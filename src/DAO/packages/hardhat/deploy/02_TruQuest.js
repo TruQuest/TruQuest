@@ -15,7 +15,8 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   });
 
   const truQuest = await ethers.getContract("TruQuest");
-  log(`VerifierLottery deployed to ${await truQuest.i_verifierLottery()}`);
+  log(`VerifierLottery deployed at ${await truQuest.s_verifierLottery()}`);
+  log(`AcceptancePoll deployed at ${await truQuest.s_acceptancePoll()}`);
 };
 
 module.exports.tags = ["TruQuest"];
