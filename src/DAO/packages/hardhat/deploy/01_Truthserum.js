@@ -5,7 +5,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const { deployer } = await getNamedAccounts();
   const chainId = await getChainId();
 
-  await deploy("TRU", {
+  await deploy("Truthserum", {
     from: deployer,
     log: true,
     waitConfirmations: 1,

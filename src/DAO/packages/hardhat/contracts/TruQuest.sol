@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import "./TRU.sol";
+import "./Truthserum.sol";
 import "./VerifierLottery.sol";
 import "./AcceptancePoll.sol";
 
@@ -12,7 +12,7 @@ error TruQuest__NotVerifierLottery();
 error TruQuest__NotAcceptancePoll();
 
 contract TruQuest {
-    TRU private immutable i_truToken;
+    Truthserum private immutable i_truthserum;
     VerifierLottery public s_verifierLottery;
     AcceptancePoll public s_acceptancePoll;
     address private s_orchestrator;
@@ -68,7 +68,7 @@ contract TruQuest {
     }
 
     constructor(
-        address _truTokenAddress,
+        address _truthserumAddress,
         uint8 _numVerifiers,
         uint256 _verifierStake,
         uint256 _thingStake,
@@ -77,7 +77,7 @@ contract TruQuest {
         uint16 _verifierLotteryDurationBlocks,
         uint16 _acceptancePollDurationBlocks
     ) {
-        i_truToken = TRU(_truTokenAddress);
+        i_truthserum = Truthserum(_truthserumAddress);
         s_verifierLottery = new VerifierLottery(
             address(this),
             _numVerifiers,
@@ -97,7 +97,7 @@ contract TruQuest {
     }
 
     function deposit(uint256 _amount) public {
-        i_truToken.transferFrom(msg.sender, address(this), _amount);
+        i_truthserum.transferFrom(msg.sender, address(this), _amount);
         s_balanceOf[msg.sender] += _amount;
         emit FundsDeposited(msg.sender, _amount);
     }
@@ -133,7 +133,7 @@ contract TruQuest {
         external
         onlyAcceptancePoll
     {
-        // i_truToken.transfer(_user, _amount);
+        // i_truthserum.transfer(_user, _amount);
         s_balanceOf[_user] += _amount;
     }
 
