@@ -1,4 +1,4 @@
-namespace Orchestrator;
+namespace API;
 
 public class WeatherForecast
 {
