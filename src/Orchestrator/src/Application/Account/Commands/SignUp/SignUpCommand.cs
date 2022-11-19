@@ -19,7 +19,7 @@ public class SignUpCommand : IRequest<HandleResult<SignUpResultVM>>
     public string Signature { get; set; }
 }
 
-public class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<SignUpResultVM>>
+internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<SignUpResultVM>>
 {
     private readonly ILogger<SignUpCommandHandler> _logger;
     private readonly ISigner _signer;
