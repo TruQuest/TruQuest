@@ -1,13 +1,17 @@
+using System.Data.Common;
+
 using Microsoft.Extensions.Configuration;
 
 using Npgsql;
 
+using Application.Common.Interfaces;
+
 namespace Infrastructure.Persistence;
 
-public class SharedTxnScope : IDisposable
+public class SharedTxnScope : ISharedTxnScope
 {
     private readonly string _dbConnectionString;
-    public NpgsqlConnection? DbConnection { get; private set; }
+    public DbConnection? DbConnection { get; private set; }
     public HashSet<Type>? ExcludeRepos { get; private set; }
 
     public SharedTxnScope(IConfiguration configuration)
@@ -15,10 +19,10 @@ public class SharedTxnScope : IDisposable
         _dbConnectionString = configuration.GetConnectionString("Postgres")!;
     }
 
-    public void Init()
+    public void Init(Type[]? excludeRepos)
     {
-        DbConnection = new(_dbConnectionString);
-        ExcludeRepos = new();
+        DbConnection = new NpgsqlConnection(_dbConnectionString);
+        ExcludeRepos = new(excludeRepos ?? new Type[] { });
     }
 
     void IDisposable.Dispose()

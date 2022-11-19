@@ -45,7 +45,7 @@ public static class IServiceCollectionExtension
         services.AddHttpContextAccessor();
         // services.TryAddScoped<SignInManager<User>>();
 
-        services.AddScoped<SharedTxnScope>();
+        services.AddScoped<ISharedTxnScope, SharedTxnScope>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddSingleton<IAuthTokenProvider, AuthTokenProvider>();
         services.AddSingleton<Eip712TypedDataSigner>();

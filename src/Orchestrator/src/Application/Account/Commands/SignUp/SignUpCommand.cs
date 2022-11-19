@@ -1,3 +1,5 @@
+using System.Security.Claims;
+
 using Microsoft.Extensions.Logging;
 
 using MediatR;
@@ -6,9 +8,11 @@ using Domain.Results;
 using Domain.Aggregates;
 
 using Application.Common.Interfaces;
+using Application.Common.Attributes;
 
 namespace Application.Account.Commands.SignUp;
 
+[ExecuteInTxn]
 public class SignUpCommand : IRequest<HandleResult<SignUpResultVM>>
 {
     public SignUpIM Input { get; set; }
@@ -40,7 +44,7 @@ public class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<
         var result = _signer.RecoverFromSignUpMessage(command.Input, command.Signature);
         if (result.IsError)
         {
-            return new HandleResult<SignUpResultVM>
+            return new()
             {
                 Error = result.Error
             };
@@ -55,7 +59,16 @@ public class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<
         var error = await _userRepository.Create(user);
         if (error != null)
         {
-            return new HandleResult<SignUpResultVM>
+            return new()
+            {
+                Error = error
+            };
+        }
+
+        error = await _userRepository.AddClaimsTo(user, new Claim("claimType", "claimValue"));
+        if (error != null)
+        {
+            return new()
             {
                 Error = error
             };
@@ -65,7 +78,7 @@ public class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<
 
         var jwt = _authTokenProvider.GenerateJWT(user.Id);
 
-        return new HandleResult<SignUpResultVM>
+        return new()
         {
             Data = new()
             {

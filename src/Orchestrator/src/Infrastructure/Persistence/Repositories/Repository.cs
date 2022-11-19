@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Npgsql;
 
 using Domain.Base;
+using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories;
 
@@ -24,21 +25,21 @@ internal abstract class Repository<T> : IRepository<T> where T : IAggregateRoot
         _dbConnectionString = configuration.GetConnectionString("Postgres")!;
     }
 
-    protected Repository(IConfiguration configuration, SharedTxnScope sharedTxnScope) : this(configuration)
+    protected Repository(IConfiguration configuration, ISharedTxnScope sharedTxnScope) : this(configuration)
     {
         if (sharedTxnScope.DbConnection != null && !sharedTxnScope.ExcludeRepos!.Contains(GetType()))
         {
-            _setDbConnection(sharedTxnScope.DbConnection);
+            _setDbConnection((NpgsqlConnection)sharedTxnScope.DbConnection);
             _useSharedDbConnection = true;
         }
     }
 
-    protected Repository(IConfiguration configuration, DbContext dbContext, SharedTxnScope sharedTxnScope) : this(configuration)
+    protected Repository(IConfiguration configuration, DbContext dbContext, ISharedTxnScope sharedTxnScope) : this(configuration)
     {
         _dbContext = dbContext;
         if (sharedTxnScope.DbConnection != null && !sharedTxnScope.ExcludeRepos!.Contains(GetType()))
         {
-            _setDbConnection(sharedTxnScope.DbConnection);
+            _setDbConnection((NpgsqlConnection)sharedTxnScope.DbConnection);
             _useSharedDbConnection = true;
         }
     }
