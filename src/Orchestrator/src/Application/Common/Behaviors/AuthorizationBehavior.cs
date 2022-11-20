@@ -13,15 +13,10 @@ public class AuthorizationBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
     where TRequest : IRequest<TResponse>
     where TResponse : HandleResult, new()
 {
-    private readonly IAuthenticationContext _authenticationContext;
     private readonly IAuthorizationService _authorizationService;
 
-    public AuthorizationBehavior(
-        IAuthenticationContext authenticationContext,
-        IAuthorizationService authorizationService
-    )
+    public AuthorizationBehavior(IAuthorizationService authorizationService)
     {
-        _authenticationContext = authenticationContext;
         _authorizationService = authorizationService;
     }
 
@@ -35,9 +30,7 @@ public class AuthorizationBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
             .GetType()
             .GetCustomAttributes<RequireAuthorizationAttribute>();
 
-        var error = await _authorizationService.Authorize(
-            _authenticationContext, authorizeAttributes
-        );
+        var error = await _authorizationService.Authorize(authorizeAttributes);
         if (error != null)
         {
             return new()
