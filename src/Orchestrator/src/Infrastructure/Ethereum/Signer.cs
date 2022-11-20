@@ -52,7 +52,7 @@ internal class Signer : ISigner
         var tdDefinition = _getTypedDataDefinition(typeof(SignUpTD));
         var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
 
-        return address;
+        return address.Replace("0x", string.Empty);
     }
 
     public Either<SubjectError, string> RecoverFromNewSubjectMessage(NewSubjectIM input, string signature)
@@ -68,6 +68,6 @@ internal class Signer : ISigner
         var tdDefinition = _getTypedDataDefinition(typeof(NewSubjectTD), typeof(TagTD));
         var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
 
-        return address;
+        return address.Replace("0x", string.Empty);
     }
 }

@@ -128,6 +128,13 @@ public static class IServiceCollectionExtension
         services.AddSingleton<IFileFetcher, FileFetcher>();
         services.AddSingleton<IWebPageScreenshotTaker, PlaywrightWebPageScreenshotTaker>();
 
+        services.AddHttpClient("ipfs", (sp, client) =>
+        {
+            var configuration = sp.GetRequiredService<IConfiguration>();
+            client.BaseAddress = new Uri(configuration["IPFS:Host"]!);
+        });
+        services.AddSingleton<IFileStorage, FileStorage>();
+
         return services;
     }
 }

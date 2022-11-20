@@ -22,18 +22,21 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
     private readonly ICurrentPrincipal _currentPrincipal;
     private readonly ISigner _signer;
     private readonly IFileFetcher _fileFetcher;
+    private readonly IFileStorage _fileStorage;
 
     public AddNewSubjectCommandHandler(
         ILogger<AddNewSubjectCommandHandler> logger,
         ICurrentPrincipal currentPrincipal,
         ISigner signer,
-        IFileFetcher fileFetcher
+        IFileFetcher fileFetcher,
+        IFileStorage fileStorage
     )
     {
         _logger = logger;
         _currentPrincipal = currentPrincipal;
         _signer = signer;
         _fileFetcher = fileFetcher;
+        _fileStorage = fileStorage;
     }
 
     public async Task<VoidResult> Handle(AddNewSubjectCommand command, CancellationToken ct)
@@ -52,6 +55,17 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
         await foreach (var filePath in _fileFetcher.FetchAll(command.Input, _currentPrincipal.Id))
         {
             _logger.LogDebug("File saved to " + filePath);
+
+            var uploadResult = await _fileStorage.Upload(filePath);
+            if (uploadResult.IsError)
+            {
+                return new()
+                {
+                    Error = uploadResult.Error
+                };
+            }
+
+            _logger.LogDebug("File cid is " + uploadResult.Data);
         }
 
         return VoidResult.Instance;

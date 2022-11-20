@@ -477,4 +477,4 @@ $RECYCLE.BIN/
 *.lnk
 
 .env
-files/
+/src/API/files
