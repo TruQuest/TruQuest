@@ -8,6 +8,7 @@ using Domain.Errors;
 using Domain.Results;
 using Application.Account.Commands.SignUp;
 using Application.Common.Interfaces;
+using Application.Subject.Commands.AddNewSubject;
 
 using Infrastructure.Ethereum.TypedData;
 
@@ -49,6 +50,22 @@ internal class Signer : ISigner
     {
         var td = new SignUpTD { Username = input.Username };
         var tdDefinition = _getTypedDataDefinition(typeof(SignUpTD));
+        var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
+
+        return address;
+    }
+
+    public Either<SubjectError, string> RecoverFromNewSubjectMessage(NewSubjectIM input, string signature)
+    {
+        var td = new NewSubjectTD
+        {
+            Type = (int)input.Type,
+            Name = input.Name,
+            Details = input.Details,
+            ImageURL = input.ImageURL,
+            Tags = input.Tags.Select(t => new TagTD { Id = t.Id }).ToList()
+        };
+        var tdDefinition = _getTypedDataDefinition(typeof(NewSubjectTD), typeof(TagTD));
         var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
 
         return address;

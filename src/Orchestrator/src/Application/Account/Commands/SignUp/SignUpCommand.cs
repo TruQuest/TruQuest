@@ -65,7 +65,7 @@ internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResul
             };
         }
 
-        error = await _userRepository.AddClaimsTo(user, new Claim("claimType", "claimValue"));
+        error = await _userRepository.AddClaimsTo(user, new Claim("username", user.UserName));
         if (error != null)
         {
             return new()

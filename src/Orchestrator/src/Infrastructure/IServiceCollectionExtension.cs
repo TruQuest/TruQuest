@@ -17,6 +17,7 @@ using Infrastructure.Account;
 using Infrastructure.Ethereum;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Repositories;
+using Infrastructure.Files;
 
 namespace Infrastructure;
 
@@ -122,6 +123,10 @@ public static class IServiceCollectionExtension
         services.AddAuthorizationCore();
         services.AddScoped<IAuthenticationContext, AuthenticationContext>();
         services.AddTransient<IAuthorizationService, AuthorizationService>();
+        services.AddScoped<ICurrentPrincipal, CurrentPrincipal>();
+
+        services.AddSingleton<IFileFetcher, FileFetcher>();
+        services.AddSingleton<IWebPageScreenshotTaker, PlaywrightWebPageScreenshotTaker>();
 
         return services;
     }
