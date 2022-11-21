@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
 
@@ -126,8 +127,19 @@ public static class IServiceCollectionExtension
         services.AddScoped<ICurrentPrincipal, CurrentPrincipal>();
 
         services.AddSingleton<IFileFetcher, FileFetcher>();
+        services.AddSingleton<IImageFetcher, ImageFetcher>();
         services.AddSingleton<IWebPageScreenshotTaker, PlaywrightWebPageScreenshotTaker>();
+        services.AddSingleton<IImageSignatureVerifier, ImageSignatureVerifier>();
 
+        services.AddHttpClient("image", (sp, client) =>
+        {
+            var configuration = sp.GetRequiredService<IConfiguration>();
+            var mimeTypes = configuration["Files:Images:AcceptableMimeTypes"]!.Split(',');
+            foreach (var mimeType in mimeTypes)
+            {
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(mimeType));
+            }
+        });
         services.AddHttpClient("ipfs", (sp, client) =>
         {
             var configuration = sp.GetRequiredService<IConfiguration>();

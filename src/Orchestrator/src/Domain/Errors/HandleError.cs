@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Domain.Errors;
 
 public abstract class HandleError
@@ -8,5 +10,10 @@ public abstract class HandleError
     protected HandleError(string type)
     {
         Type = type;
+    }
+
+    public override string ToString()
+    {
+        return JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
     }
 }
