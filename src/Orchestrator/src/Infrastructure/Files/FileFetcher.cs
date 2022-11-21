@@ -24,7 +24,7 @@ internal class FileFetcher : IFileFetcher
         _webPageScreenshotTaker = webPageScreenshotTaker;
     }
 
-    public async IAsyncEnumerable<string> FetchAll<T>(T input, string userId)
+    public async IAsyncEnumerable<(string filePath, PropertyInfo prop)> FetchAll<T>(T input, string userId)
     {
         foreach (var prop in typeof(T).GetProperties())
         {
@@ -53,7 +53,7 @@ internal class FileFetcher : IFileFetcher
                     await _webPageScreenshotTaker.Take(url, filePath);
                 }
 
-                yield return filePath;
+                yield return (filePath, prop);
             }
         }
     }

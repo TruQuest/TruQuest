@@ -2,7 +2,7 @@ using MediatR;
 
 namespace Domain.Base;
 
-internal abstract class Entity
+public abstract class Entity
 {
     private List<INotification>? _domainEvents;
     public IReadOnlyList<INotification>? DomainEvents => _domainEvents;

@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using MediatR;
 
 using Domain.Results;
+using Domain.Aggregates;
+using SubjectDM = Domain.Aggregates.Subject;
 
 using Application.Common.Interfaces;
 using Application.Common.Attributes;
@@ -23,13 +25,15 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
     private readonly ISigner _signer;
     private readonly IFileFetcher _fileFetcher;
     private readonly IFileStorage _fileStorage;
+    private readonly ISubjectRepository _subjectRepository;
 
     public AddNewSubjectCommandHandler(
         ILogger<AddNewSubjectCommandHandler> logger,
         ICurrentPrincipal currentPrincipal,
         ISigner signer,
         IFileFetcher fileFetcher,
-        IFileStorage fileStorage
+        IFileStorage fileStorage,
+        ISubjectRepository subjectRepository
     )
     {
         _logger = logger;
@@ -37,6 +41,7 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
         _signer = signer;
         _fileFetcher = fileFetcher;
         _fileStorage = fileStorage;
+        _subjectRepository = subjectRepository;
     }
 
     public async Task<VoidResult> Handle(AddNewSubjectCommand command, CancellationToken ct)
@@ -52,7 +57,7 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
 
         // check that result.Data == _currentPrincipal.Id
 
-        await foreach (var filePath in _fileFetcher.FetchAll(command.Input, _currentPrincipal.Id))
+        await foreach (var (filePath, prop) in _fileFetcher.FetchAll(command.Input, _currentPrincipal.Id))
         {
             _logger.LogDebug("File saved to " + filePath);
 
@@ -66,7 +71,19 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
             }
 
             _logger.LogDebug("File cid is " + uploadResult.Data);
+            prop.SetValue(command.Input, uploadResult.Data);
         }
+
+        var subject = new SubjectDM(
+            name: command.Input.Name,
+            details: command.Input.Details,
+            type: (int)command.Input.Type,
+            imageURL: command.Input.ImageURL != string.Empty ? command.Input.ImageURL : null
+        );
+        subject.AddTags(command.Input.Tags.Select(t => t.Id));
+
+        _subjectRepository.Create(subject);
+        await _subjectRepository.SaveChanges();
 
         return VoidResult.Instance;
     }

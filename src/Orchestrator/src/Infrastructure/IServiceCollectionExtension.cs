@@ -147,6 +147,8 @@ public static class IServiceCollectionExtension
         });
         services.AddSingleton<IFileStorage, FileStorage>();
 
+        services.AddScoped<ISubjectRepository, SubjectRepository>();
+
         return services;
     }
 }

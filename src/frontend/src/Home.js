@@ -77,7 +77,7 @@ const Home = () => {
       details: "Enemy",
       imageUrl:
         "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Image_created_with_a_mobile_phone.png/640px-Image_created_with_a_mobile_phone.png",
-      tags: [{ id: 5 }],
+      tags: [{ id: 1 }],
     };
 
     const data = JSON.stringify({
