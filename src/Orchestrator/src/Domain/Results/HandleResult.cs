@@ -12,7 +12,7 @@ public abstract class HandleResult
 
 public class HandleResult<T> : HandleResult
 {
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public T? Data { get; init; }
 }
 

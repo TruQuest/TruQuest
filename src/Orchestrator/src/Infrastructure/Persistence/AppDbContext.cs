@@ -27,6 +27,12 @@ internal class AppDbContext : IdentityUserContext<User, string>
             builder.Property(s => s.Type).IsRequired();
             builder.Property(s => s.ImageURL).IsRequired(false);
 
+            builder
+                .HasOne<User>()
+                .WithMany()
+                .HasForeignKey(s => s.SubmitterId)
+                .IsRequired();
+
             builder.Metadata
                 .FindNavigation(nameof(Subject.Tags))
                 !.SetPropertyAccessMode(PropertyAccessMode.Field);

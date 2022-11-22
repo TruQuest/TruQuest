@@ -12,13 +12,13 @@ using Application.Common.Attributes;
 namespace Application.Subject.Commands.AddNewSubject;
 
 [RequireAuthorization]
-public class AddNewSubjectCommand : IRequest<VoidResult>
+public class AddNewSubjectCommand : IRequest<HandleResult<Guid>>
 {
     public NewSubjectIM Input { get; set; }
     public string Signature { get; set; }
 }
 
-internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectCommand, VoidResult>
+internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectCommand, HandleResult<Guid>>
 {
     private readonly ILogger<AddNewSubjectCommandHandler> _logger;
     private readonly ICurrentPrincipal _currentPrincipal;
@@ -44,7 +44,7 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
         _subjectRepository = subjectRepository;
     }
 
-    public async Task<VoidResult> Handle(AddNewSubjectCommand command, CancellationToken ct)
+    public async Task<HandleResult<Guid>> Handle(AddNewSubjectCommand command, CancellationToken ct)
     {
         var result = _signer.RecoverFromNewSubjectMessage(command.Input, command.Signature);
         if (result.IsError)
@@ -78,13 +78,17 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
             name: command.Input.Name,
             details: command.Input.Details,
             type: (int)command.Input.Type,
-            imageURL: command.Input.ImageURL != string.Empty ? command.Input.ImageURL : null
+            imageURL: command.Input.ImageURL != string.Empty ? command.Input.ImageURL : null,
+            submitterId: _currentPrincipal.Id
         );
         subject.AddTags(command.Input.Tags.Select(t => t.Id));
 
         _subjectRepository.Create(subject);
         await _subjectRepository.SaveChanges();
 
-        return VoidResult.Instance;
+        return new()
+        {
+            Data = subject.Id!.Value
+        };
     }
 }

@@ -19,5 +19,5 @@ public class SubjectController : ControllerBase
     }
 
     [HttpPost("add")]
-    public Task<VoidResult> AddNewSubject(AddNewSubjectCommand command) => _mediator.Send(command);
+    public Task<HandleResult<Guid>> AddNewSubject(AddNewSubjectCommand command) => _mediator.Send(command);
 }
