@@ -1,4 +1,4 @@
-namespace Application.Subject.Commands.AddNewSubject;
+namespace Application.Common.Models.IM;
 
 public class TagIM
 {

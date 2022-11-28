@@ -22,6 +22,17 @@ const newSubjectTD = [
 
 const tagTD = [{ name: "id", type: "int32" }];
 
+const evidenceTD = [{ name: "url", type: "string" }];
+
+const newThingTD = [
+  { name: "subjectId", type: "string" },
+  { name: "title", type: "string" },
+  { name: "details", type: "string" },
+  { name: "imageUrl", type: "string" },
+  { name: "evidence", type: "EvidenceTD[]" },
+  { name: "tags", type: "TagTD[]" },
+];
+
 const domainData = {
   name: "TruQuest",
   version: "0.0.1",
@@ -33,6 +44,7 @@ const domainData = {
 const Home = () => {
   const { account, enableWeb3, isWeb3EnableLoading, web3 } = useMoralis();
   const [token, setToken] = useState("");
+  const [subjectId, setSubjectId] = useState("");
 
   const connect = async () => {
     await enableWeb3();
@@ -97,19 +109,70 @@ const Home = () => {
       from: account,
     });
 
-    await axios.post(
+    const response = await axios.post(
       "http://localhost:5223/subject/add",
       {
-        input: {
-          ...message,
-          profilePageUrl: "https://www.sports.ru/",
-        },
+        input: message,
         signature: res,
       },
       {
         headers: { Authorization: "Bearer " + token },
       }
     );
+
+    const subjectId = response.data.data;
+    console.log(`SubjectId: ${subjectId}`);
+    if (subjectId) {
+      setSubjectId(subjectId);
+    }
+  };
+
+  const submitNewThing = async () => {
+    const message = {
+      subjectId: subjectId,
+      title: "Moon base",
+      details: "2024",
+      imageUrl:
+        "https://images.newscientist.com/wp-content/uploads/2022/09/09152048/SEI_124263525.jpg",
+      evidence: [
+        { url: "https://stackoverflow.com/" },
+        { url: "https://fanfics.me/" },
+      ],
+      tags: [{ id: 1 }],
+    };
+
+    const data = JSON.stringify({
+      types: {
+        EIP712Domain: domain,
+        NewThingTD: newThingTD,
+        EvidenceTD: evidenceTD,
+        TagTD: tagTD,
+      },
+      domain: domainData,
+      primaryType: "NewThingTD",
+      message: message,
+    });
+
+    const res = await web3.provider.request({
+      method: "eth_signTypedData_v4",
+      params: [account, data],
+      from: account,
+    });
+
+    const response = await axios.post(
+      "http://localhost:5223/thing/submit",
+      {
+        input: message,
+        signature: res,
+      },
+      {
+        headers: { Authorization: "Bearer " + token },
+      }
+    );
+    if (response.data.data) {
+      console.log(`ThingId: ${response.data.data.thing.id}`);
+      console.log(`Sig: ${response.data.data.signature}`);
+    }
   };
 
   useEffect(() => {
@@ -137,8 +200,11 @@ const Home = () => {
   return (
     <div>
       <h3>{account}</h3>
-      <button onClick={signUp}>Sign up</button>
+      {!token && <button onClick={signUp}>Sign up</button>}
       {token && <button onClick={addNewSubject}>Add new subject</button>}
+      {token && subjectId && (
+        <button onClick={submitNewThing}>Submit new thing</button>
+      )}
     </div>
   );
 };

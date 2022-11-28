@@ -57,7 +57,7 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
 
         // check that result.Data == _currentPrincipal.Id
 
-        await foreach (var (filePath, prop) in _fileFetcher.FetchAll(command.Input, _currentPrincipal.Id))
+        await foreach (var (filePath, obj, prop) in _fileFetcher.FetchAll(command.Input, _currentPrincipal.Id))
         {
             _logger.LogDebug("File saved to " + filePath);
 
@@ -71,7 +71,7 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
             }
 
             _logger.LogDebug("File cid is " + uploadResult.Data);
-            prop.SetValue(command.Input, uploadResult.Data);
+            prop.SetValue(obj, uploadResult.Data);
         }
 
         var subject = new SubjectDM(

@@ -6,5 +6,5 @@ namespace Infrastructure.Ethereum.TypedData;
 internal class SignUpTD
 {
     [Parameter("string", "username", 1)]
-    public string Username { get; set; }
+    public string Username { get; init; }
 }

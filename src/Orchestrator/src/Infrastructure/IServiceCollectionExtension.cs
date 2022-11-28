@@ -148,6 +148,7 @@ public static class IServiceCollectionExtension
         services.AddSingleton<IFileStorage, FileStorage>();
 
         services.AddScoped<ISubjectRepository, SubjectRepository>();
+        services.AddScoped<IThingRepository, ThingRepository>();
 
         return services;
     }

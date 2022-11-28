@@ -6,5 +6,5 @@ namespace Infrastructure.Ethereum.TypedData;
 public class TagTD
 {
     [Parameter("int32", "id", 1)]
-    public int Id { get; set; }
+    public int Id { get; init; }
 }
