@@ -18,9 +18,9 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   log(`VerifierLottery deployed at ${await truQuest.s_verifierLottery()}`);
   log(`AcceptancePoll deployed at ${await truQuest.s_acceptancePoll()}`);
 
-  let txnResponse = await truthserum.approve(truQuest.address, 50);
+  let txnResponse = await truthserum.approve(truQuest.address, 500);
   await txnResponse.wait(1);
-  txnResponse = await truQuest.deposit(50);
+  txnResponse = await truQuest.deposit(500);
   await txnResponse.wait(1);
 
   const balance = await truQuest.getAvailableFunds(player);

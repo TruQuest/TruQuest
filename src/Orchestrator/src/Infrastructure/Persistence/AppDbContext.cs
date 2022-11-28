@@ -65,6 +65,9 @@ internal class AppDbContext : IdentityUserContext<User, string>
         {
             builder.HasKey(t => t.Id);
             builder.Property(t => t.Id).HasValueGenerator<GuidValueGenerator>();
+            builder.Property(t => t.IdHash)
+                .HasValueGenerator<KeccakSHA3Generator>()
+                .IsRequired();
             builder.Property(t => t.Title).IsRequired();
             builder.Property(t => t.Details).IsRequired();
             builder.Property(t => t.ImageURL).IsRequired(false);
@@ -88,6 +91,8 @@ internal class AppDbContext : IdentityUserContext<User, string>
             builder.Metadata
                 .FindNavigation(nameof(Thing.Tags))
                 !.SetPropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.HasIndex(t => t.IdHash);
         });
 
         modelBuilder.Entity<Evidence>(builder =>

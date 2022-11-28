@@ -12,7 +12,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   });
 
   const truthserum = await ethers.getContract("Truthserum", deployer);
-  const txnResponse = await truthserum.transfer(player, 100);
+  const txnResponse = await truthserum.transfer(player, 500);
   await txnResponse.wait(1);
 
   // Getting a previously deployed contract

@@ -26,17 +26,18 @@ internal class Signer : ISigner
     {
         _eip712Signer = eip712Signer;
 
+        var network = configuration["Ethereum:Network"]!;
         var domainConfig = configuration.GetSection("Ethereum:Domain");
         _domain = new()
         {
             Name = domainConfig["Name"],
             Version = domainConfig["Version"],
-            ChainId = domainConfig.GetValue<int>("ChainId"),
-            VerifyingContract = domainConfig["VerifyingContract"],
+            ChainId = configuration.GetValue<int>($"Ethereum:Networks:{network}:ChainId"),
+            VerifyingContract = configuration[$"Ethereum:Contracts:{network}:TruQuest:Address"],
             Salt = domainConfig["Salt"].HexToByteArray()
         };
 
-        _orchestratorPrivateKey = new EthECKey(configuration["Ethereum:Accounts:Orchestrator:PrivateKey"]!);
+        _orchestratorPrivateKey = new EthECKey(configuration[$"Ethereum:Accounts:{network}:Orchestrator:PrivateKey"]!);
     }
 
     private TypedData<DomainWithSalt> _getTypedDataDefinition(params Type[] types)

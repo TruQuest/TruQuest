@@ -3,6 +3,8 @@ using System.Text.Json;
 using Application;
 using Infrastructure;
 
+using API.BackgroundServices;
+
 DotNetEnv.Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,6 +31,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddHostedService<EthereumEventTracker>();
 
 var app = builder.Build();
 

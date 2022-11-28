@@ -150,6 +150,8 @@ public static class IServiceCollectionExtension
         services.AddScoped<ISubjectRepository, SubjectRepository>();
         services.AddScoped<IThingRepository, ThingRepository>();
 
+        services.AddSingleton<IEthereumEventListener, EventListener>();
+
         return services;
     }
 }
