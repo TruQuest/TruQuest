@@ -2,6 +2,7 @@ require("dotenv").config();
 const { utils } = require("ethers");
 const fs = require("fs");
 const chalk = require("chalk");
+const { task } = require("hardhat/config");
 
 require("@nomicfoundation/hardhat-chai-matchers");
 require("@tenderly/hardhat-tenderly");
@@ -283,6 +284,9 @@ module.exports = {
     deployer: {
       default: 0, // here this will by default take the first account as deployer
     },
+    player: {
+      default: 1,
+    },
   },
   etherscan: {
     apiKey: {
@@ -312,6 +316,18 @@ function debug(text) {
     console.log(text);
   }
 }
+
+task("tru", "Tru")
+  .addParam("thingId", "Thing GUID")
+  .setAction(async (taskArgs, { getNamedAccounts, ethers }) => {
+    const { player } = await getNamedAccounts();
+    const truQuest = await ethers.getContract("TruQuest", player);
+    const balance = await truQuest.getAvailableFunds(player);
+    console.log(
+      `Player balance is ${ethers.utils.formatUnits(balance, "wei")}`
+    );
+    console.log(await truQuest.s_thingSubmitter(taskArgs.thingId));
+  });
 
 task("wallet", "Create a wallet (pk) link", async (_, { ethers }) => {
   const randomWallet = ethers.Wallet.createRandom();

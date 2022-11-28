@@ -4,5 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract Truthserum is ERC20 {
-    constructor() ERC20("Truthserum", "TRU") {}
+    constructor() ERC20("Truthserum", "TRU") {
+        _mint(msg.sender, 1000);
+    }
 }

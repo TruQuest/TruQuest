@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useMoralis } from "react-moralis";
+import { useMoralis, useWeb3Contract } from "react-moralis";
 import axios from "axios";
 
 const domain = [
@@ -37,7 +37,7 @@ const domainData = {
   name: "TruQuest",
   version: "0.0.1",
   chainId: 31337,
-  verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC",
+  verifyingContract: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
   salt: "0xf2d857f4a3edcb9b78b4d503bfe733db1e3f6cdc2b7971ee739626c97e86a558",
 };
 
@@ -45,6 +45,393 @@ const Home = () => {
   const { account, enableWeb3, isWeb3EnableLoading, web3 } = useMoralis();
   const [token, setToken] = useState("");
   const [subjectId, setSubjectId] = useState("");
+  const [thingId, setThingId] = useState("");
+  const [sig, setSig] = useState("");
+
+  const { runContractFunction } = useWeb3Contract({
+    contractAddress: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+    abi: [
+      {
+        inputs: [
+          {
+            internalType: "address",
+            name: "_truthserumAddress",
+            type: "address",
+          },
+          {
+            internalType: "uint8",
+            name: "_numVerifiers",
+            type: "uint8",
+          },
+          {
+            internalType: "uint256",
+            name: "_verifierStake",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "_thingStake",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "_thingSubmissionAcceptedReward",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "_verifierReward",
+            type: "uint256",
+          },
+          {
+            internalType: "uint16",
+            name: "_verifierLotteryDurationBlocks",
+            type: "uint16",
+          },
+          {
+            internalType: "uint16",
+            name: "_acceptancePollDurationBlocks",
+            type: "uint16",
+          },
+        ],
+        stateMutability: "nonpayable",
+        type: "constructor",
+      },
+      {
+        inputs: [],
+        name: "TruQuest__InvalidSignature",
+        type: "error",
+      },
+      {
+        inputs: [],
+        name: "TruQuest__NotAcceptancePoll",
+        type: "error",
+      },
+      {
+        inputs: [
+          {
+            internalType: "uint256",
+            name: "requiredAmount",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "availableAmount",
+            type: "uint256",
+          },
+        ],
+        name: "TruQuest__NotEnoughFunds",
+        type: "error",
+      },
+      {
+        inputs: [],
+        name: "TruQuest__NotVerifierLottery",
+        type: "error",
+      },
+      {
+        inputs: [
+          {
+            internalType: "string",
+            name: "thingId",
+            type: "string",
+          },
+        ],
+        name: "TruQuest__ThingAlreadyFunded",
+        type: "error",
+      },
+      {
+        anonymous: false,
+        inputs: [
+          {
+            indexed: true,
+            internalType: "address",
+            name: "user",
+            type: "address",
+          },
+          {
+            indexed: false,
+            internalType: "uint256",
+            name: "amount",
+            type: "uint256",
+          },
+        ],
+        name: "FundsDeposited",
+        type: "event",
+      },
+      {
+        anonymous: false,
+        inputs: [
+          {
+            indexed: true,
+            internalType: "string",
+            name: "thingId",
+            type: "string",
+          },
+          {
+            indexed: true,
+            internalType: "address",
+            name: "user",
+            type: "address",
+          },
+          {
+            indexed: false,
+            internalType: "uint256",
+            name: "thingStake",
+            type: "uint256",
+          },
+        ],
+        name: "ThingFunded",
+        type: "event",
+      },
+      {
+        inputs: [
+          {
+            internalType: "address",
+            name: "_user",
+            type: "address",
+          },
+          {
+            internalType: "uint256",
+            name: "_requiredFunds",
+            type: "uint256",
+          },
+        ],
+        name: "checkHasAtLeast",
+        outputs: [
+          {
+            internalType: "bool",
+            name: "",
+            type: "bool",
+          },
+        ],
+        stateMutability: "view",
+        type: "function",
+      },
+      {
+        inputs: [
+          {
+            internalType: "uint256",
+            name: "_amount",
+            type: "uint256",
+          },
+        ],
+        name: "deposit",
+        outputs: [],
+        stateMutability: "nonpayable",
+        type: "function",
+      },
+      {
+        inputs: [
+          {
+            components: [
+              {
+                internalType: "string",
+                name: "id",
+                type: "string",
+              },
+            ],
+            internalType: "struct TruQuest.ThingTD",
+            name: "_thing",
+            type: "tuple",
+          },
+          {
+            internalType: "uint8",
+            name: "_v",
+            type: "uint8",
+          },
+          {
+            internalType: "bytes32",
+            name: "_r",
+            type: "bytes32",
+          },
+          {
+            internalType: "bytes32",
+            name: "_s",
+            type: "bytes32",
+          },
+        ],
+        name: "fundThing",
+        outputs: [],
+        stateMutability: "nonpayable",
+        type: "function",
+      },
+      {
+        inputs: [
+          {
+            internalType: "address",
+            name: "_user",
+            type: "address",
+          },
+        ],
+        name: "getAvailableFunds",
+        outputs: [
+          {
+            internalType: "uint256",
+            name: "",
+            type: "uint256",
+          },
+        ],
+        stateMutability: "view",
+        type: "function",
+      },
+      {
+        inputs: [
+          {
+            internalType: "address",
+            name: "_user",
+            type: "address",
+          },
+          {
+            internalType: "uint256",
+            name: "_amount",
+            type: "uint256",
+          },
+        ],
+        name: "reward",
+        outputs: [],
+        stateMutability: "nonpayable",
+        type: "function",
+      },
+      {
+        inputs: [],
+        name: "s_acceptancePoll",
+        outputs: [
+          {
+            internalType: "contract AcceptancePoll",
+            name: "",
+            type: "address",
+          },
+        ],
+        stateMutability: "view",
+        type: "function",
+      },
+      {
+        inputs: [
+          {
+            internalType: "address",
+            name: "",
+            type: "address",
+          },
+        ],
+        name: "s_balanceOf",
+        outputs: [
+          {
+            internalType: "uint256",
+            name: "",
+            type: "uint256",
+          },
+        ],
+        stateMutability: "view",
+        type: "function",
+      },
+      {
+        inputs: [
+          {
+            internalType: "address",
+            name: "",
+            type: "address",
+          },
+        ],
+        name: "s_stakedBalanceOf",
+        outputs: [
+          {
+            internalType: "uint256",
+            name: "",
+            type: "uint256",
+          },
+        ],
+        stateMutability: "view",
+        type: "function",
+      },
+      {
+        inputs: [
+          {
+            internalType: "string",
+            name: "",
+            type: "string",
+          },
+        ],
+        name: "s_thingSubmitter",
+        outputs: [
+          {
+            internalType: "address",
+            name: "",
+            type: "address",
+          },
+        ],
+        stateMutability: "view",
+        type: "function",
+      },
+      {
+        inputs: [],
+        name: "s_verifierLottery",
+        outputs: [
+          {
+            internalType: "contract VerifierLottery",
+            name: "",
+            type: "address",
+          },
+        ],
+        stateMutability: "view",
+        type: "function",
+      },
+      {
+        inputs: [
+          {
+            internalType: "address",
+            name: "_user",
+            type: "address",
+          },
+          {
+            internalType: "uint256",
+            name: "_amount",
+            type: "uint256",
+          },
+        ],
+        name: "slash",
+        outputs: [],
+        stateMutability: "nonpayable",
+        type: "function",
+      },
+      {
+        inputs: [
+          {
+            internalType: "address",
+            name: "_user",
+            type: "address",
+          },
+          {
+            internalType: "uint256",
+            name: "_amount",
+            type: "uint256",
+          },
+        ],
+        name: "stake",
+        outputs: [],
+        stateMutability: "nonpayable",
+        type: "function",
+      },
+      {
+        inputs: [
+          {
+            internalType: "address",
+            name: "_user",
+            type: "address",
+          },
+          {
+            internalType: "uint256",
+            name: "_amount",
+            type: "uint256",
+          },
+        ],
+        name: "unstake",
+        outputs: [],
+        stateMutability: "nonpayable",
+        type: "function",
+      },
+    ],
+    functionName: "fundThing",
+  });
 
   const connect = async () => {
     await enableWeb3();
@@ -170,9 +557,35 @@ const Home = () => {
       }
     );
     if (response.data.data) {
-      console.log(`ThingId: ${response.data.data.thing.id}`);
-      console.log(`Sig: ${response.data.data.signature}`);
+      setThingId(response.data.data.thing.id);
+      setSig(response.data.data.signature.substring(2));
     }
+  };
+
+  const onFundThingTxnSent = async (txn) => {
+    await txn.wait(1);
+    console.log("Thing funded");
+  };
+
+  const fundThing = async () => {
+    const r = "0x" + sig.substring(0, 64);
+    const s = "0x" + sig.substring(64, 128);
+    const v = parseInt(sig.substring(128, 130), 16);
+
+    await runContractFunction({
+      params: {
+        params: {
+          _thing: {
+            id: thingId,
+          },
+          _v: v,
+          _r: r,
+          _s: s,
+        },
+      },
+      onSuccess: onFundThingTxnSent,
+      onError: (error) => console.error(error),
+    });
   };
 
   useEffect(() => {
@@ -205,6 +618,7 @@ const Home = () => {
       {token && subjectId && (
         <button onClick={submitNewThing}>Submit new thing</button>
       )}
+      {thingId && <button onClick={fundThing}>Fund thing {thingId}</button>}
     </div>
   );
 };

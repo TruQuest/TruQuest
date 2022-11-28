@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
+pragma abicoder v2;
 
 import "./Truthserum.sol";
 import "./VerifierLottery.sol";
@@ -10,8 +11,21 @@ error TruQuest__NotEnoughFunds(uint256 requiredAmount, uint256 availableAmount);
 error TruQuest__NotOrchestrator();
 error TruQuest__NotVerifierLottery();
 error TruQuest__NotAcceptancePoll();
+error TruQuest__InvalidSignature();
 
 contract TruQuest {
+    struct ThingTD {
+        string id;
+    }
+
+    bytes private constant THING_TD = "ThingTD(string id)";
+    bytes32 private immutable i_thing_td_hash;
+    bytes32 constant SALT =
+        0xf2d857f4a3edcb9b78b4d503bfe733db1e3f6cdc2b7971ee739626c97e86a558;
+    bytes private constant DOMAIN_TD =
+        "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,bytes32 salt)";
+    bytes32 private immutable i_domain_separator;
+
     Truthserum private immutable i_truthserum;
     VerifierLottery public s_verifierLottery;
     AcceptancePoll public s_acceptancePoll;
@@ -19,8 +33,8 @@ contract TruQuest {
 
     uint256 private s_thingStake;
 
-    mapping(address => uint256) private s_balanceOf;
-    mapping(address => uint256) private s_stakedBalanceOf;
+    mapping(address => uint256) public s_balanceOf;
+    mapping(address => uint256) public s_stakedBalanceOf;
 
     mapping(string => address) public s_thingSubmitter;
 
@@ -94,6 +108,18 @@ contract TruQuest {
         s_acceptancePoll.connectToVerifierLottery(address(s_verifierLottery));
         s_orchestrator = msg.sender;
         s_thingStake = _thingStake;
+
+        i_domain_separator = keccak256(
+            abi.encode(
+                keccak256(DOMAIN_TD),
+                keccak256("TruQuest"),
+                keccak256("0.0.1"),
+                block.chainid,
+                address(this),
+                SALT
+            )
+        );
+        i_thing_td_hash = keccak256(THING_TD);
     }
 
     function deposit(uint256 _amount) public {
@@ -102,17 +128,17 @@ contract TruQuest {
         emit FundsDeposited(msg.sender, _amount);
     }
 
-    function stake(address _user, uint256 _amount)
-        external
-        onlyVerifierLottery
-    {
+    function stake(
+        address _user,
+        uint256 _amount
+    ) external onlyVerifierLottery {
         s_stakedBalanceOf[_user] += _amount;
     }
 
-    function unstake(address _user, uint256 _amount)
-        external
-        onlyVerifierLottery
-    {
+    function unstake(
+        address _user,
+        uint256 _amount
+    ) external onlyVerifierLottery {
         s_stakedBalanceOf[_user] -= _amount;
     }
 
@@ -129,10 +155,10 @@ contract TruQuest {
         s_stakedBalanceOf[_user] -= _amount;
     }
 
-    function reward(address _user, uint256 _amount)
-        external
-        onlyAcceptancePoll
-    {
+    function reward(
+        address _user,
+        uint256 _amount
+    ) external onlyAcceptancePoll {
         // i_truthserum.transfer(_user, _amount);
         s_balanceOf[_user] += _amount;
     }
@@ -141,22 +167,48 @@ contract TruQuest {
         return s_balanceOf[_user] - s_stakedBalanceOf[_user];
     }
 
-    function checkHasAtLeast(address _user, uint256 _requiredFunds)
-        external
-        view
-        returns (bool)
-    {
+    function checkHasAtLeast(
+        address _user,
+        uint256 _requiredFunds
+    ) external view returns (bool) {
         return getAvailableFunds(_user) >= _requiredFunds;
     }
 
-    // Is there a risk of user A submitting a thing, but then user B funding (stealing) it before A can?
-    function fundThing(string calldata _thingId)
-        public
-        onlyWhenNotFunded(_thingId)
-        whenHasAtLeast(s_thingStake)
-    {
+    function _hashThing(
+        ThingTD calldata _thing
+    ) private view returns (bytes32) {
+        return
+            keccak256(
+                abi.encodePacked(
+                    "\x19\x01",
+                    i_domain_separator,
+                    keccak256(
+                        abi.encode(i_thing_td_hash, keccak256(bytes(_thing.id)))
+                    )
+                )
+            );
+    }
+
+    function _verifyThingSignature(
+        ThingTD calldata _thing,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    ) private view returns (bool) {
+        return s_orchestrator == ecrecover(_hashThing(_thing), _v, _r, _s);
+    }
+
+    function fundThing(
+        ThingTD calldata _thing,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    ) public onlyWhenNotFunded(_thing.id) whenHasAtLeast(s_thingStake) {
+        if (!_verifyThingSignature(_thing, _v, _r, _s)) {
+            revert TruQuest__InvalidSignature();
+        }
         _stake(msg.sender, s_thingStake);
-        s_thingSubmitter[_thingId] = msg.sender;
-        emit ThingFunded(_thingId, msg.sender, s_thingStake);
+        s_thingSubmitter[_thing.id] = msg.sender;
+        emit ThingFunded(_thing.id, msg.sender, s_thingStake);
     }
 }
