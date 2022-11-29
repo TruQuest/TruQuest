@@ -3,13 +3,13 @@ using Application.Common.Models.IM;
 
 namespace Application.Thing.Commands.SubmitNewThing;
 
-public class NewThingIM
+public class NewThingIm
 {
     public Guid SubjectId { get; set; }
     public string Title { get; set; }
     public string Details { get; set; }
-    [ImageURL]
-    public string ImageURL { get; set; } = string.Empty;
-    public IEnumerable<EvidenceIM> Evidence { get; set; }
-    public IEnumerable<TagIM> Tags { get; set; } = new List<TagIM>();
+    [ImageUrl]
+    public string ImageUrl { get; set; } = string.Empty;
+    public IEnumerable<EvidenceIm> Evidence { get; set; }
+    public IEnumerable<TagIm> Tags { get; set; } = new List<TagIm>();
 }

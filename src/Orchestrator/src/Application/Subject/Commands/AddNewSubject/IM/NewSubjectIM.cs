@@ -3,12 +3,12 @@ using Application.Common.Models.IM;
 
 namespace Application.Subject.Commands.AddNewSubject;
 
-public class NewSubjectIM
+public class NewSubjectIm
 {
-    public SubjectTypeIM Type { get; set; }
+    public SubjectTypeIm Type { get; set; }
     public string Name { get; set; }
     public string Details { get; set; }
-    [ImageURL]
-    public string ImageURL { get; set; } = string.Empty;
-    public IEnumerable<TagIM> Tags { get; set; } = new List<TagIM>();
+    [ImageUrl]
+    public string ImageUrl { get; set; } = string.Empty;
+    public IEnumerable<TagIm> Tags { get; set; } = new List<TagIm>();
 }

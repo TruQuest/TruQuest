@@ -13,13 +13,13 @@ using Application.Common.Attributes;
 namespace Application.Account.Commands.SignUp;
 
 [ExecuteInTxn]
-public class SignUpCommand : IRequest<HandleResult<SignUpResultVM>>
+public class SignUpCommand : IRequest<HandleResult<SignUpResultVm>>
 {
-    public SignUpIM Input { get; set; }
+    public SignUpIm Input { get; set; }
     public string Signature { get; set; }
 }
 
-internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<SignUpResultVM>>
+internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<SignUpResultVm>>
 {
     private readonly ILogger<SignUpCommandHandler> _logger;
     private readonly ISigner _signer;
@@ -39,7 +39,7 @@ internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResul
         _authTokenProvider = authTokenProvider;
     }
 
-    public async Task<HandleResult<SignUpResultVM>> Handle(SignUpCommand command, CancellationToken ct)
+    public async Task<HandleResult<SignUpResultVm>> Handle(SignUpCommand command, CancellationToken ct)
     {
         var result = _signer.RecoverFromSignUpMessage(command.Input, command.Signature);
         if (result.IsError)
@@ -76,7 +76,7 @@ internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResul
 
         await _userRepository.SaveChanges();
 
-        var jwt = _authTokenProvider.GenerateJWT(user.Id);
+        var jwt = _authTokenProvider.GenerateJwt(user.Id);
 
         return new()
         {

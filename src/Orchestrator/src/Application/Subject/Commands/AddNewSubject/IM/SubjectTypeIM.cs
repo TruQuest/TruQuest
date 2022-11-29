@@ -1,6 +1,6 @@
 namespace Application.Subject.Commands.AddNewSubject;
 
-public enum SubjectTypeIM
+public enum SubjectTypeIm
 {
     Person,
     Organization

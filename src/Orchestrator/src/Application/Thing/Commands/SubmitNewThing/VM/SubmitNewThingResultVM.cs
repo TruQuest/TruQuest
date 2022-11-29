@@ -1,7 +1,7 @@
 namespace Application.Thing.Commands.SubmitNewThing;
 
-public class SubmitNewThingResultVM
+public class SubmitNewThingResultVm
 {
-    public ThingVM Thing { get; init; }
+    public ThingVm Thing { get; init; }
     public string Signature { get; init; }
 }

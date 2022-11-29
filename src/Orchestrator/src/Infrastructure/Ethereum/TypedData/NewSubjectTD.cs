@@ -2,8 +2,8 @@ using Nethereum.ABI.FunctionEncoding.Attributes;
 
 namespace Infrastructure.Ethereum.TypedData;
 
-[Struct("NewSubjectTD")]
-public class NewSubjectTD
+[Struct("NewSubjectTd")]
+public class NewSubjectTd
 {
     [Parameter("int8", "type", 1)]
     public int Type { get; init; }
@@ -15,8 +15,8 @@ public class NewSubjectTD
     public string Details { get; init; }
 
     [Parameter("string", "imageUrl", 4)]
-    public string ImageURL { get; init; }
+    public string ImageUrl { get; init; }
 
-    [Parameter("tuple[]", "tags", 5, "TagTD[]")]
-    public IList<TagTD> Tags { get; init; }
+    [Parameter("tuple[]", "tags", 5, "TagTd[]")]
+    public IList<TagTd> Tags { get; init; }
 }

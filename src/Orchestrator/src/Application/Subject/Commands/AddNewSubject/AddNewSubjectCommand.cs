@@ -4,7 +4,7 @@ using MediatR;
 
 using Domain.Results;
 using Domain.Aggregates;
-using SubjectDM = Domain.Aggregates.Subject;
+using SubjectDm = Domain.Aggregates.Subject;
 
 using Application.Common.Interfaces;
 using Application.Common.Attributes;
@@ -14,7 +14,7 @@ namespace Application.Subject.Commands.AddNewSubject;
 [RequireAuthorization]
 public class AddNewSubjectCommand : IRequest<HandleResult<Guid>>
 {
-    public NewSubjectIM Input { get; set; }
+    public NewSubjectIm Input { get; set; }
     public string Signature { get; set; }
 }
 
@@ -74,11 +74,11 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
             prop.SetValue(obj, uploadResult.Data);
         }
 
-        var subject = new SubjectDM(
+        var subject = new SubjectDm(
             name: command.Input.Name,
             details: command.Input.Details,
             type: (int)command.Input.Type,
-            imageURL: command.Input.ImageURL != string.Empty ? command.Input.ImageURL : null,
+            imageUrl: command.Input.ImageUrl != string.Empty ? command.Input.ImageUrl : null,
             submitterId: _currentPrincipal.Id
         );
         subject.AddTags(command.Input.Tags.Select(t => t.Id));

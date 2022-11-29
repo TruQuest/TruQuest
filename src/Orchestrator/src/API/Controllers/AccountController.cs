@@ -19,5 +19,5 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost("signup")]
-    public Task<HandleResult<SignUpResultVM>> SignUp(SignUpCommand command) => _mediator.Send(command);
+    public Task<HandleResult<SignUpResultVm>> SignUp(SignUpCommand command) => _mediator.Send(command);
 }

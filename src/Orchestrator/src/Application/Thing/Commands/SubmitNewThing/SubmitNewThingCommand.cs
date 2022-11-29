@@ -6,7 +6,7 @@ using MediatR;
 
 using Domain.Results;
 using Domain.Aggregates;
-using ThingDM = Domain.Aggregates.Thing;
+using ThingDm = Domain.Aggregates.Thing;
 
 using Application.Common.Attributes;
 using Application.Common.Interfaces;
@@ -14,13 +14,13 @@ using Application.Common.Interfaces;
 namespace Application.Thing.Commands.SubmitNewThing;
 
 [RequireAuthorization]
-public class SubmitNewThingCommand : IRequest<HandleResult<SubmitNewThingResultVM>>
+public class SubmitNewThingCommand : IRequest<HandleResult<SubmitNewThingResultVm>>
 {
-    public NewThingIM Input { get; set; }
+    public NewThingIm Input { get; set; }
     public string Signature { get; set; }
 }
 
-internal class SubmitNewThingCommandHandler : IRequestHandler<SubmitNewThingCommand, HandleResult<SubmitNewThingResultVM>>
+internal class SubmitNewThingCommandHandler : IRequestHandler<SubmitNewThingCommand, HandleResult<SubmitNewThingResultVm>>
 {
     private readonly ILogger<SubmitNewThingCommandHandler> _logger;
     private readonly ICurrentPrincipal _currentPrincipal;
@@ -46,7 +46,7 @@ internal class SubmitNewThingCommandHandler : IRequestHandler<SubmitNewThingComm
         _thingRepository = thingRepository;
     }
 
-    public async Task<HandleResult<SubmitNewThingResultVM>> Handle(
+    public async Task<HandleResult<SubmitNewThingResultVm>> Handle(
         SubmitNewThingCommand command, CancellationToken ct
     )
     {
@@ -76,8 +76,8 @@ internal class SubmitNewThingCommandHandler : IRequestHandler<SubmitNewThingComm
 
             _logger.LogDebug("File cid is " + uploadResult.Data);
 
-            var attr = prop.GetCustomAttribute<FileURLAttribute>()!;
-            if (attr.KeepOriginURL)
+            var attr = prop.GetCustomAttribute<FileUrlAttribute>()!;
+            if (attr.KeepOriginUrl)
             {
                 prop.SetValue(obj, $"{prop.GetValue(obj)}\t{uploadResult.Data}");
             }
@@ -87,19 +87,19 @@ internal class SubmitNewThingCommandHandler : IRequestHandler<SubmitNewThingComm
             }
         }
 
-        var thing = new ThingDM(
+        var thing = new ThingDm(
             title: command.Input.Title,
             details: command.Input.Details,
-            imageURL: command.Input.ImageURL != string.Empty ? command.Input.ImageURL : null,
+            imageUrl: command.Input.ImageUrl != string.Empty ? command.Input.ImageUrl : null,
             submitterId: _currentPrincipal.Id,
             subjectId: command.Input.SubjectId
         );
         thing.AddEvidence(command.Input.Evidence.Select(e =>
         {
-            var index = e.URL.LastIndexOf('\t');
+            var index = e.Url.LastIndexOf('\t');
             return new Evidence(
-                originURL: e.URL.Substring(0, index),
-                truURL: e.URL.Substring(index + 1)
+                originUrl: e.Url.Substring(0, index),
+                truUrl: e.Url.Substring(index + 1)
             );
         }));
         thing.AddTags(command.Input.Tags.Select(t => t.Id));
@@ -108,7 +108,7 @@ internal class SubmitNewThingCommandHandler : IRequestHandler<SubmitNewThingComm
 
         await _thingRepository.SaveChanges();
 
-        var thingVM = new ThingVM
+        var thingVm = new ThingVm
         {
             Id = thing.Id!.Value.ToString()
         };
@@ -117,8 +117,8 @@ internal class SubmitNewThingCommandHandler : IRequestHandler<SubmitNewThingComm
         {
             Data = new()
             {
-                Thing = thingVM,
-                Signature = _signer.SignThing(thingVM)
+                Thing = thingVm,
+                Signature = _signer.SignThing(thingVm)
             }
         };
     }

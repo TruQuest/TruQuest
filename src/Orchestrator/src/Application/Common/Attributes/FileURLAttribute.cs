@@ -1,7 +1,7 @@
 namespace Application.Common.Attributes;
 
 [AttributeUsage(AttributeTargets.Property)]
-public abstract class FileURLAttribute : Attribute
+public abstract class FileUrlAttribute : Attribute
 {
-    public bool KeepOriginURL { get; set; } = false;
+    public bool KeepOriginUrl { get; set; } = false;
 }

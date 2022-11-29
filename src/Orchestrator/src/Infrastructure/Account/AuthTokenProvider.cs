@@ -32,7 +32,7 @@ public class AuthTokenProvider : IAuthTokenProvider
         _expiresInDays = jwtConfig.GetValue<int>("ExpiresInDays");
     }
 
-    public string GenerateJWT(string id, IList<Claim>? claims = null)
+    public string GenerateJwt(string id, IList<Claim>? claims = null)
     {
         claims = claims ?? new List<Claim>();
         claims.Add(new Claim(JwtRegisteredClaimNames.Sub, id));

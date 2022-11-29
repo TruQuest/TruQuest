@@ -26,7 +26,7 @@ internal class AppDbContext : IdentityUserContext<User, string>
             builder.Property(s => s.Name).IsRequired();
             builder.Property(s => s.Details).IsRequired();
             builder.Property(s => s.Type).IsRequired();
-            builder.Property(s => s.ImageURL).IsRequired(false);
+            builder.Property(s => s.ImageUrl).IsRequired(false);
 
             builder
                 .HasOne<User>()
@@ -66,11 +66,11 @@ internal class AppDbContext : IdentityUserContext<User, string>
             builder.HasKey(t => t.Id);
             builder.Property(t => t.Id).HasValueGenerator<GuidValueGenerator>();
             builder.Property(t => t.IdHash)
-                .HasValueGenerator<KeccakSHA3Generator>()
+                .HasValueGenerator<KeccakSha3Generator>()
                 .IsRequired();
             builder.Property(t => t.Title).IsRequired();
             builder.Property(t => t.Details).IsRequired();
-            builder.Property(t => t.ImageURL).IsRequired(false);
+            builder.Property(t => t.ImageUrl).IsRequired(false);
 
             builder
                 .HasOne<User>()
@@ -99,8 +99,8 @@ internal class AppDbContext : IdentityUserContext<User, string>
         {
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).HasValueGenerator<GuidValueGenerator>();
-            builder.Property(e => e.OriginURL).IsRequired();
-            builder.Property(e => e.TruURL).IsRequired();
+            builder.Property(e => e.OriginUrl).IsRequired();
+            builder.Property(e => e.TruUrl).IsRequired();
 
             builder
                 .HasOne<Thing>()

@@ -1,3 +1,3 @@
 namespace Application.Common.Attributes;
 
-public class WebPageURLAttribute : FileURLAttribute { }
+public class WebPageUrlAttribute : FileUrlAttribute { }

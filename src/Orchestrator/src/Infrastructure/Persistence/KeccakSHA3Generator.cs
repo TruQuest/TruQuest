@@ -7,7 +7,7 @@ using Domain.Aggregates;
 
 namespace Infrastructure.Persistence;
 
-public class KeccakSHA3Generator : ValueGenerator<string>
+public class KeccakSha3Generator : ValueGenerator<string>
 {
     public override bool GeneratesTemporaryValues => false;
 

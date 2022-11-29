@@ -1,6 +1,6 @@
 namespace Application.Common.Models.IM;
 
-public class TagIM
+public class TagIm
 {
     public int Id { get; set; }
 }

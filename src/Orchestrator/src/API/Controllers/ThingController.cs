@@ -19,6 +19,6 @@ public class ThingController : ControllerBase
     }
 
     [HttpPost("submit")]
-    public Task<HandleResult<SubmitNewThingResultVM>> SubmitNewThing(SubmitNewThingCommand command)
+    public Task<HandleResult<SubmitNewThingResultVm>> SubmitNewThing(SubmitNewThingCommand command)
         => _mediator.Send(command);
 }

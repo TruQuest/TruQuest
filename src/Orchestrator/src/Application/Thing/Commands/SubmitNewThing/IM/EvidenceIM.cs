@@ -2,8 +2,8 @@ using Application.Common.Attributes;
 
 namespace Application.Thing.Commands.SubmitNewThing;
 
-public class EvidenceIM
+public class EvidenceIm
 {
-    [WebPageURL(KeepOriginURL = true)]
-    public string URL { get; set; }
+    [WebPageUrl(KeepOriginUrl = true)]
+    public string Url { get; set; }
 }

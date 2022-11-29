@@ -1,6 +1,6 @@
 namespace Application.Thing.Commands.SubmitNewThing;
 
-public class ThingVM
+public class ThingVm
 {
     public string Id { get; init; }
 }

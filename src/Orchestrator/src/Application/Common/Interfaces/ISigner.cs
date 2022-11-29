@@ -9,9 +9,9 @@ namespace Application.Common.Interfaces;
 
 public interface ISigner
 {
-    Either<AccountError, string> RecoverFromSignUpMessage(SignUpIM input, string signature);
-    Either<SubjectError, string> RecoverFromNewSubjectMessage(NewSubjectIM input, string signature);
-    Either<ThingError, string> RecoverFromNewThingMessage(NewThingIM input, string signature);
+    Either<AccountError, string> RecoverFromSignUpMessage(SignUpIm input, string signature);
+    Either<SubjectError, string> RecoverFromNewSubjectMessage(NewSubjectIm input, string signature);
+    Either<ThingError, string> RecoverFromNewThingMessage(NewThingIm input, string signature);
 
-    string SignThing(ThingVM thing);
+    string SignThing(ThingVm thing);
 }

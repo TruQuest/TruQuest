@@ -60,12 +60,12 @@ internal class FileFetcher : IFileFetcher
             }
             else
             {
-                var attr = prop.GetCustomAttribute<FileURLAttribute>();
+                var attr = prop.GetCustomAttribute<FileUrlAttribute>();
                 string url;
                 if (attr != null && (url = (string)prop.GetValue(input)!) != string.Empty)
                 {
                     string filePath;
-                    if (attr is ImageURLAttribute)
+                    if (attr is ImageUrlAttribute)
                     {
                         Directory.CreateDirectory($"files/{userId}/images");
                         filePath = $"files/{userId}/images/{Guid.NewGuid()}";

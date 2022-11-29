@@ -5,12 +5,12 @@ namespace Domain.Aggregates;
 public class Evidence : Entity
 {
     public Guid? Id { get; private set; }
-    public string OriginURL { get; }
-    public string TruURL { get; }
+    public string OriginUrl { get; }
+    public string TruUrl { get; }
 
-    public Evidence(string originURL, string truURL)
+    public Evidence(string originUrl, string truUrl)
     {
-        OriginURL = originURL;
-        TruURL = truURL;
+        OriginUrl = originUrl;
+        TruUrl = truUrl;
     }
 }

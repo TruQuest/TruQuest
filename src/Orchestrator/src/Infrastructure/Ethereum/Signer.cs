@@ -52,55 +52,55 @@ internal class Signer : ISigner
         };
     }
 
-    public Either<AccountError, string> RecoverFromSignUpMessage(SignUpIM input, string signature)
+    public Either<AccountError, string> RecoverFromSignUpMessage(SignUpIm input, string signature)
     {
-        var td = new SignUpTD { Username = input.Username };
-        var tdDefinition = _getTypedDataDefinition(typeof(SignUpTD));
+        var td = new SignUpTd { Username = input.Username };
+        var tdDefinition = _getTypedDataDefinition(typeof(SignUpTd));
         var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
 
         return address.Replace("0x", string.Empty);
     }
 
-    public Either<SubjectError, string> RecoverFromNewSubjectMessage(NewSubjectIM input, string signature)
+    public Either<SubjectError, string> RecoverFromNewSubjectMessage(NewSubjectIm input, string signature)
     {
-        var td = new NewSubjectTD
+        var td = new NewSubjectTd
         {
             Type = (int)input.Type,
             Name = input.Name,
             Details = input.Details,
-            ImageURL = input.ImageURL,
-            Tags = input.Tags.Select(t => new TagTD { Id = t.Id }).ToList()
+            ImageUrl = input.ImageUrl,
+            Tags = input.Tags.Select(t => new TagTd { Id = t.Id }).ToList()
         };
-        var tdDefinition = _getTypedDataDefinition(typeof(NewSubjectTD), typeof(TagTD));
+        var tdDefinition = _getTypedDataDefinition(typeof(NewSubjectTd), typeof(TagTd));
         var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
 
         return address.Replace("0x", string.Empty);
     }
 
-    public Either<ThingError, string> RecoverFromNewThingMessage(NewThingIM input, string signature)
+    public Either<ThingError, string> RecoverFromNewThingMessage(NewThingIm input, string signature)
     {
-        var td = new NewThingTD
+        var td = new NewThingTd
         {
             SubjectId = input.SubjectId.ToString(),
             Title = input.Title,
             Details = input.Details,
-            ImageURL = input.ImageURL,
-            Evidence = input.Evidence.Select(e => new EvidenceTD { URL = e.URL }).ToList(),
-            Tags = input.Tags.Select(t => new TagTD { Id = t.Id }).ToList()
+            ImageUrl = input.ImageUrl,
+            Evidence = input.Evidence.Select(e => new EvidenceTd { Url = e.Url }).ToList(),
+            Tags = input.Tags.Select(t => new TagTd { Id = t.Id }).ToList()
         };
-        var tdDefinition = _getTypedDataDefinition(typeof(NewThingTD), typeof(EvidenceTD), typeof(TagTD));
+        var tdDefinition = _getTypedDataDefinition(typeof(NewThingTd), typeof(EvidenceTd), typeof(TagTd));
         var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
 
         return address.Replace("0x", string.Empty);
     }
 
-    public string SignThing(ThingVM thing)
+    public string SignThing(ThingVm thing)
     {
-        var td = new ThingTD
+        var td = new ThingTd
         {
             Id = thing.Id
         };
-        var tdDefinition = _getTypedDataDefinition(typeof(ThingTD));
+        var tdDefinition = _getTypedDataDefinition(typeof(ThingTd));
         tdDefinition.SetMessage(td);
 
         return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);

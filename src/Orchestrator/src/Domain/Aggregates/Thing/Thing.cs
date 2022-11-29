@@ -8,7 +8,7 @@ public class Thing : Entity, IAggregateRoot
     public string? IdHash { get; private set; }
     public string Title { get; }
     public string Details { get; }
-    public string? ImageURL { get; }
+    public string? ImageUrl { get; }
     public string SubmitterId { get; }
     public Guid SubjectId { get; }
 
@@ -18,11 +18,12 @@ public class Thing : Entity, IAggregateRoot
     private List<ThingAttachedTag> _tags = new();
     public IReadOnlyList<ThingAttachedTag> Tags => _tags;
 
-    public Thing(string title, string details, string? imageURL, string submitterId, Guid subjectId)
+    public Thing(string title, string details, string? imageUrl, string submitterId, Guid subjectId)
     {
+        State = ThingState.WaitingToBeFunded;
         Title = title;
         Details = details;
-        ImageURL = imageURL;
+        ImageUrl = imageUrl;
         SubmitterId = submitterId;
         SubjectId = subjectId;
     }
