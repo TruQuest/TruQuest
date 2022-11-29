@@ -1,0 +1,5 @@
+CREATE TRIGGER "OnNew"
+AFTER INSERT
+ON "ThingFundedEvents"
+FOR EACH ROW
+EXECUTE PROCEDURE "HandleNewThingFundedEvent"();

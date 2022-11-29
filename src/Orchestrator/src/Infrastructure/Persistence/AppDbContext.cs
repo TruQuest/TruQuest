@@ -68,6 +68,7 @@ internal class AppDbContext : IdentityUserContext<User, string>
             builder.Property(t => t.IdHash)
                 .HasValueGenerator<KeccakSha3Generator>()
                 .IsRequired();
+            builder.Property(t => t.State).HasConversion<int>().IsRequired();
             builder.Property(t => t.Title).IsRequired();
             builder.Property(t => t.Details).IsRequired();
             builder.Property(t => t.ImageUrl).IsRequired(false);

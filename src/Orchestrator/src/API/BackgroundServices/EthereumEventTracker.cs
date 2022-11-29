@@ -7,19 +7,24 @@ namespace API.BackgroundServices;
 public class EthereumEventTracker : BackgroundService
 {
     private readonly IEthereumEventListener _ethereumEventListener;
-    private readonly IPublisher _mediator;
+    private readonly IServiceProvider _serviceProvider;
 
-    public EthereumEventTracker(IEthereumEventListener ethereumEventListener, IPublisher mediator)
+    public EthereumEventTracker(
+        IEthereumEventListener ethereumEventListener,
+        IServiceProvider serviceProvider
+    )
     {
         _ethereumEventListener = ethereumEventListener;
-        _mediator = mediator;
+        _serviceProvider = serviceProvider;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await foreach (var @event in _ethereumEventListener.GetNext(stoppingToken))
         {
-            await _mediator.Publish(@event);
+            using var scope = _serviceProvider.CreateScope();
+            var mediator = scope.ServiceProvider.GetRequiredService<IPublisher>();
+            await mediator.Publish(@event);
         }
     }
 }

@@ -1,26 +1,37 @@
-using Microsoft.Extensions.Logging;
-
 using MediatR;
+
+using Domain.Aggregates.Events;
+using ThingFundedEventDm = Domain.Aggregates.Events.ThingFundedEvent;
 
 namespace Application.Ethereum.Events.ThingFunded;
 
 public class ThingFundedEvent : INotification
 {
-    public string ThingIdHash { get; init; }
+    public long BlockNumber { get; init; }
+    public required string ThingIdHash { get; init; }
     public required string UserId { get; init; }
+    public decimal Stake { get; init; }
 }
 
 internal class ThingFundedEventHandler : INotificationHandler<ThingFundedEvent>
 {
-    private readonly ILogger<ThingFundedEventHandler> _logger;
+    private readonly IThingFundedEventRepository _thingFundedEventRepository;
 
-    public ThingFundedEventHandler(ILogger<ThingFundedEventHandler> logger)
+    public ThingFundedEventHandler(IThingFundedEventRepository thingFundedEventRepository)
     {
-        _logger = logger;
+        _thingFundedEventRepository = thingFundedEventRepository;
     }
 
     public async Task Handle(ThingFundedEvent @event, CancellationToken ct)
     {
-        _logger.LogInformation($"Thing {@event.ThingIdHash} funded by {@event.UserId}");
+        var thingFundedEvent = new ThingFundedEventDm(
+            blockNumber: @event.BlockNumber,
+            thingIdHash: @event.ThingIdHash,
+            userId: @event.UserId,
+            stake: @event.Stake
+        );
+        _thingFundedEventRepository.Create(thingFundedEvent);
+
+        await _thingFundedEventRepository.SaveChanges();
     }
 }

@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Nethereum.Signer.EIP712;
 
 using Domain.Aggregates;
+using Domain.Aggregates.Events;
 using Application.Common.Interfaces;
 
 using Infrastructure.Account;
@@ -19,6 +20,8 @@ using Infrastructure.Ethereum;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Repositories;
 using Infrastructure.Files;
+using Infrastructure.Persistence.Repositories.Events;
+using Infrastructure.Persistence.NotificationListeners;
 
 namespace Infrastructure;
 
@@ -28,9 +31,18 @@ public static class IServiceCollectionExtension
     {
         services.AddDbContext<AppDbContext>(optionsBuilder =>
             optionsBuilder.UseNpgsql(
-                configuration.GetConnectionString("Postgres"),
+                configuration.GetConnectionString("Postgres") + "SearchPath=truquest;",
                 pgOptionsBuilder => pgOptionsBuilder.MigrationsHistoryTable(
                     "__EFMigrationsHistory", "truquest"
+                )
+            )
+        );
+
+        services.AddDbContext<EventDbContext>(optionsBuilder =>
+            optionsBuilder.UseNpgsql(
+                configuration.GetConnectionString("Postgres") + "SearchPath=truquest_events;",
+                pgOptionsBuilder => pgOptionsBuilder.MigrationsHistoryTable(
+                    "__EFMigrationsHistory", "truquest_events"
                 )
             )
         );
@@ -150,7 +162,10 @@ public static class IServiceCollectionExtension
         services.AddScoped<ISubjectRepository, SubjectRepository>();
         services.AddScoped<IThingRepository, ThingRepository>();
 
+        services.AddScoped<IThingFundedEventRepository, ThingFundedEventRepository>();
+
         services.AddSingleton<IEthereumEventListener, EventListener>();
+        services.AddTransient<IThingFundedNotificationListener, ThingFundedNotificationListener>();
 
         return services;
     }

@@ -10,27 +10,27 @@ const domain = [
   { name: "salt", type: "bytes32" },
 ];
 
-const signUpTD = [{ name: "username", type: "string" }];
+const signUpTd = [{ name: "username", type: "string" }];
 
-const newSubjectTD = [
+const newSubjectTd = [
   { name: "type", type: "int8" },
   { name: "name", type: "string" },
   { name: "details", type: "string" },
   { name: "imageUrl", type: "string" },
-  { name: "tags", type: "TagTD[]" },
+  { name: "tags", type: "TagTd[]" },
 ];
 
-const tagTD = [{ name: "id", type: "int32" }];
+const tagTd = [{ name: "id", type: "int32" }];
 
-const evidenceTD = [{ name: "url", type: "string" }];
+const evidenceTd = [{ name: "url", type: "string" }];
 
-const newThingTD = [
+const newThingTd = [
   { name: "subjectId", type: "string" },
   { name: "title", type: "string" },
   { name: "details", type: "string" },
   { name: "imageUrl", type: "string" },
-  { name: "evidence", type: "EvidenceTD[]" },
-  { name: "tags", type: "TagTD[]" },
+  { name: "evidence", type: "EvidenceTd[]" },
+  { name: "tags", type: "TagTd[]" },
 ];
 
 const domainData = {
@@ -230,7 +230,7 @@ const Home = () => {
                 type: "string",
               },
             ],
-            internalType: "struct TruQuest.ThingTD",
+            internalType: "struct TruQuest.ThingTd",
             name: "_thing",
             type: "tuple",
           },
@@ -445,10 +445,10 @@ const Home = () => {
     const data = JSON.stringify({
       types: {
         EIP712Domain: domain,
-        SignUpTD: signUpTD,
+        SignUpTd: signUpTd,
       },
       domain: domainData,
-      primaryType: "SignUpTD",
+      primaryType: "SignUpTd",
       message: message,
     });
 
@@ -482,11 +482,11 @@ const Home = () => {
     const data = JSON.stringify({
       types: {
         EIP712Domain: domain,
-        NewSubjectTD: newSubjectTD,
-        TagTD: tagTD,
+        NewSubjectTd: newSubjectTd,
+        TagTd: tagTd,
       },
       domain: domainData,
-      primaryType: "NewSubjectTD",
+      primaryType: "NewSubjectTd",
       message: message,
     });
 
@@ -531,12 +531,12 @@ const Home = () => {
     const data = JSON.stringify({
       types: {
         EIP712Domain: domain,
-        NewThingTD: newThingTD,
-        EvidenceTD: evidenceTD,
-        TagTD: tagTD,
+        NewThingTd: newThingTd,
+        EvidenceTd: evidenceTd,
+        TagTd: tagTd,
       },
       domain: domainData,
-      primaryType: "NewThingTD",
+      primaryType: "NewThingTd",
       message: message,
     });
 

@@ -41,8 +41,10 @@ internal class EventListener : IEthereumEventListener
             {
                 yield return new AppEvents.ThingFunded.ThingFundedEvent
                 {
+                    BlockNumber = (long)@event.Log.BlockNumber.Value,
                     ThingIdHash = @event.Event.ThingIdHash,
-                    UserId = @event.Event.UserId
+                    UserId = @event.Event.UserId,
+                    Stake = (decimal)@event.Event.Stake
                 };
             }
 

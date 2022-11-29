@@ -14,11 +14,11 @@ error TruQuest__NotAcceptancePoll();
 error TruQuest__InvalidSignature();
 
 contract TruQuest {
-    struct ThingTD {
+    struct ThingTd {
         string id;
     }
 
-    bytes private constant THING_TD = "ThingTD(string id)";
+    bytes private constant THING_TD = "ThingTd(string id)";
     bytes32 private immutable i_thing_td_hash;
     bytes32 constant SALT =
         0xf2d857f4a3edcb9b78b4d503bfe733db1e3f6cdc2b7971ee739626c97e86a558;
@@ -175,7 +175,7 @@ contract TruQuest {
     }
 
     function _hashThing(
-        ThingTD calldata _thing
+        ThingTd calldata _thing
     ) private view returns (bytes32) {
         return
             keccak256(
@@ -190,7 +190,7 @@ contract TruQuest {
     }
 
     function _verifyThingSignature(
-        ThingTD calldata _thing,
+        ThingTd calldata _thing,
         uint8 _v,
         bytes32 _r,
         bytes32 _s
@@ -199,7 +199,7 @@ contract TruQuest {
     }
 
     function fundThing(
-        ThingTD calldata _thing,
+        ThingTd calldata _thing,
         uint8 _v,
         bytes32 _r,
         bytes32 _s

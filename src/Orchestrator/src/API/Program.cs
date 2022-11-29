@@ -32,6 +32,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddHostedService<EthereumEventTracker>();
+builder.Services.AddHostedService<EventTracker>();
 
 var app = builder.Build();
 
