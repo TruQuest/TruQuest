@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 using Domain.Aggregates;
@@ -22,4 +23,6 @@ internal class ThingRepository : Repository<Thing>, IThingRepository
     {
         _dbContext.Things.Add(thing);
     }
+
+    public Task<Thing> FindByIdHash(string idHash) => _dbContext.Things.SingleAsync(t => t.IdHash == idHash);
 }

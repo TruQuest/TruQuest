@@ -23,7 +23,7 @@ public class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
 
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
     {
-        var attr = request.GetType().GetCustomAttributes<ExecuteInTxnAttribute>().SingleOrDefault();
+        var attr = request.GetType().GetCustomAttribute<ExecuteInTxnAttribute>();
         if (attr != null)
         {
             _sharedTxnScope.Init(attr.ExcludeRepos);

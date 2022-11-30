@@ -30,20 +30,21 @@ internal class EventListener : IEthereumEventListener
     public async IAsyncEnumerable<INotification> GetNext([EnumeratorCancellation] CancellationToken stoppingToken)
     {
         var web3 = new Web3(_url);
-        var thingFundedEventCtx = web3.Eth.GetEvent<ThingFundedEvent>();
-        var filterInput = thingFundedEventCtx.CreateFilterInput();
-        var filterId = await thingFundedEventCtx.CreateFilterAsync(filterInput);
+        var thingFundedEventLog = web3.Eth.GetEvent<ThingFundedEvent>();
+        var filterInput = thingFundedEventLog.CreateFilterInput();
+        var filterId = await thingFundedEventLog.CreateFilterAsync(filterInput);
+        _logger.LogInformation("Filter {filterId}", filterId.Value);
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            var thingFundedEvents = await thingFundedEventCtx.GetFilterChangesAsync(filterId);
+            var thingFundedEvents = await thingFundedEventLog.GetFilterChangesAsync(filterId);
             foreach (var @event in thingFundedEvents)
             {
                 yield return new AppEvents.ThingFunded.ThingFundedEvent
                 {
                     BlockNumber = (long)@event.Log.BlockNumber.Value,
-                    ThingIdHash = @event.Event.ThingIdHash,
-                    UserId = @event.Event.UserId,
+                    ThingIdHash = @event.Event.ThingIdHash.TrimStart('0', 'x'),
+                    UserId = @event.Event.UserId.TrimStart('0', 'x'),
                     Stake = (decimal)@event.Event.Stake
                 };
             }

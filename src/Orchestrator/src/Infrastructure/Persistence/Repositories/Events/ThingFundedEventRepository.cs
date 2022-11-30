@@ -22,4 +22,11 @@ internal class ThingFundedEventRepository : Repository<ThingFundedEvent>, IThing
     {
         _dbContext.ThingFundedEvents.Add(@event);
     }
+
+    public void UpdateProcessedStateFor(long id, bool processed)
+    {
+        var @event = new ThingFundedEvent(id: id, processed: processed);
+        var entry = _dbContext.ThingFundedEvents.Attach(@event);
+        entry.Property(e => e.Processed).IsModified = true;
+    }
 }
