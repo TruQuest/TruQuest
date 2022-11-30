@@ -9,12 +9,12 @@ using Application.Thing.Events.ThingFunded;
 
 namespace API.BackgroundServices;
 
-public class EventTracker : BackgroundService
+public class DbEventTracker : BackgroundService
 {
-    private readonly ILogger<EventTracker> _logger;
+    private readonly ILogger<DbEventTracker> _logger;
     private readonly IServiceProvider _serviceProvider;
 
-    public EventTracker(ILogger<EventTracker> logger, IServiceProvider serviceProvider)
+    public DbEventTracker(ILogger<DbEventTracker> logger, IServiceProvider serviceProvider)
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
