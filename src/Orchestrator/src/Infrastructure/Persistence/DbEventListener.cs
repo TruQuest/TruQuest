@@ -8,23 +8,23 @@ using Npgsql;
 
 using Application.Common.Interfaces;
 
-namespace Infrastructure.Persistence.NotificationListeners;
+namespace Infrastructure.Persistence;
 
-internal class ThingFundedNotificationListener : IThingFundedNotificationListener
+internal class DbEventListener : IDbEventListener
 {
-    private readonly ILogger<ThingFundedNotificationListener> _logger;
+    private readonly ILogger<DbEventListener> _logger;
     private readonly string _dbConnectionString;
     private NpgsqlConnection? _dbConnection;
     private readonly ChannelReader<string> _stream;
     private readonly ChannelWriter<string> _sink;
 
-    public ThingFundedNotificationListener(
-        ILogger<ThingFundedNotificationListener> logger,
+    public DbEventListener(
+        ILogger<DbEventListener> logger,
         IConfiguration configuration
     )
     {
         _logger = logger;
-        _dbConnectionString = configuration.GetConnectionString("Postgres") + "SearchPath=truquest_events;";
+        _dbConnectionString = configuration.GetConnectionString("Postgres")!;
 
         var channel = Channel.CreateUnbounded<string>(new UnboundedChannelOptions
         {

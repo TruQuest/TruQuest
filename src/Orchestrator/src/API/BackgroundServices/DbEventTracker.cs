@@ -3,9 +3,11 @@ using System.Transactions;
 
 using MediatR;
 
+using Domain.Aggregates;
 using Application.Common.Interfaces;
 using Application.Common.Attributes;
 using Application.Thing.Events.ThingFunded;
+using Application.Thing.Commands.InitVerifierLottery;
 
 namespace API.BackgroundServices;
 
@@ -24,16 +26,17 @@ public class DbEventTracker : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            using var thingFundedNotificationListener = _serviceProvider.GetRequiredService<IThingFundedNotificationListener>();
-            await foreach (var notification in thingFundedNotificationListener.GetNext(stoppingToken))
+            using var dbEventListener = _serviceProvider.GetRequiredService<IDbEventListener>();
+            await foreach (var @event in dbEventListener.GetNext(stoppingToken))
             {
                 using var scope = _serviceProvider.CreateScope();
-                var mediator = scope.ServiceProvider.GetRequiredService<IPublisher>();
-                var notificationSplit = notification.Split("::");
-                var eventTypeName = notificationSplit.First();
+                var eventSplit = @event.Split("::");
+                var typeName = eventSplit.First();
 
-                if (eventTypeName == typeof(ThingFundedEvent).Name)
+                if (typeName == typeof(ThingFundedEvent).Name)
                 {
+                    var mediator = scope.ServiceProvider.GetRequiredService<IPublisher>();
+
                     var attr = typeof(ThingFundedEvent).GetCustomAttribute<ExecuteInTxnAttribute>()!;
                     var sharedTxnScope = scope.ServiceProvider.GetRequiredService<ISharedTxnScope>();
                     sharedTxnScope.Init(attr.ExcludeRepos);
@@ -46,11 +49,31 @@ public class DbEventTracker : BackgroundService
 
                     await mediator.Publish(new ThingFundedEvent
                     {
-                        Id = long.Parse(notificationSplit.Skip(1).First()),
-                        ThingIdHash = notificationSplit.Last()
+                        Id = long.Parse(eventSplit.Skip(1).First()),
+                        BlockNumber = long.Parse(eventSplit.Skip(2).First()),
+                        ThingIdHash = eventSplit.Last()
                     });
 
                     txnScope.Complete();
+                }
+                else if (typeName == typeof(Thing).Name)
+                {
+                    var mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+
+                    var thingId = Guid.Parse(eventSplit.Skip(1).First());
+                    var state = (ThingState)int.Parse(eventSplit.Last());
+                    switch (state)
+                    {
+                        case ThingState.Funded:
+                            await mediator.Send(new InitVerifierLotteryCommand
+                            {
+                                ThingId = thingId
+                            });
+                            break;
+                        case ThingState.VerifierLotteryInProgress:
+                            _logger.LogInformation("Lottery in progress");
+                            break;
+                    }
                 }
             }
         }

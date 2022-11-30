@@ -1,6 +1,6 @@
 namespace Application.Common.Interfaces;
 
-public interface IThingFundedNotificationListener : IDisposable
+public interface IDbEventListener : IDisposable
 {
     IAsyncEnumerable<string> GetNext(CancellationToken stoppingToken);
 }

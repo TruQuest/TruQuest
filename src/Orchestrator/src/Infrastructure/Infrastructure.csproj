@@ -9,6 +9,8 @@
     <ItemGroup>
         <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Functions/HandleNewThingFundedEvent/HandleNewThingFundedEvent.v0.sql" />
         <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Triggers/ThingFundedEvents/OnNew/OnNew.v0.sql" />
+        <EmbeddedResource Include="Persistence/Migrations/App/Scripts/Functions/HandleThingStateChanged/HandleThingStateChanged.v0.sql" />
+        <EmbeddedResource Include="Persistence/Migrations/App/Scripts/Triggers/Things/OnStateChanged/OnStateChanged.v0.sql" />
     </ItemGroup>
 
     <ItemGroup>

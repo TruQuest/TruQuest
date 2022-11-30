@@ -167,10 +167,9 @@ contract VerifierLottery {
         s_durationBlocks = _durationBlocks;
     }
 
-    function connectToAcceptancePoll(address _acceptancePollAddress)
-        external
-        onlyTruQuest
-    {
+    function connectToAcceptancePoll(
+        address _acceptancePollAddress
+    ) external onlyTruQuest {
         s_acceptancePoll = AcceptancePoll(_acceptancePollAddress);
     }
 
@@ -179,11 +178,10 @@ contract VerifierLottery {
     }
 
     // onlyFunded
-    function initLottery(string calldata _thingId, bytes32 _dataHash)
-        public
-        onlyOrchestrator
-        onlyOncePerLottery(_thingId)
-    {
+    function initLottery(
+        string calldata _thingId,
+        bytes32 _dataHash
+    ) public onlyOrchestrator onlyOncePerLottery(_thingId) {
         s_thingIdToLotteryCommitments[_thingId][msg.sender] = Commitment(
             _dataHash,
             int64(uint64(block.number)),
@@ -192,7 +190,10 @@ contract VerifierLottery {
         emit LotteryInitiated(_thingId, s_orchestrator, _dataHash);
     }
 
-    function preJoinLottery(string calldata _thingId, bytes32 _dataHash)
+    function preJoinLottery(
+        string calldata _thingId,
+        bytes32 _dataHash
+    )
         public
         onlyWhenLotteryActive(_thingId)
         whenHasAtLeast(s_verifierStake)
@@ -209,10 +210,10 @@ contract VerifierLottery {
         emit PreJoinedLottery(_thingId, msg.sender, _dataHash);
     }
 
-    function joinLottery(string calldata _thingId, bytes32 _data)
-        public
-        onlyWhenLotteryActive(_thingId)
-    {
+    function joinLottery(
+        string calldata _thingId,
+        bytes32 _data
+    ) public onlyWhenLotteryActive(_thingId) {
         // check that current block is not too late?
         Commitment memory commitment = s_thingIdToLotteryCommitments[_thingId][
             msg.sender
@@ -295,11 +296,9 @@ contract VerifierLottery {
 
     // when not enough participants
     // @@??: add reason string/enum param ?
-    function closeLotteryInFailure(string calldata _thingId)
-        public
-        onlyOrchestrator
-        onlyWhenLotteryActive(_thingId)
-    {
+    function closeLotteryInFailure(
+        string calldata _thingId
+    ) public onlyOrchestrator onlyWhenLotteryActive(_thingId) {
         // checks?
         s_thingIdToLotteryCommitments[_thingId][msg.sender].block = -1;
 
@@ -314,11 +313,10 @@ contract VerifierLottery {
         emit LotteryClosedInFailure(_thingId, s_orchestrator);
     }
 
-    function initSubLottery(string calldata _thingId, bytes32 _dataHash)
-        external
-        onlyAcceptancePoll
-        onlyOncePerSubLottery(_thingId)
-    {
+    function initSubLottery(
+        string calldata _thingId,
+        bytes32 _dataHash
+    ) external onlyAcceptancePoll onlyOncePerSubLottery(_thingId) {
         s_thingIdToSubLotteryCommitments[_thingId][msg.sender] = Commitment(
             _dataHash,
             int64(uint64(block.number)),
@@ -328,7 +326,10 @@ contract VerifierLottery {
         emit SubLotteryInitiated(_thingId, s_orchestrator, _dataHash);
     }
 
-    function preJoinSubLottery(string calldata _thingId, bytes32 _dataHash)
+    function preJoinSubLottery(
+        string calldata _thingId,
+        bytes32 _dataHash
+    )
         public
         onlyWhenSubLotteryActive(_thingId)
         whenHasAtLeast(s_verifierStake)
@@ -346,10 +347,10 @@ contract VerifierLottery {
         emit PreJoinedSubLottery(_thingId, msg.sender, _dataHash);
     }
 
-    function joinSubLottery(string calldata _thingId, bytes32 _data)
-        public
-        onlyWhenSubLotteryActive(_thingId)
-    {
+    function joinSubLottery(
+        string calldata _thingId,
+        bytes32 _data
+    ) public onlyWhenSubLotteryActive(_thingId) {
         // check that current block is not too late?
         Commitment memory commitment = s_thingIdToSubLotteryCommitments[
             _thingId

@@ -8,6 +8,7 @@ namespace Infrastructure.Persistence;
 
 internal class AppDbContext : IdentityUserContext<User, string>
 {
+    public DbSet<DeferredTask> Tasks { get; set; }
     public DbSet<Subject> Subjects { get; set; }
     public DbSet<Tag> Tags { get; set; }
     public DbSet<Thing> Things { get; set; }
@@ -69,6 +70,7 @@ internal class AppDbContext : IdentityUserContext<User, string>
                 .HasValueGenerator<KeccakSha3Generator>()
                 .IsRequired();
             builder.Property(t => t.State).HasConversion<int>().IsRequired();
+            builder.Property(t => t.LastUpdatedAtBlockNumber).IsRequired(false);
             builder.Property(t => t.Title).IsRequired();
             builder.Property(t => t.Details).IsRequired();
             builder.Property(t => t.ImageUrl).IsRequired(false);
@@ -122,6 +124,19 @@ internal class AppDbContext : IdentityUserContext<User, string>
                 .HasOne<Tag>()
                 .WithMany()
                 .HasForeignKey(t => t.TagId)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<DeferredTask>(builder =>
+        {
+            builder.HasKey(t => t.Id);
+            builder.Property(t => t.Id).UseIdentityAlwaysColumn();
+            builder.Property(t => t.Type).HasConversion<int>().IsRequired();
+            builder.Property(t => t.ScheduledBlockNumber).IsRequired();
+            builder
+                .Property(t => t.Payload)
+                .HasColumnType("jsonb")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .IsRequired();
         });
     }

@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 using Domain.Aggregates;
@@ -6,11 +5,11 @@ using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories;
 
-internal class ThingRepository : Repository<Thing>, IThingRepository
+internal class TaskRepository : Repository<DeferredTask>, ITaskRepository
 {
     private readonly AppDbContext _dbContext;
 
-    public ThingRepository(
+    public TaskRepository(
         IConfiguration configuration,
         AppDbContext dbContext,
         ISharedTxnScope sharedTxnScope
@@ -19,12 +18,8 @@ internal class ThingRepository : Repository<Thing>, IThingRepository
         _dbContext = dbContext;
     }
 
-    public void Create(Thing thing)
+    public void Create(DeferredTask task)
     {
-        _dbContext.Things.Add(thing);
+        _dbContext.Tasks.Add(task);
     }
-
-    public Task<Thing> FindByIdHash(string idHash) => _dbContext.Things.SingleAsync(t => t.IdHash == idHash);
-
-    public Task<Thing> FindById(Guid id) => _dbContext.Things.SingleAsync(t => t.Id == id);
 }

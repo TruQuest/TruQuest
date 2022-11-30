@@ -11,6 +11,7 @@ namespace Application.Thing.Events.ThingFunded;
 public class ThingFundedEvent : INotification
 {
     public long Id { get; init; }
+    public long BlockNumber { get; init; }
     public required string ThingIdHash { get; init; }
 }
 
@@ -33,6 +34,7 @@ internal class ThingFundedEventHandler : INotificationHandler<ThingFundedEvent>
         _thingFundedEventRepository.UpdateProcessedStateFor(@event.Id, processed: true);
         var thing = await _thingRepository.FindByIdHash(@event.ThingIdHash);
         thing.SetState(ThingState.Funded);
+        thing.SetLastUpdatedAt(@event.BlockNumber);
 
         await _thingFundedEventRepository.SaveChanges();
         await _thingRepository.SaveChanges();

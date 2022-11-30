@@ -21,7 +21,6 @@ using Infrastructure.Persistence;
 using Infrastructure.Persistence.Repositories;
 using Infrastructure.Files;
 using Infrastructure.Persistence.Repositories.Events;
-using Infrastructure.Persistence.NotificationListeners;
 
 namespace Infrastructure;
 
@@ -161,11 +160,14 @@ public static class IServiceCollectionExtension
 
         services.AddScoped<ISubjectRepository, SubjectRepository>();
         services.AddScoped<IThingRepository, ThingRepository>();
+        services.AddScoped<ITaskRepository, TaskRepository>();
 
         services.AddScoped<IThingFundedEventRepository, ThingFundedEventRepository>();
 
         services.AddSingleton<IEthereumEventListener, EventListener>();
-        services.AddTransient<IThingFundedNotificationListener, ThingFundedNotificationListener>();
+        services.AddTransient<IDbEventListener, DbEventListener>();
+
+        services.AddSingleton<IContractCaller, ContractCaller>();
 
         return services;
     }
