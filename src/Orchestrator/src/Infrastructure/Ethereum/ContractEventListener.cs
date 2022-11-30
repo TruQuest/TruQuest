@@ -13,13 +13,13 @@ using Infrastructure.Ethereum.Events;
 
 namespace Infrastructure.Ethereum;
 
-internal class EventListener : IEthereumEventListener
+internal class ContractEventListener : IContractEventListener
 {
-    private readonly ILogger<EventListener> _logger;
+    private readonly ILogger<ContractEventListener> _logger;
     private readonly string _url;
     private readonly string _truQuestAddress;
 
-    public EventListener(IConfiguration configuration, ILogger<EventListener> logger)
+    public ContractEventListener(IConfiguration configuration, ILogger<ContractEventListener> logger)
     {
         _logger = logger;
         var network = configuration["Ethereum:Network"]!;

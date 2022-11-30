@@ -164,10 +164,11 @@ public static class IServiceCollectionExtension
 
         services.AddScoped<IThingFundedEventRepository, ThingFundedEventRepository>();
 
-        services.AddSingleton<IEthereumEventListener, EventListener>();
+        services.AddSingleton<IContractEventListener, ContractEventListener>();
         services.AddTransient<IDbEventListener, DbEventListener>();
 
         services.AddSingleton<IContractCaller, ContractCaller>();
+        services.AddSingleton<IBlockTracker, BlockTracker>();
 
         return services;
     }

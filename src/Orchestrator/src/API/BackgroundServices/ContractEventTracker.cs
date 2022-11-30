@@ -4,23 +4,23 @@ using Application.Common.Interfaces;
 
 namespace API.BackgroundServices;
 
-public class EthereumEventTracker : BackgroundService
+public class ContractEventTracker : BackgroundService
 {
-    private readonly IEthereumEventListener _ethereumEventListener;
+    private readonly IContractEventListener _contractEventListener;
     private readonly IServiceProvider _serviceProvider;
 
-    public EthereumEventTracker(
-        IEthereumEventListener ethereumEventListener,
+    public ContractEventTracker(
+        IContractEventListener contractEventListener,
         IServiceProvider serviceProvider
     )
     {
-        _ethereumEventListener = ethereumEventListener;
+        _contractEventListener = contractEventListener;
         _serviceProvider = serviceProvider;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await foreach (var @event in _ethereumEventListener.GetNext(stoppingToken))
+        await foreach (var @event in _contractEventListener.GetNext(stoppingToken))
         {
             using var scope = _serviceProvider.CreateScope();
             var mediator = scope.ServiceProvider.GetRequiredService<IPublisher>();

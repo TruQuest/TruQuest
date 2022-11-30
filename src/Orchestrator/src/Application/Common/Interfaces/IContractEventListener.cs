@@ -2,7 +2,7 @@ using MediatR;
 
 namespace Application.Common.Interfaces;
 
-public interface IEthereumEventListener
+public interface IContractEventListener
 {
     IAsyncEnumerable<INotification> GetNext(CancellationToken stoppingToken);
 }

@@ -6,7 +6,7 @@ public class DeferredTask : Entity, IAggregateRoot
 {
     public long? Id { get; private set; }
     public TaskType Type { get; }
-    public long ScheduledBlockNumber { get; }
+    public long ScheduledBlockNumber { get; private set; }
     private Dictionary<string, object> _payload = new();
     public IReadOnlyDictionary<string, object> Payload => _payload;
 
@@ -19,5 +19,10 @@ public class DeferredTask : Entity, IAggregateRoot
     public void SetPayload(Dictionary<string, object> payload)
     {
         _payload = payload;
+    }
+
+    public void SetCompleted()
+    {
+        ScheduledBlockNumber = -1;
     }
 }

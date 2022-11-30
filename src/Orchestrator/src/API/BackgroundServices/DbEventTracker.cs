@@ -71,7 +71,7 @@ public class DbEventTracker : BackgroundService
                             });
                             break;
                         case ThingState.VerifierLotteryInProgress:
-                            _logger.LogInformation("Lottery in progress");
+                            _logger.LogInformation("Verifier selection lottery for thing {ThingId} initiated", thingId);
                             break;
                     }
                 }

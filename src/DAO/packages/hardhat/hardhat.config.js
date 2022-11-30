@@ -329,6 +329,20 @@ task("tru", "Tru")
     console.log(await truQuest.s_thingSubmitter(taskArgs.thingId));
   });
 
+task("mine", "Move blocks")
+  .addParam("blocks", "Num blocks to mine")
+  .setAction(async (taskArgs, hre) => {
+    if (hre.network.name == "localhost" && taskArgs.blocks > 0) {
+      for (let i = 0; i < taskArgs.blocks; ++i) {
+        await hre.network.provider.request({
+          method: "evm_mine",
+          params: [],
+        });
+      }
+      console.log(`Mined ${taskArgs.blocks} blocks`);
+    }
+  });
+
 task("wallet", "Create a wallet (pk) link", async (_, { ethers }) => {
   const randomWallet = ethers.Wallet.createRandom();
   const privateKey = randomWallet._signingKey().privateKey;

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 using Domain.Aggregates;
@@ -22,4 +23,7 @@ internal class TaskRepository : Repository<DeferredTask>, ITaskRepository
     {
         _dbContext.Tasks.Add(task);
     }
+
+    public Task<List<DeferredTask>> FindAllWithScheduledBlockNumber(long leBlockNumber) =>
+        _dbContext.Tasks.Where(t => t.ScheduledBlockNumber > 0 && t.ScheduledBlockNumber <= leBlockNumber).ToListAsync();
 }
