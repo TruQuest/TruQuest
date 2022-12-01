@@ -45,7 +45,7 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
 
             var task = new DeferredTask(
                 type: TaskType.CloseVerifierLottery,
-                scheduledBlockNumber: thing.LastUpdatedAtBlockNumber!.Value + 5
+                scheduledBlockNumber: thing.LastUpdatedAtBlockNumber!.Value + 30
             );
             task.SetPayload(new()
             {

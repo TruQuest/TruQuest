@@ -35,6 +35,8 @@ contract VerifierLottery {
         bool revealed;
     }
 
+    uint256 public constant MAX_NONCE = 1000000;
+
     TruQuest private immutable i_truQuest;
     AcceptancePoll private s_acceptancePoll;
     address private s_orchestrator;
@@ -239,9 +241,25 @@ contract VerifierLottery {
         }
 
         bytes32 blockHash = blockhash(commitmentBlock);
-        uint256 nonce = uint256(keccak256(abi.encodePacked(blockHash, _data)));
+        uint256 nonce = uint256(keccak256(abi.encodePacked(blockHash, _data))) %
+            MAX_NONCE;
 
         emit JoinedLottery(_thingId, msg.sender, nonce);
+    }
+
+    function computeNonce(
+        string calldata _thingId,
+        bytes32 _data
+    ) public view returns (uint256) {
+        Commitment memory commitment = s_thingIdToLotteryCommitments[_thingId][
+            msg.sender
+        ];
+        return
+            uint256(
+                keccak256(
+                    abi.encodePacked(blockhash(uint64(commitment.block)), _data)
+                )
+            ) % MAX_NONCE;
     }
 
     function closeLotteryWithSuccess(
@@ -289,7 +307,8 @@ contract VerifierLottery {
         s_acceptancePoll.initPoll(_thingId, winners);
 
         bytes32 blockHash = blockhash(commitmentBlock);
-        uint256 nonce = uint256(keccak256(abi.encodePacked(blockHash, _data)));
+        uint256 nonce = uint256(keccak256(abi.encodePacked(blockHash, _data))) %
+            MAX_NONCE;
 
         emit LotteryClosedWithSuccess(_thingId, s_orchestrator, nonce, winners);
     }
@@ -376,7 +395,8 @@ contract VerifierLottery {
         }
 
         bytes32 blockHash = blockhash(commitmentBlock);
-        uint256 nonce = uint256(keccak256(abi.encodePacked(blockHash, _data)));
+        uint256 nonce = uint256(keccak256(abi.encodePacked(blockHash, _data))) %
+            MAX_NONCE;
 
         emit JoinedSubLottery(_thingId, msg.sender, nonce);
     }
@@ -431,7 +451,8 @@ contract VerifierLottery {
         s_acceptancePoll.initSubPoll(_thingId, winners);
 
         bytes32 blockHash = blockhash(commitmentBlock);
-        uint256 nonce = uint256(keccak256(abi.encodePacked(blockHash, _data)));
+        uint256 nonce = uint256(keccak256(abi.encodePacked(blockHash, _data))) %
+            MAX_NONCE;
 
         emit SubLotteryClosedWithSuccess(
             _thingId,

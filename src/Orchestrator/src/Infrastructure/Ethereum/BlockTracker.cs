@@ -23,7 +23,7 @@ internal class BlockTracker : IBlockTracker
         long lastReportedBlockNumber = 0;
         while (!stoppingToken.IsCancellationRequested)
         {
-            var blockNumber = (long)(await _web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).Value;
+            var blockNumber = (long)(await _web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).Value - 1;
             if (blockNumber > lastReportedBlockNumber)
             {
                 lastReportedBlockNumber = blockNumber;

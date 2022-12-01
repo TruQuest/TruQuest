@@ -287,6 +287,18 @@ module.exports = {
     player: {
       default: 1,
     },
+    lotteryPlayer1: {
+      default: 2,
+    },
+    lotteryPlayer2: {
+      default: 3,
+    },
+    lotteryPlayer3: {
+      default: 4,
+    },
+    lotteryPlayer4: {
+      default: 5,
+    },
   },
   etherscan: {
     apiKey: {
@@ -321,12 +333,13 @@ task("tru", "Tru")
   .addParam("thingId", "Thing GUID")
   .setAction(async (taskArgs, { getNamedAccounts, ethers }) => {
     const { player } = await getNamedAccounts();
-    const truQuest = await ethers.getContract("TruQuest", player);
-    const balance = await truQuest.getAvailableFunds(player);
-    console.log(
-      `Player balance is ${ethers.utils.formatUnits(balance, "wei")}`
+    const acceptancePoll = await ethers.getContractAt(
+      "AcceptancePoll",
+      "0xBA12646CC07ADBe43F8bD25D83FB628D29C8A762",
+      player
     );
-    console.log(await truQuest.s_thingSubmitter(taskArgs.thingId));
+    const count = await acceptancePoll.getVerifierCount(taskArgs.thingId);
+    console.log(`Verifier count is ${count}`);
   });
 
 task("mine", "Move blocks")
@@ -341,6 +354,69 @@ task("mine", "Move blocks")
       }
       console.log(`Mined ${taskArgs.blocks} blocks`);
     }
+  });
+
+task("lottery", "Enter lottery")
+  .addParam("thingId", "Thing GUID")
+  .setAction(async (taskArgs, { getNamedAccounts, ethers, network }) => {
+    const { lotteryPlayer1, lotteryPlayer2, lotteryPlayer3, lotteryPlayer4 } =
+      await getNamedAccounts();
+
+    let verifierLottery = await ethers.getContractAt(
+      "VerifierLottery",
+      "0x3B02fF1e626Ed7a8fd6eC5299e2C54e1421B626B",
+      lotteryPlayer1
+    );
+    let data = ethers.utils.randomBytes(32);
+    let dataHash = await verifierLottery.computeHash(data);
+    await verifierLottery.preJoinLottery(taskArgs.thingId, dataHash);
+    await network.provider.request({
+      method: "evm_mine",
+      params: [],
+    });
+    await verifierLottery.joinLottery(taskArgs.thingId, data);
+
+    verifierLottery = await ethers.getContractAt(
+      "VerifierLottery",
+      "0x3B02fF1e626Ed7a8fd6eC5299e2C54e1421B626B",
+      lotteryPlayer2
+    );
+    data = ethers.utils.randomBytes(32);
+    dataHash = await verifierLottery.computeHash(data);
+    await verifierLottery.preJoinLottery(taskArgs.thingId, dataHash);
+    await network.provider.request({
+      method: "evm_mine",
+      params: [],
+    });
+    await verifierLottery.joinLottery(taskArgs.thingId, data);
+
+    verifierLottery = await ethers.getContractAt(
+      "VerifierLottery",
+      "0x3B02fF1e626Ed7a8fd6eC5299e2C54e1421B626B",
+      lotteryPlayer3
+    );
+    data = ethers.utils.randomBytes(32);
+    dataHash = await verifierLottery.computeHash(data);
+    await verifierLottery.preJoinLottery(taskArgs.thingId, dataHash);
+    await network.provider.request({
+      method: "evm_mine",
+      params: [],
+    });
+    await verifierLottery.joinLottery(taskArgs.thingId, data);
+
+    verifierLottery = await ethers.getContractAt(
+      "VerifierLottery",
+      "0x3B02fF1e626Ed7a8fd6eC5299e2C54e1421B626B",
+      lotteryPlayer4
+    );
+    data = ethers.utils.randomBytes(32);
+    dataHash = await verifierLottery.computeHash(data);
+    await verifierLottery.preJoinLottery(taskArgs.thingId, dataHash);
+    await network.provider.request({
+      method: "evm_mine",
+      params: [],
+    });
+    await verifierLottery.joinLottery(taskArgs.thingId, data);
   });
 
 task("wallet", "Create a wallet (pk) link", async (_, { ethers }) => {

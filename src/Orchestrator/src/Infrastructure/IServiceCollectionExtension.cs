@@ -163,6 +163,8 @@ public static class IServiceCollectionExtension
         services.AddScoped<ITaskRepository, TaskRepository>();
 
         services.AddScoped<IThingFundedEventRepository, ThingFundedEventRepository>();
+        services.AddScoped<IPreJoinedLotteryEventRepository, PreJoinedLotteryEventRepository>();
+        services.AddScoped<IJoinedLotteryEventRepository, JoinedLotteryEventRepository>();
 
         services.AddSingleton<IContractEventListener, ContractEventListener>();
         services.AddTransient<IDbEventListener, DbEventListener>();

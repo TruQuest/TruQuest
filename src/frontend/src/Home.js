@@ -37,7 +37,7 @@ const domainData = {
   name: "TruQuest",
   version: "0.0.1",
   chainId: 31337,
-  verifyingContract: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+  verifyingContract: "0x0165878A594ca255338adfa4d48449f69242Eb8F",
   salt: "0xf2d857f4a3edcb9b78b4d503bfe733db1e3f6cdc2b7971ee739626c97e86a558",
 };
 
@@ -49,7 +49,7 @@ const Home = () => {
   const [sig, setSig] = useState("");
 
   const { runContractFunction } = useWeb3Contract({
-    contractAddress: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+    contractAddress: "0x0165878A594ca255338adfa4d48449f69242Eb8F",
     abi: [
       {
         inputs: [

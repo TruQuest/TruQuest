@@ -1,3 +1,5 @@
+using System.Numerics;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 
@@ -48,7 +50,43 @@ internal class ContractCaller : IContractCaller
                 }
             );
 
-            _logger.LogInformation(txnReceipt.LogsBloom);
+            _logger.LogInformation("Txn hash {TxnHash}", txnReceipt.TransactionHash);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+        }
+    }
+
+    public Task<BigInteger> ComputeNonce(string thingId, byte[] data)
+    {
+        var queryDispatcher = _web3.Eth.GetContractQueryHandler<ComputeNonceMessage>();
+        return queryDispatcher.QueryAsync<BigInteger>(
+            _verifierLotteryAddress,
+            new ComputeNonceMessage
+            {
+                ThingId = thingId,
+                Data = data
+            }
+        );
+    }
+
+    public async Task CloseVerifierLotteryWithSuccess(string thingId, byte[] data, IList<ulong> winnerIndices)
+    {
+        var txnDispatcher = _web3.Eth.GetContractTransactionHandler<CloseVerifierLotteryWithSuccessMessage>();
+        try
+        {
+            var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
+                _verifierLotteryAddress,
+                new CloseVerifierLotteryWithSuccessMessage
+                {
+                    ThingId = thingId,
+                    Data = data,
+                    WinnerIndices = winnerIndices
+                }
+            );
+
+            _logger.LogInformation("Txn hash {TxnHash}", txnReceipt.TransactionHash);
         }
         catch (Exception ex)
         {

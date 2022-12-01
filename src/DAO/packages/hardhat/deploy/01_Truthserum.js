@@ -2,7 +2,14 @@ const { ethers } = require("hardhat");
 
 module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const { deploy, log } = deployments;
-  const { deployer, player } = await getNamedAccounts();
+  const {
+    deployer,
+    player,
+    lotteryPlayer1,
+    lotteryPlayer2,
+    lotteryPlayer3,
+    lotteryPlayer4,
+  } = await getNamedAccounts();
   const chainId = await getChainId();
 
   await deploy("Truthserum", {
@@ -12,7 +19,15 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   });
 
   const truthserum = await ethers.getContract("Truthserum", deployer);
-  const txnResponse = await truthserum.transfer(player, 500);
+  let txnResponse = await truthserum.transfer(player, 500);
+  await txnResponse.wait(1);
+  txnResponse = await truthserum.transfer(lotteryPlayer1, 500);
+  await txnResponse.wait(1);
+  txnResponse = await truthserum.transfer(lotteryPlayer2, 500);
+  await txnResponse.wait(1);
+  txnResponse = await truthserum.transfer(lotteryPlayer3, 500);
+  await txnResponse.wait(1);
+  txnResponse = await truthserum.transfer(lotteryPlayer4, 500);
   await txnResponse.wait(1);
 
   // Getting a previously deployed contract

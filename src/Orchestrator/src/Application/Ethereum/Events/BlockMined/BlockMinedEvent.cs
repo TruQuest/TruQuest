@@ -34,6 +34,7 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
                 case TaskType.CloseVerifierLottery:
                     await _mediator.Send(new CloseVerifierLotteryCommand
                     {
+                        LatestIncludedBlockNumber = task.ScheduledBlockNumber,
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),
                         Data = Convert.FromBase64String(((JsonElement)task.Payload["data"]).GetString()!)
                     });
