@@ -5,49 +5,63 @@ using Infrastructure;
 
 using API.BackgroundServices;
 
-DotNetEnv.Env.Load();
+namespace API;
 
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Services
-    .AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-    });
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-builder.Services.AddCors(options =>
-    options.AddDefaultPolicy(builder =>
-        builder
-            .AllowAnyOrigin()
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-    )
-);
-
-builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddHostedService<ContractEventTracker>();
-builder.Services.AddHostedService<DbEventTracker>();
-builder.Services.AddHostedService<BlockchainEventTracker>();
-
-var app = builder.Build();
-
-app.UseCors();
-
-if (app.Environment.IsDevelopment())
+public class Program
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    public static void Main(string[] args)
+    {
+        var app = CreateWebApplication(args);
+
+        app.UseCors();
+
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
+
+        // app.UseHttpsRedirection();
+        // app.UseAuthorization();
+
+        app.MapControllers();
+
+        app.Run();
+    }
+
+    public static WebApplication CreateWebApplication(string[] args)
+    {
+        DotNetEnv.Env.Load();
+
+        var builder = WebApplication.CreateBuilder(args);
+
+        builder.Services
+            .AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+                options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+            });
+
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
+
+        builder.Services.AddCors(options =>
+            options.AddDefaultPolicy(builder =>
+                builder
+                    .AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+            )
+        );
+
+        builder.Services.AddApplication();
+        builder.Services.AddInfrastructure(builder.Configuration);
+
+        builder.Services.AddHostedService<ContractEventTracker>();
+        builder.Services.AddHostedService<DbEventTracker>();
+        builder.Services.AddHostedService<BlockchainEventTracker>();
+
+        return builder.Build();
+    }
 }
-
-// app.UseHttpsRedirection();
-// app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();

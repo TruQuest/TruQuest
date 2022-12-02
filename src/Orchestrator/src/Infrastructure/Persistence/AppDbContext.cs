@@ -6,7 +6,7 @@ using Domain.Aggregates;
 
 namespace Infrastructure.Persistence;
 
-internal class AppDbContext : IdentityUserContext<User, string>
+public class AppDbContext : IdentityUserContext<User, string>
 {
     public DbSet<DeferredTask> Tasks { get; set; }
     public DbSet<Subject> Subjects { get; set; }
