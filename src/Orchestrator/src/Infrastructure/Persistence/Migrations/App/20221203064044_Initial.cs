@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -7,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Persistence.Migrations.App
 {
     /// <inheritdoc />
-    public partial class IdentitySubjectThing : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -53,6 +54,22 @@ namespace Infrastructure.Persistence.Migrations.App
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Tags", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Tasks",
+                schema: "truquest",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityAlwaysColumn),
+                    Type = table.Column<int>(type: "integer", nullable: false),
+                    ScheduledBlockNumber = table.Column<long>(type: "bigint", nullable: false),
+                    Payload = table.Column<IReadOnlyDictionary<string, object>>(type: "jsonb", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tasks", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -344,6 +361,10 @@ namespace Infrastructure.Persistence.Migrations.App
 
             migrationBuilder.DropTable(
                 name: "SubjectAttachedTag",
+                schema: "truquest");
+
+            migrationBuilder.DropTable(
+                name: "Tasks",
                 schema: "truquest");
 
             migrationBuilder.DropTable(

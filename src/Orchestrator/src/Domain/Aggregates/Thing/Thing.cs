@@ -7,7 +7,6 @@ public class Thing : Entity, IAggregateRoot
     public Guid? Id { get; private set; }
     public string? IdHash { get; private set; }
     public ThingState State { get; private set; }
-    public long? LastUpdatedAtBlockNumber { get; private set; }
     public string Title { get; }
     public string Details { get; }
     public string? ImageUrl { get; }
@@ -23,7 +22,6 @@ public class Thing : Entity, IAggregateRoot
     public Thing(string title, string details, string? imageUrl, string submitterId, Guid subjectId)
     {
         State = ThingState.WaitingToBeFunded;
-        LastUpdatedAtBlockNumber = null;
         Title = title;
         Details = details;
         ImageUrl = imageUrl;
@@ -44,10 +42,5 @@ public class Thing : Entity, IAggregateRoot
     public void SetState(ThingState state)
     {
         State = state;
-    }
-
-    public void SetLastUpdatedAt(long blockNumber)
-    {
-        LastUpdatedAtBlockNumber = blockNumber;
     }
 }

@@ -1,13 +1,13 @@
 using MediatR;
 
 using Domain.Aggregates.Events;
-using ThingFundedEventDm = Domain.Aggregates.Events.ThingFundedEvent;
 
 namespace Application.Ethereum.Events.ThingFunded;
 
 public class ThingFundedEvent : INotification
 {
     public long BlockNumber { get; init; }
+    public int TxnIndex { get; init; }
     public required string ThingIdHash { get; init; }
     public required string UserId { get; init; }
     public decimal Stake { get; init; }
@@ -15,23 +15,28 @@ public class ThingFundedEvent : INotification
 
 internal class ThingFundedEventHandler : INotificationHandler<ThingFundedEvent>
 {
-    private readonly IThingFundedEventRepository _thingFundedEventRepository;
+    private readonly IActionableThingRelatedEventRepository _actionableThingRelatedEventRepository;
 
-    public ThingFundedEventHandler(IThingFundedEventRepository thingFundedEventRepository)
+    public ThingFundedEventHandler(IActionableThingRelatedEventRepository actionableThingRelatedEventRepository)
     {
-        _thingFundedEventRepository = thingFundedEventRepository;
+        _actionableThingRelatedEventRepository = actionableThingRelatedEventRepository;
     }
 
     public async Task Handle(ThingFundedEvent @event, CancellationToken ct)
     {
-        var thingFundedEvent = new ThingFundedEventDm(
+        var thingFundedEvent = new ActionableThingRelatedEvent(
             blockNumber: @event.BlockNumber,
+            txnIndex: @event.TxnIndex,
             thingIdHash: @event.ThingIdHash,
-            userId: @event.UserId,
-            stake: @event.Stake
+            type: ThingEventType.ThingFunded
         );
-        _thingFundedEventRepository.Create(thingFundedEvent);
+        thingFundedEvent.SetPayload(new()
+        {
+            ["userId"] = @event.UserId,
+            ["stake"] = @event.Stake
+        });
+        _actionableThingRelatedEventRepository.Create(thingFundedEvent);
 
-        await _thingFundedEventRepository.SaveChanges();
+        await _actionableThingRelatedEventRepository.SaveChanges();
     }
 }

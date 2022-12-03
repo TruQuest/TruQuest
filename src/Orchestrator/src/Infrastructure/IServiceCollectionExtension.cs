@@ -9,6 +9,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using KafkaFlow;
+using KafkaFlow.TypedHandler;
 using Nethereum.Signer.EIP712;
 
 using Domain.Aggregates;
@@ -21,6 +23,7 @@ using Infrastructure.Persistence;
 using Infrastructure.Persistence.Repositories;
 using Infrastructure.Files;
 using Infrastructure.Persistence.Repositories.Events;
+using Infrastructure.Kafka;
 
 namespace Infrastructure;
 
@@ -162,15 +165,40 @@ public static class IServiceCollectionExtension
         services.AddScoped<IThingRepository, ThingRepository>();
         services.AddScoped<ITaskRepository, TaskRepository>();
 
-        services.AddScoped<IThingFundedEventRepository, ThingFundedEventRepository>();
+        services.AddScoped<IActionableThingRelatedEventRepository, ActionableThingRelatedEventRepository>();
         services.AddScoped<IPreJoinedVerifierLotteryEventRepository, PreJoinedVerifierLotteryEventRepository>();
         services.AddScoped<IJoinedVerifierLotteryEventRepository, JoinedVerifierLotteryEventRepository>();
 
         services.AddSingleton<IContractEventListener, ContractEventListener>();
-        services.AddTransient<IDbEventListener, DbEventListener>();
 
         services.AddSingleton<IContractCaller, ContractCaller>();
         services.AddSingleton<IBlockListener, BlockListener>();
+
+        services.AddKafka(kafka =>
+            kafka
+                .UseMicrosoftLog()
+                .AddCluster(cluster =>
+                    cluster
+                        .WithBrokers(configuration["Kafka:Brokers"]!.Split(','))
+                        .AddConsumer(consumer =>
+                            consumer
+                                .Topic(configuration["Kafka:Consumer:Topic"])
+                                .WithGroupId(configuration["Kafka:Consumer:GroupId"])
+                                .WithAutoOffsetReset(AutoOffsetReset.Earliest)
+                                .WithBufferSize(1)
+                                .WithWorkersCount(4)
+                                .AddMiddlewares(middlewares =>
+                                    middlewares
+                                        .AddSerializer<MessageSerializer, MessageTypeResolver>()
+                                        .AddTypedHandlers(handlers =>
+                                            handlers
+                                                .WithHandlerLifetime(InstanceLifetime.Scoped)
+                                                .AddHandlersFromAssemblyOf<MessageTypeResolver>()
+                                        )
+                                )
+                        )
+                )
+        );
 
         return services;
     }

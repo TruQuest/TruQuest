@@ -151,9 +151,6 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.Property<string>("ImageUrl")
                         .HasColumnType("text");
 
-                    b.Property<long?>("LastUpdatedAtBlockNumber")
-                        .HasColumnType("bigint");
-
                     b.Property<int>("State")
                         .HasColumnType("integer");
 

@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Persistence.Migrations.App
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20221130073024_Thing_State_Changed_Trigger")]
-    partial class ThingStateChangedTrigger
+    [Migration("20221203064044_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -153,9 +153,6 @@ namespace Infrastructure.Persistence.Migrations.App
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("text");
-
-                    b.Property<long?>("LastUpdatedAtBlockNumber")
-                        .HasColumnType("bigint");
 
                     b.Property<int>("State")
                         .HasColumnType("integer");

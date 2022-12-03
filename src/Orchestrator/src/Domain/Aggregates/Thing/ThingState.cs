@@ -3,7 +3,6 @@ namespace Domain.Aggregates;
 public enum ThingState
 {
     WaitingToBeFunded,
-    Funded,
-    VerifierLotteryInProgress,
+    FundedAndVerifierLotteryInitiated,
     VerifiersSelected
 }

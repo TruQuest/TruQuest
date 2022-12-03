@@ -98,8 +98,9 @@ internal class ContractEventListener : IContractEventListener
                 yield return new AppEvents.ThingFunded.ThingFundedEvent
                 {
                     BlockNumber = (long)thingFundedEvent.Log.BlockNumber.Value,
-                    ThingIdHash = thingFundedEvent.Event.ThingIdHash.TrimStart('0', 'x'),
-                    UserId = thingFundedEvent.Event.UserId.TrimStart('0', 'x'),
+                    TxnIndex = (int)thingFundedEvent.Log.TransactionIndex.Value,
+                    ThingIdHash = thingFundedEvent.Event.ThingIdHash.Replace("0x", string.Empty),
+                    UserId = thingFundedEvent.Event.UserId.Replace("0x", string.Empty),
                     Stake = (decimal)thingFundedEvent.Event.Stake
                 };
             }
@@ -109,8 +110,8 @@ internal class ContractEventListener : IContractEventListener
                 {
                     BlockNumber = (long)preJoinedVerifierLotteryEvent.Log.BlockNumber.Value,
                     TxnIndex = (int)preJoinedVerifierLotteryEvent.Log.TransactionIndex.Value,
-                    ThingIdHash = preJoinedVerifierLotteryEvent.Event.ThingIdHash.TrimStart('0', 'x'),
-                    UserId = preJoinedVerifierLotteryEvent.Event.UserId.TrimStart('0', 'x'),
+                    ThingIdHash = preJoinedVerifierLotteryEvent.Event.ThingIdHash.Replace("0x", string.Empty),
+                    UserId = preJoinedVerifierLotteryEvent.Event.UserId.Replace("0x", string.Empty),
                     DataHash = preJoinedVerifierLotteryEvent.Event.DataHash
                 };
             }
@@ -120,8 +121,8 @@ internal class ContractEventListener : IContractEventListener
                 {
                     BlockNumber = (long)joinedVerifierLotteryEvent.Log.BlockNumber.Value,
                     TxnIndex = (int)joinedVerifierLotteryEvent.Log.TransactionIndex.Value,
-                    ThingIdHash = joinedVerifierLotteryEvent.Event.ThingIdHash.TrimStart('0', 'x'),
-                    UserId = joinedVerifierLotteryEvent.Event.UserId.TrimStart('0', 'x'),
+                    ThingIdHash = joinedVerifierLotteryEvent.Event.ThingIdHash.Replace("0x", string.Empty),
+                    UserId = joinedVerifierLotteryEvent.Event.UserId.Replace("0x", string.Empty),
                     Nonce = joinedVerifierLotteryEvent.Event.Nonce
                 };
             }
@@ -129,7 +130,7 @@ internal class ContractEventListener : IContractEventListener
             {
                 yield return new AppEvents.Lottery.VerifierLotteryClosedWithSuccess.VerifierLotteryClosedWithSuccessEvent
                 {
-                    ThingIdHash = verifierLotteryClosedWithSuccessEvent.Event.ThingIdHash.TrimStart('0', 'x'),
+                    ThingIdHash = verifierLotteryClosedWithSuccessEvent.Event.ThingIdHash.Replace("0x", string.Empty),
                     WinnerIds = verifierLotteryClosedWithSuccessEvent.Event.WinnerIds
                 };
             }

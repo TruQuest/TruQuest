@@ -1,5 +1,7 @@
 using System.Text.Json;
 
+using KafkaFlow;
+
 using Application;
 using Infrastructure;
 
@@ -9,7 +11,7 @@ namespace API;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         var app = CreateWebApplication(args);
 
@@ -25,6 +27,9 @@ public class Program
         // app.UseAuthorization();
 
         app.MapControllers();
+
+        var bus = app.Services.CreateKafkaBus();
+        await bus.StartAsync();
 
         app.Run();
     }
@@ -59,7 +64,6 @@ public class Program
         builder.Services.AddInfrastructure(builder.Configuration);
 
         builder.Services.AddHostedService<ContractEventTracker>();
-        builder.Services.AddHostedService<DbEventTracker>();
         builder.Services.AddHostedService<BlockTracker>();
 
         return builder.Build();

@@ -70,7 +70,6 @@ public class AppDbContext : IdentityUserContext<User, string>
                 .HasValueGenerator<KeccakSha3Generator>()
                 .IsRequired();
             builder.Property(t => t.State).HasConversion<int>().IsRequired();
-            builder.Property(t => t.LastUpdatedAtBlockNumber).IsRequired(false);
             builder.Property(t => t.Title).IsRequired();
             builder.Property(t => t.Details).IsRequired();
             builder.Property(t => t.ImageUrl).IsRequired(false);

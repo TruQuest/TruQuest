@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ValueGeneration;
 
 using Domain.QM;
 using Domain.Aggregates.Events;
@@ -7,7 +8,7 @@ namespace Infrastructure.Persistence;
 
 public class EventDbContext : DbContext
 {
-    public DbSet<ThingFundedEvent> ThingFundedEvents { get; set; }
+    public DbSet<ActionableThingRelatedEvent> ActionableThingRelatedEvents { get; set; }
     public DbSet<PreJoinedVerifierLotteryEvent> PreJoinedVerifierLotteryEvents { get; set; }
     public DbSet<JoinedVerifierLotteryEvent> JoinedVerifierLotteryEvents { get; set; }
 
@@ -19,15 +20,19 @@ public class EventDbContext : DbContext
     {
         modelBuilder.HasDefaultSchema("truquest_events");
 
-        modelBuilder.Entity<ThingFundedEvent>(builder =>
+        modelBuilder.Entity<ActionableThingRelatedEvent>(builder =>
         {
             builder.HasKey(e => e.Id);
-            builder.Property(e => e.Id).UseIdentityAlwaysColumn();
+            builder.Property(e => e.Id).HasValueGenerator<GuidValueGenerator>();
             builder.Property(e => e.BlockNumber).IsRequired();
+            builder.Property(e => e.TxnIndex).IsRequired();
             builder.Property(e => e.ThingIdHash).IsRequired();
-            builder.Property(e => e.UserId).IsRequired();
-            builder.Property(e => e.Stake).IsRequired();
-            builder.Property(e => e.Processed).IsRequired();
+            builder.Property(e => e.Type).HasConversion<int>().IsRequired();
+            builder
+                .Property(e => e.Payload)
+                .HasColumnType("jsonb")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .IsRequired();
         });
 
         modelBuilder.Entity<PreJoinedVerifierLotteryEvent>(builder =>

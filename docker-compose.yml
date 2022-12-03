@@ -1,0 +1,118 @@
+version: '2'
+
+services:
+  pg:
+    image: bitnami/postgresql:14.2.0
+    environment:
+      POSTGRESQL_WAL_LEVEL: logical
+      POSTGRESQL_DATABASE: TruQuest
+      POSTGRESQL_PASSWORD: password
+      POSTGRESQL_SHARED_PRELOAD_LIBRARIES: pgaudit,pg_stat_statements
+    ports:
+      - '5433:5432'
+    networks:
+      - truquest
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - '2181:2181'
+    networks:
+      - truquest
+    restart: unless-stopped
+
+  kafka-1:
+    image: wurstmeister/kafka:2.12-2.5.0
+    ports:
+      - '9091:9092'
+    environment:
+      DOCKER_API_VERSION: 1.22
+      KAFKA_BROKER_ID: 1
+      KAFKA_ADVERTISED_HOST_NAME: host.docker.internal
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_CREATE_TOPICS: 'thing.events:1:1'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - truquest
+    restart: unless-stopped
+
+  kafka-2:
+    image: wurstmeister/kafka:2.12-2.5.0
+    ports:
+      - '9092:9092'
+    environment:
+      DOCKER_API_VERSION: 1.22
+      KAFKA_BROKER_ID: 2
+      KAFKA_ADVERTISED_HOST_NAME: host.docker.internal
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - truquest
+    restart: unless-stopped
+
+  kafka-3:
+    image: wurstmeister/kafka:2.12-2.5.0
+    ports:
+      - '9093:9092'
+    environment:
+      DOCKER_API_VERSION: 1.22
+      KAFKA_BROKER_ID: 3
+      KAFKA_ADVERTISED_HOST_NAME: host.docker.internal
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - truquest
+    restart: unless-stopped
+
+  debezium:
+    image: debezium/connect
+    environment:
+      BOOTSTRAP_SERVERS: 'kafka-1:9092,kafka-2:9092,kafka-3:9092'
+      GROUP_ID: debez
+      CONFIG_STORAGE_TOPIC: debez_connect_configs
+      OFFSET_STORAGE_TOPIC: debez_connect_offsets
+      STATUS_STORAGE_TOPIC: debez_connect_statuses
+    ports:
+      - '8083:8083'
+    networks:
+      - truquest
+    depends_on:
+      - pg
+      - zookeeper
+      - kafka-1
+      - kafka-2
+      - kafka-3
+
+  ipfs:
+    image: ipfs/kubo
+    ports:
+      - '4001:4001'
+      - '4001:4001/udp'
+      - '8080:8080'
+      - '5001:5001'
+    networks:
+      - truquest
+    volumes:
+      - ./ipfs/data:/data/ipfs
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-1:9092
+    ports:
+      - '7777:8080'
+    networks:
+      - truquest
+    depends_on:
+      - zookeeper
+      - kafka-1
+      - kafka-2
+      - kafka-3
+
+networks:
+  truquest:
+    driver: bridge

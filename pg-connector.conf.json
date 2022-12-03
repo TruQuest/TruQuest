@@ -1,0 +1,28 @@
+{
+  "name": "pg-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "plugin.name": "pgoutput",
+    "database.hostname": "pg",
+    "database.port": "5432",
+    "database.user": "postgres",
+    "database.password": "password",
+    "database.dbname" : "TruQuest",
+    "database.server.name": "debez",
+    "heartbeat.interval.ms": "5000",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "table.include.list": "truquest_events.ActionableThingRelatedEvents",
+    "transforms": "outbox",
+    "transforms.outbox.type": "io.debezium.transforms.outbox.EventRouter",
+    "transforms.outbox.table.field.event.id": "Id",
+    "transforms.outbox.table.field.event.key": "ThingIdHash",
+    "transforms.outbox.table.field.event.payload": "Payload",
+    "transforms.outbox.table.expand.json.payload": "true",
+    "transforms.outbox.table.fields.additional.placement": "BlockNumber:header,TxnIndex:header,Type:header",
+    "transforms.outbox.route.by.field": "ThingIdHash",
+    "transforms.outbox.route.topic.replacement": "thing.events"
+  }
+}
