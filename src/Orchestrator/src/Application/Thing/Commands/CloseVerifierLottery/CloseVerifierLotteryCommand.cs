@@ -20,27 +20,27 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 {
     private readonly ILogger<CloseVerifierLotteryCommandHandler> _logger;
     private readonly IContractCaller _contractCaller;
-    private readonly IPreJoinedLotteryEventRepository _preJoinedLotteryEventRepository;
-    private readonly IJoinedLotteryEventRepository _joinedLotteryEventRepository;
+    private readonly IPreJoinedVerifierLotteryEventRepository _preJoinedVerifierLotteryEventRepository;
+    private readonly IJoinedVerifierLotteryEventRepository _joinedVerifierLotteryEventRepository;
 
     public CloseVerifierLotteryCommandHandler(
         ILogger<CloseVerifierLotteryCommandHandler> logger,
         IContractCaller contractCaller,
-        IPreJoinedLotteryEventRepository preJoinedLotteryEventRepository,
-        IJoinedLotteryEventRepository joinedLotteryEventRepository
+        IPreJoinedVerifierLotteryEventRepository preJoinedVerifierLotteryEventRepository,
+        IJoinedVerifierLotteryEventRepository joinedVerifierLotteryEventRepository
     )
     {
         _logger = logger;
         _contractCaller = contractCaller;
-        _preJoinedLotteryEventRepository = preJoinedLotteryEventRepository;
-        _joinedLotteryEventRepository = joinedLotteryEventRepository;
+        _preJoinedVerifierLotteryEventRepository = preJoinedVerifierLotteryEventRepository;
+        _joinedVerifierLotteryEventRepository = joinedVerifierLotteryEventRepository;
     }
 
     public async Task<VoidResult> Handle(CloseVerifierLotteryCommand command, CancellationToken ct)
     {
         var nonce = (decimal)await _contractCaller.ComputeNonce(command.ThingId.ToString(), command.Data);
 
-        var winnerEvents = await _joinedLotteryEventRepository.FindWithClosestNonces(
+        var winnerEvents = await _joinedVerifierLotteryEventRepository.FindWithClosestNonces(
             thingId: command.ThingId,
             latestBlockNumber: command.LatestIncludedBlockNumber,
             nonce: nonce,
@@ -49,7 +49,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 
         if (winnerEvents.Count == 3)
         {
-            var lotteryWinners = await _preJoinedLotteryEventRepository.GetLotteryWinnerIndices(
+            var lotteryWinners = await _preJoinedVerifierLotteryEventRepository.GetLotteryWinnerIndices(
                 command.ThingId,
                 winnerEvents.Select(e => e.UserId)
             );

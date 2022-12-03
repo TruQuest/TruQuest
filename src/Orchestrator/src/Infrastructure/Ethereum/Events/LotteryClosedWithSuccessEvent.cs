@@ -14,5 +14,5 @@ public class LotteryClosedWithSuccessEvent : IEventDTO
     [Parameter("uint256", "nonce", 3, false)]
     public BigInteger Nonce { get; set; }
     [Parameter("address[]", "winners", 4, false)]
-    public List<string> Winners { get; set; }
+    public List<string> WinnerIds { get; set; }
 }

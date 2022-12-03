@@ -11,11 +11,11 @@ using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories.Events;
 
-internal class PreJoinedLotteryEventRepository : Repository<PreJoinedLotteryEvent>, IPreJoinedLotteryEventRepository
+internal class PreJoinedVerifierLotteryEventRepository : Repository<PreJoinedVerifierLotteryEvent>, IPreJoinedVerifierLotteryEventRepository
 {
     private readonly EventDbContext _dbContext;
 
-    public PreJoinedLotteryEventRepository(
+    public PreJoinedVerifierLotteryEventRepository(
         IConfiguration configuration,
         EventDbContext dbContext,
         ISharedTxnScope sharedTxnScope
@@ -24,12 +24,12 @@ internal class PreJoinedLotteryEventRepository : Repository<PreJoinedLotteryEven
         _dbContext = dbContext;
     }
 
-    public void Create(PreJoinedLotteryEvent @event)
+    public void Create(PreJoinedVerifierLotteryEvent @event)
     {
-        _dbContext.PreJoinedLotteryEvents.Add(@event);
+        _dbContext.PreJoinedVerifierLotteryEvents.Add(@event);
     }
 
-    public Task<List<LotteryWinnerQm>> GetLotteryWinnerIndices(Guid thingId, IEnumerable<string> winnerIds)
+    public Task<List<VerifierLotteryWinnerQm>> GetLotteryWinnerIndices(Guid thingId, IEnumerable<string> winnerIds)
     {
         var thingIdHashParam = new NpgsqlParameter<string>("ThingIdHash", NpgsqlDbType.Text)
         {
@@ -40,11 +40,11 @@ internal class PreJoinedLotteryEventRepository : Repository<PreJoinedLotteryEven
             TypedValue = winnerIds.ToArray()
         };
 
-        return _dbContext.LotteryWinners
+        return _dbContext.VerifierLotteryWinners
                 .FromSqlRaw(
                     $@"
                         SELECT *
-                        FROM ""SelectWinnerIndicesAccordingToPreJoinedLotteryEvents"" (
+                        FROM ""SelectWinnerIndicesAccordingToPreJoinedVerifierLotteryEvents"" (
                             @{thingIdHashParam.ParameterName}, @{winnerIdsParam.ParameterName}
                         )
                     ",

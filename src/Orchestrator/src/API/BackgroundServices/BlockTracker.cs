@@ -5,26 +5,26 @@ using Application.Ethereum.Events.BlockMined;
 
 namespace API.BackgroundServices;
 
-public class BlockchainEventTracker : BackgroundService
+public class BlockTracker : BackgroundService
 {
-    private readonly ILogger<BlockchainEventTracker> _logger;
+    private readonly ILogger<BlockTracker> _logger;
     private readonly IServiceProvider _serviceProvider;
-    private readonly IBlockTracker _blockTracker;
+    private readonly IBlockListener _blockListener;
 
-    public BlockchainEventTracker(
-        ILogger<BlockchainEventTracker> logger,
+    public BlockTracker(
+        ILogger<BlockTracker> logger,
         IServiceProvider serviceProvider,
-        IBlockTracker blockTracker
+        IBlockListener blockListener
     )
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
-        _blockTracker = blockTracker;
+        _blockListener = blockListener;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await foreach (long blockNumber in _blockTracker.GetNext(stoppingToken))
+        await foreach (long blockNumber in _blockListener.GetNext(stoppingToken))
         {
             _logger.LogInformation("Current block {BlockNumber}", blockNumber);
 

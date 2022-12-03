@@ -22,6 +22,7 @@ internal class ContractEventListener : IContractEventListener
 {
     private readonly ILogger<ContractEventListener> _logger;
     private readonly Web3 _web3;
+    private readonly uint _blockConfirmations;
     private readonly string _truQuestAddress;
     private readonly string _verifierLotteryAddress;
 
@@ -33,6 +34,7 @@ internal class ContractEventListener : IContractEventListener
         _logger = logger;
         var network = configuration["Ethereum:Network"]!;
         _web3 = new Web3(configuration[$"Ethereum:Networks:{network}:URL"]);
+        _blockConfirmations = configuration.GetValue<uint>($"Ethereum:Networks:{network}:BlockConfirmations");
         _truQuestAddress = configuration[$"Ethereum:Contracts:{network}:TruQuest:Address"]!;
         _verifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:VerifierLottery:Address"]!;
 
@@ -74,7 +76,7 @@ internal class ContractEventListener : IContractEventListener
             var logProcessor = _web3.Processing.Logs.CreateProcessor(
                 logProcessors: eventHandlers,
                 filter: contractFilter,
-                minimumBlockConfirmations: 1,
+                minimumBlockConfirmations: _blockConfirmations,
                 log: _logger
             );
             // @@TODO: Add block progress repo.
@@ -101,31 +103,35 @@ internal class ContractEventListener : IContractEventListener
                     Stake = (decimal)thingFundedEvent.Event.Stake
                 };
             }
-            else if (@event is EventLog<PreJoinedLotteryEvent> preJoinedLotteryEvent)
+            else if (@event is EventLog<PreJoinedLotteryEvent> preJoinedVerifierLotteryEvent)
             {
-                yield return new AppEvents.Lottery.PreJoinedLottery.PreJoinedLotteryEvent
+                yield return new AppEvents.Lottery.PreJoinedVerifierLottery.PreJoinedVerifierLotteryEvent
                 {
-                    BlockNumber = (long)preJoinedLotteryEvent.Log.BlockNumber.Value,
-                    TxnIndex = (int)preJoinedLotteryEvent.Log.TransactionIndex.Value,
-                    ThingIdHash = preJoinedLotteryEvent.Event.ThingIdHash.TrimStart('0', 'x'),
-                    UserId = preJoinedLotteryEvent.Event.UserId.TrimStart('0', 'x'),
-                    DataHash = preJoinedLotteryEvent.Event.DataHash
+                    BlockNumber = (long)preJoinedVerifierLotteryEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)preJoinedVerifierLotteryEvent.Log.TransactionIndex.Value,
+                    ThingIdHash = preJoinedVerifierLotteryEvent.Event.ThingIdHash.TrimStart('0', 'x'),
+                    UserId = preJoinedVerifierLotteryEvent.Event.UserId.TrimStart('0', 'x'),
+                    DataHash = preJoinedVerifierLotteryEvent.Event.DataHash
                 };
             }
-            else if (@event is EventLog<JoinedLotteryEvent> joinedLotteryEvent)
+            else if (@event is EventLog<JoinedLotteryEvent> joinedVerifierLotteryEvent)
             {
-                yield return new AppEvents.Lottery.JoinedLottery.JoinedLotteryEvent
+                yield return new AppEvents.Lottery.JoinedVerifierLottery.JoinedVerifierLotteryEvent
                 {
-                    BlockNumber = (long)joinedLotteryEvent.Log.BlockNumber.Value,
-                    TxnIndex = (int)joinedLotteryEvent.Log.TransactionIndex.Value,
-                    ThingIdHash = joinedLotteryEvent.Event.ThingIdHash.TrimStart('0', 'x'),
-                    UserId = joinedLotteryEvent.Event.UserId.TrimStart('0', 'x'),
-                    Nonce = joinedLotteryEvent.Event.Nonce
+                    BlockNumber = (long)joinedVerifierLotteryEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)joinedVerifierLotteryEvent.Log.TransactionIndex.Value,
+                    ThingIdHash = joinedVerifierLotteryEvent.Event.ThingIdHash.TrimStart('0', 'x'),
+                    UserId = joinedVerifierLotteryEvent.Event.UserId.TrimStart('0', 'x'),
+                    Nonce = joinedVerifierLotteryEvent.Event.Nonce
                 };
             }
-            else if (@event is EventLog<LotteryClosedWithSuccessEvent> lotteryClosedWithSuccessEvent)
+            else if (@event is EventLog<LotteryClosedWithSuccessEvent> verifierLotteryClosedWithSuccessEvent)
             {
-
+                yield return new AppEvents.Lottery.VerifierLotteryClosedWithSuccess.VerifierLotteryClosedWithSuccessEvent
+                {
+                    ThingIdHash = verifierLotteryClosedWithSuccessEvent.Event.ThingIdHash.TrimStart('0', 'x'),
+                    WinnerIds = verifierLotteryClosedWithSuccessEvent.Event.WinnerIds
+                };
             }
         }
     }

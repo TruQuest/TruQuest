@@ -14,7 +14,7 @@ public class NewThingTd
     [Parameter("string", "imageUrl", 4)]
     public string ImageUrl { get; init; }
     [Parameter("tuple[]", "evidence", 5, "EvidenceTd[]")]
-    public IList<EvidenceTd> Evidence { get; init; }
+    public List<EvidenceTd> Evidence { get; init; }
     [Parameter("tuple[]", "tags", 6, "TagTd[]")]
-    public IList<TagTd> Tags { get; init; }
+    public List<TagTd> Tags { get; init; }
 }

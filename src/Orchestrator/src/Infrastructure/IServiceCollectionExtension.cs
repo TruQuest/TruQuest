@@ -163,14 +163,14 @@ public static class IServiceCollectionExtension
         services.AddScoped<ITaskRepository, TaskRepository>();
 
         services.AddScoped<IThingFundedEventRepository, ThingFundedEventRepository>();
-        services.AddScoped<IPreJoinedLotteryEventRepository, PreJoinedLotteryEventRepository>();
-        services.AddScoped<IJoinedLotteryEventRepository, JoinedLotteryEventRepository>();
+        services.AddScoped<IPreJoinedVerifierLotteryEventRepository, PreJoinedVerifierLotteryEventRepository>();
+        services.AddScoped<IJoinedVerifierLotteryEventRepository, JoinedVerifierLotteryEventRepository>();
 
         services.AddSingleton<IContractEventListener, ContractEventListener>();
         services.AddTransient<IDbEventListener, DbEventListener>();
 
         services.AddSingleton<IContractCaller, ContractCaller>();
-        services.AddSingleton<IBlockTracker, BlockTracker>();
+        services.AddSingleton<IBlockListener, BlockListener>();
 
         return services;
     }

@@ -60,7 +60,7 @@ public class Program
 
         builder.Services.AddHostedService<ContractEventTracker>();
         builder.Services.AddHostedService<DbEventTracker>();
-        builder.Services.AddHostedService<BlockchainEventTracker>();
+        builder.Services.AddHostedService<BlockTracker>();
 
         return builder.Build();
     }

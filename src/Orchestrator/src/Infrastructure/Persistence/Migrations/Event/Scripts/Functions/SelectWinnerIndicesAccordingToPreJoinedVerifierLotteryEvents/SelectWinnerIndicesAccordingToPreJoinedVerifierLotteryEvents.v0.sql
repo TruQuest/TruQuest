@@ -1,4 +1,4 @@
-CREATE FUNCTION "SelectWinnerIndicesAccordingToPreJoinedLotteryEvents"("ThingIdHash" TEXT, "WinnerIds" TEXT[])
+CREATE FUNCTION "SelectWinnerIndicesAccordingToPreJoinedVerifierLotteryEvents"("ThingIdHash" TEXT, "WinnerIds" TEXT[])
     RETURNS TABLE (
         "UserId" TEXT,
         "Index" BIGINT
@@ -12,7 +12,7 @@ BEGIN
 	        SELECT
 	            e."UserId",
 	            ROW_NUMBER() OVER (ORDER BY e."BlockNumber", e."TxnIndex") AS "RowNumber"
-	        FROM "PreJoinedLotteryEvents" AS e
+	        FROM "PreJoinedVerifierLotteryEvents" AS e
 	        WHERE e."ThingIdHash" = $1
 	    )
 	    SELECT val."UserId", val."RowNumber" - 1

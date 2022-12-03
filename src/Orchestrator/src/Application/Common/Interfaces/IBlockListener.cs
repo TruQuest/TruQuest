@@ -1,6 +1,6 @@
 namespace Application.Common.Interfaces;
 
-public interface IBlockTracker
+public interface IBlockListener
 {
     IAsyncEnumerable<long> GetNext(CancellationToken stoppingToken);
 }

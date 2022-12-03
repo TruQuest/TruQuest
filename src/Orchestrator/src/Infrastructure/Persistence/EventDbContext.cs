@@ -8,10 +8,10 @@ namespace Infrastructure.Persistence;
 public class EventDbContext : DbContext
 {
     public DbSet<ThingFundedEvent> ThingFundedEvents { get; set; }
-    public DbSet<PreJoinedLotteryEvent> PreJoinedLotteryEvents { get; set; }
-    public DbSet<JoinedLotteryEvent> JoinedLotteryEvents { get; set; }
+    public DbSet<PreJoinedVerifierLotteryEvent> PreJoinedVerifierLotteryEvents { get; set; }
+    public DbSet<JoinedVerifierLotteryEvent> JoinedVerifierLotteryEvents { get; set; }
 
-    public DbSet<LotteryWinnerQm> LotteryWinners { get; set; }
+    public DbSet<VerifierLotteryWinnerQm> VerifierLotteryWinners { get; set; }
 
     public EventDbContext(DbContextOptions<EventDbContext> options) : base(options) { }
 
@@ -30,7 +30,7 @@ public class EventDbContext : DbContext
             builder.Property(e => e.Processed).IsRequired();
         });
 
-        modelBuilder.Entity<PreJoinedLotteryEvent>(builder =>
+        modelBuilder.Entity<PreJoinedVerifierLotteryEvent>(builder =>
         {
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).UseIdentityAlwaysColumn();
@@ -41,7 +41,7 @@ public class EventDbContext : DbContext
             builder.Property(e => e.DataHash).IsRequired();
         });
 
-        modelBuilder.Entity<JoinedLotteryEvent>(builder =>
+        modelBuilder.Entity<JoinedVerifierLotteryEvent>(builder =>
         {
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).UseIdentityAlwaysColumn();
@@ -52,10 +52,10 @@ public class EventDbContext : DbContext
             builder.Property(e => e.Nonce).IsRequired();
         });
 
-        modelBuilder.Entity<LotteryWinnerQm>(builder =>
+        modelBuilder.Entity<VerifierLotteryWinnerQm>(builder =>
         {
             builder.HasNoKey();
-            builder.ToView(nameof(LotteryWinners));
+            builder.ToView(nameof(VerifierLotteryWinners));
         });
     }
 }

@@ -18,5 +18,5 @@ public class NewSubjectTd
     public string ImageUrl { get; init; }
 
     [Parameter("tuple[]", "tags", 5, "TagTd[]")]
-    public IList<TagTd> Tags { get; init; }
+    public List<TagTd> Tags { get; init; }
 }

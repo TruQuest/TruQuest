@@ -8,11 +8,11 @@ using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories.Events;
 
-internal class JoinedLotteryEventRepository : Repository<JoinedLotteryEvent>, IJoinedLotteryEventRepository
+internal class JoinedVerifierLotteryEventRepository : Repository<JoinedVerifierLotteryEvent>, IJoinedVerifierLotteryEventRepository
 {
     private readonly EventDbContext _dbContext;
 
-    public JoinedLotteryEventRepository(
+    public JoinedVerifierLotteryEventRepository(
         IConfiguration configuration,
         EventDbContext dbContext,
         ISharedTxnScope sharedTxnScope
@@ -21,17 +21,17 @@ internal class JoinedLotteryEventRepository : Repository<JoinedLotteryEvent>, IJ
         _dbContext = dbContext;
     }
 
-    public void Create(JoinedLotteryEvent @event)
+    public void Create(JoinedVerifierLotteryEvent @event)
     {
-        _dbContext.JoinedLotteryEvents.Add(@event);
+        _dbContext.JoinedVerifierLotteryEvents.Add(@event);
     }
 
-    public Task<List<JoinedLotteryEvent>> FindWithClosestNonces(
+    public Task<List<JoinedVerifierLotteryEvent>> FindWithClosestNonces(
         Guid thingId, long latestBlockNumber, decimal nonce, int count
     )
     {
         var thingIdHash = Sha3Keccack.Current.CalculateHash(thingId.ToString());
-        return _dbContext.JoinedLotteryEvents
+        return _dbContext.JoinedVerifierLotteryEvents
             .AsNoTracking()
             .Where(e => e.ThingIdHash == thingIdHash && e.BlockNumber <= latestBlockNumber)
             .OrderBy(e => Math.Abs(nonce - e.Nonce))
