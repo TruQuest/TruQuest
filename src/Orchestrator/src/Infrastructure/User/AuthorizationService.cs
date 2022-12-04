@@ -6,7 +6,7 @@ using Domain.Errors;
 using Application.Common.Attributes;
 using AppInterfaces = Application.Common.Interfaces;
 
-namespace Infrastructure.Account;
+namespace Infrastructure.User;
 
 public class AuthorizationService : AppInterfaces.IAuthorizationService
 {

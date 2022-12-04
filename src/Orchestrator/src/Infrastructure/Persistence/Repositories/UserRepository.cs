@@ -5,19 +5,22 @@ using Microsoft.Extensions.Configuration;
 
 using Domain.Aggregates;
 using Domain.Errors;
+using UserDm = Domain.Aggregates.User;
 using Application.Common.Interfaces;
+
+using Infrastructure.User;
 
 namespace Infrastructure.Persistence.Repositories;
 
-internal class UserRepository : Repository<User>, IUserRepository
+internal class UserRepository : Repository<UserDm>, IUserRepository
 {
-    private readonly UserManager<User> _userManager;
+    private readonly UserManager<UserDm> _userManager;
 
     public UserRepository(
         IConfiguration configuration,
         AppDbContext dbContext,
         ISharedTxnScope sharedTxnScope,
-        UserManager<User> userManager
+        UserManager<UserDm> userManager
     ) : base(configuration, dbContext, sharedTxnScope)
     {
         _userManager = userManager;
@@ -25,25 +28,25 @@ internal class UserRepository : Repository<User>, IUserRepository
 
     public override ValueTask SaveChanges() => ValueTask.CompletedTask;
 
-    public async Task<AccountError?> Create(User user)
+    public async Task<UserError?> Create(UserDm user)
     {
         var result = await _userManager.CreateAsync(user);
         if (!result.Succeeded)
         {
             // @@NOTE: Since auto-saving is enabled by default, a possible
             // error (like duplicate email/username) is detected right away.
-            return new AccountError(result.ToErrorDictionary());
+            return new UserError(result.ToErrorDictionary());
         }
 
         return null;
     }
 
-    public async Task<AccountError?> AddClaimsTo(User user, params Claim[] claims)
+    public async Task<UserError?> AddClaimsTo(UserDm user, params Claim[] claims)
     {
         var result = await _userManager.AddClaimsAsync(user, claims);
         if (!result.Succeeded)
         {
-            return new AccountError(result.ToErrorDictionary());
+            return new UserError(result.ToErrorDictionary());
         }
 
         return null;

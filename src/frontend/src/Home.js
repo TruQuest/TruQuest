@@ -458,7 +458,7 @@ const Home = () => {
       from: account,
     });
 
-    const response = await axios.post("http://localhost:5223/account/signup", {
+    const response = await axios.post("http://localhost:5223/user/signup", {
       input: message,
       signature: res,
     });

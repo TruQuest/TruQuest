@@ -5,6 +5,7 @@ using MediatR;
 using Domain.Aggregates;
 
 using Application.Thing.Commands.CloseVerifierLottery;
+using Application.Thing.Commands.CloseAcceptancePoll;
 
 namespace Application.Ethereum.Events.BlockMined;
 
@@ -26,21 +27,29 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
 
     public async Task Handle(BlockMinedEvent @event, CancellationToken ct)
     {
-        var tasks = await _taskRepository.FindAllWithScheduledBlockNumber(leBlockNumber: @event.BlockNumber);
+        var tasks = await _taskRepository.FindAllWithScheduledBlockNumber(leBlockNumber: @event.BlockNumber - 1);
         foreach (var task in tasks)
         {
             switch (task.Type)
             {
-                case TaskType.CloseVerifierLottery:
+                case TaskType.CloseThingVerifierLottery:
                     await _mediator.Send(new CloseVerifierLotteryCommand
                     {
                         LatestIncludedBlockNumber = task.ScheduledBlockNumber,
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),
                         Data = Convert.FromBase64String(((JsonElement)task.Payload["data"]).GetString()!)
                     });
-                    task.SetCompleted();
+                    break;
+                case TaskType.CloseThingAcceptancePoll:
+                    await _mediator.Send(new CloseAcceptancePollCommand
+                    {
+                        LatestIncludedBlockNumber = task.ScheduledBlockNumber,
+                        ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!)
+                    });
                     break;
             }
+
+            task.SetCompleted();
         }
 
         await _taskRepository.SaveChanges();

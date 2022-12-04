@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 
 using Application.Common.Attributes;
 
-namespace Infrastructure.Account;
+namespace Infrastructure.User;
 
 public static class RequireAuthorizationAttributeExtension
 {

@@ -1,13 +1,13 @@
 namespace Domain.Errors;
 
-public class AccountError : HandleError
+public class UserError : HandleError
 {
-    public AccountError(Dictionary<string, string[]> errors) : base(type: "Account")
+    public UserError(Dictionary<string, string[]> errors) : base(type: "User")
     {
         Errors = errors;
     }
 
-    public AccountError(string message) : base(type: "Account")
+    public UserError(string message) : base(type: "User")
     {
         Errors = new Dictionary<string, string[]>
         {

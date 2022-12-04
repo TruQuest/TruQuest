@@ -186,23 +186,25 @@ contract AcceptancePoll {
         s_durationBlocks = _durationBlocks;
     }
 
-    function connectToVerifierLottery(address _verifierLotteryAddress)
-        external
-        onlyTruQuest
-    {
+    function connectToVerifierLottery(
+        address _verifierLotteryAddress
+    ) external onlyTruQuest {
         s_verifierLottery = VerifierLottery(_verifierLotteryAddress);
     }
 
-    function initPoll(string calldata _thingId, address[] memory _verifiers)
-        external
-        onlyVerifierLottery
-    {
-        s_thingIdToPollStartedBlock[_thingId] = uint64(block.number); // should be calculated instead of being dependant on backend's timing
+    function initPoll(
+        string calldata _thingId,
+        address[] memory _verifiers
+    ) external onlyVerifierLottery {
+        s_thingIdToPollStartedBlock[_thingId] = uint64(block.number);
         s_thingVerifiers[_thingId] = _verifiers;
         s_thingPollStage[_thingId] = Stage.InProgress;
     }
 
-    function castVote(string calldata _thingId, Vote _vote)
+    function castVote(
+        string calldata _thingId,
+        Vote _vote
+    )
         public
         onlyWhenPollInProgress(_thingId)
         onlyWhileNotExpired(_thingId)
@@ -280,7 +282,10 @@ contract AcceptancePoll {
         s_thingPollStage[_thingId] = Stage.SubPollInProgress;
     }
 
-    function castVoteAsSubstituteVerifier(string calldata _thingId, Vote _vote)
+    function castVoteAsSubstituteVerifier(
+        string calldata _thingId,
+        Vote _vote
+    )
         public
         onlyWhenSubPollInProgress(_thingId)
         onlyWhileNotExpired(_thingId)
@@ -394,11 +399,9 @@ contract AcceptancePoll {
         );
     }
 
-    function getVerifierCount(string calldata _thingId)
-        external
-        view
-        returns (uint256)
-    {
+    function getVerifierCount(
+        string calldata _thingId
+    ) external view returns (uint256) {
         return s_thingVerifiers[_thingId].length;
     }
 }

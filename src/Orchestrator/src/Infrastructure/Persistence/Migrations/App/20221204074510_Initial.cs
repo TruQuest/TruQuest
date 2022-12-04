@@ -164,7 +164,7 @@ namespace Infrastructure.Persistence.Migrations.App
                 });
 
             migrationBuilder.CreateTable(
-                name: "SubjectAttachedTag",
+                name: "SubjectAttachedTags",
                 schema: "truquest",
                 columns: table => new
                 {
@@ -173,16 +173,16 @@ namespace Infrastructure.Persistence.Migrations.App
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SubjectAttachedTag", x => new { x.SubjectId, x.TagId });
+                    table.PrimaryKey("PK_SubjectAttachedTags", x => new { x.SubjectId, x.TagId });
                     table.ForeignKey(
-                        name: "FK_SubjectAttachedTag_Subjects_SubjectId",
+                        name: "FK_SubjectAttachedTags_Subjects_SubjectId",
                         column: x => x.SubjectId,
                         principalSchema: "truquest",
                         principalTable: "Subjects",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_SubjectAttachedTag_Tags_TagId",
+                        name: "FK_SubjectAttachedTags_Tags_TagId",
                         column: x => x.TagId,
                         principalSchema: "truquest",
                         principalTable: "Tags",
@@ -246,7 +246,7 @@ namespace Infrastructure.Persistence.Migrations.App
                 });
 
             migrationBuilder.CreateTable(
-                name: "ThingAttachedTag",
+                name: "ThingAttachedTags",
                 schema: "truquest",
                 columns: table => new
                 {
@@ -255,16 +255,43 @@ namespace Infrastructure.Persistence.Migrations.App
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ThingAttachedTag", x => new { x.ThingId, x.TagId });
+                    table.PrimaryKey("PK_ThingAttachedTags", x => new { x.ThingId, x.TagId });
                     table.ForeignKey(
-                        name: "FK_ThingAttachedTag_Tags_TagId",
+                        name: "FK_ThingAttachedTags_Tags_TagId",
                         column: x => x.TagId,
                         principalSchema: "truquest",
                         principalTable: "Tags",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_ThingAttachedTag_Things_ThingId",
+                        name: "FK_ThingAttachedTags_Things_ThingId",
+                        column: x => x.ThingId,
+                        principalSchema: "truquest",
+                        principalTable: "Things",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ThingVerifiers",
+                schema: "truquest",
+                columns: table => new
+                {
+                    ThingId = table.Column<Guid>(type: "uuid", nullable: false),
+                    VerifierId = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ThingVerifiers", x => new { x.ThingId, x.VerifierId });
+                    table.ForeignKey(
+                        name: "FK_ThingVerifiers_AspNetUsers_VerifierId",
+                        column: x => x.VerifierId,
+                        principalSchema: "truquest",
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ThingVerifiers_Things_ThingId",
                         column: x => x.ThingId,
                         principalSchema: "truquest",
                         principalTable: "Things",
@@ -304,9 +331,9 @@ namespace Infrastructure.Persistence.Migrations.App
                 column: "ThingId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_SubjectAttachedTag_TagId",
+                name: "IX_SubjectAttachedTags_TagId",
                 schema: "truquest",
-                table: "SubjectAttachedTag",
+                table: "SubjectAttachedTags",
                 column: "TagId");
 
             migrationBuilder.CreateIndex(
@@ -316,9 +343,9 @@ namespace Infrastructure.Persistence.Migrations.App
                 column: "SubmitterId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ThingAttachedTag_TagId",
+                name: "IX_ThingAttachedTags_TagId",
                 schema: "truquest",
-                table: "ThingAttachedTag",
+                table: "ThingAttachedTags",
                 column: "TagId");
 
             migrationBuilder.CreateIndex(
@@ -338,6 +365,12 @@ namespace Infrastructure.Persistence.Migrations.App
                 schema: "truquest",
                 table: "Things",
                 column: "SubmitterId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ThingVerifiers_VerifierId",
+                schema: "truquest",
+                table: "ThingVerifiers",
+                column: "VerifierId");
         }
 
         /// <inheritdoc />
@@ -360,7 +393,7 @@ namespace Infrastructure.Persistence.Migrations.App
                 schema: "truquest");
 
             migrationBuilder.DropTable(
-                name: "SubjectAttachedTag",
+                name: "SubjectAttachedTags",
                 schema: "truquest");
 
             migrationBuilder.DropTable(
@@ -368,7 +401,11 @@ namespace Infrastructure.Persistence.Migrations.App
                 schema: "truquest");
 
             migrationBuilder.DropTable(
-                name: "ThingAttachedTag",
+                name: "ThingAttachedTags",
+                schema: "truquest");
+
+            migrationBuilder.DropTable(
+                name: "ThingVerifiers",
                 schema: "truquest");
 
             migrationBuilder.DropTable(

@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Persistence.Migrations.App
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20221203064044_Initial")]
+    [Migration("20221204074510_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -117,7 +117,7 @@ namespace Infrastructure.Persistence.Migrations.App
 
                     b.HasIndex("TagId");
 
-                    b.ToTable("SubjectAttachedTag", "truquest");
+                    b.ToTable("SubjectAttachedTags", "truquest");
                 });
 
             modelBuilder.Entity("Domain.Aggregates.Tag", b =>
@@ -191,7 +191,22 @@ namespace Infrastructure.Persistence.Migrations.App
 
                     b.HasIndex("TagId");
 
-                    b.ToTable("ThingAttachedTag", "truquest");
+                    b.ToTable("ThingAttachedTags", "truquest");
+                });
+
+            modelBuilder.Entity("Domain.Aggregates.ThingVerifier", b =>
+                {
+                    b.Property<Guid?>("ThingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("VerifierId")
+                        .HasColumnType("text");
+
+                    b.HasKey("ThingId", "VerifierId");
+
+                    b.HasIndex("VerifierId");
+
+                    b.ToTable("ThingVerifiers", "truquest");
                 });
 
             modelBuilder.Entity("Domain.Aggregates.User", b =>
@@ -387,6 +402,21 @@ namespace Infrastructure.Persistence.Migrations.App
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Domain.Aggregates.ThingVerifier", b =>
+                {
+                    b.HasOne("Domain.Aggregates.Thing", null)
+                        .WithMany("Verifiers")
+                        .HasForeignKey("ThingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Aggregates.User", null)
+                        .WithMany()
+                        .HasForeignKey("VerifierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
                     b.HasOne("Domain.Aggregates.User", null)
@@ -424,6 +454,8 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.Navigation("Evidence");
 
                     b.Navigation("Tags");
+
+                    b.Navigation("Verifiers");
                 });
 #pragma warning restore 612, 618
         }

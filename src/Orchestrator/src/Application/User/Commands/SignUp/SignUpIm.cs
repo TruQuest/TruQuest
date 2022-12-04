@@ -1,4 +1,4 @@
-namespace Application.Account.Commands.SignUp;
+namespace Application.User.Commands.SignUp;
 
 public class SignUpIm
 {

@@ -3,17 +3,17 @@ using Microsoft.AspNetCore.Mvc;
 using MediatR;
 
 using Domain.Results;
-using Application.Account.Commands.SignUp;
+using Application.User.Commands.SignUp;
 
 namespace API.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class AccountController : ControllerBase
+public class UserController : ControllerBase
 {
     private readonly ISender _mediator;
 
-    public AccountController(ISender mediator)
+    public UserController(ISender mediator)
     {
         _mediator = mediator;
     }

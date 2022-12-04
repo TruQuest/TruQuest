@@ -14,14 +14,21 @@ internal class MessageTypeResolver : IMessageTypeResolver
 
     public Type OnConsume(IMessageContext context)
     {
-        var messageTypeBytes = context.Headers[_messageTypeHeaderName];
-        var eventType = (ThingEventType)int.Parse(Encoding.UTF8.GetString(messageTypeBytes));
-        switch (eventType)
+        if (context.ConsumerContext.Topic == "thing.events")
         {
-            case ThingEventType.ThingFunded:
-                return typeof(ThingFundedEvent);
-            case ThingEventType.VerifierLotteryClosedWithSuccess:
-                return typeof(VerifierLotteryClosedWithSuccessEvent);
+            var messageTypeBytes = context.Headers[_messageTypeHeaderName];
+            var eventType = (ThingEventType)int.Parse(Encoding.UTF8.GetString(messageTypeBytes));
+            switch (eventType)
+            {
+                case ThingEventType.ThingFunded:
+                    return typeof(ThingFundedEvent);
+                case ThingEventType.VerifierLotteryClosedWithSuccess:
+                    return typeof(VerifierLotteryClosedWithSuccessEvent);
+            }
+        }
+        else if (context.ConsumerContext.Topic == "thing.verifiers")
+        {
+            return typeof(ThingVerifierSelectedEvent);
         }
 
         throw new InvalidOperationException();

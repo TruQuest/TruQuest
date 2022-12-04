@@ -36,26 +36,19 @@ internal class ContractCaller : IContractCaller
         return queryDispatcher.QueryAsync<byte[]>(_verifierLotteryAddress, new ComputeHashMessage { Data = data });
     }
 
-    public async Task InitVerifierLottery(string thingId, byte[] dataHash)
+    public async Task<long> InitVerifierLottery(string thingId, byte[] dataHash)
     {
         var txnDispatcher = _web3.Eth.GetContractTransactionHandler<InitVerifierLotteryMessage>();
-        try
-        {
-            var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
-                _verifierLotteryAddress,
-                new InitVerifierLotteryMessage
-                {
-                    ThingId = thingId,
-                    DataHash = dataHash
-                }
-            );
+        var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
+            _verifierLotteryAddress,
+            new InitVerifierLotteryMessage
+            {
+                ThingId = thingId,
+                DataHash = dataHash
+            }
+        );
 
-            _logger.LogInformation("Txn hash {TxnHash}", txnReceipt.TransactionHash);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, ex.Message);
-        }
+        return (long)txnReceipt.BlockNumber.Value;
     }
 
     public Task<BigInteger> ComputeNonce(string thingId, byte[] data)

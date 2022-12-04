@@ -7,6 +7,6 @@ namespace Domain.Aggregates;
 
 public interface IUserRepository : IRepository<User>
 {
-    Task<AccountError?> Create(User user);
-    Task<AccountError?> AddClaimsTo(User user, params Claim[] claims);
+    Task<UserError?> Create(User user);
+    Task<UserError?> AddClaimsTo(User user, params Claim[] claims);
 }

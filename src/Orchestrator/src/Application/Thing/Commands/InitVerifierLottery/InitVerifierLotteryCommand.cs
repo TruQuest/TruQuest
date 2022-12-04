@@ -5,15 +5,12 @@ using MediatR;
 using Domain.Aggregates;
 using Domain.Results;
 
-using Application.Common.Attributes;
 using Application.Common.Interfaces;
 
 namespace Application.Thing.Commands.InitVerifierLottery;
 
-[ExecuteInTxn]
 public class InitVerifierLotteryCommand : IRequest<VoidResult>
 {
-    public long ThingFundedBlockNumber { get; init; }
     public required string ThingIdHash { get; init; }
 }
 
@@ -41,11 +38,11 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
         var data = RandomNumberGenerator.GetBytes(32);
         var dataHash = await _contractCaller.ComputeHash(data);
 
-        await _contractCaller.InitVerifierLottery(thing.Id!.Value.ToString(), dataHash);
+        long lotteryInitBlockNumber = await _contractCaller.InitVerifierLottery(thing.Id!.Value.ToString(), dataHash);
 
         var task = new DeferredTask(
-            type: TaskType.CloseVerifierLottery,
-            scheduledBlockNumber: command.ThingFundedBlockNumber + 30
+            type: TaskType.CloseThingVerifierLottery,
+            scheduledBlockNumber: lotteryInitBlockNumber + 30
         );
         task.SetPayload(new()
         {

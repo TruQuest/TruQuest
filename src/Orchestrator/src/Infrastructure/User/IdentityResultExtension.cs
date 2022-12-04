@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 
-namespace Infrastructure.Persistence.Repositories;
+namespace Infrastructure.User;
 
 internal static class IdentityResultExtension
 {

@@ -9,6 +9,7 @@ error VerifierLottery__NotTruQuest();
 error VerifierLottery__NotAcceptancePoll();
 error VerifierLottery__AlreadyCommittedToLottery(string thingId);
 error VerifierLottery__LotteryNotActive(string thingId);
+error VerifierLottery__LotteryExpired(string thingId);
 error VerifierLottery__NotEnoughFunds(uint256 requiredFunds);
 error VerifierLottery__NotCommittedToLottery(string thingId);
 error VerifierLottery__AlreadyJoinedLottery(string thingId);
@@ -21,6 +22,7 @@ error VerifierLottery__InvalidNumberOfLotteryWinners(
 error VerifierLottery__InitAndCloseLotteryInTheSameBlock(string thingId);
 
 error VerifierLottery__SubLotteryNotActive(string thingId);
+error VerifierLottery__SubLotteryExpired(string thingId);
 error VerifierLottery__AlreadyCommittedToSubLottery(string thingId);
 error VerifierLottery__NotCommittedToSubLottery(string thingId);
 error VerifierLottery__AlreadyJoinedSubLottery(string thingId);
@@ -131,6 +133,24 @@ contract VerifierLottery {
         _;
     }
 
+    modifier onlyWhenLotteryActiveAndNotExpired(
+        string calldata _thingId,
+        uint8 _margin
+    ) {
+        int64 lotteryInitBlock = s_thingIdToLotteryCommitments[_thingId][
+            s_orchestrator
+        ].block;
+        if (lotteryInitBlock < 1) {
+            revert VerifierLottery__LotteryNotActive(_thingId);
+        }
+        if (
+            block.number + _margin > uint64(lotteryInitBlock) + s_durationBlocks
+        ) {
+            revert VerifierLottery__LotteryExpired(_thingId);
+        }
+        _;
+    }
+
     modifier onlyWhenLotteryActive(string calldata _thingId) {
         if (s_thingIdToLotteryCommitments[_thingId][s_orchestrator].block < 1) {
             revert VerifierLottery__LotteryNotActive(_thingId);
@@ -141,6 +161,25 @@ contract VerifierLottery {
     modifier onlyOncePerSubLottery(string calldata _thingId) {
         if (s_thingIdToSubLotteryCommitments[_thingId][msg.sender].block != 0) {
             revert VerifierLottery__AlreadyCommittedToSubLottery(_thingId);
+        }
+        _;
+    }
+
+    modifier onlyWhenSubLotteryActiveAndNotExpired(
+        string calldata _thingId,
+        uint8 _margin
+    ) {
+        int64 subLotteryInitBlock = s_thingIdToSubLotteryCommitments[_thingId][
+            address(s_acceptancePoll)
+        ].block;
+        if (subLotteryInitBlock < 1) {
+            revert VerifierLottery__SubLotteryNotActive(_thingId);
+        }
+        if (
+            block.number + _margin >
+            uint64(subLotteryInitBlock) + s_durationBlocks
+        ) {
+            revert VerifierLottery__SubLotteryExpired(_thingId);
         }
         _;
     }
@@ -197,11 +236,10 @@ contract VerifierLottery {
         bytes32 _dataHash
     )
         public
-        onlyWhenLotteryActive(_thingId)
+        onlyWhenLotteryActiveAndNotExpired(_thingId, 1)
         whenHasAtLeast(s_verifierStake)
         onlyOncePerLottery(_thingId)
     {
-        // check that current block is not too late?
         i_truQuest.stake(msg.sender, s_verifierStake);
         s_thingIdToLotteryCommitments[_thingId][msg.sender] = Commitment(
             _dataHash,
@@ -215,8 +253,7 @@ contract VerifierLottery {
     function joinLottery(
         string calldata _thingId,
         bytes32 _data
-    ) public onlyWhenLotteryActive(_thingId) {
-        // check that current block is not too late?
+    ) public onlyWhenLotteryActiveAndNotExpired(_thingId, 0) {
         Commitment memory commitment = s_thingIdToLotteryCommitments[_thingId][
             msg.sender
         ];
@@ -350,11 +387,10 @@ contract VerifierLottery {
         bytes32 _dataHash
     )
         public
-        onlyWhenSubLotteryActive(_thingId)
+        onlyWhenSubLotteryActiveAndNotExpired(_thingId, 1)
         whenHasAtLeast(s_verifierStake)
         onlyOncePerSubLottery(_thingId)
     {
-        // check that current block is not too late?
         i_truQuest.stake(msg.sender, s_verifierStake);
         s_thingIdToSubLotteryCommitments[_thingId][msg.sender] = Commitment(
             _dataHash,
@@ -369,8 +405,7 @@ contract VerifierLottery {
     function joinSubLottery(
         string calldata _thingId,
         bytes32 _data
-    ) public onlyWhenSubLotteryActive(_thingId) {
-        // check that current block is not too late?
+    ) public onlyWhenSubLotteryActiveAndNotExpired(_thingId, 0) {
         Commitment memory commitment = s_thingIdToSubLotteryCommitments[
             _thingId
         ][msg.sender];

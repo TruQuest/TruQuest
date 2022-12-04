@@ -5,7 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 
 using Application.Common.Interfaces;
 
-namespace Infrastructure.Account;
+namespace Infrastructure.User;
 
 public class AuthenticationContext : IAuthenticationContext
 {

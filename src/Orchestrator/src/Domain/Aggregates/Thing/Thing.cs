@@ -19,6 +19,9 @@ public class Thing : Entity, IAggregateRoot
     private List<ThingAttachedTag> _tags = new();
     public IReadOnlyList<ThingAttachedTag> Tags => _tags;
 
+    private List<ThingVerifier> _verifiers = new();
+    public IReadOnlyList<ThingVerifier> Verifiers => _verifiers;
+
     public Thing(string title, string details, string? imageUrl, string submitterId, Guid subjectId)
     {
         State = ThingState.WaitingToBeFunded;
@@ -42,5 +45,10 @@ public class Thing : Entity, IAggregateRoot
     public void SetState(ThingState state)
     {
         State = state;
+    }
+
+    public void AddVerifiers(IEnumerable<string> verifierIds)
+    {
+        _verifiers.AddRange(verifierIds.Select(id => new ThingVerifier(id)));
     }
 }

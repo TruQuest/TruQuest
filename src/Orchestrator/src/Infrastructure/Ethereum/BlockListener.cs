@@ -25,8 +25,7 @@ internal class BlockListener : IBlockListener
         long lastReportedBlockNumber = 0;
         while (!stoppingToken.IsCancellationRequested)
         {
-            var blockNumber = (long)(await _web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).Value -
-                (_blockConfirmations + 1);
+            var blockNumber = (long)(await _web3.Eth.Blocks.GetBlockNumber.SendRequestAsync()).Value - _blockConfirmations;
             if (blockNumber > lastReportedBlockNumber)
             {
                 lastReportedBlockNumber = blockNumber;

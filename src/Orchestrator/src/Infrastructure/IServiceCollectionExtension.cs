@@ -15,9 +15,10 @@ using Nethereum.Signer.EIP712;
 
 using Domain.Aggregates;
 using Domain.Aggregates.Events;
+using UserDm = Domain.Aggregates.User;
 using Application.Common.Interfaces;
 
-using Infrastructure.Account;
+using Infrastructure.User;
 using Infrastructure.Ethereum;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Repositories;
@@ -52,7 +53,7 @@ public static class IServiceCollectionExtension
         JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 
         services
-            .AddIdentityCore<User>(options =>
+            .AddIdentityCore<UserDm>(options =>
             {
                 options.ClaimsIdentity.UserIdClaimType = JwtRegisteredClaimNames.Sub;
                 options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -_";
@@ -174,31 +175,34 @@ public static class IServiceCollectionExtension
         services.AddSingleton<IContractCaller, ContractCaller>();
         services.AddSingleton<IBlockListener, BlockListener>();
 
-        services.AddKafka(kafka =>
-            kafka
-                .UseMicrosoftLog()
-                .AddCluster(cluster =>
-                    cluster
-                        .WithBrokers(configuration["Kafka:Brokers"]!.Split(','))
-                        .AddConsumer(consumer =>
-                            consumer
-                                .Topic(configuration["Kafka:Consumer:Topic"])
-                                .WithGroupId(configuration["Kafka:Consumer:GroupId"])
-                                .WithAutoOffsetReset(AutoOffsetReset.Earliest)
-                                .WithBufferSize(1)
-                                .WithWorkersCount(4)
-                                .AddMiddlewares(middlewares =>
-                                    middlewares
-                                        .AddSerializer<MessageSerializer, MessageTypeResolver>()
-                                        .AddTypedHandlers(handlers =>
-                                            handlers
-                                                .WithHandlerLifetime(InstanceLifetime.Scoped)
-                                                .AddHandlersFromAssemblyOf<MessageTypeResolver>()
-                                        )
-                                )
-                        )
-                )
-        );
+        if (!configuration.GetValue<bool>("DbMigrator"))
+        {
+            services.AddKafka(kafka =>
+                kafka
+                    .UseMicrosoftLog()
+                    .AddCluster(cluster =>
+                        cluster
+                            .WithBrokers(configuration.GetSection("Kafka:Brokers").Get<List<string>>())
+                            .AddConsumer(consumer =>
+                                consumer
+                                    .Topics(configuration.GetSection("Kafka:Consumer:Topics").Get<List<string>>())
+                                    .WithGroupId(configuration["Kafka:Consumer:GroupId"])
+                                    .WithAutoOffsetReset(AutoOffsetReset.Earliest)
+                                    .WithBufferSize(1)
+                                    .WithWorkersCount(4)
+                                    .AddMiddlewares(middlewares =>
+                                        middlewares
+                                            .AddSerializer<MessageSerializer, MessageTypeResolver>()
+                                            .AddTypedHandlers(handlers =>
+                                                handlers
+                                                    .WithHandlerLifetime(InstanceLifetime.Scoped)
+                                                    .AddHandlersFromAssemblyOf<MessageTypeResolver>()
+                                            )
+                                    )
+                            )
+                    )
+            );
+        }
 
         return services;
     }

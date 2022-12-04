@@ -7,7 +7,7 @@ using Nethereum.Signer;
 
 using Domain.Errors;
 using Domain.Results;
-using Application.Account.Commands.SignUp;
+using Application.User.Commands.SignUp;
 using Application.Common.Interfaces;
 using Application.Subject.Commands.AddNewSubject;
 using Application.Thing.Commands.SubmitNewThing;
@@ -52,7 +52,7 @@ internal class Signer : ISigner
         };
     }
 
-    public Either<AccountError, string> RecoverFromSignUpMessage(SignUpIm input, string signature)
+    public Either<UserError, string> RecoverFromSignUpMessage(SignUpIm input, string signature)
     {
         var td = new SignUpTd { Username = input.Username };
         var tdDefinition = _getTypedDataDefinition(typeof(SignUpTd));

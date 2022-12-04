@@ -3,7 +3,7 @@ using System.Security.Claims;
 
 using Application.Common.Interfaces;
 
-namespace Infrastructure.Account;
+namespace Infrastructure.User;
 
 internal class CurrentPrincipal : ICurrentPrincipal
 {

@@ -3,10 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ValueGeneration;
 
 using Domain.Aggregates;
+using UserDm = Domain.Aggregates.User;
 
 namespace Infrastructure.Persistence;
 
-public class AppDbContext : IdentityUserContext<User, string>
+public class AppDbContext : IdentityUserContext<UserDm, string>
 {
     public DbSet<DeferredTask> Tasks { get; set; }
     public DbSet<Subject> Subjects { get; set; }
@@ -30,7 +31,7 @@ public class AppDbContext : IdentityUserContext<User, string>
             builder.Property(s => s.ImageUrl).IsRequired(false);
 
             builder
-                .HasOne<User>()
+                .HasOne<UserDm>()
                 .WithMany()
                 .HasForeignKey(s => s.SubmitterId)
                 .IsRequired();
@@ -49,6 +50,7 @@ public class AppDbContext : IdentityUserContext<User, string>
 
         modelBuilder.Entity<SubjectAttachedTag>(builder =>
         {
+            builder.ToTable("SubjectAttachedTags");
             builder.HasKey(t => new { t.SubjectId, t.TagId });
             builder
                 .HasOne<Subject>()
@@ -75,7 +77,7 @@ public class AppDbContext : IdentityUserContext<User, string>
             builder.Property(t => t.ImageUrl).IsRequired(false);
 
             builder
-                .HasOne<User>()
+                .HasOne<UserDm>()
                 .WithMany()
                 .HasForeignKey(t => t.SubmitterId)
                 .IsRequired();
@@ -92,6 +94,10 @@ public class AppDbContext : IdentityUserContext<User, string>
 
             builder.Metadata
                 .FindNavigation(nameof(Thing.Tags))
+                !.SetPropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.Metadata
+                .FindNavigation(nameof(Thing.Verifiers))
                 !.SetPropertyAccessMode(PropertyAccessMode.Field);
 
             builder.HasIndex(t => t.IdHash);
@@ -113,6 +119,7 @@ public class AppDbContext : IdentityUserContext<User, string>
 
         modelBuilder.Entity<ThingAttachedTag>(builder =>
         {
+            builder.ToTable("ThingAttachedTags");
             builder.HasKey(t => new { t.ThingId, t.TagId });
             builder
                 .HasOne<Thing>()
@@ -123,6 +130,22 @@ public class AppDbContext : IdentityUserContext<User, string>
                 .HasOne<Tag>()
                 .WithMany()
                 .HasForeignKey(t => t.TagId)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<ThingVerifier>(builder =>
+        {
+            builder.ToTable("ThingVerifiers");
+            builder.HasKey(tv => new { tv.ThingId, tv.VerifierId });
+            builder
+                .HasOne<Thing>()
+                .WithMany(t => t.Verifiers)
+                .HasForeignKey(tv => tv.ThingId)
+                .IsRequired();
+            builder
+                .HasOne<UserDm>()
+                .WithMany()
+                .HasForeignKey(tv => tv.VerifierId)
                 .IsRequired();
         });
 

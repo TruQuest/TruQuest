@@ -6,11 +6,12 @@ using MediatR;
 
 using Domain.Results;
 using Domain.Aggregates;
+using UserDm = Domain.Aggregates.User;
 
 using Application.Common.Interfaces;
 using Application.Common.Attributes;
 
-namespace Application.Account.Commands.SignUp;
+namespace Application.User.Commands.SignUp;
 
 [ExecuteInTxn]
 public class SignUpCommand : IRequest<HandleResult<SignUpResultVm>>
@@ -50,7 +51,7 @@ internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResul
             };
         }
 
-        var user = new User
+        var user = new UserDm
         {
             Id = result.Data!.Replace("0x", string.Empty),
             UserName = command.Input.Username
