@@ -33,6 +33,14 @@ const newThingTd = [
   { name: "tags", type: "TagTd[]" },
 ];
 
+const newVoteTd = [
+  { name: "thingId", type: "string" },
+  { name: "pollType", type: "string" },
+  { name: "castedAt", type: "string" },
+  { name: "decision", type: "string" },
+  { name: "reason", type: "string" },
+];
+
 const domainData = {
   name: "TruQuest",
   version: "0.0.1",
@@ -588,6 +596,49 @@ const Home = () => {
     });
   };
 
+  const castVote = async () => {
+    const message = {
+      thingId: thingId,
+      pollType: "Acceptance",
+      castedAt: new Date().toISOString(),
+      decision: "Accept",
+      reason: "Valid",
+    };
+
+    const data = JSON.stringify({
+      types: {
+        EIP712Domain: domain,
+        NewVoteTd: newVoteTd,
+      },
+      domain: domainData,
+      primaryType: "NewVoteTd",
+      message: message,
+    });
+
+    const res = await web3.provider.request({
+      method: "eth_signTypedData_v4",
+      params: [account, data],
+      from: account,
+    });
+
+    const response = await axios.post(
+      "http://localhost:5223/vote/cast",
+      {
+        input: {
+          thingId: message.thingId,
+          pollType: 0,
+          castedAt: message.castedAt,
+          decision: 2,
+          reason: message.reason,
+        },
+        signature: res,
+      },
+      {
+        headers: { Authorization: "Bearer " + token },
+      }
+    );
+  };
+
   useEffect(() => {
     if (window.localStorage.getItem("web3account")) {
       enableWeb3();
@@ -619,6 +670,7 @@ const Home = () => {
         <button onClick={submitNewThing}>Submit new thing</button>
       )}
       {thingId && <button onClick={fundThing}>Fund thing {thingId}</button>}
+      {thingId && <button onClick={castVote}>Cast vote</button>}
     </div>
   );
 };

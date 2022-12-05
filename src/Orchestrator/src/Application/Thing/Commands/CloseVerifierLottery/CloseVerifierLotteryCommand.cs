@@ -44,10 +44,10 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
             thingId: command.ThingId,
             latestBlockNumber: command.LatestIncludedBlockNumber,
             nonce: nonce,
-            count: 3
+            count: 5
         );
 
-        if (winnerEvents.Count == 3)
+        if (winnerEvents.Count == 5)
         {
             var lotteryWinners = await _preJoinedVerifierLotteryEventRepository.GetLotteryWinnerIndices(
                 command.ThingId,

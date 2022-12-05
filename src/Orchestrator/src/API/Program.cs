@@ -14,6 +14,15 @@ public class Program
     public static async Task Main(string[] args)
     {
         var app = CreateWebApplication(args);
+        app.Lifetime.ApplicationStarted.Register(async () =>
+        {
+            var client = new HttpClient();
+            var body = await File.ReadAllTextAsync("pg-connector.conf.json");
+            var request = new HttpRequestMessage(HttpMethod.Post, "http://localhost:8083/connectors");
+            request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+            var response = await client.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+        });
 
         app.UseCors();
 

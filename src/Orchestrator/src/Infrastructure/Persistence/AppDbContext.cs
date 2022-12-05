@@ -13,6 +13,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
     public DbSet<Subject> Subjects { get; set; }
     public DbSet<Tag> Tags { get; set; }
     public DbSet<Thing> Things { get; set; }
+    public DbSet<Vote> Votes { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -159,6 +160,23 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
                 .Property(t => t.Payload)
                 .HasColumnType("jsonb")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<Vote>(builder =>
+        {
+            builder.HasKey(v => new { v.ThingId, v.VoterId });
+            builder.Property(v => v.PollType).HasConversion<int>().IsRequired();
+            builder.Property(v => v.CastedAtMs).IsRequired();
+            builder.Property(v => v.Decision).HasConversion<int>().IsRequired();
+            builder.Property(v => v.Reason).IsRequired(false);
+            builder.Property(v => v.VoterSignature).IsRequired();
+            builder.Property(v => v.IpfsCid).IsRequired();
+
+            builder
+                .HasOne<ThingVerifier>()
+                .WithMany()
+                .HasForeignKey(v => new { v.ThingId, v.VoterId })
                 .IsRequired();
         });
     }

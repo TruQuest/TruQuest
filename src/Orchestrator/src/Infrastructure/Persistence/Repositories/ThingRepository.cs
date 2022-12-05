@@ -27,4 +27,15 @@ internal class ThingRepository : Repository<Thing>, IThingRepository
     public Task<Thing> FindByIdHash(string idHash) => _dbContext.Things.SingleAsync(t => t.IdHash == idHash);
 
     public Task<Thing> FindById(Guid id) => _dbContext.Things.SingleAsync(t => t.Id == id);
+
+    public async Task<bool> CheckIsVerifierFor(Guid thingId, string userId)
+    {
+        var thing = await _dbContext.Things
+            .AsNoTracking()
+            .Include(t => t.Verifiers.Where(v => v.VerifierId == userId))
+            .Where(t => t.Id == thingId)
+            .SingleAsync();
+
+        return thing.Verifiers.Any();
+    }
 }

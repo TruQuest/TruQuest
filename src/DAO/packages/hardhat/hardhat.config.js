@@ -359,8 +359,13 @@ task("mine", "Move blocks")
 task("lottery", "Enter lottery")
   .addParam("thingId", "Thing GUID")
   .setAction(async (taskArgs, { getNamedAccounts, ethers, network }) => {
-    const { lotteryPlayer1, lotteryPlayer2, lotteryPlayer3, lotteryPlayer4 } =
-      await getNamedAccounts();
+    const {
+      player,
+      lotteryPlayer1,
+      lotteryPlayer2,
+      lotteryPlayer3,
+      lotteryPlayer4,
+    } = await getNamedAccounts();
 
     let verifierLottery = await ethers.getContractAt(
       "VerifierLottery",
@@ -417,6 +422,25 @@ task("lottery", "Enter lottery")
       params: [],
     });
     await verifierLottery.joinLottery(taskArgs.thingId, data);
+
+    verifierLottery = await ethers.getContractAt(
+      "VerifierLottery",
+      "0x3B02fF1e626Ed7a8fd6eC5299e2C54e1421B626B",
+      player
+    );
+    data = ethers.utils.randomBytes(32);
+    dataHash = await verifierLottery.computeHash(data);
+    await verifierLottery.preJoinLottery(taskArgs.thingId, dataHash);
+    await network.provider.request({
+      method: "evm_mine",
+      params: [],
+    });
+    await verifierLottery.joinLottery(taskArgs.thingId, data);
+
+    await network.provider.request({
+      method: "evm_mine",
+      params: [],
+    });
   });
 
 task("wallet", "Create a wallet (pk) link", async (_, { ethers }) => {

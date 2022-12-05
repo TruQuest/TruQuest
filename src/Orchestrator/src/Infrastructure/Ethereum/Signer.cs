@@ -11,6 +11,7 @@ using Application.User.Commands.SignUp;
 using Application.Common.Interfaces;
 using Application.Subject.Commands.AddNewSubject;
 using Application.Thing.Commands.SubmitNewThing;
+using Application.Vote.Commands.CastVote;
 
 using Infrastructure.Ethereum.TypedData;
 
@@ -58,7 +59,7 @@ internal class Signer : ISigner
         var tdDefinition = _getTypedDataDefinition(typeof(SignUpTd));
         var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
 
-        return address.Replace("0x", string.Empty);
+        return address.Substring(2);
     }
 
     public Either<SubjectError, string> RecoverFromNewSubjectMessage(NewSubjectIm input, string signature)
@@ -74,7 +75,7 @@ internal class Signer : ISigner
         var tdDefinition = _getTypedDataDefinition(typeof(NewSubjectTd), typeof(TagTd));
         var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
 
-        return address.Replace("0x", string.Empty);
+        return address.Substring(2);
     }
 
     public Either<ThingError, string> RecoverFromNewThingMessage(NewThingIm input, string signature)
@@ -91,7 +92,23 @@ internal class Signer : ISigner
         var tdDefinition = _getTypedDataDefinition(typeof(NewThingTd), typeof(EvidenceTd), typeof(TagTd));
         var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
 
-        return address.Replace("0x", string.Empty);
+        return address.Substring(2);
+    }
+
+    public Either<VoteError, string> RecoverFromNewVoteMessage(NewVoteIm input, string signature)
+    {
+        var td = new NewVoteTd
+        {
+            ThingId = input.ThingId.ToString(),
+            PollType = input.PollType.GetString(),
+            CastedAt = input.CastedAt,
+            Decision = input.Decision.GetString(),
+            Reason = input.Reason
+        };
+        var tdDefinition = _getTypedDataDefinition(typeof(NewVoteTd));
+        var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
+
+        return address.Substring(2);
     }
 
     public string SignThing(ThingVm thing)
@@ -101,6 +118,27 @@ internal class Signer : ISigner
             Id = thing.Id
         };
         var tdDefinition = _getTypedDataDefinition(typeof(ThingTd));
+        tdDefinition.SetMessage(td);
+
+        return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);
+    }
+
+    public string SignNewVote(NewVoteIm input, string voterId, string voterSignature)
+    {
+        var td = new SignedNewVoteTd
+        {
+            Vote = new NewVoteTd
+            {
+                ThingId = input.ThingId.ToString(),
+                PollType = input.PollType.GetString(),
+                CastedAt = input.CastedAt,
+                Decision = input.Decision.GetString(),
+                Reason = input.Reason
+            },
+            VoterId = voterId,
+            VoterSignature = voterSignature
+        };
+        var tdDefinition = _getTypedDataDefinition(typeof(SignedNewVoteTd), typeof(NewVoteTd));
         tdDefinition.SetMessage(td);
 
         return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);

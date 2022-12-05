@@ -165,6 +165,7 @@ public static class IServiceCollectionExtension
         services.AddScoped<ISubjectRepository, SubjectRepository>();
         services.AddScoped<IThingRepository, ThingRepository>();
         services.AddScoped<ITaskRepository, TaskRepository>();
+        services.AddScoped<IVoteRepository, VoteRepository>();
 
         services.AddScoped<IActionableThingRelatedEventRepository, ActionableThingRelatedEventRepository>();
         services.AddScoped<IPreJoinedVerifierLotteryEventRepository, PreJoinedVerifierLotteryEventRepository>();
