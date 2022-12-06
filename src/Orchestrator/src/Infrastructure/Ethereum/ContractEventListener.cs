@@ -25,6 +25,7 @@ internal class ContractEventListener : IContractEventListener
     private readonly uint _blockConfirmations;
     private readonly string _truQuestAddress;
     private readonly string _verifierLotteryAddress;
+    private readonly string _acceptancePollAddress;
 
     private readonly ChannelReader<IEventLog> _stream;
     private readonly ChannelWriter<IEventLog> _sink;
@@ -37,6 +38,7 @@ internal class ContractEventListener : IContractEventListener
         _blockConfirmations = configuration.GetValue<uint>($"Ethereum:Networks:{network}:BlockConfirmations");
         _truQuestAddress = configuration[$"Ethereum:Contracts:{network}:TruQuest:Address"]!;
         _verifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:VerifierLottery:Address"]!;
+        _acceptancePollAddress = configuration[$"Ethereum:Contracts:{network}:AcceptancePoll:Address"]!;
 
         var channel = Channel.CreateUnbounded<IEventLog>(new UnboundedChannelOptions
         {
@@ -59,18 +61,20 @@ internal class ContractEventListener : IContractEventListener
             var preJoinedLotteryEventHandler = new EventLogProcessorHandler<PreJoinedLotteryEvent>(WriteToChannel);
             var joinedLotteryEventHandler = new EventLogProcessorHandler<JoinedLotteryEvent>(WriteToChannel);
             var lotteryClosedWithSuccessEventHandler = new EventLogProcessorHandler<LotteryClosedWithSuccessEvent>(WriteToChannel);
+            var castedVoteEventHandler = new EventLogProcessorHandler<CastedVoteEvent>(WriteToChannel);
 
             var eventHandlers = new ProcessorHandler<FilterLog>[]
             {
                 thingFundedEventHandler,
                 preJoinedLotteryEventHandler,
                 joinedLotteryEventHandler,
-                lotteryClosedWithSuccessEventHandler
+                lotteryClosedWithSuccessEventHandler,
+                castedVoteEventHandler
             };
 
             var contractFilter = new NewFilterInput
             {
-                Address = new[] { _truQuestAddress, _verifierLotteryAddress }
+                Address = new[] { _truQuestAddress, _verifierLotteryAddress, _acceptancePollAddress }
             };
 
             var logProcessor = _web3.Processing.Logs.CreateProcessor(
@@ -136,6 +140,17 @@ internal class ContractEventListener : IContractEventListener
                     WinnerIds = verifierLotteryClosedWithSuccessEvent.Event.WinnerIds
                         .Select(id => id.Substring(2))
                         .ToList()
+                };
+            }
+            else if (@event is EventLog<CastedVoteEvent> castedAcceptancePollVoteEvent)
+            {
+                yield return new AppEvents.AcceptancePoll.CastedAcceptancePollVote.CastedAcceptancePollVoteEvent
+                {
+                    BlockNumber = (long)castedAcceptancePollVoteEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)castedAcceptancePollVoteEvent.Log.TransactionIndex.Value,
+                    ThingIdHash = castedAcceptancePollVoteEvent.Event.ThingIdHash.Substring(2),
+                    UserId = castedAcceptancePollVoteEvent.Event.UserId.Substring(2),
+                    Vote = castedAcceptancePollVoteEvent.Event.Vote
                 };
             }
         }

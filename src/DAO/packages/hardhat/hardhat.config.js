@@ -342,6 +342,40 @@ task("tru", "Tru")
     console.log(`Verifier count is ${count}`);
   });
 
+task("balances", "Player balances").setAction(
+  async (_, { getNamedAccounts, ethers }) => {
+    const {
+      player,
+      lotteryPlayer1,
+      lotteryPlayer2,
+      lotteryPlayer3,
+      lotteryPlayer4,
+    } = await getNamedAccounts();
+    const truQuest = await ethers.getContract("TruQuest");
+
+    let balance = await truQuest.getAvailableFunds(player);
+    console.log(
+      `Player balance is ${ethers.utils.formatUnits(balance, "wei")}`
+    );
+    balance = await truQuest.getAvailableFunds(lotteryPlayer1);
+    console.log(
+      `LotteryPlayer1 balance is ${ethers.utils.formatUnits(balance, "wei")}`
+    );
+    balance = await truQuest.getAvailableFunds(lotteryPlayer2);
+    console.log(
+      `LotteryPlayer2 balance is ${ethers.utils.formatUnits(balance, "wei")}`
+    );
+    balance = await truQuest.getAvailableFunds(lotteryPlayer3);
+    console.log(
+      `LotteryPlayer3 balance is ${ethers.utils.formatUnits(balance, "wei")}`
+    );
+    balance = await truQuest.getAvailableFunds(lotteryPlayer4);
+    console.log(
+      `LotteryPlayer4 balance is ${ethers.utils.formatUnits(balance, "wei")}`
+    );
+  }
+);
+
 task("mine", "Move blocks")
   .addParam("blocks", "Num blocks to mine")
   .setAction(async (taskArgs, hre) => {

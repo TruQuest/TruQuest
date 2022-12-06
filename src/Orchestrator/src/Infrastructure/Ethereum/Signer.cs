@@ -7,6 +7,8 @@ using Nethereum.Signer;
 
 using Domain.Errors;
 using Domain.Results;
+using Domain.Aggregates.Events;
+using Domain.Aggregates;
 using Application.User.Commands.SignUp;
 using Application.Common.Interfaces;
 using Application.Subject.Commands.AddNewSubject;
@@ -139,6 +141,44 @@ internal class Signer : ISigner
             VoterSignature = voterSignature
         };
         var tdDefinition = _getTypedDataDefinition(typeof(SignedNewVoteTd), typeof(NewVoteTd));
+        tdDefinition.SetMessage(td);
+
+        return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);
+    }
+
+    public string SignVoteAgg(
+        IEnumerable<Vote> offChainVotes, IEnumerable<CastedAcceptancePollVoteEvent> onChainVotes
+    )
+    {
+        var td = new SignedVoteAggTd
+        {
+            OffChainVotes = offChainVotes
+                .Select(v => new OffChainVoteTd
+                {
+                    ThingId = v.ThingId.ToString(),
+                    VoterId = "0x" + v.VoterId,
+                    PollType = v.PollType.GetString(),
+                    CastedAt = DateTimeOffset.FromUnixTimeMilliseconds(v.CastedAtMs).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                    Decision = v.Decision.GetString(),
+                    Reason = v.Reason ?? string.Empty,
+                    IpfsCid = v.IpfsCid,
+                    VoterSignature = v.VoterSignature
+                })
+                .ToList(),
+            OnChainVotes = onChainVotes
+                .Select(v => new OnChainVoteTd
+                {
+                    BlockNumber = v.BlockNumber,
+                    TxnIndex = v.TxnIndex,
+                    ThingIdHash = v.ThingIdHash,
+                    UserId = "0x" + v.UserId,
+                    Decision = v.Decision.GetString()
+                })
+                .ToList()
+        };
+        var tdDefinition = _getTypedDataDefinition(
+            typeof(SignedVoteAggTd), typeof(OffChainVoteTd), typeof(OnChainVoteTd)
+        );
         tdDefinition.SetMessage(td);
 
         return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);

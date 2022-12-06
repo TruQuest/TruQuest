@@ -42,6 +42,7 @@ internal class CastVoteCommandHandler : IRequestHandler<CastVoteCommand, HandleR
 
     public async Task<HandleResult<string>> Handle(CastVoteCommand command, CancellationToken ct)
     {
+        // @@TODO: Check poll type is valid for the moment.
         bool isValidVerifier = await _thingRepository.CheckIsVerifierFor(
             command.Input.ThingId,
             _currentPrincipal.Id

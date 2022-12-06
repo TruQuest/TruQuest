@@ -1,5 +1,7 @@
 using Domain.Errors;
 using Domain.Results;
+using Domain.Aggregates.Events;
+using VoteDm = Domain.Aggregates.Vote;
 
 using Application.User.Commands.SignUp;
 using Application.Subject.Commands.AddNewSubject;
@@ -17,4 +19,5 @@ public interface ISigner
 
     string SignThing(ThingVm thing);
     string SignNewVote(NewVoteIm input, string voterId, string voterSignature);
+    string SignVoteAgg(IEnumerable<VoteDm> offChainVotes, IEnumerable<CastedAcceptancePollVoteEvent> onChainVotes);
 }

@@ -59,7 +59,7 @@ contract AcceptancePoll {
         string indexed thingId,
         address orchestrator,
         Decision decision,
-        string voteAggIpfsUri,
+        string voteAggIpfsCid,
         address submitter,
         address[] slashedVerifiers
     );
@@ -78,7 +78,7 @@ contract AcceptancePoll {
         string indexed thingId,
         address orchestrator,
         Decision decision,
-        string voteAggIpfsUri,
+        string voteAggIpfsCid,
         address submitter,
         address[] rewardedVerifiers,
         address[] slashedVerifiers
@@ -226,7 +226,7 @@ contract AcceptancePoll {
         emit CastedVoteWithReason(_thingId, msg.sender, _vote, _reason);
     }
 
-    //   function freezePoll__Unsettled__MajorityThresholdNotReached(string calldata _thingId, string calldata _voteAggIpfsUri)
+    //   function freezePoll__Unsettled__MajorityThresholdNotReached(string calldata _thingId, string calldata _voteAggIpfsCid)
     //     public
     //     onlyOrchestrator
     //     onlyWhenPollInProgress(_thingId)
@@ -236,7 +236,7 @@ contract AcceptancePoll {
     //       _thingId,
     //       s_orchestrator,
     //       Decision.Unsettled__MajorityThresholdNotReached,
-    //       _voteAggIpfsUri,
+    //       _voteAggIpfsCid,
     //       i_truQuest.s_thingSubmitter(_thingId),
     //       new address[](0)
     //     );
@@ -244,7 +244,7 @@ contract AcceptancePoll {
 
     function freezePoll__Unsettled__InsufficientVotingVolume(
         string calldata _thingId,
-        string calldata _voteAggIpfsUri,
+        string calldata _voteAggIpfsCid,
         address[] calldata _verifiersToKeep,
         address[] calldata _verifiersToSlash,
         bytes32 _dataHash
@@ -265,7 +265,7 @@ contract AcceptancePoll {
             _thingId,
             s_orchestrator,
             Decision.Unsettled__InsufficientVotingVolume,
-            _voteAggIpfsUri,
+            _voteAggIpfsCid,
             submitter,
             _verifiersToSlash
         );
@@ -314,7 +314,7 @@ contract AcceptancePoll {
 
     function finalizePoll__Accepted(
         string calldata _thingId,
-        string calldata _voteAggIpfsUri,
+        string calldata _voteAggIpfsCid,
         address[] calldata _verifiersToReward,
         address[] calldata _verifiersToSlash
     ) public onlyOrchestrator onlyWhenPollOrSubPollInProgress(_thingId) {
@@ -334,7 +334,7 @@ contract AcceptancePoll {
             _thingId,
             s_orchestrator,
             Decision.Accepted,
-            _voteAggIpfsUri,
+            _voteAggIpfsCid,
             submitter,
             _verifiersToReward,
             _verifiersToSlash
@@ -343,7 +343,7 @@ contract AcceptancePoll {
 
     function finalizePoll__Declined__Soft(
         string calldata _thingId,
-        string calldata _voteAggIpfsUri,
+        string calldata _voteAggIpfsCid,
         address[] calldata _verifiersToReward,
         address[] calldata _verifiersToSlash
     ) public onlyOrchestrator onlyWhenPollOrSubPollInProgress(_thingId) {
@@ -363,7 +363,7 @@ contract AcceptancePoll {
             _thingId,
             s_orchestrator,
             Decision.Declined__Soft,
-            _voteAggIpfsUri,
+            _voteAggIpfsCid,
             submitter,
             _verifiersToReward,
             _verifiersToSlash
@@ -372,7 +372,7 @@ contract AcceptancePoll {
 
     function finalizePoll__Declined__Hard(
         string calldata _thingId,
-        string calldata _voteAggIpfsUri,
+        string calldata _voteAggIpfsCid,
         address[] calldata _verifiersToReward,
         address[] calldata _verifiersToSlash
     ) public onlyOrchestrator onlyWhenPollOrSubPollInProgress(_thingId) {
@@ -392,7 +392,7 @@ contract AcceptancePoll {
             _thingId,
             s_orchestrator,
             Decision.Declined__Hard,
-            _voteAggIpfsUri,
+            _voteAggIpfsCid,
             submitter,
             _verifiersToReward,
             _verifiersToSlash

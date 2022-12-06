@@ -170,11 +170,13 @@ public static class IServiceCollectionExtension
         services.AddScoped<IActionableThingRelatedEventRepository, ActionableThingRelatedEventRepository>();
         services.AddScoped<IPreJoinedVerifierLotteryEventRepository, PreJoinedVerifierLotteryEventRepository>();
         services.AddScoped<IJoinedVerifierLotteryEventRepository, JoinedVerifierLotteryEventRepository>();
+        services.AddScoped<ICastedAcceptancePollVoteEventRepository, CastedAcceptancePollVoteEventRepository>();
 
         services.AddSingleton<IContractEventListener, ContractEventListener>();
 
         services.AddSingleton<IContractCaller, ContractCaller>();
         services.AddSingleton<IBlockListener, BlockListener>();
+        services.AddSingleton<IBlockchainQueryable, BlockchainQueryable>();
 
         if (!configuration.GetValue<bool>("DbMigrator"))
         {

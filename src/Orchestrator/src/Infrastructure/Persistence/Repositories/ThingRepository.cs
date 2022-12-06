@@ -38,4 +38,14 @@ internal class ThingRepository : Repository<Thing>, IThingRepository
 
         return thing.Verifiers.Any();
     }
+
+    public async Task<IReadOnlyList<ThingVerifier>> GetAllVerifiersFor(Guid thingId)
+    {
+        var thing = await _dbContext.Things
+            .AsNoTracking()
+            .Include(t => t.Verifiers)
+            .SingleAsync(t => t.Id == thingId);
+
+        return thing.Verifiers;
+    }
 }

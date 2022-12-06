@@ -16,6 +16,7 @@ internal class ContractCaller : IContractCaller
     private readonly ILogger<ContractCaller> _logger;
     private readonly Web3 _web3;
     private readonly string _verifierLotteryAddress;
+    private readonly string _acceptancePollAddress;
 
     public ContractCaller(ILogger<ContractCaller> logger, IConfiguration configuration)
     {
@@ -28,6 +29,7 @@ internal class ContractCaller : IContractCaller
         );
         _web3 = new Web3(orchestrator, configuration[$"Ethereum:Networks:{network}:URL"]);
         _verifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:VerifierLottery:Address"]!;
+        _acceptancePollAddress = configuration[$"Ethereum:Contracts:{network}:AcceptancePoll:Address"]!;
     }
 
     public Task<byte[]> ComputeHash(byte[] data)
@@ -64,7 +66,7 @@ internal class ContractCaller : IContractCaller
         );
     }
 
-    public async Task CloseVerifierLotteryWithSuccess(string thingId, byte[] data, IList<ulong> winnerIndices)
+    public async Task CloseVerifierLotteryWithSuccess(string thingId, byte[] data, List<ulong> winnerIndices)
     {
         var txnDispatcher = _web3.Eth.GetContractTransactionHandler<CloseVerifierLotteryWithSuccessMessage>();
         try
@@ -76,6 +78,33 @@ internal class ContractCaller : IContractCaller
                     ThingId = thingId,
                     Data = data,
                     WinnerIndices = winnerIndices
+                }
+            );
+
+            _logger.LogInformation("Txn hash {TxnHash}", txnReceipt.TransactionHash);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+        }
+    }
+
+    public async Task FinalizeAcceptancePollForThingAsAccepted(
+        string thingId, string voteAggIpfsCid,
+        List<string> verifiersToReward, List<string> verifiersToSlash
+    )
+    {
+        var txnDispatcher = _web3.Eth.GetContractTransactionHandler<FinalizeAcceptancePollForThingAsAcceptedMessage>();
+        try
+        {
+            var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
+                _acceptancePollAddress,
+                new FinalizeAcceptancePollForThingAsAcceptedMessage
+                {
+                    ThingId = thingId,
+                    VoteAggIpfsCid = voteAggIpfsCid,
+                    VerifiersToReward = verifiersToReward,
+                    VerifiersToSlash = verifiersToSlash
                 }
             );
 

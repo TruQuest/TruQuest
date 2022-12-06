@@ -11,5 +11,5 @@ public class CloseVerifierLotteryWithSuccessMessage : FunctionMessage
     [Parameter("bytes32", "_data", 2)]
     public byte[] Data { get; init; }
     [Parameter("uint64[]", "_winnerIndices", 3)]
-    public IList<ulong> WinnerIndices { get; init; }
+    public List<ulong> WinnerIndices { get; init; }
 }

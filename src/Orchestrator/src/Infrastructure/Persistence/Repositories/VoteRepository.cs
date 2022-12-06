@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 using Domain.Aggregates;
@@ -22,4 +23,10 @@ internal class VoteRepository : Repository<Vote>, IVoteRepository
     {
         _dbContext.Votes.Add(vote);
     }
+
+    public Task<List<Vote>> GetForThingCastedAt(Guid thingId, long noLaterThanTs, PollType pollType) =>
+        _dbContext.Votes
+            .AsNoTracking()
+            .Where(v => v.ThingId == thingId && v.PollType == pollType && v.CastedAtMs <= noLaterThanTs)
+            .ToListAsync();
 }
