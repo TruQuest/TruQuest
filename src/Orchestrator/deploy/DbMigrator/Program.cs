@@ -3,8 +3,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Domain.Aggregates;
 using Infrastructure.Persistence;
+using static API.Program;
 
-var app = API.Program.CreateWebApplication(new[] { "DbMigrator=true" });
+var app = ConfigureServices(CreateWebApplicationBuilder(new[] { "DbMigrator=true" })).Build();
 using var scope = app.Services.CreateScope();
 
 var appDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();

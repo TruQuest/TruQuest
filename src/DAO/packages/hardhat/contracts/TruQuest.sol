@@ -2,6 +2,8 @@
 pragma solidity >=0.8.0 <0.9.0;
 pragma abicoder v2;
 
+import "@ganache/console.log/console.sol";
+
 import "./Truthserum.sol";
 import "./VerifierLottery.sol";
 import "./AcceptancePoll.sol";

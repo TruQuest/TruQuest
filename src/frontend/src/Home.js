@@ -44,8 +44,8 @@ const newVoteTd = [
 const domainData = {
   name: "TruQuest",
   version: "0.0.1",
-  chainId: 31337,
-  verifyingContract: "0x0165878A594ca255338adfa4d48449f69242Eb8F",
+  chainId: 1337,
+  verifyingContract: "0x1cf6f69441996615Df4370E09A2885F2448b9234",
   salt: "0xf2d857f4a3edcb9b78b4d503bfe733db1e3f6cdc2b7971ee739626c97e86a558",
 };
 
@@ -57,7 +57,7 @@ const Home = () => {
   const [sig, setSig] = useState("");
 
   const { runContractFunction } = useWeb3Contract({
-    contractAddress: "0x0165878A594ca255338adfa4d48449f69242Eb8F",
+    contractAddress: "0x1cf6f69441996615Df4370E09A2885F2448b9234",
     abi: [
       {
         inputs: [

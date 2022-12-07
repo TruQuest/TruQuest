@@ -11,44 +11,19 @@ namespace API;
 
 public class Program
 {
-    public static async Task Main(string[] args)
+    public static void Main(string[] args)
     {
-        var app = CreateWebApplication(args);
-        app.Lifetime.ApplicationStarted.Register(async () =>
-        {
-            var client = new HttpClient();
-            var body = await File.ReadAllTextAsync("pg-connector.conf.json");
-            var request = new HttpRequestMessage(HttpMethod.Post, "http://localhost:8083/connectors");
-            request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
-            var response = await client.SendAsync(request);
-            response.EnsureSuccessStatusCode();
-        });
-
-        app.UseCors();
-
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI();
-        }
-
-        // app.UseHttpsRedirection();
-        // app.UseAuthorization();
-
-        app.MapControllers();
-
-        var bus = app.Services.CreateKafkaBus();
-        await bus.StartAsync();
-
+        DotNetEnv.Env.TraversePath().Load();
+        var appBuilder = ConfigureServices(CreateWebApplicationBuilder(args));
+        var app = ConfigurePipeline(appBuilder.Build());
         app.Run();
     }
 
-    public static WebApplication CreateWebApplication(string[] args)
+    public static WebApplicationBuilder CreateWebApplicationBuilder(string[] args) =>
+        WebApplication.CreateBuilder(args);
+
+    public static WebApplicationBuilder ConfigureServices(WebApplicationBuilder builder)
     {
-        DotNetEnv.Env.Load();
-
-        var builder = WebApplication.CreateBuilder(args);
-
         builder.Services
             .AddControllers()
             .AddJsonOptions(options =>
@@ -75,6 +50,37 @@ public class Program
         builder.Services.AddHostedService<ContractEventTracker>();
         builder.Services.AddHostedService<BlockTracker>();
 
-        return builder.Build();
+        return builder;
+    }
+
+    public static WebApplication ConfigurePipeline(WebApplication app)
+    {
+        using var client = new HttpClient();
+        var body = File.ReadAllText("pg-connector.conf.json");
+        var request = new HttpRequestMessage(HttpMethod.Post, "http://localhost:8083/connectors");
+        request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+        var response = client.Send(request);
+        if (!(response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.Conflict))
+        {
+            throw new Exception("Debez");
+        }
+
+        app.UseCors();
+
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
+
+        // app.UseHttpsRedirection();
+        // app.UseAuthorization();
+
+        app.MapControllers();
+
+        var bus = app.Services.CreateKafkaBus();
+        bus.StartAsync().Wait();
+
+        return app;
     }
 }

@@ -23,7 +23,7 @@ const { isAddress, getAddress, formatUnits, parseUnits } = utils;
 //
 // Select the network you want to deploy to here:
 //
-const defaultNetwork = "localhost";
+const defaultNetwork = "ganache";
 
 function mnemonic() {
   try {
@@ -66,6 +66,22 @@ module.exports = {
         (you can put in a mnemonic here to set the deployer locally)
 
       */
+    },
+    ganache: {
+      url: "http://localhost:7545",
+      chainId: 1337,
+      accounts: [
+        "0x94303bb1e6b0d634f5253aab6ee321e7c526e337d0c5e3054e30ce948b438eb4",
+        "0xe198e7799dc3bdd0d04e778a3a234cc411b9aa71c63835bfc9df40bcfe074a63",
+        "0x3afeb4f3a11549842dfcfa98e6aedb18de1d670bd4a55017ce5e1690b1d98966",
+        "0x6d1e5f9e96704257cc47d211728f9b3ac399da0efb69e9a5dabd52a05d9c943a",
+        "0x2c485a67da1c44263b3cb42782e8cf61d74a14d13ac9c99ec073b2e936750a5b",
+        "0x401bd7104cad815c63baf636080d3569ebcd0e308c62ead23d2ae1432f4007f8",
+        "0x70fabb03fe5a9b4d429c086f35425653be57170de69c3c9d0a716d3782a79bfd",
+        "0x4c56d468a7e3ce180be79c1fdd750d433cbcc148203cad9e374408338fee79bd",
+        "0xda87232edd0da6e49116c69e67720de71bf84a9446a95a78a91ba3e6293fc769",
+        "0x4dd9d054544240633e8cd9e510c9c25cd5d2a01ef112bbe42e47471990334c60",
+      ],
     },
     mainnet: {
       url: "https://mainnet.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad", // <---- YOUR INFURA ID! (or it won't work)
@@ -379,7 +395,11 @@ task("balances", "Player balances").setAction(
 task("mine", "Move blocks")
   .addParam("blocks", "Num blocks to mine")
   .setAction(async (taskArgs, hre) => {
-    if (hre.network.name == "localhost" && taskArgs.blocks > 0) {
+    const networkName = hre.network.name;
+    if (
+      (networkName == "localhost" || networkName == "ganache") &&
+      taskArgs.blocks > 0
+    ) {
       for (let i = 0; i < taskArgs.blocks; ++i) {
         await hre.network.provider.request({
           method: "evm_mine",
@@ -403,7 +423,7 @@ task("lottery", "Enter lottery")
 
     let verifierLottery = await ethers.getContractAt(
       "VerifierLottery",
-      "0x3B02fF1e626Ed7a8fd6eC5299e2C54e1421B626B",
+      "0xe7f97C0ccE6C7235e89E9875DB4E7B47839aFCd4",
       lotteryPlayer1
     );
     let data = ethers.utils.randomBytes(32);
@@ -417,7 +437,7 @@ task("lottery", "Enter lottery")
 
     verifierLottery = await ethers.getContractAt(
       "VerifierLottery",
-      "0x3B02fF1e626Ed7a8fd6eC5299e2C54e1421B626B",
+      "0xe7f97C0ccE6C7235e89E9875DB4E7B47839aFCd4",
       lotteryPlayer2
     );
     data = ethers.utils.randomBytes(32);
@@ -431,7 +451,7 @@ task("lottery", "Enter lottery")
 
     verifierLottery = await ethers.getContractAt(
       "VerifierLottery",
-      "0x3B02fF1e626Ed7a8fd6eC5299e2C54e1421B626B",
+      "0xe7f97C0ccE6C7235e89E9875DB4E7B47839aFCd4",
       lotteryPlayer3
     );
     data = ethers.utils.randomBytes(32);
@@ -445,7 +465,7 @@ task("lottery", "Enter lottery")
 
     verifierLottery = await ethers.getContractAt(
       "VerifierLottery",
-      "0x3B02fF1e626Ed7a8fd6eC5299e2C54e1421B626B",
+      "0xe7f97C0ccE6C7235e89E9875DB4E7B47839aFCd4",
       lotteryPlayer4
     );
     data = ethers.utils.randomBytes(32);
@@ -459,7 +479,7 @@ task("lottery", "Enter lottery")
 
     verifierLottery = await ethers.getContractAt(
       "VerifierLottery",
-      "0x3B02fF1e626Ed7a8fd6eC5299e2C54e1421B626B",
+      "0xe7f97C0ccE6C7235e89E9875DB4E7B47839aFCd4",
       player
     );
     data = ethers.utils.randomBytes(32);

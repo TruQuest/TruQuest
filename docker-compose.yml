@@ -24,7 +24,7 @@ services:
   kafka-1:
     image: wurstmeister/kafka:2.12-2.5.0
     ports:
-      - '9091:9092'
+      - '9092:9092'
     environment:
       DOCKER_API_VERSION: 1.22
       KAFKA_BROKER_ID: 1
@@ -37,40 +37,10 @@ services:
       - truquest
     restart: unless-stopped
 
-  kafka-2:
-    image: wurstmeister/kafka:2.12-2.5.0
-    ports:
-      - '9092:9092'
-    environment:
-      DOCKER_API_VERSION: 1.22
-      KAFKA_BROKER_ID: 2
-      KAFKA_ADVERTISED_HOST_NAME: host.docker.internal
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - truquest
-    restart: unless-stopped
-
-  kafka-3:
-    image: wurstmeister/kafka:2.12-2.5.0
-    ports:
-      - '9093:9092'
-    environment:
-      DOCKER_API_VERSION: 1.22
-      KAFKA_BROKER_ID: 3
-      KAFKA_ADVERTISED_HOST_NAME: host.docker.internal
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - truquest
-    restart: unless-stopped
-
   debezium:
     image: debezium/connect
     environment:
-      BOOTSTRAP_SERVERS: 'kafka-1:9092,kafka-2:9092,kafka-3:9092'
+      BOOTSTRAP_SERVERS: 'kafka-1:9092'
       GROUP_ID: debez
       CONFIG_STORAGE_TOPIC: debez_connect_configs
       OFFSET_STORAGE_TOPIC: debez_connect_offsets
@@ -83,8 +53,6 @@ services:
       - pg
       - zookeeper
       - kafka-1
-      - kafka-2
-      - kafka-3
 
   ipfs:
     image: ipfs/kubo
@@ -110,8 +78,14 @@ services:
     depends_on:
       - zookeeper
       - kafka-1
-      - kafka-2
-      - kafka-3
+
+  ganache:
+    image: trufflesuite/ganache
+    ports:
+      - '7545:8545'
+    command: '--wallet.mnemonic "atom traffic guard castle father vendor modify sauce rebuild true mixture van"'
+    networks:
+      - truquest
 
 networks:
   truquest:
