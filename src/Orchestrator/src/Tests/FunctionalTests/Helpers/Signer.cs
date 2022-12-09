@@ -6,6 +6,7 @@ using Nethereum.Signer;
 using Nethereum.Signer.EIP712;
 
 using Application.Subject.Commands.AddNewSubject;
+using Application.Thing.Commands.SubmitNewThing;
 using Infrastructure.Ethereum.TypedData;
 
 namespace Tests.FunctionalTests.Helpers;
@@ -57,6 +58,23 @@ public class Signer
             Tags = input.Tags.Select(t => new TagTd { Id = t.Id }).ToList()
         };
         var tdDefinition = _getTypedDataDefinition(typeof(NewSubjectTd), typeof(TagTd));
+        tdDefinition.SetMessage(td);
+
+        return _eip712Signer.SignTypedDataV4(tdDefinition, _playerPrivateKey);
+    }
+
+    public string SignNewThingMessage(NewThingIm input)
+    {
+        var td = new NewThingTd
+        {
+            SubjectId = input.SubjectId.ToString(),
+            Title = input.Title,
+            Details = input.Details,
+            ImageUrl = input.ImageUrl,
+            Evidence = input.Evidence.Select(e => new EvidenceTd { Url = e.Url }).ToList(),
+            Tags = input.Tags.Select(t => new TagTd { Id = t.Id }).ToList()
+        };
+        var tdDefinition = _getTypedDataDefinition(typeof(NewThingTd), typeof(EvidenceTd), typeof(TagTd));
         tdDefinition.SetMessage(td);
 
         return _eip712Signer.SignTypedDataV4(tdDefinition, _playerPrivateKey);

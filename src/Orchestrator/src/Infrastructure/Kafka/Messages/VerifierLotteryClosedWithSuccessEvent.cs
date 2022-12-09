@@ -10,6 +10,7 @@ namespace Infrastructure.Kafka.Messages;
 
 internal class VerifierLotteryClosedWithSuccessEvent
 {
+    public decimal Nonce { get; set; }
     public List<string> WinnerIds { get; set; }
 }
 

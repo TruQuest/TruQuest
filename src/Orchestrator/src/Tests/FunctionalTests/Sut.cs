@@ -14,51 +14,57 @@ using MediatR;
 using Domain.Aggregates;
 using Application.Common.Interfaces;
 using Infrastructure.Persistence;
-using static API.Program;
+using API;
 
 using Tests.FunctionalTests.Helpers;
 
 namespace Tests.FunctionalTests;
 
-public class Sut
+public class Sut : IAsyncLifetime
 {
-    private readonly WebApplication _app;
-    private readonly Respawner _respawner;
+    private WebApplication _app;
+    private Respawner _respawner;
 
     private ClaimsPrincipal? _user;
 
-    public Signer Signer { get; }
+    public Signer Signer { get; private set; }
+    public BlockchainManipulator BlockchainManipulator { get; private set; }
+    public ContractCaller ContractCaller { get; private set; }
 
-    public Sut()
+    public async Task InitializeAsync()
     {
         DotNetEnv.Env.TraversePath().Load();
 
-        var appBuilder = CreateWebApplicationBuilder(new string[] { });
+        var appBuilder = API.Program.CreateWebApplicationBuilder(new string[] { });
         appBuilder.Configuration.AddJsonFile("appsettings.Testing.json", optional: false);
-        appBuilder = ConfigureServices(appBuilder);
+        appBuilder.ConfigureServices();
 
         using (var scope = appBuilder.Services.BuildServiceProvider().CreateScope())
         {
-            _applyMigrations(scope);
+            await _applyMigrations(scope);
 
             var appDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            appDbContext.Database.OpenConnection();
+            await appDbContext.Database.OpenConnectionAsync();
 
-            _respawner = Respawner
+            _respawner = await Respawner
                 .CreateAsync(appDbContext.Database.GetDbConnection(), new RespawnerOptions
                 {
                     SchemasToInclude = new[] { "truquest", "truquest_events" },
                     TablesToIgnore = new Table[] { "__EFMigrationsHistory", "Tags", "AspNetUsers" },
                     DbAdapter = DbAdapter.Postgres
-                })
-                .GetAwaiter()
-                .GetResult();
+                });
         }
 
-        _app = ConfigurePipeline(appBuilder.Build());
+        _app = appBuilder.Build().ConfigurePipeline();
+        await _app.DeployContracts();
+        await _app.RegisterDebeziumConnector();
 
         Signer = new Signer(_app.Configuration);
+        BlockchainManipulator = new BlockchainManipulator(_app.Configuration);
+        ContractCaller = new ContractCaller(_app.Configuration, BlockchainManipulator);
     }
+
+    public Task DisposeAsync() => Task.CompletedTask;
 
     public async Task<TResult> ExecWithService<TService, TResult>(
         Func<TService, Task<TResult>> func
@@ -72,34 +78,29 @@ public class Sut
         return result;
     }
 
-    public void StartHostedService<T>() where T : IHostedService
-    {
+    public Task StartKafkaBus() => _app.StartKafkaBus();
+
+    public Task StartHostedService<T>() where T : IHostedService =>
         _app.Services
             .GetServices<IHostedService>()
             .OfType<T>()
             .First()
-            .StartAsync(CancellationToken.None)
-            .Wait();
-    }
+            .StartAsync(CancellationToken.None);
 
-    public void StopHostedService<T>() where T : IHostedService
-    {
+    public Task StopHostedService<T>() where T : IHostedService =>
         _app.Services
             .GetServices<IHostedService>()
             .OfType<T>()
             .First()
-            .StopAsync(CancellationToken.None)
-            .Wait();
-    }
+            .StopAsync(CancellationToken.None);
 
-    private void _applyMigrations(IServiceScope scope)
+    private async Task _applyMigrations(IServiceScope scope)
     {
         var appDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        appDbContext.Database.Migrate();
+        await appDbContext.Database.MigrateAsync();
 
         var userIds = new[]
         {
-            "0xbF2Ff171C3C4A63FBBD369ddb021c75934005e81",
             "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
             "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
             "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
@@ -108,7 +109,17 @@ public class Sut
             "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955",
             "0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f",
             "0xa0Ee7A142d267C1f36714E4a8F75612F20a79720",
-            "0xBcd4042DE499D14e55001CcbB24a551F3b954096"
+            "0xBcd4042DE499D14e55001CcbB24a551F3b954096",
+
+            "0xbF2Ff171C3C4A63FBBD369ddb021c75934005e81",
+            "0x529A3efb0F113a2FB6dB0818639EEa26e0661450",
+            "0x09f9063bc1355C587F87dE2F7B35740754353Bfb",
+            "0x9B7501b9aaa582F0902D100b927AF25809A204ef",
+            "0xf4D41175ae91A26311a2B2c49D4eB85CfdDB1898",
+            "0xAf73Ad8bd8b023E778b7ccD6Ef490B57adceB655",
+            "0x1C0Aa24069f5d9500AC5890195acBB5088BdCcd6",
+            "0x202b5E4653846ABB2be555ff09Ba70EeC0AF1451",
+            "0xdD5B3fa962aD96590592D4816bb2d025aC0B7225"
         };
         appDbContext.Users.AddRange(userIds.Select(id => new User
         {
@@ -117,19 +128,19 @@ public class Sut
         }));
 
         appDbContext.Tags.Add(new Tag("Politics"));
-        appDbContext.SaveChanges();
+        await appDbContext.SaveChangesAsync();
 
         var eventDbContext = scope.ServiceProvider.GetRequiredService<EventDbContext>();
-        eventDbContext.Database.Migrate();
+        await eventDbContext.Database.MigrateAsync();
     }
 
-    public void ResetState()
+    public async Task ResetState()
     {
         using var scope = _app.Services.CreateScope();
 
         var appDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        appDbContext.Database.OpenConnection();
-        _respawner.ResetAsync(appDbContext.Database.GetDbConnection()).Wait();
+        await appDbContext.Database.OpenConnectionAsync();
+        await _respawner.ResetAsync(appDbContext.Database.GetDbConnection());
 
         _user = null;
     }

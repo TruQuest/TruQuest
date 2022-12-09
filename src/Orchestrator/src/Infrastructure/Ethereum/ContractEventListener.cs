@@ -137,6 +137,7 @@ internal class ContractEventListener : IContractEventListener
                     BlockNumber = (long)verifierLotteryClosedWithSuccessEvent.Log.BlockNumber.Value,
                     TxnIndex = (int)verifierLotteryClosedWithSuccessEvent.Log.TransactionIndex.Value,
                     ThingIdHash = verifierLotteryClosedWithSuccessEvent.Event.ThingIdHash.Substring(2),
+                    Nonce = (decimal)verifierLotteryClosedWithSuccessEvent.Event.Nonce,
                     WinnerIds = verifierLotteryClosedWithSuccessEvent.Event.WinnerIds
                         .Select(id => id.Substring(2))
                         .ToList()

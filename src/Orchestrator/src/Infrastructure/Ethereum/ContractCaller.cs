@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 
 using Nethereum.Web3;
+using Nethereum.Web3.Accounts;
 
 using Application.Common.Interfaces;
 
@@ -23,7 +24,7 @@ internal class ContractCaller : IContractCaller
         _logger = logger;
 
         var network = configuration["Ethereum:Network"]!;
-        var orchestrator = new Nethereum.Web3.Accounts.Account(
+        var orchestrator = new Account(
             configuration[$"Ethereum:Accounts:{network}:Orchestrator:PrivateKey"]!,
             configuration.GetValue<int>($"Ethereum:Networks:{network}:ChainId")
         );
@@ -69,24 +70,17 @@ internal class ContractCaller : IContractCaller
     public async Task CloseVerifierLotteryWithSuccess(string thingId, byte[] data, List<ulong> winnerIndices)
     {
         var txnDispatcher = _web3.Eth.GetContractTransactionHandler<CloseVerifierLotteryWithSuccessMessage>();
-        try
-        {
-            var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
-                _verifierLotteryAddress,
-                new CloseVerifierLotteryWithSuccessMessage
-                {
-                    ThingId = thingId,
-                    Data = data,
-                    WinnerIndices = winnerIndices
-                }
-            );
+        var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
+            _verifierLotteryAddress,
+            new CloseVerifierLotteryWithSuccessMessage
+            {
+                ThingId = thingId,
+                Data = data,
+                WinnerIndices = winnerIndices
+            }
+        );
 
-            _logger.LogInformation("Txn hash {TxnHash}", txnReceipt.TransactionHash);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, ex.Message);
-        }
+        _logger.LogInformation("=============== CloseVerifierLotteryWithSuccess: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
     public async Task FinalizeAcceptancePollForThingAsAccepted(
@@ -95,24 +89,17 @@ internal class ContractCaller : IContractCaller
     )
     {
         var txnDispatcher = _web3.Eth.GetContractTransactionHandler<FinalizeAcceptancePollForThingAsAcceptedMessage>();
-        try
-        {
-            var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
-                _acceptancePollAddress,
-                new FinalizeAcceptancePollForThingAsAcceptedMessage
-                {
-                    ThingId = thingId,
-                    VoteAggIpfsCid = voteAggIpfsCid,
-                    VerifiersToReward = verifiersToReward,
-                    VerifiersToSlash = verifiersToSlash
-                }
-            );
+        var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
+            _acceptancePollAddress,
+            new FinalizeAcceptancePollForThingAsAcceptedMessage
+            {
+                ThingId = thingId,
+                VoteAggIpfsCid = voteAggIpfsCid,
+                VerifiersToReward = verifiersToReward,
+                VerifiersToSlash = verifiersToSlash
+            }
+        );
 
-            _logger.LogInformation("Txn hash {TxnHash}", txnReceipt.TransactionHash);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, ex.Message);
-        }
+        _logger.LogInformation("Txn hash {TxnHash}", txnReceipt.TransactionHash);
     }
 }

@@ -9,6 +9,7 @@ public class VerifierLotteryClosedWithSuccessEvent : INotification
     public long BlockNumber { get; init; }
     public int TxnIndex { get; init; }
     public required string ThingIdHash { get; init; }
+    public decimal Nonce { get; init; }
     public required List<string> WinnerIds { get; init; }
 }
 
@@ -33,6 +34,7 @@ internal class VerifierLotteryClosedWithSuccessEventHandler : INotificationHandl
         );
         lotteryClosedEvent.SetPayload(new()
         {
+            ["nonce"] = @event.Nonce,
             ["winnerIds"] = @event.WinnerIds
         });
         _actionableThingRelatedEventRepository.Create(lotteryClosedEvent);

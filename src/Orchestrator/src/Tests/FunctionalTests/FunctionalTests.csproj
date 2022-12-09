@@ -8,9 +8,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Content Include="appsettings.Testing.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
+        <Content Include="appsettings.Testing.json" CopyToOutputDirectory="PreserveNewest" />
+        <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
     <ItemGroup>

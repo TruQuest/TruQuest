@@ -496,4 +496,14 @@ contract VerifierLottery {
             winners
         );
     }
+
+    function getLotteryDurationBlocks() public view returns (uint16) {
+        return s_durationBlocks;
+    }
+
+    function getLotteryInitBlockNumber(
+        string calldata _thingId
+    ) public view returns (int64) {
+        return s_thingIdToLotteryCommitments[_thingId][s_orchestrator].block;
+    }
 }
