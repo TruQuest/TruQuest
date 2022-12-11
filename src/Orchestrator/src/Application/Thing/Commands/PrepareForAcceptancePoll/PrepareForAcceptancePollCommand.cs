@@ -31,7 +31,7 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
         var thing = await _thingRepository.FindByIdHash(command.ThingIdHash);
         if (thing.State == ThingState.FundedAndVerifierLotteryInitiated)
         {
-            thing.SetState(ThingState.VerifiersSelected);
+            thing.SetState(ThingState.VerifiersSelectedAndAcceptancePollInitiated);
             thing.AddVerifiers(command.WinnerIds);
 
             var task = new DeferredTask(

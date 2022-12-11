@@ -4,5 +4,5 @@ public enum ThingState
 {
     WaitingToBeFunded,
     FundedAndVerifierLotteryInitiated,
-    VerifiersSelected
+    VerifiersSelectedAndAcceptancePollInitiated
 }

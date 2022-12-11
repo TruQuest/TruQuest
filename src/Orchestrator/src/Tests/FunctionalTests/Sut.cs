@@ -61,7 +61,7 @@ public class Sut : IAsyncLifetime
 
         Signer = new Signer(_app.Configuration);
         BlockchainManipulator = new BlockchainManipulator(_app.Configuration);
-        ContractCaller = new ContractCaller(_app.Configuration, BlockchainManipulator);
+        ContractCaller = new ContractCaller(_app.Logger, _app.Configuration, BlockchainManipulator);
     }
 
     public Task DisposeAsync() => Task.CompletedTask;

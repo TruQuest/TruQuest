@@ -25,6 +25,28 @@ public class VerifierLottery : IAsyncLifetime
         await _sut.StartKafkaBus();
         await _sut.StartHostedService<BlockTracker>();
         await _sut.StartHostedService<ContractEventTracker>();
+
+        var network = _sut.GetConfigurationValue<string>("Ethereum:Network");
+        var players = new[]
+        {
+            "Player",
+            "LotteryPlayer1",
+            "LotteryPlayer2",
+            "LotteryPlayer3",
+            "LotteryPlayer4"
+        };
+
+        foreach (var player in players)
+        {
+            await _sut.ContractCaller.TransferTruthserumTo(
+                _sut.GetConfigurationValue<string>($"Ethereum:Accounts:{network}:{player}:Address"),
+                500
+            );
+            await _sut.ContractCaller.DepositFunds(
+                _sut.GetConfigurationValue<string>($"Ethereum:Accounts:{network}:{player}:PrivateKey"),
+                500
+            );
+        }
     }
 
     public async Task DisposeAsync()
@@ -98,6 +120,8 @@ public class VerifierLottery : IAsyncLifetime
             await _sut.ContractCaller.PreJoinLotteryAs(privateKey, thingId, dataHash);
             await _sut.ContractCaller.JoinLotteryAs(privateKey, thingId, data);
         }
+
+        await Task.Delay(TimeSpan.FromSeconds(10));
 
         int lotteryDurationBlocks = await _sut.ContractCaller.GetLotteryDurationBlocks();
         long lotteryInitBlockNumber = await _sut.ContractCaller.GetLotteryInitBlockNumber(thingId);
