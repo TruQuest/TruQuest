@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 
 using Domain.Aggregates;
+using Domain.Aggregates.Events;
 using Infrastructure.Persistence;
 using API;
 
@@ -45,3 +46,6 @@ appDbContext.SaveChanges();
 
 var eventDbContext = scope.ServiceProvider.GetRequiredService<EventDbContext>();
 eventDbContext.Database.Migrate();
+
+eventDbContext.BlockProcessedEvent.Add(new BlockProcessedEvent(id: 1, blockNumber: null));
+eventDbContext.SaveChanges();

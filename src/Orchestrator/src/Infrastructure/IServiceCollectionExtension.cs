@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using KafkaFlow;
 using KafkaFlow.TypedHandler;
 using Nethereum.Signer.EIP712;
+using Nethereum.BlockchainProcessing.ProgressRepositories;
 
 using Domain.Aggregates;
 using Domain.Aggregates.Events;
@@ -167,6 +168,7 @@ public static class IServiceCollectionExtension
         services.AddScoped<ITaskRepository, TaskRepository>();
         services.AddScoped<IVoteRepository, VoteRepository>();
 
+        services.AddSingleton<IBlockProgressRepository, BlockProgressRepository>();
         services.AddScoped<IActionableThingRelatedEventRepository, ActionableThingRelatedEventRepository>();
         services.AddScoped<IPreJoinedVerifierLotteryEventRepository, PreJoinedVerifierLotteryEventRepository>();
         services.AddScoped<IJoinedVerifierLotteryEventRepository, JoinedVerifierLotteryEventRepository>();

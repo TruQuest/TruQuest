@@ -10,6 +10,7 @@ using Nethereum.Contracts;
 using Nethereum.BlockchainProcessing.Processor;
 using Nethereum.RPC.Eth.DTOs;
 using Nethereum.ABI.FunctionEncoding.Attributes;
+using Nethereum.BlockchainProcessing.ProgressRepositories;
 
 using Application.Common.Interfaces;
 using AppEvents = Application.Ethereum.Events;
@@ -21,18 +22,26 @@ namespace Infrastructure.Ethereum;
 internal class ContractEventListener : IContractEventListener
 {
     private readonly ILogger<ContractEventListener> _logger;
+    private readonly IBlockProgressRepository _blockProgressRepository;
+
     private readonly Web3 _web3;
     private readonly uint _blockConfirmations;
     private readonly string _truQuestAddress;
     private readonly string _verifierLotteryAddress;
     private readonly string _acceptancePollAddress;
 
-    private readonly ChannelReader<IEventLog> _stream;
-    private readonly ChannelWriter<IEventLog> _sink;
+    private readonly ChannelReader<(IEventLog, TaskCompletionSource)> _stream;
+    private readonly ChannelWriter<(IEventLog, TaskCompletionSource)> _sink;
 
-    public ContractEventListener(IConfiguration configuration, ILogger<ContractEventListener> logger)
+    public ContractEventListener(
+        IConfiguration configuration,
+        ILogger<ContractEventListener> logger,
+        IBlockProgressRepository blockProgressRepository
+    )
     {
         _logger = logger;
+        _blockProgressRepository = blockProgressRepository;
+
         var network = configuration["Ethereum:Network"]!;
         _web3 = new Web3(configuration[$"Ethereum:Networks:{network}:URL"]);
         _blockConfirmations = configuration.GetValue<uint>($"Ethereum:Networks:{network}:BlockConfirmations");
@@ -40,10 +49,12 @@ internal class ContractEventListener : IContractEventListener
         _verifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:VerifierLottery:Address"]!;
         _acceptancePollAddress = configuration[$"Ethereum:Contracts:{network}:AcceptancePoll:Address"]!;
 
-        var channel = Channel.CreateUnbounded<IEventLog>(new UnboundedChannelOptions
-        {
-            SingleReader = true
-        });
+        var channel = Channel.CreateUnbounded<(IEventLog, TaskCompletionSource)>(
+            new UnboundedChannelOptions
+            {
+                SingleReader = true
+            }
+        );
         _stream = channel.Reader;
         _sink = channel.Writer;
     }
@@ -54,7 +65,9 @@ internal class ContractEventListener : IContractEventListener
         {
             async Task WriteToChannel<T>(EventLog<T> @event) where T : IEventDTO
             {
-                await _sink.WriteAsync(@event);
+                var tcs = new TaskCompletionSource();
+                await _sink.WriteAsync((@event, tcs));
+                await tcs.Task;
             }
 
             var thingFundedEventHandler = new EventLogProcessorHandler<ThingFundedEvent>(WriteToChannel);
@@ -81,9 +94,9 @@ internal class ContractEventListener : IContractEventListener
                 logProcessors: eventHandlers,
                 filter: contractFilter,
                 minimumBlockConfirmations: _blockConfirmations,
+                blockProgressRepository: _blockProgressRepository,
                 log: _logger
             );
-            // @@TODO: Add block progress repo.
 
             try
             {
@@ -95,7 +108,7 @@ internal class ContractEventListener : IContractEventListener
             }
         }).Start();
 
-        await foreach (var @event in _stream.ReadAllAsync())
+        await foreach (var (@event, tcs) in _stream.ReadAllAsync())
         {
             if (@event is EventLog<ThingFundedEvent> thingFundedEvent)
             {
@@ -154,6 +167,8 @@ internal class ContractEventListener : IContractEventListener
                     Vote = castedAcceptancePollVoteEvent.Event.Vote
                 };
             }
+
+            tcs.SetResult();
         }
     }
 }

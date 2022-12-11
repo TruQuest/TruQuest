@@ -12,6 +12,7 @@ public class EventDbContext : DbContext
     public DbSet<PreJoinedVerifierLotteryEvent> PreJoinedVerifierLotteryEvents { get; set; }
     public DbSet<JoinedVerifierLotteryEvent> JoinedVerifierLotteryEvents { get; set; }
     public DbSet<CastedAcceptancePollVoteEvent> CastedAcceptancePollVoteEvents { get; set; }
+    public DbSet<BlockProcessedEvent> BlockProcessedEvent { get; set; }
 
     public DbSet<VerifierLotteryWinnerQm> VerifierLotteryWinners { get; set; }
 
@@ -73,6 +74,13 @@ public class EventDbContext : DbContext
             builder.Property(e => e.ThingIdHash).IsRequired();
             builder.Property(e => e.UserId).IsRequired();
             builder.Property(e => e.Decision).HasConversion<int>().IsRequired();
+        });
+
+        modelBuilder.Entity<BlockProcessedEvent>(builder =>
+        {
+            builder.HasKey(e => e.Id);
+            builder.Property(e => e.Id).ValueGeneratedNever();
+            builder.Property(e => e.BlockNumber).IsRequired(false);
         });
     }
 }

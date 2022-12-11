@@ -12,6 +12,7 @@ using Respawn.Graph;
 using MediatR;
 
 using Domain.Aggregates;
+using Domain.Aggregates.Events;
 using Application.Common.Interfaces;
 using Infrastructure.Persistence;
 using API;
@@ -50,7 +51,13 @@ public class Sut : IAsyncLifetime
                 .CreateAsync(appDbContext.Database.GetDbConnection(), new RespawnerOptions
                 {
                     SchemasToInclude = new[] { "truquest", "truquest_events" },
-                    TablesToIgnore = new Table[] { "__EFMigrationsHistory", "Tags", "AspNetUsers" },
+                    TablesToIgnore = new Table[]
+                    {
+                        "__EFMigrationsHistory",
+                        "Tags",
+                        "AspNetUsers",
+                        "BlockProcessedEvent"
+                    },
                     DbAdapter = DbAdapter.Postgres
                 });
         }
@@ -132,6 +139,9 @@ public class Sut : IAsyncLifetime
 
         var eventDbContext = scope.ServiceProvider.GetRequiredService<EventDbContext>();
         await eventDbContext.Database.MigrateAsync();
+
+        eventDbContext.BlockProcessedEvent.Add(new BlockProcessedEvent(id: 1, blockNumber: null));
+        await eventDbContext.SaveChangesAsync();
     }
 
     public async Task ResetState()
