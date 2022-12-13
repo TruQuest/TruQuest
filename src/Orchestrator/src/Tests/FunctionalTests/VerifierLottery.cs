@@ -105,7 +105,7 @@ public class VerifierLottery : IAsyncLifetime
 
         var thingId = thingResult.Data.Thing.Id;
 
-        await Task.Delay(TimeSpan.FromSeconds(10));
+        await Task.Delay(TimeSpan.FromSeconds(15));
 
         var network = _sut.GetConfigurationValue<string>("Ethereum:Network");
         for (int i = 1; i <= 4; ++i)
@@ -121,14 +121,14 @@ public class VerifierLottery : IAsyncLifetime
             await _sut.ContractCaller.JoinLotteryAs(privateKey, thingId, data);
         }
 
-        await Task.Delay(TimeSpan.FromSeconds(10));
+        await Task.Delay(TimeSpan.FromSeconds(15));
 
         int lotteryDurationBlocks = await _sut.ContractCaller.GetLotteryDurationBlocks();
         long lotteryInitBlockNumber = await _sut.ContractCaller.GetLotteryInitBlockNumber(thingId);
 
         await _sut.BlockchainManipulator.Mine(lotteryDurationBlocks);
 
-        await Task.Delay(TimeSpan.FromSeconds(10));
+        await Task.Delay(TimeSpan.FromSeconds(15));
 
         await _sut.BlockchainManipulator.Mine(1);
 
