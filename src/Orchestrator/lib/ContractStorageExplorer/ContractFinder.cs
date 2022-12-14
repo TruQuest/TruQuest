@@ -1,39 +1,39 @@
 ﻿namespace ContractStorageExplorer;
 
-public class ContractBuilder
+public class ContractFinder
 {
     private string? _layoutDirectoryPath;
     private string? _name;
     private string? _address;
     private string? _rpcUrl;
 
-    public static ContractBuilder Create() => new ContractBuilder();
+    public static ContractFinder Create() => new ContractFinder();
 
-    public ContractBuilder WithLayoutDirectory(string layoutDirectoryPath)
+    public ContractFinder WithLayoutDirectory(string layoutDirectoryPath)
     {
         _layoutDirectoryPath = layoutDirectoryPath;
         return this;
     }
 
-    public ContractBuilder WithName(string name)
+    public ContractFinder WithName(string name)
     {
         _name = name;
         return this;
     }
 
-    public ContractBuilder DeployedAt(string address)
+    public ContractFinder DeployedAt(string address)
     {
         _address = address;
         return this;
     }
 
-    public ContractBuilder OnNetwork(string rpcUrl)
+    public ContractFinder OnNetwork(string rpcUrl)
     {
         _rpcUrl = rpcUrl;
         return this;
     }
 
-    public Contract Build()
+    public Contract Find()
     {
         if (_layoutDirectoryPath == null || _name == null || _address == null || _rpcUrl == null)
         {

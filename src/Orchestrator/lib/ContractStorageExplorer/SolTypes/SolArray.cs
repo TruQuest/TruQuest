@@ -2,7 +2,13 @@ namespace ContractStorageExplorer.SolTypes;
 
 public class SolArray : SolType
 {
-    public static int SizeBits => 32 * 8;
+    public override int SizeBits => 32 * 8;
 
-    public override string HexValue => throw new NotImplementedException();
+    protected internal override object ValueObject
+    {
+        get => throw new NotSupportedException();
+        set => throw new NotSupportedException();
+    }
+
+    public override string HexValue => throw new NotSupportedException();
 }

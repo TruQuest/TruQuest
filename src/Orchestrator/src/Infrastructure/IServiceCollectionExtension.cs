@@ -179,6 +179,7 @@ public static class IServiceCollectionExtension
         services.AddSingleton<IContractCaller, ContractCaller>();
         services.AddSingleton<IBlockListener, BlockListener>();
         services.AddSingleton<IBlockchainQueryable, BlockchainQueryable>();
+        services.AddSingleton<IContractStorageQueryable, ContractStorageQueryable>();
 
         if (!configuration.GetValue<bool>("DbMigrator"))
         {

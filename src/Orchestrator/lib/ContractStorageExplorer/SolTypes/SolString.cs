@@ -4,16 +4,18 @@ using Nethereum.Hex.HexConvertors.Extensions;
 
 namespace ContractStorageExplorer.SolTypes;
 
-public class SolString : SolType
+public class SolString : SolType<string>
 {
-    public static int SizeBits => 32 * 8;
+    public override int SizeBits => 32 * 8;
 
-    public string Value { get; }
+    public override string Value => (string)ValueObject;
+
+    public override string HexValue => Encoding.UTF8.GetBytes(Value).ToHex(prefix: false);
+
+    public SolString() { }
 
     public SolString(string value)
     {
-        Value = value;
+        ValueObject = value;
     }
-
-    public override string HexValue => Encoding.UTF8.GetBytes(Value).ToHex(prefix: false);
 }

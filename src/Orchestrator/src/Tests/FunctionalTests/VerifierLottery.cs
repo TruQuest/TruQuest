@@ -1,5 +1,9 @@
 using System.Security.Cryptography;
 
+using FluentAssertions;
+using ContractStorageExplorer;
+using ContractStorageExplorer.SolTypes;
+
 using Application.Common.Interfaces;
 using Application.Common.Models.IM;
 using Application.Subject.Commands.AddNewSubject;
@@ -12,6 +16,10 @@ namespace Tests.FunctionalTests;
 public class VerifierLottery : IAsyncLifetime
 {
     private readonly Sut _sut;
+
+    private Contract _truQuestContract;
+    private Contract _verifierLotteryContract;
+    private Contract _acceptancePollContract;
 
     public VerifierLottery(Sut sut)
     {
@@ -47,6 +55,27 @@ public class VerifierLottery : IAsyncLifetime
                 500
             );
         }
+
+        _truQuestContract = ContractFinder.Create()
+            .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
+            .WithName("TruQuest")
+            .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:TruQuest:Address"))
+            .OnNetwork(_sut.GetConfigurationValue<string>($"Ethereum:Networks:{network}:URL"))
+            .Find();
+
+        _verifierLotteryContract = ContractFinder.Create()
+            .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
+            .WithName("VerifierLottery")
+            .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:VerifierLottery:Address"))
+            .OnNetwork(_sut.GetConfigurationValue<string>($"Ethereum:Networks:{network}:URL"))
+            .Find();
+
+        _acceptancePollContract = ContractFinder.Create()
+            .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
+            .WithName("AcceptancePoll")
+            .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:AcceptancePoll:Address"))
+            .OnNetwork(_sut.GetConfigurationValue<string>($"Ethereum:Networks:{network}:URL"))
+            .Find();
     }
 
     public async Task DisposeAsync()
@@ -105,6 +134,15 @@ public class VerifierLottery : IAsyncLifetime
 
         var thingId = thingResult.Data.Thing.Id;
 
+        var submitter = await _truQuestContract
+            .WalkStorage()
+            .Field("s_thingSubmitter")
+            .AsMapping()
+            .Key(new SolString(thingId))
+            .GetValue<SolAddress>();
+
+        submitter.Value.ToLower().Should().Be("bF2Ff171C3C4A63FBBD369ddb021c75934005e81".ToLower());
+
         await Task.Delay(TimeSpan.FromSeconds(15));
 
         var network = _sut.GetConfigurationValue<string>("Ethereum:Network");
@@ -119,6 +157,20 @@ public class VerifierLottery : IAsyncLifetime
 
             await _sut.ContractCaller.PreJoinLotteryAs(privateKey, thingId, dataHash);
             await _sut.ContractCaller.JoinLotteryAs(privateKey, thingId, data);
+
+            var address = _sut.GetConfigurationValue<string>($"Ethereum:Accounts:{network}:LotteryPlayer{i}:Address");
+            var value = await _verifierLotteryContract
+                .WalkStorage()
+                .Field("s_thingIdToLotteryCommitments")
+                .AsMapping()
+                .Key(new SolString(thingId))
+                .AsMapping()
+                .Key(new SolAddress(address))
+                .AsStruct("Commitment")
+                .Field("dataHash")
+                .GetValue<SolBytes32>();
+
+            value.Value.Should().Equal(dataHash);
         }
 
         await Task.Delay(TimeSpan.FromSeconds(15));
@@ -132,6 +184,6 @@ public class VerifierLottery : IAsyncLifetime
 
         await _sut.BlockchainManipulator.Mine(1);
 
-        await Task.Delay(TimeSpan.FromSeconds(20));
+        await Task.Delay(TimeSpan.FromSeconds(15));
     }
 }

@@ -22,18 +22,21 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
     private readonly IContractCaller _contractCaller;
     private readonly IPreJoinedVerifierLotteryEventRepository _preJoinedVerifierLotteryEventRepository;
     private readonly IJoinedVerifierLotteryEventRepository _joinedVerifierLotteryEventRepository;
+    private readonly IContractStorageQueryable _contractStorageQueryable;
 
     public CloseVerifierLotteryCommandHandler(
         ILogger<CloseVerifierLotteryCommandHandler> logger,
         IContractCaller contractCaller,
         IPreJoinedVerifierLotteryEventRepository preJoinedVerifierLotteryEventRepository,
-        IJoinedVerifierLotteryEventRepository joinedVerifierLotteryEventRepository
+        IJoinedVerifierLotteryEventRepository joinedVerifierLotteryEventRepository,
+        IContractStorageQueryable contractStorageQueryable
     )
     {
         _logger = logger;
         _contractCaller = contractCaller;
         _preJoinedVerifierLotteryEventRepository = preJoinedVerifierLotteryEventRepository;
         _joinedVerifierLotteryEventRepository = joinedVerifierLotteryEventRepository;
+        _contractStorageQueryable = contractStorageQueryable;
     }
 
     public async Task<VoidResult> Handle(CloseVerifierLotteryCommand command, CancellationToken ct)
@@ -53,6 +56,18 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
                 command.ThingId,
                 winnerEvents.Select(e => e.UserId)
             );
+
+            foreach (var winner in lotteryWinners)
+            {
+                var user = await _contractStorageQueryable.GetVerifierLotteryParticipantAt(
+                    command.ThingId.ToString(),
+                    (int)winner.Index
+                );
+                if (user.ToLower() != winner.UserId.ToLower())
+                {
+                    throw new Exception("Incorrect winner selection");
+                }
+            }
 
             await _contractCaller.CloseVerifierLotteryWithSuccess(
                 command.ThingId.ToString(),

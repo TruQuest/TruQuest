@@ -15,5 +15,9 @@ internal class FieldDto
     [JsonIgnore]
     public HexBigInteger Slot => new(BigInteger.Parse(SlotStr));
 
-    public int Offset { get; set; }
+    [JsonPropertyName("offset")]
+    public int OffsetBytes { get; set; }
+
+    [JsonIgnore]
+    public int Offset => OffsetBytes * 8;
 }

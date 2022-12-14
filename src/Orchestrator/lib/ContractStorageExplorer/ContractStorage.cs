@@ -1,10 +1,12 @@
+using System.Collections;
+using System.Diagnostics;
 using System.Reflection;
 using System.Text;
+using System.Numerics;
 
 using Nethereum.Hex.HexConvertors.Extensions;
 using Nethereum.Hex.HexTypes;
 using Nethereum.Util;
-using Nethereum.Web3;
 
 using ContractStorageExplorer.DTO;
 using ContractStorageExplorer.SolTypes;
@@ -124,6 +126,10 @@ public class ContractStorage
                 _slot.ToPaddedHexValue()
             ));
         }
+        else
+        {
+            throw new InvalidOperationException();
+        }
 
         _offset = 0;
         _mode = Mode.Value;
@@ -131,7 +137,7 @@ public class ContractStorage
         return this;
     }
 
-    public ContractStorage AsArrayOf<T>() where T : SolType
+    public ContractStorage AsArrayOf<T>() where T : SolType, new()
     {
         _ensureIsValueMode();
         _arrayElementType = typeof(T);
@@ -147,8 +153,8 @@ public class ContractStorage
             throw new Exception("Not array");
         }
 
-        var property = _arrayElementType!.GetProperty("SizeBits", BindingFlags.Static | BindingFlags.Public)!;
-        var sizeBits = (int)property.GetValue(null)!;
+        var property = _arrayElementType!.GetProperty(nameof(SolType.SizeBits), BindingFlags.Instance | BindingFlags.Public)!;
+        var sizeBits = (int)property.GetValue(Activator.CreateInstance(_arrayElementType))!;
 
         var slotShift = new HexBigInteger(index / (256 / sizeBits));
         _slot = new HexBigInteger(
@@ -176,7 +182,7 @@ public class ContractStorage
         return this;
     }
 
-    public async Task<SolType> GetValue<T>() where T : SolType
+    public async Task<T> GetValue<T>() where T : SolType, new()
     {
         _ensureIsValueMode();
 
@@ -185,13 +191,48 @@ public class ContractStorage
         var type = typeof(T);
         if (type.IsSubclassOf(typeof(SolValueType)))
         {
-            if (type == typeof(SolBytes32))
+            if (type.IsAssignableTo(typeof(ISolNumber)))
             {
-                return new SolBytes32(value.HexToByteArray());
+                var property = type.GetProperty(nameof(SolType.SizeBits), BindingFlags.Instance | BindingFlags.Public)!;
+                var temp = Activator.CreateInstance(type);
+                var sizeBits = (int)property.GetValue(temp)!;
+                var maxValueOfTypeBits = new BitArray(Enumerable
+                    .Repeat<bool>(false, 256 - sizeBits)
+                    .Concat(Enumerable.Repeat<bool>(true, sizeBits))
+                    .ToArray()
+                );
+
+                var valueBits = new BitArray(value.HexToByteArray());
+                valueBits = valueBits.LeftShift(_offset);
+                Debug.Assert(valueBits.Count == maxValueOfTypeBits.Count);
+                valueBits = valueBits.And(maxValueOfTypeBits);
+
+                var valueBytes = valueBits.ToByteArray();
+
+                property = type.GetProperty(nameof(ISolNumber.IsUnsigned), BindingFlags.Instance | BindingFlags.Public)!;
+
+                return new T
+                {
+                    ValueObject = new BigInteger(
+                        valueBytes.TakeLast(sizeBits / 8).ToArray(),
+                        isUnsigned: (bool)property.GetValue(temp)!,
+                        isBigEndian: true
+                    )
+                };
+            }
+            else if (type == typeof(SolBytes32))
+            {
+                return new T
+                {
+                    ValueObject = value.HexToByteArray()
+                };
             }
             else if (type == typeof(SolAddress))
             {
-                return new SolAddress(value);
+                return new T
+                {
+                    ValueObject = value
+                };
             }
         }
         else if (type == typeof(SolString))
@@ -220,7 +261,10 @@ public class ContractStorage
                 value = Encoding.UTF8.GetString(valueBytes.Take(length).ToArray());
             }
 
-            return new SolString(value);
+            return new T
+            {
+                ValueObject = value
+            };
         }
 
         throw new NotImplementedException();

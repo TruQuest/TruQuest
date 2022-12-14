@@ -2,13 +2,31 @@ using Nethereum.Hex.HexConvertors.Extensions;
 
 namespace ContractStorageExplorer.SolTypes;
 
-public class SolAddress : SolValueType
+public class SolAddress : SolValueType<string>
 {
-    public static int SizeBits => 20 * 8;
+    public override int SizeBits => 20 * 8;
 
-    public string Value { get; }
+    protected internal override object ValueObject
+    {
+        get => base.ValueObject;
+        set
+        {
+            base.ValueObject = _checkValue((string)value);
+        }
+    }
+
+    public override string Value => (string)ValueObject;
+
+    public override string HexValue => Value;
+
+    public SolAddress() { }
 
     public SolAddress(string value)
+    {
+        ValueObject = value;
+    }
+
+    private string _checkValue(string value)
     {
         value = value.RemoveHexPrefix();
         if (value.Length < 40)
@@ -20,8 +38,6 @@ public class SolAddress : SolValueType
             value = string.Join(string.Empty, value.TakeLast(40));
         }
 
-        Value = value;
+        return value;
     }
-
-    public override string HexValue => Value;
 }
