@@ -114,10 +114,22 @@ public class ContractStorage
 
         if (key is SolValueType keyValue)
         {
-            _slot = new HexBigInteger(Sha3Keccack.Current.CalculateHashFromHex(
-                keyValue.HexValue.PadLeft(64, '0'),
-                _slot.ToPaddedHexValue()
-            ));
+            if (key is ISolNumber keyNumber && !keyNumber.IsUnsigned)
+            {
+                var hexValue = keyValue.HexValue;
+                var padWith = (hexValue.HexToByteArray()[0] & (byte)8) == 0 ? '0' : 'f';
+                _slot = new HexBigInteger(Sha3Keccack.Current.CalculateHashFromHex(
+                    hexValue.PadLeft(64, padWith),
+                    _slot.ToPaddedHexValue()
+                ));
+            }
+            else
+            {
+                _slot = new HexBigInteger(Sha3Keccack.Current.CalculateHashFromHex(
+                    keyValue.HexValue.PadLeft(64, '0'),
+                    _slot.ToPaddedHexValue()
+                ));
+            }
         }
         else if (key is SolString keyString)
         {
@@ -232,6 +244,18 @@ public class ContractStorage
                 return new T
                 {
                     ValueObject = value
+                };
+            }
+            else if (type == typeof(SolBool))
+            {
+                var valueBits = new BitArray(value.HexToByteArray());
+                valueBits = valueBits.LeftShift(_offset);
+
+                var valueBytes = valueBits.ToByteArray();
+
+                return new T
+                {
+                    ValueObject = valueBytes.Last() == 1
                 };
             }
         }

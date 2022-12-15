@@ -12,7 +12,7 @@
 
     <ItemGroup>
         <ProjectReference Include="../Application/Application.csproj" />
-        <ProjectReference Include="../../lib/ContractStorageExplorer/ContractStorageExplorer.csproj" />
+        <ProjectReference Include="../../lib/ContractStorageExplorer/src/ContractStorageExplorer.csproj" />
     </ItemGroup>
 
     <ItemGroup>
