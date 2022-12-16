@@ -95,5 +95,86 @@ public class Tests : IClassFixture<TestContract>
             .GetValue<SolBool>();
 
         boolValue.Value.Should().BeTrue();
+
+        var int64Value = await _contract
+            .WalkStorage()
+            .Field("map_uint8_to_struct_a")
+            .AsMapping()
+            .Key(new SolUint8(5))
+            .AsStruct("A")
+            .Field("map_uint64_to_int64")
+            .AsMapping()
+            .Key(new SolUint64(15))
+            .GetValue<SolInt64>();
+
+        int64Value.Value.Should().Be(9633);
+
+        value = await _contract
+            .WalkStorage()
+            .Field("map_uint8_to_struct_a")
+            .AsMapping()
+            .Key(new SolUint8(5))
+            .AsStruct("A")
+            .Field("name")
+            .GetValue<SolString>();
+
+        value.Value.Should().Be("Martin Martin Martin Martin Martin Martin Martin Martin Martin Sebastian Marcus Alex");
+
+        value = await _contract
+            .WalkStorage()
+            .Field("arr_of_arr_of_arr_of_string")
+            .AsArrayOf<SolArray>()
+            .Index(14)
+            .AsArrayOf<SolArray>()
+            .Index(3)
+            .AsArrayOf<SolString>()
+            .Index(98)
+            .GetValue<SolString>();
+
+        value.Value.Should().Be("veeeeeeeeeeeeeeeeeeeeeeery loooooooooooooooooooooooooooooooooooooooooooooooooooooooooong value");
+
+        var int8Value = await _contract
+            .WalkStorage()
+            .Field("arr_of_struct_b")
+            .AsArrayOfStruct("B")
+            .Index(0)
+            .AsStruct("B")
+            .Field("age")
+            .GetValue<SolInt8>();
+
+        int8Value.Value.Should().Be(15);
+
+        value = await _contract
+            .WalkStorage()
+            .Field("arr_of_struct_b")
+            .AsArrayOfStruct("B")
+            .Index(1)
+            .AsStruct("B")
+            .Field("name")
+            .GetValue<SolString>();
+
+        value.Value.Should().Be("Bumblebee");
+
+        int8Value = await _contract
+            .WalkStorage()
+            .Field("arr_of_struct_b")
+            .AsArrayOfStruct("B")
+            .Index(1)
+            .AsStruct("B")
+            .Field("age")
+            .GetValue<SolInt8>();
+
+        int8Value.Value.Should().Be(-122);
+
+        boolValue = await _contract
+            .WalkStorage()
+            .Field("arr_of_struct_b")
+            .AsArrayOfStruct("B")
+            .Index(1)
+            .AsStruct("B")
+            .Field("yes")
+            .GetValue<SolBool>();
+
+        boolValue.Value.Should().BeTrue();
     }
 }

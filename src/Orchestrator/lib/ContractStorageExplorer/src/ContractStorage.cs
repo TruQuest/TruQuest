@@ -28,10 +28,10 @@ public class ContractStorage
     private HexBigInteger _slot;
     private int _offset;
 
-    private Type? _arrayElementType;
+    private object? _arrayElementDummyInstance;
 
     private readonly Dictionary<string, FieldDto> _fields;
-    private readonly Dictionary<string, Dictionary<string, FieldDto>>? _structNameToFields;
+    private readonly Dictionary<string, (int SizeBits, Dictionary<string, FieldDto> Fields)>? _structNameToInfo;
     private Dictionary<string, FieldDto>? _structFields;
 
     internal ContractStorage(Contract contract)
@@ -51,12 +51,12 @@ public class ContractStorage
         {
             if (type.Encoding == "inplace" && type.Members != null)
             {
-                _structNameToFields = _structNameToFields ?? new();
+                _structNameToInfo = _structNameToInfo ?? new();
                 var structName = type.Label.Replace("struct ", string.Empty).Split('.').Last();
-                _structNameToFields[structName] = new();
+                _structNameToInfo[structName] = (SizeBits: type.NumberOfBytes * 8, Fields: new());
                 foreach (var member in type.Members)
                 {
-                    _structNameToFields[structName][member.Label] = member;
+                    _structNameToInfo[structName].Fields[member.Label] = member;
                 }
             }
         }
@@ -152,7 +152,22 @@ public class ContractStorage
     public ContractStorage AsArrayOf<T>() where T : SolType, new()
     {
         _ensureIsValueMode();
-        _arrayElementType = typeof(T);
+        _arrayElementDummyInstance = Activator.CreateInstance(typeof(T));
+        _mode = Mode.Array;
+
+        return this;
+    }
+
+    public ContractStorage AsArrayOfStruct(string structName)
+    {
+        _ensureIsValueMode();
+
+        if (_structNameToInfo == null)
+        {
+            throw new Exception("No structs defined");
+        }
+
+        _arrayElementDummyInstance = new SolStruct(_structNameToInfo[structName].SizeBits);
         _mode = Mode.Array;
 
         return this;
@@ -165,15 +180,27 @@ public class ContractStorage
             throw new Exception("Not array");
         }
 
-        var property = _arrayElementType!.GetProperty(nameof(SolType.SizeBits), BindingFlags.Instance | BindingFlags.Public)!;
-        var sizeBits = (int)property.GetValue(Activator.CreateInstance(_arrayElementType))!;
+        var property = _arrayElementDummyInstance!.GetType().GetProperty(
+            nameof(SolType.SizeBits),
+            BindingFlags.Instance | BindingFlags.Public
+        )!;
+        var sizeBits = (int)property.GetValue(_arrayElementDummyInstance)!;
 
-        var slotShift = new HexBigInteger(index / (256 / sizeBits));
+        HexBigInteger slotShift;
+        if (sizeBits <= 256)
+        {
+            slotShift = new HexBigInteger(index / (256 / sizeBits));
+            _offset = (index % (256 / sizeBits)) * sizeBits;
+        }
+        else
+        {
+            slotShift = new HexBigInteger(index * ((sizeBits - 1) / 256 + 1));
+            _offset = 0;
+        }
         _slot = new HexBigInteger(
             new HexBigInteger(Sha3Keccack.Current.CalculateHashFromHex(_slot.ToPaddedHexValue())).Value +
             slotShift.Value
         );
-        _offset = (index % (256 / sizeBits)) * sizeBits;
         _mode = Mode.Value;
 
         return this;
@@ -183,12 +210,12 @@ public class ContractStorage
     {
         _ensureIsValueMode();
 
-        if (_structNameToFields == null)
+        if (_structNameToInfo == null)
         {
             throw new Exception("No structs defined");
         }
 
-        _structFields = _structNameToFields[structName];
+        _structFields = _structNameToInfo[structName].Fields;
         _mode = Mode.Field;
 
         return this;
