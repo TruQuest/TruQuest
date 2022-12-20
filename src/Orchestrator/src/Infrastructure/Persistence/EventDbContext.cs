@@ -12,6 +12,11 @@ public class EventDbContext : DbContext
     public DbSet<PreJoinedVerifierLotteryEvent> PreJoinedVerifierLotteryEvents { get; set; }
     public DbSet<JoinedVerifierLotteryEvent> JoinedVerifierLotteryEvents { get; set; }
     public DbSet<CastedAcceptancePollVoteEvent> CastedAcceptancePollVoteEvents { get; set; }
+
+    public DbSet<PreJoinedThingAssessmentVerifierLotteryEvent> PreJoinedThingAssessmentVerifierLotteryEvents { get; set; }
+    public DbSet<JoinedThingAssessmentVerifierLotteryEvent> JoinedThingAssessmentVerifierLotteryEvents { get; set; }
+    public DbSet<ThingAssessmentVerifierLotterySpotClaimedEvent> ThingAssessmentVerifierLotterySpotClaimedEvents { get; set; }
+
     public DbSet<BlockProcessedEvent> BlockProcessedEvent { get; set; }
 
     public DbSet<VerifierLotteryWinnerQm> VerifierLotteryWinners { get; set; }
@@ -74,6 +79,42 @@ public class EventDbContext : DbContext
             builder.Property(e => e.ThingIdHash).IsRequired();
             builder.Property(e => e.UserId).IsRequired();
             builder.Property(e => e.Decision).HasConversion<int>().IsRequired();
+            builder.Property(e => e.Reason).IsRequired(false);
+        });
+
+        modelBuilder.Entity<PreJoinedThingAssessmentVerifierLotteryEvent>(builder =>
+        {
+            builder.HasKey(e => e.Id);
+            builder.Property(e => e.Id).UseIdentityAlwaysColumn();
+            builder.Property(e => e.BlockNumber).IsRequired();
+            builder.Property(e => e.TxnIndex).IsRequired();
+            builder.Property(e => e.ThingIdHash).IsRequired();
+            builder.Property(e => e.SettlementProposalIdHash).IsRequired();
+            builder.Property(e => e.UserId).IsRequired();
+            builder.Property(e => e.DataHash).IsRequired();
+        });
+
+        modelBuilder.Entity<JoinedThingAssessmentVerifierLotteryEvent>(builder =>
+        {
+            builder.HasKey(e => e.Id);
+            builder.Property(e => e.Id).UseIdentityAlwaysColumn();
+            builder.Property(e => e.BlockNumber).IsRequired();
+            builder.Property(e => e.TxnIndex).IsRequired();
+            builder.Property(e => e.ThingIdHash).IsRequired();
+            builder.Property(e => e.SettlementProposalIdHash).IsRequired();
+            builder.Property(e => e.UserId).IsRequired();
+            builder.Property(e => e.Nonce).IsRequired();
+        });
+
+        modelBuilder.Entity<ThingAssessmentVerifierLotterySpotClaimedEvent>(builder =>
+        {
+            builder.HasKey(e => e.Id);
+            builder.Property(e => e.Id).UseIdentityAlwaysColumn();
+            builder.Property(e => e.BlockNumber).IsRequired();
+            builder.Property(e => e.TxnIndex).IsRequired();
+            builder.Property(e => e.ThingIdHash).IsRequired();
+            builder.Property(e => e.SettlementProposalIdHash).IsRequired();
+            builder.Property(e => e.UserId).IsRequired();
         });
 
         modelBuilder.Entity<BlockProcessedEvent>(builder =>

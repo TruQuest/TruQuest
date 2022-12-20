@@ -3,6 +3,8 @@ using MediatR;
 using Domain.Results;
 using Domain.Aggregates;
 
+using Application.Common.Interfaces;
+
 namespace Application.Thing.Commands.PrepareForAcceptancePoll;
 
 public class PrepareForAcceptancePollCommand : IRequest<VoidResult>
@@ -16,14 +18,17 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
 {
     private readonly IThingRepository _thingRepository;
     private readonly ITaskRepository _taskRepository;
+    private readonly IContractStorageQueryable _contractStorageQueryable;
 
     public PrepareForAcceptancePollCommandHandler(
         IThingRepository thingRepository,
-        ITaskRepository taskRepository
+        ITaskRepository taskRepository,
+        IContractStorageQueryable contractStorageQueryable
     )
     {
         _thingRepository = thingRepository;
         _taskRepository = taskRepository;
+        _contractStorageQueryable = contractStorageQueryable;
     }
 
     public async Task<VoidResult> Handle(PrepareForAcceptancePollCommand command, CancellationToken ct)
@@ -34,9 +39,11 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
             thing.SetState(ThingState.VerifiersSelectedAndAcceptancePollInitiated);
             thing.AddVerifiers(command.WinnerIds);
 
+            int pollDurationBlocks = await _contractStorageQueryable.GetAcceptancePollDurationBlocks();
+
             var task = new DeferredTask(
                 type: TaskType.CloseThingAcceptancePoll,
-                scheduledBlockNumber: command.AcceptancePollInitBlockNumber + 30
+                scheduledBlockNumber: command.AcceptancePollInitBlockNumber + pollDurationBlocks
             );
             task.SetPayload(new()
             {

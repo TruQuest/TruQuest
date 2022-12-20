@@ -53,7 +53,7 @@ internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResul
 
         var user = new UserDm
         {
-            Id = result.Data!.Replace("0x", string.Empty),
+            Id = result.Data!.ToLower(),
             UserName = command.Input.Username
         };
 

@@ -8,6 +8,7 @@
 
     <ItemGroup>
         <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Functions/SelectWinnerIndicesAccordingToPreJoinedVerifierLotteryEvents/SelectWinnerIndicesAccordingToPreJoinedVerifierLotteryEvents.v0.sql" />
+        <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Functions/SelectWinnerIndicesAccordingToPreJoinedThingAssessmentVerifierLotteryEvents/SelectWinnerIndicesAccordingToPreJoinedThingAssessmentVerifierLotteryEvents.v0.sql" />
     </ItemGroup>
 
     <ItemGroup>

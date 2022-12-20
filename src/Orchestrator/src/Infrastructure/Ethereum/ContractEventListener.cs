@@ -16,6 +16,7 @@ using Application.Common.Interfaces;
 using AppEvents = Application.Ethereum.Events;
 
 using Infrastructure.Ethereum.Events;
+using ThingAssessmentVerifierLottery = Infrastructure.Ethereum.Events.ThingAssessmentVerifierLottery;
 
 namespace Infrastructure.Ethereum;
 
@@ -29,6 +30,7 @@ internal class ContractEventListener : IContractEventListener
     private readonly string _truQuestAddress;
     private readonly string _verifierLotteryAddress;
     private readonly string _acceptancePollAddress;
+    private readonly string _thingAssessmentVerifierLotteryAddress;
 
     private readonly ChannelReader<(IEventLog, TaskCompletionSource)> _stream;
     private readonly ChannelWriter<(IEventLog, TaskCompletionSource)> _sink;
@@ -48,6 +50,7 @@ internal class ContractEventListener : IContractEventListener
         _truQuestAddress = configuration[$"Ethereum:Contracts:{network}:TruQuest:Address"]!;
         _verifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:VerifierLottery:Address"]!;
         _acceptancePollAddress = configuration[$"Ethereum:Contracts:{network}:AcceptancePoll:Address"]!;
+        _thingAssessmentVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingAssessmentVerifierLottery:Address"]!;
 
         var channel = Channel.CreateUnbounded<(IEventLog, TaskCompletionSource)>(
             new UnboundedChannelOptions
@@ -70,24 +73,31 @@ internal class ContractEventListener : IContractEventListener
                 await tcs.Task;
             }
 
-            var thingFundedEventHandler = new EventLogProcessorHandler<ThingFundedEvent>(WriteToChannel);
-            var preJoinedLotteryEventHandler = new EventLogProcessorHandler<PreJoinedLotteryEvent>(WriteToChannel);
-            var joinedLotteryEventHandler = new EventLogProcessorHandler<JoinedLotteryEvent>(WriteToChannel);
-            var lotteryClosedWithSuccessEventHandler = new EventLogProcessorHandler<LotteryClosedWithSuccessEvent>(WriteToChannel);
-            var castedVoteEventHandler = new EventLogProcessorHandler<CastedVoteEvent>(WriteToChannel);
+            // @@TODO: Use reflection to create and register handlers.
 
             var eventHandlers = new ProcessorHandler<FilterLog>[]
             {
-                thingFundedEventHandler,
-                preJoinedLotteryEventHandler,
-                joinedLotteryEventHandler,
-                lotteryClosedWithSuccessEventHandler,
-                castedVoteEventHandler
+                new EventLogProcessorHandler<ThingFundedEvent>(WriteToChannel),
+                new EventLogProcessorHandler<PreJoinedLotteryEvent>(WriteToChannel),
+                new EventLogProcessorHandler<JoinedLotteryEvent>(WriteToChannel),
+                new EventLogProcessorHandler<LotteryClosedWithSuccessEvent>(WriteToChannel),
+                new EventLogProcessorHandler<CastedVoteEvent>(WriteToChannel),
+                new EventLogProcessorHandler<CastedVoteWithReasonEvent>(WriteToChannel),
+                new EventLogProcessorHandler<ThingSettlementProposalFundedEvent>(WriteToChannel),
+                new EventLogProcessorHandler<ThingAssessmentVerifierLottery.LotterySpotClaimedEvent>(WriteToChannel),
+                new EventLogProcessorHandler<ThingAssessmentVerifierLottery.PreJoinedLotteryEvent>(WriteToChannel),
+                new EventLogProcessorHandler<ThingAssessmentVerifierLottery.JoinedLotteryEvent>(WriteToChannel)
             };
 
             var contractFilter = new NewFilterInput
             {
-                Address = new[] { _truQuestAddress, _verifierLotteryAddress, _acceptancePollAddress }
+                Address = new[]
+                {
+                    _truQuestAddress,
+                    _verifierLotteryAddress,
+                    _acceptancePollAddress,
+                    _thingAssessmentVerifierLotteryAddress
+                }
             };
 
             var logProcessor = _web3.Processing.Logs.CreateProcessor(
@@ -117,7 +127,7 @@ internal class ContractEventListener : IContractEventListener
                     BlockNumber = (long)thingFundedEvent.Log.BlockNumber.Value,
                     TxnIndex = (int)thingFundedEvent.Log.TransactionIndex.Value,
                     ThingIdHash = thingFundedEvent.Event.ThingIdHash.Substring(2),
-                    UserId = thingFundedEvent.Event.UserId.Substring(2),
+                    UserId = thingFundedEvent.Event.UserId.Substring(2).ToLower(),
                     Stake = (decimal)thingFundedEvent.Event.Stake
                 };
             }
@@ -128,7 +138,7 @@ internal class ContractEventListener : IContractEventListener
                     BlockNumber = (long)preJoinedVerifierLotteryEvent.Log.BlockNumber.Value,
                     TxnIndex = (int)preJoinedVerifierLotteryEvent.Log.TransactionIndex.Value,
                     ThingIdHash = preJoinedVerifierLotteryEvent.Event.ThingIdHash.Substring(2),
-                    UserId = preJoinedVerifierLotteryEvent.Event.UserId.Substring(2),
+                    UserId = preJoinedVerifierLotteryEvent.Event.UserId.Substring(2).ToLower(),
                     DataHash = preJoinedVerifierLotteryEvent.Event.DataHash
                 };
             }
@@ -139,7 +149,7 @@ internal class ContractEventListener : IContractEventListener
                     BlockNumber = (long)joinedVerifierLotteryEvent.Log.BlockNumber.Value,
                     TxnIndex = (int)joinedVerifierLotteryEvent.Log.TransactionIndex.Value,
                     ThingIdHash = joinedVerifierLotteryEvent.Event.ThingIdHash.Substring(2),
-                    UserId = joinedVerifierLotteryEvent.Event.UserId.Substring(2),
+                    UserId = joinedVerifierLotteryEvent.Event.UserId.Substring(2).ToLower(),
                     Nonce = joinedVerifierLotteryEvent.Event.Nonce
                 };
             }
@@ -152,7 +162,7 @@ internal class ContractEventListener : IContractEventListener
                     ThingIdHash = verifierLotteryClosedWithSuccessEvent.Event.ThingIdHash.Substring(2),
                     Nonce = (decimal)verifierLotteryClosedWithSuccessEvent.Event.Nonce,
                     WinnerIds = verifierLotteryClosedWithSuccessEvent.Event.WinnerIds
-                        .Select(id => id.Substring(2))
+                        .Select(id => id.Substring(2).ToLower())
                         .ToList()
                 };
             }
@@ -163,8 +173,67 @@ internal class ContractEventListener : IContractEventListener
                     BlockNumber = (long)castedAcceptancePollVoteEvent.Log.BlockNumber.Value,
                     TxnIndex = (int)castedAcceptancePollVoteEvent.Log.TransactionIndex.Value,
                     ThingIdHash = castedAcceptancePollVoteEvent.Event.ThingIdHash.Substring(2),
-                    UserId = castedAcceptancePollVoteEvent.Event.UserId.Substring(2),
+                    UserId = castedAcceptancePollVoteEvent.Event.UserId.Substring(2).ToLower(),
                     Vote = castedAcceptancePollVoteEvent.Event.Vote
+                };
+            }
+            else if (@event is EventLog<CastedVoteWithReasonEvent> castedAcceptancePollVoteWithReasonEvent)
+            {
+                yield return new AppEvents.AcceptancePoll.CastedAcceptancePollVote.CastedAcceptancePollVoteEvent
+                {
+                    BlockNumber = (long)castedAcceptancePollVoteWithReasonEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)castedAcceptancePollVoteWithReasonEvent.Log.TransactionIndex.Value,
+                    ThingIdHash = castedAcceptancePollVoteWithReasonEvent.Event.ThingIdHash.Substring(2),
+                    UserId = castedAcceptancePollVoteWithReasonEvent.Event.UserId.Substring(2).ToLower(),
+                    Vote = castedAcceptancePollVoteWithReasonEvent.Event.Vote,
+                    Reason = castedAcceptancePollVoteWithReasonEvent.Event.Reason
+                };
+            }
+            else if (@event is EventLog<ThingSettlementProposalFundedEvent> thingSettlementProposalFundedEvent)
+            {
+                yield return new AppEvents.ThingSettlementProposalFunded.ThingSettlementProposalFundedEvent
+                {
+                    BlockNumber = (long)thingSettlementProposalFundedEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)thingSettlementProposalFundedEvent.Log.TransactionIndex.Value,
+                    ThingIdHash = thingSettlementProposalFundedEvent.Event.ThingIdHash.Substring(2),
+                    SettlementProposalIdHash = thingSettlementProposalFundedEvent.Event.SettlementProposalIdHash.Substring(2),
+                    UserId = thingSettlementProposalFundedEvent.Event.UserId.Substring(2).ToLower(),
+                    Stake = (decimal)thingSettlementProposalFundedEvent.Event.Stake
+                };
+            }
+            else if (@event is EventLog<ThingAssessmentVerifierLottery.PreJoinedLotteryEvent> preJoinedThingAssessmentVerifierLotteryEvent)
+            {
+                yield return new AppEvents.ThingAssessmentVerifierLottery.PreJoinedLottery.PreJoinedLotteryEvent
+                {
+                    BlockNumber = (long)preJoinedThingAssessmentVerifierLotteryEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)preJoinedThingAssessmentVerifierLotteryEvent.Log.TransactionIndex.Value,
+                    ThingIdHash = preJoinedThingAssessmentVerifierLotteryEvent.Event.ThingIdHash.Substring(2),
+                    SettlementProposalIdHash = preJoinedThingAssessmentVerifierLotteryEvent.Event.SettlementProposalIdHash.Substring(2),
+                    UserId = preJoinedThingAssessmentVerifierLotteryEvent.Event.UserId.Substring(2).ToLower(),
+                    DataHash = preJoinedThingAssessmentVerifierLotteryEvent.Event.DataHash
+                };
+            }
+            else if (@event is EventLog<ThingAssessmentVerifierLottery.JoinedLotteryEvent> joinedThingAssessmentVerifierLotteryEvent)
+            {
+                yield return new AppEvents.ThingAssessmentVerifierLottery.JoinedLottery.JoinedLotteryEvent
+                {
+                    BlockNumber = (long)joinedThingAssessmentVerifierLotteryEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)joinedThingAssessmentVerifierLotteryEvent.Log.TransactionIndex.Value,
+                    ThingIdHash = joinedThingAssessmentVerifierLotteryEvent.Event.ThingIdHash.Substring(2),
+                    SettlementProposalIdHash = joinedThingAssessmentVerifierLotteryEvent.Event.SettlementProposalIdHash.Substring(2),
+                    UserId = joinedThingAssessmentVerifierLotteryEvent.Event.UserId.Substring(2).ToLower(),
+                    Nonce = joinedThingAssessmentVerifierLotteryEvent.Event.Nonce
+                };
+            }
+            else if (@event is EventLog<ThingAssessmentVerifierLottery.LotterySpotClaimedEvent> thingAssessmentVerifierLotterySpotClaimedEvent)
+            {
+                yield return new AppEvents.ThingAssessmentVerifierLottery.LotterySpotClaimed.LotterySpotClaimedEvent
+                {
+                    BlockNumber = (long)thingAssessmentVerifierLotterySpotClaimedEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)thingAssessmentVerifierLotterySpotClaimedEvent.Log.TransactionIndex.Value,
+                    ThingIdHash = thingAssessmentVerifierLotterySpotClaimedEvent.Event.ThingIdHash.Substring(2),
+                    SettlementProposalIdHash = thingAssessmentVerifierLotterySpotClaimedEvent.Event.SettlementProposalIdHash.Substring(2),
+                    UserId = thingAssessmentVerifierLotterySpotClaimedEvent.Event.UserId.Substring(2).ToLower(),
                 };
             }
 

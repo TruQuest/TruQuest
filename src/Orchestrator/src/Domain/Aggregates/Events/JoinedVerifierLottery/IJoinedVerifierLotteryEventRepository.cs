@@ -9,4 +9,8 @@ public interface IJoinedVerifierLotteryEventRepository : IRepository<JoinedVerif
     Task<List<JoinedVerifierLotteryEvent>> FindWithClosestNonces(
         Guid thingId, long latestBlockNumber, decimal nonce, int count
     );
+
+    Task<List<JoinedVerifierLotteryEvent>> FindWithClosestNoncesAmongUsers(
+        Guid thingId, IEnumerable<string> userIds, decimal nonce, int count
+    );
 }

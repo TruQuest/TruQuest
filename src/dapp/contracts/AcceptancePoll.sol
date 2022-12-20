@@ -320,7 +320,7 @@ contract AcceptancePoll {
     ) public onlyOrchestrator onlyWhenPollOrSubPollInProgress(_thingId) {
         s_thingPollStage[_thingId] = Stage.Finalized;
         address submitter = i_truQuest.s_thingSubmitter(_thingId);
-        i_truQuest.reward(submitter, s_thingSubmissionAcceptedReward);
+        i_truQuest.unstakeAndReward(submitter, s_thingSubmissionAcceptedReward);
 
         for (uint8 i = 0; i < _verifiersToReward.length; ++i) {
             i_truQuest.reward(_verifiersToReward[i], s_verifierReward);

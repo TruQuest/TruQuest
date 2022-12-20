@@ -11,7 +11,7 @@ using Application.Vote.Commands.CastVote;
 
 namespace Application.Thing.Commands.CloseAcceptancePoll;
 
-public class CloseAcceptancePollCommand : IRequest<VoidResult>
+internal class CloseAcceptancePollCommand : IRequest<VoidResult>
 {
     public long LatestIncludedBlockNumber { get; init; }
     public Guid ThingId { get; init; }
@@ -84,7 +84,8 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
                     TxnIndex = v.TxnIndex,
                     ThingIdHash = v.ThingIdHash,
                     UserId = "0x" + v.UserId,
-                    Decision = v.Decision.GetString()
+                    Decision = v.Decision.GetString(),
+                    Reason = v.Reason ?? string.Empty
                 }),
             OrchestratorSignature = orchestratorSig
         });

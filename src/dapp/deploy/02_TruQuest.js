@@ -9,7 +9,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
   await deploy("TruQuest", {
     from: deployer,
-    args: [truthserum.address, 4, 5, 25, 3, 1, 30, 30],
+    args: [truthserum.address, 5, 5, 25, 3, 1, 100, 100, 25],
     log: true,
     waitConfirmations: 1,
   });
@@ -17,6 +17,9 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   let truQuest = await ethers.getContract("TruQuest");
   log(`VerifierLottery deployed at ${await truQuest.s_verifierLottery()}`);
   log(`AcceptancePoll deployed at ${await truQuest.s_acceptancePoll()}`);
+  log(
+    `ThingAssessmentVerifierLottery deployed at ${await truQuest.s_thingAssessmentVerifierLottery()}`
+  );
 };
 
 module.exports.tags = ["TruQuest"];

@@ -16,6 +16,7 @@ using Application.Thing.Commands.SubmitNewThing;
 using Application.Vote.Commands.CastVote;
 
 using Infrastructure.Ethereum.TypedData;
+using Application.Settlement.Commands.SubmitNewSettlementProposal;
 
 namespace Infrastructure.Ethereum;
 
@@ -113,6 +114,24 @@ internal class Signer : ISigner
         return address.Substring(2);
     }
 
+    public Either<SettlementError, string> RecoverFromNewSettlementProposalMessage(
+        NewSettlementProposalIm input, string signature
+    )
+    {
+        var td = new NewSettlementProposalTd
+        {
+            ThingId = input.ThingId.ToString(),
+            Title = input.Title,
+            Verdict = (int)input.Verdict,
+            Details = input.Details,
+            Evidence = input.Evidence.Select(e => new SupportingEvidenceTd { Url = e.Url }).ToList()
+        };
+        var tdDefinition = _getTypedDataDefinition(typeof(NewSettlementProposalTd), typeof(SupportingEvidenceTd));
+        var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
+
+        return address.Substring(2);
+    }
+
     public string SignThing(ThingVm thing)
     {
         var td = new ThingTd
@@ -172,13 +191,27 @@ internal class Signer : ISigner
                     TxnIndex = v.TxnIndex,
                     ThingIdHash = v.ThingIdHash,
                     UserId = "0x" + v.UserId,
-                    Decision = v.Decision.GetString()
+                    Decision = v.Decision.GetString(),
+                    Reason = v.Reason ?? string.Empty
                 })
                 .ToList()
         };
         var tdDefinition = _getTypedDataDefinition(
             typeof(SignedVoteAggTd), typeof(OffChainVoteTd), typeof(OnChainVoteTd)
         );
+        tdDefinition.SetMessage(td);
+
+        return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);
+    }
+
+    public string SignSettlementProposal(SettlementProposalVm proposal)
+    {
+        var td = new SettlementProposalTd
+        {
+            ThingId = proposal.ThingId,
+            Id = proposal.Id
+        };
+        var tdDefinition = _getTypedDataDefinition(typeof(SettlementProposalTd));
         tdDefinition.SetMessage(td);
 
         return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);

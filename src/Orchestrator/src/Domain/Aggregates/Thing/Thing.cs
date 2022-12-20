@@ -24,7 +24,7 @@ public class Thing : Entity, IAggregateRoot
 
     public Thing(string title, string details, string? imageUrl, string submitterId, Guid subjectId)
     {
-        State = ThingState.WaitingToBeFunded;
+        State = ThingState.AwaitingFunding;
         Title = title;
         Details = details;
         ImageUrl = imageUrl;

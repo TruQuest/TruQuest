@@ -4,4 +4,5 @@ public enum ThingEventType
 {
     ThingFunded,
     VerifierLotteryClosedWithSuccess,
+    ThingSettlementProposalFunded,
 }

@@ -14,6 +14,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
     public DbSet<Tag> Tags { get; set; }
     public DbSet<Thing> Things { get; set; }
     public DbSet<Vote> Votes { get; set; }
+    public DbSet<SettlementProposal> SettlementProposals { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -177,6 +178,52 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
                 .HasOne<ThingVerifier>()
                 .WithMany()
                 .HasForeignKey(v => new { v.ThingId, v.VoterId })
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<SettlementProposal>(builder =>
+        {
+            builder.HasKey(p => p.Id);
+            builder.Property(p => p.Id).HasValueGenerator<GuidValueGenerator>();
+            builder
+                .Property(p => p.IdHash)
+                .HasValueGenerator<KeccakSha3Generator>()
+                .IsRequired();
+            builder.Property(p => p.State).HasConversion<int>().IsRequired();
+            builder.Property(p => p.Title).IsRequired();
+            builder.Property(p => p.Verdict).HasConversion<int>().IsRequired();
+            builder.Property(p => p.Details).IsRequired();
+
+            builder
+                .HasOne<UserDm>()
+                .WithMany()
+                .HasForeignKey(p => p.SubmitterId)
+                .IsRequired();
+
+            builder
+                .HasOne<Thing>()
+                .WithMany()
+                .HasForeignKey(p => p.ThingId)
+                .IsRequired();
+
+            builder.Metadata
+                .FindNavigation(nameof(SettlementProposal.Evidence))
+                !.SetPropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.HasIndex(p => p.IdHash);
+        });
+
+        modelBuilder.Entity<SupportingEvidence>(builder =>
+        {
+            builder.HasKey(e => e.Id);
+            builder.Property(e => e.Id).HasValueGenerator<GuidValueGenerator>();
+            builder.Property(e => e.OriginUrl).IsRequired();
+            builder.Property(e => e.TruUrl).IsRequired();
+
+            builder
+                .HasOne<SettlementProposal>()
+                .WithMany(p => p.Evidence)
+                .HasForeignKey("ProposalId")
                 .IsRequired();
         });
     }

@@ -40,4 +40,19 @@ internal class JoinedVerifierLotteryEventRepository : Repository<JoinedVerifierL
             .Take(count)
             .ToListAsync();
     }
+
+    public Task<List<JoinedVerifierLotteryEvent>> FindWithClosestNoncesAmongUsers(
+        Guid thingId, IEnumerable<string> userIds, decimal nonce, int count
+    )
+    {
+        var thingIdHash = Sha3Keccack.Current.CalculateHash(thingId.ToString());
+        return _dbContext.JoinedVerifierLotteryEvents
+            .AsNoTracking()
+            .Where(e => e.ThingIdHash == thingIdHash && userIds.Contains(e.UserId))
+            .OrderBy(e => Math.Abs(nonce - e.Nonce))
+                .ThenBy(e => e.BlockNumber)
+                    .ThenBy(e => e.TxnIndex)
+            .Take(count)
+            .ToListAsync();
+    }
 }

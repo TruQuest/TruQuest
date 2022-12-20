@@ -118,6 +118,7 @@ public class Sut : IAsyncLifetime
             "0xa0Ee7A142d267C1f36714E4a8F75612F20a79720",
             "0xBcd4042DE499D14e55001CcbB24a551F3b954096",
 
+            // "0xC7e4C4A64a6EC2821921596770C784580B94b701",
             "0xbF2Ff171C3C4A63FBBD369ddb021c75934005e81",
             "0x529A3efb0F113a2FB6dB0818639EEa26e0661450",
             "0x09f9063bc1355C587F87dE2F7B35740754353Bfb",
@@ -126,12 +127,22 @@ public class Sut : IAsyncLifetime
             "0xAf73Ad8bd8b023E778b7ccD6Ef490B57adceB655",
             "0x1C0Aa24069f5d9500AC5890195acBB5088BdCcd6",
             "0x202b5E4653846ABB2be555ff09Ba70EeC0AF1451",
-            "0xdD5B3fa962aD96590592D4816bb2d025aC0B7225"
+            "0xdD5B3fa962aD96590592D4816bb2d025aC0B7225",
+            "0x73c26eE1478c96B1ACe803BE249D3949f77A0c7F",
+            "0x97F534DeAF3B70d986ac38F7494564583D9f70A2",
+            "0xF422334d4C32E72a339F886AC052711279827155",
+            "0x230E11E0fc86b48447051E841f2503037E56a0a5",
+            "0x2F184C02be71DD94549682460fae534309625e9b",
+            "0x06d3DA3948126ee728Bf1975286C2c73788E3fb4",
+            "0x733d09dd9Dce5A25ed702Fd7a5502FB16B8461AE",
+            "0x0a8eB9AcD21539F211c870A78246b9Bd81a89Efa",
+            "0x634Db9D7469f7D8d9c7DfFe484C9FE356Ac23F20",
+            "0x236dEe4FA348A1cb1152D54281387fBda3B93F4A",
         };
         appDbContext.Users.AddRange(userIds.Select(id => new User
         {
-            Id = id.Substring(2),
-            UserName = id.Substring(20)
+            Id = id.Substring(2).ToLower(),
+            UserName = id.Substring(2, 20).ToLower()
         }));
 
         appDbContext.Tags.Add(new Tag("Politics"));

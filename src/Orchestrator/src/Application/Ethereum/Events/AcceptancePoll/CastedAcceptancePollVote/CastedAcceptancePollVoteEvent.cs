@@ -13,6 +13,7 @@ public class CastedAcceptancePollVoteEvent : INotification
     public required string ThingIdHash { get; init; }
     public required string UserId { get; init; }
     public int Vote { get; init; }
+    public string? Reason { get; init; }
 }
 
 internal class CastedAcceptancePollVoteEventHandler : INotificationHandler<CastedAcceptancePollVoteEvent>
@@ -33,7 +34,8 @@ internal class CastedAcceptancePollVoteEventHandler : INotificationHandler<Caste
             txnIndex: @event.TxnIndex,
             thingIdHash: @event.ThingIdHash,
             userId: @event.UserId,
-            decision: (Decision)@event.Vote
+            decision: (Decision)@event.Vote,
+            reason: @event.Reason
         );
         _castedAcceptancePollVoteEventRepository.Create(castedVoteEvent);
 

@@ -15,4 +15,6 @@ public class OnChainVoteTd
     public string UserId { get; init; }
     [Parameter("string", "decision", 5)]
     public string Decision { get; init; }
+    [Parameter("string", "reason", 6)]
+    public string Reason { get; init; }
 }

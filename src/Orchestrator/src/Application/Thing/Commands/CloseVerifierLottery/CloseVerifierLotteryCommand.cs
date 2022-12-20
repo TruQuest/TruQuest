@@ -9,7 +9,7 @@ using Application.Common.Interfaces;
 
 namespace Application.Thing.Commands.CloseVerifierLottery;
 
-public class CloseVerifierLotteryCommand : IRequest<VoidResult>
+internal class CloseVerifierLotteryCommand : IRequest<VoidResult>
 {
     public long LatestIncludedBlockNumber { get; init; }
     public Guid ThingId { get; init; }
@@ -42,15 +42,16 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
     public async Task<VoidResult> Handle(CloseVerifierLotteryCommand command, CancellationToken ct)
     {
         var nonce = (decimal)await _contractCaller.ComputeNonce(command.ThingId.ToString(), command.Data);
+        int numVerifiers = await _contractStorageQueryable.GetNumVerifiers();
 
         var winnerEvents = await _joinedVerifierLotteryEventRepository.FindWithClosestNonces(
             thingId: command.ThingId,
             latestBlockNumber: command.LatestIncludedBlockNumber,
             nonce: nonce,
-            count: 4
+            count: numVerifiers
         );
 
-        if (winnerEvents.Count == 4)
+        if (winnerEvents.Count == numVerifiers)
         {
             var lotteryWinners = await _preJoinedVerifierLotteryEventRepository.GetLotteryWinnerIndices(
                 command.ThingId,
@@ -63,7 +64,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
                     command.ThingId.ToString(),
                     (int)winner.Index
                 );
-                if (user.ToLower() != winner.UserId.ToLower())
+                if (user.ToLower() != winner.UserId)
                 {
                     throw new Exception("Incorrect winner selection");
                 }

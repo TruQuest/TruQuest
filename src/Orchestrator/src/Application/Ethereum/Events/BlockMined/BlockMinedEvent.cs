@@ -32,7 +32,7 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
         {
             switch (task.Type)
             {
-                case TaskType.CloseThingVerifierLottery:
+                case TaskType.CloseThingSubmissionVerifierLottery:
                     await _mediator.Send(new CloseVerifierLotteryCommand
                     {
                         LatestIncludedBlockNumber = task.ScheduledBlockNumber,
@@ -45,6 +45,15 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
                     {
                         LatestIncludedBlockNumber = task.ScheduledBlockNumber,
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!)
+                    });
+                    break;
+                case TaskType.CloseThingAssessmentVerifierLottery:
+                    await _mediator.Send(new Settlement.Commands.CloseVerifierLottery.CloseVerifierLotteryCommand
+                    {
+                        LatestIncludedBlockNumber = task.ScheduledBlockNumber,
+                        ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),
+                        SettlementProposalId = Guid.Parse(((JsonElement)task.Payload["settlementProposalId"]).GetString()!),
+                        Data = Convert.FromBase64String(((JsonElement)task.Payload["data"]).GetString()!)
                     });
                     break;
             }

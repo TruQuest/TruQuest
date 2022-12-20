@@ -173,6 +173,18 @@ public class ContractStorage
         return this;
     }
 
+    public async Task<int> Length()
+    {
+        if (_mode != Mode.Array)
+        {
+            throw new Exception("Not array");
+        }
+
+        var value = await _contract._web3.Eth.GetStorageAt.SendRequestAsync(_contract._address, _slot);
+
+        return (int)new HexBigInteger(value).Value;
+    }
+
     public ContractStorage Index(int index)
     {
         if (_mode != Mode.Array)

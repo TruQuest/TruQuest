@@ -71,6 +71,48 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.ToTable("Evidence", "truquest");
                 });
 
+            modelBuilder.Entity("Domain.Aggregates.SettlementProposal", b =>
+                {
+                    b.Property<Guid?>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Details")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("IdHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("State")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SubmitterId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ThingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Verdict")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdHash");
+
+                    b.HasIndex("SubmitterId");
+
+                    b.HasIndex("ThingId");
+
+                    b.ToTable("SettlementProposals", "truquest");
+                });
+
             modelBuilder.Entity("Domain.Aggregates.Subject", b =>
                 {
                     b.Property<Guid?>("Id")
@@ -115,6 +157,30 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.HasIndex("TagId");
 
                     b.ToTable("SubjectAttachedTags", "truquest");
+                });
+
+            modelBuilder.Entity("Domain.Aggregates.SupportingEvidence", b =>
+                {
+                    b.Property<Guid?>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("OriginUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ProposalId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TruUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProposalId");
+
+                    b.ToTable("SupportingEvidence", "truquest");
                 });
 
             modelBuilder.Entity("Domain.Aggregates.Tag", b =>
@@ -378,6 +444,21 @@ namespace Infrastructure.Persistence.Migrations.App
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Domain.Aggregates.SettlementProposal", b =>
+                {
+                    b.HasOne("Domain.Aggregates.User", null)
+                        .WithMany()
+                        .HasForeignKey("SubmitterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Aggregates.Thing", null)
+                        .WithMany()
+                        .HasForeignKey("ThingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Domain.Aggregates.Subject", b =>
                 {
                     b.HasOne("Domain.Aggregates.User", null)
@@ -398,6 +479,15 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.HasOne("Domain.Aggregates.Tag", null)
                         .WithMany()
                         .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Aggregates.SupportingEvidence", b =>
+                {
+                    b.HasOne("Domain.Aggregates.SettlementProposal", null)
+                        .WithMany("Evidence")
+                        .HasForeignKey("ProposalId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -481,6 +571,11 @@ namespace Infrastructure.Persistence.Migrations.App
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Aggregates.SettlementProposal", b =>
+                {
+                    b.Navigation("Evidence");
                 });
 
             modelBuilder.Entity("Domain.Aggregates.Subject", b =>

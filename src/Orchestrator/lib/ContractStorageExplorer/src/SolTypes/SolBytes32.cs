@@ -11,10 +11,26 @@ public class SolBytes32 : SolValueType<byte[]>
         get => base.ValueObject;
         set
         {
-            if (value == null || ((byte[])value).Length != 32)
+            if (value == null)
             {
-                throw new ArgumentException("Must be 32 bytes long");
+                throw new ArgumentException("Can't be null");
             }
+            if (value is byte[] bytes)
+            {
+                if (bytes.Length > 32)
+                {
+                    throw new ArgumentException("Too long");
+                }
+                else if (bytes.Length < 32)
+                {
+                    value = Enumerable.Repeat<byte>(0, 32 - bytes.Length).Concat(bytes).ToArray();
+                }
+            }
+            else
+            {
+                throw new ArgumentException("Invalid type");
+            }
+
             base.ValueObject = value;
         }
     }

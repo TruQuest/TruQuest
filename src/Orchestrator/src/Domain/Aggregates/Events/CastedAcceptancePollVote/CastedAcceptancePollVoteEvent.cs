@@ -10,9 +10,11 @@ public class CastedAcceptancePollVoteEvent : Entity, IAggregateRoot
     public string ThingIdHash { get; }
     public string UserId { get; }
     public Decision Decision { get; }
+    public string? Reason { get; }
 
     public CastedAcceptancePollVoteEvent(
-        long blockNumber, int txnIndex, string thingIdHash, string userId, Decision decision
+        long blockNumber, int txnIndex, string thingIdHash,
+        string userId, Decision decision, string? reason
     )
     {
         BlockNumber = blockNumber;
@@ -20,5 +22,6 @@ public class CastedAcceptancePollVoteEvent : Entity, IAggregateRoot
         ThingIdHash = thingIdHash;
         UserId = userId;
         Decision = decision;
+        Reason = reason;
     }
 }

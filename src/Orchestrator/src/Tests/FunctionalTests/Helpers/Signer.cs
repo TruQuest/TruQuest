@@ -7,6 +7,8 @@ using Nethereum.Signer.EIP712;
 
 using Application.Subject.Commands.AddNewSubject;
 using Application.Thing.Commands.SubmitNewThing;
+using Application.Vote.Commands.CastVote;
+using Application.Settlement.Commands.SubmitNewSettlementProposal;
 using Infrastructure.Ethereum.TypedData;
 
 namespace Tests.FunctionalTests.Helpers;
@@ -15,7 +17,8 @@ public class Signer
 {
     private readonly Eip712TypedDataSigner _eip712Signer;
     private readonly DomainWithSalt _domain;
-    private readonly EthECKey _playerPrivateKey;
+    private readonly EthECKey _submitterPrivateKey;
+    private readonly EthECKey _proposerPrivateKey;
 
     public Signer(IConfiguration configuration)
     {
@@ -32,7 +35,8 @@ public class Signer
             Salt = domainConfig["Salt"].HexToByteArray()
         };
 
-        _playerPrivateKey = new EthECKey(configuration[$"Ethereum:Accounts:{network}:Player:PrivateKey"]!);
+        _submitterPrivateKey = new EthECKey(configuration[$"Ethereum:Accounts:{network}:Submitter:PrivateKey"]);
+        _proposerPrivateKey = new EthECKey(configuration[$"Ethereum:Accounts:{network}:Proposer:PrivateKey"]);
     }
 
     private TypedData<DomainWithSalt> _getTypedDataDefinition(params Type[] types)
@@ -60,7 +64,7 @@ public class Signer
         var tdDefinition = _getTypedDataDefinition(typeof(NewSubjectTd), typeof(TagTd));
         tdDefinition.SetMessage(td);
 
-        return _eip712Signer.SignTypedDataV4(tdDefinition, _playerPrivateKey);
+        return _eip712Signer.SignTypedDataV4(tdDefinition, _submitterPrivateKey);
     }
 
     public string SignNewThingMessage(NewThingIm input)
@@ -77,6 +81,38 @@ public class Signer
         var tdDefinition = _getTypedDataDefinition(typeof(NewThingTd), typeof(EvidenceTd), typeof(TagTd));
         tdDefinition.SetMessage(td);
 
-        return _eip712Signer.SignTypedDataV4(tdDefinition, _playerPrivateKey);
+        return _eip712Signer.SignTypedDataV4(tdDefinition, _submitterPrivateKey);
+    }
+
+    public string SignNewVoteMessage(NewVoteIm input)
+    {
+        var td = new NewVoteTd
+        {
+            ThingId = input.ThingId.ToString(),
+            PollType = input.PollType.GetString(),
+            CastedAt = input.CastedAt,
+            Decision = input.Decision.GetString(),
+            Reason = input.Reason
+        };
+        var tdDefinition = _getTypedDataDefinition(typeof(NewVoteTd));
+        tdDefinition.SetMessage(td);
+
+        return _eip712Signer.SignTypedDataV4(tdDefinition, _submitterPrivateKey);
+    }
+
+    public string SignNewSettlementProposalMessage(NewSettlementProposalIm input)
+    {
+        var td = new NewSettlementProposalTd
+        {
+            ThingId = input.ThingId.ToString(),
+            Title = input.Title,
+            Verdict = (int)input.Verdict,
+            Details = input.Details,
+            Evidence = input.Evidence.Select(e => new SupportingEvidenceTd { Url = e.Url }).ToList()
+        };
+        var tdDefinition = _getTypedDataDefinition(typeof(NewSettlementProposalTd), typeof(SupportingEvidenceTd));
+        tdDefinition.SetMessage(td);
+
+        return _eip712Signer.SignTypedDataV4(tdDefinition, _proposerPrivateKey);
     }
 }

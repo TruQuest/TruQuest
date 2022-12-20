@@ -79,6 +79,9 @@ namespace Infrastructure.Persistence.Migrations.Event
                     b.Property<int>("Decision")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Reason")
+                        .HasColumnType("text");
+
                     b.Property<string>("ThingIdHash")
                         .IsRequired()
                         .HasColumnType("text");
@@ -93,6 +96,40 @@ namespace Infrastructure.Persistence.Migrations.Event
                     b.HasKey("Id");
 
                     b.ToTable("CastedAcceptancePollVoteEvents", "truquest_events");
+                });
+
+            modelBuilder.Entity("Domain.Aggregates.Events.JoinedThingAssessmentVerifierLotteryEvent", b =>
+                {
+                    b.Property<long?>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long?>("Id"));
+
+                    b.Property<long>("BlockNumber")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("Nonce")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("SettlementProposalIdHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ThingIdHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("TxnIndex")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("JoinedThingAssessmentVerifierLotteryEvents", "truquest_events");
                 });
 
             modelBuilder.Entity("Domain.Aggregates.Events.JoinedVerifierLotteryEvent", b =>
@@ -125,6 +162,41 @@ namespace Infrastructure.Persistence.Migrations.Event
                     b.ToTable("JoinedVerifierLotteryEvents", "truquest_events");
                 });
 
+            modelBuilder.Entity("Domain.Aggregates.Events.PreJoinedThingAssessmentVerifierLotteryEvent", b =>
+                {
+                    b.Property<long?>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long?>("Id"));
+
+                    b.Property<long>("BlockNumber")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("DataHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SettlementProposalIdHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ThingIdHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("TxnIndex")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PreJoinedThingAssessmentVerifierLotteryEvents", "truquest_events");
+                });
+
             modelBuilder.Entity("Domain.Aggregates.Events.PreJoinedVerifierLotteryEvent", b =>
                 {
                     b.Property<long?>("Id")
@@ -154,6 +226,37 @@ namespace Infrastructure.Persistence.Migrations.Event
                     b.HasKey("Id");
 
                     b.ToTable("PreJoinedVerifierLotteryEvents", "truquest_events");
+                });
+
+            modelBuilder.Entity("Domain.Aggregates.Events.ThingAssessmentVerifierLotterySpotClaimedEvent", b =>
+                {
+                    b.Property<long?>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long?>("Id"));
+
+                    b.Property<long>("BlockNumber")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("SettlementProposalIdHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ThingIdHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("TxnIndex")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ThingAssessmentVerifierLotterySpotClaimedEvents", "truquest_events");
                 });
 
             modelBuilder.Entity("Domain.QM.VerifierLotteryWinnerQm", b =>

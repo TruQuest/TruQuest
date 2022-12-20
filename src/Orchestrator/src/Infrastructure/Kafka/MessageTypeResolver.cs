@@ -24,6 +24,8 @@ internal class MessageTypeResolver : IMessageTypeResolver
                     return typeof(ThingFundedEvent);
                 case ThingEventType.VerifierLotteryClosedWithSuccess:
                     return typeof(VerifierLotteryClosedWithSuccessEvent);
+                case ThingEventType.ThingSettlementProposalFunded:
+                    return typeof(ThingSettlementProposalFundedEvent);
             }
         }
         else if (context.ConsumerContext.Topic == "thing.verifiers")
