@@ -29,7 +29,7 @@ internal class VerifierLotteryClosedWithSuccessEventHandler : IMessageHandler<Ve
         _mediator.Send(new PrepareForAcceptancePollCommand
         {
             AcceptancePollInitBlockNumber = long.Parse(Encoding.UTF8.GetString((byte[])context.Headers[_blockNumberHeaderName])),
-            ThingIdHash = Encoding.UTF8.GetString((byte[])context.Message.Key),
+            ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
             WinnerIds = message.WinnerIds
         });
 }

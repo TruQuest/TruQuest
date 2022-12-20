@@ -6,8 +6,8 @@ namespace Tests.FunctionalTests.Helpers.Messages;
 [Function("preJoinLottery")]
 public class PreJoinLotteryMessage : FunctionMessage
 {
-    [Parameter("string", "_thingId", 1)]
-    public string ThingId { get; init; }
+    [Parameter("bytes16", "_thingId", 1)]
+    public byte[] ThingId { get; init; }
     [Parameter("bytes32", "_dataHash", 2)]
     public byte[] DataHash { get; init; }
 }

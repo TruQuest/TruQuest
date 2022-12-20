@@ -5,7 +5,6 @@ namespace Domain.Aggregates;
 public class Thing : Entity, IAggregateRoot
 {
     public Guid? Id { get; private set; }
-    public string? IdHash { get; private set; }
     public ThingState State { get; private set; }
     public string Title { get; }
     public string Details { get; }

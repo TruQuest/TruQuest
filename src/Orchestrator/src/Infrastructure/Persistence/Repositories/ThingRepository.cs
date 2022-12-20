@@ -24,8 +24,6 @@ internal class ThingRepository : Repository<Thing>, IThingRepository
         _dbContext.Things.Add(thing);
     }
 
-    public Task<Thing> FindByIdHash(string idHash) => _dbContext.Things.SingleAsync(t => t.IdHash == idHash);
-
     public Task<Thing> FindById(Guid id) => _dbContext.Things.SingleAsync(t => t.Id == id);
 
     public async Task<bool> CheckIsVerifierFor(Guid thingId, string userId)

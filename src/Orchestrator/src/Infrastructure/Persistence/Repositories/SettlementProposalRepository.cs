@@ -25,6 +25,5 @@ internal class SettlementProposalRepository : Repository<SettlementProposal>, IS
         _dbContext.SettlementProposals.Add(proposal);
     }
 
-    public Task<SettlementProposal> FindByIdHash(string idHash) =>
-        _dbContext.SettlementProposals.SingleAsync(p => p.IdHash == idHash);
+    public Task<SettlementProposal> FindById(Guid id) => _dbContext.SettlementProposals.SingleAsync(p => p.Id == id);
 }

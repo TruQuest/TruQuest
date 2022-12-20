@@ -7,11 +7,11 @@ import "./VerifierLottery.sol";
 error AcceptancePoll__NotOrchestrator();
 error AcceptancePoll__NotTruQuest();
 error AcceptancePoll__NotVerifierLottery();
-error AcceptancePoll__Expired(string thingId);
-error AcceptancePoll__NotDesignatedVerifier(string thingId);
-error AcceptancePoll__PollNotInProgress(string thingId);
-error AcceptancePoll__NotDesignatedSubstituteVerifier(string thingId);
-error AcceptancePoll__SubPollNotInProgress(string thingId);
+error AcceptancePoll__Expired(bytes16 thingId);
+error AcceptancePoll__NotDesignatedVerifier(bytes16 thingId);
+error AcceptancePoll__PollNotInProgress(bytes16 thingId);
+error AcceptancePoll__NotDesignatedSubstituteVerifier(bytes16 thingId);
+error AcceptancePoll__SubPollNotInProgress(bytes16 thingId);
 
 contract AcceptancePoll {
     enum Vote {
@@ -44,38 +44,43 @@ contract AcceptancePoll {
     uint256 private s_verifierReward;
     uint16 private s_durationBlocks;
 
-    mapping(string => uint64) private s_thingIdToPollStartedBlock;
-    mapping(string => address[]) private s_thingVerifiers;
-    mapping(string => Stage) private s_thingPollStage;
+    mapping(bytes16 => uint64) private s_thingIdToPollStartedBlock;
+    mapping(bytes16 => address[]) private s_thingVerifiers;
+    mapping(bytes16 => Stage) private s_thingPollStage;
 
-    event CastedVote(string indexed thingId, address indexed user, Vote vote);
+    event CastedVote(bytes16 indexed thingId, address indexed user, Vote vote);
+
     event CastedVoteWithReason(
-        string indexed thingId,
+        bytes16 indexed thingId,
         address indexed user,
         Vote vote,
         string reason
     );
+
     event PollFrozen(
-        string indexed thingId,
+        bytes16 indexed thingId,
         address orchestrator,
         Decision decision,
         string voteAggIpfsCid,
         address submitter,
         address[] slashedVerifiers
     );
+
     event CastedVoteAsSubstituteVerifier(
-        string indexed thingId,
+        bytes16 indexed thingId,
         address indexed user,
         Vote vote
     );
+
     event CastedVoteWithReasonAsSubstituteVerifier(
-        string indexed thingId,
+        bytes16 indexed thingId,
         address indexed user,
         Vote vote,
         string reason
     );
+
     event PollFinalized(
-        string indexed thingId,
+        bytes16 indexed thingId,
         address orchestrator,
         Decision decision,
         string voteAggIpfsCid,
@@ -105,7 +110,7 @@ contract AcceptancePoll {
         _;
     }
 
-    modifier onlyWhileNotExpired(string calldata _thingId) {
+    modifier onlyWhileNotExpired(bytes16 _thingId) {
         if (
             block.number >
             s_thingIdToPollStartedBlock[_thingId] + s_durationBlocks
@@ -115,7 +120,7 @@ contract AcceptancePoll {
         _;
     }
 
-    modifier onlyDesignatedVerifiers(string calldata _thingId) {
+    modifier onlyDesignatedVerifiers(bytes16 _thingId) {
         uint256 designatedVerifiersCount = s_thingVerifiers[_thingId].length; // @@??: static var ?
         bool isDesignatedVerifier = false;
         // while?
@@ -132,21 +137,21 @@ contract AcceptancePoll {
         _;
     }
 
-    modifier onlyWhenPollInProgress(string calldata _thingId) {
+    modifier onlyWhenPollInProgress(bytes16 _thingId) {
         if (s_thingPollStage[_thingId] != Stage.InProgress) {
             revert AcceptancePoll__PollNotInProgress(_thingId);
         }
         _;
     }
 
-    modifier onlyWhenSubPollInProgress(string calldata _thingId) {
+    modifier onlyWhenSubPollInProgress(bytes16 _thingId) {
         if (s_thingPollStage[_thingId] != Stage.SubPollInProgress) {
             revert AcceptancePoll__SubPollNotInProgress(_thingId);
         }
         _;
     }
 
-    modifier onlyDesignatedSubstituteVerifiers(string calldata _thingId) {
+    modifier onlyDesignatedSubstituteVerifiers(bytes16 _thingId) {
         int256 designatedVerifiersCount = int256(
             s_thingVerifiers[_thingId].length
         );
@@ -165,7 +170,7 @@ contract AcceptancePoll {
         _;
     }
 
-    modifier onlyWhenPollOrSubPollInProgress(string calldata _thingId) {
+    modifier onlyWhenPollOrSubPollInProgress(bytes16 _thingId) {
         Stage stage = s_thingPollStage[_thingId];
         if (stage != Stage.InProgress && stage != Stage.SubPollInProgress) {
             revert AcceptancePoll__PollNotInProgress(_thingId);
@@ -193,7 +198,7 @@ contract AcceptancePoll {
     }
 
     function initPoll(
-        string calldata _thingId,
+        bytes16 _thingId,
         address[] memory _verifiers
     ) external onlyVerifierLottery {
         s_thingIdToPollStartedBlock[_thingId] = uint64(block.number);
@@ -202,7 +207,7 @@ contract AcceptancePoll {
     }
 
     function castVote(
-        string calldata _thingId,
+        bytes16 _thingId,
         Vote _vote
     )
         public
@@ -214,7 +219,7 @@ contract AcceptancePoll {
     }
 
     function castVoteWithReason(
-        string calldata _thingId,
+        bytes16 _thingId,
         Vote _vote,
         string calldata _reason
     )
@@ -226,7 +231,7 @@ contract AcceptancePoll {
         emit CastedVoteWithReason(_thingId, msg.sender, _vote, _reason);
     }
 
-    //   function freezePoll__Unsettled__MajorityThresholdNotReached(string calldata _thingId, string calldata _voteAggIpfsCid)
+    //   function freezePoll__Unsettled__MajorityThresholdNotReached(bytes16 _thingId, string calldata _voteAggIpfsCid)
     //     public
     //     onlyOrchestrator
     //     onlyWhenPollInProgress(_thingId)
@@ -243,7 +248,7 @@ contract AcceptancePoll {
     //   }
 
     function freezePoll__Unsettled__InsufficientVotingVolume(
-        string calldata _thingId,
+        bytes16 _thingId,
         string calldata _voteAggIpfsCid,
         address[] calldata _verifiersToKeep,
         address[] calldata _verifiersToSlash,
@@ -272,7 +277,7 @@ contract AcceptancePoll {
     }
 
     function initSubPoll(
-        string calldata _thingId,
+        bytes16 _thingId,
         address[] memory _substituteVerifiers
     ) external onlyVerifierLottery {
         s_thingIdToPollStartedBlock[_thingId] = uint64(block.number); // same as in initPoll
@@ -283,7 +288,7 @@ contract AcceptancePoll {
     }
 
     function castVoteAsSubstituteVerifier(
-        string calldata _thingId,
+        bytes16 _thingId,
         Vote _vote
     )
         public
@@ -295,7 +300,7 @@ contract AcceptancePoll {
     }
 
     function castVoteWithReasonAsSubstituteVerifier(
-        string calldata _thingId,
+        bytes16 _thingId,
         Vote _vote,
         string calldata _reason
     )
@@ -313,7 +318,7 @@ contract AcceptancePoll {
     }
 
     function finalizePoll__Accepted(
-        string calldata _thingId,
+        bytes16 _thingId,
         string calldata _voteAggIpfsCid,
         address[] calldata _verifiersToReward,
         address[] calldata _verifiersToSlash
@@ -342,7 +347,7 @@ contract AcceptancePoll {
     }
 
     function finalizePoll__Declined__Soft(
-        string calldata _thingId,
+        bytes16 _thingId,
         string calldata _voteAggIpfsCid,
         address[] calldata _verifiersToReward,
         address[] calldata _verifiersToSlash
@@ -371,7 +376,7 @@ contract AcceptancePoll {
     }
 
     function finalizePoll__Declined__Hard(
-        string calldata _thingId,
+        bytes16 _thingId,
         string calldata _voteAggIpfsCid,
         address[] calldata _verifiersToReward,
         address[] calldata _verifiersToSlash
@@ -400,7 +405,7 @@ contract AcceptancePoll {
     }
 
     function getVerifierCount(
-        string calldata _thingId
+        bytes16 _thingId
     ) external view returns (uint256) {
         return s_thingVerifiers[_thingId].length;
     }

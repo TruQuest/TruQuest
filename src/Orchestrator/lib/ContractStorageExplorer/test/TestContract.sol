@@ -13,6 +13,12 @@ contract TestContract {
         bool yes;
     }
 
+    struct C {
+        int8 age;
+        bytes12 data;
+        bytes32 dataBig;
+    }
+
     mapping(string => string) private map_string_to_string;
     mapping(string => int16) private map_string_to_int16;
     mapping(string => bool) private map_string_to_bool;
@@ -20,6 +26,10 @@ contract TestContract {
     mapping(int64 => string) private map_int64_to_string;
 
     mapping(uint8 => A) private map_uint8_to_struct_a;
+
+    mapping(bytes16 => bytes16) private map_b16_to_b16;
+    mapping(bytes12 => string) private map_b12_to_string;
+    C private struct_c;
 
     string[][][] private arr_of_arr_of_arr_of_string;
     B[] private arr_of_struct_b;
@@ -66,5 +76,15 @@ contract TestContract {
 
         arr_of_struct_b.push(B("McAllister", 15, false));
         arr_of_struct_b.push(B("Bumblebee", -122, true));
+
+        map_b16_to_b16[
+            0x6F353500BBB93342A15967ABD0C6CA7B
+        ] = 0xDF97506F262B0544B3FFAC8A70940CC8;
+        map_b16_to_b16[
+            0xE08A283DECFFB54785FDB9117A707E52
+        ] = 0xDA87ADAB336C77428F0E6B84E4BDE406;
+
+        map_b12_to_string[0x6F353500BBB93342A15967AB] = "good bye!";
+        struct_c = C(88, 0x6F353500BBB93342A15967AB, bytes32(0));
     }
 }

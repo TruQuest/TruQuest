@@ -7,8 +7,8 @@ namespace Infrastructure.Ethereum.Events;
 [Event("LotteryClosedWithSuccess")]
 public class LotteryClosedWithSuccessEvent : IEventDTO
 {
-    [Parameter("string", "thingId", 1, true)]
-    public string ThingIdHash { get; set; }
+    [Parameter("bytes16", "thingId", 1, true)]
+    public byte[] ThingId { get; set; }
     [Parameter("address", "orchestrator", 2, false)]
     public string Orchestrator { get; set; }
     [Parameter("uint256", "nonce", 3, false)]

@@ -37,9 +37,8 @@ namespace Infrastructure.Persistence.Migrations.Event
                         .IsRequired()
                         .HasColumnType("jsonb");
 
-                    b.Property<string>("ThingIdHash")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<Guid>("ThingId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("TxnIndex")
                         .HasColumnType("integer");
@@ -82,9 +81,8 @@ namespace Infrastructure.Persistence.Migrations.Event
                     b.Property<string>("Reason")
                         .HasColumnType("text");
 
-                    b.Property<string>("ThingIdHash")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<Guid>("ThingId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("TxnIndex")
                         .HasColumnType("integer");
@@ -112,13 +110,11 @@ namespace Infrastructure.Persistence.Migrations.Event
                     b.Property<decimal>("Nonce")
                         .HasColumnType("numeric");
 
-                    b.Property<string>("SettlementProposalIdHash")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<Guid>("SettlementProposalId")
+                        .HasColumnType("uuid");
 
-                    b.Property<string>("ThingIdHash")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<Guid>("ThingId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("TxnIndex")
                         .HasColumnType("integer");
@@ -146,9 +142,8 @@ namespace Infrastructure.Persistence.Migrations.Event
                     b.Property<decimal>("Nonce")
                         .HasColumnType("numeric");
 
-                    b.Property<string>("ThingIdHash")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<Guid>("ThingId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("TxnIndex")
                         .HasColumnType("integer");
@@ -177,13 +172,11 @@ namespace Infrastructure.Persistence.Migrations.Event
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("SettlementProposalIdHash")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<Guid>("SettlementProposalId")
+                        .HasColumnType("uuid");
 
-                    b.Property<string>("ThingIdHash")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<Guid>("ThingId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("TxnIndex")
                         .HasColumnType("integer");
@@ -212,9 +205,8 @@ namespace Infrastructure.Persistence.Migrations.Event
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("ThingIdHash")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<Guid>("ThingId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("TxnIndex")
                         .HasColumnType("integer");
@@ -239,13 +231,11 @@ namespace Infrastructure.Persistence.Migrations.Event
                     b.Property<long>("BlockNumber")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("SettlementProposalIdHash")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<Guid>("SettlementProposalId")
+                        .HasColumnType("uuid");
 
-                    b.Property<string>("ThingIdHash")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<Guid>("ThingId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("TxnIndex")
                         .HasColumnType("integer");

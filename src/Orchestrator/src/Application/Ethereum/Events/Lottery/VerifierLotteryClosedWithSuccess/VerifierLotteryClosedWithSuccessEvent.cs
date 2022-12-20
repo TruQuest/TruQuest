@@ -8,7 +8,7 @@ public class VerifierLotteryClosedWithSuccessEvent : INotification
 {
     public long BlockNumber { get; init; }
     public int TxnIndex { get; init; }
-    public required string ThingIdHash { get; init; }
+    public required byte[] ThingId { get; init; }
     public decimal Nonce { get; init; }
     public required List<string> WinnerIds { get; init; }
 }
@@ -29,7 +29,7 @@ internal class VerifierLotteryClosedWithSuccessEventHandler : INotificationHandl
         var lotteryClosedEvent = new ActionableThingRelatedEvent(
             blockNumber: @event.BlockNumber,
             txnIndex: @event.TxnIndex,
-            thingIdHash: @event.ThingIdHash,
+            thingId: new Guid(@event.ThingId),
             type: ThingEventType.VerifierLotteryClosedWithSuccess
         );
         lotteryClosedEvent.SetPayload(new()

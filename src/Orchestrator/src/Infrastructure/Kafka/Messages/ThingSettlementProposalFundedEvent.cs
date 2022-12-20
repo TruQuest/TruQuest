@@ -10,7 +10,7 @@ namespace Infrastructure.Kafka.Messages;
 
 internal class ThingSettlementProposalFundedEvent
 {
-    public string SettlementProposalIdHash { get; set; }
+    public Guid SettlementProposalId { get; set; }
     public string UserId { get; set; }
     public decimal Stake { get; set; }
 }
@@ -27,7 +27,7 @@ internal class ThingSettlementProposalFundedEventHandler : IMessageHandler<Thing
     public Task Handle(IMessageContext context, ThingSettlementProposalFundedEvent @event) =>
         _mediator.Send(new InitVerifierLotteryCommand
         {
-            ThingIdHash = Encoding.UTF8.GetString((byte[])context.Message.Key),
-            SettlementProposalIdHash = @event.SettlementProposalIdHash
+            ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
+            SettlementProposalId = @event.SettlementProposalId
         });
 }

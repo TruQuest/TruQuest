@@ -7,15 +7,17 @@ public class JoinedVerifierLotteryEvent : Entity, IAggregateRoot
     public long? Id { get; private set; }
     public long BlockNumber { get; }
     public int TxnIndex { get; }
-    public string ThingIdHash { get; }
+    public Guid ThingId { get; }
     public string UserId { get; }
     public decimal Nonce { get; }
 
-    public JoinedVerifierLotteryEvent(long blockNumber, int txnIndex, string thingIdHash, string userId, decimal nonce)
+    public JoinedVerifierLotteryEvent(
+        long blockNumber, int txnIndex, Guid thingId, string userId, decimal nonce
+    )
     {
         BlockNumber = blockNumber;
         TxnIndex = txnIndex;
-        ThingIdHash = thingIdHash;
+        ThingId = thingId;
         UserId = userId;
         Nonce = nonce;
     }

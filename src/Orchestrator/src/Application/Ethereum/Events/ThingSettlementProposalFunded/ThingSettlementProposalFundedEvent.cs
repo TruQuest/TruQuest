@@ -8,8 +8,8 @@ public class ThingSettlementProposalFundedEvent : INotification
 {
     public long BlockNumber { get; init; }
     public int TxnIndex { get; init; }
-    public required string ThingIdHash { get; init; }
-    public required string SettlementProposalIdHash { get; init; }
+    public required byte[] ThingId { get; init; }
+    public required byte[] SettlementProposalId { get; init; }
     public required string UserId { get; init; }
     public decimal Stake { get; init; }
 }
@@ -30,12 +30,12 @@ internal class ThingSettlementProposalFundedEventHandler : INotificationHandler<
         var proposalFundedEvent = new ActionableThingRelatedEvent(
             blockNumber: @event.BlockNumber,
             txnIndex: @event.TxnIndex,
-            thingIdHash: @event.ThingIdHash,
+            thingId: new Guid(@event.ThingId),
             type: ThingEventType.ThingSettlementProposalFunded
         );
         proposalFundedEvent.SetPayload(new()
         {
-            ["settlementProposalIdHash"] = @event.SettlementProposalIdHash,
+            ["settlementProposalId"] = new Guid(@event.SettlementProposalId),
             ["userId"] = @event.UserId,
             ["stake"] = @event.Stake
         });

@@ -7,28 +7,28 @@ import "./AcceptancePoll.sol";
 error VerifierLottery__NotOrchestrator();
 error VerifierLottery__NotTruQuest();
 error VerifierLottery__NotAcceptancePoll();
-error VerifierLottery__AlreadyCommittedToLottery(string thingId);
-error VerifierLottery__LotteryNotActive(string thingId);
-error VerifierLottery__LotteryExpired(string thingId);
+error VerifierLottery__AlreadyCommittedToLottery(bytes16 thingId);
+error VerifierLottery__LotteryNotActive(bytes16 thingId);
+error VerifierLottery__LotteryExpired(bytes16 thingId);
 error VerifierLottery__NotEnoughFunds(uint256 requiredFunds);
-error VerifierLottery__NotCommittedToLottery(string thingId);
-error VerifierLottery__AlreadyJoinedLottery(string thingId);
-error VerifierLottery__InvalidLotteryReveal(string thingId);
-error VerifierLottery__PreJoinAndJoinLotteryInTheSameBlock(string thingId);
+error VerifierLottery__NotCommittedToLottery(bytes16 thingId);
+error VerifierLottery__AlreadyJoinedLottery(bytes16 thingId);
+error VerifierLottery__InvalidLotteryReveal(bytes16 thingId);
+error VerifierLottery__PreJoinAndJoinLotteryInTheSameBlock(bytes16 thingId);
 error VerifierLottery__InvalidNumberOfLotteryWinners(
     uint8 numRequiredVerifiers,
     uint256 numWinners
 );
-error VerifierLottery__InitAndCloseLotteryInTheSameBlock(string thingId);
+error VerifierLottery__InitAndCloseLotteryInTheSameBlock(bytes16 thingId);
 
-error VerifierLottery__SubLotteryNotActive(string thingId);
-error VerifierLottery__SubLotteryExpired(string thingId);
-error VerifierLottery__AlreadyCommittedToSubLottery(string thingId);
-error VerifierLottery__NotCommittedToSubLottery(string thingId);
-error VerifierLottery__AlreadyJoinedSubLottery(string thingId);
-error VerifierLottery__InvalidSubLotteryReveal(string thingId);
-error VerifierLottery__PreJoinAndJoinSubLotteryInTheSameBlock(string thingId);
-error VerifierLottery__InitAndCloseSubLotteryInTheSameBlock(string thingId);
+error VerifierLottery__SubLotteryNotActive(bytes16 thingId);
+error VerifierLottery__SubLotteryExpired(bytes16 thingId);
+error VerifierLottery__AlreadyCommittedToSubLottery(bytes16 thingId);
+error VerifierLottery__NotCommittedToSubLottery(bytes16 thingId);
+error VerifierLottery__AlreadyJoinedSubLottery(bytes16 thingId);
+error VerifierLottery__InvalidSubLotteryReveal(bytes16 thingId);
+error VerifierLottery__PreJoinAndJoinSubLotteryInTheSameBlock(bytes16 thingId);
+error VerifierLottery__InitAndCloseSubLotteryInTheSameBlock(bytes16 thingId);
 
 contract VerifierLottery {
     struct Commitment {
@@ -47,52 +47,52 @@ contract VerifierLottery {
     uint256 private s_verifierStake;
     uint16 private s_durationBlocks;
 
-    mapping(string => mapping(address => Commitment))
+    mapping(bytes16 => mapping(address => Commitment))
         private s_thingIdToLotteryCommitments;
-    mapping(string => address[]) private s_participants;
-    mapping(string => mapping(address => Commitment))
+    mapping(bytes16 => address[]) private s_participants;
+    mapping(bytes16 => mapping(address => Commitment))
         private s_thingIdToSubLotteryCommitments;
 
     event LotteryInitiated(
-        string indexed thingId,
+        bytes16 indexed thingId,
         address orchestrator,
         bytes32 dataHash
     );
     event PreJoinedLottery(
-        string indexed thingId,
+        bytes16 indexed thingId,
         address indexed user,
         bytes32 dataHash
     );
     event JoinedLottery(
-        string indexed thingId,
+        bytes16 indexed thingId,
         address indexed user,
         uint256 nonce
     );
     event LotteryClosedWithSuccess(
-        string indexed thingId,
+        bytes16 indexed thingId,
         address orchestrator,
         uint256 nonce,
         address[] winners
     );
-    event LotteryClosedInFailure(string indexed thingId, address orchestrator);
+    event LotteryClosedInFailure(bytes16 indexed thingId, address orchestrator);
 
     event SubLotteryInitiated(
-        string indexed thingId,
+        bytes16 indexed thingId,
         address orchestrator,
         bytes32 dataHash
     );
     event PreJoinedSubLottery(
-        string indexed thingId,
+        bytes16 indexed thingId,
         address indexed user,
         bytes32 dataHash
     );
     event JoinedSubLottery(
-        string indexed thingId,
+        bytes16 indexed thingId,
         address indexed user,
         uint256 nonce
     );
     event SubLotteryClosedWithSuccess(
-        string indexed thingId,
+        bytes16 indexed thingId,
         address orchestrator,
         uint256 nonce,
         address[] winners
@@ -126,7 +126,7 @@ contract VerifierLottery {
         _;
     }
 
-    modifier onlyOncePerLottery(string calldata _thingId) {
+    modifier onlyOncePerLottery(bytes16 _thingId) {
         if (s_thingIdToLotteryCommitments[_thingId][msg.sender].block != 0) {
             revert VerifierLottery__AlreadyCommittedToLottery(_thingId);
         }
@@ -134,7 +134,7 @@ contract VerifierLottery {
     }
 
     modifier onlyWhenLotteryActiveAndNotExpired(
-        string calldata _thingId,
+        bytes16 _thingId,
         uint8 _margin
     ) {
         int64 lotteryInitBlock = s_thingIdToLotteryCommitments[_thingId][
@@ -151,14 +151,14 @@ contract VerifierLottery {
         _;
     }
 
-    modifier onlyWhenLotteryActive(string calldata _thingId) {
+    modifier onlyWhenLotteryActive(bytes16 _thingId) {
         if (s_thingIdToLotteryCommitments[_thingId][s_orchestrator].block < 1) {
             revert VerifierLottery__LotteryNotActive(_thingId);
         }
         _;
     }
 
-    modifier onlyOncePerSubLottery(string calldata _thingId) {
+    modifier onlyOncePerSubLottery(bytes16 _thingId) {
         if (s_thingIdToSubLotteryCommitments[_thingId][msg.sender].block != 0) {
             revert VerifierLottery__AlreadyCommittedToSubLottery(_thingId);
         }
@@ -166,7 +166,7 @@ contract VerifierLottery {
     }
 
     modifier onlyWhenSubLotteryActiveAndNotExpired(
-        string calldata _thingId,
+        bytes16 _thingId,
         uint8 _margin
     ) {
         int64 subLotteryInitBlock = s_thingIdToSubLotteryCommitments[_thingId][
@@ -184,7 +184,7 @@ contract VerifierLottery {
         _;
     }
 
-    modifier onlyWhenSubLotteryActive(string calldata _thingId) {
+    modifier onlyWhenSubLotteryActive(bytes16 _thingId) {
         if (
             s_thingIdToSubLotteryCommitments[_thingId][
                 address(s_acceptancePoll)
@@ -220,7 +220,7 @@ contract VerifierLottery {
 
     // onlyFunded
     function initLottery(
-        string calldata _thingId,
+        bytes16 _thingId,
         bytes32 _dataHash
     ) public onlyOrchestrator onlyOncePerLottery(_thingId) {
         s_thingIdToLotteryCommitments[_thingId][msg.sender] = Commitment(
@@ -232,7 +232,7 @@ contract VerifierLottery {
     }
 
     function preJoinLottery(
-        string calldata _thingId,
+        bytes16 _thingId,
         bytes32 _dataHash
     )
         public
@@ -251,7 +251,7 @@ contract VerifierLottery {
     }
 
     function joinLottery(
-        string calldata _thingId,
+        bytes16 _thingId,
         bytes32 _data
     ) public onlyWhenLotteryActiveAndNotExpired(_thingId, 0) {
         Commitment memory commitment = s_thingIdToLotteryCommitments[_thingId][
@@ -285,7 +285,7 @@ contract VerifierLottery {
     }
 
     function computeNonce(
-        string calldata _thingId,
+        bytes16 _thingId,
         bytes32 _data
     ) public view returns (uint256) {
         Commitment memory commitment = s_thingIdToLotteryCommitments[_thingId][
@@ -300,7 +300,7 @@ contract VerifierLottery {
     }
 
     function closeLotteryWithSuccess(
-        string calldata _thingId,
+        bytes16 _thingId,
         bytes32 _data,
         uint64[] calldata _winnerIndices // sorted asc indices of users in prejoin array
     ) public onlyOrchestrator onlyWhenLotteryActive(_thingId) {
@@ -353,7 +353,7 @@ contract VerifierLottery {
     // when not enough participants
     // @@??: add reason string/enum param ?
     function closeLotteryInFailure(
-        string calldata _thingId
+        bytes16 _thingId
     ) public onlyOrchestrator onlyWhenLotteryActive(_thingId) {
         // checks?
         s_thingIdToLotteryCommitments[_thingId][msg.sender].block = -1;
@@ -370,7 +370,7 @@ contract VerifierLottery {
     }
 
     function initSubLottery(
-        string calldata _thingId,
+        bytes16 _thingId,
         bytes32 _dataHash
     ) external onlyAcceptancePoll onlyOncePerSubLottery(_thingId) {
         s_thingIdToSubLotteryCommitments[_thingId][msg.sender] = Commitment(
@@ -383,7 +383,7 @@ contract VerifierLottery {
     }
 
     function preJoinSubLottery(
-        string calldata _thingId,
+        bytes16 _thingId,
         bytes32 _dataHash
     )
         public
@@ -403,7 +403,7 @@ contract VerifierLottery {
     }
 
     function joinSubLottery(
-        string calldata _thingId,
+        bytes16 _thingId,
         bytes32 _data
     ) public onlyWhenSubLotteryActiveAndNotExpired(_thingId, 0) {
         Commitment memory commitment = s_thingIdToSubLotteryCommitments[
@@ -437,7 +437,7 @@ contract VerifierLottery {
     }
 
     function closeSubLotteryWithSuccess(
-        string calldata _thingId,
+        bytes16 _thingId,
         bytes32 _data,
         uint64[] calldata _winnerIndices // sorted asc indices of users in prejoin array
     ) public onlyOrchestrator onlyWhenSubLotteryActive(_thingId) {
@@ -495,15 +495,5 @@ contract VerifierLottery {
             nonce,
             winners
         );
-    }
-
-    function getLotteryDurationBlocks() public view returns (uint16) {
-        return s_durationBlocks;
-    }
-
-    function getLotteryInitBlockNumber(
-        string calldata _thingId
-    ) public view returns (int64) {
-        return s_thingIdToLotteryCommitments[_thingId][s_orchestrator].block;
     }
 }

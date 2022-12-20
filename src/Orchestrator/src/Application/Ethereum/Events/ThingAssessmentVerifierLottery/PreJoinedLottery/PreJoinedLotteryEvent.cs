@@ -9,8 +9,8 @@ public class PreJoinedLotteryEvent : INotification
 {
     public long BlockNumber { get; init; }
     public int TxnIndex { get; init; }
-    public required string ThingIdHash { get; init; }
-    public required string SettlementProposalIdHash { get; init; }
+    public required byte[] ThingId { get; init; }
+    public required byte[] SettlementProposalId { get; init; }
     public required string UserId { get; init; }
     public required byte[] DataHash { get; init; }
 }
@@ -31,8 +31,8 @@ internal class PreJoinedLotteryEventHandler : INotificationHandler<PreJoinedLott
         var preJoinedThingAssessmentVerifierLotteryEvent = new PreJoinedThingAssessmentVerifierLotteryEventDm(
             blockNumber: @event.BlockNumber,
             txnIndex: @event.TxnIndex,
-            thingIdHash: @event.ThingIdHash,
-            settlementProposalIdHash: @event.SettlementProposalIdHash,
+            thingId: new Guid(@event.ThingId),
+            settlementProposalId: new Guid(@event.SettlementProposalId),
             userId: @event.UserId,
             dataHash: Convert.ToBase64String(@event.DataHash)
         );

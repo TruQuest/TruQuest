@@ -3,7 +3,6 @@ using Microsoft.Extensions.Configuration;
 
 using Npgsql;
 using NpgsqlTypes;
-using Nethereum.Util;
 
 using Domain.QM;
 using Domain.Aggregates.Events;
@@ -31,9 +30,9 @@ internal class PreJoinedVerifierLotteryEventRepository : Repository<PreJoinedVer
 
     public Task<List<VerifierLotteryWinnerQm>> GetLotteryWinnerIndices(Guid thingId, IEnumerable<string> winnerIds)
     {
-        var thingIdHashParam = new NpgsqlParameter<string>("ThingIdHash", NpgsqlDbType.Text)
+        var thingIdParam = new NpgsqlParameter<Guid>("ThingId", NpgsqlDbType.Uuid)
         {
-            TypedValue = Sha3Keccack.Current.CalculateHash(thingId.ToString())
+            TypedValue = thingId
         };
         var winnerIdsParam = new NpgsqlParameter<string[]>("WinnerIds", NpgsqlDbType.Text | NpgsqlDbType.Array)
         {
@@ -45,10 +44,10 @@ internal class PreJoinedVerifierLotteryEventRepository : Repository<PreJoinedVer
                     $@"
                         SELECT *
                         FROM ""SelectWinnerIndicesAccordingToPreJoinedVerifierLotteryEvents"" (
-                            @{thingIdHashParam.ParameterName}, @{winnerIdsParam.ParameterName}
+                            @{thingIdParam.ParameterName}, @{winnerIdsParam.ParameterName}
                         )
                     ",
-                    thingIdHashParam, winnerIdsParam
+                    thingIdParam, winnerIdsParam
                 )
                 .ToListAsync();
     }

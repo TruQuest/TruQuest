@@ -2,7 +2,7 @@ using Nethereum.Hex.HexConvertors.Extensions;
 
 namespace ContractStorageExplorer.SolTypes;
 
-public class SolBytes32 : SolValueType<byte[]>
+public class SolBytes32 : SolValueType<byte[]>, ISolBytesX
 {
     public override int SizeBits => 32 * 8;
 

@@ -110,8 +110,8 @@ internal class SubmitNewSettlementProposalCommandHandler : IRequestHandler<Submi
 
         var proposalVm = new SettlementProposalVm
         {
-            ThingId = proposal.ThingId.ToString(),
-            Id = proposal.Id!.Value.ToString()
+            ThingId = proposal.ThingId,
+            Id = proposal.Id!.Value
         };
 
         return new()

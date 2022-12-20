@@ -5,6 +5,6 @@ namespace Infrastructure.Ethereum.TypedData;
 [Struct("ThingTd")]
 public class ThingTd
 {
-    [Parameter("string", "id", 1)]
-    public string Id { get; init; }
+    [Parameter("bytes16", "id", 1)]
+    public byte[] Id { get; init; }
 }

@@ -33,7 +33,7 @@ public class EventDbContext : DbContext
             builder.Property(e => e.Id).HasValueGenerator<GuidValueGenerator>();
             builder.Property(e => e.BlockNumber).IsRequired();
             builder.Property(e => e.TxnIndex).IsRequired();
-            builder.Property(e => e.ThingIdHash).IsRequired();
+            builder.Property(e => e.ThingId).IsRequired();
             builder.Property(e => e.Type).HasConversion<int>().IsRequired();
             builder
                 .Property(e => e.Payload)
@@ -48,7 +48,7 @@ public class EventDbContext : DbContext
             builder.Property(e => e.Id).UseIdentityAlwaysColumn();
             builder.Property(e => e.BlockNumber).IsRequired();
             builder.Property(e => e.TxnIndex).IsRequired();
-            builder.Property(e => e.ThingIdHash).IsRequired();
+            builder.Property(e => e.ThingId).IsRequired();
             builder.Property(e => e.UserId).IsRequired();
             builder.Property(e => e.DataHash).IsRequired();
         });
@@ -59,7 +59,7 @@ public class EventDbContext : DbContext
             builder.Property(e => e.Id).UseIdentityAlwaysColumn();
             builder.Property(e => e.BlockNumber).IsRequired();
             builder.Property(e => e.TxnIndex).IsRequired();
-            builder.Property(e => e.ThingIdHash).IsRequired();
+            builder.Property(e => e.ThingId).IsRequired();
             builder.Property(e => e.UserId).IsRequired();
             builder.Property(e => e.Nonce).IsRequired();
         });
@@ -76,7 +76,7 @@ public class EventDbContext : DbContext
             builder.Property(e => e.Id).UseIdentityAlwaysColumn();
             builder.Property(e => e.BlockNumber).IsRequired();
             builder.Property(e => e.TxnIndex).IsRequired();
-            builder.Property(e => e.ThingIdHash).IsRequired();
+            builder.Property(e => e.ThingId).IsRequired();
             builder.Property(e => e.UserId).IsRequired();
             builder.Property(e => e.Decision).HasConversion<int>().IsRequired();
             builder.Property(e => e.Reason).IsRequired(false);
@@ -88,8 +88,8 @@ public class EventDbContext : DbContext
             builder.Property(e => e.Id).UseIdentityAlwaysColumn();
             builder.Property(e => e.BlockNumber).IsRequired();
             builder.Property(e => e.TxnIndex).IsRequired();
-            builder.Property(e => e.ThingIdHash).IsRequired();
-            builder.Property(e => e.SettlementProposalIdHash).IsRequired();
+            builder.Property(e => e.ThingId).IsRequired();
+            builder.Property(e => e.SettlementProposalId).IsRequired();
             builder.Property(e => e.UserId).IsRequired();
             builder.Property(e => e.DataHash).IsRequired();
         });
@@ -100,8 +100,8 @@ public class EventDbContext : DbContext
             builder.Property(e => e.Id).UseIdentityAlwaysColumn();
             builder.Property(e => e.BlockNumber).IsRequired();
             builder.Property(e => e.TxnIndex).IsRequired();
-            builder.Property(e => e.ThingIdHash).IsRequired();
-            builder.Property(e => e.SettlementProposalIdHash).IsRequired();
+            builder.Property(e => e.ThingId).IsRequired();
+            builder.Property(e => e.SettlementProposalId).IsRequired();
             builder.Property(e => e.UserId).IsRequired();
             builder.Property(e => e.Nonce).IsRequired();
         });
@@ -112,8 +112,8 @@ public class EventDbContext : DbContext
             builder.Property(e => e.Id).UseIdentityAlwaysColumn();
             builder.Property(e => e.BlockNumber).IsRequired();
             builder.Property(e => e.TxnIndex).IsRequired();
-            builder.Property(e => e.ThingIdHash).IsRequired();
-            builder.Property(e => e.SettlementProposalIdHash).IsRequired();
+            builder.Property(e => e.ThingId).IsRequired();
+            builder.Property(e => e.SettlementProposalId).IsRequired();
             builder.Property(e => e.UserId).IsRequired();
         });
 

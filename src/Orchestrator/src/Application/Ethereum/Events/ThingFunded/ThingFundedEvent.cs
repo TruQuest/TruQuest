@@ -8,7 +8,7 @@ public class ThingFundedEvent : INotification
 {
     public long BlockNumber { get; init; }
     public int TxnIndex { get; init; }
-    public required string ThingIdHash { get; init; }
+    public required byte[] ThingId { get; init; }
     public required string UserId { get; init; }
     public decimal Stake { get; init; }
 }
@@ -27,7 +27,7 @@ internal class ThingFundedEventHandler : INotificationHandler<ThingFundedEvent>
         var thingFundedEvent = new ActionableThingRelatedEvent(
             blockNumber: @event.BlockNumber,
             txnIndex: @event.TxnIndex,
-            thingIdHash: @event.ThingIdHash,
+            thingId: new Guid(@event.ThingId),
             type: ThingEventType.ThingFunded
         );
         thingFundedEvent.SetPayload(new()

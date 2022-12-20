@@ -6,34 +6,36 @@ import "./TruQuest.sol";
 error ThingAssessmentVerifierLottery__NotOrchestrator();
 error ThingAssessmentVerifierLottery__NotTruQuest();
 // error ThingAssessmentVerifierLottery__NotAcceptancePoll();
-error ThingAssessmentVerifierLottery__AlreadyCommittedToLottery(string thingId);
-error ThingAssessmentVerifierLottery__LotteryNotActive(string thingId);
-error ThingAssessmentVerifierLottery__LotteryExpired(string thingId);
+error ThingAssessmentVerifierLottery__AlreadyCommittedToLottery(
+    bytes16 thingId
+);
+error ThingAssessmentVerifierLottery__LotteryNotActive(bytes16 thingId);
+error ThingAssessmentVerifierLottery__LotteryExpired(bytes16 thingId);
 error ThingAssessmentVerifierLottery__NotEnoughFunds(uint256 requiredFunds);
-error ThingAssessmentVerifierLottery__NotCommittedToLottery(string thingId);
-error ThingAssessmentVerifierLottery__AlreadyJoinedLottery(string thingId);
-error ThingAssessmentVerifierLottery__InvalidLotteryReveal(string thingId);
+error ThingAssessmentVerifierLottery__NotCommittedToLottery(bytes16 thingId);
+error ThingAssessmentVerifierLottery__AlreadyJoinedLottery(bytes16 thingId);
+error ThingAssessmentVerifierLottery__InvalidLotteryReveal(bytes16 thingId);
 error ThingAssessmentVerifierLottery__PreJoinAndJoinLotteryInTheSameBlock(
-    string thingId
+    bytes16 thingId
 );
 error ThingAssessmentVerifierLottery__InvalidNumberOfLotteryWinners();
 error ThingAssessmentVerifierLottery__InitAndCloseLotteryInTheSameBlock(
-    string thingId
+    bytes16 thingId
 );
 
-// error ThingAssessmentVerifierLottery__SubLotteryNotActive(string thingId);
-// error ThingAssessmentVerifierLottery__SubLotteryExpired(string thingId);
+// error ThingAssessmentVerifierLottery__SubLotteryNotActive(bytes16 thingId);
+// error ThingAssessmentVerifierLottery__SubLotteryExpired(bytes16 thingId);
 // error ThingAssessmentVerifierLottery__AlreadyCommittedToSubLottery(
-//     string thingId
+//     bytes16 thingId
 // );
-// error ThingAssessmentVerifierLottery__NotCommittedToSubLottery(string thingId);
-// error ThingAssessmentVerifierLottery__AlreadyJoinedSubLottery(string thingId);
-// error ThingAssessmentVerifierLottery__InvalidSubLotteryReveal(string thingId);
+// error ThingAssessmentVerifierLottery__NotCommittedToSubLottery(bytes16 thingId);
+// error ThingAssessmentVerifierLottery__AlreadyJoinedSubLottery(bytes16 thingId);
+// error ThingAssessmentVerifierLottery__InvalidSubLotteryReveal(bytes16 thingId);
 // error ThingAssessmentVerifierLottery__PreJoinAndJoinSubLotteryInTheSameBlock(
-//     string thingId
+//     bytes16 thingId
 // );
 // error ThingAssessmentVerifierLottery__InitAndCloseSubLotteryInTheSameBlock(
-//     string thingId
+//     bytes16 thingId
 // );
 
 contract ThingAssessmentVerifierLottery {
@@ -53,43 +55,43 @@ contract ThingAssessmentVerifierLottery {
     uint256 private s_verifierStake;
     uint16 private s_durationBlocks;
 
-    mapping(string => mapping(address => Commitment))
+    mapping(bytes16 => mapping(address => Commitment))
         private s_thingIdToLotteryCommitments;
-    mapping(string => address[]) private s_participants;
-    mapping(string => address[]) private s_claimants;
-    // mapping(string => mapping(address => Commitment))
+    mapping(bytes16 => address[]) private s_participants;
+    mapping(bytes16 => address[]) private s_claimants;
+    // mapping(bytes16 => mapping(address => Commitment))
     //     private s_thingIdToSubLotteryCommitments;
 
     event LotteryInitiated(
-        string indexed thingId,
-        string indexed settlementProposalId,
+        bytes16 indexed thingId,
+        bytes16 indexed settlementProposalId,
         address orchestrator,
         bytes32 dataHash
     );
 
     event LotterySpotClaimed(
-        string indexed thingId,
-        string indexed settlementProposalId,
+        bytes16 indexed thingId,
+        bytes16 indexed settlementProposalId,
         address indexed user
     );
 
     event PreJoinedLottery(
-        string indexed thingId,
-        string indexed settlementProposalId,
+        bytes16 indexed thingId,
+        bytes16 indexed settlementProposalId,
         address indexed user,
         bytes32 dataHash
     );
 
     event JoinedLottery(
-        string indexed thingId,
-        string indexed settlementProposalId,
+        bytes16 indexed thingId,
+        bytes16 indexed settlementProposalId,
         address indexed user,
         uint256 nonce
     );
 
     event LotteryClosedWithSuccess(
-        string indexed thingId,
-        string indexed settlementProposalId,
+        bytes16 indexed thingId,
+        bytes16 indexed settlementProposalId,
         address orchestrator,
         uint256 nonce,
         address[] claimants,
@@ -97,31 +99,31 @@ contract ThingAssessmentVerifierLottery {
     );
 
     event LotteryClosedInFailure(
-        string indexed thingId,
-        string indexed settlementProposalId,
+        bytes16 indexed thingId,
+        bytes16 indexed settlementProposalId,
         address orchestrator
     );
 
     // event SubLotteryInitiated(
-    //     string indexed thingId,
+    //     bytes16 indexed thingId,
     //     address orchestrator,
     //     bytes32 dataHash
     // );
 
     // event PreJoinedSubLottery(
-    //     string indexed thingId,
+    //     bytes16 indexed thingId,
     //     address indexed user,
     //     bytes32 dataHash
     // );
 
     // event JoinedSubLottery(
-    //     string indexed thingId,
+    //     bytes16 indexed thingId,
     //     address indexed user,
     //     uint256 nonce
     // );
 
     // event SubLotteryClosedWithSuccess(
-    //     string indexed thingId,
+    //     bytes16 indexed thingId,
     //     address orchestrator,
     //     uint256 nonce,
     //     address[] winners
@@ -157,7 +159,7 @@ contract ThingAssessmentVerifierLottery {
         _;
     }
 
-    modifier onlyOncePerLottery(string calldata _thingId) {
+    modifier onlyOncePerLottery(bytes16 _thingId) {
         if (s_thingIdToLotteryCommitments[_thingId][msg.sender].block != 0) {
             revert ThingAssessmentVerifierLottery__AlreadyCommittedToLottery(
                 _thingId
@@ -167,7 +169,7 @@ contract ThingAssessmentVerifierLottery {
     }
 
     modifier onlyWhenLotteryActiveAndNotExpired(
-        string calldata _thingId,
+        bytes16 _thingId,
         uint8 _margin
     ) {
         int64 lotteryInitBlock = s_thingIdToLotteryCommitments[_thingId][
@@ -184,14 +186,14 @@ contract ThingAssessmentVerifierLottery {
         _;
     }
 
-    modifier onlyWhenLotteryActive(string calldata _thingId) {
+    modifier onlyWhenLotteryActive(bytes16 _thingId) {
         if (s_thingIdToLotteryCommitments[_thingId][s_orchestrator].block < 1) {
             revert ThingAssessmentVerifierLottery__LotteryNotActive(_thingId);
         }
         _;
     }
 
-    // modifier onlyOncePerSubLottery(string calldata _thingId) {
+    // modifier onlyOncePerSubLottery(bytes16 _thingId) {
     //     if (s_thingIdToSubLotteryCommitments[_thingId][msg.sender].block != 0) {
     //         revert ThingAssessmentVerifierLottery__AlreadyCommittedToSubLottery(
     //             _thingId
@@ -201,7 +203,7 @@ contract ThingAssessmentVerifierLottery {
     // }
 
     // modifier onlyWhenSubLotteryActiveAndNotExpired(
-    //     string calldata _thingId,
+    //     bytes16 _thingId,
     //     uint8 _margin
     // ) {
     //     int64 subLotteryInitBlock = s_thingIdToSubLotteryCommitments[_thingId][
@@ -221,7 +223,7 @@ contract ThingAssessmentVerifierLottery {
     //     _;
     // }
 
-    // modifier onlyWhenSubLotteryActive(string calldata _thingId) {
+    // modifier onlyWhenSubLotteryActive(bytes16 _thingId) {
     //     if (
     //         s_thingIdToSubLotteryCommitments[_thingId][
     //             address(s_assessmentPoll)
@@ -258,7 +260,7 @@ contract ThingAssessmentVerifierLottery {
     }
 
     function initLottery(
-        string calldata _thingId,
+        bytes16 _thingId,
         bytes32 _dataHash
     ) public onlyOrchestrator onlyOncePerLottery(_thingId) {
         s_thingIdToLotteryCommitments[_thingId][msg.sender] = Commitment(
@@ -267,12 +269,12 @@ contract ThingAssessmentVerifierLottery {
             false
         );
 
-        string memory settlementProposalId = i_truQuest.getSettlementProposalId(
+        bytes16 settlementProposalId = i_truQuest.getSettlementProposalId(
             _thingId
         );
 
         // onlyFunded
-        // if (bytes(settlementProposalId).length == 0) {
+        // if (settlementProposalId == bytes16(0)) {
         //     // ... not funded
         // }
 
@@ -285,7 +287,7 @@ contract ThingAssessmentVerifierLottery {
     }
 
     function claimLotterySpot(
-        string calldata _thingId
+        bytes16 _thingId
     )
         public
         onlyWhenLotteryActiveAndNotExpired(_thingId, 0)
@@ -300,7 +302,7 @@ contract ThingAssessmentVerifierLottery {
         );
         s_claimants[_thingId].push(msg.sender);
 
-        string memory settlementProposalId = i_truQuest.getSettlementProposalId(
+        bytes16 settlementProposalId = i_truQuest.getSettlementProposalId(
             _thingId
         );
 
@@ -308,7 +310,7 @@ contract ThingAssessmentVerifierLottery {
     }
 
     function preJoinLottery(
-        string calldata _thingId,
+        bytes16 _thingId,
         bytes32 _dataHash
     )
         public
@@ -324,7 +326,7 @@ contract ThingAssessmentVerifierLottery {
         );
         s_participants[_thingId].push(msg.sender);
 
-        string memory settlementProposalId = i_truQuest.getSettlementProposalId(
+        bytes16 settlementProposalId = i_truQuest.getSettlementProposalId(
             _thingId
         );
 
@@ -337,7 +339,7 @@ contract ThingAssessmentVerifierLottery {
     }
 
     function joinLottery(
-        string calldata _thingId,
+        bytes16 _thingId,
         bytes32 _data
     ) public onlyWhenLotteryActiveAndNotExpired(_thingId, 0) {
         Commitment memory commitment = s_thingIdToLotteryCommitments[_thingId][
@@ -373,7 +375,7 @@ contract ThingAssessmentVerifierLottery {
         uint256 nonce = uint256(keccak256(abi.encodePacked(blockHash, _data))) %
             MAX_NONCE;
 
-        string memory settlementProposalId = i_truQuest.getSettlementProposalId(
+        bytes16 settlementProposalId = i_truQuest.getSettlementProposalId(
             _thingId
         );
 
@@ -381,7 +383,7 @@ contract ThingAssessmentVerifierLottery {
     }
 
     function computeNonce(
-        string calldata _thingId,
+        bytes16 _thingId,
         bytes32 _data
     ) public view returns (uint256) {
         Commitment memory commitment = s_thingIdToLotteryCommitments[_thingId][
@@ -396,7 +398,7 @@ contract ThingAssessmentVerifierLottery {
     }
 
     function _getWinnerClaimants(
-        string calldata _thingId,
+        bytes16 _thingId,
         uint64[] calldata _winnerClaimantIndices
     ) private returns (address[] memory) {
         uint64 j = 0;
@@ -418,7 +420,7 @@ contract ThingAssessmentVerifierLottery {
     }
 
     function _getLotteryWinners(
-        string calldata _thingId,
+        bytes16 _thingId,
         uint64[] calldata _winnerIndices
     ) private returns (address[] memory) {
         uint64 j = 0;
@@ -440,7 +442,7 @@ contract ThingAssessmentVerifierLottery {
     }
 
     function closeLotteryWithSuccess(
-        string calldata _thingId,
+        bytes16 _thingId,
         bytes32 _data,
         uint64[] calldata _winnerClaimantIndices,
         uint64[] calldata _winnerIndices // sorted asc indices of users in prejoin array
@@ -497,7 +499,7 @@ contract ThingAssessmentVerifierLottery {
     // when not enough participants
     // @@??: add reason string/enum param ?
     function closeLotteryInFailure(
-        string calldata _thingId
+        bytes16 _thingId
     ) public onlyOrchestrator onlyWhenLotteryActive(_thingId) {
         // checks?
         s_thingIdToLotteryCommitments[_thingId][msg.sender].block = -1;
@@ -510,7 +512,7 @@ contract ThingAssessmentVerifierLottery {
         s_participants[_thingId] = new address[](0); // unnecessary?
         delete s_participants[_thingId];
 
-        string memory settlementProposalId = i_truQuest.getSettlementProposalId(
+        bytes16 settlementProposalId = i_truQuest.getSettlementProposalId(
             _thingId
         );
 
@@ -522,7 +524,7 @@ contract ThingAssessmentVerifierLottery {
     }
 
     // function initSubLottery(
-    //     string calldata _thingId,
+    //     bytes16 _thingId,
     //     bytes32 _dataHash
     // ) external onlyAcceptancePoll onlyOncePerSubLottery(_thingId) {
     //     s_thingIdToSubLotteryCommitments[_thingId][msg.sender] = Commitment(
@@ -535,7 +537,7 @@ contract ThingAssessmentVerifierLottery {
     // }
 
     // function preJoinSubLottery(
-    //     string calldata _thingId,
+    //     bytes16 _thingId,
     //     bytes32 _dataHash
     // )
     //     public
@@ -555,7 +557,7 @@ contract ThingAssessmentVerifierLottery {
     // }
 
     // function joinSubLottery(
-    //     string calldata _thingId,
+    //     bytes16 _thingId,
     //     bytes32 _data
     // ) public onlyWhenSubLotteryActiveAndNotExpired(_thingId, 0) {
     //     Commitment memory commitment = s_thingIdToSubLotteryCommitments[
@@ -595,7 +597,7 @@ contract ThingAssessmentVerifierLottery {
     // }
 
     // function closeSubLotteryWithSuccess(
-    //     string calldata _thingId,
+    //     bytes16 _thingId,
     //     bytes32 _data,
     //     uint64[] calldata _winnerIndices // sorted asc indices of users in prejoin array
     // ) public onlyOrchestrator onlyWhenSubLotteryActive(_thingId) {
@@ -662,7 +664,7 @@ contract ThingAssessmentVerifierLottery {
     }
 
     function getLotteryInitBlockNumber(
-        string calldata _thingId
+        bytes16 _thingId
     ) public view returns (int64) {
         return s_thingIdToLotteryCommitments[_thingId][s_orchestrator].block;
     }

@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
-using Nethereum.Util;
-
 using Domain.Aggregates.Events;
 using Application.Common.Interfaces;
 
@@ -32,14 +30,11 @@ internal class JoinedThingAssessmentVerifierLotteryEventRepository :
         Guid thingId, Guid settlementProposalId, long latestBlockNumber, decimal nonce, int count
     )
     {
-        var thingIdHash = Sha3Keccack.Current.CalculateHash(thingId.ToString());
-        var settlementProposalIdHash = Sha3Keccack.Current.CalculateHash(settlementProposalId.ToString());
-
         return _dbContext.JoinedThingAssessmentVerifierLotteryEvents
             .AsNoTracking()
             .Where(e =>
-                e.ThingIdHash == thingIdHash &&
-                e.SettlementProposalIdHash == settlementProposalIdHash &&
+                e.ThingId == thingId &&
+                e.SettlementProposalId == settlementProposalId &&
                 e.BlockNumber <= latestBlockNumber
             )
             .OrderBy(e => Math.Abs(nonce - e.Nonce))

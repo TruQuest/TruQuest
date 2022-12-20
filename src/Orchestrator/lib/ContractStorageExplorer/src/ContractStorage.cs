@@ -114,21 +114,42 @@ public class ContractStorage
 
         if (key is SolValueType keyValue)
         {
-            if (key is ISolNumber keyNumber && !keyNumber.IsUnsigned)
+            if (key is ISolNumber keyNumber)
             {
-                var hexValue = keyValue.HexValue;
-                var padWith = (hexValue.HexToByteArray()[0] & (byte)8) == 0 ? '0' : 'f';
-                _slot = new HexBigInteger(Sha3Keccack.Current.CalculateHashFromHex(
-                    hexValue.PadLeft(64, padWith),
-                    _slot.ToPaddedHexValue()
-                ));
+                if (!keyNumber.IsUnsigned)
+                {
+                    var hexValue = keyValue.HexValue;
+                    var padWith = (hexValue.HexToByteArray()[0] & (byte)8) == 0 ? '0' : 'f';
+                    _slot = new HexBigInteger(Sha3Keccack.Current.CalculateHashFromHex(
+                        hexValue.PadLeft(64, padWith),
+                        _slot.ToPaddedHexValue()
+                    ));
+                }
+                else
+                {
+                    _slot = new HexBigInteger(Sha3Keccack.Current.CalculateHashFromHex(
+                        keyValue.HexValue.PadLeft(64, '0'),
+                        _slot.ToPaddedHexValue()
+                    ));
+                }
             }
-            else
+            else if (key is SolAddress)
             {
                 _slot = new HexBigInteger(Sha3Keccack.Current.CalculateHashFromHex(
                     keyValue.HexValue.PadLeft(64, '0'),
                     _slot.ToPaddedHexValue()
                 ));
+            }
+            else if (key is ISolBytesX)
+            {
+                _slot = new HexBigInteger(Sha3Keccack.Current.CalculateHashFromHex(
+                    keyValue.HexValue.PadRight(64, '0'),
+                    _slot.ToPaddedHexValue()
+                ));
+            }
+            else
+            {
+                throw new NotImplementedException();
             }
         }
         else if (key is SolString keyString)
@@ -140,7 +161,7 @@ public class ContractStorage
         }
         else
         {
-            throw new InvalidOperationException();
+            throw new NotImplementedException();
         }
 
         _offset = 0;
@@ -271,11 +292,28 @@ public class ContractStorage
                     )
                 };
             }
-            else if (type == typeof(SolBytes32))
+            else if (type.IsAssignableTo(typeof(ISolBytesX)))
             {
+                value = value == "0x" ? value + "0000000000000000000000000000000000000000000000000000000000000000" : value;
+                var property = type.GetProperty(nameof(SolType.SizeBits), BindingFlags.Instance | BindingFlags.Public)!;
+                var temp = Activator.CreateInstance(type);
+                var sizeBits = (int)property.GetValue(temp)!;
+                var maxValueOfTypeBits = new BitArray(Enumerable
+                    .Repeat<bool>(false, 256 - sizeBits)
+                    .Concat(Enumerable.Repeat<bool>(true, sizeBits))
+                    .ToArray()
+                );
+
+                var valueBits = new BitArray(value.HexToByteArray());
+                valueBits = valueBits.LeftShift(_offset);
+                Debug.Assert(valueBits.Count == maxValueOfTypeBits.Count);
+                valueBits = valueBits.And(maxValueOfTypeBits);
+
+                var valueBytes = valueBits.ToByteArray();
+
                 return new T
                 {
-                    ValueObject = value.HexToByteArray()
+                    ValueObject = valueBits.ToByteArray().TakeLast(sizeBits / 8).ToArray()
                 };
             }
             else if (type == typeof(SolAddress))

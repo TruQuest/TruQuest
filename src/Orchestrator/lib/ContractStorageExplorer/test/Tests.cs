@@ -120,6 +120,24 @@ public class Tests : IClassFixture<TestContract>
 
         value.Value.Should().Be("Martin Martin Martin Martin Martin Martin Martin Martin Martin Sebastian Marcus Alex");
 
+        var bytes16Value = await _contract
+            .WalkStorage()
+            .Field("map_b16_to_b16")
+            .AsMapping()
+            .Key(new SolBytes16(Convert.FromHexString("6F353500BBB93342A15967ABD0C6CA7B")))
+            .GetValue<SolBytes16>();
+
+        bytes16Value.HexValue.ToUpper().Should().Be("DF97506F262B0544B3FFAC8A70940CC8");
+
+        bytes16Value = await _contract
+            .WalkStorage()
+            .Field("map_b16_to_b16")
+            .AsMapping()
+            .Key(new SolBytes16(Convert.FromHexString("E08A283DECFFB54785FDB9117A707E52")))
+            .GetValue<SolBytes16>();
+
+        bytes16Value.HexValue.ToUpper().Should().Be("DA87ADAB336C77428F0E6B84E4BDE406");
+
         value = await _contract
             .WalkStorage()
             .Field("arr_of_arr_of_arr_of_string")
@@ -176,5 +194,32 @@ public class Tests : IClassFixture<TestContract>
             .GetValue<SolBool>();
 
         boolValue.Value.Should().BeTrue();
+
+        value = await _contract
+            .WalkStorage()
+            .Field("map_b12_to_string")
+            .AsMapping()
+            .Key(new SolBytes12(Convert.FromHexString("6F353500BBB93342A15967AB")))
+            .GetValue<SolString>();
+
+        value.Value.Should().Be("good bye!");
+
+        var bytes12Value = await _contract
+            .WalkStorage()
+            .Field("struct_c")
+            .AsStruct("C")
+            .Field("data")
+            .GetValue<SolBytes12>();
+
+        bytes12Value.HexValue.ToUpper().Should().Be("6F353500BBB93342A15967AB");
+
+        var bytes32Value = await _contract
+            .WalkStorage()
+            .Field("struct_c")
+            .AsStruct("C")
+            .Field("dataBig")
+            .GetValue<SolBytes32>();
+
+        bytes32Value.Value.Should().Equal(new byte[32]);
     }
 }

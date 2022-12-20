@@ -154,13 +154,13 @@ public class E2ETests : IAsyncLifetime
 
         await _sut.ContractCaller.FundThing(thingResult.Data!.Thing, thingResult.Data.Signature);
 
-        string thingId = thingResult.Data.Thing.Id;
+        byte[] thingId = thingResult.Data.Thing.Id.ToByteArray();
 
         var submitter = await _truQuestContract
             .WalkStorage()
             .Field("s_thingSubmitter")
             .AsMapping()
-            .Key(new SolString(thingId))
+            .Key(new SolBytes16(thingId))
             .GetValue<SolAddress>();
 
         submitter.Value.ToLower().Should().Be(submitterAddress);
@@ -184,7 +184,7 @@ public class E2ETests : IAsyncLifetime
                 .WalkStorage()
                 .Field("s_thingIdToLotteryCommitments")
                 .AsMapping()
-                .Key(new SolString(thingId))
+                .Key(new SolBytes16(thingId))
                 .AsMapping()
                 .Key(new SolAddress(address))
                 .AsStruct("Commitment")
@@ -197,7 +197,7 @@ public class E2ETests : IAsyncLifetime
                 .WalkStorage()
                 .Field("s_thingIdToLotteryCommitments")
                 .AsMapping()
-                .Key(new SolString(thingId))
+                .Key(new SolBytes16(thingId))
                 .AsMapping()
                 .Key(new SolAddress(address))
                 .AsStruct("Commitment")
@@ -209,10 +209,12 @@ public class E2ETests : IAsyncLifetime
 
         await Task.Delay(TimeSpan.FromSeconds(15)); // giving time for (Pre-)Joined events to be handled.
 
-        int lotteryDurationBlocks = await _sut.ContractCaller.GetLotteryDurationBlocks();
-        long lotteryInitBlockNumber = await _sut.ContractCaller.GetLotteryInitBlockNumber(thingId);
+        var lotteryDurationBlocks = await _verifierLotteryContract
+            .WalkStorage()
+            .Field("s_durationBlocks")
+            .GetValue<SolUint16>();
 
-        await _sut.BlockchainManipulator.Mine(lotteryDurationBlocks);
+        await _sut.BlockchainManipulator.Mine(lotteryDurationBlocks.Value);
 
         await Task.Delay(TimeSpan.FromSeconds(15)); // giving time to close verifier lottery
 
@@ -230,7 +232,7 @@ public class E2ETests : IAsyncLifetime
             .WalkStorage()
             .Field("s_thingVerifiers")
             .AsMapping()
-            .Key(new SolString(thingId))
+            .Key(new SolBytes16(thingId))
             .AsArrayOf<SolAddress>()
             .Length();
 
@@ -244,7 +246,7 @@ public class E2ETests : IAsyncLifetime
                 .WalkStorage()
                 .Field("s_thingVerifiers")
                 .AsMapping()
-                .Key(new SolString(thingId))
+                .Key(new SolBytes16(thingId))
                 .AsArrayOf<SolAddress>()
                 .Index(i)
                 .GetValue<SolAddress>();
@@ -255,7 +257,7 @@ public class E2ETests : IAsyncLifetime
 
             var voteInput = new NewVoteIm
             {
-                ThingId = Guid.Parse(thingId),
+                ThingId = new Guid(thingId),
                 PollType = PollTypeIm.Acceptance,
                 CastedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
                 Decision = DecisionIm.Accept,
@@ -282,7 +284,7 @@ public class E2ETests : IAsyncLifetime
             .WalkStorage()
             .Field("s_thingPollStage")
             .AsMapping()
-            .Key(new SolString(thingId))
+            .Key(new SolBytes16(thingId))
             .GetValue<SolUint8>();
 
         pollStage.Value.Should().Be(4);
@@ -295,7 +297,7 @@ public class E2ETests : IAsyncLifetime
 
         var proposalInput = new NewSettlementProposalIm
         {
-            ThingId = Guid.Parse(thingId),
+            ThingId = new Guid(thingId),
             Title = "Proposal title",
             Verdict = VerdictIm.AintGoodEnough,
             Details = "Proposal details",
@@ -319,7 +321,7 @@ public class E2ETests : IAsyncLifetime
             .WalkStorage()
             .Field("s_thingIdToSettlementProposal")
             .AsMapping()
-            .Key(new SolString(thingId))
+            .Key(new SolBytes16(thingId))
             .AsStruct("SettlementProposal")
             .Field("submitter")
             .GetValue<SolAddress>();
@@ -341,7 +343,7 @@ public class E2ETests : IAsyncLifetime
                     .WalkStorage()
                     .Field("s_thingIdToLotteryCommitments")
                     .AsMapping()
-                    .Key(new SolString(thingId))
+                    .Key(new SolBytes16(thingId))
                     .AsMapping()
                     .Key(new SolAddress(address))
                     .AsStruct("Commitment")
@@ -354,7 +356,7 @@ public class E2ETests : IAsyncLifetime
                     .WalkStorage()
                     .Field("s_thingIdToLotteryCommitments")
                     .AsMapping()
-                    .Key(new SolString(thingId))
+                    .Key(new SolBytes16(thingId))
                     .AsMapping()
                     .Key(new SolAddress(address))
                     .AsStruct("Commitment")
@@ -378,7 +380,7 @@ public class E2ETests : IAsyncLifetime
                     .WalkStorage()
                     .Field("s_thingIdToLotteryCommitments")
                     .AsMapping()
-                    .Key(new SolString(thingId))
+                    .Key(new SolBytes16(thingId))
                     .AsMapping()
                     .Key(new SolAddress(address))
                     .AsStruct("Commitment")
@@ -391,7 +393,7 @@ public class E2ETests : IAsyncLifetime
                     .WalkStorage()
                     .Field("s_thingIdToLotteryCommitments")
                     .AsMapping()
-                    .Key(new SolString(thingId))
+                    .Key(new SolBytes16(thingId))
                     .AsMapping()
                     .Key(new SolAddress(address))
                     .AsStruct("Commitment")
@@ -404,12 +406,12 @@ public class E2ETests : IAsyncLifetime
 
         await Task.Delay(TimeSpan.FromSeconds(20)); // giving time to handle Claimed/(Pre-)Joined events
 
-        var thingAssessmentVerifierLotteryDurationBlocks = await _thingAssessmentVerifierLotteryContract
+        lotteryDurationBlocks = await _thingAssessmentVerifierLotteryContract
             .WalkStorage()
             .Field("s_durationBlocks")
             .GetValue<SolUint16>();
 
-        await _sut.BlockchainManipulator.Mine(thingAssessmentVerifierLotteryDurationBlocks.Value);
+        await _sut.BlockchainManipulator.Mine(lotteryDurationBlocks.Value);
 
         await Task.Delay(TimeSpan.FromSeconds(20)); // giving time to close the lottery
 
@@ -419,7 +421,7 @@ public class E2ETests : IAsyncLifetime
             .WalkStorage()
             .Field("s_thingIdToLotteryCommitments")
             .AsMapping()
-            .Key(new SolString(thingId))
+            .Key(new SolBytes16(thingId))
             .AsMapping()
             .Key(new SolAddress(orchestrator))
             .AsStruct("Commitment")

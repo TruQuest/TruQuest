@@ -10,7 +10,7 @@ public class CastedAcceptancePollVoteEvent : INotification
 {
     public long BlockNumber { get; init; }
     public int TxnIndex { get; init; }
-    public required string ThingIdHash { get; init; }
+    public required byte[] ThingId { get; init; }
     public required string UserId { get; init; }
     public int Vote { get; init; }
     public string? Reason { get; init; }
@@ -32,7 +32,7 @@ internal class CastedAcceptancePollVoteEventHandler : INotificationHandler<Caste
         var castedVoteEvent = new CastedAcceptancePollVoteEventDm(
             blockNumber: @event.BlockNumber,
             txnIndex: @event.TxnIndex,
-            thingIdHash: @event.ThingIdHash,
+            thingId: new Guid(@event.ThingId),
             userId: @event.UserId,
             decision: (Decision)@event.Vote,
             reason: @event.Reason

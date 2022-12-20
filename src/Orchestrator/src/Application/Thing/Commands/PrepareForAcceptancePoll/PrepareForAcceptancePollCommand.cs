@@ -10,7 +10,7 @@ namespace Application.Thing.Commands.PrepareForAcceptancePoll;
 public class PrepareForAcceptancePollCommand : IRequest<VoidResult>
 {
     public long AcceptancePollInitBlockNumber { get; init; }
-    public required string ThingIdHash { get; init; }
+    public Guid ThingId { get; init; }
     public required List<string> WinnerIds { get; init; }
 }
 
@@ -33,7 +33,7 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
 
     public async Task<VoidResult> Handle(PrepareForAcceptancePollCommand command, CancellationToken ct)
     {
-        var thing = await _thingRepository.FindByIdHash(command.ThingIdHash);
+        var thing = await _thingRepository.FindById(command.ThingId);
         if (thing.State == ThingState.FundedAndVerifierLotteryInitiated)
         {
             thing.SetState(ThingState.VerifiersSelectedAndAcceptancePollInitiated);

@@ -11,7 +11,7 @@ namespace Application.Thing.Commands.InitVerifierLottery;
 
 public class InitVerifierLotteryCommand : IRequest<VoidResult>
 {
-    public required string ThingIdHash { get; init; }
+    public Guid ThingId { get; init; }
 }
 
 internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierLotteryCommand, VoidResult>
@@ -36,12 +36,12 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
 
     public async Task<VoidResult> Handle(InitVerifierLotteryCommand command, CancellationToken ct)
     {
-        var thing = await _thingRepository.FindByIdHash(command.ThingIdHash);
+        var thing = await _thingRepository.FindById(command.ThingId);
 
         var data = RandomNumberGenerator.GetBytes(32);
         var dataHash = await _contractCaller.ComputeHashForThingSubmissionVerifierLottery(data);
 
-        long lotteryInitBlockNumber = await _contractCaller.InitVerifierLottery(thing.Id!.Value.ToString(), dataHash);
+        long lotteryInitBlockNumber = await _contractCaller.InitVerifierLottery(thing.Id!.Value.ToByteArray(), dataHash);
 
         int lotteryDurationBlocks = await _contractStorageQueryable.GetThingSubmissionVerifierLotteryDurationBlocks();
 
@@ -51,7 +51,7 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
         );
         task.SetPayload(new()
         {
-            ["thingId"] = thing.Id!.Value.ToString(),
+            ["thingId"] = thing.Id!,
             ["data"] = Convert.ToBase64String(data)
         });
 

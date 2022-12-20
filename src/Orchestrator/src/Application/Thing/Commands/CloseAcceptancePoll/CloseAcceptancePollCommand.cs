@@ -68,7 +68,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
             OffChainVotes = offChainVotes
                 .Select(v => new
                 {
-                    ThingId = v.ThingId.ToString(),
+                    ThingId = v.ThingId,
                     VoterId = "0x" + v.VoterId,
                     PollType = v.PollType.GetString(),
                     CastedAt = DateTimeOffset.FromUnixTimeMilliseconds(v.CastedAtMs).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
@@ -82,7 +82,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
                 {
                     BlockNumber = v.BlockNumber,
                     TxnIndex = v.TxnIndex,
-                    ThingIdHash = v.ThingIdHash,
+                    ThingId = v.ThingId,
                     UserId = "0x" + v.UserId,
                     Decision = v.Decision.GetString(),
                     Reason = v.Reason ?? string.Empty
@@ -110,7 +110,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
         var verifiersToSlash = verifiers.Except(votedVerifiers);
 
         await _contractCaller.FinalizeAcceptancePollForThingAsAccepted(
-            thingId: command.ThingId.ToString(),
+            thingId: command.ThingId.ToByteArray(),
             voteAggIpfsCid: result.Data!,
             verifiersToReward: votedVerifiers.Select(v => "0x" + v).ToList(),
             verifiersToSlash: verifiersToSlash.Select(v => "0x" + v).ToList()

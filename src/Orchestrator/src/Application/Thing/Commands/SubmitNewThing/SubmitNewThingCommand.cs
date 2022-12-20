@@ -110,7 +110,7 @@ internal class SubmitNewThingCommandHandler : IRequestHandler<SubmitNewThingComm
 
         var thingVm = new ThingVm
         {
-            Id = thing.Id!.Value.ToString()
+            Id = thing.Id!.Value
         };
 
         return new()

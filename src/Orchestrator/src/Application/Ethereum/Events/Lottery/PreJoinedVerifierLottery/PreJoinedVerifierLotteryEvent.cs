@@ -9,7 +9,7 @@ public class PreJoinedVerifierLotteryEvent : INotification
 {
     public long BlockNumber { get; init; }
     public int TxnIndex { get; init; }
-    public required string ThingIdHash { get; init; }
+    public required byte[] ThingId { get; init; }
     public required string UserId { get; init; }
     public required byte[] DataHash { get; init; }
 }
@@ -28,7 +28,7 @@ internal class PreJoinedVerifierLotteryEventHandler : INotificationHandler<PreJo
         var preJoinedVerifierLotteryEvent = new PreJoinedVerifierLotteryEventDm(
             blockNumber: @event.BlockNumber,
             txnIndex: @event.TxnIndex,
-            thingIdHash: @event.ThingIdHash,
+            thingId: new Guid(@event.ThingId),
             userId: @event.UserId,
             dataHash: Convert.ToBase64String(@event.DataHash)
         );

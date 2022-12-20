@@ -5,6 +5,6 @@ namespace Tests.FunctionalTests.Helpers.Errors;
 [Error("ThingAssessmentVerifierLottery__PreJoinAndJoinLotteryInTheSameBlock")]
 public class ThingAssessmentVerifierLottery__PreJoinAndJoinLotteryInTheSameBlockError
 {
-    [Parameter("string", "thingId", 1)]
-    public string ThingId { get; set; }
+    [Parameter("bytes16", "thingId", 1)]
+    public byte[] ThingId { get; set; }
 }

@@ -9,35 +9,35 @@ import "./VerifierLottery.sol";
 import "./AcceptancePoll.sol";
 import "./ThingAssessmentVerifierLottery.sol";
 
-error TruQuest__ThingAlreadyFunded(string thingId);
+error TruQuest__ThingAlreadyFunded(bytes16 thingId);
 error TruQuest__NotEnoughFunds(uint256 requiredAmount, uint256 availableAmount);
 error TruQuest__NotOrchestrator();
 error TruQuest__NotVerifierLottery();
 error TruQuest__NotAcceptancePoll();
 error TruQuest__InvalidSignature();
 error TruQuest__ThingAlreadyHasSettlementProposalUnderAssessment(
-    string thingId
+    bytes16 thingId
 );
 
 contract TruQuest {
     struct ThingTd {
-        string id;
+        bytes16 id;
     }
 
     struct SettlementProposalTd {
-        string thingId;
-        string id;
+        bytes16 thingId;
+        bytes16 id;
     }
 
     struct SettlementProposal {
-        string id;
+        bytes16 id;
         address submitter;
     }
 
-    bytes private constant THING_TD = "ThingTd(string id)";
+    bytes private constant THING_TD = "ThingTd(bytes16 id)";
     bytes32 private immutable i_thingTdHash;
     bytes private constant SETTLEMENT_PROPOSAL_TD =
-        "SettlementProposalTd(string thingId,string id)";
+        "SettlementProposalTd(bytes16 thingId,bytes16 id)";
     bytes32 private immutable i_settlementProposalTdHash;
     bytes32 private constant SALT =
         0xf2d857f4a3edcb9b78b4d503bfe733db1e3f6cdc2b7971ee739626c97e86a558;
@@ -56,22 +56,22 @@ contract TruQuest {
     mapping(address => uint256) private s_balanceOf;
     mapping(address => uint256) private s_stakedBalanceOf;
 
-    mapping(string => address) public s_thingSubmitter;
+    mapping(bytes16 => address) public s_thingSubmitter;
 
     uint256 private s_thingSettlementProposalStake;
-    mapping(string => SettlementProposal) public s_thingIdToSettlementProposal;
+    mapping(bytes16 => SettlementProposal) public s_thingIdToSettlementProposal;
 
     event FundsDeposited(address indexed user, uint256 amount);
 
     event ThingFunded(
-        string indexed thingId,
+        bytes16 indexed thingId,
         address indexed user,
         uint256 thingStake
     );
 
     event ThingSettlementProposalFunded(
-        string indexed thingId,
-        string indexed settlementProposalId,
+        bytes16 indexed thingId,
+        bytes16 indexed settlementProposalId,
         address indexed user,
         uint256 thingSettlementProposalStake
     );
@@ -108,14 +108,14 @@ contract TruQuest {
         _;
     }
 
-    modifier onlyWhenNotFunded(string calldata _thingId) {
+    modifier onlyWhenNotFunded(bytes16 _thingId) {
         if (s_thingSubmitter[_thingId] != address(0)) {
             revert TruQuest__ThingAlreadyFunded(_thingId);
         }
         _;
     }
 
-    modifier onlyWhenNoProposalUnderAssessmentFor(string calldata _thingId) {
+    modifier onlyWhenNoProposalUnderAssessmentFor(bytes16 _thingId) {
         if (s_thingIdToSettlementProposal[_thingId].submitter != address(0)) {
             revert TruQuest__ThingAlreadyHasSettlementProposalUnderAssessment(
                 _thingId
@@ -243,9 +243,7 @@ contract TruQuest {
                 abi.encodePacked(
                     "\x19\x01",
                     i_domainSeparator,
-                    keccak256(
-                        abi.encode(i_thingTdHash, keccak256(bytes(_thing.id)))
-                    )
+                    keccak256(abi.encode(i_thingTdHash, _thing.id))
                 )
             );
     }
@@ -284,8 +282,8 @@ contract TruQuest {
                     keccak256(
                         abi.encode(
                             i_settlementProposalTdHash,
-                            keccak256(bytes(_settlementProposal.thingId)),
-                            keccak256(bytes(_settlementProposal.id))
+                            _settlementProposal.thingId,
+                            _settlementProposal.id
                         )
                     )
                 )
@@ -339,8 +337,8 @@ contract TruQuest {
 
     // only...?
     function getSettlementProposalId(
-        string memory _thingId
-    ) public view returns (string memory) {
+        bytes16 _thingId
+    ) public view returns (bytes16) {
         return s_thingIdToSettlementProposal[_thingId].id;
     }
 }

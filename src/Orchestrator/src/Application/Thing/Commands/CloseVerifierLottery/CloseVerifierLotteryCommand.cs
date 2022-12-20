@@ -41,7 +41,8 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 
     public async Task<VoidResult> Handle(CloseVerifierLotteryCommand command, CancellationToken ct)
     {
-        var nonce = (decimal)await _contractCaller.ComputeNonce(command.ThingId.ToString(), command.Data);
+        var thingId = command.ThingId.ToByteArray();
+        var nonce = (decimal)await _contractCaller.ComputeNonce(thingId, command.Data);
         int numVerifiers = await _contractStorageQueryable.GetNumVerifiers();
 
         var winnerEvents = await _joinedVerifierLotteryEventRepository.FindWithClosestNonces(
@@ -61,7 +62,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
             foreach (var winner in lotteryWinners)
             {
                 var user = await _contractStorageQueryable.GetVerifierLotteryParticipantAt(
-                    command.ThingId.ToString(),
+                    thingId,
                     (int)winner.Index
                 );
                 if (user.ToLower() != winner.UserId)
@@ -71,7 +72,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
             }
 
             await _contractCaller.CloseVerifierLotteryWithSuccess(
-                command.ThingId.ToString(),
+                thingId,
                 command.Data,
                 lotteryWinners.Select(w => w.Index).ToList()
             );

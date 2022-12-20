@@ -11,7 +11,7 @@ public class JoinedVerifierLotteryEvent : INotification
 {
     public long BlockNumber { get; init; }
     public int TxnIndex { get; init; }
-    public required string ThingIdHash { get; init; }
+    public required byte[] ThingId { get; init; }
     public required string UserId { get; init; }
     public BigInteger Nonce { get; init; }
 }
@@ -30,7 +30,7 @@ internal class JoinedVerifierLotteryEventHandler : INotificationHandler<JoinedVe
         var joinedVerifierLotteryEvent = new JoinedVerifierLotteryEventDm(
             blockNumber: @event.BlockNumber,
             txnIndex: @event.TxnIndex,
-            thingIdHash: @event.ThingIdHash,
+            thingId: new Guid(@event.ThingId),
             userId: @event.UserId,
             nonce: (decimal)@event.Nonce
         );

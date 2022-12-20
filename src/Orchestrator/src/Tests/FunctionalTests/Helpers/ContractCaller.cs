@@ -122,7 +122,7 @@ public class ContractCaller
             {
                 Thing = new ThingTd
                 {
-                    Id = thing.Id
+                    Id = thing.Id.ToByteArray()
                 },
                 V = v,
                 R = r,
@@ -133,7 +133,7 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task PreJoinLotteryAs(string privateKey, string thingId, byte[] dataHash)
+    public async Task PreJoinLotteryAs(string privateKey, byte[] thingId, byte[] dataHash)
     {
         var account = new Account(privateKey);
         var web3 = new Web3(account, _rpcUrl);
@@ -151,7 +151,7 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task JoinLotteryAs(string privateKey, string thingId, byte[] data)
+    public async Task JoinLotteryAs(string privateKey, byte[] thingId, byte[] data)
     {
         var account = new Account(privateKey);
         var web3 = new Web3(account, _rpcUrl);
@@ -167,21 +167,6 @@ public class ContractCaller
         );
 
         await _blockchainManipulator.Mine(1);
-    }
-
-    public Task<int> GetLotteryDurationBlocks()
-    {
-        return _web3.Eth.GetContractQueryHandler<GetLotteryDurationBlocksMessage>()
-            .QueryAsync<int>(_verifierLotteryAddress, new());
-    }
-
-    public Task<long> GetLotteryInitBlockNumber(string thingId)
-    {
-        return _web3.Eth.GetContractQueryHandler<GetLotteryInitBlockNumberMessage>()
-            .QueryAsync<long>(_verifierLotteryAddress, new()
-            {
-                ThingId = thingId
-            });
     }
 
     public async Task FundThingSettlementProposal(SettlementProposalVm proposal, string signature)
@@ -202,8 +187,8 @@ public class ContractCaller
             {
                 SettlementProposal = new SettlementProposalTd
                 {
-                    ThingId = proposal.ThingId,
-                    Id = proposal.Id
+                    ThingId = proposal.ThingId.ToByteArray(),
+                    Id = proposal.Id.ToByteArray()
                 },
                 V = v,
                 R = r,
@@ -214,7 +199,7 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task ClaimThingAssessmentVerifierLotterySpotAs(string privateKey, string thingId)
+    public async Task ClaimThingAssessmentVerifierLotterySpotAs(string privateKey, byte[] thingId)
     {
         var account = new Account(privateKey);
         var web3 = new Web3(account, _rpcUrl);
@@ -254,7 +239,7 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task PreJoinThingAssessmentVerifierLotteryAs(string privateKey, string thingId, byte[] dataHash)
+    public async Task PreJoinThingAssessmentVerifierLotteryAs(string privateKey, byte[] thingId, byte[] dataHash)
     {
         var account = new Account(privateKey);
         var web3 = new Web3(account, _rpcUrl);
@@ -272,7 +257,7 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task JoinThingAssessmentVerifierLotteryAs(string privateKey, string thingId, byte[] data)
+    public async Task JoinThingAssessmentVerifierLotteryAs(string privateKey, byte[] thingId, byte[] data)
     {
         var account = new Account(privateKey);
         var web3 = new Web3(account, _rpcUrl);

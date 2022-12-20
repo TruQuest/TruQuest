@@ -5,8 +5,8 @@ namespace Infrastructure.Ethereum.TypedData;
 [Struct("SettlementProposalTd")]
 public class SettlementProposalTd
 {
-    [Parameter("string", "thingId", 1)]
-    public string ThingId { get; init; }
-    [Parameter("string", "id", 2)]
-    public string Id { get; init; }
+    [Parameter("bytes16", "thingId", 1)]
+    public byte[] ThingId { get; init; }
+    [Parameter("bytes16", "id", 2)]
+    public byte[] Id { get; init; }
 }

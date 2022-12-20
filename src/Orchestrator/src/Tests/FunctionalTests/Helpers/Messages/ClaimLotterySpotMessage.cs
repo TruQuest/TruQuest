@@ -6,6 +6,6 @@ namespace Tests.FunctionalTests.Helpers.Messages;
 [Function("claimLotterySpot")]
 public class ClaimLotterySpotMessage : FunctionMessage
 {
-    [Parameter("string", "_thingId", 1)]
-    public string ThingId { get; init; }
+    [Parameter("bytes16", "_thingId", 1)]
+    public byte[] ThingId { get; init; }
 }

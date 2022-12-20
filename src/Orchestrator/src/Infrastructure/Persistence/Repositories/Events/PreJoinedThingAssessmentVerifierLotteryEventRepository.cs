@@ -3,7 +3,6 @@ using Microsoft.Extensions.Configuration;
 
 using Npgsql;
 using NpgsqlTypes;
-using Nethereum.Util;
 
 using Domain.QM;
 using Domain.Aggregates.Events;
@@ -35,13 +34,13 @@ internal class PreJoinedThingAssessmentVerifierLotteryEventRepository :
         Guid thingId, Guid settlementProposalId, IEnumerable<string> winnerIds
     )
     {
-        var thingIdHashParam = new NpgsqlParameter<string>("ThingIdHash", NpgsqlDbType.Text)
+        var thingIdParam = new NpgsqlParameter<Guid>("ThingId", NpgsqlDbType.Uuid)
         {
-            TypedValue = Sha3Keccack.Current.CalculateHash(thingId.ToString())
+            TypedValue = thingId
         };
-        var settlementProposalIdHashParam = new NpgsqlParameter<string>("SettlementProposalIdHash", NpgsqlDbType.Text)
+        var settlementProposalIdParam = new NpgsqlParameter<Guid>("SettlementProposalId", NpgsqlDbType.Uuid)
         {
-            TypedValue = Sha3Keccack.Current.CalculateHash(settlementProposalId.ToString())
+            TypedValue = settlementProposalId
         };
         var winnerIdsParam = new NpgsqlParameter<string[]>("WinnerIds", NpgsqlDbType.Text | NpgsqlDbType.Array)
         {
@@ -53,12 +52,12 @@ internal class PreJoinedThingAssessmentVerifierLotteryEventRepository :
                     $@"
                         SELECT *
                         FROM ""SelectWinnerIndicesAccordingToPreJoinedThingAssessmentVerifierLotteryEvents"" (
-                            @{thingIdHashParam.ParameterName},
-                            @{settlementProposalIdHashParam.ParameterName},
+                            @{thingIdParam.ParameterName},
+                            @{settlementProposalIdParam.ParameterName},
                             @{winnerIdsParam.ParameterName}
                         )
                     ",
-                    thingIdHashParam, settlementProposalIdHashParam, winnerIdsParam
+                    thingIdParam, settlementProposalIdParam, winnerIdsParam
                 )
                 .ToListAsync();
     }

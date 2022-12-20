@@ -70,9 +70,6 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
         {
             builder.HasKey(t => t.Id);
             builder.Property(t => t.Id).HasValueGenerator<GuidValueGenerator>();
-            builder.Property(t => t.IdHash)
-                .HasValueGenerator<KeccakSha3Generator>()
-                .IsRequired();
             builder.Property(t => t.State).HasConversion<int>().IsRequired();
             builder.Property(t => t.Title).IsRequired();
             builder.Property(t => t.Details).IsRequired();
@@ -101,8 +98,6 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.Metadata
                 .FindNavigation(nameof(Thing.Verifiers))
                 !.SetPropertyAccessMode(PropertyAccessMode.Field);
-
-            builder.HasIndex(t => t.IdHash);
         });
 
         modelBuilder.Entity<Evidence>(builder =>
@@ -185,10 +180,6 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
         {
             builder.HasKey(p => p.Id);
             builder.Property(p => p.Id).HasValueGenerator<GuidValueGenerator>();
-            builder
-                .Property(p => p.IdHash)
-                .HasValueGenerator<KeccakSha3Generator>()
-                .IsRequired();
             builder.Property(p => p.State).HasConversion<int>().IsRequired();
             builder.Property(p => p.Title).IsRequired();
             builder.Property(p => p.Verdict).HasConversion<int>().IsRequired();
@@ -209,8 +200,6 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.Metadata
                 .FindNavigation(nameof(SettlementProposal.Evidence))
                 !.SetPropertyAccessMode(PropertyAccessMode.Field);
-
-            builder.HasIndex(p => p.IdHash);
         });
 
         modelBuilder.Entity<SupportingEvidence>(builder =>

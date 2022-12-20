@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
-using Nethereum.Util;
-
 using Domain.Aggregates.Events;
 using Application.Common.Interfaces;
 
@@ -29,9 +27,9 @@ internal class CastedAcceptancePollVoteEventRepository :
 
     public Task<List<CastedAcceptancePollVoteEvent>> GetAllFor(Guid thingId)
     {
-        var thingIdHash = Sha3Keccack.Current.CalculateHash(thingId.ToString());
         return _dbContext.CastedAcceptancePollVoteEvents
-            .Where(e => e.ThingIdHash == thingIdHash)
+            .AsNoTracking()
+            .Where(e => e.ThingId == thingId)
             .ToListAsync();
     }
 }

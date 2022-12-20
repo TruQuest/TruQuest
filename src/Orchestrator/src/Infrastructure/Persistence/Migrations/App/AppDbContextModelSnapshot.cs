@@ -81,10 +81,6 @@ namespace Infrastructure.Persistence.Migrations.App
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("IdHash")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<int>("State")
                         .HasColumnType("integer");
 
@@ -103,8 +99,6 @@ namespace Infrastructure.Persistence.Migrations.App
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("IdHash");
 
                     b.HasIndex("SubmitterId");
 
@@ -210,10 +204,6 @@ namespace Infrastructure.Persistence.Migrations.App
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("IdHash")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("ImageUrl")
                         .HasColumnType("text");
 
@@ -232,8 +222,6 @@ namespace Infrastructure.Persistence.Migrations.App
                         .HasColumnType("text");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("IdHash");
 
                     b.HasIndex("SubjectId");
 

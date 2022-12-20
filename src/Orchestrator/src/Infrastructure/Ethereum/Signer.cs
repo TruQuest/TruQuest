@@ -136,7 +136,7 @@ internal class Signer : ISigner
     {
         var td = new ThingTd
         {
-            Id = thing.Id
+            Id = thing.Id.ToByteArray()
         };
         var tdDefinition = _getTypedDataDefinition(typeof(ThingTd));
         tdDefinition.SetMessage(td);
@@ -189,7 +189,7 @@ internal class Signer : ISigner
                 {
                     BlockNumber = v.BlockNumber,
                     TxnIndex = v.TxnIndex,
-                    ThingIdHash = v.ThingIdHash,
+                    ThingId = v.ThingId.ToString(),
                     UserId = "0x" + v.UserId,
                     Decision = v.Decision.GetString(),
                     Reason = v.Reason ?? string.Empty
@@ -208,8 +208,8 @@ internal class Signer : ISigner
     {
         var td = new SettlementProposalTd
         {
-            ThingId = proposal.ThingId,
-            Id = proposal.Id
+            ThingId = proposal.ThingId.ToByteArray(),
+            Id = proposal.Id.ToByteArray()
         };
         var tdDefinition = _getTypedDataDefinition(typeof(SettlementProposalTd));
         tdDefinition.SetMessage(td);

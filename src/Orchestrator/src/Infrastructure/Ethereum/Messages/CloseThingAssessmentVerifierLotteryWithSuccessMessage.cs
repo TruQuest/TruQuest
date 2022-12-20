@@ -6,8 +6,8 @@ namespace Infrastructure.Ethereum.Messages;
 [Function("closeLotteryWithSuccess")]
 public class CloseThingAssessmentVerifierLotteryWithSuccessMessage : FunctionMessage
 {
-    [Parameter("string", "_thingId", 1)]
-    public string ThingId { get; init; }
+    [Parameter("bytes16", "_thingId", 1)]
+    public byte[] ThingId { get; init; }
     [Parameter("bytes32", "_data", 2)]
     public byte[] Data { get; init; }
     [Parameter("uint64[]", "_winnerClaimantIndices", 3)]

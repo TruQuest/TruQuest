@@ -5,7 +5,6 @@ namespace Domain.Aggregates;
 public class SettlementProposal : Entity, IAggregateRoot
 {
     public Guid? Id { get; private set; }
-    public string? IdHash { get; private set; }
     public Guid ThingId { get; }
     public SettlementProposalState State { get; private set; }
     public string Title { get; }

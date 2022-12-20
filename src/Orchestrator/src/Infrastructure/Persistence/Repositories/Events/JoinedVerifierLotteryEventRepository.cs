@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
-using Nethereum.Util;
-
 using Domain.Aggregates.Events;
 using Application.Common.Interfaces;
 
@@ -30,10 +28,9 @@ internal class JoinedVerifierLotteryEventRepository : Repository<JoinedVerifierL
         Guid thingId, long latestBlockNumber, decimal nonce, int count
     )
     {
-        var thingIdHash = Sha3Keccack.Current.CalculateHash(thingId.ToString());
         return _dbContext.JoinedVerifierLotteryEvents
             .AsNoTracking()
-            .Where(e => e.ThingIdHash == thingIdHash && e.BlockNumber <= latestBlockNumber)
+            .Where(e => e.ThingId == thingId && e.BlockNumber <= latestBlockNumber)
             .OrderBy(e => Math.Abs(nonce - e.Nonce))
                 .ThenBy(e => e.BlockNumber)
                     .ThenBy(e => e.TxnIndex)
@@ -45,10 +42,9 @@ internal class JoinedVerifierLotteryEventRepository : Repository<JoinedVerifierL
         Guid thingId, IEnumerable<string> userIds, decimal nonce, int count
     )
     {
-        var thingIdHash = Sha3Keccack.Current.CalculateHash(thingId.ToString());
         return _dbContext.JoinedVerifierLotteryEvents
             .AsNoTracking()
-            .Where(e => e.ThingIdHash == thingIdHash && userIds.Contains(e.UserId))
+            .Where(e => e.ThingId == thingId && userIds.Contains(e.UserId))
             .OrderBy(e => Math.Abs(nonce - e.Nonce))
                 .ThenBy(e => e.BlockNumber)
                     .ThenBy(e => e.TxnIndex)

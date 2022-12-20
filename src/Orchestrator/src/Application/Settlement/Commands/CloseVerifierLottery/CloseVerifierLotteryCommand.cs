@@ -52,8 +52,9 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 
     public async Task<VoidResult> Handle(CloseVerifierLotteryCommand command, CancellationToken ct)
     {
+        var thingId = command.ThingId.ToByteArray();
         var nonce = (decimal)await _contractCaller.ComputeNonceForThingAssessmentVerifierLottery(
-            command.ThingId.ToString(), command.Data
+            thingId, command.Data
         );
         int numVerifiers = await _contractStorageQueryable.GetThingAssessmentNumVerifiers();
 
@@ -72,7 +73,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
         foreach (var @event in validSpotClaimedEvents)
         {
             var user = await _contractStorageQueryable.GetThingAssessmentVerifierLotterySpotClaimantAt(
-                command.ThingId.ToString(),
+                thingId,
                 @event.Index
             );
             if (user.ToLower() != @event.Event.UserId)
@@ -117,7 +118,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
             foreach (var winner in lotteryWinners)
             {
                 var user = await _contractStorageQueryable.GetThingAssessmentVerifierLotteryParticipantAt(
-                    command.ThingId.ToString(),
+                    thingId,
                     (int)winner.Index
                 );
                 if (user.ToLower() != winner.UserId)
@@ -127,7 +128,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
             }
 
             await _contractCaller.CloseThingAssessmentVerifierLotteryWithSuccess(
-                command.ThingId.ToString(),
+                thingId,
                 command.Data,
                 winnerClaimantIndices,
                 lotteryWinners.Select(w => w.Index).ToList()

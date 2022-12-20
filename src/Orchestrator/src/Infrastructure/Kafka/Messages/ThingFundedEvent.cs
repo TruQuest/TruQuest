@@ -26,6 +26,6 @@ internal class ThingFundedEventHandler : IMessageHandler<ThingFundedEvent>
     public Task Handle(IMessageContext context, ThingFundedEvent @event) =>
         _mediator.Send(new InitVerifierLotteryCommand
         {
-            ThingIdHash = Encoding.UTF8.GetString((byte[])context.Message.Key)
+            ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key))
         });
 }
