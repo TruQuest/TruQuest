@@ -2,7 +2,7 @@ using System.Numerics;
 
 using Nethereum.ABI.FunctionEncoding.Attributes;
 
-namespace Infrastructure.Ethereum.Events;
+namespace Infrastructure.Ethereum.Events.ThingSubmissionVerifierLottery;
 
 [Event("LotteryClosedWithSuccess")]
 public class LotteryClosedWithSuccessEvent : IEventDTO

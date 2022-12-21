@@ -9,17 +9,17 @@ namespace Infrastructure.Ethereum;
 
 internal class ContractStorageQueryable : IContractStorageQueryable
 {
-    private readonly Contract _verifierLotteryContract;
+    private readonly Contract _thingSubmissionVerifierLotteryContract;
     private readonly Contract _acceptancePollContract;
     private readonly Contract _thingAssessmentVerifierLotteryContract;
 
     public ContractStorageQueryable(IConfiguration configuration)
     {
         var network = configuration["Ethereum:Network"];
-        _verifierLotteryContract = ContractFinder.Create()
+        _thingSubmissionVerifierLotteryContract = ContractFinder.Create()
             .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
-            .WithName("VerifierLottery")
-            .DeployedAt(configuration[$"Ethereum:Contracts:{network}:VerifierLottery:Address"]!)
+            .WithName("ThingSubmissionVerifierLottery")
+            .DeployedAt(configuration[$"Ethereum:Contracts:{network}:ThingSubmissionVerifierLottery:Address"]!)
             .OnNetwork(configuration[$"Ethereum:Networks:{network}:URL"]!)
             .Find();
 
@@ -40,7 +40,7 @@ internal class ContractStorageQueryable : IContractStorageQueryable
 
     public async Task<int> GetThingSubmissionVerifierLotteryDurationBlocks()
     {
-        var value = await _verifierLotteryContract
+        var value = await _thingSubmissionVerifierLotteryContract
             .WalkStorage()
             .Field("s_durationBlocks")
             .GetValue<SolUint16>();
@@ -58,9 +58,9 @@ internal class ContractStorageQueryable : IContractStorageQueryable
         return value.Value;
     }
 
-    public async Task<int> GetNumVerifiers()
+    public async Task<int> GetThingSubmissionNumVerifiers()
     {
-        var value = await _verifierLotteryContract
+        var value = await _thingSubmissionVerifierLotteryContract
             .WalkStorage()
             .Field("s_numVerifiers")
             .GetValue<SolUint8>();
@@ -68,9 +68,9 @@ internal class ContractStorageQueryable : IContractStorageQueryable
         return value.Value;
     }
 
-    public async Task<string> GetVerifierLotteryParticipantAt(byte[] thingId, int index)
+    public async Task<string> GetThingSubmissionVerifierLotteryParticipantAt(byte[] thingId, int index)
     {
-        var value = await _verifierLotteryContract
+        var value = await _thingSubmissionVerifierLotteryContract
             .WalkStorage()
             .Field("s_participants")
             .AsMapping()

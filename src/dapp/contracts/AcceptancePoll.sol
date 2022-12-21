@@ -2,7 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import "./TruQuest.sol";
-import "./VerifierLottery.sol";
+import "./ThingSubmissionVerifierLottery.sol";
 
 error AcceptancePoll__NotOrchestrator();
 error AcceptancePoll__NotTruQuest();
@@ -37,7 +37,7 @@ contract AcceptancePoll {
     }
 
     TruQuest private immutable i_truQuest;
-    VerifierLottery private s_verifierLottery;
+    ThingSubmissionVerifierLottery private s_verifierLottery;
     address private s_orchestrator;
 
     uint256 private s_thingSubmissionAcceptedReward;
@@ -103,7 +103,7 @@ contract AcceptancePoll {
         _;
     }
 
-    modifier onlyVerifierLottery() {
+    modifier onlyThingSubmissionVerifierLottery() {
         if (msg.sender != address(s_verifierLottery)) {
             revert AcceptancePoll__NotVerifierLottery();
         }
@@ -191,16 +191,18 @@ contract AcceptancePoll {
         s_durationBlocks = _durationBlocks;
     }
 
-    function connectToVerifierLottery(
+    function connectToThingSubmissionVerifierLottery(
         address _verifierLotteryAddress
     ) external onlyTruQuest {
-        s_verifierLottery = VerifierLottery(_verifierLotteryAddress);
+        s_verifierLottery = ThingSubmissionVerifierLottery(
+            _verifierLotteryAddress
+        );
     }
 
     function initPoll(
         bytes16 _thingId,
         address[] memory _verifiers
-    ) external onlyVerifierLottery {
+    ) external onlyThingSubmissionVerifierLottery {
         s_thingIdToPollStartedBlock[_thingId] = uint64(block.number);
         s_thingVerifiers[_thingId] = _verifiers;
         s_thingPollStage[_thingId] = Stage.InProgress;
@@ -279,7 +281,7 @@ contract AcceptancePoll {
     function initSubPoll(
         bytes16 _thingId,
         address[] memory _substituteVerifiers
-    ) external onlyVerifierLottery {
+    ) external onlyThingSubmissionVerifierLottery {
         s_thingIdToPollStartedBlock[_thingId] = uint64(block.number); // same as in initPoll
         for (uint8 i = 0; i < _substituteVerifiers.length; ++i) {
             s_thingVerifiers[_thingId].push(_substituteVerifiers[i]);

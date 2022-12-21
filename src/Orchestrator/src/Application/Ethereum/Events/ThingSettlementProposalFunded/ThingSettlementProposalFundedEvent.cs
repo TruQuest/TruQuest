@@ -31,7 +31,7 @@ internal class ThingSettlementProposalFundedEventHandler : INotificationHandler<
             blockNumber: @event.BlockNumber,
             txnIndex: @event.TxnIndex,
             thingId: new Guid(@event.ThingId),
-            type: ThingEventType.ThingSettlementProposalFunded
+            type: ThingEventType.SettlementProposalFunded
         );
         proposalFundedEvent.SetPayload(new()
         {

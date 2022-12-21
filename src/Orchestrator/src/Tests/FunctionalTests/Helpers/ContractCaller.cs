@@ -27,7 +27,7 @@ public class ContractCaller
     private readonly string _rpcUrl;
     private readonly string _truthserumAddress;
     private readonly string _truQuestAddress;
-    private readonly string _verifierLotteryAddress;
+    private readonly string _thingSubmissionVerifierLotteryAddress;
     private readonly string _acceptancePollAddress;
     private readonly string _thingAssessmentVerifierLotteryAddress;
 
@@ -45,7 +45,7 @@ public class ContractCaller
         _web3 = new Web3(submitter, _rpcUrl);
         _truthserumAddress = configuration[$"Ethereum:Contracts:{network}:Truthserum:Address"]!;
         _truQuestAddress = configuration[$"Ethereum:Contracts:{network}:TruQuest:Address"]!;
-        _verifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:VerifierLottery:Address"]!;
+        _thingSubmissionVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingSubmissionVerifierLottery:Address"]!;
         _acceptancePollAddress = configuration[$"Ethereum:Contracts:{network}:AcceptancePoll:Address"]!;
         _thingAssessmentVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingAssessmentVerifierLottery:Address"]!;
 
@@ -133,14 +133,14 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task PreJoinLotteryAs(string privateKey, byte[] thingId, byte[] dataHash)
+    public async Task PreJoinThingSubmissionVerifierLotteryAs(string privateKey, byte[] thingId, byte[] dataHash)
     {
         var account = new Account(privateKey);
         var web3 = new Web3(account, _rpcUrl);
 
         var txnDispatcher = web3.Eth.GetContractTransactionHandler<PreJoinLotteryMessage>();
         var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
-            _verifierLotteryAddress,
+            _thingSubmissionVerifierLotteryAddress,
             new()
             {
                 ThingId = thingId,
@@ -151,14 +151,14 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task JoinLotteryAs(string privateKey, byte[] thingId, byte[] data)
+    public async Task JoinThingSubmissionVerifierLotteryAs(string privateKey, byte[] thingId, byte[] data)
     {
         var account = new Account(privateKey);
         var web3 = new Web3(account, _rpcUrl);
 
         var txnDispatcher = web3.Eth.GetContractTransactionHandler<JoinLotteryMessage>();
         var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
-            _verifierLotteryAddress,
+            _thingSubmissionVerifierLotteryAddress,
             new()
             {
                 ThingId = thingId,

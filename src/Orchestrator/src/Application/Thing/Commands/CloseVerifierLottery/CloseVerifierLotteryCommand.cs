@@ -20,32 +20,32 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 {
     private readonly ILogger<CloseVerifierLotteryCommandHandler> _logger;
     private readonly IContractCaller _contractCaller;
-    private readonly IPreJoinedVerifierLotteryEventRepository _preJoinedVerifierLotteryEventRepository;
-    private readonly IJoinedVerifierLotteryEventRepository _joinedVerifierLotteryEventRepository;
+    private readonly IPreJoinedThingSubmissionVerifierLotteryEventRepository _preJoinedThingSubmissionVerifierLotteryEventRepository;
+    private readonly IJoinedThingSubmissionVerifierLotteryEventRepository _joinedThingSubmissionVerifierLotteryEventRepository;
     private readonly IContractStorageQueryable _contractStorageQueryable;
 
     public CloseVerifierLotteryCommandHandler(
         ILogger<CloseVerifierLotteryCommandHandler> logger,
         IContractCaller contractCaller,
-        IPreJoinedVerifierLotteryEventRepository preJoinedVerifierLotteryEventRepository,
-        IJoinedVerifierLotteryEventRepository joinedVerifierLotteryEventRepository,
+        IPreJoinedThingSubmissionVerifierLotteryEventRepository preJoinedThingSubmissionVerifierLotteryEventRepository,
+        IJoinedThingSubmissionVerifierLotteryEventRepository joinedThingSubmissionVerifierLotteryEventRepository,
         IContractStorageQueryable contractStorageQueryable
     )
     {
         _logger = logger;
         _contractCaller = contractCaller;
-        _preJoinedVerifierLotteryEventRepository = preJoinedVerifierLotteryEventRepository;
-        _joinedVerifierLotteryEventRepository = joinedVerifierLotteryEventRepository;
+        _preJoinedThingSubmissionVerifierLotteryEventRepository = preJoinedThingSubmissionVerifierLotteryEventRepository;
+        _joinedThingSubmissionVerifierLotteryEventRepository = joinedThingSubmissionVerifierLotteryEventRepository;
         _contractStorageQueryable = contractStorageQueryable;
     }
 
     public async Task<VoidResult> Handle(CloseVerifierLotteryCommand command, CancellationToken ct)
     {
         var thingId = command.ThingId.ToByteArray();
-        var nonce = (decimal)await _contractCaller.ComputeNonce(thingId, command.Data);
-        int numVerifiers = await _contractStorageQueryable.GetNumVerifiers();
+        var nonce = (decimal)await _contractCaller.ComputeNonceForThingSubmissionVerifierLottery(thingId, command.Data);
+        int numVerifiers = await _contractStorageQueryable.GetThingSubmissionNumVerifiers();
 
-        var winnerEvents = await _joinedVerifierLotteryEventRepository.FindWithClosestNonces(
+        var winnerEvents = await _joinedThingSubmissionVerifierLotteryEventRepository.FindWithClosestNonces(
             thingId: command.ThingId,
             latestBlockNumber: command.LatestIncludedBlockNumber,
             nonce: nonce,
@@ -54,14 +54,14 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 
         if (winnerEvents.Count == numVerifiers)
         {
-            var lotteryWinners = await _preJoinedVerifierLotteryEventRepository.GetLotteryWinnerIndices(
+            var lotteryWinners = await _preJoinedThingSubmissionVerifierLotteryEventRepository.GetLotteryWinnerIndices(
                 command.ThingId,
                 winnerEvents.Select(e => e.UserId)
             );
 
             foreach (var winner in lotteryWinners)
             {
-                var user = await _contractStorageQueryable.GetVerifierLotteryParticipantAt(
+                var user = await _contractStorageQueryable.GetThingSubmissionVerifierLotteryParticipantAt(
                     thingId,
                     (int)winner.Index
                 );
@@ -71,7 +71,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
                 }
             }
 
-            await _contractCaller.CloseVerifierLotteryWithSuccess(
+            await _contractCaller.CloseThingSubmissionVerifierLotteryWithSuccess(
                 thingId,
                 command.Data,
                 lotteryWinners.Select(w => w.Index).ToList()

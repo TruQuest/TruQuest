@@ -15,7 +15,9 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   });
 
   let truQuest = await ethers.getContract("TruQuest");
-  log(`VerifierLottery deployed at ${await truQuest.s_verifierLottery()}`);
+  log(
+    `ThingSubmissionVerifierLottery deployed at ${await truQuest.s_thingSubmissionVerifierLottery()}`
+  );
   log(`AcceptancePoll deployed at ${await truQuest.s_acceptancePoll()}`);
   log(
     `ThingAssessmentVerifierLottery deployed at ${await truQuest.s_thingAssessmentVerifierLottery()}`

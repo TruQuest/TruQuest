@@ -8,24 +8,24 @@ using Application.Thing.Commands.PrepareForAcceptancePoll;
 
 namespace Infrastructure.Kafka.Messages;
 
-internal class VerifierLotteryClosedWithSuccessEvent
+internal class ThingSubmissionVerifierLotteryClosedWithSuccessEvent
 {
     public decimal Nonce { get; set; }
     public List<string> WinnerIds { get; set; }
 }
 
-internal class VerifierLotteryClosedWithSuccessEventHandler : IMessageHandler<VerifierLotteryClosedWithSuccessEvent>
+internal class ThingSubmissionVerifierLotteryClosedWithSuccessEventHandler : IMessageHandler<ThingSubmissionVerifierLotteryClosedWithSuccessEvent>
 {
     private const string _blockNumberHeaderName = "BlockNumber";
 
     private readonly ISender _mediator;
 
-    public VerifierLotteryClosedWithSuccessEventHandler(ISender mediator)
+    public ThingSubmissionVerifierLotteryClosedWithSuccessEventHandler(ISender mediator)
     {
         _mediator = mediator;
     }
 
-    public Task Handle(IMessageContext context, VerifierLotteryClosedWithSuccessEvent message) =>
+    public Task Handle(IMessageContext context, ThingSubmissionVerifierLotteryClosedWithSuccessEvent message) =>
         _mediator.Send(new PrepareForAcceptancePollCommand
         {
             AcceptancePollInitBlockNumber = long.Parse(Encoding.UTF8.GetString((byte[])context.Headers[_blockNumberHeaderName])),

@@ -11,6 +11,7 @@
         <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Functions/SelectWinnerIndicesAccordingToPreJoinedThingAssessmentVerifierLotteryEvents/SelectWinnerIndicesAccordingToPreJoinedThingAssessmentVerifierLotteryEvents.v0.sql" />
         <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Functions/SelectWinnerIndicesAccordingToPreJoinedVerifierLotteryEvents/SelectWinnerIndicesAccordingToPreJoinedVerifierLotteryEvents.v1.sql" />
         <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Functions/SelectWinnerIndicesAccordingToPreJoinedThingAssessmentVerifierLotteryEvents/SelectWinnerIndicesAccordingToPreJoinedThingAssessmentVerifierLotteryEvents.v1.sql" />
+        <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Functions/SelectWinnerIndicesAccordingToPreJoinedThingSubmissionVerifierLotteryEvents/SelectWinnerIndicesAccordingToPreJoinedThingSubmissionVerifierLotteryEvents.v0.sql" />
     </ItemGroup>
 
     <ItemGroup>

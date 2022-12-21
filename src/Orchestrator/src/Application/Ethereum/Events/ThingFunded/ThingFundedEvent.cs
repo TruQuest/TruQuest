@@ -28,7 +28,7 @@ internal class ThingFundedEventHandler : INotificationHandler<ThingFundedEvent>
             blockNumber: @event.BlockNumber,
             txnIndex: @event.TxnIndex,
             thingId: new Guid(@event.ThingId),
-            type: ThingEventType.ThingFunded
+            type: ThingEventType.Funded
         );
         thingFundedEvent.SetPayload(new()
         {

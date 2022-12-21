@@ -20,11 +20,11 @@ internal class MessageTypeResolver : IMessageTypeResolver
             var eventType = (ThingEventType)int.Parse(Encoding.UTF8.GetString(messageTypeBytes));
             switch (eventType)
             {
-                case ThingEventType.ThingFunded:
+                case ThingEventType.Funded:
                     return typeof(ThingFundedEvent);
-                case ThingEventType.VerifierLotteryClosedWithSuccess:
-                    return typeof(VerifierLotteryClosedWithSuccessEvent);
-                case ThingEventType.ThingSettlementProposalFunded:
+                case ThingEventType.SubmissionVerifierLotteryClosedWithSuccess:
+                    return typeof(ThingSubmissionVerifierLotteryClosedWithSuccessEvent);
+                case ThingEventType.SettlementProposalFunded:
                     return typeof(ThingSettlementProposalFundedEvent);
             }
         }

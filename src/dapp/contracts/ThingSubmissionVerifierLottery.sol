@@ -4,33 +4,45 @@ pragma solidity >=0.8.0 <0.9.0;
 import "./TruQuest.sol";
 import "./AcceptancePoll.sol";
 
-error VerifierLottery__NotOrchestrator();
-error VerifierLottery__NotTruQuest();
-error VerifierLottery__NotAcceptancePoll();
-error VerifierLottery__AlreadyCommittedToLottery(bytes16 thingId);
-error VerifierLottery__LotteryNotActive(bytes16 thingId);
-error VerifierLottery__LotteryExpired(bytes16 thingId);
-error VerifierLottery__NotEnoughFunds(uint256 requiredFunds);
-error VerifierLottery__NotCommittedToLottery(bytes16 thingId);
-error VerifierLottery__AlreadyJoinedLottery(bytes16 thingId);
-error VerifierLottery__InvalidLotteryReveal(bytes16 thingId);
-error VerifierLottery__PreJoinAndJoinLotteryInTheSameBlock(bytes16 thingId);
-error VerifierLottery__InvalidNumberOfLotteryWinners(
+error ThingSubmissionVerifierLottery__NotOrchestrator();
+error ThingSubmissionVerifierLottery__NotTruQuest();
+error ThingSubmissionVerifierLottery__NotAcceptancePoll();
+error ThingSubmissionVerifierLottery__AlreadyCommittedToLottery(
+    bytes16 thingId
+);
+error ThingSubmissionVerifierLottery__LotteryNotActive(bytes16 thingId);
+error ThingSubmissionVerifierLottery__LotteryExpired(bytes16 thingId);
+error ThingSubmissionVerifierLottery__NotEnoughFunds(uint256 requiredFunds);
+error ThingSubmissionVerifierLottery__NotCommittedToLottery(bytes16 thingId);
+error ThingSubmissionVerifierLottery__AlreadyJoinedLottery(bytes16 thingId);
+error ThingSubmissionVerifierLottery__InvalidLotteryReveal(bytes16 thingId);
+error ThingSubmissionVerifierLottery__PreJoinAndJoinLotteryInTheSameBlock(
+    bytes16 thingId
+);
+error ThingSubmissionVerifierLottery__InvalidNumberOfLotteryWinners(
     uint8 numRequiredVerifiers,
     uint256 numWinners
 );
-error VerifierLottery__InitAndCloseLotteryInTheSameBlock(bytes16 thingId);
+error ThingSubmissionVerifierLottery__InitAndCloseLotteryInTheSameBlock(
+    bytes16 thingId
+);
 
-error VerifierLottery__SubLotteryNotActive(bytes16 thingId);
-error VerifierLottery__SubLotteryExpired(bytes16 thingId);
-error VerifierLottery__AlreadyCommittedToSubLottery(bytes16 thingId);
-error VerifierLottery__NotCommittedToSubLottery(bytes16 thingId);
-error VerifierLottery__AlreadyJoinedSubLottery(bytes16 thingId);
-error VerifierLottery__InvalidSubLotteryReveal(bytes16 thingId);
-error VerifierLottery__PreJoinAndJoinSubLotteryInTheSameBlock(bytes16 thingId);
-error VerifierLottery__InitAndCloseSubLotteryInTheSameBlock(bytes16 thingId);
+error ThingSubmissionVerifierLottery__SubLotteryNotActive(bytes16 thingId);
+error ThingSubmissionVerifierLottery__SubLotteryExpired(bytes16 thingId);
+error ThingSubmissionVerifierLottery__AlreadyCommittedToSubLottery(
+    bytes16 thingId
+);
+error ThingSubmissionVerifierLottery__NotCommittedToSubLottery(bytes16 thingId);
+error ThingSubmissionVerifierLottery__AlreadyJoinedSubLottery(bytes16 thingId);
+error ThingSubmissionVerifierLottery__InvalidSubLotteryReveal(bytes16 thingId);
+error ThingSubmissionVerifierLottery__PreJoinAndJoinSubLotteryInTheSameBlock(
+    bytes16 thingId
+);
+error ThingSubmissionVerifierLottery__InitAndCloseSubLotteryInTheSameBlock(
+    bytes16 thingId
+);
 
-contract VerifierLottery {
+contract ThingSubmissionVerifierLottery {
     struct Commitment {
         bytes32 dataHash;
         int64 block;
@@ -58,22 +70,26 @@ contract VerifierLottery {
         address orchestrator,
         bytes32 dataHash
     );
+
     event PreJoinedLottery(
         bytes16 indexed thingId,
         address indexed user,
         bytes32 dataHash
     );
+
     event JoinedLottery(
         bytes16 indexed thingId,
         address indexed user,
         uint256 nonce
     );
+
     event LotteryClosedWithSuccess(
         bytes16 indexed thingId,
         address orchestrator,
         uint256 nonce,
         address[] winners
     );
+
     event LotteryClosedInFailure(bytes16 indexed thingId, address orchestrator);
 
     event SubLotteryInitiated(
@@ -81,16 +97,19 @@ contract VerifierLottery {
         address orchestrator,
         bytes32 dataHash
     );
+
     event PreJoinedSubLottery(
         bytes16 indexed thingId,
         address indexed user,
         bytes32 dataHash
     );
+
     event JoinedSubLottery(
         bytes16 indexed thingId,
         address indexed user,
         uint256 nonce
     );
+
     event SubLotteryClosedWithSuccess(
         bytes16 indexed thingId,
         address orchestrator,
@@ -100,35 +119,39 @@ contract VerifierLottery {
 
     modifier onlyOrchestrator() {
         if (msg.sender != s_orchestrator) {
-            revert VerifierLottery__NotOrchestrator();
+            revert ThingSubmissionVerifierLottery__NotOrchestrator();
         }
         _;
     }
 
     modifier onlyTruQuest() {
         if (msg.sender != address(i_truQuest)) {
-            revert VerifierLottery__NotTruQuest();
+            revert ThingSubmissionVerifierLottery__NotTruQuest();
         }
         _;
     }
 
     modifier onlyAcceptancePoll() {
         if (msg.sender != address(s_acceptancePoll)) {
-            revert VerifierLottery__NotAcceptancePoll();
+            revert ThingSubmissionVerifierLottery__NotAcceptancePoll();
         }
         _;
     }
 
     modifier whenHasAtLeast(uint256 _requiredFunds) {
         if (!i_truQuest.checkHasAtLeast(msg.sender, _requiredFunds)) {
-            revert VerifierLottery__NotEnoughFunds(_requiredFunds);
+            revert ThingSubmissionVerifierLottery__NotEnoughFunds(
+                _requiredFunds
+            );
         }
         _;
     }
 
     modifier onlyOncePerLottery(bytes16 _thingId) {
         if (s_thingIdToLotteryCommitments[_thingId][msg.sender].block != 0) {
-            revert VerifierLottery__AlreadyCommittedToLottery(_thingId);
+            revert ThingSubmissionVerifierLottery__AlreadyCommittedToLottery(
+                _thingId
+            );
         }
         _;
     }
@@ -141,26 +164,28 @@ contract VerifierLottery {
             s_orchestrator
         ].block;
         if (lotteryInitBlock < 1) {
-            revert VerifierLottery__LotteryNotActive(_thingId);
+            revert ThingSubmissionVerifierLottery__LotteryNotActive(_thingId);
         }
         if (
             block.number + _margin > uint64(lotteryInitBlock) + s_durationBlocks
         ) {
-            revert VerifierLottery__LotteryExpired(_thingId);
+            revert ThingSubmissionVerifierLottery__LotteryExpired(_thingId);
         }
         _;
     }
 
     modifier onlyWhenLotteryActive(bytes16 _thingId) {
         if (s_thingIdToLotteryCommitments[_thingId][s_orchestrator].block < 1) {
-            revert VerifierLottery__LotteryNotActive(_thingId);
+            revert ThingSubmissionVerifierLottery__LotteryNotActive(_thingId);
         }
         _;
     }
 
     modifier onlyOncePerSubLottery(bytes16 _thingId) {
         if (s_thingIdToSubLotteryCommitments[_thingId][msg.sender].block != 0) {
-            revert VerifierLottery__AlreadyCommittedToSubLottery(_thingId);
+            revert ThingSubmissionVerifierLottery__AlreadyCommittedToSubLottery(
+                _thingId
+            );
         }
         _;
     }
@@ -173,13 +198,15 @@ contract VerifierLottery {
             address(s_acceptancePoll)
         ].block;
         if (subLotteryInitBlock < 1) {
-            revert VerifierLottery__SubLotteryNotActive(_thingId);
+            revert ThingSubmissionVerifierLottery__SubLotteryNotActive(
+                _thingId
+            );
         }
         if (
             block.number + _margin >
             uint64(subLotteryInitBlock) + s_durationBlocks
         ) {
-            revert VerifierLottery__SubLotteryExpired(_thingId);
+            revert ThingSubmissionVerifierLottery__SubLotteryExpired(_thingId);
         }
         _;
     }
@@ -190,7 +217,9 @@ contract VerifierLottery {
                 address(s_acceptancePoll)
             ].block < 1
         ) {
-            revert VerifierLottery__SubLotteryNotActive(_thingId);
+            revert ThingSubmissionVerifierLottery__SubLotteryNotActive(
+                _thingId
+            );
         }
         _;
     }
@@ -228,6 +257,7 @@ contract VerifierLottery {
             int64(uint64(block.number)),
             false
         );
+
         emit LotteryInitiated(_thingId, s_orchestrator, _dataHash);
     }
 
@@ -247,6 +277,7 @@ contract VerifierLottery {
             false
         );
         s_participants[_thingId].push(msg.sender);
+
         emit PreJoinedLottery(_thingId, msg.sender, _dataHash);
     }
 
@@ -259,20 +290,26 @@ contract VerifierLottery {
         ];
 
         if (commitment.block == 0) {
-            revert VerifierLottery__NotCommittedToLottery(_thingId);
+            revert ThingSubmissionVerifierLottery__NotCommittedToLottery(
+                _thingId
+            );
         }
         if (commitment.revealed) {
-            revert VerifierLottery__AlreadyJoinedLottery(_thingId);
+            revert ThingSubmissionVerifierLottery__AlreadyJoinedLottery(
+                _thingId
+            );
         }
         s_thingIdToLotteryCommitments[_thingId][msg.sender].revealed = true;
 
         if (computeHash(_data) != commitment.dataHash) {
-            revert VerifierLottery__InvalidLotteryReveal(_thingId);
+            revert ThingSubmissionVerifierLottery__InvalidLotteryReveal(
+                _thingId
+            );
         }
 
         uint64 commitmentBlock = uint64(commitment.block);
         if (uint64(block.number) == commitmentBlock) {
-            revert VerifierLottery__PreJoinAndJoinLotteryInTheSameBlock(
+            revert ThingSubmissionVerifierLottery__PreJoinAndJoinLotteryInTheSameBlock(
                 _thingId
             );
         }
@@ -305,7 +342,7 @@ contract VerifierLottery {
         uint64[] calldata _winnerIndices // sorted asc indices of users in prejoin array
     ) public onlyOrchestrator onlyWhenLotteryActive(_thingId) {
         if (_winnerIndices.length != s_numVerifiers) {
-            revert VerifierLottery__InvalidNumberOfLotteryWinners(
+            revert ThingSubmissionVerifierLottery__InvalidNumberOfLotteryWinners(
                 s_numVerifiers,
                 _winnerIndices.length
             );
@@ -316,12 +353,16 @@ contract VerifierLottery {
         ];
 
         if (computeHash(_data) != commitment.dataHash) {
-            revert VerifierLottery__InvalidLotteryReveal(_thingId);
+            revert ThingSubmissionVerifierLottery__InvalidLotteryReveal(
+                _thingId
+            );
         }
 
         uint64 commitmentBlock = uint64(commitment.block);
         if (uint64(block.number) == commitmentBlock) {
-            revert VerifierLottery__InitAndCloseLotteryInTheSameBlock(_thingId);
+            revert ThingSubmissionVerifierLottery__InitAndCloseLotteryInTheSameBlock(
+                _thingId
+            );
         }
 
         s_thingIdToLotteryCommitments[_thingId][msg.sender].block = -1;
@@ -411,20 +452,26 @@ contract VerifierLottery {
         ][msg.sender];
 
         if (commitment.block == 0) {
-            revert VerifierLottery__NotCommittedToSubLottery(_thingId);
+            revert ThingSubmissionVerifierLottery__NotCommittedToSubLottery(
+                _thingId
+            );
         }
         if (commitment.revealed) {
-            revert VerifierLottery__AlreadyJoinedSubLottery(_thingId);
+            revert ThingSubmissionVerifierLottery__AlreadyJoinedSubLottery(
+                _thingId
+            );
         }
         s_thingIdToSubLotteryCommitments[_thingId][msg.sender].revealed = true;
 
         if (computeHash(_data) != commitment.dataHash) {
-            revert VerifierLottery__InvalidSubLotteryReveal(_thingId);
+            revert ThingSubmissionVerifierLottery__InvalidSubLotteryReveal(
+                _thingId
+            );
         }
 
         uint64 commitmentBlock = uint64(commitment.block);
         if (uint64(block.number) == commitmentBlock) {
-            revert VerifierLottery__PreJoinAndJoinSubLotteryInTheSameBlock(
+            revert ThingSubmissionVerifierLottery__PreJoinAndJoinSubLotteryInTheSameBlock(
                 _thingId
             );
         }
@@ -444,7 +491,7 @@ contract VerifierLottery {
         uint8 numSubstituteVerifiers = s_numVerifiers -
             uint8(s_acceptancePoll.getVerifierCount(_thingId));
         if (_winnerIndices.length != numSubstituteVerifiers) {
-            revert VerifierLottery__InvalidNumberOfLotteryWinners(
+            revert ThingSubmissionVerifierLottery__InvalidNumberOfLotteryWinners(
                 numSubstituteVerifiers,
                 _winnerIndices.length
             );
@@ -455,12 +502,14 @@ contract VerifierLottery {
         ][address(s_acceptancePoll)];
 
         if (computeHash(_data) != commitment.dataHash) {
-            revert VerifierLottery__InvalidSubLotteryReveal(_thingId);
+            revert ThingSubmissionVerifierLottery__InvalidSubLotteryReveal(
+                _thingId
+            );
         }
 
         uint64 commitmentBlock = uint64(commitment.block);
         if (uint64(block.number) == commitmentBlock) {
-            revert VerifierLottery__InitAndCloseSubLotteryInTheSameBlock(
+            revert ThingSubmissionVerifierLottery__InitAndCloseSubLotteryInTheSameBlock(
                 _thingId
             );
         }

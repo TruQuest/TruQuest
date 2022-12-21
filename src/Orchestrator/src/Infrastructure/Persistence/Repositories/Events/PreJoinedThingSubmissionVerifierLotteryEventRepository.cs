@@ -10,11 +10,11 @@ using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories.Events;
 
-internal class PreJoinedVerifierLotteryEventRepository : Repository<PreJoinedVerifierLotteryEvent>, IPreJoinedVerifierLotteryEventRepository
+internal class PreJoinedThingSubmissionVerifierLotteryEventRepository : Repository<PreJoinedThingSubmissionVerifierLotteryEvent>, IPreJoinedThingSubmissionVerifierLotteryEventRepository
 {
     private readonly EventDbContext _dbContext;
 
-    public PreJoinedVerifierLotteryEventRepository(
+    public PreJoinedThingSubmissionVerifierLotteryEventRepository(
         IConfiguration configuration,
         EventDbContext dbContext,
         ISharedTxnScope sharedTxnScope
@@ -23,9 +23,9 @@ internal class PreJoinedVerifierLotteryEventRepository : Repository<PreJoinedVer
         _dbContext = dbContext;
     }
 
-    public void Create(PreJoinedVerifierLotteryEvent @event)
+    public void Create(PreJoinedThingSubmissionVerifierLotteryEvent @event)
     {
-        _dbContext.PreJoinedVerifierLotteryEvents.Add(@event);
+        _dbContext.PreJoinedThingSubmissionVerifierLotteryEvents.Add(@event);
     }
 
     public Task<List<VerifierLotteryWinnerQm>> GetLotteryWinnerIndices(Guid thingId, IEnumerable<string> winnerIds)
@@ -43,7 +43,7 @@ internal class PreJoinedVerifierLotteryEventRepository : Repository<PreJoinedVer
                 .FromSqlRaw(
                     $@"
                         SELECT *
-                        FROM ""SelectWinnerIndicesAccordingToPreJoinedVerifierLotteryEvents"" (
+                        FROM ""SelectWinnerIndicesAccordingToPreJoinedThingSubmissionVerifierLotteryEvents"" (
                             @{thingIdParam.ParameterName}, @{winnerIdsParam.ParameterName}
                         )
                     ",

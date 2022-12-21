@@ -4,7 +4,6 @@ using MediatR;
 
 using Domain.Aggregates;
 
-using Application.Thing.Commands.CloseVerifierLottery;
 using Application.Thing.Commands.CloseAcceptancePoll;
 
 namespace Application.Ethereum.Events.BlockMined;
@@ -33,7 +32,7 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
             switch (task.Type)
             {
                 case TaskType.CloseThingSubmissionVerifierLottery:
-                    await _mediator.Send(new CloseVerifierLotteryCommand
+                    await _mediator.Send(new Thing.Commands.CloseVerifierLottery.CloseVerifierLotteryCommand
                     {
                         LatestIncludedBlockNumber = task.ScheduledBlockNumber,
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),

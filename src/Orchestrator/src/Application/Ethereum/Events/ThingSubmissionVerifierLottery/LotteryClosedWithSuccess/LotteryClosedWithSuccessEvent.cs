@@ -2,9 +2,9 @@ using MediatR;
 
 using Domain.Aggregates.Events;
 
-namespace Application.Ethereum.Events.Lottery.VerifierLotteryClosedWithSuccess;
+namespace Application.Ethereum.Events.ThingSubmissionVerifierLottery.LotteryClosedWithSuccess;
 
-public class VerifierLotteryClosedWithSuccessEvent : INotification
+public class LotteryClosedWithSuccessEvent : INotification
 {
     public long BlockNumber { get; init; }
     public int TxnIndex { get; init; }
@@ -13,24 +13,24 @@ public class VerifierLotteryClosedWithSuccessEvent : INotification
     public required List<string> WinnerIds { get; init; }
 }
 
-internal class VerifierLotteryClosedWithSuccessEventHandler : INotificationHandler<VerifierLotteryClosedWithSuccessEvent>
+internal class LotteryClosedWithSuccessEventHandler : INotificationHandler<LotteryClosedWithSuccessEvent>
 {
     private readonly IActionableThingRelatedEventRepository _actionableThingRelatedEventRepository;
 
-    public VerifierLotteryClosedWithSuccessEventHandler(
+    public LotteryClosedWithSuccessEventHandler(
         IActionableThingRelatedEventRepository actionableThingRelatedEventRepository
     )
     {
         _actionableThingRelatedEventRepository = actionableThingRelatedEventRepository;
     }
 
-    public async Task Handle(VerifierLotteryClosedWithSuccessEvent @event, CancellationToken ct)
+    public async Task Handle(LotteryClosedWithSuccessEvent @event, CancellationToken ct)
     {
         var lotteryClosedEvent = new ActionableThingRelatedEvent(
             blockNumber: @event.BlockNumber,
             txnIndex: @event.TxnIndex,
             thingId: new Guid(@event.ThingId),
-            type: ThingEventType.VerifierLotteryClosedWithSuccess
+            type: ThingEventType.SubmissionVerifierLotteryClosedWithSuccess
         );
         lotteryClosedEvent.SetPayload(new()
         {

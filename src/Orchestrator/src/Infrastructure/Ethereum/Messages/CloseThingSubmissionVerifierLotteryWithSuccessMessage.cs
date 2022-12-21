@@ -4,7 +4,7 @@ using Nethereum.Contracts;
 namespace Infrastructure.Ethereum.Messages;
 
 [Function("closeLotteryWithSuccess")]
-public class CloseVerifierLotteryWithSuccessMessage : FunctionMessage
+public class CloseThingSubmissionVerifierLotteryWithSuccessMessage : FunctionMessage
 {
     [Parameter("bytes16", "_thingId", 1)]
     public byte[] ThingId { get; init; }

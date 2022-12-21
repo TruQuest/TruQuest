@@ -22,7 +22,7 @@ public class E2ETests : IAsyncLifetime
     private readonly Sut _sut;
 
     private Contract _truQuestContract;
-    private Contract _verifierLotteryContract;
+    private Contract _thingSubmissionVerifierLotteryContract;
     private Contract _acceptancePollContract;
     private Contract _thingAssessmentVerifierLotteryContract;
 
@@ -76,10 +76,10 @@ public class E2ETests : IAsyncLifetime
             .OnNetwork(_sut.GetConfigurationValue<string>($"Ethereum:Networks:{network}:URL"))
             .Find();
 
-        _verifierLotteryContract = ContractFinder.Create()
+        _thingSubmissionVerifierLotteryContract = ContractFinder.Create()
             .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
-            .WithName("VerifierLottery")
-            .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:VerifierLottery:Address"))
+            .WithName("ThingSubmissionVerifierLottery")
+            .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:ThingSubmissionVerifierLottery:Address"))
             .OnNetwork(_sut.GetConfigurationValue<string>($"Ethereum:Networks:{network}:URL"))
             .Find();
 
@@ -176,11 +176,11 @@ public class E2ETests : IAsyncLifetime
                 return await contractCaller.ComputeHashForThingSubmissionVerifierLottery(data);
             });
 
-            await _sut.ContractCaller.PreJoinLotteryAs(privateKey, thingId, dataHash);
-            await _sut.ContractCaller.JoinLotteryAs(privateKey, thingId, data);
+            await _sut.ContractCaller.PreJoinThingSubmissionVerifierLotteryAs(privateKey, thingId, dataHash);
+            await _sut.ContractCaller.JoinThingSubmissionVerifierLotteryAs(privateKey, thingId, data);
 
             var address = _sut.GetConfigurationValue<string>($"Ethereum:Accounts:{network}:Verifier{i}:Address");
-            var committedDataHash = await _verifierLotteryContract
+            var committedDataHash = await _thingSubmissionVerifierLotteryContract
                 .WalkStorage()
                 .Field("s_thingIdToLotteryCommitments")
                 .AsMapping()
@@ -193,7 +193,7 @@ public class E2ETests : IAsyncLifetime
 
             committedDataHash.Value.Should().Equal(dataHash);
 
-            var revealed = await _verifierLotteryContract
+            var revealed = await _thingSubmissionVerifierLotteryContract
                 .WalkStorage()
                 .Field("s_thingIdToLotteryCommitments")
                 .AsMapping()
@@ -209,7 +209,7 @@ public class E2ETests : IAsyncLifetime
 
         await Task.Delay(TimeSpan.FromSeconds(15)); // giving time for (Pre-)Joined events to be handled.
 
-        var lotteryDurationBlocks = await _verifierLotteryContract
+        var lotteryDurationBlocks = await _thingSubmissionVerifierLotteryContract
             .WalkStorage()
             .Field("s_durationBlocks")
             .GetValue<SolUint16>();
@@ -225,7 +225,7 @@ public class E2ETests : IAsyncLifetime
         // check that winners are who they should be
 
         int requiredVerifierCount = await _sut.ExecWithService<IContractStorageQueryable, int>(
-            contractStorageQueryable => contractStorageQueryable.GetNumVerifiers()
+            contractStorageQueryable => contractStorageQueryable.GetThingSubmissionNumVerifiers()
         );
 
         int verifierCount = await _acceptancePollContract

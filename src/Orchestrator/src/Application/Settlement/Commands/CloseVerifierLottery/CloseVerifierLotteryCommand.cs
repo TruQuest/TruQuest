@@ -23,7 +23,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
     private readonly ILogger<CloseVerifierLotteryCommandHandler> _logger;
     private readonly IContractCaller _contractCaller;
     private readonly IThingRepository _thingRepository;
-    private readonly IJoinedVerifierLotteryEventRepository _joinedVerifierLotteryEventRepository;
+    private readonly IJoinedThingSubmissionVerifierLotteryEventRepository _joinedThingSubmissionVerifierLotteryEventRepository;
     private readonly IThingAssessmentVerifierLotterySpotClaimedEventRepository _thingAssessmentVerifierLotterySpotClaimedEventRepository;
     private readonly IPreJoinedThingAssessmentVerifierLotteryEventRepository _preJoinedThingAssessmentVerifierLotteryEventRepository;
     private readonly IJoinedThingAssessmentVerifierLotteryEventRepository _joinedThingAssessmentVerifierLotteryEventRepository;
@@ -33,7 +33,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
         ILogger<CloseVerifierLotteryCommandHandler> logger,
         IContractCaller contractCaller,
         IThingRepository thingRepository,
-        IJoinedVerifierLotteryEventRepository joinedVerifierLotteryEventRepository,
+        IJoinedThingSubmissionVerifierLotteryEventRepository joinedThingSubmissionVerifierLotteryEventRepository,
         IThingAssessmentVerifierLotterySpotClaimedEventRepository thingAssessmentVerifierLotterySpotClaimedEventRepository,
         IPreJoinedThingAssessmentVerifierLotteryEventRepository preJoinedThingAssessmentVerifierLotteryEventRepository,
         IJoinedThingAssessmentVerifierLotteryEventRepository joinedThingAssessmentVerifierLotteryEventRepository,
@@ -43,7 +43,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
         _logger = logger;
         _contractCaller = contractCaller;
         _thingRepository = thingRepository;
-        _joinedVerifierLotteryEventRepository = joinedVerifierLotteryEventRepository;
+        _joinedThingSubmissionVerifierLotteryEventRepository = joinedThingSubmissionVerifierLotteryEventRepository;
         _thingAssessmentVerifierLotterySpotClaimedEventRepository = thingAssessmentVerifierLotterySpotClaimedEventRepository;
         _preJoinedThingAssessmentVerifierLotteryEventRepository = preJoinedThingAssessmentVerifierLotteryEventRepository;
         _joinedThingAssessmentVerifierLotteryEventRepository = joinedThingAssessmentVerifierLotteryEventRepository;
@@ -83,7 +83,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
         }
 
         var joinedThingSubmissionVerifierLotteryEvents =
-            await _joinedVerifierLotteryEventRepository.FindWithClosestNoncesAmongUsers(
+            await _joinedThingSubmissionVerifierLotteryEventRepository.FindWithClosestNoncesAmongUsers(
                 thingId: command.ThingId,
                 userIds: validSpotClaimedEvents.Select(e => e.Event.UserId).ToList(),
                 nonce: nonce,

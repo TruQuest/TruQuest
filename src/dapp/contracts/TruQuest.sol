@@ -5,7 +5,7 @@ pragma abicoder v2;
 import "@ganache/console.log/console.sol";
 
 import "./Truthserum.sol";
-import "./VerifierLottery.sol";
+import "./ThingSubmissionVerifierLottery.sol";
 import "./AcceptancePoll.sol";
 import "./ThingAssessmentVerifierLottery.sol";
 
@@ -46,12 +46,12 @@ contract TruQuest {
     bytes32 private immutable i_domainSeparator;
 
     Truthserum private immutable i_truthserum;
-    VerifierLottery public s_verifierLottery;
+    ThingSubmissionVerifierLottery public s_thingSubmissionVerifierLottery;
     AcceptancePoll public s_acceptancePoll;
     ThingAssessmentVerifierLottery public s_thingAssessmentVerifierLottery;
     address private s_orchestrator;
 
-    uint256 private s_thingStake;
+    uint256 private s_thingSubmissionStake;
 
     mapping(address => uint256) private s_balanceOf;
     mapping(address => uint256) private s_stakedBalanceOf;
@@ -93,7 +93,7 @@ contract TruQuest {
 
     modifier onlyVerifierLottery() {
         if (
-            msg.sender != address(s_verifierLottery) &&
+            msg.sender != address(s_thingSubmissionVerifierLottery) &&
             msg.sender != address(s_thingAssessmentVerifierLottery)
         ) {
             revert TruQuest__NotVerifierLottery();
@@ -128,7 +128,7 @@ contract TruQuest {
         address _truthserumAddress,
         uint8 _numVerifiers,
         uint256 _verifierStake,
-        uint256 _thingStake,
+        uint256 _thingSubmissionStake,
         uint256 _thingSubmissionAcceptedReward,
         uint256 _verifierReward,
         uint16 _verifierLotteryDurationBlocks,
@@ -136,7 +136,7 @@ contract TruQuest {
         uint256 _thingSettlementProposalStake
     ) {
         i_truthserum = Truthserum(_truthserumAddress);
-        s_verifierLottery = new VerifierLottery(
+        s_thingSubmissionVerifierLottery = new ThingSubmissionVerifierLottery(
             address(this),
             _numVerifiers,
             _verifierStake,
@@ -154,10 +154,14 @@ contract TruQuest {
             _verifierStake,
             _verifierLotteryDurationBlocks
         );
-        s_verifierLottery.connectToAcceptancePoll(address(s_acceptancePoll));
-        s_acceptancePoll.connectToVerifierLottery(address(s_verifierLottery));
+        s_thingSubmissionVerifierLottery.connectToAcceptancePoll(
+            address(s_acceptancePoll)
+        );
+        s_acceptancePoll.connectToThingSubmissionVerifierLottery(
+            address(s_thingSubmissionVerifierLottery)
+        );
         s_orchestrator = msg.sender;
-        s_thingStake = _thingStake;
+        s_thingSubmissionStake = _thingSubmissionStake;
         s_thingSettlementProposalStake = _thingSettlementProposalStake;
 
         i_domainSeparator = keccak256(
@@ -212,7 +216,7 @@ contract TruQuest {
         uint256 _amount
     ) external onlyAcceptancePoll {
         // ...
-        _unstake(_user, s_thingStake);
+        _unstake(_user, s_thingSubmissionStake);
         s_balanceOf[_user] += _amount;
     }
 
@@ -262,13 +266,17 @@ contract TruQuest {
         uint8 _v,
         bytes32 _r,
         bytes32 _s
-    ) public onlyWhenNotFunded(_thing.id) whenHasAtLeast(s_thingStake) {
+    )
+        public
+        onlyWhenNotFunded(_thing.id)
+        whenHasAtLeast(s_thingSubmissionStake)
+    {
         if (!_verifyOrchestratorSignatureForThing(_thing, _v, _r, _s)) {
             revert TruQuest__InvalidSignature();
         }
-        _stake(msg.sender, s_thingStake);
+        _stake(msg.sender, s_thingSubmissionStake);
         s_thingSubmitter[_thing.id] = msg.sender;
-        emit ThingFunded(_thing.id, msg.sender, s_thingStake);
+        emit ThingFunded(_thing.id, msg.sender, s_thingSubmissionStake);
     }
 
     function _hashSettlementProposal(

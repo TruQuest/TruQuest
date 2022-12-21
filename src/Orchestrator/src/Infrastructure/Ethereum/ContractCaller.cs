@@ -16,7 +16,7 @@ internal class ContractCaller : IContractCaller
 {
     private readonly ILogger<ContractCaller> _logger;
     private readonly Web3 _web3;
-    private readonly string _verifierLotteryAddress;
+    private readonly string _thingSubmissionVerifierLotteryAddress;
     private readonly string _acceptancePollAddress;
     private readonly string _thingAssessmentVerifierLotteryAddress;
 
@@ -27,22 +27,23 @@ internal class ContractCaller : IContractCaller
         var network = configuration["Ethereum:Network"]!;
         var orchestrator = new Account(configuration[$"Ethereum:Accounts:{network}:Orchestrator:PrivateKey"]);
         _web3 = new Web3(orchestrator, configuration[$"Ethereum:Networks:{network}:URL"]);
-        _verifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:VerifierLottery:Address"]!;
+        _thingSubmissionVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingSubmissionVerifierLottery:Address"]!;
         _acceptancePollAddress = configuration[$"Ethereum:Contracts:{network}:AcceptancePoll:Address"]!;
         _thingAssessmentVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingAssessmentVerifierLottery:Address"]!;
     }
 
     public Task<byte[]> ComputeHashForThingSubmissionVerifierLottery(byte[] data)
     {
-        var queryDispatcher = _web3.Eth.GetContractQueryHandler<ComputeHashMessage>();
-        return queryDispatcher.QueryAsync<byte[]>(_verifierLotteryAddress, new ComputeHashMessage { Data = data });
+        return _web3.Eth.GetContractQueryHandler<ComputeHashMessage>().QueryAsync<byte[]>(
+            _thingSubmissionVerifierLotteryAddress, new() { Data = data }
+        );
     }
 
-    public async Task<long> InitVerifierLottery(byte[] thingId, byte[] dataHash)
+    public async Task<long> InitThingSubmissionVerifierLottery(byte[] thingId, byte[] dataHash)
     {
         var txnDispatcher = _web3.Eth.GetContractTransactionHandler<InitVerifierLotteryMessage>();
         var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
-            _verifierLotteryAddress,
+            _thingSubmissionVerifierLotteryAddress,
             new()
             {
                 ThingId = thingId,
@@ -50,17 +51,16 @@ internal class ContractCaller : IContractCaller
             }
         );
 
-        _logger.LogInformation("=============== InitVerifierLottery: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        _logger.LogInformation("=============== InitThingSubmissionVerifierLottery: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
 
         return (long)txnReceipt.BlockNumber.Value;
     }
 
-    public Task<BigInteger> ComputeNonce(byte[] thingId, byte[] data)
+    public Task<BigInteger> ComputeNonceForThingSubmissionVerifierLottery(byte[] thingId, byte[] data)
     {
-        var queryDispatcher = _web3.Eth.GetContractQueryHandler<ComputeNonceMessage>();
-        return queryDispatcher.QueryAsync<BigInteger>(
-            _verifierLotteryAddress,
-            new ComputeNonceMessage
+        return _web3.Eth.GetContractQueryHandler<ComputeNonceMessage>().QueryAsync<BigInteger>(
+            _thingSubmissionVerifierLotteryAddress,
+            new()
             {
                 ThingId = thingId,
                 Data = data
@@ -68,11 +68,13 @@ internal class ContractCaller : IContractCaller
         );
     }
 
-    public async Task CloseVerifierLotteryWithSuccess(byte[] thingId, byte[] data, List<ulong> winnerIndices)
+    public async Task CloseThingSubmissionVerifierLotteryWithSuccess(
+        byte[] thingId, byte[] data, List<ulong> winnerIndices
+    )
     {
-        var txnDispatcher = _web3.Eth.GetContractTransactionHandler<CloseVerifierLotteryWithSuccessMessage>();
+        var txnDispatcher = _web3.Eth.GetContractTransactionHandler<CloseThingSubmissionVerifierLotteryWithSuccessMessage>();
         var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
-            _verifierLotteryAddress,
+            _thingSubmissionVerifierLotteryAddress,
             new()
             {
                 ThingId = thingId,
@@ -81,7 +83,7 @@ internal class ContractCaller : IContractCaller
             }
         );
 
-        _logger.LogInformation("=============== CloseVerifierLotteryWithSuccess: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        _logger.LogInformation("=============== CloseThingSubmissionVerifierLotteryWithSuccess: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
     public async Task FinalizeAcceptancePollForThingAsAccepted(
@@ -123,10 +125,9 @@ internal class ContractCaller : IContractCaller
 
     public Task<BigInteger> ComputeNonceForThingAssessmentVerifierLottery(byte[] thingId, byte[] data)
     {
-        var queryDispatcher = _web3.Eth.GetContractQueryHandler<ComputeNonceMessage>();
-        return queryDispatcher.QueryAsync<BigInteger>(
+        return _web3.Eth.GetContractQueryHandler<ComputeNonceMessage>().QueryAsync<BigInteger>(
             _thingAssessmentVerifierLotteryAddress,
-            new ComputeNonceMessage
+            new()
             {
                 ThingId = thingId,
                 Data = data

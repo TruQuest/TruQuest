@@ -1,6 +1,6 @@
 using Nethereum.ABI.FunctionEncoding.Attributes;
 
-namespace Infrastructure.Ethereum.Events;
+namespace Infrastructure.Ethereum.Events.ThingSubmissionVerifierLottery;
 
 [Event("PreJoinedLottery")]
 public class PreJoinedLotteryEvent : IEventDTO
