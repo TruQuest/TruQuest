@@ -180,6 +180,7 @@ public static class IServiceCollectionExtension
 
         services.AddSingleton<IContractEventListener, ContractEventListener>();
 
+        services.AddSingleton<AccountProvider>();
         services.AddSingleton<IContractCaller, ContractCaller>();
         services.AddSingleton<IBlockListener, BlockListener>();
         services.AddSingleton<IBlockchainQueryable, BlockchainQueryable>();

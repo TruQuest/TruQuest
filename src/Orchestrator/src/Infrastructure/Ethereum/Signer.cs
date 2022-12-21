@@ -26,7 +26,11 @@ internal class Signer : ISigner
     private readonly DomainWithSalt _domain;
     private readonly EthECKey _orchestratorPrivateKey;
 
-    public Signer(IConfiguration configuration, Eip712TypedDataSigner eip712Signer)
+    public Signer(
+        IConfiguration configuration,
+        AccountProvider accountProvider,
+        Eip712TypedDataSigner eip712Signer
+    )
     {
         _eip712Signer = eip712Signer;
 
@@ -41,7 +45,7 @@ internal class Signer : ISigner
             Salt = domainConfig["Salt"].HexToByteArray()
         };
 
-        _orchestratorPrivateKey = new EthECKey(configuration[$"Ethereum:Accounts:{network}:Orchestrator:PrivateKey"]!);
+        _orchestratorPrivateKey = new EthECKey(accountProvider.GetAccount("Orchestrator").PrivateKey);
     }
 
     private TypedData<DomainWithSalt> _getTypedDataDefinition(params Type[] types)

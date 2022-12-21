@@ -10,6 +10,7 @@ using Nethereum.Contracts;
 
 using Application.Thing.Commands.SubmitNewThing;
 using Application.Settlement.Commands.SubmitNewSettlementProposal;
+using Infrastructure.Ethereum;
 using Infrastructure.Ethereum.TypedData;
 
 using Tests.FunctionalTests.Helpers.Messages;
@@ -21,6 +22,7 @@ public class ContractCaller
 {
     private readonly ILogger _logger;
     private readonly IConfiguration _configuration;
+    private readonly AccountProvider _accountProvider;
     private readonly BlockchainManipulator _blockchainManipulator;
 
     private readonly Web3 _web3;
@@ -33,14 +35,20 @@ public class ContractCaller
 
     private readonly Account _orchestrator;
 
-    public ContractCaller(ILogger logger, IConfiguration configuration, BlockchainManipulator blockchainManipulator)
+    public ContractCaller(
+        ILogger logger,
+        IConfiguration configuration,
+        AccountProvider accountProvider,
+        BlockchainManipulator blockchainManipulator
+    )
     {
         _logger = logger;
         _configuration = configuration;
+        _accountProvider = accountProvider;
         _blockchainManipulator = blockchainManipulator;
 
         var network = configuration["Ethereum:Network"]!;
-        var submitter = new Account(configuration[$"Ethereum:Accounts:{network}:Submitter:PrivateKey"]);
+        var submitter = accountProvider.GetAccount("Submitter");
         _rpcUrl = configuration[$"Ethereum:Networks:{network}:URL"]!;
         _web3 = new Web3(submitter, _rpcUrl);
         _truthserumAddress = configuration[$"Ethereum:Contracts:{network}:Truthserum:Address"]!;
@@ -49,10 +57,10 @@ public class ContractCaller
         _acceptancePollAddress = configuration[$"Ethereum:Contracts:{network}:AcceptancePoll:Address"]!;
         _thingAssessmentVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingAssessmentVerifierLottery:Address"]!;
 
-        _orchestrator = new Account(configuration[$"Ethereum:Accounts:{network}:Orchestrator:PrivateKey"]);
+        _orchestrator = accountProvider.GetAccount("Orchestrator");
     }
 
-    public async Task TransferTruthserumTo(string address, BigInteger amount)
+    public async Task TransferTruthserumTo(string accountName, BigInteger amount)
     {
         var web3 = new Web3(_orchestrator, _rpcUrl);
         var txnDispatcher = web3.Eth.GetContractTransactionHandler<TransferMessage>();
@@ -60,7 +68,7 @@ public class ContractCaller
             _truthserumAddress,
             new()
             {
-                To = address,
+                To = _accountProvider.GetAccount(accountName).Address,
                 Amount = amount
             }
         );
@@ -68,10 +76,10 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task DepositFundsAs(string privateKey, BigInteger amount)
+    public async Task DepositFundsAs(string accountName, BigInteger amount)
     {
-        var player = new Account(privateKey);
-        var web3 = new Web3(player, _rpcUrl);
+        var account = _accountProvider.GetAccount(accountName);
+        var web3 = new Web3(account, _rpcUrl);
 
         var approveTxnDispatcher = web3.Eth.GetContractTransactionHandler<ApproveMessage>();
         var approveTxnReceipt = await approveTxnDispatcher.SendRequestAndWaitForReceiptAsync(
@@ -101,11 +109,11 @@ public class ContractCaller
                 _truQuestAddress,
                 new()
                 {
-                    User = player.Address
+                    User = account.Address
                 }
             );
 
-        _logger.LogInformation("User {Address} balance: {Balance}", player.Address, balance);
+        _logger.LogInformation("User {Address} balance: {Balance}", account.Address, balance);
     }
 
     public async Task FundThing(ThingVm thing, string signature)
@@ -133,9 +141,9 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task PreJoinThingSubmissionVerifierLotteryAs(string privateKey, byte[] thingId, byte[] dataHash)
+    public async Task PreJoinThingSubmissionVerifierLotteryAs(string accountName, byte[] thingId, byte[] dataHash)
     {
-        var account = new Account(privateKey);
+        var account = _accountProvider.GetAccount(accountName);
         var web3 = new Web3(account, _rpcUrl);
 
         var txnDispatcher = web3.Eth.GetContractTransactionHandler<PreJoinLotteryMessage>();
@@ -151,9 +159,9 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task JoinThingSubmissionVerifierLotteryAs(string privateKey, byte[] thingId, byte[] data)
+    public async Task JoinThingSubmissionVerifierLotteryAs(string accountName, byte[] thingId, byte[] data)
     {
-        var account = new Account(privateKey);
+        var account = _accountProvider.GetAccount(accountName);
         var web3 = new Web3(account, _rpcUrl);
 
         var txnDispatcher = web3.Eth.GetContractTransactionHandler<JoinLotteryMessage>();
@@ -172,7 +180,7 @@ public class ContractCaller
     public async Task FundThingSettlementProposal(SettlementProposalVm proposal, string signature)
     {
         var network = _configuration["Ethereum:Network"]!;
-        var proposer = new Account(_configuration[$"Ethereum:Accounts:{network}:Proposer:PrivateKey"]);
+        var proposer = _accountProvider.GetAccount("Proposer");
         var web3 = new Web3(proposer, _rpcUrl);
 
         signature = signature.Substring(2);
@@ -199,9 +207,9 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task ClaimThingAssessmentVerifierLotterySpotAs(string privateKey, byte[] thingId)
+    public async Task ClaimThingAssessmentVerifierLotterySpotAs(string accountName, byte[] thingId)
     {
-        var account = new Account(privateKey);
+        var account = _accountProvider.GetAccount(accountName);
         var web3 = new Web3(account, _rpcUrl);
 
         var txnDispatcher = web3.Eth.GetContractTransactionHandler<ClaimLotterySpotMessage>();
@@ -239,9 +247,9 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task PreJoinThingAssessmentVerifierLotteryAs(string privateKey, byte[] thingId, byte[] dataHash)
+    public async Task PreJoinThingAssessmentVerifierLotteryAs(string accountName, byte[] thingId, byte[] dataHash)
     {
-        var account = new Account(privateKey);
+        var account = _accountProvider.GetAccount(accountName);
         var web3 = new Web3(account, _rpcUrl);
 
         var txnDispatcher = web3.Eth.GetContractTransactionHandler<PreJoinLotteryMessage>();
@@ -257,9 +265,9 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task JoinThingAssessmentVerifierLotteryAs(string privateKey, byte[] thingId, byte[] data)
+    public async Task JoinThingAssessmentVerifierLotteryAs(string accountName, byte[] thingId, byte[] data)
     {
-        var account = new Account(privateKey);
+        var account = _accountProvider.GetAccount(accountName);
         var web3 = new Web3(account, _rpcUrl);
 
         var txnDispatcher = web3.Eth.GetContractTransactionHandler<JoinLotteryMessage>();

@@ -9,6 +9,7 @@ using Application.Subject.Commands.AddNewSubject;
 using Application.Thing.Commands.SubmitNewThing;
 using Application.Vote.Commands.CastVote;
 using Application.Settlement.Commands.SubmitNewSettlementProposal;
+using Infrastructure.Ethereum;
 using Infrastructure.Ethereum.TypedData;
 
 namespace Tests.FunctionalTests.Helpers;
@@ -20,7 +21,7 @@ public class Signer
     private readonly EthECKey _submitterPrivateKey;
     private readonly EthECKey _proposerPrivateKey;
 
-    public Signer(IConfiguration configuration)
+    public Signer(IConfiguration configuration, AccountProvider accountProvider)
     {
         _eip712Signer = new Eip712TypedDataSigner();
 
@@ -35,8 +36,8 @@ public class Signer
             Salt = domainConfig["Salt"].HexToByteArray()
         };
 
-        _submitterPrivateKey = new EthECKey(configuration[$"Ethereum:Accounts:{network}:Submitter:PrivateKey"]);
-        _proposerPrivateKey = new EthECKey(configuration[$"Ethereum:Accounts:{network}:Proposer:PrivateKey"]);
+        _submitterPrivateKey = new EthECKey(accountProvider.GetAccount("Submitter").PrivateKey);
+        _proposerPrivateKey = new EthECKey(accountProvider.GetAccount("Proposer").PrivateKey);
     }
 
     private TypedData<DomainWithSalt> _getTypedDataDefinition(params Type[] types)

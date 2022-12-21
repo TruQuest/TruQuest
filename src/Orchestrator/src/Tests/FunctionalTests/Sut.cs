@@ -15,6 +15,7 @@ using Domain.Aggregates;
 using Domain.Aggregates.Events;
 using Application.Common.Interfaces;
 using Infrastructure.Persistence;
+using Infrastructure.Ethereum;
 using API;
 
 using Tests.FunctionalTests.Helpers;
@@ -28,6 +29,7 @@ public class Sut : IAsyncLifetime
 
     private ClaimsPrincipal? _user;
 
+    public AccountProvider AccountProvider { get; private set; }
     public Signer Signer { get; private set; }
     public BlockchainManipulator BlockchainManipulator { get; private set; }
     public ContractCaller ContractCaller { get; private set; }
@@ -66,9 +68,10 @@ public class Sut : IAsyncLifetime
         await _app.DeployContracts();
         await _app.RegisterDebeziumConnector();
 
-        Signer = new Signer(_app.Configuration);
+        AccountProvider = _app.Services.GetRequiredService<AccountProvider>();
+        Signer = new Signer(_app.Configuration, AccountProvider);
         BlockchainManipulator = new BlockchainManipulator(_app.Configuration);
-        ContractCaller = new ContractCaller(_app.Logger, _app.Configuration, BlockchainManipulator);
+        ContractCaller = new ContractCaller(_app.Logger, _app.Configuration, AccountProvider, BlockchainManipulator);
     }
 
     public Task DisposeAsync() => Task.CompletedTask;

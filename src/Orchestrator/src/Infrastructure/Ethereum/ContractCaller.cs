@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 
 using Nethereum.Web3;
-using Nethereum.Web3.Accounts;
 
 using Application.Common.Interfaces;
 
@@ -15,17 +14,23 @@ namespace Infrastructure.Ethereum;
 internal class ContractCaller : IContractCaller
 {
     private readonly ILogger<ContractCaller> _logger;
+    private readonly AccountProvider _accountProvider;
     private readonly Web3 _web3;
     private readonly string _thingSubmissionVerifierLotteryAddress;
     private readonly string _acceptancePollAddress;
     private readonly string _thingAssessmentVerifierLotteryAddress;
 
-    public ContractCaller(ILogger<ContractCaller> logger, IConfiguration configuration)
+    public ContractCaller(
+        ILogger<ContractCaller> logger,
+        IConfiguration configuration,
+        AccountProvider accountProvider
+    )
     {
         _logger = logger;
+        _accountProvider = accountProvider;
 
         var network = configuration["Ethereum:Network"]!;
-        var orchestrator = new Account(configuration[$"Ethereum:Accounts:{network}:Orchestrator:PrivateKey"]);
+        var orchestrator = _accountProvider.GetAccount("Orchestrator");
         _web3 = new Web3(orchestrator, configuration[$"Ethereum:Networks:{network}:URL"]);
         _thingSubmissionVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingSubmissionVerifierLottery:Address"]!;
         _acceptancePollAddress = configuration[$"Ethereum:Contracts:{network}:AcceptancePoll:Address"]!;
