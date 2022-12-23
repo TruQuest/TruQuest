@@ -8,7 +8,8 @@ namespace Application.User.Commands.NotifyAboutSelectionAsVerifier;
 
 public class NotifyAboutSelectionAsVerifierCommand : IRequest<VoidResult>
 {
-    public Guid ThingId { get; init; }
+    public Guid? ThingId { get; init; }
+    public Guid? SettlementProposalId { get; init; }
     public required string UserId { get; init; }
 }
 
@@ -25,7 +26,15 @@ internal class NotifyAboutSelectionAsVerifierCommandHandler : IRequestHandler<No
 
     public async Task<VoidResult> Handle(NotifyAboutSelectionAsVerifierCommand command, CancellationToken ct)
     {
-        _logger.LogInformation("User {UserId} selected as submission verifier for thing {ThingId}", command.UserId, command.ThingId);
+        if (command.ThingId != null)
+        {
+            _logger.LogInformation("User {UserId} selected as submission verifier for thing {ThingId}", command.UserId, command.ThingId);
+        }
+        else if (command.SettlementProposalId != null)
+        {
+            _logger.LogInformation("User {UserId} selected as assessment verifier for settlement proposal {SettlementProposalId}", command.UserId, command.SettlementProposalId);
+        }
+
         return VoidResult.Instance;
     }
 }

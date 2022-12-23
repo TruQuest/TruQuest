@@ -30,9 +30,17 @@ internal class MessageTypeResolver : IMessageTypeResolver
                     return typeof(ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent);
             }
         }
-        else if (context.ConsumerContext.Topic == "thing.verifiers")
+        else if (context.ConsumerContext.Topic == "verifiers")
         {
-            return typeof(ThingVerifierSelectedEvent);
+            var table = Encoding.UTF8.GetString(context.Headers["__table"]);
+            if (table == "ThingVerifiers")
+            {
+                return typeof(ThingVerifierSelectedEvent);
+            }
+            else if (table == "SettlementProposalVerifiers")
+            {
+                return typeof(ThingSettlementProposalVerifierSelectedEvent);
+            }
         }
 
         throw new InvalidOperationException();

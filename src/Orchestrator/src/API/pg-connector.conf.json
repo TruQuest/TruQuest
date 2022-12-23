@@ -14,13 +14,13 @@
         "key.converter.schemas.enable": "false",
         "value.converter": "org.apache.kafka.connect.json.JsonConverter",
         "value.converter.schemas.enable": "false",
-        "table.include.list": "truquest_events.ActionableThingRelatedEvents,truquest.ThingVerifiers",
-        "predicates": "IsActionableThingRelatedEventsTable,IsThingVerifiersTable",
+        "table.include.list": "truquest_events.ActionableThingRelatedEvents,truquest.ThingVerifiers,truquest.SettlementProposalVerifiers",
+        "predicates": "IsActionableThingRelatedEventsTable,IsVerifiersTable",
         "transforms": "outbox,flatten,verifiers",
         "predicates.IsActionableThingRelatedEventsTable.type": "org.apache.kafka.connect.transforms.predicates.TopicNameMatches",
         "predicates.IsActionableThingRelatedEventsTable.pattern": ".*ActionableThingRelatedEvents.*",
-        "predicates.IsThingVerifiersTable.type": "org.apache.kafka.connect.transforms.predicates.TopicNameMatches",
-        "predicates.IsThingVerifiersTable.pattern": ".*ThingVerifiers.*",
+        "predicates.IsVerifiersTable.type": "org.apache.kafka.connect.transforms.predicates.TopicNameMatches",
+        "predicates.IsVerifiersTable.pattern": ".*(Thing|SettlementProposal)Verifiers.*",
         "transforms.outbox.type": "io.debezium.transforms.outbox.EventRouter",
         "transforms.outbox.predicate": "IsActionableThingRelatedEventsTable",
         "transforms.outbox.table.field.event.id": "Id",
@@ -31,9 +31,10 @@
         "transforms.outbox.route.by.field": "ThingId",
         "transforms.outbox.route.topic.replacement": "thing.events",
         "transforms.flatten.type": "io.debezium.transforms.ExtractNewRecordState",
-        "transforms.flatten.predicate": "IsThingVerifiersTable",
+        "transforms.flatten.predicate": "IsVerifiersTable",
+        "transforms.flatten.add.headers": "table",
         "transforms.verifiers.type": "org.apache.kafka.connect.transforms.RegexRouter",
-        "transforms.verifiers.regex": ".*ThingVerifiers.*",
-        "transforms.verifiers.replacement": "thing.verifiers"
+        "transforms.verifiers.regex": ".*(Thing|SettlementProposal)Verifiers.*",
+        "transforms.verifiers.replacement": "verifiers"
     }
 }
