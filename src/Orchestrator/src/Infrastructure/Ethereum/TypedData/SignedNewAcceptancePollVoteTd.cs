@@ -2,11 +2,11 @@ using Nethereum.ABI.FunctionEncoding.Attributes;
 
 namespace Infrastructure.Ethereum.TypedData;
 
-[Struct("SignedNewVoteTd")]
-public class SignedNewVoteTd
+[Struct("SignedNewAcceptancePollVoteTd")]
+public class SignedNewAcceptancePollVoteTd
 {
-    [Parameter("tuple", "vote", 1, "NewVoteTd")]
-    public NewVoteTd Vote { get; init; }
+    [Parameter("tuple", "vote", 1, "NewAcceptancePollVoteTd")]
+    public NewAcceptancePollVoteTd Vote { get; init; }
     [Parameter("string", "voterId", 2)]
     public string VoterId { get; init; }
     [Parameter("string", "voterSignature", 3)]

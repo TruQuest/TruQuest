@@ -65,7 +65,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
             command.ThingId, command.SettlementProposalId
         );
 
-        var orchestratorSig = _signer.SignVoteAgg(offChainVotes, castedVoteEvents);
+        var orchestratorSig = _signer.SignAssessmentPollVoteAgg(offChainVotes, castedVoteEvents);
 
         var result = await _fileStorage.UploadJson(new
         {

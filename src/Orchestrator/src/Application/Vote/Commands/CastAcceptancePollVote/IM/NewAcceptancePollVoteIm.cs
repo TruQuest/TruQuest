@@ -1,6 +1,6 @@
 namespace Application.Vote.Commands.CastAcceptancePollVote;
 
-public class NewVoteIm
+public class NewAcceptancePollVoteIm
 {
     public Guid ThingId { get; set; }
     public string CastedAt { get; set; }

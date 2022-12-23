@@ -259,7 +259,7 @@ public class E2ETests : IAsyncLifetime
 
             _sut.RunAs(userId: verifier.Value.ToLower(), username: verifier.Value.ToLower().Substring(0, 20));
 
-            var voteInput = new NewVoteIm
+            var voteInput = new NewAcceptancePollVoteIm
             {
                 ThingId = new Guid(thingId),
                 CastedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
@@ -270,7 +270,7 @@ public class E2ETests : IAsyncLifetime
             await _sut.SendRequest(new CastAcceptancePollVoteCommand
             {
                 Input = voteInput,
-                Signature = _sut.Signer.SignNewVoteMessage(voteInput)
+                Signature = _sut.Signer.SignNewAcceptancePollVoteMessage(voteInput)
             });
         }
 

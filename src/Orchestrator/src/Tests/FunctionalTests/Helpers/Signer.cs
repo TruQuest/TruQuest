@@ -85,9 +85,9 @@ public class Signer
         return _eip712Signer.SignTypedDataV4(tdDefinition, _submitterPrivateKey);
     }
 
-    public string SignNewVoteMessage(NewVoteIm input)
+    public string SignNewAcceptancePollVoteMessage(NewAcceptancePollVoteIm input)
     {
-        var td = new NewVoteTd
+        var td = new NewAcceptancePollVoteTd
         {
             ThingId = input.ThingId.ToString(),
             PollType = "Acceptance",
@@ -95,7 +95,7 @@ public class Signer
             Decision = input.Decision.GetString(),
             Reason = input.Reason
         };
-        var tdDefinition = _getTypedDataDefinition(typeof(NewVoteTd));
+        var tdDefinition = _getTypedDataDefinition(typeof(NewAcceptancePollVoteTd));
         tdDefinition.SetMessage(td);
 
         return _eip712Signer.SignTypedDataV4(tdDefinition, _submitterPrivateKey);

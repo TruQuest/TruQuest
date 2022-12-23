@@ -2,8 +2,8 @@ using Nethereum.ABI.FunctionEncoding.Attributes;
 
 namespace Infrastructure.Ethereum.TypedData;
 
-[Struct("OffChainVoteTd")]
-public class OffChainVoteTd
+[Struct("OffChainAcceptancePollVoteTd")]
+public class OffChainAcceptancePollVoteTd
 {
     [Parameter("string", "thingId", 1)]
     public string ThingId { get; init; }

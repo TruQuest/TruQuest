@@ -2,8 +2,8 @@ using Nethereum.ABI.FunctionEncoding.Attributes;
 
 namespace Infrastructure.Ethereum.TypedData;
 
-[Struct("OnChainVoteTd")]
-public class OnChainVoteTd
+[Struct("OnChainAcceptancePollVoteTd")]
+public class OnChainAcceptancePollVoteTd
 {
     [Parameter("int64", "blockNumber", 1)]
     public long BlockNumber { get; init; }

@@ -102,9 +102,9 @@ internal class Signer : ISigner
         return address.Substring(2);
     }
 
-    public Either<VoteError, string> RecoverFromNewVoteMessage(NewVoteIm input, string signature)
+    public Either<VoteError, string> RecoverFromNewAcceptancePollVoteMessage(NewAcceptancePollVoteIm input, string signature)
     {
-        var td = new NewVoteTd
+        var td = new NewAcceptancePollVoteTd
         {
             ThingId = input.ThingId.ToString(),
             PollType = "Acceptance",
@@ -112,7 +112,7 @@ internal class Signer : ISigner
             Decision = input.Decision.GetString(),
             Reason = input.Reason
         };
-        var tdDefinition = _getTypedDataDefinition(typeof(NewVoteTd));
+        var tdDefinition = _getTypedDataDefinition(typeof(NewAcceptancePollVoteTd));
         var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
 
         return address.Substring(2);
@@ -148,11 +148,11 @@ internal class Signer : ISigner
         return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);
     }
 
-    public string SignNewVote(NewVoteIm input, string voterId, string voterSignature)
+    public string SignNewAcceptancePollVote(NewAcceptancePollVoteIm input, string voterId, string voterSignature)
     {
-        var td = new SignedNewVoteTd
+        var td = new SignedNewAcceptancePollVoteTd
         {
-            Vote = new NewVoteTd
+            Vote = new NewAcceptancePollVoteTd
             {
                 ThingId = input.ThingId.ToString(),
                 PollType = "Acceptance",
@@ -163,20 +163,20 @@ internal class Signer : ISigner
             VoterId = voterId,
             VoterSignature = voterSignature
         };
-        var tdDefinition = _getTypedDataDefinition(typeof(SignedNewVoteTd), typeof(NewVoteTd));
+        var tdDefinition = _getTypedDataDefinition(typeof(SignedNewAcceptancePollVoteTd), typeof(NewAcceptancePollVoteTd));
         tdDefinition.SetMessage(td);
 
         return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);
     }
 
-    public string SignVoteAgg(
+    public string SignAcceptancePollVoteAgg(
         IEnumerable<AcceptancePollVote> offChainVotes, IEnumerable<CastedAcceptancePollVoteEvent> onChainVotes
     )
     {
-        var td = new SignedVoteAggTd
+        var td = new SignedAcceptancePollVoteAggTd
         {
             OffChainVotes = offChainVotes
-                .Select(v => new OffChainVoteTd
+                .Select(v => new OffChainAcceptancePollVoteTd
                 {
                     ThingId = v.ThingId.ToString(),
                     VoterId = "0x" + v.VoterId,
@@ -189,7 +189,7 @@ internal class Signer : ISigner
                 })
                 .ToList(),
             OnChainVotes = onChainVotes
-                .Select(v => new OnChainVoteTd
+                .Select(v => new OnChainAcceptancePollVoteTd
                 {
                     BlockNumber = v.BlockNumber,
                     TxnIndex = v.TxnIndex,
@@ -201,7 +201,9 @@ internal class Signer : ISigner
                 .ToList()
         };
         var tdDefinition = _getTypedDataDefinition(
-            typeof(SignedVoteAggTd), typeof(OffChainVoteTd), typeof(OnChainVoteTd)
+            typeof(SignedAcceptancePollVoteAggTd),
+            typeof(OffChainAcceptancePollVoteTd),
+            typeof(OnChainAcceptancePollVoteTd)
         );
         tdDefinition.SetMessage(td);
 
@@ -221,7 +223,7 @@ internal class Signer : ISigner
         return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);
     }
 
-    public string SignVoteAgg(
+    public string SignAssessmentPollVoteAgg(
         IEnumerable<AssessmentPollVote> offChainVotes, IEnumerable<CastedAssessmentPollVoteEvent> onChainVotes
     )
     {

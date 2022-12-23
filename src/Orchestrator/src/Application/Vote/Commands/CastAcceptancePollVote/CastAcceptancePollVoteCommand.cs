@@ -12,7 +12,7 @@ namespace Application.Vote.Commands.CastAcceptancePollVote;
 [RequireAuthorization]
 public class CastAcceptancePollVoteCommand : IRequest<HandleResult<string>>
 {
-    public NewVoteIm Input { get; set; }
+    public NewAcceptancePollVoteIm Input { get; set; }
     public string Signature { get; set; }
 }
 
@@ -55,7 +55,7 @@ internal class CastAcceptancePollVoteCommandHandler : IRequestHandler<CastAccept
             };
         }
 
-        var result = _signer.RecoverFromNewVoteMessage(command.Input, command.Signature);
+        var result = _signer.RecoverFromNewAcceptancePollVoteMessage(command.Input, command.Signature);
         if (result.IsError)
         {
             return new()
@@ -68,7 +68,7 @@ internal class CastAcceptancePollVoteCommandHandler : IRequestHandler<CastAccept
         // @@??: Check current block ?
 
         var castedAtUtc = DateTime.Parse(command.Input.CastedAt).ToUniversalTime();
-        if ((DateTime.UtcNow - castedAtUtc).Duration() > TimeSpan.FromMinutes(5))
+        if ((DateTime.UtcNow - castedAtUtc).Duration() > TimeSpan.FromMinutes(5)) // @@TODO: Config.
         {
             return new()
             {
@@ -76,7 +76,7 @@ internal class CastAcceptancePollVoteCommandHandler : IRequestHandler<CastAccept
             };
         }
 
-        var orchestratorSig = _signer.SignNewVote(command.Input, _currentPrincipal.Id, command.Signature);
+        var orchestratorSig = _signer.SignNewAcceptancePollVote(command.Input, _currentPrincipal.Id, command.Signature);
 
         var uploadResult = await _fileStorage.UploadJson(new
         {

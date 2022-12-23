@@ -60,7 +60,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
 
         var castedVoteEvents = await _castedAcceptancePollVoteEventRepository.GetAllFor(command.ThingId);
 
-        var orchestratorSig = _signer.SignVoteAgg(offChainVotes, castedVoteEvents);
+        var orchestratorSig = _signer.SignAcceptancePollVoteAgg(offChainVotes, castedVoteEvents);
 
         var result = await _fileStorage.UploadJson(new
         {

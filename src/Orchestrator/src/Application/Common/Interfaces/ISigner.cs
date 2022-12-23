@@ -16,16 +16,16 @@ public interface ISigner
     Either<UserError, string> RecoverFromSignUpMessage(SignUpIm input, string signature);
     Either<SubjectError, string> RecoverFromNewSubjectMessage(NewSubjectIm input, string signature);
     Either<ThingError, string> RecoverFromNewThingMessage(NewThingIm input, string signature);
-    Either<VoteError, string> RecoverFromNewVoteMessage(NewVoteIm input, string signature);
+    Either<VoteError, string> RecoverFromNewAcceptancePollVoteMessage(NewAcceptancePollVoteIm input, string signature);
     Either<SettlementError, string> RecoverFromNewSettlementProposalMessage(
         NewSettlementProposalIm input, string signature
     );
 
     string SignThing(ThingVm thing);
-    string SignNewVote(NewVoteIm input, string voterId, string voterSignature);
-    string SignVoteAgg(IEnumerable<AcceptancePollVote> offChainVotes, IEnumerable<CastedAcceptancePollVoteEvent> onChainVotes);
+    string SignNewAcceptancePollVote(NewAcceptancePollVoteIm input, string voterId, string voterSignature);
+    string SignAcceptancePollVoteAgg(IEnumerable<AcceptancePollVote> offChainVotes, IEnumerable<CastedAcceptancePollVoteEvent> onChainVotes);
     string SignSettlementProposal(SettlementProposalVm proposal);
-    string SignVoteAgg(
+    string SignAssessmentPollVoteAgg(
         IEnumerable<AssessmentPollVote> offChainVotes, IEnumerable<CastedAssessmentPollVoteEvent> onChainVotes
     );
 }
