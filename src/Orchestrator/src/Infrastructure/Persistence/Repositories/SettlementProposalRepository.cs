@@ -26,4 +26,14 @@ internal class SettlementProposalRepository : Repository<SettlementProposal>, IS
     }
 
     public Task<SettlementProposal> FindById(Guid id) => _dbContext.SettlementProposals.SingleAsync(p => p.Id == id);
+
+    public async Task<IReadOnlyList<SettlementProposalVerifier>> GetAllVerifiersFor(Guid settlementProposalId)
+    {
+        var settlementProposal = await _dbContext.SettlementProposals
+            .AsNoTracking()
+            .Include(p => p.Verifiers)
+            .SingleAsync(p => p.Id == settlementProposalId);
+
+        return settlementProposal.Verifiers;
+    }
 }

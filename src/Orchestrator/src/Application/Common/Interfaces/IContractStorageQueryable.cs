@@ -10,4 +10,5 @@ public interface IContractStorageQueryable
     Task<int> GetThingAssessmentNumVerifiers();
     Task<string> GetThingAssessmentVerifierLotterySpotClaimantAt(byte[] thingId, int index);
     Task<string> GetThingAssessmentVerifierLotteryParticipantAt(byte[] thingId, int index);
+    Task<int> GetAssessmentPollDurationBlocks();
 }

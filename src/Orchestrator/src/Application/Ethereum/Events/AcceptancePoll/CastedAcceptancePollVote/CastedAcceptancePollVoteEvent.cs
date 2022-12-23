@@ -34,7 +34,7 @@ internal class CastedAcceptancePollVoteEventHandler : INotificationHandler<Caste
             txnIndex: @event.TxnIndex,
             thingId: new Guid(@event.ThingId),
             userId: @event.UserId,
-            decision: (Decision)@event.Vote,
+            decision: (AcceptancePollVote.VoteDecision)@event.Vote,
             reason: @event.Reason
         );
         _castedAcceptancePollVoteEventRepository.Create(castedVoteEvent);

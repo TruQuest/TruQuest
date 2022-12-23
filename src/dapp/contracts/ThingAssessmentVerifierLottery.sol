@@ -2,10 +2,11 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import "./TruQuest.sol";
+import "./AssessmentPoll.sol";
 
 error ThingAssessmentVerifierLottery__NotOrchestrator();
 error ThingAssessmentVerifierLottery__NotTruQuest();
-// error ThingAssessmentVerifierLottery__NotAcceptancePoll();
+error ThingAssessmentVerifierLottery__NotAssessmentPoll();
 error ThingAssessmentVerifierLottery__AlreadyCommittedToLottery(
     bytes16 thingId
 );
@@ -48,7 +49,7 @@ contract ThingAssessmentVerifierLottery {
     uint256 public constant MAX_NONCE = 1000000;
 
     TruQuest private immutable i_truQuest;
-    // AcceptancePoll private s_assessmentPoll;
+    AssessmentPoll private s_assessmentPoll;
     address private s_orchestrator;
 
     uint8 private s_numVerifiers;
@@ -65,7 +66,6 @@ contract ThingAssessmentVerifierLottery {
     event LotteryInitiated(
         bytes16 indexed thingId,
         bytes16 indexed settlementProposalId,
-        address orchestrator,
         bytes32 dataHash
     );
 
@@ -92,7 +92,6 @@ contract ThingAssessmentVerifierLottery {
     event LotteryClosedWithSuccess(
         bytes16 indexed thingId,
         bytes16 indexed settlementProposalId,
-        address orchestrator,
         uint256 nonce,
         address[] claimants,
         address[] winners
@@ -100,13 +99,11 @@ contract ThingAssessmentVerifierLottery {
 
     event LotteryClosedInFailure(
         bytes16 indexed thingId,
-        bytes16 indexed settlementProposalId,
-        address orchestrator
+        bytes16 indexed settlementProposalId
     );
 
     // event SubLotteryInitiated(
     //     bytes16 indexed thingId,
-    //     address orchestrator,
     //     bytes32 dataHash
     // );
 
@@ -124,7 +121,6 @@ contract ThingAssessmentVerifierLottery {
 
     // event SubLotteryClosedWithSuccess(
     //     bytes16 indexed thingId,
-    //     address orchestrator,
     //     uint256 nonce,
     //     address[] winners
     // );
@@ -143,12 +139,12 @@ contract ThingAssessmentVerifierLottery {
         _;
     }
 
-    // modifier onlyAcceptancePoll() {
-    //     if (msg.sender != address(s_assessmentPoll)) {
-    //         revert ThingAssessmentVerifierLottery__NotAcceptancePoll();
-    //     }
-    //     _;
-    // }
+    modifier onlyAssessmentPoll() {
+        if (msg.sender != address(s_assessmentPoll)) {
+            revert ThingAssessmentVerifierLottery__NotAssessmentPoll();
+        }
+        _;
+    }
 
     modifier whenHasAtLeast(uint256 _requiredFunds) {
         if (!i_truQuest.checkHasAtLeast(msg.sender, _requiredFunds)) {
@@ -249,16 +245,17 @@ contract ThingAssessmentVerifierLottery {
         s_durationBlocks = _durationBlocks;
     }
 
-    // function connectToAcceptancePoll(
-    //     address _acceptancePollAddress
-    // ) external onlyTruQuest {
-    //     s_assessmentPoll = AcceptancePoll(_acceptancePollAddress);
-    // }
+    function connectToAssessmentPoll(
+        address _assessmentPollAddress
+    ) external onlyTruQuest {
+        s_assessmentPoll = AssessmentPoll(_assessmentPollAddress);
+    }
 
     function computeHash(bytes32 _data) public view returns (bytes32) {
         return keccak256(abi.encodePacked(address(this), _data));
     }
 
+    // settlementProposalId param: compare with the funded one?
     function initLottery(
         bytes16 _thingId,
         bytes32 _dataHash
@@ -278,12 +275,7 @@ contract ThingAssessmentVerifierLottery {
         //     // ... not funded
         // }
 
-        emit LotteryInitiated(
-            _thingId,
-            settlementProposalId,
-            s_orchestrator,
-            _dataHash
-        );
+        emit LotteryInitiated(_thingId, settlementProposalId, _dataHash);
     }
 
     function claimLotterySpot(
@@ -480,7 +472,21 @@ contract ThingAssessmentVerifierLottery {
 
         address[] memory winners = _getLotteryWinners(_thingId, _winnerIndices);
 
-        // s_assessmentPoll.initPoll(_thingId, winners);
+        bytes16 settlementProposalId = i_truQuest.getSettlementProposalId(
+            _thingId
+        );
+
+        address[] memory verifiers = new address[](
+            claimants.length + winners.length
+        );
+        uint j = 0;
+        for (uint i = 0; i < claimants.length; ) {
+            verifiers[j++] = claimants[i++];
+        }
+        for (uint i = 0; i < winners.length; ) {
+            verifiers[j++] = winners[i++];
+        }
+        s_assessmentPoll.initPoll(_thingId, settlementProposalId, verifiers);
 
         uint256 nonce = uint256(
             keccak256(abi.encodePacked(blockhash(commitmentBlock), _data))
@@ -488,8 +494,7 @@ contract ThingAssessmentVerifierLottery {
 
         emit LotteryClosedWithSuccess(
             _thingId,
-            i_truQuest.getSettlementProposalId(_thingId),
-            s_orchestrator,
+            settlementProposalId,
             nonce,
             claimants,
             winners
@@ -516,11 +521,7 @@ contract ThingAssessmentVerifierLottery {
             _thingId
         );
 
-        emit LotteryClosedInFailure(
-            _thingId,
-            settlementProposalId,
-            s_orchestrator
-        );
+        emit LotteryClosedInFailure(_thingId, settlementProposalId);
     }
 
     // function initSubLottery(
@@ -533,7 +534,7 @@ contract ThingAssessmentVerifierLottery {
     //         false
     //     );
 
-    //     emit SubLotteryInitiated(_thingId, s_orchestrator, _dataHash);
+    //     emit SubLotteryInitiated(_thingId, _dataHash);
     // }
 
     // function preJoinSubLottery(
@@ -653,7 +654,6 @@ contract ThingAssessmentVerifierLottery {
 
     //     emit SubLotteryClosedWithSuccess(
     //         _thingId,
-    //         s_orchestrator,
     //         nonce,
     //         winners
     //     );

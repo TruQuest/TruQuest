@@ -6,11 +6,11 @@ using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories;
 
-internal class VoteRepository : Repository<Vote>, IVoteRepository
+internal class AcceptancePollVoteRepository : Repository<AcceptancePollVote>, IAcceptancePollVoteRepository
 {
     private readonly AppDbContext _dbContext;
 
-    public VoteRepository(
+    public AcceptancePollVoteRepository(
         IConfiguration configuration,
         AppDbContext dbContext,
         ISharedTxnScope sharedTxnScope
@@ -19,14 +19,14 @@ internal class VoteRepository : Repository<Vote>, IVoteRepository
         _dbContext = dbContext;
     }
 
-    public void Create(Vote vote)
+    public void Create(AcceptancePollVote vote)
     {
-        _dbContext.Votes.Add(vote);
+        _dbContext.AcceptancePollVotes.Add(vote);
     }
 
-    public Task<List<Vote>> GetForThingCastedAt(Guid thingId, long noLaterThanTs, PollType pollType) =>
-        _dbContext.Votes
+    public Task<List<AcceptancePollVote>> GetForThingCastedAt(Guid thingId, long noLaterThanTs) =>
+        _dbContext.AcceptancePollVotes
             .AsNoTracking()
-            .Where(v => v.ThingId == thingId && v.PollType == pollType && v.CastedAtMs <= noLaterThanTs)
+            .Where(v => v.ThingId == thingId && v.CastedAtMs <= noLaterThanTs)
             .ToListAsync();
 }

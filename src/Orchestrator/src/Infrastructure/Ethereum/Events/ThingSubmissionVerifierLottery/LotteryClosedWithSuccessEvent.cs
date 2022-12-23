@@ -9,10 +9,8 @@ public class LotteryClosedWithSuccessEvent : IEventDTO
 {
     [Parameter("bytes16", "thingId", 1, true)]
     public byte[] ThingId { get; set; }
-    [Parameter("address", "orchestrator", 2, false)]
-    public string Orchestrator { get; set; }
-    [Parameter("uint256", "nonce", 3, false)]
+    [Parameter("uint256", "nonce", 2, false)]
     public BigInteger Nonce { get; set; }
-    [Parameter("address[]", "winners", 4, false)]
+    [Parameter("address[]", "winners", 3, false)]
     public List<string> WinnerIds { get; set; }
 }

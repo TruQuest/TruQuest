@@ -8,12 +8,13 @@ import "./Truthserum.sol";
 import "./ThingSubmissionVerifierLottery.sol";
 import "./AcceptancePoll.sol";
 import "./ThingAssessmentVerifierLottery.sol";
+import "./AssessmentPoll.sol";
 
 error TruQuest__ThingAlreadyFunded(bytes16 thingId);
 error TruQuest__NotEnoughFunds(uint256 requiredAmount, uint256 availableAmount);
 error TruQuest__NotOrchestrator();
 error TruQuest__NotVerifierLottery();
-error TruQuest__NotAcceptancePoll();
+error TruQuest__NotPoll();
 error TruQuest__InvalidSignature();
 error TruQuest__ThingAlreadyHasSettlementProposalUnderAssessment(
     bytes16 thingId
@@ -49,6 +50,7 @@ contract TruQuest {
     ThingSubmissionVerifierLottery public s_thingSubmissionVerifierLottery;
     AcceptancePoll public s_acceptancePoll;
     ThingAssessmentVerifierLottery public s_thingAssessmentVerifierLottery;
+    AssessmentPoll public s_assessmentPoll;
     address private s_orchestrator;
 
     uint256 private s_thingSubmissionStake;
@@ -101,9 +103,12 @@ contract TruQuest {
         _;
     }
 
-    modifier onlyAcceptancePoll() {
-        if (msg.sender != address(s_acceptancePoll)) {
-            revert TruQuest__NotAcceptancePoll();
+    modifier onlyPoll() {
+        if (
+            msg.sender != address(s_acceptancePoll) &&
+            msg.sender != address(s_assessmentPoll)
+        ) {
+            revert TruQuest__NotPoll();
         }
         _;
     }
@@ -132,8 +137,9 @@ contract TruQuest {
         uint256 _thingSubmissionAcceptedReward,
         uint256 _verifierReward,
         uint16 _verifierLotteryDurationBlocks,
-        uint16 _acceptancePollDurationBlocks,
-        uint256 _thingSettlementProposalStake
+        uint16 _pollDurationBlocks,
+        uint256 _thingSettlementProposalStake,
+        uint256 _proposalAcceptedReward
     ) {
         i_truthserum = Truthserum(_truthserumAddress);
         s_thingSubmissionVerifierLottery = new ThingSubmissionVerifierLottery(
@@ -146,7 +152,7 @@ contract TruQuest {
             address(this),
             _thingSubmissionAcceptedReward,
             _verifierReward,
-            _acceptancePollDurationBlocks
+            _pollDurationBlocks
         );
         s_thingAssessmentVerifierLottery = new ThingAssessmentVerifierLottery(
             address(this),
@@ -154,11 +160,23 @@ contract TruQuest {
             _verifierStake,
             _verifierLotteryDurationBlocks
         );
+        s_assessmentPoll = new AssessmentPoll(
+            address(this),
+            _proposalAcceptedReward,
+            _verifierReward,
+            _pollDurationBlocks
+        );
         s_thingSubmissionVerifierLottery.connectToAcceptancePoll(
             address(s_acceptancePoll)
         );
         s_acceptancePoll.connectToThingSubmissionVerifierLottery(
             address(s_thingSubmissionVerifierLottery)
+        );
+        s_thingAssessmentVerifierLottery.connectToAssessmentPoll(
+            address(s_assessmentPoll)
+        );
+        s_assessmentPoll.connectToThingAssessmentVerifierLottery(
+            address(s_thingAssessmentVerifierLottery)
         );
         s_orchestrator = msg.sender;
         s_thingSubmissionStake = _thingSubmissionStake;
@@ -206,7 +224,7 @@ contract TruQuest {
         s_stakedBalanceOf[_user] -= _amount;
     }
 
-    function slash(address _user, uint256 _amount) external onlyAcceptancePoll {
+    function slash(address _user, uint256 _amount) external onlyPoll {
         s_balanceOf[_user] -= _amount;
         s_stakedBalanceOf[_user] -= _amount;
     }
@@ -214,16 +232,13 @@ contract TruQuest {
     function unstakeAndReward(
         address _user,
         uint256 _amount
-    ) external onlyAcceptancePoll {
+    ) external onlyPoll {
         // ...
         _unstake(_user, s_thingSubmissionStake);
         s_balanceOf[_user] += _amount;
     }
 
-    function reward(
-        address _user,
-        uint256 _amount
-    ) external onlyAcceptancePoll {
+    function reward(address _user, uint256 _amount) external onlyPoll {
         // i_truthserum.transfer(_user, _amount);
         s_balanceOf[_user] += _amount;
     }
@@ -348,5 +363,11 @@ contract TruQuest {
         bytes16 _thingId
     ) public view returns (bytes16) {
         return s_thingIdToSettlementProposal[_thingId].id;
+    }
+
+    function getSettlementProposalSubmitter(
+        bytes16 _thingId
+    ) public view returns (address) {
+        return s_thingIdToSettlementProposal[_thingId].submitter;
     }
 }

@@ -96,6 +96,41 @@ namespace Infrastructure.Persistence.Migrations.Event
                     b.ToTable("CastedAcceptancePollVoteEvents", "truquest_events");
                 });
 
+            modelBuilder.Entity("Domain.Aggregates.Events.CastedAssessmentPollVoteEvent", b =>
+                {
+                    b.Property<long?>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long?>("Id"));
+
+                    b.Property<long>("BlockNumber")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Decision")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("SettlementProposalId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ThingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("TxnIndex")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CastedAssessmentPollVoteEvents", "truquest_events");
+                });
+
             modelBuilder.Entity("Domain.Aggregates.Events.JoinedThingAssessmentVerifierLotteryEvent", b =>
                 {
                     b.Property<long?>("Id")

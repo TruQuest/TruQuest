@@ -9,7 +9,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
   await deploy("TruQuest", {
     from: deployer,
-    args: [truthserum.address, 5, 5, 25, 3, 1, 100, 100, 25],
+    args: [truthserum.address, 5, 5, 25, 3, 1, 100, 100, 25, 3],
     log: true,
     waitConfirmations: 1,
   });
@@ -22,6 +22,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   log(
     `ThingAssessmentVerifierLottery deployed at ${await truQuest.s_thingAssessmentVerifierLottery()}`
   );
+  log(`AssessmentPoll deployed at ${await truQuest.s_assessmentPoll()}`);
 };
 
 module.exports.tags = ["TruQuest"];

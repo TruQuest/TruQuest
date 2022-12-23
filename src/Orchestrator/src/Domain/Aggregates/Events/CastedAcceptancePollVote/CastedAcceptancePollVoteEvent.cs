@@ -9,12 +9,12 @@ public class CastedAcceptancePollVoteEvent : Entity, IAggregateRoot
     public int TxnIndex { get; }
     public Guid ThingId { get; }
     public string UserId { get; }
-    public Decision Decision { get; }
+    public AcceptancePollVote.VoteDecision Decision { get; }
     public string? Reason { get; }
 
     public CastedAcceptancePollVoteEvent(
         long blockNumber, int txnIndex, Guid thingId,
-        string userId, Decision decision, string? reason
+        string userId, AcceptancePollVote.VoteDecision decision, string? reason
     )
     {
         BlockNumber = blockNumber;

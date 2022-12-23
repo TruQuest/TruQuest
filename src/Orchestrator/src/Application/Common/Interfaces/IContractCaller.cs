@@ -18,4 +18,8 @@ public interface IContractCaller
     Task CloseThingAssessmentVerifierLotteryWithSuccess(
         byte[] thingId, byte[] data, List<ulong> winnerClaimantIndices, List<ulong> winnerIndices
     );
+    Task FinalizeAssessmentPollForSettlementProposalAsAccepted(
+        byte[] thingId, byte[] settlementProposalId, string voteAggIpfsCid,
+        List<string> verifiersToReward, List<string> verifiersToSlash
+    );
 }

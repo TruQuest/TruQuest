@@ -65,11 +65,7 @@ contract ThingSubmissionVerifierLottery {
     mapping(bytes16 => mapping(address => Commitment))
         private s_thingIdToSubLotteryCommitments;
 
-    event LotteryInitiated(
-        bytes16 indexed thingId,
-        address orchestrator,
-        bytes32 dataHash
-    );
+    event LotteryInitiated(bytes16 indexed thingId, bytes32 dataHash);
 
     event PreJoinedLottery(
         bytes16 indexed thingId,
@@ -85,18 +81,13 @@ contract ThingSubmissionVerifierLottery {
 
     event LotteryClosedWithSuccess(
         bytes16 indexed thingId,
-        address orchestrator,
         uint256 nonce,
         address[] winners
     );
 
-    event LotteryClosedInFailure(bytes16 indexed thingId, address orchestrator);
+    event LotteryClosedInFailure(bytes16 indexed thingId);
 
-    event SubLotteryInitiated(
-        bytes16 indexed thingId,
-        address orchestrator,
-        bytes32 dataHash
-    );
+    event SubLotteryInitiated(bytes16 indexed thingId, bytes32 dataHash);
 
     event PreJoinedSubLottery(
         bytes16 indexed thingId,
@@ -112,7 +103,6 @@ contract ThingSubmissionVerifierLottery {
 
     event SubLotteryClosedWithSuccess(
         bytes16 indexed thingId,
-        address orchestrator,
         uint256 nonce,
         address[] winners
     );
@@ -258,7 +248,7 @@ contract ThingSubmissionVerifierLottery {
             false
         );
 
-        emit LotteryInitiated(_thingId, s_orchestrator, _dataHash);
+        emit LotteryInitiated(_thingId, _dataHash);
     }
 
     function preJoinLottery(
@@ -388,7 +378,7 @@ contract ThingSubmissionVerifierLottery {
         uint256 nonce = uint256(keccak256(abi.encodePacked(blockHash, _data))) %
             MAX_NONCE;
 
-        emit LotteryClosedWithSuccess(_thingId, s_orchestrator, nonce, winners);
+        emit LotteryClosedWithSuccess(_thingId, nonce, winners);
     }
 
     // when not enough participants
@@ -407,7 +397,7 @@ contract ThingSubmissionVerifierLottery {
         s_participants[_thingId] = new address[](0); // unnecessary?
         delete s_participants[_thingId];
 
-        emit LotteryClosedInFailure(_thingId, s_orchestrator);
+        emit LotteryClosedInFailure(_thingId);
     }
 
     function initSubLottery(
@@ -420,7 +410,7 @@ contract ThingSubmissionVerifierLottery {
             false
         );
 
-        emit SubLotteryInitiated(_thingId, s_orchestrator, _dataHash);
+        emit SubLotteryInitiated(_thingId, _dataHash);
     }
 
     function preJoinSubLottery(
@@ -538,11 +528,6 @@ contract ThingSubmissionVerifierLottery {
         uint256 nonce = uint256(keccak256(abi.encodePacked(blockHash, _data))) %
             MAX_NONCE;
 
-        emit SubLotteryClosedWithSuccess(
-            _thingId,
-            s_orchestrator,
-            nonce,
-            winners
-        );
+        emit SubLotteryClosedWithSuccess(_thingId, nonce, winners);
     }
 }

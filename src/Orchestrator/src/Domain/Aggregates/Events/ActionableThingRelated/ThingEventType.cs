@@ -5,4 +5,5 @@ public enum ThingEventType
     Funded,
     SubmissionVerifierLotteryClosedWithSuccess,
     SettlementProposalFunded,
+    SettlementProposalAssessmentVerifierLotteryClosedWithSuccess,
 }

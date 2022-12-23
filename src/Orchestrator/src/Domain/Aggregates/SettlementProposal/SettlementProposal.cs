@@ -15,6 +15,9 @@ public class SettlementProposal : Entity, IAggregateRoot
     private List<SupportingEvidence> _evidence = new();
     public IReadOnlyList<SupportingEvidence> Evidence => _evidence;
 
+    private List<SettlementProposalVerifier> _verifiers = new();
+    public IReadOnlyList<SettlementProposalVerifier> Verifiers => _verifiers;
+
     public SettlementProposal(Guid thingId, string title, Verdict verdict, string details, string submitterId)
     {
         ThingId = thingId;
@@ -33,5 +36,10 @@ public class SettlementProposal : Entity, IAggregateRoot
     public void SetState(SettlementProposalState state)
     {
         State = state;
+    }
+
+    public void AddVerifiers(IEnumerable<string> verifierIds)
+    {
+        _verifiers.AddRange(verifierIds.Select(id => new SettlementProposalVerifier(id)));
     }
 }

@@ -6,4 +6,5 @@ public interface ISettlementProposalRepository : IRepository<SettlementProposal>
 {
     void Create(SettlementProposal proposal);
     Task<SettlementProposal> FindById(Guid id);
+    Task<IReadOnlyList<SettlementProposalVerifier>> GetAllVerifiersFor(Guid settlementProposalId);
 }

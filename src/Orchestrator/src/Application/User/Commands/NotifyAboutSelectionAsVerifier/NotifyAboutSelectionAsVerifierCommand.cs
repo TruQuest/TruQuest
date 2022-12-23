@@ -25,7 +25,7 @@ internal class NotifyAboutSelectionAsVerifierCommandHandler : IRequestHandler<No
 
     public async Task<VoidResult> Handle(NotifyAboutSelectionAsVerifierCommand command, CancellationToken ct)
     {
-        _logger.LogInformation("User {UserId} selected as verifier for thing {ThingId}", command.UserId, command.ThingId);
+        _logger.LogInformation("User {UserId} selected as submission verifier for thing {ThingId}", command.UserId, command.ThingId);
         return VoidResult.Instance;
     }
 }

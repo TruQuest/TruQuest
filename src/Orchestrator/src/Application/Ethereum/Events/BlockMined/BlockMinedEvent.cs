@@ -5,6 +5,7 @@ using MediatR;
 using Domain.Aggregates;
 
 using Application.Thing.Commands.CloseAcceptancePoll;
+using Application.Settlement.Commands.CloseAssessmentPoll;
 
 namespace Application.Ethereum.Events.BlockMined;
 
@@ -53,6 +54,14 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),
                         SettlementProposalId = Guid.Parse(((JsonElement)task.Payload["settlementProposalId"]).GetString()!),
                         Data = Convert.FromBase64String(((JsonElement)task.Payload["data"]).GetString()!)
+                    });
+                    break;
+                case TaskType.CloseThingSettlementProposalAssessmentPoll:
+                    await _mediator.Send(new CloseAssessmentPollCommand
+                    {
+                        LatestIncludedBlockNumber = task.ScheduledBlockNumber,
+                        ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),
+                        SettlementProposalId = Guid.Parse(((JsonElement)task.Payload["settlementProposalId"]).GetString()!),
                     });
                     break;
             }

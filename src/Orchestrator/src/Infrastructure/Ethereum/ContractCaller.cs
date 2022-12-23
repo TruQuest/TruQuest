@@ -19,6 +19,7 @@ internal class ContractCaller : IContractCaller
     private readonly string _thingSubmissionVerifierLotteryAddress;
     private readonly string _acceptancePollAddress;
     private readonly string _thingAssessmentVerifierLotteryAddress;
+    private readonly string _assessmentPollAddress;
 
     public ContractCaller(
         ILogger<ContractCaller> logger,
@@ -35,6 +36,7 @@ internal class ContractCaller : IContractCaller
         _thingSubmissionVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingSubmissionVerifierLottery:Address"]!;
         _acceptancePollAddress = configuration[$"Ethereum:Contracts:{network}:AcceptancePoll:Address"]!;
         _thingAssessmentVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingAssessmentVerifierLottery:Address"]!;
+        _assessmentPollAddress = configuration[$"Ethereum:Contracts:{network}:AssessmentPoll:Address"]!;
     }
 
     public Task<byte[]> ComputeHashForThingSubmissionVerifierLottery(byte[] data)
@@ -163,5 +165,25 @@ internal class ContractCaller : IContractCaller
         );
 
         _logger.LogInformation("=============== CloseThingAssessmentVerifierLotteryWithSuccess: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+    }
+
+    public async Task FinalizeAssessmentPollForSettlementProposalAsAccepted(
+        byte[] thingId, byte[] settlementProposalId, string voteAggIpfsCid,
+        List<string> verifiersToReward, List<string> verifiersToSlash
+    )
+    {
+        var txnDispatcher = _web3.Eth.GetContractTransactionHandler<FinalizeAssessmentPollForSettlementProposalAsAcceptedMessage>();
+        var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
+            _assessmentPollAddress,
+            new()
+            {
+                CombinedId = thingId.Concat(settlementProposalId).ToArray(),
+                VoteAggIpfsCid = voteAggIpfsCid,
+                VerifiersToReward = verifiersToReward,
+                VerifiersToSlash = verifiersToSlash
+            }
+        );
+
+        _logger.LogInformation("=============== FinalizeAssessmentPollForSettlementProposalAsAccepted: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 }

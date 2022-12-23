@@ -65,7 +65,7 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
 
         _taskRepository.Create(task);
 
-        thing.SetState(ThingState.AssessmentInProgress);
+        thing.SetState(ThingState.SettlementProposalFundedAndAssessmentVerifierLotteryInitiated);
         proposal.SetState(SettlementProposalState.FundedAndAssessmentVerifierLotteryInitiated);
 
         await _taskRepository.SaveChanges();

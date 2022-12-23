@@ -32,6 +32,7 @@ public class ContractCaller
     private readonly string _thingSubmissionVerifierLotteryAddress;
     private readonly string _acceptancePollAddress;
     private readonly string _thingAssessmentVerifierLotteryAddress;
+    private readonly string _assessmentPollAddress;
 
     private readonly Account _orchestrator;
 
@@ -56,6 +57,7 @@ public class ContractCaller
         _thingSubmissionVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingSubmissionVerifierLottery:Address"]!;
         _acceptancePollAddress = configuration[$"Ethereum:Contracts:{network}:AcceptancePoll:Address"]!;
         _thingAssessmentVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingAssessmentVerifierLottery:Address"]!;
+        _assessmentPollAddress = configuration[$"Ethereum:Contracts:{network}:AssessmentPoll:Address"]!;
 
         _orchestrator = accountProvider.GetAccount("Orchestrator");
     }
@@ -277,6 +279,24 @@ public class ContractCaller
             {
                 ThingId = thingId,
                 Data = data
+            }
+        );
+
+        await _blockchainManipulator.Mine(1);
+    }
+
+    public async Task CastAssessmentPollVoteAs(string accountName, byte[] combinedId, Vote vote)
+    {
+        var account = _accountProvider.GetAccount(accountName);
+        var web3 = new Web3(account, _rpcUrl);
+
+        var txnDispatcher = web3.Eth.GetContractTransactionHandler<CastVoteMessage>();
+        var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
+            _assessmentPollAddress,
+            new()
+            {
+                CombinedId = combinedId,
+                Vote = vote
             }
         );
 

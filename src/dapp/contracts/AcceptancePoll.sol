@@ -44,7 +44,7 @@ contract AcceptancePoll {
     uint256 private s_verifierReward;
     uint16 private s_durationBlocks;
 
-    mapping(bytes16 => uint64) private s_thingIdToPollStartedBlock;
+    mapping(bytes16 => uint64) private s_thingIdToPollInitBlock;
     mapping(bytes16 => address[]) private s_thingVerifiers;
     mapping(bytes16 => Stage) private s_thingPollStage;
 
@@ -59,7 +59,6 @@ contract AcceptancePoll {
 
     event PollFrozen(
         bytes16 indexed thingId,
-        address orchestrator,
         Decision decision,
         string voteAggIpfsCid,
         address submitter,
@@ -81,7 +80,6 @@ contract AcceptancePoll {
 
     event PollFinalized(
         bytes16 indexed thingId,
-        address orchestrator,
         Decision decision,
         string voteAggIpfsCid,
         address submitter,
@@ -112,8 +110,7 @@ contract AcceptancePoll {
 
     modifier onlyWhileNotExpired(bytes16 _thingId) {
         if (
-            block.number >
-            s_thingIdToPollStartedBlock[_thingId] + s_durationBlocks
+            block.number > s_thingIdToPollInitBlock[_thingId] + s_durationBlocks
         ) {
             revert AcceptancePoll__Expired(_thingId);
         }
@@ -203,7 +200,7 @@ contract AcceptancePoll {
         bytes16 _thingId,
         address[] memory _verifiers
     ) external onlyThingSubmissionVerifierLottery {
-        s_thingIdToPollStartedBlock[_thingId] = uint64(block.number);
+        s_thingIdToPollInitBlock[_thingId] = uint64(block.number);
         s_thingVerifiers[_thingId] = _verifiers;
         s_thingPollStage[_thingId] = Stage.InProgress;
     }
@@ -241,7 +238,6 @@ contract AcceptancePoll {
     //     s_thingPollStage[_thingId] = Stage.Frozen;
     //     emit PollFrozen(
     //       _thingId,
-    //       s_orchestrator,
     //       Decision.Unsettled__MajorityThresholdNotReached,
     //       _voteAggIpfsCid,
     //       i_truQuest.s_thingSubmitter(_thingId),
@@ -270,7 +266,6 @@ contract AcceptancePoll {
 
         emit PollFrozen(
             _thingId,
-            s_orchestrator,
             Decision.Unsettled__InsufficientVotingVolume,
             _voteAggIpfsCid,
             submitter,
@@ -282,7 +277,7 @@ contract AcceptancePoll {
         bytes16 _thingId,
         address[] memory _substituteVerifiers
     ) external onlyThingSubmissionVerifierLottery {
-        s_thingIdToPollStartedBlock[_thingId] = uint64(block.number); // same as in initPoll
+        s_thingIdToPollInitBlock[_thingId] = uint64(block.number);
         for (uint8 i = 0; i < _substituteVerifiers.length; ++i) {
             s_thingVerifiers[_thingId].push(_substituteVerifiers[i]);
         }
@@ -339,7 +334,6 @@ contract AcceptancePoll {
 
         emit PollFinalized(
             _thingId,
-            s_orchestrator,
             Decision.Accepted,
             _voteAggIpfsCid,
             submitter,
@@ -368,7 +362,6 @@ contract AcceptancePoll {
 
         emit PollFinalized(
             _thingId,
-            s_orchestrator,
             Decision.Declined__Soft,
             _voteAggIpfsCid,
             submitter,
@@ -397,7 +390,6 @@ contract AcceptancePoll {
 
         emit PollFinalized(
             _thingId,
-            s_orchestrator,
             Decision.Declined__Hard,
             _voteAggIpfsCid,
             submitter,

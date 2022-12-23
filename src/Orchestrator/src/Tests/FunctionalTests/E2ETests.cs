@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Security.Cryptography;
 
 using Xunit.Abstractions;
@@ -9,9 +10,11 @@ using Application.Common.Interfaces;
 using Application.Common.Models.IM;
 using Application.Subject.Commands.AddNewSubject;
 using Application.Thing.Commands.SubmitNewThing;
-using Application.Vote.Commands.CastVote;
+using Application.Vote.Commands.CastAcceptancePollVote;
 using Application.Settlement.Commands.SubmitNewSettlementProposal;
 using API.BackgroundServices;
+
+using Tests.FunctionalTests.Helpers.Messages;
 
 namespace Tests.FunctionalTests;
 
@@ -25,6 +28,7 @@ public class E2ETests : IAsyncLifetime
     private Contract _thingSubmissionVerifierLotteryContract;
     private Contract _acceptancePollContract;
     private Contract _thingAssessmentVerifierLotteryContract;
+    private Contract _assessmentPollContract;
 
     public E2ETests(ITestOutputHelper output, Sut sut)
     {
@@ -88,6 +92,13 @@ public class E2ETests : IAsyncLifetime
             .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
             .WithName("ThingAssessmentVerifierLottery")
             .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:ThingAssessmentVerifierLottery:Address"))
+            .OnNetwork(_sut.GetConfigurationValue<string>($"Ethereum:Networks:{network}:URL"))
+            .Find();
+
+        _assessmentPollContract = ContractFinder.Create()
+            .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
+            .WithName("AssessmentPoll")
+            .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:AssessmentPoll:Address"))
             .OnNetwork(_sut.GetConfigurationValue<string>($"Ethereum:Networks:{network}:URL"))
             .Find();
     }
@@ -157,12 +168,13 @@ public class E2ETests : IAsyncLifetime
 
         submitter.Value.ToLower().Should().Be(submitterAddress);
 
-        await Task.Delay(TimeSpan.FromSeconds(15)); // @@TODO: Wait for LotteryInitiated event instead.
+        await Task.Delay(TimeSpan.FromSeconds(25)); // @@TODO: Wait for LotteryInitiated event instead.
 
         for (int i = 1; i <= 10; ++i)
         {
             var verifierAccountName = $"Verifier{i}";
             var verifier = _sut.AccountProvider.GetAccount(verifierAccountName);
+
             var data = RandomNumberGenerator.GetBytes(32);
             var dataHash = await _sut.ExecWithService<IContractCaller, byte[]>(async contractCaller =>
             {
@@ -250,13 +262,12 @@ public class E2ETests : IAsyncLifetime
             var voteInput = new NewVoteIm
             {
                 ThingId = new Guid(thingId),
-                PollType = PollTypeIm.Acceptance,
                 CastedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
                 Decision = DecisionIm.Accept,
                 Reason = "Some reason"
             };
 
-            await _sut.SendRequest(new CastVoteCommand
+            await _sut.SendRequest(new CastAcceptancePollVoteCommand
             {
                 Input = voteInput,
                 Signature = _sut.Signer.SignNewVoteMessage(voteInput)
@@ -303,8 +314,10 @@ public class E2ETests : IAsyncLifetime
             Signature = _sut.Signer.SignNewSettlementProposalMessage(proposalInput)
         });
 
+        byte[] proposalId = proposalResult.Data!.SettlementProposal.Id.ToByteArray();
+
         await _sut.ContractCaller.FundThingSettlementProposal(
-            proposalResult.Data!.SettlementProposal, proposalResult.Data.Signature
+            proposalResult.Data.SettlementProposal, proposalResult.Data.Signature
         );
 
         var proposer = await _truQuestContract
@@ -324,6 +337,7 @@ public class E2ETests : IAsyncLifetime
         {
             var verifierAccountName = $"Verifier{i}";
             var verifier = _sut.AccountProvider.GetAccount(verifierAccountName);
+
             if (thingSubmissionVerifierAccountNames.Contains(verifierAccountName))
             {
                 await _sut.ContractCaller.ClaimThingAssessmentVerifierLotterySpotAs(verifierAccountName, thingId);
@@ -402,7 +416,11 @@ public class E2ETests : IAsyncLifetime
 
         await _sut.BlockchainManipulator.Mine(lotteryDurationBlocks.Value);
 
-        await Task.Delay(TimeSpan.FromSeconds(20)); // giving time to close the lottery
+        await Task.Delay(TimeSpan.FromSeconds(15)); // giving time to close verifier lottery
+
+        await _sut.BlockchainManipulator.Mine(1);
+        // giving time to add verifiers, change the proposal's state, and create an assessment poll closing task
+        await Task.Delay(TimeSpan.FromSeconds(30));
 
         var orchestrator = _sut.AccountProvider.GetAccount("Orchestrator");
 
@@ -418,5 +436,63 @@ public class E2ETests : IAsyncLifetime
             .GetValue<SolInt64>();
 
         block.Value.Should().Be(-1);
+
+        // check that winners are who they should be
+
+        requiredVerifierCount = await _sut.ExecWithService<IContractStorageQueryable, int>(
+            contractStorageQueryable => contractStorageQueryable.GetThingAssessmentNumVerifiers()
+        );
+
+        byte[] combinedId = thingId.Concat(proposalId).ToArray();
+        Debug.Assert(combinedId.Length == 32);
+
+        verifierCount = await _assessmentPollContract
+            .WalkStorage()
+            .Field("s_proposalVerifiers")
+            .AsMapping()
+            .Key(new SolBytes32(combinedId))
+            .AsArrayOf<SolAddress>()
+            .Length();
+
+        verifierCount.Should().Be(requiredVerifierCount);
+
+        var settlementProposalAssessmentVerifierAccountNames = new List<string>();
+
+        for (int i = 0; i < verifierCount; ++i)
+        {
+            var verifier = await _assessmentPollContract
+                .WalkStorage()
+                .Field("s_proposalVerifiers")
+                .AsMapping()
+                .Key(new SolBytes32(combinedId))
+                .AsArrayOf<SolAddress>()
+                .Index(i)
+                .GetValue<SolAddress>();
+
+            var verifierAccountName = _sut.AccountProvider.LookupNameByAddress(verifier.Value);
+            settlementProposalAssessmentVerifierAccountNames.Add(verifierAccountName);
+
+            await _sut.ContractCaller.CastAssessmentPollVoteAs(verifierAccountName, combinedId, Vote.Accept);
+        }
+
+        await Task.Delay(TimeSpan.FromSeconds(15)); // giving time to handle CastedVote events
+
+        pollDurationBlocks = await _assessmentPollContract
+            .WalkStorage()
+            .Field("s_durationBlocks")
+            .GetValue<SolUint16>();
+
+        await _sut.BlockchainManipulator.Mine(pollDurationBlocks.Value);
+
+        await Task.Delay(TimeSpan.FromSeconds(20)); // giving time to finalize poll
+
+        pollStage = await _assessmentPollContract
+            .WalkStorage()
+            .Field("s_proposalPollStage")
+            .AsMapping()
+            .Key(new SolBytes32(combinedId))
+            .GetValue<SolUint8>();
+
+        pollStage.Value.Should().Be(4);
     }
 }

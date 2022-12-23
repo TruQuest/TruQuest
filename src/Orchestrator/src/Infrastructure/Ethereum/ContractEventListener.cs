@@ -18,6 +18,8 @@ using AppEvents = Application.Ethereum.Events;
 using Infrastructure.Ethereum.Events;
 using ThingSubmissionVerifierLottery = Infrastructure.Ethereum.Events.ThingSubmissionVerifierLottery;
 using ThingAssessmentVerifierLottery = Infrastructure.Ethereum.Events.ThingAssessmentVerifierLottery;
+using AcceptancePoll = Infrastructure.Ethereum.Events.AcceptancePoll;
+using AssessmentPoll = Infrastructure.Ethereum.Events.AssessmentPoll;
 
 namespace Infrastructure.Ethereum;
 
@@ -32,6 +34,7 @@ internal class ContractEventListener : IContractEventListener
     private readonly string _thingSubmissionVerifierLotteryAddress;
     private readonly string _acceptancePollAddress;
     private readonly string _thingAssessmentVerifierLotteryAddress;
+    private readonly string _assessmentPollAddress;
 
     private readonly ChannelReader<(IEventLog, TaskCompletionSource)> _stream;
     private readonly ChannelWriter<(IEventLog, TaskCompletionSource)> _sink;
@@ -52,6 +55,7 @@ internal class ContractEventListener : IContractEventListener
         _thingSubmissionVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingSubmissionVerifierLottery:Address"]!;
         _acceptancePollAddress = configuration[$"Ethereum:Contracts:{network}:AcceptancePoll:Address"]!;
         _thingAssessmentVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingAssessmentVerifierLottery:Address"]!;
+        _assessmentPollAddress = configuration[$"Ethereum:Contracts:{network}:AssessmentPoll:Address"]!;
 
         var channel = Channel.CreateUnbounded<(IEventLog, TaskCompletionSource)>(
             new UnboundedChannelOptions
@@ -82,12 +86,15 @@ internal class ContractEventListener : IContractEventListener
                 new EventLogProcessorHandler<ThingSubmissionVerifierLottery.PreJoinedLotteryEvent>(WriteToChannel),
                 new EventLogProcessorHandler<ThingSubmissionVerifierLottery.JoinedLotteryEvent>(WriteToChannel),
                 new EventLogProcessorHandler<ThingSubmissionVerifierLottery.LotteryClosedWithSuccessEvent>(WriteToChannel),
-                new EventLogProcessorHandler<CastedVoteEvent>(WriteToChannel),
-                new EventLogProcessorHandler<CastedVoteWithReasonEvent>(WriteToChannel),
+                new EventLogProcessorHandler<AcceptancePoll.CastedVoteEvent>(WriteToChannel),
+                new EventLogProcessorHandler<AcceptancePoll.CastedVoteWithReasonEvent>(WriteToChannel),
                 new EventLogProcessorHandler<ThingSettlementProposalFundedEvent>(WriteToChannel),
                 new EventLogProcessorHandler<ThingAssessmentVerifierLottery.LotterySpotClaimedEvent>(WriteToChannel),
                 new EventLogProcessorHandler<ThingAssessmentVerifierLottery.PreJoinedLotteryEvent>(WriteToChannel),
-                new EventLogProcessorHandler<ThingAssessmentVerifierLottery.JoinedLotteryEvent>(WriteToChannel)
+                new EventLogProcessorHandler<ThingAssessmentVerifierLottery.JoinedLotteryEvent>(WriteToChannel),
+                new EventLogProcessorHandler<ThingAssessmentVerifierLottery.LotteryClosedWithSuccessEvent>(WriteToChannel),
+                new EventLogProcessorHandler<AssessmentPoll.CastedVoteEvent>(WriteToChannel),
+                new EventLogProcessorHandler<AssessmentPoll.CastedVoteWithReasonEvent>(WriteToChannel),
             };
 
             var contractFilter = new NewFilterInput
@@ -97,7 +104,8 @@ internal class ContractEventListener : IContractEventListener
                     _truQuestAddress,
                     _thingSubmissionVerifierLotteryAddress,
                     _acceptancePollAddress,
-                    _thingAssessmentVerifierLotteryAddress
+                    _thingAssessmentVerifierLotteryAddress,
+                    _assessmentPollAddress
                 }
             };
 
@@ -167,7 +175,7 @@ internal class ContractEventListener : IContractEventListener
                         .ToList()
                 };
             }
-            else if (@event is EventLog<CastedVoteEvent> castedAcceptancePollVoteEvent)
+            else if (@event is EventLog<AcceptancePoll.CastedVoteEvent> castedAcceptancePollVoteEvent)
             {
                 yield return new AppEvents.AcceptancePoll.CastedAcceptancePollVote.CastedAcceptancePollVoteEvent
                 {
@@ -178,7 +186,7 @@ internal class ContractEventListener : IContractEventListener
                     Vote = castedAcceptancePollVoteEvent.Event.Vote
                 };
             }
-            else if (@event is EventLog<CastedVoteWithReasonEvent> castedAcceptancePollVoteWithReasonEvent)
+            else if (@event is EventLog<AcceptancePoll.CastedVoteWithReasonEvent> castedAcceptancePollVoteWithReasonEvent)
             {
                 yield return new AppEvents.AcceptancePoll.CastedAcceptancePollVote.CastedAcceptancePollVoteEvent
                 {
@@ -235,6 +243,48 @@ internal class ContractEventListener : IContractEventListener
                     ThingId = thingAssessmentVerifierLotterySpotClaimedEvent.Event.ThingId,
                     SettlementProposalId = thingAssessmentVerifierLotterySpotClaimedEvent.Event.SettlementProposalId,
                     UserId = thingAssessmentVerifierLotterySpotClaimedEvent.Event.UserId.Substring(2).ToLower(),
+                };
+            }
+            else if (@event is EventLog<ThingAssessmentVerifierLottery.LotteryClosedWithSuccessEvent> thingAssessmentVerifierLotteryClosedWithSuccessEvent)
+            {
+                yield return new AppEvents.ThingAssessmentVerifierLottery.LotteryClosedWithSuccess.LotteryClosedWithSuccessEvent
+                {
+                    BlockNumber = (long)thingAssessmentVerifierLotteryClosedWithSuccessEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)thingAssessmentVerifierLotteryClosedWithSuccessEvent.Log.TransactionIndex.Value,
+                    ThingId = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.ThingId,
+                    SettlementProposalId = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.SettlementProposalId,
+                    Nonce = (decimal)thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.Nonce,
+                    ClaimantIds = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.ClaimantIds
+                        .Select(id => id.Substring(2).ToLower())
+                        .ToList(),
+                    WinnerIds = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.WinnerIds
+                        .Select(id => id.Substring(2).ToLower())
+                        .ToList()
+                };
+            }
+            else if (@event is EventLog<AssessmentPoll.CastedVoteEvent> castedAssessmentPollVoteEvent)
+            {
+                yield return new AppEvents.AssessmentPoll.CastedAssessmentPollVote.CastedAssessmentPollVoteEvent
+                {
+                    BlockNumber = (long)castedAssessmentPollVoteEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)castedAssessmentPollVoteEvent.Log.TransactionIndex.Value,
+                    ThingId = castedAssessmentPollVoteEvent.Event.ThingId,
+                    SettlementProposalId = castedAssessmentPollVoteEvent.Event.SettlementProposalId,
+                    UserId = castedAssessmentPollVoteEvent.Event.UserId.Substring(2).ToLower(),
+                    Vote = castedAssessmentPollVoteEvent.Event.Vote
+                };
+            }
+            else if (@event is EventLog<AssessmentPoll.CastedVoteWithReasonEvent> castedAssessmentPollVoteWithReasonEvent)
+            {
+                yield return new AppEvents.AssessmentPoll.CastedAssessmentPollVote.CastedAssessmentPollVoteEvent
+                {
+                    BlockNumber = (long)castedAssessmentPollVoteWithReasonEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)castedAssessmentPollVoteWithReasonEvent.Log.TransactionIndex.Value,
+                    ThingId = castedAssessmentPollVoteWithReasonEvent.Event.ThingId,
+                    SettlementProposalId = castedAssessmentPollVoteWithReasonEvent.Event.SettlementProposalId,
+                    UserId = castedAssessmentPollVoteWithReasonEvent.Event.UserId.Substring(2).ToLower(),
+                    Vote = castedAssessmentPollVoteWithReasonEvent.Event.Vote,
+                    Reason = castedAssessmentPollVoteWithReasonEvent.Event.Reason
                 };
             }
 

@@ -16,6 +16,7 @@ public class EventDbContext : DbContext
     public DbSet<PreJoinedThingAssessmentVerifierLotteryEvent> PreJoinedThingAssessmentVerifierLotteryEvents { get; set; }
     public DbSet<JoinedThingAssessmentVerifierLotteryEvent> JoinedThingAssessmentVerifierLotteryEvents { get; set; }
     public DbSet<ThingAssessmentVerifierLotterySpotClaimedEvent> ThingAssessmentVerifierLotterySpotClaimedEvents { get; set; }
+    public DbSet<CastedAssessmentPollVoteEvent> CastedAssessmentPollVoteEvents { get; set; }
 
     public DbSet<BlockProcessedEvent> BlockProcessedEvent { get; set; }
 
@@ -115,6 +116,19 @@ public class EventDbContext : DbContext
             builder.Property(e => e.ThingId).IsRequired();
             builder.Property(e => e.SettlementProposalId).IsRequired();
             builder.Property(e => e.UserId).IsRequired();
+        });
+
+        modelBuilder.Entity<CastedAssessmentPollVoteEvent>(builder =>
+        {
+            builder.HasKey(e => e.Id);
+            builder.Property(e => e.Id).UseIdentityAlwaysColumn();
+            builder.Property(e => e.BlockNumber).IsRequired();
+            builder.Property(e => e.TxnIndex).IsRequired();
+            builder.Property(e => e.ThingId).IsRequired();
+            builder.Property(e => e.SettlementProposalId).IsRequired();
+            builder.Property(e => e.UserId).IsRequired();
+            builder.Property(e => e.Decision).HasConversion<int>().IsRequired();
+            builder.Property(e => e.Reason).IsRequired(false);
         });
 
         modelBuilder.Entity<BlockProcessedEvent>(builder =>

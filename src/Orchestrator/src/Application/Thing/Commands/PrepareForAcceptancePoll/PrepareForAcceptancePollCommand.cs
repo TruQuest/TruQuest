@@ -36,7 +36,7 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
         var thing = await _thingRepository.FindById(command.ThingId);
         if (thing.State == ThingState.FundedAndSubmissionVerifierLotteryInitiated)
         {
-            thing.SetState(ThingState.SubmissionVerifiersSelectedAndAcceptancePollInitiated);
+            thing.SetState(ThingState.SubmissionVerifiersSelectedAndPollInitiated);
             thing.AddVerifiers(command.WinnerIds);
 
             int pollDurationBlocks = await _contractStorageQueryable.GetAcceptancePollDurationBlocks();

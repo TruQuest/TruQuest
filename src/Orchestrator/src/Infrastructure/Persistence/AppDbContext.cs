@@ -13,8 +13,9 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
     public DbSet<Subject> Subjects { get; set; }
     public DbSet<Tag> Tags { get; set; }
     public DbSet<Thing> Things { get; set; }
-    public DbSet<Vote> Votes { get; set; }
+    public DbSet<AcceptancePollVote> AcceptancePollVotes { get; set; }
     public DbSet<SettlementProposal> SettlementProposals { get; set; }
+    public DbSet<AssessmentPollVote> AssessmentPollVotes { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -159,10 +160,9 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
                 .IsRequired();
         });
 
-        modelBuilder.Entity<Vote>(builder =>
+        modelBuilder.Entity<AcceptancePollVote>(builder =>
         {
             builder.HasKey(v => new { v.ThingId, v.VoterId });
-            builder.Property(v => v.PollType).HasConversion<int>().IsRequired();
             builder.Property(v => v.CastedAtMs).IsRequired();
             builder.Property(v => v.Decision).HasConversion<int>().IsRequired();
             builder.Property(v => v.Reason).IsRequired(false);
@@ -171,8 +171,8 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
 
             builder
                 .HasOne<ThingVerifier>()
-                .WithMany()
-                .HasForeignKey(v => new { v.ThingId, v.VoterId })
+                .WithOne()
+                .HasForeignKey<AcceptancePollVote>(v => new { v.ThingId, v.VoterId })
                 .IsRequired();
         });
 
@@ -200,6 +200,10 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.Metadata
                 .FindNavigation(nameof(SettlementProposal.Evidence))
                 !.SetPropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.Metadata
+                .FindNavigation(nameof(SettlementProposal.Verifiers))
+                !.SetPropertyAccessMode(PropertyAccessMode.Field);
         });
 
         modelBuilder.Entity<SupportingEvidence>(builder =>
@@ -213,6 +217,38 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
                 .HasOne<SettlementProposal>()
                 .WithMany(p => p.Evidence)
                 .HasForeignKey("ProposalId")
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<SettlementProposalVerifier>(builder =>
+        {
+            builder.ToTable("SettlementProposalVerifiers");
+            builder.HasKey(pv => new { pv.SettlementProposalId, pv.VerifierId });
+            builder
+                .HasOne<SettlementProposal>()
+                .WithMany(p => p.Verifiers)
+                .HasForeignKey(pv => pv.SettlementProposalId)
+                .IsRequired();
+            builder
+                .HasOne<UserDm>()
+                .WithMany()
+                .HasForeignKey(pv => pv.VerifierId)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<AssessmentPollVote>(builder =>
+        {
+            builder.HasKey(v => new { v.SettlementProposalId, v.VoterId });
+            builder.Property(v => v.CastedAtMs).IsRequired();
+            builder.Property(v => v.Decision).HasConversion<int>().IsRequired();
+            builder.Property(v => v.Reason).IsRequired(false);
+            builder.Property(v => v.VoterSignature).IsRequired();
+            builder.Property(v => v.IpfsCid).IsRequired();
+
+            builder
+                .HasOne<SettlementProposalVerifier>()
+                .WithOne()
+                .HasForeignKey<AssessmentPollVote>(v => new { v.SettlementProposalId, v.VoterId })
                 .IsRequired();
         });
     }

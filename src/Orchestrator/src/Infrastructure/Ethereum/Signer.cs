@@ -13,10 +13,10 @@ using Application.User.Commands.SignUp;
 using Application.Common.Interfaces;
 using Application.Subject.Commands.AddNewSubject;
 using Application.Thing.Commands.SubmitNewThing;
-using Application.Vote.Commands.CastVote;
+using Application.Vote.Commands.CastAcceptancePollVote;
+using Application.Settlement.Commands.SubmitNewSettlementProposal;
 
 using Infrastructure.Ethereum.TypedData;
-using Application.Settlement.Commands.SubmitNewSettlementProposal;
 
 namespace Infrastructure.Ethereum;
 
@@ -107,7 +107,7 @@ internal class Signer : ISigner
         var td = new NewVoteTd
         {
             ThingId = input.ThingId.ToString(),
-            PollType = input.PollType.GetString(),
+            PollType = "Acceptance",
             CastedAt = input.CastedAt,
             Decision = input.Decision.GetString(),
             Reason = input.Reason
@@ -155,7 +155,7 @@ internal class Signer : ISigner
             Vote = new NewVoteTd
             {
                 ThingId = input.ThingId.ToString(),
-                PollType = input.PollType.GetString(),
+                PollType = "Acceptance",
                 CastedAt = input.CastedAt,
                 Decision = input.Decision.GetString(),
                 Reason = input.Reason
@@ -170,7 +170,7 @@ internal class Signer : ISigner
     }
 
     public string SignVoteAgg(
-        IEnumerable<Vote> offChainVotes, IEnumerable<CastedAcceptancePollVoteEvent> onChainVotes
+        IEnumerable<AcceptancePollVote> offChainVotes, IEnumerable<CastedAcceptancePollVoteEvent> onChainVotes
     )
     {
         var td = new SignedVoteAggTd
@@ -180,7 +180,7 @@ internal class Signer : ISigner
                 {
                     ThingId = v.ThingId.ToString(),
                     VoterId = "0x" + v.VoterId,
-                    PollType = v.PollType.GetString(),
+                    PollType = "Acceptance",
                     CastedAt = DateTimeOffset.FromUnixTimeMilliseconds(v.CastedAtMs).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
                     Decision = v.Decision.GetString(),
                     Reason = v.Reason ?? string.Empty,
@@ -216,6 +216,47 @@ internal class Signer : ISigner
             Id = proposal.Id.ToByteArray()
         };
         var tdDefinition = _getTypedDataDefinition(typeof(SettlementProposalTd));
+        tdDefinition.SetMessage(td);
+
+        return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);
+    }
+
+    public string SignVoteAgg(
+        IEnumerable<AssessmentPollVote> offChainVotes, IEnumerable<CastedAssessmentPollVoteEvent> onChainVotes
+    )
+    {
+        var td = new SignedAssessmentPollVoteAggTd
+        {
+            OffChainVotes = offChainVotes
+                .Select(v => new OffChainAssessmentPollVoteTd
+                {
+                    SettlementProposalId = v.SettlementProposalId.ToString(),
+                    VoterId = "0x" + v.VoterId,
+                    PollType = "Assessment",
+                    CastedAt = DateTimeOffset.FromUnixTimeMilliseconds(v.CastedAtMs).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                    Decision = v.Decision.GetString(),
+                    Reason = v.Reason ?? string.Empty,
+                    IpfsCid = v.IpfsCid,
+                    VoterSignature = v.VoterSignature
+                })
+                .ToList(),
+            OnChainVotes = onChainVotes
+                .Select(v => new OnChainAssessmentPollVoteTd
+                {
+                    BlockNumber = v.BlockNumber,
+                    TxnIndex = v.TxnIndex,
+                    SettlementProposalId = v.SettlementProposalId.ToString(),
+                    UserId = "0x" + v.UserId,
+                    Decision = v.Decision.GetString(),
+                    Reason = v.Reason ?? string.Empty
+                })
+                .ToList()
+        };
+        var tdDefinition = _getTypedDataDefinition(
+            typeof(SignedAssessmentPollVoteAggTd),
+            typeof(OffChainAssessmentPollVoteTd),
+            typeof(OnChainAssessmentPollVoteTd)
+        );
         tdDefinition.SetMessage(td);
 
         return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);

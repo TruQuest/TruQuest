@@ -3,34 +3,33 @@ using MediatR;
 using Domain.Results;
 using Domain.Errors;
 using Domain.Aggregates;
-using VoteDm = Domain.Aggregates.Vote;
 
 using Application.Common.Attributes;
 using Application.Common.Interfaces;
 
-namespace Application.Vote.Commands.CastVote;
+namespace Application.Vote.Commands.CastAcceptancePollVote;
 
 [RequireAuthorization]
-public class CastVoteCommand : IRequest<HandleResult<string>>
+public class CastAcceptancePollVoteCommand : IRequest<HandleResult<string>>
 {
     public NewVoteIm Input { get; set; }
     public string Signature { get; set; }
 }
 
-internal class CastVoteCommandHandler : IRequestHandler<CastVoteCommand, HandleResult<string>>
+internal class CastAcceptancePollVoteCommandHandler : IRequestHandler<CastAcceptancePollVoteCommand, HandleResult<string>>
 {
     private readonly ICurrentPrincipal _currentPrincipal;
     private readonly ISigner _signer;
     private readonly IFileStorage _fileStorage;
     private readonly IThingRepository _thingRepository;
-    private readonly IVoteRepository _voteRepository;
+    private readonly IAcceptancePollVoteRepository _voteRepository;
 
-    public CastVoteCommandHandler(
+    public CastAcceptancePollVoteCommandHandler(
         ICurrentPrincipal currentPrincipal,
         ISigner signer,
         IFileStorage fileStorage,
         IThingRepository thingRepository,
-        IVoteRepository voteRepository
+        IAcceptancePollVoteRepository voteRepository
     )
     {
         _currentPrincipal = currentPrincipal;
@@ -40,7 +39,7 @@ internal class CastVoteCommandHandler : IRequestHandler<CastVoteCommand, HandleR
         _voteRepository = voteRepository;
     }
 
-    public async Task<HandleResult<string>> Handle(CastVoteCommand command, CancellationToken ct)
+    public async Task<HandleResult<string>> Handle(CastAcceptancePollVoteCommand command, CancellationToken ct)
     {
         // @@TODO: Check poll type is valid for the moment.
         bool isValidVerifier = await _thingRepository.CheckIsVerifierFor(
@@ -84,7 +83,7 @@ internal class CastVoteCommandHandler : IRequestHandler<CastVoteCommand, HandleR
             Vote = new
             {
                 ThingId = command.Input.ThingId,
-                PollType = command.Input.PollType.GetString(),
+                PollType = "Acceptance",
                 CastedAt = command.Input.CastedAt,
                 Decision = command.Input.Decision.GetString(),
                 Reason = command.Input.Reason
@@ -101,12 +100,11 @@ internal class CastVoteCommandHandler : IRequestHandler<CastVoteCommand, HandleR
             };
         }
 
-        var vote = new VoteDm(
+        var vote = new AcceptancePollVote(
             thingId: command.Input.ThingId,
             voterId: _currentPrincipal.Id,
-            pollType: (PollType)command.Input.PollType,
             castedAtMs: DateTimeOffset.Parse(command.Input.CastedAt).ToUnixTimeMilliseconds(),
-            decision: (Decision)command.Input.Decision,
+            decision: (AcceptancePollVote.VoteDecision)command.Input.Decision,
             reason: command.Input.Reason != string.Empty ? command.Input.Reason : null,
             voterSignature: command.Signature,
             ipfsCid: uploadResult.Data!

@@ -24,6 +24,66 @@ namespace Infrastructure.Persistence.Migrations.App
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Domain.Aggregates.AcceptancePollVote", b =>
+                {
+                    b.Property<Guid>("ThingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("VoterId")
+                        .HasColumnType("text");
+
+                    b.Property<long>("CastedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Decision")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("IpfsCid")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text");
+
+                    b.Property<string>("VoterSignature")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("ThingId", "VoterId");
+
+                    b.ToTable("AcceptancePollVotes", "truquest");
+                });
+
+            modelBuilder.Entity("Domain.Aggregates.AssessmentPollVote", b =>
+                {
+                    b.Property<Guid>("SettlementProposalId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("VoterId")
+                        .HasColumnType("text");
+
+                    b.Property<long>("CastedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Decision")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("IpfsCid")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text");
+
+                    b.Property<string>("VoterSignature")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("SettlementProposalId", "VoterId");
+
+                    b.ToTable("AssessmentPollVotes", "truquest");
+                });
+
             modelBuilder.Entity("Domain.Aggregates.DeferredTask", b =>
                 {
                     b.Property<long?>("Id")
@@ -105,6 +165,21 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.HasIndex("ThingId");
 
                     b.ToTable("SettlementProposals", "truquest");
+                });
+
+            modelBuilder.Entity("Domain.Aggregates.SettlementProposalVerifier", b =>
+                {
+                    b.Property<Guid?>("SettlementProposalId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("VerifierId")
+                        .HasColumnType("text");
+
+                    b.HasKey("SettlementProposalId", "VerifierId");
+
+                    b.HasIndex("VerifierId");
+
+                    b.ToTable("SettlementProposalVerifiers", "truquest");
                 });
 
             modelBuilder.Entity("Domain.Aggregates.Subject", b =>
@@ -324,39 +399,6 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.ToTable("AspNetUsers", "truquest");
                 });
 
-            modelBuilder.Entity("Domain.Aggregates.Vote", b =>
-                {
-                    b.Property<Guid>("ThingId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("VoterId")
-                        .HasColumnType("text");
-
-                    b.Property<long>("CastedAtMs")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Decision")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("IpfsCid")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("PollType")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Reason")
-                        .HasColumnType("text");
-
-                    b.Property<string>("VoterSignature")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("ThingId", "VoterId");
-
-                    b.ToTable("Votes", "truquest");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
                     b.Property<int>("Id")
@@ -423,6 +465,24 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.ToTable("AspNetUserTokens", "truquest");
                 });
 
+            modelBuilder.Entity("Domain.Aggregates.AcceptancePollVote", b =>
+                {
+                    b.HasOne("Domain.Aggregates.ThingVerifier", null)
+                        .WithOne()
+                        .HasForeignKey("Domain.Aggregates.AcceptancePollVote", "ThingId", "VoterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Aggregates.AssessmentPollVote", b =>
+                {
+                    b.HasOne("Domain.Aggregates.SettlementProposalVerifier", null)
+                        .WithOne()
+                        .HasForeignKey("Domain.Aggregates.AssessmentPollVote", "SettlementProposalId", "VoterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Domain.Aggregates.Evidence", b =>
                 {
                     b.HasOne("Domain.Aggregates.Thing", null)
@@ -443,6 +503,21 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.HasOne("Domain.Aggregates.Thing", null)
                         .WithMany()
                         .HasForeignKey("ThingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Aggregates.SettlementProposalVerifier", b =>
+                {
+                    b.HasOne("Domain.Aggregates.SettlementProposal", null)
+                        .WithMany("Verifiers")
+                        .HasForeignKey("SettlementProposalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Aggregates.User", null)
+                        .WithMany()
+                        .HasForeignKey("VerifierId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -525,15 +600,6 @@ namespace Infrastructure.Persistence.Migrations.App
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Domain.Aggregates.Vote", b =>
-                {
-                    b.HasOne("Domain.Aggregates.ThingVerifier", null)
-                        .WithMany()
-                        .HasForeignKey("ThingId", "VoterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
                     b.HasOne("Domain.Aggregates.User", null)
@@ -564,6 +630,8 @@ namespace Infrastructure.Persistence.Migrations.App
             modelBuilder.Entity("Domain.Aggregates.SettlementProposal", b =>
                 {
                     b.Navigation("Evidence");
+
+                    b.Navigation("Verifiers");
                 });
 
             modelBuilder.Entity("Domain.Aggregates.Subject", b =>

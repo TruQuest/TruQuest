@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using MediatR;
 
 using Domain.Results;
-using Application.Vote.Commands.CastVote;
+using Application.Vote.Commands.CastAcceptancePollVote;
 
 namespace API.Controllers;
 
@@ -18,6 +18,6 @@ public class VoteController : ControllerBase
         _mediator = mediator;
     }
 
-    [HttpPost("cast")]
-    public Task<HandleResult<string>> Cast(CastVoteCommand command) => _mediator.Send(command);
+    [HttpPost("acceptance/cast")]
+    public Task<HandleResult<string>> Cast(CastAcceptancePollVoteCommand command) => _mediator.Send(command);
 }

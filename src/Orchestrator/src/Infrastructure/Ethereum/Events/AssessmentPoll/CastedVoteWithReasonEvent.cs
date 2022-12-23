@@ -1,16 +1,18 @@
 using Nethereum.ABI.FunctionEncoding.Attributes;
 
-namespace Infrastructure.Ethereum.Events;
+namespace Infrastructure.Ethereum.Events.AssessmentPoll;
 
 [Event("CastedVoteWithReason")]
 public class CastedVoteWithReasonEvent : IEventDTO
 {
     [Parameter("bytes16", "thingId", 1, true)]
     public byte[] ThingId { get; set; }
-    [Parameter("address", "user", 2, true)]
+    [Parameter("bytes16", "settlementProposalId", 2, true)]
+    public byte[] SettlementProposalId { get; set; }
+    [Parameter("address", "user", 3, true)]
     public string UserId { get; set; }
-    [Parameter("uint8", "vote", 3, false)]
+    [Parameter("uint8", "vote", 4, false)]
     public int Vote { get; set; }
-    [Parameter("string", "reason", 4, false)]
+    [Parameter("string", "reason", 5, false)]
     public string Reason { get; set; }
 }

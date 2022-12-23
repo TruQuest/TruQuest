@@ -12,6 +12,7 @@ internal class ContractStorageQueryable : IContractStorageQueryable
     private readonly Contract _thingSubmissionVerifierLotteryContract;
     private readonly Contract _acceptancePollContract;
     private readonly Contract _thingAssessmentVerifierLotteryContract;
+    private readonly Contract _assessmentPollContract;
 
     public ContractStorageQueryable(IConfiguration configuration)
     {
@@ -34,6 +35,13 @@ internal class ContractStorageQueryable : IContractStorageQueryable
             .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
             .WithName("ThingAssessmentVerifierLottery")
             .DeployedAt(configuration[$"Ethereum:Contracts:{network}:ThingAssessmentVerifierLottery:Address"]!)
+            .OnNetwork(configuration[$"Ethereum:Networks:{network}:URL"]!)
+            .Find();
+
+        _assessmentPollContract = ContractFinder.Create()
+            .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
+            .WithName("AssessmentPoll")
+            .DeployedAt(configuration[$"Ethereum:Contracts:{network}:AssessmentPoll:Address"]!)
             .OnNetwork(configuration[$"Ethereum:Networks:{network}:URL"]!)
             .Find();
     }
@@ -126,6 +134,16 @@ internal class ContractStorageQueryable : IContractStorageQueryable
             .AsArrayOf<SolAddress>()
             .Index(index)
             .GetValue<SolAddress>();
+
+        return value.Value;
+    }
+
+    public async Task<int> GetAssessmentPollDurationBlocks()
+    {
+        var value = await _assessmentPollContract
+            .WalkStorage()
+            .Field("s_durationBlocks")
+            .GetValue<SolUint16>();
 
         return value.Value;
     }

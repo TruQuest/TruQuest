@@ -166,8 +166,9 @@ public static class IServiceCollectionExtension
         services.AddScoped<ISubjectRepository, SubjectRepository>();
         services.AddScoped<IThingRepository, ThingRepository>();
         services.AddScoped<ITaskRepository, TaskRepository>();
-        services.AddScoped<IVoteRepository, VoteRepository>();
+        services.AddScoped<IAcceptancePollVoteRepository, AcceptancePollVoteRepository>();
         services.AddScoped<ISettlementProposalRepository, SettlementProposalRepository>();
+        services.AddScoped<IAssessmentPollVoteRepository, AssessmentPollVoteRepository>();
 
         services.AddSingleton<IBlockProgressRepository, BlockProgressRepository>();
         services.AddScoped<IActionableThingRelatedEventRepository, ActionableThingRelatedEventRepository>();
@@ -177,6 +178,7 @@ public static class IServiceCollectionExtension
         services.AddScoped<IPreJoinedThingAssessmentVerifierLotteryEventRepository, PreJoinedThingAssessmentVerifierLotteryEventRepository>();
         services.AddScoped<IJoinedThingAssessmentVerifierLotteryEventRepository, JoinedThingAssessmentVerifierLotteryEventRepository>();
         services.AddScoped<IThingAssessmentVerifierLotterySpotClaimedEventRepository, ThingAssessmentVerifierLotterySpotClaimedEventRepository>();
+        services.AddScoped<ICastedAssessmentPollVoteEventRepository, CastedAssessmentPollVoteEventRepository>();
 
         services.AddSingleton<IContractEventListener, ContractEventListener>();
 

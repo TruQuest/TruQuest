@@ -7,7 +7,7 @@ using Domain.Aggregates;
 using Domain.Aggregates.Events;
 
 using Application.Common.Interfaces;
-using Application.Vote.Commands.CastVote;
+using Application.Vote.Commands.CastAcceptancePollVote;
 
 namespace Application.Thing.Commands.CloseAcceptancePoll;
 
@@ -21,7 +21,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
 {
     private readonly ILogger<CloseAcceptancePollCommandHandler> _logger;
     private readonly IBlockchainQueryable _blockchainQueryable;
-    private readonly IVoteRepository _voteRepository;
+    private readonly IAcceptancePollVoteRepository _voteRepository;
     private readonly ICastedAcceptancePollVoteEventRepository _castedAcceptancePollVoteEventRepository;
     private readonly IThingRepository _thingRepository;
     private readonly ISigner _signer;
@@ -31,7 +31,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
     public CloseAcceptancePollCommandHandler(
         ILogger<CloseAcceptancePollCommandHandler> logger,
         IBlockchainQueryable blockchainQueryable,
-        IVoteRepository voteRepository,
+        IAcceptancePollVoteRepository voteRepository,
         ICastedAcceptancePollVoteEventRepository castedAcceptancePollVoteEventRepository,
         IThingRepository thingRepository,
         ISigner signer,
@@ -55,8 +55,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
 
         var offChainVotes = await _voteRepository.GetForThingCastedAt(
             command.ThingId,
-            noLaterThanTs: upperLimitTs,
-            pollType: PollType.Acceptance
+            noLaterThanTs: upperLimitTs
         );
 
         var castedVoteEvents = await _castedAcceptancePollVoteEventRepository.GetAllFor(command.ThingId);
@@ -70,7 +69,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
                 {
                     ThingId = v.ThingId,
                     VoterId = "0x" + v.VoterId,
-                    PollType = v.PollType.GetString(),
+                    PollType = "Acceptance",
                     CastedAt = DateTimeOffset.FromUnixTimeMilliseconds(v.CastedAtMs).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
                     Decision = v.Decision.GetString(),
                     Reason = v.Reason ?? string.Empty,

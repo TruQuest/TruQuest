@@ -7,7 +7,7 @@ using Nethereum.Signer.EIP712;
 
 using Application.Subject.Commands.AddNewSubject;
 using Application.Thing.Commands.SubmitNewThing;
-using Application.Vote.Commands.CastVote;
+using Application.Vote.Commands.CastAcceptancePollVote;
 using Application.Settlement.Commands.SubmitNewSettlementProposal;
 using Infrastructure.Ethereum;
 using Infrastructure.Ethereum.TypedData;
@@ -90,7 +90,7 @@ public class Signer
         var td = new NewVoteTd
         {
             ThingId = input.ThingId.ToString(),
-            PollType = input.PollType.GetString(),
+            PollType = "Acceptance",
             CastedAt = input.CastedAt,
             Decision = input.Decision.GetString(),
             Reason = input.Reason
