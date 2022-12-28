@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "ethereum_actions.dart";
 import "ethereum_result_vm.dart";
 import "../services/ethereum_service.dart";
@@ -6,6 +8,11 @@ import "../../general/bloc/bloc.dart";
 class EthereumBloc extends Bloc<EthereumAction> {
   final EthereumService _ethereumService;
 
+  final StreamController<SwitchEthereumChainResultVm> _selectedChainChannel =
+      StreamController<SwitchEthereumChainResultVm>.broadcast();
+  Stream<SwitchEthereumChainResultVm> get selectedChain$ =>
+      _selectedChainChannel.stream;
+
   EthereumBloc(this._ethereumService) {
     actionChannel.stream.listen((action) {
       if (action is ConnectEthereumAccount) {
@@ -13,6 +20,15 @@ class EthereumBloc extends Bloc<EthereumAction> {
       } else if (action is SignAuthMessage) {
         _signAuthMessage(action);
       }
+    });
+
+    var first = true;
+    _ethereumService.connectedChainChanged$.listen((chainId) {
+      _selectedChainChannel.add(SwitchEthereumChainSuccessVm(
+        chainId: chainId,
+        shouldRefreshPage: !first,
+      ));
+      first = false;
     });
   }
 

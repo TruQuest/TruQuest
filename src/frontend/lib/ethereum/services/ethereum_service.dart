@@ -10,8 +10,16 @@ class EthereumService {
   final bool available;
   final int _validChainId = 1337;
 
+  int? _connectedChainId;
+  int? get connectedChainId => _connectedChainId;
+
   String? _connectedAccount;
   String? get connectedAccount => _connectedAccount;
+
+  final StreamController<int> _connectedChainChangedEventChannel =
+      StreamController<int>();
+  Stream<int> get connectedChainChanged$ =>
+      _connectedChainChangedEventChannel.stream;
 
   final StreamController<String?> _connectedAccountChangedEventChannel =
       StreamController<String?>();
@@ -23,6 +31,10 @@ class EthereumService {
     if (metamask != null) {
       metamask.onChainChanged((chainId) {
         print("Chain changed: $chainId");
+        if (_connectedChainId != chainId) {
+          _connectedChainId = chainId;
+          _connectedChainChangedEventChannel.add(chainId);
+        }
       });
 
       metamask.onAccountsChanged((accounts) {
@@ -31,7 +43,13 @@ class EthereumService {
         _connectedAccountChangedEventChannel.add(_connectedAccount);
       });
 
-      // @@NOTE: ?? accountsChanged event doesn"t fire on launch even though MM says it does ??
+      metamask.getChainId().then((chainId) {
+        print("Current chain: $chainId");
+        _connectedChainId = chainId;
+        _connectedChainChangedEventChannel.add(chainId);
+      });
+
+      // @@NOTE: ?? accountsChanged event doesn't fire on launch even though MM says it does ??
       metamask.getAccounts().then((accounts) {
         _connectedAccount = accounts.isNotEmpty ? accounts.first : null;
         _connectedAccountChangedEventChannel.add(_connectedAccount);
