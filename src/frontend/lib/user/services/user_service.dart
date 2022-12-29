@@ -1,10 +1,12 @@
 import "dart:async";
 
+import 'user_api_service.dart';
 import "../../ethereum/services/ethereum_service.dart";
 import "../models/vm/user_vm.dart";
 
 class UserService {
   final EthereumService _ethereumService;
+  final UserApiService _userApiService;
 
   final Map<String, String> _accountToJwt = {};
   final Map<String, String> _accountToUsername = {};
@@ -14,7 +16,7 @@ class UserService {
   Stream<UserVm> get currentUserChanged$ =>
       _currentUserChangedEventChannel.stream;
 
-  UserService(this._ethereumService) {
+  UserService(this._ethereumService, this._userApiService) {
     _ethereumService.connectedAccountChanged$.listen((account) {
       final UserAccountState state;
       String? username;
@@ -55,6 +57,6 @@ class UserService {
   }
 
   Future signUp(String username, String signature) async {
-    print("Signing up...");
+    await _userApiService.signUp(username, signature);
   }
 }

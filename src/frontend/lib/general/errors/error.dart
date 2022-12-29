@@ -1,8 +1,8 @@
 class Error {
-  final String _message;
+  final String message;
 
-  Error(this._message);
+  Error(this.message);
 
   @override
-  String toString() => _message;
+  String toString() => message;
 }

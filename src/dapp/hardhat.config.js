@@ -15,7 +15,7 @@ module.exports = {
     },
     ganache: {
       url: "http://localhost:7545",
-      chainId: 1337,
+      chainId: 51234,
       accounts: {
         mnemonic:
           "atom traffic guard castle father vendor modify sauce rebuild true mixture van",

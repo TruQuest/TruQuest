@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of "injector.dart";
+part of 'injector.dart';
 
 // **************************************************************************
 // KiwiInjectorGenerator
@@ -12,8 +12,11 @@ class _$Injector extends Injector {
     final KiwiContainer container = KiwiContainer();
     container
       ..registerSingleton((c) => UserBloc(c<UserService>()))
-      ..registerSingleton((c) => UserService(c<EthereumService>()))
+      ..registerSingleton(
+          (c) => UserService(c<EthereumService>(), c<UserApiService>()))
       ..registerSingleton((c) => EthereumBloc(c<EthereumService>()))
-      ..registerSingleton((c) => EthereumService());
+      ..registerSingleton((c) => EthereumService())
+      ..registerSingleton((c) => ServerConnector())
+      ..registerSingleton((c) => UserApiService(c<ServerConnector>()));
   }
 }
