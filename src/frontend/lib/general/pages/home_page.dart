@@ -2,6 +2,10 @@
 
 import "package:flutter/material.dart";
 
+import '../widgets/image_block.dart';
+import '../widgets/tags_block.dart';
+import '../widgets/document_composer.dart';
+import '../widgets/evidence_block.dart';
 import "../widgets/status_panel.dart";
 
 class HomePage extends StatelessWidget {
@@ -18,6 +22,22 @@ class HomePage extends StatelessWidget {
       ),
       body: Center(
         child: Text("Hello!"),
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.edit),
+        onPressed: () {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => DocumentComposer(
+              sideBlocks: [
+                ImageBlock(),
+                TagsBlock(),
+                EvidenceBlock(),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
