@@ -1,16 +1,16 @@
 abstract class EthereumResultVm {}
 
-abstract class SwitchEthereumChainResultVm extends EthereumResultVm {}
-
-class SwitchEthereumChainSuccessVm extends SwitchEthereumChainResultVm {
+class SwitchEthereumChainSuccessVm extends EthereumResultVm {
   final int chainId;
-  final bool shouldRefreshPage;
+  final bool shouldOfferToSwitchChain;
 
   SwitchEthereumChainSuccessVm({
     required this.chainId,
-    required this.shouldRefreshPage,
+    required this.shouldOfferToSwitchChain,
   });
 }
+
+class SwitchEthereumChainFailureVm extends EthereumResultVm {}
 
 class ConnectEthereumAccountFailureVm extends EthereumResultVm {}
 

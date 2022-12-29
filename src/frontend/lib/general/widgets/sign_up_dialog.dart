@@ -54,7 +54,7 @@ class _SignUpDialogState
                   child: Text("Connect account"),
                   onPressed: () async {
                     var action = ConnectEthereumAccount();
-                    _ethereumBloc.dispatchAction(action);
+                    _ethereumBloc.dispatch(action);
 
                     var error = await action.result;
                     if (error != null) {
@@ -75,7 +75,7 @@ class _SignUpDialogState
           onPressed: () async {
             if (_username != null) {
               var signAction = SignAuthMessage(username: _username!);
-              _ethereumBloc.dispatchAction(signAction);
+              _ethereumBloc.dispatch(signAction);
 
               var vm = await signAction.result;
               if (vm is SignAuthMessageFailureVm) {
@@ -87,7 +87,7 @@ class _SignUpDialogState
                 username: _username!,
                 signature: signature,
               );
-              _userBloc.dispatchAction(signUpAction);
+              _userBloc.dispatch(signUpAction);
 
               Navigator.of(this.context).pop();
             }

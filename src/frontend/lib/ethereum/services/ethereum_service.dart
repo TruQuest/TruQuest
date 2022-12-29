@@ -8,7 +8,7 @@ import "../errors/ethereum_error.dart";
 
 class EthereumService {
   final bool available;
-  final int _validChainId = 1337;
+  final int validChainId = 51234;
 
   int? _connectedChainId;
   int? get connectedChainId => _connectedChainId;
@@ -55,6 +55,37 @@ class EthereumService {
         _connectedAccountChangedEventChannel.add(_connectedAccount);
       });
     }
+  }
+
+  Future<EthereumError?> switchEthereumChain() async {
+    var metamask = ethereum;
+    if (metamask == null) {
+      return EthereumError("Metamask not installed");
+    }
+
+    try {
+      await metamask.walletSwitchChain(validChainId);
+    } catch (e) {
+      // catching EthereumUnrecognizedChainException doesn't work fsr
+      print(e);
+      try {
+        await metamask.walletAddChain(
+          chainId: validChainId,
+          chainName: "Ganache",
+          nativeCurrency: CurrencyParams(
+            name: "Ether",
+            symbol: "ETH",
+            decimals: 18,
+          ),
+          rpcUrls: ["http://localhost:7545/"],
+        );
+      } catch (e) {
+        print(e);
+        return EthereumError(e.toString());
+      }
+    }
+
+    return null;
   }
 
   Future<EthereumError?> connectAccount() async {
