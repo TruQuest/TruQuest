@@ -48,6 +48,6 @@ internal class MessageTypeResolver : IMessageTypeResolver
 
     public void OnProduce(IMessageContext context)
     {
-        throw new NotImplementedException();
+        context.Headers.SetString("requestType", context.Message.Value.GetType().Name);
     }
 }

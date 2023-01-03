@@ -26,6 +26,7 @@ using Infrastructure.Persistence.Repositories;
 using Infrastructure.Files;
 using Infrastructure.Persistence.Repositories.Events;
 using Infrastructure.Kafka;
+using Infrastructure.Kafka.Messages;
 
 namespace Infrastructure;
 
@@ -142,20 +143,8 @@ public static class IServiceCollectionExtension
         services.AddTransient<IAuthorizationService, AuthorizationService>();
         services.AddScoped<ICurrentPrincipal, CurrentPrincipal>();
 
-        services.AddSingleton<IFileFetcher, FileFetcher>();
-        services.AddSingleton<IImageFetcher, ImageFetcher>();
-        services.AddSingleton<IWebPageScreenshotTaker, PlaywrightWebPageScreenshotTaker>();
-        services.AddSingleton<IImageSignatureVerifier, ImageSignatureVerifier>();
+        services.AddSingleton<IFileArchiver, FileArchiver>();
 
-        services.AddHttpClient("image", (sp, client) =>
-        {
-            var configuration = sp.GetRequiredService<IConfiguration>();
-            var mimeTypes = configuration["Files:Images:AcceptableMimeTypes"]!.Split(',');
-            foreach (var mimeType in mimeTypes)
-            {
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(mimeType));
-            }
-        });
         services.AddHttpClient("ipfs", (sp, client) =>
         {
             var configuration = sp.GetRequiredService<IConfiguration>();
@@ -188,6 +177,8 @@ public static class IServiceCollectionExtension
         services.AddSingleton<IBlockchainQueryable, BlockchainQueryable>();
         services.AddSingleton<IContractStorageQueryable, ContractStorageQueryable>();
 
+        services.AddSingleton<IRequestDispatcher, RequestDispatcher>();
+
         if (!configuration.GetValue<bool>("DbMigrator"))
         {
             services.AddKafka(kafka =>
@@ -198,8 +189,8 @@ public static class IServiceCollectionExtension
                             .WithBrokers(configuration.GetSection("Kafka:Brokers").Get<List<string>>())
                             .AddConsumer(consumer =>
                                 consumer
-                                    .Topics(configuration.GetSection("Kafka:Consumer:Topics").Get<List<string>>())
-                                    .WithGroupId(configuration["Kafka:Consumer:GroupId"])
+                                    .Topics(configuration.GetSection("Kafka:EventConsumer:Topics").Get<List<string>>())
+                                    .WithGroupId(configuration["Kafka:EventConsumer:GroupId"])
                                     .WithAutoOffsetReset(AutoOffsetReset.Earliest)
                                     .WithBufferSize(1)
                                     .WithWorkersCount(4)
@@ -209,8 +200,35 @@ public static class IServiceCollectionExtension
                                             .AddTypedHandlers(handlers =>
                                                 handlers
                                                     .WithHandlerLifetime(InstanceLifetime.Scoped)
-                                                    .AddHandlersFromAssemblyOf<MessageTypeResolver>()
+                                                    .AddHandlers(new[]
+                                                    {
+                                                        typeof(ThingFundedEventHandler),
+                                                        typeof(ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccessEventHandler),
+                                                        typeof(ThingSettlementProposalFundedEventHandler),
+                                                        typeof(ThingSettlementProposalVerifierSelectedEventHandler),
+                                                        typeof(ThingSubmissionVerifierLotteryClosedWithSuccessEventHandler),
+                                                        typeof(ThingVerifierSelectedEventHandler)
+                                                    })
                                             )
+                                    )
+                            )
+                            .AddConsumer(consumer =>
+                                consumer
+                                    .Topics(configuration.GetSection("Kafka:ResponseConsumer:Topics").Get<List<string>>())
+                                    .WithGroupId(configuration["Kafka:ResponseConsumer:GroupId"])
+                                    .WithAutoOffsetReset(AutoOffsetReset.Earliest)
+                                    .WithBufferSize(1)
+                                    .WithWorkersCount(1)
+                                    .AddMiddlewares(middlewares =>
+                                        middlewares.Add<ResponseConsumer>(MiddlewareLifetime.Singleton)
+                                    )
+                            )
+                            .AddProducer<RequestDispatcher>(producer =>
+                                producer
+                                    .DefaultTopic(configuration["Kafka:RequestProducer:Topic"])
+                                    .WithAcks(Acks.All)
+                                    .AddMiddlewares(middlewares =>
+                                        middlewares.AddSerializer<MessageSerializer, MessageTypeResolver>()
                                     )
                             )
                     )

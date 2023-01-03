@@ -477,4 +477,5 @@ $RECYCLE.BIN/
 *.lnk
 
 .env
-/src/API/files
+/services/FileArchiveService/output
+/services/FileArchiveService/images

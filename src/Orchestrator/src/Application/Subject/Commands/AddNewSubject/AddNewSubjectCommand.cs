@@ -23,24 +23,21 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
     private readonly ILogger<AddNewSubjectCommandHandler> _logger;
     private readonly ICurrentPrincipal _currentPrincipal;
     private readonly ISigner _signer;
-    private readonly IFileFetcher _fileFetcher;
-    private readonly IFileStorage _fileStorage;
+    private readonly IFileArchiver _fileArchiver;
     private readonly ISubjectRepository _subjectRepository;
 
     public AddNewSubjectCommandHandler(
         ILogger<AddNewSubjectCommandHandler> logger,
         ICurrentPrincipal currentPrincipal,
         ISigner signer,
-        IFileFetcher fileFetcher,
-        IFileStorage fileStorage,
+        IFileArchiver fileArchiver,
         ISubjectRepository subjectRepository
     )
     {
         _logger = logger;
         _currentPrincipal = currentPrincipal;
         _signer = signer;
-        _fileFetcher = fileFetcher;
-        _fileStorage = fileStorage;
+        _fileArchiver = fileArchiver;
         _subjectRepository = subjectRepository;
     }
 
@@ -57,21 +54,10 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
 
         // check that result.Data == _currentPrincipal.Id
 
-        await foreach (var (filePath, obj, prop) in _fileFetcher.FetchAll(command.Input, _currentPrincipal.Id))
+        await foreach (var (ipfsCid, obj, prop) in _fileArchiver.ArchiveAll(command.Input, _currentPrincipal.Id))
         {
-            _logger.LogDebug("File saved to " + filePath);
-
-            var uploadResult = await _fileStorage.Upload(filePath);
-            if (uploadResult.IsError)
-            {
-                return new()
-                {
-                    Error = uploadResult.Error
-                };
-            }
-
-            _logger.LogDebug("File cid is " + uploadResult.Data);
-            prop.SetValue(obj, uploadResult.Data);
+            _logger.LogDebug("File cid is " + ipfsCid);
+            prop.SetValue(obj, ipfsCid);
         }
 
         var subject = new SubjectDm(

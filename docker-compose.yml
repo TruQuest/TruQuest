@@ -30,7 +30,7 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ADVERTISED_HOST_NAME: host.docker.internal
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_CREATE_TOPICS: 'thing.events:1:1,verifiers:1:1'
+      KAFKA_CREATE_TOPICS: 'thing.events:1:1,verifiers:1:1,requests:1:1,responses:1:1'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
@@ -86,6 +86,20 @@ services:
     command: '--chain.chainId 51234 --logging.verbose --wallet.totalAccounts 20 --wallet.mnemonic "atom traffic guard castle father vendor modify sauce rebuild true mixture van"'
     networks:
       - truquest
+
+  file-archive:
+    image: file-archive:latest
+    build:
+      context: src/Orchestrator/services/FileArchiveService
+    volumes:
+      - './src/Orchestrator/services/FileArchiveService/output:/singlefile/output'
+      - './src/Orchestrator/services/FileArchiveService/images:/images'
+    networks:
+      - truquest
+    depends_on:
+      - zookeeper
+      - kafka-1
+      - ipfs
 
 networks:
   truquest:
