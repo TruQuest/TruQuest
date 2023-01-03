@@ -144,7 +144,8 @@ public class E2ETests : IAsyncLifetime
             Evidence = new List<EvidenceIm>()
             {
                 new() { Url = "https://stackoverflow.com/" },
-                new() { Url = "https://fanfics.me/" }
+                new() { Url = "https://fanfics.me/" },
+                new() { Url = "https://abrahamjuliot.github.io/creepjs/" }
             },
             Tags = new List<TagIm>() { new() { Id = 1 } }
         };

@@ -20,6 +20,7 @@ RUN apt update && apt install -y aspnetcore-runtime-7.0
 WORKDIR /singlefile
 
 COPY ublock/ ublock/
+COPY cookies/ cookies/
 COPY bootstrap.sh bootstrap.sh
 COPY singlefile.sh singlefile.sh
 RUN chmod 755 bootstrap.sh
