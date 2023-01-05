@@ -1,3 +1,5 @@
+using System.Reflection;
+
 using Microsoft.Extensions.Logging;
 
 using MediatR;
@@ -54,17 +56,22 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
 
         // check that result.Data == _currentPrincipal.Id
 
-        await foreach (var (ipfsCid, obj, prop) in _fileArchiver.ArchiveAll(command.Input, _currentPrincipal.Id))
+        await foreach (var (ipfsCid, extraIpfsCid, obj, prop) in _fileArchiver.ArchiveAll(command.Input, _currentPrincipal.Id))
         {
             _logger.LogDebug("File cid is " + ipfsCid);
-            prop.SetValue(obj, ipfsCid);
+
+            var attr = prop.GetCustomAttribute<FileUrlAttribute>()!;
+            var backingProp = obj.GetType()
+                .GetProperties(BindingFlags.Instance | BindingFlags.NonPublic)
+                .Single(p => p.Name == attr.BackingField);
+            backingProp.SetValue(obj, ipfsCid);
         }
 
         var subject = new SubjectDm(
             name: command.Input.Name,
             details: command.Input.Details,
             type: (int)command.Input.Type,
-            imageUrl: command.Input.ImageUrl != string.Empty ? command.Input.ImageUrl : null,
+            imageIpfsCid: command.Input.ImageIpfsCid,
             submitterId: _currentPrincipal.Id
         );
         subject.AddTags(command.Input.Tags.Select(t => t.Id));

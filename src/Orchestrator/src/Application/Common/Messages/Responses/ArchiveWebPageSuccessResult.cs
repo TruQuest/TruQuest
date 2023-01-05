@@ -2,5 +2,6 @@ namespace Application.Common.Messages.Responses;
 
 public class ArchiveWebPageSuccessResult
 {
-    public string IpfsCid { get; set; }
+    public string HtmlIpfsCid { get; set; }
+    public string JpgIpfsCid { get; set; }
 }

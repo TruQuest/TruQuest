@@ -6,11 +6,13 @@ public class SupportingEvidence : Entity
 {
     public Guid? Id { get; private set; }
     public string OriginUrl { get; }
-    public string TruUrl { get; }
+    public string IpfsCid { get; }
+    public string PreviewImageIpfsCid { get; }
 
-    public SupportingEvidence(string originUrl, string truUrl)
+    public SupportingEvidence(string originUrl, string ipfsCid, string previewImageIpfsCid)
     {
         OriginUrl = originUrl;
-        TruUrl = truUrl;
+        IpfsCid = ipfsCid;
+        PreviewImageIpfsCid = previewImageIpfsCid;
     }
 }

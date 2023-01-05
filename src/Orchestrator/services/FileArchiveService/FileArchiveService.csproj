@@ -14,5 +14,6 @@
         <PackageReference Include="KafkaFlow.Serializer" Version="2.2.13" />
         <PackageReference Include="KafkaFlow.TypedHandler" Version="2.2.13" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
+        <PackageReference Include="Microsoft.Playwright" Version="1.28.0" />
     </ItemGroup>
 </Project>

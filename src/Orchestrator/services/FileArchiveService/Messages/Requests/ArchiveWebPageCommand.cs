@@ -35,9 +35,9 @@ internal class ArchiveWebPageCommandHandler : IMessageHandler<ArchiveWebPageComm
 
     public async Task Handle(IMessageContext context, ArchiveWebPageCommand message)
     {
-        var filePath = await _webPageSaver.SaveLocalCopy(message.Url);
-        var result = await _fileStorage.Upload(filePath);
-        // File.Delete(filePath);
+        var (htmlFilePath, jpgFilePath) = await _webPageSaver.SaveLocalCopy(message.Url);
+        var result = await _fileStorage.Upload(htmlFilePath);
+        // File.Delete(htmlFilePath);
 
         object response;
         if (result.IsError)
@@ -47,7 +47,22 @@ internal class ArchiveWebPageCommandHandler : IMessageHandler<ArchiveWebPageComm
         }
         else
         {
-            response = new ArchiveWebPageSuccessResult { IpfsCid = result.Data! };
+            var htmlIpfsCid = result.Data!;
+            result = await _fileStorage.Upload(jpgFilePath);
+            // File.Delete(jpgFilePath);
+            if (result.IsError)
+            {
+                _logger.LogWarning(result.Error!.ToString());
+                response = new ArchiveWebPageFailureResult { ErrorMessage = result.Error.ToString() };
+            }
+            else
+            {
+                response = new ArchiveWebPageSuccessResult
+                {
+                    HtmlIpfsCid = htmlIpfsCid,
+                    JpgIpfsCid = result.Data!
+                };
+            }
         }
 
         await _responseDispatcher.DispatchFor(

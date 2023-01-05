@@ -1,5 +1,7 @@
 using System.Diagnostics;
 
+using Microsoft.Playwright;
+
 namespace Services;
 
 internal class WebPageSaver : IWebPageSaver
@@ -11,7 +13,7 @@ internal class WebPageSaver : IWebPageSaver
         _logger = logger;
     }
 
-    public async Task<string> SaveLocalCopy(string url)
+    public async Task<(string htmlFilePath, string jpgFilePath)> SaveLocalCopy(string url)
     {
         var requestId = Guid.NewGuid().ToString();
 
@@ -47,7 +49,26 @@ internal class WebPageSaver : IWebPageSaver
         await process.WaitForExitAsync();
 
         url = url.EndsWith('/') ? url : (url + "/");
+        var htmlFilePath = $"/singlefile/output/{requestId}/{url.Replace("://", "__").Replace('/', '_').Replace('?', '_')}.html";
 
-        return $"/singlefile/output/{requestId}/{url.Replace("://", "__").Replace('/', '_').Replace('?', '_')}.html";
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new()
+        {
+            ExecutablePath = "/usr/bin/google-chrome",
+            Headless = true
+        });
+
+        var page = await browser.NewPageAsync();
+        await page.GotoAsync("file://" + htmlFilePath);
+
+        var jpgFilePath = htmlFilePath.Substring(0, htmlFilePath.Length - 4) + "jpg";
+        await page.ScreenshotAsync(new()
+        {
+            Path = jpgFilePath,
+            FullPage = false,
+            Timeout = 10000
+        });
+
+        return (htmlFilePath, jpgFilePath);
     }
 }

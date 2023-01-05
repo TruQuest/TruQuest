@@ -58,33 +58,38 @@ internal class SubmitNewThingCommandHandler : IRequestHandler<SubmitNewThingComm
 
         // check that result.Data == _currentPrincipal.Id
 
-        await foreach (var (ipfsCid, obj, prop) in _fileArchiver.ArchiveAll(command.Input, _currentPrincipal.Id))
+        await foreach (var (ipfsCid, extraIpfsCid, obj, prop) in _fileArchiver.ArchiveAll(command.Input, _currentPrincipal.Id))
         {
             _logger.LogDebug("File cid is " + ipfsCid);
+
             var attr = prop.GetCustomAttribute<FileUrlAttribute>()!;
-            if (attr.KeepOriginUrl)
+            var backingProp = obj.GetType()
+                .GetProperties(BindingFlags.Instance | BindingFlags.NonPublic)
+                .Single(p => p.Name == attr.BackingField);
+            backingProp.SetValue(obj, ipfsCid);
+
+            if (attr is WebPageUrlAttribute webAttr && extraIpfsCid != null)
             {
-                prop.SetValue(obj, $"{prop.GetValue(obj)}\t{ipfsCid}");
-            }
-            else
-            {
-                prop.SetValue(obj, ipfsCid);
+                var extraBackingProp = obj.GetType()
+                    .GetProperties(BindingFlags.Instance | BindingFlags.NonPublic)
+                    .Single(p => p.Name == webAttr.ExtraBackingField);
+                extraBackingProp.SetValue(obj, extraIpfsCid);
             }
         }
 
         var thing = new ThingDm(
             title: command.Input.Title,
             details: command.Input.Details,
-            imageUrl: command.Input.ImageUrl != string.Empty ? command.Input.ImageUrl : null,
+            imageIpfsCid: command.Input.ImageIpfsCid,
             submitterId: _currentPrincipal.Id,
             subjectId: command.Input.SubjectId
         );
         thing.AddEvidence(command.Input.Evidence.Select(e =>
         {
-            var index = e.Url.LastIndexOf('\t');
             return new Evidence(
-                originUrl: e.Url.Substring(0, index),
-                truUrl: e.Url.Substring(index + 1)
+                originUrl: e.Url,
+                ipfsCid: e.HtmlIpfsCid,
+                previewImageIpfsCid: e.JpgIpfsCid
             );
         }));
         thing.AddTags(command.Input.Tags.Select(t => t.Id));

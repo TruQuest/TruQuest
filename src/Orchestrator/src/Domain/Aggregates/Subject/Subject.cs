@@ -9,18 +9,18 @@ public class Subject : Entity, IAggregateRoot
     public string Name { get; }
     public string Details { get; }
     public int Type { get; }
-    public string? ImageUrl { get; }
+    public string? ImageIpfsCid { get; }
     public string SubmitterId { get; }
 
     private List<SubjectAttachedTag> _tags = new();
     public IReadOnlyList<SubjectAttachedTag> Tags => _tags;
 
-    public Subject(string name, string details, int type, string? imageUrl, string submitterId)
+    public Subject(string name, string details, int type, string? imageIpfsCid, string submitterId)
     {
         Name = name;
         Details = details;
         Type = type;
-        ImageUrl = imageUrl;
+        ImageIpfsCid = imageIpfsCid;
         SubmitterId = submitterId;
     }
 

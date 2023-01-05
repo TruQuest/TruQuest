@@ -31,7 +31,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.Property(s => s.Name).IsRequired();
             builder.Property(s => s.Details).IsRequired();
             builder.Property(s => s.Type).IsRequired();
-            builder.Property(s => s.ImageUrl).IsRequired(false);
+            builder.Property(s => s.ImageIpfsCid).IsRequired(false);
 
             builder
                 .HasOne<UserDm>()
@@ -74,7 +74,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.Property(t => t.State).HasConversion<int>().IsRequired();
             builder.Property(t => t.Title).IsRequired();
             builder.Property(t => t.Details).IsRequired();
-            builder.Property(t => t.ImageUrl).IsRequired(false);
+            builder.Property(t => t.ImageIpfsCid).IsRequired(false);
 
             builder
                 .HasOne<UserDm>()
@@ -106,7 +106,8 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).HasValueGenerator<GuidValueGenerator>();
             builder.Property(e => e.OriginUrl).IsRequired();
-            builder.Property(e => e.TruUrl).IsRequired();
+            builder.Property(e => e.IpfsCid).IsRequired();
+            builder.Property(e => e.PreviewImageIpfsCid).IsRequired();
 
             builder
                 .HasOne<Thing>()
@@ -211,7 +212,8 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).HasValueGenerator<GuidValueGenerator>();
             builder.Property(e => e.OriginUrl).IsRequired();
-            builder.Property(e => e.TruUrl).IsRequired();
+            builder.Property(e => e.IpfsCid).IsRequired();
+            builder.Property(e => e.PreviewImageIpfsCid).IsRequired();
 
             builder
                 .HasOne<SettlementProposal>()

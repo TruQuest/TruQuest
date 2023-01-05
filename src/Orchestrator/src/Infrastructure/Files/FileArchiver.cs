@@ -23,11 +23,11 @@ internal class FileArchiver : IFileArchiver
         _inputModelsAssembly = Assembly.GetAssembly(typeof(IFileArchiver))!;
     }
 
-    public async IAsyncEnumerable<(string ipfsCid, object obj, PropertyInfo prop)> ArchiveAll(
+    public async IAsyncEnumerable<(string ipfsCid, string? extraIpfsCid, object obj, PropertyInfo prop)> ArchiveAll(
         object input, string userId
     )
     {
-        foreach (var prop in input.GetType().GetProperties())
+        foreach (var prop in input.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public))
         {
             var propType = prop.PropertyType;
             Type? elemType = null;
@@ -42,17 +42,17 @@ internal class FileArchiver : IFileArchiver
                 {
                     foreach (var elem in (IEnumerable)prop.GetValue(input)!)
                     {
-                        await foreach (var (ipfsCid, obj, nestedProp) in ArchiveAll(elem, userId))
+                        await foreach (var (ipfsCid, extraIpfsCid, obj, nestedProp) in ArchiveAll(elem, userId))
                         {
-                            yield return (ipfsCid, obj, nestedProp);
+                            yield return (ipfsCid, extraIpfsCid, obj, nestedProp);
                         }
                     }
                 }
                 else
                 {
-                    await foreach (var (ipfsCid, obj, nestedProp) in ArchiveAll(prop.GetValue(input)!, userId))
+                    await foreach (var (ipfsCid, extraIpfsCid, obj, nestedProp) in ArchiveAll(prop.GetValue(input)!, userId))
                     {
-                        yield return (ipfsCid, obj, nestedProp);
+                        yield return (ipfsCid, extraIpfsCid, obj, nestedProp);
                     }
                 }
             }
@@ -63,6 +63,7 @@ internal class FileArchiver : IFileArchiver
                 if (attr != null && (url = (string)prop.GetValue(input)!) != string.Empty)
                 {
                     string ipfsCid;
+                    string? extraIpfsCid = null;
                     if (attr is ImageUrlAttribute)
                     {
                         ipfsCid = "";
@@ -78,11 +79,12 @@ internal class FileArchiver : IFileArchiver
                         var response = await _requestDispatcher.Dispatch(new ArchiveWebPageCommand { Url = url });
                         if (response is ArchiveWebPageSuccessResult result)
                         {
-                            ipfsCid = result.IpfsCid;
+                            ipfsCid = result.HtmlIpfsCid;
+                            extraIpfsCid = result.JpgIpfsCid;
                         }
                     }
 
-                    yield return (ipfsCid, input, prop);
+                    yield return (ipfsCid, extraIpfsCid, input, prop);
                 }
             }
         }

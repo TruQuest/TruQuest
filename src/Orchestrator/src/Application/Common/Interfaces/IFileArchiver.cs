@@ -4,5 +4,5 @@ namespace Application.Common.Interfaces;
 
 public interface IFileArchiver
 {
-    IAsyncEnumerable<(string ipfsCid, object obj, PropertyInfo prop)> ArchiveAll(object input, string userId);
+    IAsyncEnumerable<(string ipfsCid, string? extraIpfsCid, object obj, PropertyInfo prop)> ArchiveAll(object input, string userId);
 }
