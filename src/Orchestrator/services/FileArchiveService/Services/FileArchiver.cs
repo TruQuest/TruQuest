@@ -195,15 +195,10 @@ internal class FileArchiver : IFileArchiver
                 return new Error("Error saving images to local drive");
             }
 
-            // @@TODO: Upload directory instead of separate files.
-            var uploadImageTasks = filePaths
-                .Select(filePath => _fileStorage.Upload(filePath))
-                .ToList();
-
-            string[] ipfsCids;
+            List<string> ipfsCids;
             try
             {
-                ipfsCids = await Task.WhenAll(uploadImageTasks);
+                ipfsCids = await _fileStorage.Upload(filePaths);
             }
             catch (Exception e)
             {
@@ -214,26 +209,13 @@ internal class FileArchiver : IFileArchiver
                     File.Delete(filePath);
                 }
 
-                var ipfsCidsToCleanup = new List<string>();
-                foreach (var task in uploadImageTasks)
-                {
-                    if (task.Status == TaskStatus.RanToCompletion)
-                    {
-                        ipfsCidsToCleanup.Add(await task);
-                    }
-                }
-                if (ipfsCidsToCleanup.Any())
-                {
-                    await _fileStorage.Delete(ipfsCidsToCleanup);
-                }
-
                 return new Error("Error adding images to ipfs");
             }
 
             progress.Report(40);
 
             Debug.Assert(
-                ipfsCids.Length == archiveTasks.Where(t => t.AttachmentType == AttachmentType.Image).Count()
+                ipfsCids.Count == archiveTasks.Where(t => t.AttachmentType == AttachmentType.Image).Count()
             );
 
             int i = 0;
@@ -280,14 +262,9 @@ internal class FileArchiver : IFileArchiver
 
                 progress.Report(85);
 
-                var uploadWebPageTasks = htmlFilePaths
-                    .Concat(previewImageFilePaths)
-                    .Select(filePath => _fileStorage.Upload(filePath))
-                    .ToList();
-
                 try
                 {
-                    ipfsCids = await Task.WhenAll(uploadWebPageTasks);
+                    ipfsCids = await _fileStorage.Upload(htmlFilePaths.Concat(previewImageFilePaths));
                 }
                 catch (Exception e)
                 {
@@ -296,24 +273,11 @@ internal class FileArchiver : IFileArchiver
                     var outputFilesDir = Path.GetDirectoryName(htmlFilePaths.First())!;
                     Directory.Delete(outputFilesDir, recursive: true);
 
-                    var ipfsCidsToCleanup = new List<string>();
-                    foreach (var task in uploadWebPageTasks)
-                    {
-                        if (task.Status == TaskStatus.RanToCompletion)
-                        {
-                            ipfsCidsToCleanup.Add(await task);
-                        }
-                    }
-                    if (ipfsCidsToCleanup.Any())
-                    {
-                        await _fileStorage.Delete(ipfsCidsToCleanup);
-                    }
-
                     return new Error("Error adding webpages to ipfs");
                 }
 
-                var htmlIpfsCids = ipfsCids.Take(ipfsCids.Length / 2).ToList();
-                var previewImageIpfsCids = ipfsCids.TakeLast(ipfsCids.Length / 2).ToList();
+                var htmlIpfsCids = ipfsCids.Take(ipfsCids.Count / 2).ToList();
+                var previewImageIpfsCids = ipfsCids.TakeLast(ipfsCids.Count / 2).ToList();
 
                 Debug.Assert(htmlIpfsCids.Count == previewImageIpfsCids.Count);
                 Debug.Assert(

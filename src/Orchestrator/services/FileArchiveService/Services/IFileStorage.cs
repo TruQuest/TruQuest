@@ -2,6 +2,6 @@ namespace Services;
 
 internal interface IFileStorage
 {
-    Task<string> Upload(string filePath);
+    Task<List<string>> Upload(IEnumerable<string> filePaths);
     Task Delete(IEnumerable<string> ipfsCids);
 }
