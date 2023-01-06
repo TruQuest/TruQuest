@@ -1,7 +1,5 @@
 using System.Buffers;
 
-using Utils;
-
 namespace Services;
 
 internal class ImageSaver : IImageSaver
@@ -30,14 +28,14 @@ internal class ImageSaver : IImageSaver
         _fetchBufferSizeBytes = configuration.GetValue<int>("Files:FetchBufferSizeBytes");
     }
 
-    public async Task<Either<Error, string>> SaveLocalCopy(string url)
+    public async Task<string> SaveLocalCopy(string url)
     {
         using var client = _httpClientFactory.CreateClient("image");
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         var response = await client.SendAsync(request);
         if (!response.IsSuccessStatusCode)
         {
-            return new Error(response.ReasonPhrase!);
+            throw new Exception(response.ReasonPhrase!);
         }
 
         string? contentType;
@@ -52,7 +50,7 @@ internal class ImageSaver : IImageSaver
             long? contentLength = response.Content.Headers.ContentLength;
             if (contentLength > _maxSizeBytes)
             {
-                return new Error("Max size exceeded");
+                throw new Exception("Max size exceeded");
             }
 
             int maxBytesToRead = contentLength != null ? (int)contentLength.Value : _maxSizeBytes + 1;
@@ -105,7 +103,7 @@ internal class ImageSaver : IImageSaver
             if (!signatureVerified)
             {
                 File.Delete(filePath);
-                return new Error("Invalid file signature");
+                throw new Exception("Invalid file signature");
             }
 
             if (contentLength != null)
@@ -113,7 +111,7 @@ internal class ImageSaver : IImageSaver
                 if (bytesRead != contentLength)
                 {
                     File.Delete(filePath);
-                    return new Error(
+                    throw new Exception(
                         "Either connection to the image hosting site was interrupted or " +
                         "the image's declared size is less than its actual size"
                     );
@@ -124,13 +122,13 @@ internal class ImageSaver : IImageSaver
                 if (bytesRead >= maxBytesToRead)
                 {
                     File.Delete(filePath);
-                    return new Error("Max size exceeded");
+                    throw new Exception("Max size exceeded");
                 }
             }
 
             return filePath;
         }
 
-        return new Error("Unsupported MIME-type");
+        throw new Exception("Unsupported MIME-type");
     }
 }

@@ -23,9 +23,7 @@ internal class FileArchiver : IFileArchiver
         _inputModelsAssembly = Assembly.GetAssembly(typeof(IFileArchiver))!;
     }
 
-    public async IAsyncEnumerable<(string ipfsCid, string? extraIpfsCid, object obj, PropertyInfo prop)> ArchiveAll(
-        object input, string userId
-    )
+    public async Task ArchiveAll(object input)
     {
         foreach (var prop in input.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public))
         {
@@ -42,18 +40,12 @@ internal class FileArchiver : IFileArchiver
                 {
                     foreach (var elem in (IEnumerable)prop.GetValue(input)!)
                     {
-                        await foreach (var (ipfsCid, extraIpfsCid, obj, nestedProp) in ArchiveAll(elem, userId))
-                        {
-                            yield return (ipfsCid, extraIpfsCid, obj, nestedProp);
-                        }
+                        await ArchiveAll(elem);
                     }
                 }
                 else
                 {
-                    await foreach (var (ipfsCid, extraIpfsCid, obj, nestedProp) in ArchiveAll(prop.GetValue(input)!, userId))
-                    {
-                        yield return (ipfsCid, extraIpfsCid, obj, nestedProp);
-                    }
+                    await ArchiveAll(prop.GetValue(input)!);
                 }
             }
             else
@@ -62,29 +54,30 @@ internal class FileArchiver : IFileArchiver
                 string url;
                 if (attr != null && (url = (string)prop.GetValue(input)!) != string.Empty)
                 {
-                    string ipfsCid;
-                    string? extraIpfsCid = null;
+                    var backingProp = prop.DeclaringType!
+                        .GetProperties(BindingFlags.Instance | BindingFlags.NonPublic)
+                        .Single(p => p.Name == attr.BackingField);
+
                     if (attr is ImageUrlAttribute)
                     {
-                        ipfsCid = "";
-                        var response = await _requestDispatcher.Dispatch(new ArchiveImageCommand { Url = url });
+                        var response = await _requestDispatcher.GetResult(new ArchiveImageCommand { Url = url });
                         if (response is ArchiveImageSuccessResult result)
                         {
-                            ipfsCid = result.IpfsCid;
+                            backingProp.SetValue(input, result.IpfsCid);
                         }
                     }
-                    else
+                    else if (attr is WebPageUrlAttribute webAttr)
                     {
-                        ipfsCid = "";
-                        var response = await _requestDispatcher.Dispatch(new ArchiveWebPageCommand { Url = url });
+                        var response = await _requestDispatcher.GetResult(new ArchiveWebPageCommand { Url = url });
                         if (response is ArchiveWebPageSuccessResult result)
                         {
-                            ipfsCid = result.HtmlIpfsCid;
-                            extraIpfsCid = result.JpgIpfsCid;
+                            backingProp.SetValue(input, result.HtmlIpfsCid);
+                            prop.DeclaringType
+                                .GetProperties(BindingFlags.Instance | BindingFlags.NonPublic)
+                                .Single(p => p.Name == webAttr.ExtraBackingField)
+                                .SetValue(input, result.JpgIpfsCid);
                         }
                     }
-
-                    yield return (ipfsCid, extraIpfsCid, input, prop);
                 }
             }
         }

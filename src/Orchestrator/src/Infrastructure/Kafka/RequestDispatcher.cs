@@ -26,7 +26,7 @@ internal class RequestDispatcher : IRequestDispatcher
         }
     }
 
-    public async Task<object> Dispatch(object request)
+    public async Task<object> GetResult(object request)
     {
         var requestId = Guid.NewGuid().ToString();
         var tcs = _requestIdToResponseReceivedTcs[requestId] = new();
@@ -43,5 +43,13 @@ internal class RequestDispatcher : IRequestDispatcher
         var result = await tcs.Task;
 
         return result;
+    }
+
+    public async Task Send(object request)
+    {
+        await _producer.ProduceAsync(
+            messageKey: Guid.NewGuid().ToString(),
+            messageValue: request
+        );
     }
 }

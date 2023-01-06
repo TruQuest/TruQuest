@@ -1,5 +1,3 @@
-using System.Reflection;
-
 using Microsoft.Extensions.Logging;
 
 using MediatR;
@@ -59,24 +57,7 @@ internal class SubmitNewSettlementProposalCommandHandler : IRequestHandler<Submi
 
         // check that result.Data == _currentPrincipal.Id
 
-        await foreach (var (ipfsCid, extraIpfsCid, obj, prop) in _fileArchiver.ArchiveAll(command.Input, _currentPrincipal.Id))
-        {
-            _logger.LogDebug("File cid is " + ipfsCid);
-
-            var attr = prop.GetCustomAttribute<FileUrlAttribute>()!;
-            var backingProp = obj.GetType()
-                .GetProperties(BindingFlags.Instance | BindingFlags.NonPublic)
-                .Single(p => p.Name == attr.BackingField);
-            backingProp.SetValue(obj, ipfsCid);
-
-            if (attr is WebPageUrlAttribute webAttr && extraIpfsCid != null)
-            {
-                var extraBackingProp = obj.GetType()
-                    .GetProperties(BindingFlags.Instance | BindingFlags.NonPublic)
-                    .Single(p => p.Name == webAttr.ExtraBackingField);
-                extraBackingProp.SetValue(obj, extraIpfsCid);
-            }
-        }
+        await _fileArchiver.ArchiveAll(command.Input);
 
         var proposal = new SettlementProposal(
             thingId: command.Input.ThingId,
@@ -89,8 +70,8 @@ internal class SubmitNewSettlementProposalCommandHandler : IRequestHandler<Submi
         {
             return new SupportingEvidence(
                 originUrl: e.Url,
-                ipfsCid: e.HtmlIpfsCid,
-                previewImageIpfsCid: e.JpgIpfsCid
+                ipfsCid: e.HtmlIpfsCid!,
+                previewImageIpfsCid: e.JpgIpfsCid!
             );
         }));
 

@@ -1,9 +1,7 @@
-using Utils;
-
 namespace Services;
 
 internal interface IFileStorage
 {
-    Task<Either<Error, string>> Upload(string filePath);
-    Task<Either<Error, string>> UploadJson(object obj);
+    Task<string> Upload(string filePath);
+    Task Delete(IEnumerable<string> ipfsCids);
 }

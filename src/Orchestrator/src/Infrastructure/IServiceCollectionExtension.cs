@@ -220,7 +220,7 @@ public static class IServiceCollectionExtension
                                     .WithBufferSize(1)
                                     .WithWorkersCount(1)
                                     .AddMiddlewares(middlewares =>
-                                        middlewares.Add<ResponseConsumer>(MiddlewareLifetime.Singleton)
+                                        middlewares.Add<MessageConsumer>(MiddlewareLifetime.Singleton)
                                     )
                             )
                             .AddProducer<RequestDispatcher>(producer =>

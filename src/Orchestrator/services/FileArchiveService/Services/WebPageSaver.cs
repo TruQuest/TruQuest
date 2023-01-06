@@ -1,7 +1,5 @@
 using System.Diagnostics;
 
-using Microsoft.Playwright;
-
 namespace Services;
 
 internal class WebPageSaver : IWebPageSaver
@@ -13,14 +11,17 @@ internal class WebPageSaver : IWebPageSaver
         _logger = logger;
     }
 
-    public async Task<(string htmlFilePath, string jpgFilePath)> SaveLocalCopy(string url)
+    public async Task<List<string>> SaveLocalCopies(IEnumerable<string> urls)
     {
         var requestId = Guid.NewGuid().ToString();
 
         using (var fs = new FileStream($"/singlefile/input/{requestId}.txt", FileMode.CreateNew, FileAccess.Write))
         {
             using var sw = new StreamWriter(fs);
-            await sw.WriteLineAsync(url);
+            foreach (var url in urls)
+            {
+                await sw.WriteLineAsync(url);
+            }
             await sw.FlushAsync();
         }
 
@@ -34,41 +35,59 @@ internal class WebPageSaver : IWebPageSaver
         };
 
         using var process = new Process { StartInfo = processInfo };
-        process.Start();
 
-        string? line;
-        while ((line = await process.StandardOutput.ReadLineAsync()) != null)
+        try
         {
-            _logger.LogInformation(line);
+            process.Start();
         }
-        while ((line = await process.StandardError.ReadLineAsync()) != null)
+        catch
         {
-            _logger.LogWarning(line);
+            var dir = new DirectoryInfo($"/singlefile/output/{requestId}");
+            if (dir.Exists)
+            {
+                dir.Delete(recursive: true);
+            }
+            throw;
         }
 
-        await process.WaitForExitAsync();
-
-        url = url.EndsWith('/') ? url : (url + "/");
-        var htmlFilePath = $"/singlefile/output/{requestId}/{url.Replace("://", "__").Replace('/', '_').Replace('?', '_')}.html";
-
-        using var playwright = await Playwright.CreateAsync();
-        await using var browser = await playwright.Chromium.LaunchAsync(new()
+        try
         {
-            ExecutablePath = "/usr/bin/google-chrome",
-            Headless = true
-        });
+            // @@TODO: Figure out what happens if single-file exits with an error. Will WaitForExitAsync throw?
+            // Will it return normally but with process.ExitCode != 0? Or smth else?
+            string? line;
+            while ((line = await process.StandardOutput.ReadLineAsync()) != null)
+            {
+                _logger.LogInformation(line);
+            }
+            while ((line = await process.StandardError.ReadLineAsync()) != null)
+            {
+                _logger.LogWarning(line);
+            }
 
-        var page = await browser.NewPageAsync();
-        await page.GotoAsync("file://" + htmlFilePath);
-
-        var jpgFilePath = htmlFilePath.Substring(0, htmlFilePath.Length - 4) + "jpg";
-        await page.ScreenshotAsync(new()
+            await process.WaitForExitAsync();
+        }
+        catch
         {
-            Path = jpgFilePath,
-            FullPage = false,
-            Timeout = 10000
-        });
+            var dir = new DirectoryInfo($"/singlefile/output/{requestId}");
+            if (dir.Exists)
+            {
+                dir.Delete(recursive: true);
+            }
+            throw;
+        }
 
-        return (htmlFilePath, jpgFilePath);
+        File.Delete($"/singlefile/input/{requestId}.txt");
+
+        // @@??: Check that there are as many output files as there are urls?
+
+        var filePaths = new List<string>(urls.Count());
+        foreach (var url in urls)
+        {
+            var flatUrl = url.EndsWith('/') ? url : (url + "/");
+            flatUrl = flatUrl.Replace("://", "__").Replace('/', '_').Replace('?', '_');
+            filePaths.Add($"/singlefile/output/{requestId}/{flatUrl}.html");
+        }
+
+        return filePaths;
     }
 }

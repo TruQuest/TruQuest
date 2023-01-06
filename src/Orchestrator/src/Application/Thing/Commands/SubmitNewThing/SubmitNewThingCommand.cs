@@ -1,5 +1,3 @@
-using System.Reflection;
-
 using Microsoft.Extensions.Logging;
 
 using MediatR;
@@ -58,24 +56,7 @@ internal class SubmitNewThingCommandHandler : IRequestHandler<SubmitNewThingComm
 
         // check that result.Data == _currentPrincipal.Id
 
-        await foreach (var (ipfsCid, extraIpfsCid, obj, prop) in _fileArchiver.ArchiveAll(command.Input, _currentPrincipal.Id))
-        {
-            _logger.LogDebug("File cid is " + ipfsCid);
-
-            var attr = prop.GetCustomAttribute<FileUrlAttribute>()!;
-            var backingProp = obj.GetType()
-                .GetProperties(BindingFlags.Instance | BindingFlags.NonPublic)
-                .Single(p => p.Name == attr.BackingField);
-            backingProp.SetValue(obj, ipfsCid);
-
-            if (attr is WebPageUrlAttribute webAttr && extraIpfsCid != null)
-            {
-                var extraBackingProp = obj.GetType()
-                    .GetProperties(BindingFlags.Instance | BindingFlags.NonPublic)
-                    .Single(p => p.Name == webAttr.ExtraBackingField);
-                extraBackingProp.SetValue(obj, extraIpfsCid);
-            }
-        }
+        await _fileArchiver.ArchiveAll(command.Input);
 
         var thing = new ThingDm(
             title: command.Input.Title,
@@ -88,8 +69,8 @@ internal class SubmitNewThingCommandHandler : IRequestHandler<SubmitNewThingComm
         {
             return new Evidence(
                 originUrl: e.Url,
-                ipfsCid: e.HtmlIpfsCid,
-                previewImageIpfsCid: e.JpgIpfsCid
+                ipfsCid: e.HtmlIpfsCid!,
+                previewImageIpfsCid: e.JpgIpfsCid!
             );
         }));
         thing.AddTags(command.Input.Tags.Select(t => t.Id));

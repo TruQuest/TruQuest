@@ -13,7 +13,7 @@ internal class ResponseDispatcher : IResponseDispatcher
         _producer = producer;
     }
 
-    public async Task DispatchFor(string requestId, object message)
+    public async Task ReplyTo(string requestId, object message)
     {
         await _producer.ProduceAsync(
             messageKey: Guid.NewGuid().ToString(),
@@ -21,6 +21,18 @@ internal class ResponseDispatcher : IResponseDispatcher
             headers: new MessageHeaders
             {
                 ["requestId"] = Encoding.UTF8.GetBytes(requestId)
+            }
+        );
+    }
+
+    public async Task Send(object message, string? key = null)
+    {
+        await _producer.ProduceAsync(
+            messageKey: key ?? Guid.NewGuid().ToString(),
+            messageValue: message,
+            headers: new MessageHeaders
+            {
+                ["requestId"] = Encoding.UTF8.GetBytes(Guid.Empty.ToString())
             }
         );
     }

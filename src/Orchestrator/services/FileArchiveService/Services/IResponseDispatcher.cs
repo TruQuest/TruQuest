@@ -2,5 +2,6 @@ namespace Services;
 
 internal interface IResponseDispatcher
 {
-    Task DispatchFor(string requestId, object message);
+    Task ReplyTo(string requestId, object message);
+    Task Send(object message, string? key = null);
 }

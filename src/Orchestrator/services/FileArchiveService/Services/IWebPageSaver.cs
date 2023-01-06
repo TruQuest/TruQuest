@@ -2,5 +2,5 @@ namespace Services;
 
 internal interface IWebPageSaver
 {
-    Task<(string htmlFilePath, string jpgFilePath)> SaveLocalCopy(string url);
+    Task<List<string>> SaveLocalCopies(IEnumerable<string> urls);
 }

@@ -29,7 +29,9 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<IImageSignatureVerifier, ImageSignatureVerifier>();
         services.AddSingleton<IImageSaver, ImageSaver>();
         services.AddSingleton<IWebPageSaver, WebPageSaver>();
+        services.AddSingleton<IWebPageScreenshotTaker, WebPageScreenshotTaker>();
         services.AddSingleton<IFileStorage, FileStorage>();
+        services.AddSingleton<IFileArchiver, FileArchiver>();
         services.AddSingleton<IResponseDispatcher, ResponseDispatcher>();
 
         services.AddKafkaFlowHostedService(kafka =>
