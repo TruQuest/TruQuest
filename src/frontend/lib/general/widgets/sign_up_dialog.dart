@@ -12,19 +12,14 @@ import "../../ethereum/bloc/ethereum_actions.dart";
 import "../../ethereum/bloc/ethereum_result_vm.dart";
 
 class SignUpDialog extends StatefulWidget {
-  final CurrentUserLoadedVm currentUserLoadedVm;
-
-  const SignUpDialog({
-    super.key,
-    required this.currentUserLoadedVm,
-  });
+  const SignUpDialog({super.key});
 
   @override
   State<SignUpDialog> createState() => _SignUpDialogState();
 }
 
 class _SignUpDialogState
-    extends StateInject2<SignUpDialog, UserBloc, EthereumBloc> {
+    extends StateUsing2<SignUpDialog, UserBloc, EthereumBloc> {
   late final UserBloc _userBloc = service1;
   late final EthereumBloc _ethereumBloc = service2;
 
@@ -44,11 +39,11 @@ class _SignUpDialogState
             decoration: InputDecoration(hintText: "Username"),
           ),
           SizedBox(height: 12),
-          StreamBuilder<LoadCurrentUserResultVm>(
+          StreamBuilder<LoadCurrentUserSuccessVm>(
             stream: _userBloc.currentUser$,
-            initialData: widget.currentUserLoadedVm,
+            initialData: _userBloc.currentUser$last,
             builder: (context, snapshot) {
-              var user = (snapshot.data! as CurrentUserLoadedVm).user;
+              var user = snapshot.data!.user;
               if (user.state == UserAccountState.guest) {
                 return TextButton(
                   child: Text("Connect account"),
@@ -82,12 +77,19 @@ class _SignUpDialogState
                 return;
               }
 
-              var signature = (vm as SignAuthMessageSuccessVm).signature;
+              vm as SignAuthMessageSuccessVm;
+
               var signUpAction = SignUp(
+                account: vm.account,
                 username: _username!,
-                signature: signature,
+                signature: vm.signature,
               );
               _userBloc.dispatch(signUpAction);
+
+              var error = await signUpAction.result;
+              if (error != null) {
+                return;
+              }
 
               Navigator.of(this.context).pop();
             }

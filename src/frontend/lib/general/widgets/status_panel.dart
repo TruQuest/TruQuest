@@ -8,20 +8,19 @@ import "../../ethereum/bloc/ethereum_result_vm.dart";
 import "sign_up_dialog.dart";
 import "../../user/bloc/user_bloc.dart";
 import "../../widget_extensions.dart";
-import "../../user/bloc/user_actions.dart";
+// import "../../user/bloc/user_actions.dart";
 import "../../user/bloc/user_result_vm.dart";
 import "../../user/models/vm/user_vm.dart";
 
-class StatusPanel extends StatelessWidgetInject2<UserBloc, EthereumBloc> {
+class StatusPanel extends StatelessWidgetUsing2<UserBloc, EthereumBloc> {
   late final UserBloc _userBloc = service1;
   late final EthereumBloc _ethereumBloc = service2;
 
   StatusPanel({super.key});
 
   @override
-  Widget buildInject(BuildContext context) {
-    _userBloc.dispatch(LoadCurrentUser());
-
+  Widget rebuild(BuildContext context) {
+    // _userBloc.dispatch(LoadCurrentUser());
     return LimitedBox(
       maxWidth: 400,
       child: Row(
@@ -70,16 +69,14 @@ class StatusPanel extends StatelessWidgetInject2<UserBloc, EthereumBloc> {
             ),
           ),
           SizedBox(width: 64),
-          StreamBuilder<LoadCurrentUserResultVm>(
+          StreamBuilder<LoadCurrentUserSuccessVm>(
             stream: _userBloc.currentUser$,
-            initialData: CurrentUserLoadingVm(),
             builder: (context, snapshot) {
-              var vm = snapshot.data!;
-              if (vm is CurrentUserLoadingVm) {
+              if (snapshot.data == null) {
                 return CircularProgressIndicator(color: Colors.white);
               }
 
-              var user = (vm as CurrentUserLoadedVm).user;
+              var user = snapshot.data!.user;
               if (user.state == UserAccountState.guest) {
                 return TextButton(
                   child: Text(
@@ -90,7 +87,7 @@ class StatusPanel extends StatelessWidgetInject2<UserBloc, EthereumBloc> {
                     showDialog(
                       context: context,
                       barrierDismissible: false,
-                      builder: (_) => SignUpDialog(currentUserLoadedVm: vm),
+                      builder: (_) => SignUpDialog(),
                     );
                   },
                 );

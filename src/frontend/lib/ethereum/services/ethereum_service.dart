@@ -3,6 +3,7 @@ import "dart:convert";
 
 import "package:either_dart/either.dart";
 import "package:flutter_web3/flutter_web3.dart";
+import 'package:tuple/tuple.dart';
 
 import "../errors/ethereum_error.dart";
 
@@ -39,8 +40,12 @@ class EthereumService {
 
       metamask.onAccountsChanged((accounts) {
         print("Accounts changed: $accounts");
-        _connectedAccount = accounts.isNotEmpty ? accounts.first : null;
-        _connectedAccountChangedEventChannel.add(_connectedAccount);
+        var connectedAccount = accounts.isNotEmpty ? accounts.first : null;
+        // is this redundant?
+        if (_connectedAccount != connectedAccount) {
+          _connectedAccount = connectedAccount;
+          _connectedAccountChangedEventChannel.add(_connectedAccount);
+        }
       });
 
       metamask.getChainId().then((chainId) {
@@ -52,6 +57,7 @@ class EthereumService {
       // @@NOTE: ?? accountsChanged event doesn't fire on launch even though MM says it does ??
       metamask.getAccounts().then((accounts) {
         _connectedAccount = accounts.isNotEmpty ? accounts.first : null;
+        print("Current account: $_connectedAccount");
         _connectedAccountChangedEventChannel.add(_connectedAccount);
       });
     }
@@ -99,8 +105,6 @@ class EthereumService {
       if (accounts.isEmpty) {
         return EthereumError("No account selected");
       }
-      _connectedAccount = accounts.first;
-      return null;
     } on EthereumUserRejected catch (e) {
       print(e);
       return EthereumError("User rejected the request");
@@ -108,15 +112,21 @@ class EthereumService {
       print(e);
       return EthereumError(e.toString());
     }
+
+    return null;
   }
 
-  Future<Either<EthereumError, String>> signAuthMessage(String username) async {
+  Future<Either<EthereumError, Tuple2<String, String>>> signAuthMessage(
+    String username,
+  ) async {
     var metamask = ethereum;
     if (metamask == null) {
       return Left(EthereumError("Metamask not installed"));
     }
-    if (_connectedAccount == null) {
-      return Left(EthereumError("No connected account"));
+
+    var connectedAccount = _connectedAccount;
+    if (connectedAccount == null) {
+      return Left(EthereumError("No account connected"));
     }
 
     Map<String, dynamic> map = {
@@ -151,10 +161,10 @@ class EthereumService {
     try {
       var signature = await metamask.request<String>(
         "eth_signTypedData_v4",
-        [_connectedAccount, data],
+        [connectedAccount, data],
       );
 
-      return Right(signature);
+      return Right(Tuple2(connectedAccount, signature));
     } catch (e) {
       print(e);
       return Left(EthereumError(e.toString()));

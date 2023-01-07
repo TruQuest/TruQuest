@@ -1,5 +1,7 @@
 import "dart:async";
 
+import '../../general/services/server_connector.dart';
+import '../../general/errors/error.dart';
 import 'user_api_service.dart';
 import "../../ethereum/services/ethereum_service.dart";
 import "../models/vm/user_vm.dart";
@@ -7,6 +9,7 @@ import "../models/vm/user_vm.dart";
 class UserService {
   final EthereumService _ethereumService;
   final UserApiService _userApiService;
+  final ServerConnector _serverConnector;
 
   final Map<String, String> _accountToJwt = {};
   final Map<String, String> _accountToUsername = {};
@@ -16,25 +19,36 @@ class UserService {
   Stream<UserVm> get currentUserChanged$ =>
       _currentUserChangedEventChannel.stream;
 
-  UserService(this._ethereumService, this._userApiService) {
-    _ethereumService.connectedAccountChanged$.listen((account) {
-      final UserAccountState state;
-      String? username;
-      if (account == null) {
-        state = UserAccountState.guest;
-      } else if (!_accountToJwt.containsKey(account)) {
-        state = UserAccountState.connectedNotLoggedIn;
-      } else {
-        state = UserAccountState.connectedAndLoggedIn;
-        username = _accountToUsername[account];
-      }
+  UserService(
+    this._ethereumService,
+    this._userApiService,
+    this._serverConnector,
+  ) {
+    _ethereumService.connectedAccountChanged$.listen(
+      (account) => _reloadUser(account),
+    );
+  }
 
-      _currentUserChangedEventChannel.add(UserVm(
-        state: state,
-        ethereumAccount: account,
-        username: username,
-      ));
-    });
+  void _reloadUser(String? account) {
+    final UserAccountState state;
+    String? username;
+    if (account == null) {
+      state = UserAccountState.guest;
+      _serverConnector.disconnectFromHub();
+    } else if (!_accountToJwt.containsKey(account)) {
+      state = UserAccountState.connectedNotLoggedIn;
+      _serverConnector.disconnectFromHub();
+    } else {
+      state = UserAccountState.connectedAndLoggedIn;
+      username = _accountToUsername[account];
+      _serverConnector.connectToHub(_accountToJwt[account]!);
+    }
+
+    _currentUserChangedEventChannel.add(UserVm(
+      state: state,
+      ethereumAccount: account,
+      username: username,
+    ));
   }
 
   UserVm getCurrentUser() {
@@ -56,7 +70,22 @@ class UserService {
     );
   }
 
-  Future signUp(String username, String signature) async {
-    await _userApiService.signUp(username, signature);
+  Future<Error?> signUp(
+    String account,
+    String username,
+    String signature,
+  ) async {
+    try {
+      var result = await _userApiService.signUp(username, signature);
+      _accountToJwt[account] = result.token;
+      _accountToUsername[account] = username;
+      // connectedAccount here can actually be different from account
+      _reloadUser(_ethereumService.connectedAccount);
+    } on Error catch (e) {
+      print(e);
+      return e;
+    }
+
+    return null;
   }
 }

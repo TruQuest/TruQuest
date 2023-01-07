@@ -64,7 +64,9 @@ class EthereumBloc extends Bloc<EthereumAction> {
       return;
     }
 
-    var signature = result.right;
-    action.complete(SignAuthMessageSuccessVm(signature: signature));
+    action.complete(SignAuthMessageSuccessVm(
+      account: result.right.item1,
+      signature: result.right.item2,
+    ));
   }
 }

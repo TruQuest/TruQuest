@@ -2,18 +2,10 @@ import "../models/vm/user_vm.dart";
 
 abstract class UserResultVm {}
 
-abstract class LoadCurrentUserResultVm extends UserResultVm {}
-
-class CurrentUserLoadedVm extends LoadCurrentUserResultVm {
+class LoadCurrentUserSuccessVm extends UserResultVm {
   final UserVm user;
 
-  CurrentUserLoadedVm({required this.user});
+  LoadCurrentUserSuccessVm({required this.user});
 }
 
-class CurrentUserLoadingVm extends LoadCurrentUserResultVm {}
-
-abstract class SignUpResultVm extends UserResultVm {}
-
-class SignUpSuccessVm extends SignUpResultVm {}
-
-class SignUpFailureVm extends SignUpResultVm {}
+class SignUpFailureVm extends UserResultVm {}

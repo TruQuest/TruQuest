@@ -1,10 +1,11 @@
 import 'package:dio/dio.dart';
 
+import '../../general/errors/error.dart';
+import '../models/rvm/sign_up_rvm.dart';
 import '../../general/services/server_connector.dart';
 import '../errors/user_error.dart';
 import '../models/im/sign_up_command.dart';
 import '../../general/errors/api_error.dart';
-import '../../general/errors/authentication_token_expired_error.dart';
 import '../../general/errors/connection_error.dart';
 import '../../general/errors/forbidden_error.dart';
 import '../../general/errors/invalid_authentication_token_error.dart';
@@ -17,7 +18,7 @@ class UserApiService {
 
   UserApiService(ServerConnector serverConnector) : _dio = serverConnector.dio;
 
-  dynamic _wrapError(DioError dioError) {
+  Error _wrapError(DioError dioError) {
     // ignore: missing_enum_constant_in_switch
     switch (dioError.type) {
       case DioErrorType.connectTimeout:
@@ -42,9 +43,9 @@ class UserApiService {
           case 401:
             var errorMessage =
                 dioError.response!.data['error']['errors'].values.first.first;
-            if (errorMessage.contains('token expired at')) {
-              return AuthenticationTokenExpiredError();
-            }
+            // if (errorMessage.contains('token expired at')) {
+            //   return AuthenticationTokenExpiredError();
+            // }
             return InvalidAuthenticationTokenError(errorMessage);
           case 403:
             return ForbiddenError();
@@ -56,10 +57,10 @@ class UserApiService {
     return ApiError();
   }
 
-  Future signUp(String username, String signature) async {
+  Future<SignUpRvm> signUp(String username, String signature) async {
     try {
-      await _dio.post(
-        '/user/signup',
+      var response = await _dio.post(
+        "/user/signup",
         data: SignUpCommand(
           input: SignUpIm(
             username: username,
@@ -67,6 +68,8 @@ class UserApiService {
           signature: signature,
         ).toJson(),
       );
+
+      return SignUpRvm.fromJson(response.data['data']);
     } on DioError catch (error) {
       throw _wrapError(error);
     }

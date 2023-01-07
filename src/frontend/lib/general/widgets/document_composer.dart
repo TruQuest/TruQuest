@@ -3,6 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 
+import '../../thing/bloc/thing_actions.dart';
+import '../../thing/bloc/thing_bloc.dart';
+import '../../widget_extensions.dart';
+
 class DocumentComposer extends StatefulWidget {
   final List<Widget> sideBlocks;
 
@@ -12,7 +16,9 @@ class DocumentComposer extends StatefulWidget {
   State<DocumentComposer> createState() => _DocumentComposerState();
 }
 
-class _DocumentComposerState extends State<DocumentComposer> {
+class _DocumentComposerState extends StateUsing<DocumentComposer, ThingBloc> {
+  late final ThingBloc _thingBloc = service;
+
   final quill.QuillController _controller = quill.QuillController.basic();
 
   @override
@@ -33,7 +39,7 @@ class _DocumentComposerState extends State<DocumentComposer> {
               children: [
                 IconButton(
                   padding: EdgeInsets.zero,
-                  icon: Icon(Icons.preview_outlined),
+                  icon: Icon(Icons.help_outline),
                   iconSize: 20,
                   splashRadius: 13,
                   color: Colors.blue[900],
@@ -45,7 +51,9 @@ class _DocumentComposerState extends State<DocumentComposer> {
                   iconSize: 20,
                   splashRadius: 13,
                   color: Colors.red[800],
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
                 ),
               ],
             ),
@@ -139,8 +147,10 @@ class _DocumentComposerState extends State<DocumentComposer> {
                               vertical: 16,
                             ),
                           ),
-                          child: Text("Submit"),
-                          onPressed: () {},
+                          child: Text("Preview draft"),
+                          onPressed: () {
+                            _thingBloc.dispatch(CreateNewThingDraft());
+                          },
                         ),
                       ),
                     ),

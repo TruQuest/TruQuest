@@ -1,4 +1,3 @@
-using System.Net.Http.Headers;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
 
@@ -97,7 +96,7 @@ public static class IServiceCollectionExtension
                 {
                     OnMessageReceived = context =>
                     {
-                        if (context.Request.Path.StartsWithSegments("/ws"))
+                        if (context.Request.Path.StartsWithSegments("/hub"))
                         {
                             var accessToken = context.Request.Query["access_token"];
                             if (!string.IsNullOrEmpty(accessToken))
@@ -117,7 +116,7 @@ public static class IServiceCollectionExtension
 
                         authenticationContext.User = context.Principal;
 
-                        if (context.Request.Path.StartsWithSegments("/ws"))
+                        if (context.Request.Path.StartsWithSegments("/hub"))
                         {
                             authenticationContext.Token = context.SecurityToken;
                         }

@@ -10,11 +10,16 @@ class EvidenceBlock extends StatefulWidget {
 }
 
 class _EvidenceBlockState extends State<EvidenceBlock> {
-  final List<String> _links = ["Politics", "Sport", "IT"];
+  final List<String> _links = [
+    "http://sports.ru/",
+    "https://media.istockphoto.com/id/1214625216/photo/elephant-with-a-zebra-skin-walking-in-savannah-this-is-a-3d-render-illustration.jpg?b=1&s=170667a&w=0&k=20&c=rRpDFrSK4uVCq73R2AaevGfq5RkqSq0MRZZ_RnYxLX8=",
+    "http://www.stackoverflow.com/",
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         OutlinedButton(
           style: OutlinedButton.styleFrom(
@@ -52,18 +57,24 @@ class _EvidenceBlockState extends State<EvidenceBlock> {
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.blue[800],
                 side: BorderSide(color: Colors.blue[800]!),
+                padding: const EdgeInsets.fromLTRB(4, 0, 8, 0),
+                minimumSize: Size(0, 36),
               ),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Spacer(),
-                  Text(link),
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Icon(
-                        Icons.delete_outline,
-                        size: 18,
-                      ),
+                  Icon(
+                    Icons.delete_outline,
+                    size: 18,
+                  ),
+                  SizedBox(width: 2),
+                  Flexible(
+                    child: Text(
+                      link,
+                      overflow: TextOverflow.fade,
+                      softWrap: false,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12),
                     ),
                   ),
                 ],

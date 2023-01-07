@@ -10,11 +10,12 @@ class TagsBlock extends StatefulWidget {
 }
 
 class _TagsBlockState extends State<TagsBlock> {
-  final List<String> _tags = ["Politics", "Sport", "IT"];
+  final List<String> _tags = ["Politics", "Sport", "IT", "Entertainment"];
 
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         OutlinedButton(
           style: OutlinedButton.styleFrom(
@@ -45,31 +46,43 @@ class _TagsBlockState extends State<TagsBlock> {
           },
         ),
         SizedBox(height: 6),
-        ..._tags.map(
-          (tag) => Padding(
-            padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.purple[800],
-                side: BorderSide(color: Colors.purple[800]!),
-              ),
-              child: Row(
-                children: [
-                  Spacer(),
-                  Text(tag),
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Icon(
-                        Icons.delete_outline,
-                        size: 18,
-                      ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _tags
+                .map(
+                  (tag) => OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.purple[800],
+                      side: BorderSide(color: Colors.purple[800]!),
+                      padding: const EdgeInsets.fromLTRB(4, 0, 8, 0),
+                      minimumSize: Size(0, 36),
                     ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.delete_outline,
+                          size: 18,
+                        ),
+                        SizedBox(width: 2),
+                        Flexible(
+                          child: Text(
+                            tag,
+                            overflow: TextOverflow.fade,
+                            softWrap: false,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                    onPressed: () {},
                   ),
-                ],
-              ),
-              onPressed: () {},
-            ),
+                )
+                .toList(),
           ),
         ),
       ],

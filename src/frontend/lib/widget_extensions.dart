@@ -25,18 +25,18 @@ class ServiceScope extends InheritedWidget {
   }
 }
 
-abstract class _BaseStatelessWidgetInject extends StatelessWidget {
+abstract class _BaseStatelessWidgetUsing extends StatelessWidget {
   late BuildContext _context;
 
-  _BaseStatelessWidgetInject({super.key});
+  _BaseStatelessWidgetUsing({super.key});
 
   @override
   Widget build(BuildContext context) {
     _context = context;
-    return buildInject(context);
+    return rebuild(context);
   }
 
-  Widget buildInject(BuildContext context);
+  Widget rebuild(BuildContext context);
 
   T _resolveScoped<T>() {
     var provider = _context.dependOnInheritedWidgetOfExactType<ServiceScope>();
@@ -44,27 +44,27 @@ abstract class _BaseStatelessWidgetInject extends StatelessWidget {
   }
 }
 
-abstract class StatelessWidgetInject<TDependency>
-    extends _BaseStatelessWidgetInject {
+abstract class StatelessWidgetUsing<TDependency>
+    extends _BaseStatelessWidgetUsing {
   late final TDependency service = _resolveDependency<TDependency>();
   late final TDependency scopedService = _resolveScoped<TDependency>();
 
-  StatelessWidgetInject({super.key});
+  StatelessWidgetUsing({super.key});
 }
 
-abstract class StatelessWidgetInject2<TDependency1, TDependency2>
-    extends _BaseStatelessWidgetInject {
+abstract class StatelessWidgetUsing2<TDependency1, TDependency2>
+    extends _BaseStatelessWidgetUsing {
   late final TDependency1 service1 = _resolveDependency<TDependency1>();
   late final TDependency1 scopedService1 = _resolveScoped<TDependency1>();
 
   late final TDependency2 service2 = _resolveDependency<TDependency2>();
   late final TDependency2 scopedService2 = _resolveScoped<TDependency2>();
 
-  StatelessWidgetInject2({super.key});
+  StatelessWidgetUsing2({super.key});
 }
 
-abstract class StatelessWidgetInject3<TDependency1, TDependency2, TDependency3>
-    extends _BaseStatelessWidgetInject {
+abstract class StatelessWidgetUsing3<TDependency1, TDependency2, TDependency3>
+    extends _BaseStatelessWidgetUsing {
   late final TDependency1 service1 = _resolveDependency<TDependency1>();
   late final TDependency1 scopedService1 = _resolveScoped<TDependency1>();
 
@@ -74,11 +74,11 @@ abstract class StatelessWidgetInject3<TDependency1, TDependency2, TDependency3>
   late final TDependency3 service3 = _resolveDependency<TDependency3>();
   late final TDependency3 scopedService3 = _resolveScoped<TDependency3>();
 
-  StatelessWidgetInject3({super.key});
+  StatelessWidgetUsing3({super.key});
 }
 
-abstract class StatelessWidgetInject4<TDependency1, TDependency2, TDependency3,
-    TDependency4> extends _BaseStatelessWidgetInject {
+abstract class StatelessWidgetUsing4<TDependency1, TDependency2, TDependency3,
+    TDependency4> extends _BaseStatelessWidgetUsing {
   late final TDependency1 service1 = _resolveDependency<TDependency1>();
   late final TDependency1 scopedService1 = _resolveScoped<TDependency1>();
 
@@ -91,10 +91,10 @@ abstract class StatelessWidgetInject4<TDependency1, TDependency2, TDependency3,
   late final TDependency4 service4 = _resolveDependency<TDependency4>();
   late final TDependency4 scopedService4 = _resolveScoped<TDependency4>();
 
-  StatelessWidgetInject4({super.key});
+  StatelessWidgetUsing4({super.key});
 }
 
-abstract class _BaseStateInject<TWidget extends StatefulWidget>
+abstract class _BaseStateUsing<TWidget extends StatefulWidget>
     extends State<TWidget> {
   T _resolveScoped<T>() {
     var provider = context.dependOnInheritedWidgetOfExactType<ServiceScope>();
@@ -102,14 +102,14 @@ abstract class _BaseStateInject<TWidget extends StatefulWidget>
   }
 }
 
-abstract class StateInject<TWidget extends StatefulWidget, TDependency>
-    extends _BaseStateInject<TWidget> {
+abstract class StateUsing<TWidget extends StatefulWidget, TDependency>
+    extends _BaseStateUsing<TWidget> {
   late final TDependency service = _resolveDependency<TDependency>();
   late final TDependency scopedService = _resolveScoped<TDependency>();
 }
 
-abstract class StateInject2<TWidget extends StatefulWidget, TDependency1,
-    TDependency2> extends _BaseStateInject<TWidget> {
+abstract class StateUsing2<TWidget extends StatefulWidget, TDependency1,
+    TDependency2> extends _BaseStateUsing<TWidget> {
   late final TDependency1 service1 = _resolveDependency<TDependency1>();
   late final TDependency1 scopedService1 = _resolveScoped<TDependency1>();
 
@@ -117,8 +117,8 @@ abstract class StateInject2<TWidget extends StatefulWidget, TDependency1,
   late final TDependency2 scopedService2 = _resolveScoped<TDependency2>();
 }
 
-abstract class StateInject3<TWidget extends StatefulWidget, TDependency1,
-    TDependency2, TDependency3> extends _BaseStateInject<TWidget> {
+abstract class StateUsing3<TWidget extends StatefulWidget, TDependency1,
+    TDependency2, TDependency3> extends _BaseStateUsing<TWidget> {
   late final TDependency1 service1 = _resolveDependency<TDependency1>();
   late final TDependency1 scopedService1 = _resolveScoped<TDependency1>();
 
@@ -129,12 +129,8 @@ abstract class StateInject3<TWidget extends StatefulWidget, TDependency1,
   late final TDependency3 scopedService3 = _resolveScoped<TDependency3>();
 }
 
-abstract class StateInject4<
-    TWidget extends StatefulWidget,
-    TDependency1,
-    TDependency2,
-    TDependency3,
-    TDependency4> extends _BaseStateInject<TWidget> {
+abstract class StateUsing4<TWidget extends StatefulWidget, TDependency1,
+    TDependency2, TDependency3, TDependency4> extends _BaseStateUsing<TWidget> {
   late final TDependency1 service1 = _resolveDependency<TDependency1>();
   late final TDependency1 scopedService1 = _resolveScoped<TDependency1>();
 

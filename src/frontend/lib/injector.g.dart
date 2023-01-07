@@ -12,11 +12,14 @@ class _$Injector extends Injector {
     final KiwiContainer container = KiwiContainer();
     container
       ..registerSingleton((c) => UserBloc(c<UserService>()))
-      ..registerSingleton(
-          (c) => UserService(c<EthereumService>(), c<UserApiService>()))
+      ..registerSingleton((c) => UserService(
+          c<EthereumService>(), c<UserApiService>(), c<ServerConnector>()))
       ..registerSingleton((c) => EthereumBloc(c<EthereumService>()))
       ..registerSingleton((c) => EthereumService())
       ..registerSingleton((c) => ServerConnector())
-      ..registerSingleton((c) => UserApiService(c<ServerConnector>()));
+      ..registerSingleton((c) => UserApiService(c<ServerConnector>()))
+      ..registerSingleton((c) => ThingApiService(c<ServerConnector>()))
+      ..registerSingleton((c) => ThingService(c<ThingApiService>()))
+      ..registerSingleton((c) => ThingBloc(c<ThingService>()));
   }
 }

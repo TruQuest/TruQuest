@@ -1,5 +1,7 @@
 import "dart:async";
 
+import 'package:rxdart/rxdart.dart';
+
 import "user_result_vm.dart";
 import "../services/user_service.dart";
 import "user_actions.dart";
@@ -8,10 +10,11 @@ import "../../general/bloc/bloc.dart";
 class UserBloc extends Bloc<UserAction> {
   final UserService _userService;
 
-  final StreamController<LoadCurrentUserResultVm> _currentUserChannel =
-      StreamController<LoadCurrentUserResultVm>.broadcast();
-  Stream<LoadCurrentUserResultVm> get currentUser$ =>
+  final BehaviorSubject<LoadCurrentUserSuccessVm> _currentUserChannel =
+      BehaviorSubject<LoadCurrentUserSuccessVm>();
+  Stream<LoadCurrentUserSuccessVm> get currentUser$ =>
       _currentUserChannel.stream;
+  LoadCurrentUserSuccessVm get currentUser$last => _currentUserChannel.value;
 
   UserBloc(this._userService) {
     actionChannel.stream.listen((action) {
@@ -23,7 +26,7 @@ class UserBloc extends Bloc<UserAction> {
     });
 
     _userService.currentUserChanged$.listen((user) {
-      _currentUserChannel.add(CurrentUserLoadedVm(user: user));
+      _currentUserChannel.add(LoadCurrentUserSuccessVm(user: user));
     });
   }
 
@@ -32,10 +35,15 @@ class UserBloc extends Bloc<UserAction> {
 
   void _loadCurrentUser(LoadCurrentUser action) async {
     var user = _userService.getCurrentUser();
-    _currentUserChannel.add(CurrentUserLoadedVm(user: user));
+    _currentUserChannel.add(LoadCurrentUserSuccessVm(user: user));
   }
 
   void _signUp(SignUp action) async {
-    await _userService.signUp(action.username, action.signature);
+    var error = await _userService.signUp(
+      action.account,
+      action.username,
+      action.signature,
+    );
+    action.complete(error != null ? SignUpFailureVm() : null);
   }
 }

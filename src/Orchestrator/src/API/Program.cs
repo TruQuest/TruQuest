@@ -1,12 +1,17 @@
 using System.Text.Json;
 using System.Diagnostics;
 
+using Microsoft.AspNetCore.SignalR;
+
 using KafkaFlow;
 
 using Application;
 using Infrastructure;
 
 using API.BackgroundServices;
+using API.Hubs.Filters;
+using API.Hubs;
+using API.Controllers.Filters;
 
 namespace API;
 
@@ -36,7 +41,10 @@ public static class WebApplicationBuilderExtension
     public static WebApplicationBuilder ConfigureServices(this WebApplicationBuilder builder)
     {
         builder.Services
-            .AddControllers()
+            .AddControllers(options =>
+            {
+                options.Filters.Add<ConvertHandleErrorToMvcResponseFilter>();
+            })
             .AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
@@ -58,6 +66,25 @@ public static class WebApplicationBuilderExtension
         builder.Services.AddApplication();
         builder.Services.AddInfrastructure(builder.Configuration);
 
+        builder.Services
+            .AddSignalR()
+            .AddHubOptions<TruQuestHub>(options =>
+            {
+                options.KeepAliveInterval = TimeSpan.FromSeconds(90);
+                options.ClientTimeoutInterval = TimeSpan.FromSeconds(180);
+
+                options.AddFilter<ConvertHandleErrorToHubExceptionFilter>();
+                options.AddFilter<CopyAuthenticationContextToMethodInvocationScopeFilter>();
+                // options.AddFilter<AddConnectionIdProviderToMethodInvocationScopeFilter>();
+            })
+            .AddJsonProtocol(options =>
+            {
+                options.PayloadSerializerOptions.PropertyNameCaseInsensitive = true;
+                options.PayloadSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+            });
+
+        // builder.Services.AddScoped<IConnectionIdProvider, ConnectionIdProvider>();
+
         builder.Services.AddHostedService<ContractEventTracker>();
         builder.Services.AddHostedService<BlockTracker>();
 
@@ -75,9 +102,10 @@ public static class WebApplicationBuilderExtension
         }
 
         // app.UseHttpsRedirection();
-        // app.UseAuthorization();
+        app.UseAuthentication();
 
         app.MapControllers();
+        app.MapHub<TruQuestHub>("/hub");
 
         return app;
     }
