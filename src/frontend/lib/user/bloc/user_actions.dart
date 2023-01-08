@@ -1,5 +1,5 @@
-import "user_result_vm.dart";
-import "../../general/bloc/mixins.dart";
+import 'user_result_vm.dart';
+import '../../general/bloc/mixins.dart';
 
 abstract class UserAction {}
 

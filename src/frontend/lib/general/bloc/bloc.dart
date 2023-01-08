@@ -1,4 +1,4 @@
-import "dart:async";
+import 'dart:async';
 
 abstract class Bloc<TAction> {
   StreamController<TAction> actionChannel = StreamController<TAction>();

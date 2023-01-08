@@ -60,7 +60,7 @@ class UserApiService {
   Future<SignUpRvm> signUp(String username, String signature) async {
     try {
       var response = await _dio.post(
-        "/user/signup",
+        '/user/signup',
         data: SignUpCommand(
           input: SignUpIm(
             username: username,

@@ -1,10 +1,10 @@
-import "dart:async";
+import 'dart:async';
 
 import '../../general/services/server_connector.dart';
 import '../../general/errors/error.dart';
 import 'user_api_service.dart';
-import "../../ethereum/services/ethereum_service.dart";
-import "../models/vm/user_vm.dart";
+import '../../ethereum/services/ethereum_service.dart';
+import '../models/vm/user_vm.dart';
 
 class UserService {
   final EthereumService _ethereumService;

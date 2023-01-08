@@ -1,7 +1,7 @@
 // ignore_for_file: must_be_immutable
 
-import "package:flutter/widgets.dart";
-import "package:kiwi/kiwi.dart";
+import 'package:flutter/widgets.dart';
+import 'package:kiwi/kiwi.dart';
 
 T _resolveDependency<T>() => KiwiContainer().resolve<T>();
 

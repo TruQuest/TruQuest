@@ -1,11 +1,11 @@
-import "dart:async";
-import "dart:convert";
+import 'dart:async';
+import 'dart:convert';
 
-import "package:either_dart/either.dart";
-import "package:flutter_web3/flutter_web3.dart";
+import 'package:either_dart/either.dart';
+import 'package:flutter_web3/flutter_web3.dart';
 import 'package:tuple/tuple.dart';
 
-import "../errors/ethereum_error.dart";
+import '../errors/ethereum_error.dart';
 
 class EthereumService {
   final bool available;
@@ -31,7 +31,7 @@ class EthereumService {
     var metamask = ethereum;
     if (metamask != null) {
       metamask.onChainChanged((chainId) {
-        print("Chain changed: $chainId");
+        print('Chain changed: $chainId');
         if (_connectedChainId != chainId) {
           _connectedChainId = chainId;
           _connectedChainChangedEventChannel.add(chainId);
@@ -39,7 +39,7 @@ class EthereumService {
       });
 
       metamask.onAccountsChanged((accounts) {
-        print("Accounts changed: $accounts");
+        print('Accounts changed: $accounts');
         var connectedAccount = accounts.isNotEmpty ? accounts.first : null;
         // is this redundant?
         if (_connectedAccount != connectedAccount) {
@@ -49,7 +49,7 @@ class EthereumService {
       });
 
       metamask.getChainId().then((chainId) {
-        print("Current chain: $chainId");
+        print('Current chain: $chainId');
         _connectedChainId = chainId;
         _connectedChainChangedEventChannel.add(chainId);
       });
@@ -57,7 +57,7 @@ class EthereumService {
       // @@NOTE: ?? accountsChanged event doesn't fire on launch even though MM says it does ??
       metamask.getAccounts().then((accounts) {
         _connectedAccount = accounts.isNotEmpty ? accounts.first : null;
-        print("Current account: $_connectedAccount");
+        print('Current account: $_connectedAccount');
         _connectedAccountChangedEventChannel.add(_connectedAccount);
       });
     }
@@ -66,7 +66,7 @@ class EthereumService {
   Future<EthereumError?> switchEthereumChain() async {
     var metamask = ethereum;
     if (metamask == null) {
-      return EthereumError("Metamask not installed");
+      return EthereumError('Metamask not installed');
     }
 
     try {
@@ -77,13 +77,13 @@ class EthereumService {
       try {
         await metamask.walletAddChain(
           chainId: validChainId,
-          chainName: "Ganache",
+          chainName: 'Ganache',
           nativeCurrency: CurrencyParams(
-            name: "Ether",
-            symbol: "ETH",
+            name: 'Ether',
+            symbol: 'ETH',
             decimals: 18,
           ),
-          rpcUrls: ["http://localhost:7545/"],
+          rpcUrls: ['http://localhost:7545/'],
         );
       } catch (e) {
         print(e);
@@ -97,17 +97,17 @@ class EthereumService {
   Future<EthereumError?> connectAccount() async {
     var metamask = ethereum;
     if (metamask == null) {
-      return EthereumError("Metamask not installed");
+      return EthereumError('Metamask not installed');
     }
 
     try {
       var accounts = await metamask.requestAccount();
       if (accounts.isEmpty) {
-        return EthereumError("No account selected");
+        return EthereumError('No account selected');
       }
     } on EthereumUserRejected catch (e) {
       print(e);
-      return EthereumError("User rejected the request");
+      return EthereumError('User rejected the request');
     } catch (e) {
       print(e);
       return EthereumError(e.toString());
@@ -121,38 +121,38 @@ class EthereumService {
   ) async {
     var metamask = ethereum;
     if (metamask == null) {
-      return Left(EthereumError("Metamask not installed"));
+      return Left(EthereumError('Metamask not installed'));
     }
 
     var connectedAccount = _connectedAccount;
     if (connectedAccount == null) {
-      return Left(EthereumError("No account connected"));
+      return Left(EthereumError('No account connected'));
     }
 
     Map<String, dynamic> map = {
-      "types": {
-        "EIP712Domain": [
-          {"name": "name", "type": "string"},
-          {"name": "version", "type": "string"},
-          {"name": "chainId", "type": "uint256"},
-          {"name": "verifyingContract", "type": "address"},
-          {"name": "salt", "type": "bytes32"},
+      'types': {
+        'EIP712Domain': [
+          {'name': 'name', 'type': 'string'},
+          {'name': 'version', 'type': 'string'},
+          {'name': 'chainId', 'type': 'uint256'},
+          {'name': 'verifyingContract', 'type': 'address'},
+          {'name': 'salt', 'type': 'bytes32'},
         ],
-        "SignUpTd": [
-          {"name": "username", "type": "string"},
+        'SignUpTd': [
+          {'name': 'username', 'type': 'string'},
         ],
       },
-      "domain": {
-        "name": "TruQuest",
-        "version": "0.0.1",
-        "chainId": validChainId,
-        "verifyingContract": "0x32D41E4e24F97ec7D52e3c43F8DbFe209CBd0e4c",
-        "salt":
-            "0xf2d857f4a3edcb9b78b4d503bfe733db1e3f6cdc2b7971ee739626c97e86a558",
+      'domain': {
+        'name': 'TruQuest',
+        'version': '0.0.1',
+        'chainId': validChainId,
+        'verifyingContract': '0x32D41E4e24F97ec7D52e3c43F8DbFe209CBd0e4c',
+        'salt':
+            '0xf2d857f4a3edcb9b78b4d503bfe733db1e3f6cdc2b7971ee739626c97e86a558',
       },
-      "primaryType": "SignUpTd",
-      "message": {
-        "username": username,
+      'primaryType': 'SignUpTd',
+      'message': {
+        'username': username,
       }
     };
 
@@ -160,7 +160,7 @@ class EthereumService {
 
     try {
       var signature = await metamask.request<String>(
-        "eth_signTypedData_v4",
+        'eth_signTypedData_v4',
         [connectedAccount, data],
       );
 

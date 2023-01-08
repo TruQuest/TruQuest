@@ -1,9 +1,9 @@
 // ignore_for_file: prefer_const_constructors
 
-import "package:flutter/material.dart";
+import 'package:flutter/material.dart';
 
-import "injector.dart";
-import "general/pages/home_page.dart";
+import 'injector.dart';
+import 'general/pages/home_page.dart';
 
 void main() {
   setup();
@@ -17,7 +17,7 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: "TruQuest",
+      title: 'TruQuest',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),

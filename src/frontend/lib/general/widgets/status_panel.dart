@@ -1,15 +1,15 @@
 // ignore_for_file: prefer_const_constructors
 
-import "package:flutter/material.dart";
+import 'package:flutter/material.dart';
 
 import '../../ethereum/bloc/ethereum_actions.dart';
-import "../../ethereum/bloc/ethereum_bloc.dart";
-import "../../ethereum/bloc/ethereum_result_vm.dart";
-import "sign_up_dialog.dart";
-import "../../user/bloc/user_bloc.dart";
-import "../../widget_extensions.dart";
-import "../../user/bloc/user_result_vm.dart";
-import "../../user/models/vm/user_vm.dart";
+import '../../ethereum/bloc/ethereum_bloc.dart';
+import '../../ethereum/bloc/ethereum_result_vm.dart';
+import 'sign_up_dialog.dart';
+import '../../user/bloc/user_bloc.dart';
+import '../../widget_extensions.dart';
+import '../../user/bloc/user_result_vm.dart';
+import '../../user/models/vm/user_vm.dart';
 
 class StatusPanel extends StatelessWidgetX {
   late final _userBloc = use<UserBloc>();
@@ -38,7 +38,7 @@ class StatusPanel extends StatelessWidgetX {
                   return Row(
                     children: [
                       Text(
-                        "You are on an unsupported chain",
+                        'You are on an unsupported chain',
                         style: TextStyle(color: Colors.white),
                       ),
                       SizedBox(width: 12),
@@ -60,7 +60,7 @@ class StatusPanel extends StatelessWidgetX {
                 }
 
                 return Text(
-                  "Chain Id: ${vm.chainId}",
+                  'Chain Id: ${vm.chainId}',
                   style: TextStyle(color: Colors.white),
                 );
               },
@@ -78,7 +78,7 @@ class StatusPanel extends StatelessWidgetX {
               if (user.state == UserAccountState.guest) {
                 return TextButton(
                   child: Text(
-                    "Sign Up",
+                    'Sign Up',
                     style: TextStyle(color: Colors.white),
                   ),
                   onPressed: () {
@@ -92,7 +92,7 @@ class StatusPanel extends StatelessWidgetX {
               } else if (user.state == UserAccountState.connectedNotLoggedIn) {
                 return TextButton(
                   child: Text(
-                    "Log In/Sign Up",
+                    'Log In/Sign Up',
                     style: TextStyle(color: Colors.white),
                   ),
                   onPressed: () {},
@@ -100,7 +100,7 @@ class StatusPanel extends StatelessWidgetX {
               }
 
               return Text(
-                "Logged in as ${user.username}: ${user.ethereumAccount}",
+                'Logged in as ${user.username}: ${user.ethereumAccount}',
                 style: TextStyle(color: Colors.white),
               );
             },

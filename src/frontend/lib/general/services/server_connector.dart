@@ -16,12 +16,12 @@ class ServerConnector {
   ServerConnector() {
     Logger.root.level = Level.ALL;
     Logger.root.onRecord.listen((LogRecord rec) {
-      print("[${rec.level.name}]: ${rec.time}: ${rec.message}");
+      print('[${rec.level.name}]: ${rec.time}: ${rec.message}');
     });
 
     dio = Dio(
       BaseOptions(
-        baseUrl: "http://localhost:5223",
+        baseUrl: 'http://localhost:5223',
       ),
     );
 
@@ -48,12 +48,12 @@ class ServerConnector {
       _hubConnection = null;
     }
 
-    var hubLogger = Logger("Hub");
-    var transportLogger = Logger("Transport");
+    var hubLogger = Logger('Hub');
+    var transportLogger = Logger('Transport');
 
     hubConnection = _hubConnection = HubConnectionBuilder()
         .withUrl(
-          "http://localhost:5223/hub",
+          'http://localhost:5223/hub',
           options: HttpConnectionOptions(
             transport: HttpTransportType.WebSockets,
             logger: transportLogger,
@@ -68,7 +68,7 @@ class ServerConnector {
     hubConnection.serverTimeoutInMilliseconds = 180 * 1000;
 
     hubConnection.onclose(({error}) {
-      print("HubConnection closed. Error: $error");
+      print('HubConnection closed. Error: $error');
     });
 
     await hubConnection.start();

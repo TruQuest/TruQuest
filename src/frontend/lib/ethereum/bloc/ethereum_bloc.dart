@@ -1,13 +1,13 @@
-import "dart:async";
+import 'dart:async';
 
 import 'package:flutter/scheduler.dart';
 import 'package:rxdart/rxdart.dart';
-import "package:universal_html/html.dart" as html;
+import 'package:universal_html/html.dart' as html;
 
-import "ethereum_actions.dart";
-import "ethereum_result_vm.dart";
-import "../services/ethereum_service.dart";
-import "../../general/bloc/bloc.dart";
+import 'ethereum_actions.dart';
+import 'ethereum_result_vm.dart';
+import '../services/ethereum_service.dart';
+import '../../general/bloc/bloc.dart';
 
 class EthereumBloc extends Bloc<EthereumAction> {
   final EthereumService _ethereumService;

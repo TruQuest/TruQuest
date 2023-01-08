@@ -23,7 +23,7 @@ class _ImageBlockState extends State<ImageBlock> {
           child: Row(
             children: [
               Spacer(),
-              Text("Image"),
+              Text('Image'),
               Expanded(
                 child: Align(
                   alignment: Alignment.centerRight,
@@ -37,7 +37,7 @@ class _ImageBlockState extends State<ImageBlock> {
               context: context,
               barrierDismissible: true,
               builder: (_) => AlertDialog(
-                title: Text("asdasd"),
+                title: Text('asdasd'),
               ),
             );
           },
@@ -51,7 +51,7 @@ class _ImageBlockState extends State<ImageBlock> {
             ),
             clipBehavior: Clip.antiAlias,
             child: Image.network(
-              "https://media.istockphoto.com/id/1214625216/photo/elephant-with-a-zebra-skin-walking-in-savannah-this-is-a-3d-render-illustration.jpg?b=1&s=170667a&w=0&k=20&c=rRpDFrSK4uVCq73R2AaevGfq5RkqSq0MRZZ_RnYxLX8=",
+              'https://media.istockphoto.com/id/1214625216/photo/elephant-with-a-zebra-skin-walking-in-savannah-this-is-a-3d-render-illustration.jpg?b=1&s=170667a&w=0&k=20&c=rRpDFrSK4uVCq73R2AaevGfq5RkqSq0MRZZ_RnYxLX8=',
               fit: BoxFit.cover,
             ),
           ),

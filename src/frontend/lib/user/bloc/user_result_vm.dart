@@ -1,4 +1,4 @@
-import "../models/vm/user_vm.dart";
+import '../models/vm/user_vm.dart';
 
 abstract class UserResultVm {}
 

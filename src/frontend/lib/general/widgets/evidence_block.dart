@@ -11,9 +11,9 @@ class EvidenceBlock extends StatefulWidget {
 
 class _EvidenceBlockState extends State<EvidenceBlock> {
   final List<String> _links = [
-    "http://sports.ru/",
-    "https://media.istockphoto.com/id/1214625216/photo/elephant-with-a-zebra-skin-walking-in-savannah-this-is-a-3d-render-illustration.jpg?b=1&s=170667a&w=0&k=20&c=rRpDFrSK4uVCq73R2AaevGfq5RkqSq0MRZZ_RnYxLX8=",
-    "http://www.stackoverflow.com/",
+    'http://sports.ru/',
+    'https://media.istockphoto.com/id/1214625216/photo/elephant-with-a-zebra-skin-walking-in-savannah-this-is-a-3d-render-illustration.jpg?b=1&s=170667a&w=0&k=20&c=rRpDFrSK4uVCq73R2AaevGfq5RkqSq0MRZZ_RnYxLX8=',
+    'http://www.stackoverflow.com/',
   ];
 
   @override
@@ -30,7 +30,7 @@ class _EvidenceBlockState extends State<EvidenceBlock> {
           child: Row(
             children: [
               Spacer(),
-              Text("Evidence"),
+              Text('Evidence'),
               Expanded(
                 child: Align(
                   alignment: Alignment.centerRight,
@@ -44,7 +44,7 @@ class _EvidenceBlockState extends State<EvidenceBlock> {
               context: context,
               barrierDismissible: true,
               builder: (_) => AlertDialog(
-                title: Text("asdasd"),
+                title: Text('asdasd'),
               ),
             );
           },

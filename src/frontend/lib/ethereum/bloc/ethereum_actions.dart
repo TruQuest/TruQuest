@@ -1,5 +1,5 @@
-import "../../general/bloc/mixins.dart";
-import "ethereum_result_vm.dart";
+import '../../general/bloc/mixins.dart';
+import 'ethereum_result_vm.dart';
 
 abstract class EthereumAction {}
 

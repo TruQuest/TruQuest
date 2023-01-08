@@ -1,15 +1,15 @@
 // ignore_for_file: prefer_const_constructors
 
-import "package:flutter/material.dart";
+import 'package:flutter/material.dart';
 
-import "../../user/models/vm/user_vm.dart";
-import "../../user/bloc/user_result_vm.dart";
-import "../../ethereum/bloc/ethereum_bloc.dart";
-import "../../user/bloc/user_actions.dart";
-import "../../user/bloc/user_bloc.dart";
-import "../../widget_extensions.dart";
-import "../../ethereum/bloc/ethereum_actions.dart";
-import "../../ethereum/bloc/ethereum_result_vm.dart";
+import '../../user/models/vm/user_vm.dart';
+import '../../user/bloc/user_result_vm.dart';
+import '../../ethereum/bloc/ethereum_bloc.dart';
+import '../../user/bloc/user_actions.dart';
+import '../../user/bloc/user_bloc.dart';
+import '../../widget_extensions.dart';
+import '../../ethereum/bloc/ethereum_actions.dart';
+import '../../ethereum/bloc/ethereum_result_vm.dart';
 
 class SignUpDialog extends StatefulWidget {
   const SignUpDialog({super.key});
@@ -27,7 +27,7 @@ class _SignUpDialogState extends StateX<SignUpDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text("Sign Up"),
+      title: Text('Sign Up'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -35,7 +35,7 @@ class _SignUpDialogState extends StateX<SignUpDialog> {
             onChanged: (value) {
               _username = value;
             },
-            decoration: InputDecoration(hintText: "Username"),
+            decoration: InputDecoration(hintText: 'Username'),
           ),
           SizedBox(height: 12),
           StreamBuilder<LoadCurrentUserSuccessVm>(
@@ -45,7 +45,7 @@ class _SignUpDialogState extends StateX<SignUpDialog> {
               var user = snapshot.data!.user;
               if (user.state == UserAccountState.guest) {
                 return TextButton(
-                  child: Text("Connect account"),
+                  child: Text('Connect account'),
                   onPressed: () async {
                     var action = ConnectEthereumAccount();
                     _ethereumBloc.dispatch(action);
@@ -65,7 +65,7 @@ class _SignUpDialogState extends StateX<SignUpDialog> {
       ),
       actions: [
         TextButton(
-          child: Text("Sign Up"),
+          child: Text('Sign Up'),
           onPressed: () async {
             if (_username != null) {
               var signAction = SignAuthMessage(username: _username!);

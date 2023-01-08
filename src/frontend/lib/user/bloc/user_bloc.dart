@@ -1,11 +1,11 @@
-import "dart:async";
+import 'dart:async';
 
 import 'package:rxdart/rxdart.dart';
 
-import "user_result_vm.dart";
-import "../services/user_service.dart";
-import "user_actions.dart";
-import "../../general/bloc/bloc.dart";
+import 'user_result_vm.dart';
+import '../services/user_service.dart';
+import 'user_actions.dart';
+import '../../general/bloc/bloc.dart';
 
 class UserBloc extends Bloc<UserAction> {
   final UserService _userService;

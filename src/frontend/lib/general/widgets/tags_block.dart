@@ -29,7 +29,7 @@ class _TagsBlockState extends StateX<TagsBlock> {
           child: Row(
             children: [
               Spacer(),
-              Text("Tags"),
+              Text('Tags'),
               Expanded(
                 child: Align(
                   alignment: Alignment.centerRight,
@@ -43,13 +43,13 @@ class _TagsBlockState extends StateX<TagsBlock> {
               context: context,
               barrierDismissible: true,
               builder: (_) => AlertDialog(
-                title: Text("asdasd"),
+                title: Text('asdasd'),
                 content: Center(
                   child: TextButton(
-                    child: Text("Add"),
+                    child: Text('Add'),
                     onPressed: () {
                       setState(() {
-                        _documentContext.tags.add("tag1");
+                        _documentContext.tags.add('tag1');
                       });
                     },
                   ),

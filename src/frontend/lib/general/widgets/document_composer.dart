@@ -19,7 +19,7 @@ class DocumentComposer extends StatefulWidget {
 
 class _DocumentComposerState extends StateX<DocumentComposer> {
   late final _documentContext = useScoped<DocumentContext>();
-  // late final _thingBloc = use<ThingBloc>();
+  late final _thingBloc = use<ThingBloc>();
 
   final quill.QuillController _controller = quill.QuillController.basic();
 
@@ -36,7 +36,7 @@ class _DocumentComposerState extends StateX<DocumentComposer> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text("Subject"),
+            Text('Subject'),
             Row(
               children: [
                 IconButton(
@@ -95,7 +95,7 @@ class _DocumentComposerState extends StateX<DocumentComposer> {
                         padding: const EdgeInsets.all(4),
                         child: quill.QuillEditor(
                           controller: _controller,
-                          placeholder: "Fill in the details...",
+                          placeholder: 'Fill in the details...',
                           scrollController: ScrollController(),
                           scrollable: true,
                           focusNode: FocusNode(),
@@ -134,7 +134,7 @@ class _DocumentComposerState extends StateX<DocumentComposer> {
                       child: TextField(
                         maxLength: 50,
                         decoration: InputDecoration(
-                          labelText: "Name",
+                          labelText: 'Name',
                         ),
                       ),
                     ),
@@ -149,10 +149,10 @@ class _DocumentComposerState extends StateX<DocumentComposer> {
                               vertical: 16,
                             ),
                           ),
-                          child: Text("Preview draft"),
+                          child: Text('Preview draft'),
                           onPressed: () {
-                            // _thingBloc.dispatch(CreateNewThingDraft());
-                            print(_documentContext.tags);
+                            _thingBloc.dispatch(CreateNewThingDraft());
+                            // print(_documentContext.tags);
                           },
                         ),
                       ),

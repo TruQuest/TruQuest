@@ -47,18 +47,18 @@ class ThingApiService {
 
     try {
       var result = await hubConnection.invoke(
-        "CreateNewThingDraft",
+        'CreateNewThingDraft',
         args: [
           CreateNewThingDraftCommand(
             input: NewThingIm(
-              subjectId: "a3464bc9-2e22-457f-a65f-4a6d5bb6e6d9",
-              title: "title",
-              details: "details",
+              subjectId: 'a3464bc9-2e22-457f-a65f-4a6d5bb6e6d9',
+              title: 'title',
+              details: 'details',
               imageUrl:
-                  "https://images.newscientist.com/wp-content/uploads/2022/09/09152048/SEI_124263525.jpg",
+                  'https://images.newscientist.com/wp-content/uploads/2022/09/09152048/SEI_124263525.jpg',
               evidence: [
-                EvidenceIm(url: "https://stackoverflow.com/"),
-                EvidenceIm(url: "https://twitter.com/"),
+                EvidenceIm(url: 'https://stackoverflow.com/'),
+                EvidenceIm(url: 'https://twitter.com/'),
               ],
               tags: [
                 TagIm(id: 1),
@@ -68,8 +68,8 @@ class ThingApiService {
         ],
       );
 
-      var thingId = (result as Map<String, dynamic>)["data"];
-      print("ThingId: $thingId");
+      var thingId = (result as Map<String, dynamic>)['data'];
+      print('ThingId: $thingId');
     } on Exception catch (ex) {
       throw _wrapHubException(ex);
     }

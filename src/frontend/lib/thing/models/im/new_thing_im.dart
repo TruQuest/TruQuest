@@ -21,12 +21,12 @@ class NewThingIm {
   Map<String, dynamic> toJson() {
     var map = <String, dynamic>{};
 
-    map["subjectId"] = subjectId;
-    map["title"] = title;
-    map["details"] = details;
-    map["imageUrl"] = imageUrl;
-    map["evidence"] = evidence.map((e) => e.toJson()).toList();
-    map["tags"] = tags.map((t) => t.toJson()).toList();
+    map['subjectId'] = subjectId;
+    map['title'] = title;
+    map['details'] = details;
+    map['imageUrl'] = imageUrl;
+    map['evidence'] = evidence.map((e) => e.toJson()).toList();
+    map['tags'] = tags.map((t) => t.toJson()).toList();
 
     return map;
   }

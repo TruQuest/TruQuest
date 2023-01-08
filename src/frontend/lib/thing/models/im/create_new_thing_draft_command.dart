@@ -8,7 +8,7 @@ class CreateNewThingDraftCommand {
   Map<String, dynamic> toJson() {
     var map = <String, dynamic>{};
 
-    map["input"] = input.toJson();
+    map['input'] = input.toJson();
 
     return map;
   }

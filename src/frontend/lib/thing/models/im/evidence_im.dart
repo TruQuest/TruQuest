@@ -6,7 +6,7 @@ class EvidenceIm {
   Map<String, dynamic> toJson() {
     var map = <String, dynamic>{};
 
-    map["url"] = url;
+    map['url'] = url;
 
     return map;
   }
