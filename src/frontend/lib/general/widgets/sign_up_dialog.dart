@@ -18,10 +18,9 @@ class SignUpDialog extends StatefulWidget {
   State<SignUpDialog> createState() => _SignUpDialogState();
 }
 
-class _SignUpDialogState
-    extends StateUsing2<SignUpDialog, UserBloc, EthereumBloc> {
-  late final UserBloc _userBloc = service1;
-  late final EthereumBloc _ethereumBloc = service2;
+class _SignUpDialogState extends StateX<SignUpDialog> {
+  late final _userBloc = use<UserBloc>();
+  late final _ethereumBloc = use<EthereumBloc>();
 
   String? _username;
 

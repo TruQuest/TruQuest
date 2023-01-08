@@ -20,6 +20,7 @@ class _$Injector extends Injector {
       ..registerSingleton((c) => UserApiService(c<ServerConnector>()))
       ..registerSingleton((c) => ThingApiService(c<ServerConnector>()))
       ..registerSingleton((c) => ThingService(c<ThingApiService>()))
-      ..registerSingleton((c) => ThingBloc(c<ThingService>()));
+      ..registerSingleton((c) => ThingBloc(c<ThingService>()))
+      ..registerFactory((c) => DocumentContext());
   }
 }

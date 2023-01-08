@@ -1,5 +1,6 @@
 import "package:kiwi/kiwi.dart";
 
+import 'general/contexts/document_context.dart';
 import 'thing/services/thing_api_service.dart';
 import 'general/services/server_connector.dart';
 import 'thing/bloc/thing_bloc.dart';
@@ -22,6 +23,7 @@ abstract class Injector {
   @Register.singleton(ThingApiService)
   @Register.singleton(ThingService)
   @Register.singleton(ThingBloc)
+  @Register.factory(DocumentContext)
   void configure();
 }
 

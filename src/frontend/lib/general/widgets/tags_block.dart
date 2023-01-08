@@ -2,6 +2,9 @@
 
 import 'package:flutter/material.dart';
 
+import '../contexts/document_context.dart';
+import '../../widget_extensions.dart';
+
 class TagsBlock extends StatefulWidget {
   const TagsBlock({super.key});
 
@@ -9,8 +12,8 @@ class TagsBlock extends StatefulWidget {
   State<TagsBlock> createState() => _TagsBlockState();
 }
 
-class _TagsBlockState extends State<TagsBlock> {
-  final List<String> _tags = ["Politics", "Sport", "IT", "Entertainment"];
+class _TagsBlockState extends StateX<TagsBlock> {
+  late final _documentContext = useScoped<DocumentContext>();
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +44,16 @@ class _TagsBlockState extends State<TagsBlock> {
               barrierDismissible: true,
               builder: (_) => AlertDialog(
                 title: Text("asdasd"),
+                content: Center(
+                  child: TextButton(
+                    child: Text("Add"),
+                    onPressed: () {
+                      setState(() {
+                        _documentContext.tags.add("tag1");
+                      });
+                    },
+                  ),
+                ),
               ),
             );
           },
@@ -51,7 +64,7 @@ class _TagsBlockState extends State<TagsBlock> {
           child: Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: _tags
+            children: _documentContext.tags
                 .map(
                   (tag) => OutlinedButton(
                     style: OutlinedButton.styleFrom(

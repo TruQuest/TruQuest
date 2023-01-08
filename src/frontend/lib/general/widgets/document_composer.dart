@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 
+import '../contexts/document_context.dart';
 import '../../thing/bloc/thing_actions.dart';
 import '../../thing/bloc/thing_bloc.dart';
 import '../../widget_extensions.dart';
@@ -16,8 +17,9 @@ class DocumentComposer extends StatefulWidget {
   State<DocumentComposer> createState() => _DocumentComposerState();
 }
 
-class _DocumentComposerState extends StateUsing<DocumentComposer, ThingBloc> {
-  late final ThingBloc _thingBloc = service;
+class _DocumentComposerState extends StateX<DocumentComposer> {
+  late final _documentContext = useScoped<DocumentContext>();
+  // late final _thingBloc = use<ThingBloc>();
 
   final quill.QuillController _controller = quill.QuillController.basic();
 
@@ -149,7 +151,8 @@ class _DocumentComposerState extends StateUsing<DocumentComposer, ThingBloc> {
                           ),
                           child: Text("Preview draft"),
                           onPressed: () {
-                            _thingBloc.dispatch(CreateNewThingDraft());
+                            // _thingBloc.dispatch(CreateNewThingDraft());
+                            print(_documentContext.tags);
                           },
                         ),
                       ),

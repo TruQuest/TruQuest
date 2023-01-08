@@ -2,6 +2,7 @@
 
 import "package:flutter/material.dart";
 
+import '../../widget_extensions.dart';
 import '../widgets/image_block.dart';
 import '../widgets/tags_block.dart';
 import '../widgets/document_composer.dart';
@@ -29,12 +30,14 @@ class HomePage extends StatelessWidget {
           showDialog(
             context: context,
             barrierDismissible: false,
-            builder: (_) => DocumentComposer(
-              sideBlocks: [
-                ImageBlock(),
-                TagsBlock(),
-                EvidenceBlock(),
-              ],
+            builder: (_) => UseScope(
+              child: DocumentComposer(
+                sideBlocks: [
+                  ImageBlock(),
+                  TagsBlock(),
+                  EvidenceBlock(),
+                ],
+              ),
             ),
           );
         },
