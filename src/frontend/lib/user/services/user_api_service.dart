@@ -19,7 +19,6 @@ class UserApiService {
   UserApiService(ServerConnector serverConnector) : _dio = serverConnector.dio;
 
   Error _wrapError(DioError dioError) {
-    // ignore: missing_enum_constant_in_switch
     switch (dioError.type) {
       case DioErrorType.connectTimeout:
       case DioErrorType.sendTimeout:
