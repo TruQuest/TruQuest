@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 
+import 'preview_draft_button.dart';
 import '../contexts/document_context.dart';
-import '../../thing/bloc/thing_actions.dart';
-import '../../thing/bloc/thing_bloc.dart';
 import '../../widget_extensions.dart';
 
 class DocumentComposer extends StatefulWidget {
@@ -17,7 +16,6 @@ class DocumentComposer extends StatefulWidget {
 
 class _DocumentComposerState extends StateX<DocumentComposer> {
   late final _documentContext = useScoped<DocumentContext>();
-  late final _thingBloc = use<ThingBloc>();
 
   final quill.QuillController _controller = quill.QuillController.basic();
 
@@ -137,23 +135,7 @@ class _DocumentComposerState extends StateX<DocumentComposer> {
                       ),
                     ),
                     Expanded(
-                      child: Center(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.amber[900],
-                            elevation: 8,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 36,
-                              vertical: 16,
-                            ),
-                          ),
-                          child: Text('Preview draft'),
-                          onPressed: () {
-                            _thingBloc.dispatch(CreateNewThingDraft());
-                            // print(_documentContext.tags);
-                          },
-                        ),
-                      ),
+                      child: Center(child: PreviewDraftButton()),
                     ),
                   ],
                 ),

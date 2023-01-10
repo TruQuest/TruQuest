@@ -1,3 +1,4 @@
+import 'thing_result_vm.dart';
 import '../../general/bloc/bloc.dart';
 import '../services/thing_service.dart';
 import 'thing_actions.dart';
@@ -19,6 +20,7 @@ class ThingBloc extends Bloc<ThingAction> {
   }
 
   void _createNewThingDraft(CreateNewThingDraft action) async {
-    await _thingService.createNewThingDraft();
+    var progress$ = await _thingService.createNewThingDraft();
+    action.complete(CreateNewThingDraftSuccessVm(progress$: progress$));
   }
 }

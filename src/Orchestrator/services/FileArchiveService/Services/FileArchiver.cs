@@ -17,6 +17,9 @@ internal class FileArchiver : IFileArchiver
 
     private class ArchiveTask
     {
+        public required object Object { get; init; }
+        public required PropertyInfo BackingProp { get; init; }
+        public PropertyInfo? ExtraBackingProp { get; init; }
         public AttachmentType AttachmentType { get; init; }
         public required string Url { get; init; }
         public string? IpfsCid { get; set; }
@@ -52,7 +55,6 @@ internal class FileArchiver : IFileArchiver
         foreach (var prop in input.GetType()
             .GetProperties()
             .Where(p => p.GetCustomAttribute<BackingFieldAttribute>() == null)
-            .OrderBy(p => p.Name)
         )
         {
             var propType = prop.PropertyType;
@@ -82,81 +84,29 @@ internal class FileArchiver : IFileArchiver
                 string? url;
                 if (attr != null && (url = (string?)prop.GetValue(input)) != null)
                 {
-                    if (attr is ImageUrlAttribute)
+                    archiveTasks.Add(new()
                     {
-                        archiveTasks.Add(new()
-                        {
-                            AttachmentType = AttachmentType.Image,
-                            Url = url
-                        });
-                    }
-                    else if (attr is WebPageUrlAttribute webAttr)
-                    {
-                        archiveTasks.Add(new()
-                        {
-                            AttachmentType = AttachmentType.WebPage,
-                            Url = url
-                        });
-                    }
+                        Object = input,
+                        BackingProp = prop.DeclaringType!.GetProperty(attr.BackingField)!,
+                        ExtraBackingProp = attr is WebPageUrlAttribute webAttr ?
+                            prop.DeclaringType.GetProperty(webAttr.ExtraBackingField)! :
+                            null,
+                        AttachmentType = attr is ImageUrlAttribute ? AttachmentType.Image : AttachmentType.WebPage,
+                        Url = url
+                    });
                 }
             }
         }
     }
 
-    private void _setBackingFields(object input, List<ArchiveTask> archiveTasks)
+    private void _setBackingFields(List<ArchiveTask> archiveTasks)
     {
-        foreach (var prop in input.GetType()
-            .GetProperties()
-            .Where(p => p.GetCustomAttribute<BackingFieldAttribute>() == null)
-            .OrderBy(p => p.Name)
-        )
+        foreach (var task in archiveTasks)
         {
-            var propType = prop.PropertyType;
-            Type? elemType = null;
-            if (propType.IsAssignableTo(typeof(IEnumerable)) && propType != typeof(string))
+            task.BackingProp.SetValue(task.Object, task.IpfsCid);
+            if (task.AttachmentType == AttachmentType.WebPage)
             {
-                propType = elemType = propType.GetGenericArguments().First();
-            }
-
-            if (propType.Assembly == Assembly.GetExecutingAssembly())
-            {
-                if (elemType != null)
-                {
-                    foreach (var elem in (IEnumerable)prop.GetValue(input)!)
-                    {
-                        _setBackingFields(elem, archiveTasks);
-                    }
-                }
-                else
-                {
-                    _setBackingFields(prop.GetValue(input)!, archiveTasks);
-                }
-            }
-            else
-            {
-                var attr = prop.GetCustomAttribute<FileUrlAttribute>();
-                string? url;
-                if (attr != null && (url = (string?)prop.GetValue(input)) != null)
-                {
-                    var backingProp = prop.DeclaringType!
-                        .GetProperty(attr.BackingField)!;
-
-                    if (attr is ImageUrlAttribute)
-                    {
-                        Debug.Assert(archiveTasks.First().AttachmentType == AttachmentType.Image);
-                        backingProp.SetValue(input, archiveTasks.First().IpfsCid!);
-                    }
-                    else if (attr is WebPageUrlAttribute webAttr)
-                    {
-                        Debug.Assert(archiveTasks.First().AttachmentType == AttachmentType.WebPage);
-                        backingProp.SetValue(input, archiveTasks.First().IpfsCid!);
-                        prop.DeclaringType
-                            .GetProperty(webAttr.ExtraBackingField)!
-                            .SetValue(input, archiveTasks.First().ExtraIpfsCid!);
-                    }
-
-                    archiveTasks.RemoveAt(0);
-                }
+                task.ExtraBackingProp!.SetValue(task.Object, task.ExtraIpfsCid);
             }
         }
     }
@@ -292,8 +242,7 @@ internal class FileArchiver : IFileArchiver
                 }
             }
 
-            _setBackingFields(input, archiveTasks);
-            Debug.Assert(!archiveTasks.Any());
+            _setBackingFields(archiveTasks);
         }
 
         return null;

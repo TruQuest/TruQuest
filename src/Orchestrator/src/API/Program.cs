@@ -6,12 +6,15 @@ using Microsoft.AspNetCore.SignalR;
 using KafkaFlow;
 
 using Application;
+using Application.Common.Interfaces;
 using Infrastructure;
 
 using API.BackgroundServices;
 using API.Hubs.Filters;
 using API.Hubs;
 using API.Controllers.Filters;
+using API.Hubs.Misc;
+using API.Hubs.Clients;
 
 namespace API;
 
@@ -82,6 +85,9 @@ public static class WebApplicationBuilderExtension
                 options.PayloadSerializerOptions.PropertyNameCaseInsensitive = true;
                 options.PayloadSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
             });
+
+        builder.Services.AddSingleton<IUserIdProvider, UserIdProvider>();
+        builder.Services.AddSingleton<IClientNotifier, ClientNotifier>();
 
         // builder.Services.AddScoped<IConnectionIdProvider, ConnectionIdProvider>();
 

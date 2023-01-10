@@ -3,6 +3,11 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:logging/logging.dart';
 import 'package:signalr_netcore/signalr_client.dart';
+import 'package:tuple/tuple.dart';
+
+enum ServerEventType {
+  thing,
+}
 
 class ServerConnector {
   late final Dio dio;
@@ -12,6 +17,11 @@ class ServerConnector {
 
   final StreamController<Future Function()> _hubConnectionTaskChannel =
       StreamController<Future Function()>();
+
+  final StreamController<Tuple2<ServerEventType, Object>> _serverEventChannel =
+      StreamController<Tuple2<ServerEventType, Object>>.broadcast();
+  Stream<Tuple2<ServerEventType, Object>> get serverEvent$ =>
+      _serverEventChannel.stream;
 
   ServerConnector() {
     Logger.root.level = Level.ALL;
@@ -70,6 +80,17 @@ class ServerConnector {
     hubConnection.onclose(({error}) {
       print('HubConnection closed. Error: $error');
     });
+
+    hubConnection.on(
+      'TellAboutNewThingDraftCreationProgress',
+      (List<Object?>? args) {
+        var thingId = args!.first as String;
+        var percent = args.last as int;
+        _serverEventChannel.add(
+          Tuple2(ServerEventType.thing, Tuple2(thingId, percent)),
+        );
+      },
+    );
 
     await hubConnection.start();
   }

@@ -5,7 +5,8 @@ class ThingService {
 
   ThingService(this._thingApiService);
 
-  Future createNewThingDraft() async {
-    await _thingApiService.createNewThingDraft();
+  Future<Stream<int>> createNewThingDraft() async {
+    var progress$ = await _thingApiService.createNewThingDraft();
+    return progress$;
   }
 }

@@ -34,7 +34,16 @@ internal class ArchiveThingAttachmentsCommandHandler : IMessageHandler<ArchiveTh
     {
         var progress = new Progress<int>(percent =>
         {
-            _logger.LogInformation($"******************* Archive Progress: {percent}%");
+            _logger.LogInformation($"Archive Progress: {percent}%");
+            _responseDispatcher.Send(
+                new ArchiveThingAttachmentsProgress
+                {
+                    SubmitterId = message.SubmitterId,
+                    ThingId = message.ThingId,
+                    Percent = percent
+                },
+                key: message.ThingId.ToString()
+            );
         });
 
         var error = await _fileArchiver.ArchiveAllAttachments(message.Input, progress);
@@ -56,6 +65,6 @@ internal class ArchiveThingAttachmentsCommandHandler : IMessageHandler<ArchiveTh
             };
         }
 
-        await _responseDispatcher.Send(response, key: message.ThingId.ToString());
+        await _responseDispatcher.SendAsync(response, key: message.ThingId.ToString());
     }
 }

@@ -6,10 +6,15 @@ namespace Services;
 
 internal class ResponseDispatcher : IResponseDispatcher
 {
+    private readonly ILogger<ResponseDispatcher> _logger;
     private readonly IMessageProducer<ResponseDispatcher> _producer;
 
-    public ResponseDispatcher(IMessageProducer<ResponseDispatcher> producer)
+    public ResponseDispatcher(
+        ILogger<ResponseDispatcher> logger,
+        IMessageProducer<ResponseDispatcher> producer
+    )
     {
+        _logger = logger;
         _producer = producer;
     }
 
@@ -25,7 +30,7 @@ internal class ResponseDispatcher : IResponseDispatcher
         );
     }
 
-    public async Task Send(object message, string? key = null)
+    public async Task SendAsync(object message, string? key = null)
     {
         await _producer.ProduceAsync(
             messageKey: key ?? Guid.NewGuid().ToString(),
@@ -33,6 +38,25 @@ internal class ResponseDispatcher : IResponseDispatcher
             headers: new MessageHeaders
             {
                 ["requestId"] = Encoding.UTF8.GetBytes(Guid.Empty.ToString())
+            }
+        );
+    }
+
+    public void Send(object message, string? key = null)
+    {
+        _producer.Produce(
+            messageKey: key ?? Guid.NewGuid().ToString(),
+            messageValue: message,
+            headers: new MessageHeaders
+            {
+                ["requestId"] = Encoding.UTF8.GetBytes(Guid.Empty.ToString())
+            },
+            deliveryHandler: report =>
+            {
+                if (report.Error.IsError)
+                {
+                    _logger.LogWarning(report.Error.Reason);
+                }
             }
         );
     }

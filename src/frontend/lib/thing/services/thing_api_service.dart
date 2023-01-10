@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:tuple/tuple.dart';
+
 import '../models/im/evidence_im.dart';
 import '../../general/errors/connection_error.dart';
 import '../../general/errors/error.dart';
@@ -14,7 +18,25 @@ import '../models/im/tag_im.dart';
 class ThingApiService {
   final ServerConnector _serverConnector;
 
-  ThingApiService(this._serverConnector);
+  final Map<String, StreamController<int>> _thingIdToProgressChannel = {};
+
+  ThingApiService(this._serverConnector) {
+    _serverConnector.serverEvent$
+        .where((event) => event.item1 == ServerEventType.thing)
+        .listen(
+      (event) {
+        var data = event.item2 as Tuple2<String, int>;
+        var thingId = data.item1;
+        var percent = data.item2;
+        if (_thingIdToProgressChannel.containsKey(thingId)) {
+          _thingIdToProgressChannel[thingId]!.add(percent);
+          if (percent == 100) {
+            _thingIdToProgressChannel.remove(thingId)!.close();
+          }
+        }
+      },
+    );
+  }
 
   Error _wrapHubException(Exception ex) {
     var errorMessage = ex.toString();
@@ -39,7 +61,7 @@ class ThingApiService {
     return ServerError();
   }
 
-  Future createNewThingDraft() async {
+  Future<Stream<int>> createNewThingDraft() async {
     var hubConnection = _serverConnector.hubConnection;
     if (hubConnection == null) {
       throw ConnectionError();
@@ -69,7 +91,11 @@ class ThingApiService {
       );
 
       var thingId = (result as Map<String, dynamic>)['data'];
-      print('ThingId: $thingId');
+
+      var progressChannel = StreamController<int>.broadcast();
+      _thingIdToProgressChannel[thingId] = progressChannel;
+
+      return progressChannel.stream;
     } on Exception catch (ex) {
       throw _wrapHubException(ex);
     }

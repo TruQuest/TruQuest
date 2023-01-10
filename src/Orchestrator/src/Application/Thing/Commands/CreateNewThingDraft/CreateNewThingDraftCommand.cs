@@ -12,7 +12,7 @@ namespace Application.Thing.Commands.CreateNewThingDraft;
 [RequireAuthorization]
 public class CreateNewThingDraftCommand : IRequest<HandleResult<Guid>>
 {
-    public NewThingIm Input { get; set; }
+    public required NewThingIm Input { get; init; }
 }
 
 internal class CreateNewThingDraftCommandHandler : IRequestHandler<CreateNewThingDraftCommand, HandleResult<Guid>>

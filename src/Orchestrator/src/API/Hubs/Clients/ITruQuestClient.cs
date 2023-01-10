@@ -1,3 +1,6 @@
 namespace API.Hubs.Clients;
 
-public interface ITruQuestClient { }
+public interface ITruQuestClient
+{
+    Task TellAboutNewThingDraftCreationProgress(string thingId, int percent);
+}
