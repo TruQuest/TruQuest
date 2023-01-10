@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:elegant_notification/elegant_notification.dart';
 
+import '../bloc/notification_bloc.dart';
 import '../../ethereum/bloc/ethereum_actions.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';
 import '../../ethereum/bloc/ethereum_result_vm.dart';
@@ -9,14 +11,31 @@ import '../../widget_extensions.dart';
 import '../../user/bloc/user_result_vm.dart';
 import '../../user/models/vm/user_vm.dart';
 
-class StatusPanel extends StatelessWidgetX {
+class StatusPanel extends StatefulWidget {
+  const StatusPanel({super.key});
+
+  @override
+  State<StatusPanel> createState() => _StatusPanelState();
+}
+
+class _StatusPanelState extends StateX<StatusPanel> {
+  late final _notificationBloc = use<NotificationBloc>();
   late final _userBloc = use<UserBloc>();
   late final _ethereumBloc = use<EthereumBloc>();
 
-  StatusPanel({super.key});
+  @override
+  void initState() {
+    super.initState();
+    _notificationBloc.notification$.listen((event) {
+      ElegantNotification.success(
+        title: Text('Ready'),
+        description: Text(event),
+      ).show(context);
+    });
+  }
 
   @override
-  Widget buildX(BuildContext context) {
+  Widget build(BuildContext context) {
     return LimitedBox(
       maxWidth: 400,
       child: Row(
@@ -98,7 +117,7 @@ class StatusPanel extends StatelessWidgetX {
               }
 
               return Text(
-                'Logged in as ${user.username}: ${user.ethereumAccount}',
+                'Logged in as ${user.username}: ${user.ethereumAccountShort}',
                 style: TextStyle(color: Colors.white),
               );
             },

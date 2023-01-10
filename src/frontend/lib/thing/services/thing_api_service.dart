@@ -20,6 +20,10 @@ class ThingApiService {
 
   final Map<String, StreamController<int>> _thingIdToProgressChannel = {};
 
+  final StreamController<String> _thingEventChannel =
+      StreamController<String>();
+  Stream<String> get thingEvent$ => _thingEventChannel.stream;
+
   ThingApiService(this._serverConnector) {
     _serverConnector.serverEvent$
         .where((event) => event.item1 == ServerEventType.thing)
@@ -32,6 +36,7 @@ class ThingApiService {
           _thingIdToProgressChannel[thingId]!.add(percent);
           if (percent == 100) {
             _thingIdToProgressChannel.remove(thingId)!.close();
+            _thingEventChannel.add('Ok');
           }
         }
       },

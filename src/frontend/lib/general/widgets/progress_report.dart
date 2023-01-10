@@ -22,7 +22,7 @@ class _ProgressReportState extends State<ProgressReport> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.black26,
       title: Text(
         'Archiving in progress...',
         style: TextStyle(color: Colors.white),
