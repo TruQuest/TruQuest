@@ -30,6 +30,7 @@ class _StatusPanelState extends StateX<StatusPanel> {
       ElegantNotification.success(
         title: Text('Ready'),
         description: Text(event),
+        width: 300,
       ).show(context);
     });
   }

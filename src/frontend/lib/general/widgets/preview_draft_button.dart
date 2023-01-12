@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'progress_report.dart';
 import '../../thing/bloc/thing_result_vm.dart';
 import '../../thing/bloc/thing_actions.dart';
 import '../contexts/document_context.dart';
@@ -49,12 +48,6 @@ class _PreviewDraftButtonState extends StateX<PreviewDraftButton> {
               }
 
               vm as CreateNewThingDraftSuccessVm;
-
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (_) => ProgressReport(progress$: vm.progress$),
-              );
             }
           : null,
     );
