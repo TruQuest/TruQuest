@@ -26,6 +26,7 @@ using Infrastructure.Files;
 using Infrastructure.Persistence.Repositories.Events;
 using Infrastructure.Kafka;
 using Infrastructure.Kafka.Messages;
+using Infrastructure.Persistence.Queryables;
 
 namespace Infrastructure;
 
@@ -171,6 +172,8 @@ public static class IServiceCollectionExtension
         services.AddScoped<IJoinedThingAssessmentVerifierLotteryEventRepository, JoinedThingAssessmentVerifierLotteryEventRepository>();
         services.AddScoped<IThingAssessmentVerifierLotterySpotClaimedEventRepository, ThingAssessmentVerifierLotterySpotClaimedEventRepository>();
         services.AddScoped<ICastedAssessmentPollVoteEventRepository, CastedAssessmentPollVoteEventRepository>();
+
+        services.AddScoped<ISubjectQueryable, SubjectQueryable>();
 
         services.AddSingleton<IContractEventListener, ContractEventListener>();
 

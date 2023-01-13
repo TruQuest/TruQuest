@@ -86,6 +86,7 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
 
         if (result is ArchiveSubjectAttachmentsFailureResult failureResult)
         {
+            // @@TODO: Delete files.
             return new()
             {
                 Error = new SubjectError(failureResult.ErrorMessage)

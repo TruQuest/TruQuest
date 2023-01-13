@@ -2,50 +2,84 @@
 
 #r "nuget: Nethereum.Web3, 4.11.0"
 #r "nuget: Nethereum.HdWallet, 4.11.0"
+#r "nuget: Dapper, 2.0.123"
+#r "nuget: Npgsql, 7.0.1"
 #r "c:/chekh/projects/truquest/src/Orchestrator/lib/ContractStorageExplorer/src/bin/debug/net7.0/ContractStorageExplorer.dll"
-#nullable enable
 
 using Internal;
 
-using System.Net.Http;
-using System.Text.Json;
-// using Nethereum.HdWallet;
-// using ContractStorageExplorer;
-// using ContractStorageExplorer.SolTypes;
+using System.Data;
 
-// var wallet = new Wallet("atom traffic guard castle father vendor modify sauce rebuild true mixture van", null);
-// Console.WriteLine(wallet.GetAccount(1).Address);
+using Dapper;
+using Npgsql;
 
-var filePath1 = "c:/users/chekh/desktop/1.jpg";
-var filePath2 = "c:/users/chekh/desktop/2.jpg";
-
-var client = new HttpClient();
-var file1 = File.OpenRead(filePath1);
-var file2 = File.OpenRead(filePath2);
-var request = new HttpRequestMessage(HttpMethod.Post, "http://localhost:5001/api/v0/add?to-files=/");
-var content = new MultipartFormDataContent {
-    { new StreamContent(file1), "file1", "alala/" + Path.GetFileName(filePath1) },
-    { new StreamContent(file2), "file2", "alala/" + Path.GetFileName(filePath2) },
-};
-request.Content = content;
-
-var response = await client.SendAsync(request);
-if (response.IsSuccessStatusCode)
+public class SubjectQm
 {
-    Console.WriteLine(response.Content.Headers.ContentType!.MediaType);
-    using var contentStream = await response.Content.ReadAsStreamAsync();
-    using (var contentStreamReader = new StreamReader(contentStream))
-    {
-        string? line;
-        while ((line = await contentStreamReader.ReadLineAsync()) != null)
-        {
-            Console.WriteLine(line);
-            var responseMap = JsonSerializer.Deserialize<Dictionary<string, string>>(line);
-            Console.WriteLine(responseMap!["Hash"]);
-        }
-    }
+    public Guid Id { get; }
+    public string Name { get; }
+    public string Details { get; }
+    public int Type { get; }
+    public string ImageIpfsCid { get; }
+    public string CroppedImageIpfsCid { get; }
+    public string SubmitterId { get; }
+
+    public List<TagQm> Tags { get; set; } = new();
 }
-else
+
+public class TagQm
 {
-    Console.WriteLine(response.ReasonPhrase);
+    public int Id { get; }
+    public string Name { get; }
+}
+
+var conn = new NpgsqlConnection("Host=localhost;Port=5433;Database=TruQuest;Username=postgres;Password=password;SslMode=Disable;SearchPath=truquest;");
+await conn.OpenAsync();
+
+var cache = new Dictionary<Guid, SubjectQm>();
+
+await conn.QueryAsync<SubjectQm, TagQm, SubjectQm>(
+    @"
+        SELECT s.*, t.*
+        FROM
+            ""Subjects"" s
+                LEFT JOIN
+            ""SubjectAttachedTags"" st
+                ON s.""Id"" = st.""SubjectId""
+                LEFT JOIN
+            ""Tags"" t
+                ON st.""TagId"" = t.""Id""
+        WHERE s.""Id"" = @SubjectId
+    ",
+    (root, joined) =>
+    {
+        Console.WriteLine((joined == null).ToString());
+        if (!cache.ContainsKey(root.Id))
+        {
+            cache.Add(root.Id, root);
+        }
+
+        var cachedParent = cache[root.Id];
+
+        if (joined != null)
+        {
+            var children = cachedParent.Tags;
+            children.Add(joined);
+        }
+
+        return cachedParent;
+    },
+    param: new
+    {
+        SubjectId = Guid.Parse("ec8837fa-afc6-4dec-bb61-e98bcbaba434")
+    }
+);
+
+foreach (var kv in cache)
+{
+    Console.WriteLine(kv.Value.Name);
+    Console.WriteLine(kv.Value.Tags.Count.ToString());
+    foreach (var tag in kv.Value.Tags)
+    {
+        Console.WriteLine(tag.Name);
+    }
 }
