@@ -11,17 +11,19 @@ internal class FileArchiver : IFileArchiver
 {
     private enum AttachmentType
     {
-        Image,
-        WebPage
+        ImageUrl,
+        WebPageUrl,
+        ImagePath,
+        WebPagePath
     }
 
     private class ArchiveTask
     {
         public required object Object { get; init; }
         public required PropertyInfo BackingProp { get; init; }
-        public PropertyInfo? ExtraBackingProp { get; init; }
-        public AttachmentType AttachmentType { get; init; }
-        public required string Url { get; init; }
+        public required PropertyInfo? ExtraBackingProp { get; init; }
+        public required AttachmentType AttachmentType { get; init; }
+        public required string Uri { get; init; }
         public string? IpfsCid { get; set; }
         public string? ExtraIpfsCid { get; set; }
     }
@@ -47,7 +49,7 @@ internal class FileArchiver : IFileArchiver
         _fileStorage = fileStorage;
     }
 
-    public Task<Error?> ArchiveAllAttachments(object input, IProgress<int> progress) =>
+    public Task<Error?> ArchiveAllAttachments(object input, IProgress<int>? progress = null) =>
         _archiveAllAttachments(input, progress);
 
     private void _collectArchiveTasks(object input, List<ArchiveTask> archiveTasks)
@@ -80,20 +82,42 @@ internal class FileArchiver : IFileArchiver
             }
             else
             {
-                var attr = prop.GetCustomAttribute<FileUrlAttribute>();
+                var urlAttr = prop.GetCustomAttribute<FileUrlAttribute>();
                 string? url;
-                if (attr != null && (url = (string?)prop.GetValue(input)) != null)
+                if (urlAttr != null && (url = (string?)prop.GetValue(input)) != null)
                 {
                     archiveTasks.Add(new()
                     {
                         Object = input,
-                        BackingProp = prop.DeclaringType!.GetProperty(attr.BackingField)!,
-                        ExtraBackingProp = attr is WebPageUrlAttribute webAttr ?
+                        BackingProp = prop.DeclaringType!.GetProperty(urlAttr.BackingField)!,
+                        ExtraBackingProp = urlAttr is WebPageUrlAttribute webAttr ?
                             prop.DeclaringType.GetProperty(webAttr.ExtraBackingField)! :
                             null,
-                        AttachmentType = attr is ImageUrlAttribute ? AttachmentType.Image : AttachmentType.WebPage,
-                        Url = url
+                        AttachmentType = urlAttr is ImageUrlAttribute ?
+                            AttachmentType.ImageUrl :
+                            AttachmentType.WebPageUrl,
+                        Uri = url
                     });
+                }
+                else
+                {
+                    var pathAttr = prop.GetCustomAttribute<FilePathAttribute>();
+                    string? path;
+                    if (pathAttr != null && (path = (string?)prop.GetValue(input)) != null)
+                    {
+                        archiveTasks.Add(new()
+                        {
+                            Object = input,
+                            BackingProp = prop.DeclaringType!.GetProperty(pathAttr.BackingField)!,
+                            ExtraBackingProp = pathAttr is WebPagePathAttribute webAttr ?
+                                prop.DeclaringType.GetProperty(webAttr.ExtraBackingField)! :
+                                null,
+                            AttachmentType = pathAttr is ImagePathAttribute ?
+                                AttachmentType.ImagePath :
+                                AttachmentType.WebPagePath,
+                            Uri = path
+                        });
+                    }
                 }
             }
         }
@@ -104,31 +128,31 @@ internal class FileArchiver : IFileArchiver
         foreach (var task in archiveTasks)
         {
             task.BackingProp.SetValue(task.Object, task.IpfsCid);
-            if (task.AttachmentType == AttachmentType.WebPage)
+            if (task.AttachmentType is AttachmentType.WebPageUrl or AttachmentType.WebPagePath)
             {
                 task.ExtraBackingProp!.SetValue(task.Object, task.ExtraIpfsCid);
             }
         }
     }
 
-    private async Task<Error?> _archiveAllAttachments(object input, IProgress<int> progress)
+    private async Task<Error?> _archiveAllAttachments(object input, IProgress<int>? progress)
     {
         var archiveTasks = new List<ArchiveTask>();
         _collectArchiveTasks(input, archiveTasks);
 
         if (archiveTasks.Any())
         {
-            progress.Report(20);
+            progress?.Report(20);
 
             var saveImageTasks = archiveTasks
-                .Where(t => t.AttachmentType == AttachmentType.Image)
-                .Select(t => _imageSaver.SaveLocalCopy(t.Url))
+                .Where(t => t.AttachmentType == AttachmentType.ImageUrl)
+                .Select(t => _imageSaver.SaveLocalCopy(t.Uri))
                 .ToList();
 
-            string[] filePaths;
+            List<string> filePaths;
             try
             {
-                filePaths = await Task.WhenAll(saveImageTasks);
+                filePaths = (await Task.WhenAll(saveImageTasks)).ToList();
             }
             catch (Exception e)
             {
@@ -144,6 +168,11 @@ internal class FileArchiver : IFileArchiver
 
                 return new Error("Error saving images to local drive");
             }
+
+            filePaths.AddRange(archiveTasks
+                .Where(t => t.AttachmentType == AttachmentType.ImagePath)
+                .Select(t => t.Uri)
+            );
 
             List<string> ipfsCids;
             try
@@ -162,21 +191,27 @@ internal class FileArchiver : IFileArchiver
                 return new Error("Error adding images to ipfs");
             }
 
-            progress.Report(40);
+            progress?.Report(40);
 
             Debug.Assert(
-                ipfsCids.Count == archiveTasks.Where(t => t.AttachmentType == AttachmentType.Image).Count()
+                ipfsCids.Count == archiveTasks
+                    .Where(t => t.AttachmentType is AttachmentType.ImageUrl or AttachmentType.ImagePath)
+                    .Count()
             );
 
             int i = 0;
-            foreach (var archiveImageTask in archiveTasks.Where(t => t.AttachmentType == AttachmentType.Image))
+            foreach (var archiveImageTask in archiveTasks.Where(t => t.AttachmentType == AttachmentType.ImageUrl))
+            {
+                archiveImageTask.IpfsCid = ipfsCids[i++];
+            }
+            foreach (var archiveImageTask in archiveTasks.Where(t => t.AttachmentType == AttachmentType.ImagePath))
             {
                 archiveImageTask.IpfsCid = ipfsCids[i++];
             }
 
             var webPagesToArchive = archiveTasks
-                .Where(t => t.AttachmentType == AttachmentType.WebPage)
-                .Select(t => t.Url)
+                .Where(t => t.AttachmentType == AttachmentType.WebPageUrl)
+                .Select(t => t.Uri)
                 .ToList();
 
             if (webPagesToArchive.Any())
@@ -192,7 +227,7 @@ internal class FileArchiver : IFileArchiver
                     return new Error("Error saving webpages to local drive");
                 }
 
-                progress.Report(75);
+                progress?.Report(75);
 
                 List<string> previewImageFilePaths;
                 try
@@ -210,7 +245,7 @@ internal class FileArchiver : IFileArchiver
 
                 Debug.Assert(htmlFilePaths.Count == previewImageFilePaths.Count);
 
-                progress.Report(85);
+                progress?.Report(85);
 
                 try
                 {
@@ -231,11 +266,11 @@ internal class FileArchiver : IFileArchiver
 
                 Debug.Assert(htmlIpfsCids.Count == previewImageIpfsCids.Count);
                 Debug.Assert(
-                    htmlIpfsCids.Count == archiveTasks.Where(t => t.AttachmentType == AttachmentType.WebPage).Count()
+                    htmlIpfsCids.Count == archiveTasks.Where(t => t.AttachmentType == AttachmentType.WebPageUrl).Count()
                 );
 
                 i = 0;
-                foreach (var archiveWebPageTask in archiveTasks.Where(t => t.AttachmentType == AttachmentType.WebPage))
+                foreach (var archiveWebPageTask in archiveTasks.Where(t => t.AttachmentType == AttachmentType.WebPageUrl))
                 {
                     archiveWebPageTask.IpfsCid = htmlIpfsCids[i];
                     archiveWebPageTask.ExtraIpfsCid = previewImageIpfsCids[i++];

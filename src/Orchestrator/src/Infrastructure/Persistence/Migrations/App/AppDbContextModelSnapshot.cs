@@ -192,11 +192,16 @@ namespace Infrastructure.Persistence.Migrations.App
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("CroppedImageIpfsCid")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Details")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("ImageIpfsCid")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Name")

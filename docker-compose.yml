@@ -92,6 +92,7 @@ services:
     build:
       context: src/Orchestrator/services/FileArchiveService
     volumes:
+      - './src/Orchestrator/services/FileArchiveService/user_files:/user_files'
       - './src/Orchestrator/services/FileArchiveService/output:/singlefile/output'
       - './src/Orchestrator/services/FileArchiveService/images:/images'
     networks:

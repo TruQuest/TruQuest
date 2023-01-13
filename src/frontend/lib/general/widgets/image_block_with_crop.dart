@@ -1,11 +1,11 @@
-import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:crop_your_image/crop_your_image.dart';
-import 'package:universal_html/js_util.dart';
+import 'package:tuple/tuple.dart';
 
-import '../../js.dart';
+import 'image_selection_dialog.dart';
+import '../contexts/document_context.dart';
+import '../../widget_extensions.dart';
 
 class ImageBlockWithCrop extends StatefulWidget {
   const ImageBlockWithCrop({super.key});
@@ -14,16 +14,8 @@ class ImageBlockWithCrop extends StatefulWidget {
   State<ImageBlockWithCrop> createState() => _ImageBlockWithCropState();
 }
 
-class _ImageBlockWithCropState extends State<ImageBlockWithCrop> {
-  Future<Uint8List> _get() async {
-    var result = await promiseToFuture<ByteBuffer>(
-      fetchAndResizeImage(
-        'http://localhost:8080/ipfs/QmVckD4usX1Kr5GhakWMXXeEuPn673yy8CrXLUDLetUjW2?filename=1c901c20-eb8b-4d1e-8890-83bac6be8c6b.png',
-      ),
-    );
-
-    return result.asUint8List();
-  }
+class _ImageBlockWithCropState extends StateX<ImageBlockWithCrop> {
+  late final _documentContext = useScoped<DocumentContext>();
 
   @override
   Widget build(BuildContext context) {
@@ -47,48 +39,30 @@ class _ImageBlockWithCropState extends State<ImageBlockWithCrop> {
               ),
             ],
           ),
-          onPressed: () {
-            showDialog(
+          onPressed: () async {
+            var result =
+                await showDialog<Tuple3<String, Uint8List, Uint8List>?>(
               context: context,
               barrierDismissible: true,
-              builder: (_) => AlertDialog(
-                title: Text('Add image'),
-                content: FutureBuilder(
-                  future: _get(),
-                  builder: (context, snapshot) {
-                    if (snapshot.data == null) {
-                      return CircularProgressIndicator();
-                    }
-
-                    return SizedBox(
-                      width: 800,
-                      height: 600,
-                      child: Crop(
-                        image: snapshot.data!,
-                        onCropped: (croppedImageData) {},
-                        withCircleUi: true,
-                      ),
-                    );
-                  },
-                ),
-              ),
+              builder: (_) => ImageSelectionDialog(),
             );
+            if (result != null) {
+              setState(() {
+                _documentContext.imageExt = result.item1;
+                _documentContext.imageBytes = result.item2;
+                _documentContext.croppedImageBytes = result.item3;
+              });
+            }
           },
         ),
-        SizedBox(height: 6),
-        AspectRatio(
-          aspectRatio: 16.0 / 9.0,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(6)),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Image.network(
-              'http://localhost:8080/ipfs/QmZM2spx66FYLxuitRmnhLU2HC436Cd9Z4AgoUGmPshoNq?filename=3cb8812e-177f-404d-8550-6bc47d3b144e.png',
-              fit: BoxFit.cover,
+        if (_documentContext.croppedImageBytes != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: CircleAvatar(
+              radius: 30,
+              foregroundImage: MemoryImage(_documentContext.croppedImageBytes!),
             ),
           ),
-        ),
       ],
     );
   }

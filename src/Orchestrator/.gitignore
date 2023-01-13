@@ -479,3 +479,4 @@ $RECYCLE.BIN/
 .env
 /services/FileArchiveService/output
 /services/FileArchiveService/images
+/services/FileArchiveService/user_files

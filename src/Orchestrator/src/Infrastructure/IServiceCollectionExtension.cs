@@ -142,6 +142,10 @@ public static class IServiceCollectionExtension
         services.AddTransient<IAuthorizationService, AuthorizationService>();
         services.AddScoped<ICurrentPrincipal, CurrentPrincipal>();
 
+        services.AddSingleton<IFileReceiver, FileReceiver>();
+        services.AddSingleton<MultipartRequestHelper>();
+        services.AddSingleton<ImageFileValidator>();
+
         services.AddSingleton<IFileArchiver, FileArchiver>();
 
         services.AddHttpClient("ipfs", (sp, client) =>
@@ -219,7 +223,7 @@ public static class IServiceCollectionExtension
                                     .WithBufferSize(1)
                                     .WithWorkersCount(1)
                                     .AddMiddlewares(middlewares =>
-                                        middlewares.Add<MessageConsumer>(MiddlewareLifetime.Singleton)
+                                        middlewares.Add<MessageConsumer>(MiddlewareLifetime.Scoped)
                                     )
                             )
                             .AddProducer<RequestDispatcher>(producer =>

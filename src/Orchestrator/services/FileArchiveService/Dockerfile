@@ -29,6 +29,7 @@ RUN chmod 755 singlefile.sh
 RUN mkdir input
 RUN mkdir output
 RUN mkdir /images
+RUN mkdir /user_files
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src/FileArchiveService

@@ -3,8 +3,8 @@ async function fetchAndResizeImage(url) {
   var blob = await response.blob();
   const bitmap = await createImageBitmap(blob);
 
-  const maxWidth = 800.0;
-  const maxHeight = 600.0;
+  const maxWidth = 1920.0;
+  const maxHeight = 1080.0;
 
   console.log(`Width: ${bitmap.width}; Height: ${bitmap.height}`);
 
@@ -43,5 +43,5 @@ async function fetchAndResizeImage(url) {
 
   const buffer = await blob.arrayBuffer();
 
-  return buffer;
+  return { buffer: buffer, mimeType: blob.type };
 }

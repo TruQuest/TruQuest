@@ -1,15 +1,11 @@
-import 'package:easy_sidemenu/easy_sidemenu.dart';
 import 'package:flutter/material.dart';
+import 'package:easy_sidemenu/easy_sidemenu.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
-import '../widgets/image_block_with_crop.dart';
+import '../../subject/pages/subjects_page.dart';
 import '../bloc/notification_bloc.dart';
 import '../../widget_extensions.dart';
-import '../widgets/document_composer.dart';
-import '../widgets/evidence_block.dart';
-import '../widgets/image_block.dart';
 import '../widgets/status_panel.dart';
-import '../widgets/tags_block.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,7 +17,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends StateX<HomePage> {
   late final _notificationBloc = use<NotificationBloc>();
 
-  final _pageController = PageController();
+  final _pageController = PageController(initialPage: 0);
 
   @override
   void dispose() {
@@ -34,9 +30,9 @@ class _HomePageState extends StateX<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('TruQuest'),
-        actions: [
-          StatusPanel(),
-        ],
+        // actions: [
+        //   StatusPanel(),
+        // ],
       ),
       body: Row(
         children: [
@@ -87,36 +83,30 @@ class _HomePageState extends StateX<HomePage> {
                 title: 'Things',
                 onTap: () => _pageController.jumpToPage(1),
               ),
+              SideMenuItem(
+                priority: 2,
+                icon: Icon(Icons.question_answer),
+                title: 'How To',
+                onTap: () => _pageController.jumpToPage(2),
+              ),
             ],
           ),
           Expanded(
             child: PageView.builder(
               controller: _pageController,
-              itemCount: 2,
-              itemBuilder: (context, index) => Center(
-                child: Text('Page $index'),
-              ),
+              itemCount: 3,
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return SubjectsPage();
+                }
+
+                return Center(
+                  child: Text('Page $index'),
+                );
+              },
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.edit),
-        onPressed: () {
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (_) => UseScope(
-              child: DocumentComposer(
-                sideBlocks: [
-                  ImageBlockWithCrop(),
-                  TagsBlock(),
-                  EvidenceBlock(),
-                ],
-              ),
-            ),
-          );
-        },
       ),
     );
   }

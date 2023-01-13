@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:flutter_quill/flutter_quill.dart' hide Text;
 
-import 'preview_draft_button.dart';
 import '../contexts/document_context.dart';
 import '../../widget_extensions.dart';
 
 class DocumentComposer extends StatefulWidget {
+  final String title;
+  final String nameFieldLabel;
+  final Widget submitButton;
   final List<Widget> sideBlocks;
 
-  const DocumentComposer({super.key, required this.sideBlocks});
+  const DocumentComposer({
+    super.key,
+    required this.title,
+    required this.nameFieldLabel,
+    required this.submitButton,
+    required this.sideBlocks,
+  });
 
   @override
   State<DocumentComposer> createState() => _DocumentComposerState();
@@ -17,7 +25,17 @@ class DocumentComposer extends StatefulWidget {
 class _DocumentComposerState extends StateX<DocumentComposer> {
   late final _documentContext = useScoped<DocumentContext>();
 
-  final quill.QuillController _controller = quill.QuillController.basic();
+  late final QuillController _controller = _documentContext.quillController!;
+  final _scrollController = ScrollController();
+  final _focusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _focusNode.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +50,7 @@ class _DocumentComposerState extends StateX<DocumentComposer> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Subject'),
+            Text(widget.title),
             Row(
               children: [
                 IconButton(
@@ -66,7 +84,7 @@ class _DocumentComposerState extends StateX<DocumentComposer> {
           child: Column(
             children: [
               Expanded(
-                child: quill.QuillToolbar.basic(
+                child: QuillToolbar.basic(
                   controller: _controller,
                   toolbarIconAlignment: WrapAlignment.start,
                   showCodeBlock: false,
@@ -89,13 +107,13 @@ class _DocumentComposerState extends StateX<DocumentComposer> {
                           borderRadius: BorderRadius.all(Radius.circular(12)),
                         ),
                         padding: const EdgeInsets.all(4),
-                        child: quill.QuillEditor(
+                        child: QuillEditor(
                           controller: _controller,
                           placeholder: 'Fill in the details...',
-                          scrollController: ScrollController(),
+                          scrollController: _scrollController,
                           scrollable: true,
-                          focusNode: FocusNode(),
-                          autoFocus: true,
+                          focusNode: _focusNode,
+                          autoFocus: false,
                           readOnly: false,
                           expands: true,
                           padding: const EdgeInsets.all(12),
@@ -128,15 +146,17 @@ class _DocumentComposerState extends StateX<DocumentComposer> {
                     Flexible(
                       flex: 3,
                       child: TextField(
+                        autofocus: true,
                         maxLength: 50,
                         decoration: InputDecoration(
-                          labelText: 'Name',
+                          labelText: widget.nameFieldLabel,
                         ),
+                        onChanged: (value) {
+                          _documentContext.nameOrTitle = value;
+                        },
                       ),
                     ),
-                    Expanded(
-                      child: Center(child: PreviewDraftButton()),
-                    ),
+                    Expanded(child: Center(child: widget.submitButton)),
                   ],
                 ),
               ),

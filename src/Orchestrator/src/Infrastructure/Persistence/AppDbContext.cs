@@ -31,7 +31,8 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.Property(s => s.Name).IsRequired();
             builder.Property(s => s.Details).IsRequired();
             builder.Property(s => s.Type).IsRequired();
-            builder.Property(s => s.ImageIpfsCid).IsRequired(false);
+            builder.Property(s => s.ImageIpfsCid).IsRequired();
+            builder.Property(s => s.CroppedImageIpfsCid).IsRequired();
 
             builder
                 .HasOne<UserDm>()

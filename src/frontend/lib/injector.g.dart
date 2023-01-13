@@ -23,6 +23,9 @@ class _$Injector extends Injector {
       ..registerSingleton((c) => ThingBloc(c<ThingService>()))
       ..registerFactory((c) => DocumentContext())
       ..registerSingleton(
-          (c) => NotificationBloc(c<ThingService>(), c<ThingApiService>()));
+          (c) => NotificationBloc(c<ThingService>(), c<ThingApiService>()))
+      ..registerSingleton((c) => SubjectBloc(c<SubjectService>()))
+      ..registerSingleton((c) => SubjectService(c<SubjectApiService>()))
+      ..registerSingleton((c) => SubjectApiService(c<ServerConnector>()));
   }
 }
