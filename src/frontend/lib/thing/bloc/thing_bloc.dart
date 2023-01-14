@@ -10,6 +10,8 @@ class ThingBloc extends Bloc<ThingAction> {
     actionChannel.stream.listen((action) {
       if (action is CreateNewThingDraft) {
         _createNewThingDraft(action);
+      } else if (action is SubmitNewThing) {
+        _submitNewThing(action);
       }
     });
   }
@@ -22,5 +24,10 @@ class ThingBloc extends Bloc<ThingAction> {
   void _createNewThingDraft(CreateNewThingDraft action) async {
     await _thingService.createNewThingDraft(action.documentContext);
     action.complete(CreateNewThingDraftSuccessVm());
+  }
+
+  void _submitNewThing(SubmitNewThing action) async {
+    await _thingService.submitNewThing(action.thingId);
+    action.complete(SubmitNewThingSuccessVm());
   }
 }

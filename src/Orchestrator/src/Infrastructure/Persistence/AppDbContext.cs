@@ -71,7 +71,6 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
         modelBuilder.Entity<Thing>(builder =>
         {
             builder.HasKey(t => t.Id);
-            builder.Property(t => t.Id).HasValueGenerator<GuidValueGenerator>();
             builder.Property(t => t.State).HasConversion<int>().IsRequired();
             builder.Property(t => t.Title).IsRequired();
             builder.Property(t => t.Details).IsRequired();

@@ -4,7 +4,7 @@ namespace Domain.Aggregates;
 
 public class Thing : Entity, IAggregateRoot
 {
-    public Guid? Id { get; private set; }
+    public Guid Id { get; private set; }
     public ThingState State { get; private set; }
     public string Title { get; }
     public string Details { get; }
@@ -23,11 +23,12 @@ public class Thing : Entity, IAggregateRoot
     public IReadOnlyList<ThingVerifier> Verifiers => _verifiers;
 
     public Thing(
-        string title, string details, string? imageIpfsCid,
+        Guid id, string title, string details, string? imageIpfsCid,
         string? croppedImageIpfsCid, string submitterId, Guid subjectId
     )
     {
-        State = ThingState.AwaitingFunding;
+        Id = id;
+        State = ThingState.Draft;
         Title = title;
         Details = details;
         ImageIpfsCid = imageIpfsCid;

@@ -34,6 +34,7 @@ internal class AttachmentsArchivingCompletedEventHandler : INotificationHandler<
         await _clientNotifier.TellAboutNewThingDraftCreationProgress(@event.SubmitterId, @event.ThingId, percent: 100);
 
         var thing = new ThingDm(
+            id: @event.ThingId,
             title: @event.Input.Title,
             details: @event.Input.Details,
             imageIpfsCid: @event.Input.ImageIpfsCid,

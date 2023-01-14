@@ -12,7 +12,7 @@ using Application.Common.Models.IM;
 
 namespace Application.Thing.Commands.CreateNewThingDraft;
 
-// [RequireAuthorization]
+[RequireAuthorization]
 public class CreateNewThingDraftCommand : IRequest<HandleResult<Guid>>
 {
     public required HttpRequest Request { get; init; }
@@ -20,17 +20,17 @@ public class CreateNewThingDraftCommand : IRequest<HandleResult<Guid>>
 
 internal class CreateNewThingDraftCommandHandler : IRequestHandler<CreateNewThingDraftCommand, HandleResult<Guid>>
 {
-    // private readonly ICurrentPrincipal _currentPrincipal;
+    private readonly ICurrentPrincipal _currentPrincipal;
     private readonly IFileReceiver _fileReceiver;
     private readonly IRequestDispatcher _requestDispatcher;
 
     public CreateNewThingDraftCommandHandler(
-        // ICurrentPrincipal currentPrincipal,
+        ICurrentPrincipal currentPrincipal,
         IFileReceiver fileReceiver,
         IRequestDispatcher requestDispatcher
     )
     {
-        // _currentPrincipal = currentPrincipal;
+        _currentPrincipal = currentPrincipal;
         _fileReceiver = fileReceiver;
         _requestDispatcher = requestDispatcher;
     }
@@ -40,7 +40,7 @@ internal class CreateNewThingDraftCommandHandler : IRequestHandler<CreateNewThin
         var result = await _fileReceiver.ReceiveFilesAndFormValues(
             command.Request,
             maxSize: 10 * 1024 * 1024,
-            filePrefix: "bF2Ff171C3C4A63FBBD369ddb021c75934005e81".ToLower()
+            filePrefix: _currentPrincipal.Id
         );
         if (result.IsError)
         {
@@ -78,7 +78,7 @@ internal class CreateNewThingDraftCommandHandler : IRequestHandler<CreateNewThin
 
         await _requestDispatcher.Send(new ArchiveThingAttachmentsCommand
         {
-            SubmitterId = "bF2Ff171C3C4A63FBBD369ddb021c75934005e81".ToLower(),
+            SubmitterId = _currentPrincipal.Id,
             ThingId = thingId,
             Input = input
         });

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:elegant_notification/elegant_notification.dart';
 import 'package:easy_sidemenu/easy_sidemenu.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
 import '../../subject/pages/subject_page.dart';
+import '../../thing/pages/thing_page.dart';
 import '../contexts/page_context.dart';
 import '../../subject/pages/subjects_page.dart';
 import '../bloc/notification_bloc.dart';
@@ -23,6 +25,24 @@ class _HomePageState extends StateX<HomePage> {
   late final _pageController = _pageContext.controller;
 
   @override
+  void initState() {
+    super.initState();
+    _notificationBloc.notification$.listen((notification) {
+      ElegantNotification.success(
+        title: Text('Thing Draft Ready'),
+        description: Text(notification),
+        width: 300,
+        toastDuration: Duration(seconds: 5),
+        action: Icon(Icons.open_in_full),
+        onActionPressed: () {
+          _pageContext.route = '/things/$notification';
+          _pageController.jumpToPage(DateTime.now().millisecondsSinceEpoch);
+        },
+      ).show(context);
+    });
+  }
+
+  @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
@@ -33,9 +53,9 @@ class _HomePageState extends StateX<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('TruQuest'),
-        // actions: [
-        //   StatusPanel(),
-        // ],
+        actions: [
+          StatusPanel(),
+        ],
       ),
       body: Row(
         children: [
@@ -111,11 +131,13 @@ class _HomePageState extends StateX<HomePage> {
                 }
 
                 var route = _pageContext.route!;
-                _pageContext.route = null;
                 var routeSplit = route.split('/');
                 if (routeSplit[1] == 'subjects') {
                   var subjectId = routeSplit.last;
                   return SubjectPage(subjectId: subjectId);
+                } else if (routeSplit[1] == 'things') {
+                  var thingId = routeSplit.last;
+                  return ThingPage(thingId: thingId);
                 }
 
                 return Center(

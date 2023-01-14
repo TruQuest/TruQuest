@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:tuple/tuple.dart';
 
+import '../models/im/submit_new_thing_command.dart';
+import '../models/rvm/submit_new_thing_result_vm.dart';
 import '../../general/errors/api_error.dart';
 import '../../general/errors/file_error.dart';
 import '../../general/models/im/tag_im.dart';
@@ -40,7 +42,7 @@ class ThingApiService {
           _thingIdToProgressChannel[thingId]!.add(percent);
           if (percent == 100) {
             _thingIdToProgressChannel.remove(thingId)!.close();
-            _thingEventChannel.add('Ok');
+            _thingEventChannel.add(thingId);
           }
         }
       },
@@ -132,6 +134,9 @@ class ThingApiService {
 
       var response = await _dio.post(
         '/things/draft',
+        options: Options(
+          headers: {'Authorization': 'Bearer ${_serverConnector.accessToken}'},
+        ),
         data: input.toFormData(),
       );
 
@@ -141,6 +146,22 @@ class ThingApiService {
       _thingIdToProgressChannel[thingId] = progressChannel;
 
       return progressChannel.stream;
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future<SubmitNewThingResultVm> submitNewThing(String thingId) async {
+    try {
+      var response = await _dio.post(
+        '/things/submit',
+        options: Options(
+          headers: {'Authorization': 'Bearer ${_serverConnector.accessToken}'},
+        ),
+        data: SubmitNewThingCommand(thingId: thingId).toJson(),
+      );
+
+      return SubmitNewThingResultVm.fromMap(response.data['data']);
     } on DioError catch (error) {
       throw _wrapError(error);
     }

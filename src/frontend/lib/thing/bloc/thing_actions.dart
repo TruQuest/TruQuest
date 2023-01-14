@@ -13,3 +13,9 @@ class CreateNewThingDraft
 
   CreateNewThingDraft({required this.documentContext});
 }
+
+class SubmitNewThing extends ThingActionAwaitable<SubmitNewThingSuccessVm?> {
+  final String thingId;
+
+  SubmitNewThing({required this.thingId});
+}

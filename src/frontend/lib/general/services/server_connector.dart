@@ -15,6 +15,9 @@ class ServerConnector {
   HubConnection? _hubConnection;
   HubConnection? get hubConnection => _hubConnection;
 
+  String? _accessToken;
+  String? get accessToken => _accessToken;
+
   final StreamController<Future Function()> _hubConnectionTaskChannel =
       StreamController<Future Function()>();
 
@@ -48,6 +51,7 @@ class ServerConnector {
   }
 
   Future _connectToHub(String token) async {
+    _accessToken = token;
     var hubConnection = _hubConnection;
     if (hubConnection != null) {
       try {
@@ -96,6 +100,7 @@ class ServerConnector {
   }
 
   Future _disconnectFromHub() async {
+    _accessToken = null;
     if (_hubConnection != null) {
       try {
         await _hubConnection!.stop();

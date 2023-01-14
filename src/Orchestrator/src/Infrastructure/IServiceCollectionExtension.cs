@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
 
+using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Identity;
@@ -32,24 +33,32 @@ namespace Infrastructure;
 
 public static class IServiceCollectionExtension
 {
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddInfrastructure(
+        this IServiceCollection services,
+        IHostEnvironment environment,
+        IConfiguration configuration
+    )
     {
         services.AddDbContext<AppDbContext>(optionsBuilder =>
-            optionsBuilder.UseNpgsql(
-                configuration.GetConnectionString("Postgres") + "SearchPath=truquest;",
-                pgOptionsBuilder => pgOptionsBuilder.MigrationsHistoryTable(
-                    "__EFMigrationsHistory", "truquest"
+            optionsBuilder
+                .UseNpgsql(
+                    configuration.GetConnectionString("Postgres") + "SearchPath=truquest;",
+                    pgOptionsBuilder => pgOptionsBuilder.MigrationsHistoryTable(
+                        "__EFMigrationsHistory", "truquest"
+                    )
                 )
-            )
+                .EnableSensitiveDataLogging(environment.IsDevelopment())
         );
 
         services.AddDbContext<EventDbContext>(optionsBuilder =>
-            optionsBuilder.UseNpgsql(
-                configuration.GetConnectionString("Postgres") + "SearchPath=truquest_events;",
-                pgOptionsBuilder => pgOptionsBuilder.MigrationsHistoryTable(
-                    "__EFMigrationsHistory", "truquest_events"
+            optionsBuilder
+                .UseNpgsql(
+                    configuration.GetConnectionString("Postgres") + "SearchPath=truquest_events;",
+                    pgOptionsBuilder => pgOptionsBuilder.MigrationsHistoryTable(
+                        "__EFMigrationsHistory", "truquest_events"
+                    )
                 )
-            )
+                .EnableSensitiveDataLogging(environment.IsDevelopment())
         );
 
         JwtSecurityTokenHandler.DefaultMapInboundClaims = false;

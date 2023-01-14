@@ -2,5 +2,5 @@ namespace Application.Thing.Commands.SubmitNewThing;
 
 public class ThingVm
 {
-    public Guid Id { get; init; }
+    public required Guid Id { get; init; }
 }

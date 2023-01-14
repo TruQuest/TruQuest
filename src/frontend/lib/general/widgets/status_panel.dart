@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:elegant_notification/elegant_notification.dart';
 
-import '../bloc/notification_bloc.dart';
 import '../../ethereum/bloc/ethereum_actions.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';
 import '../../ethereum/bloc/ethereum_result_vm.dart';
@@ -11,32 +9,14 @@ import '../../widget_extensions.dart';
 import '../../user/bloc/user_result_vm.dart';
 import '../../user/models/vm/user_vm.dart';
 
-class StatusPanel extends StatefulWidget {
-  const StatusPanel({super.key});
-
-  @override
-  State<StatusPanel> createState() => _StatusPanelState();
-}
-
-class _StatusPanelState extends StateX<StatusPanel> {
-  late final _notificationBloc = use<NotificationBloc>();
+class StatusPanel extends StatelessWidgetX {
   late final _userBloc = use<UserBloc>();
   late final _ethereumBloc = use<EthereumBloc>();
 
-  @override
-  void initState() {
-    super.initState();
-    _notificationBloc.notification$.listen((event) {
-      ElegantNotification.success(
-        title: Text('Ready'),
-        description: Text(event),
-        width: 300,
-      ).show(context);
-    });
-  }
+  StatusPanel({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return LimitedBox(
       maxWidth: 400,
       child: Row(

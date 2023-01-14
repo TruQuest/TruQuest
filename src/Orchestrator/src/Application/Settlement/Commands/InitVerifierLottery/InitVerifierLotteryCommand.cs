@@ -47,7 +47,7 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
         var dataHash = await _contractCaller.ComputeHashForThingAssessmentVerifierLottery(data);
 
         long lotteryInitBlockNumber = await _contractCaller.InitThingAssessmentVerifierLottery(
-            thing.Id!.Value.ToByteArray(), dataHash
+            thing.Id.ToByteArray(), dataHash
         );
 
         int lotteryDurationBlocks = await _contractStorageQueryable.GetThingAssessmentVerifierLotteryDurationBlocks();

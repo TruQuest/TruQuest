@@ -29,4 +29,10 @@ class ThingService {
     _progress$Channel.add(progress$);
     return progress$;
   }
+
+  Future submitNewThing(String thingId) async {
+    var result = await _thingApiService.submitNewThing(thingId);
+    print(result.thing.id);
+    print(result.signature);
+  }
 }

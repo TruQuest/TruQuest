@@ -41,7 +41,7 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
         var data = RandomNumberGenerator.GetBytes(32);
         var dataHash = await _contractCaller.ComputeHashForThingSubmissionVerifierLottery(data);
 
-        long lotteryInitBlockNumber = await _contractCaller.InitThingSubmissionVerifierLottery(thing.Id!.Value.ToByteArray(), dataHash);
+        long lotteryInitBlockNumber = await _contractCaller.InitThingSubmissionVerifierLottery(thing.Id.ToByteArray(), dataHash);
 
         int lotteryDurationBlocks = await _contractStorageQueryable.GetThingSubmissionVerifierLotteryDurationBlocks();
 

@@ -39,7 +39,8 @@ class SubjectsPage extends StatelessWidgetX {
 
           if (jumpToRoute != null) {
             _pageContext.route = jumpToRoute;
-            _pageContext.controller.jumpToPage(0);
+            _pageContext.controller
+                .jumpToPage(DateTime.now().millisecondsSinceEpoch);
           }
         },
       ),

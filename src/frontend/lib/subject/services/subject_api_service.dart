@@ -17,10 +17,10 @@ import '../../general/errors/validation_error.dart';
 import '../../general/services/server_connector.dart';
 
 class SubjectApiService {
+  final ServerConnector _serverConnector;
   final Dio _dio;
 
-  SubjectApiService(ServerConnector serverConnector)
-      : _dio = serverConnector.dio;
+  SubjectApiService(this._serverConnector) : _dio = _serverConnector.dio;
 
   Error _wrapError(DioError dioError) {
     switch (dioError.type) {
@@ -82,9 +82,9 @@ class SubjectApiService {
 
       var response = await _dio.post(
         '/subjects/add',
-        // options: Options(
-        //   headers: {'Authorization': 'Bearer ${_serverConnector.accessToken}'},
-        // ),
+        options: Options(
+          headers: {'Authorization': 'Bearer ${_serverConnector.accessToken}'},
+        ),
         data: input.toFormData(),
       );
 

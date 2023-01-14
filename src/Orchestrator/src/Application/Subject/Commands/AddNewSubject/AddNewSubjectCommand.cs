@@ -16,7 +16,7 @@ using Application.Common.Models.IM;
 
 namespace Application.Subject.Commands.AddNewSubject;
 
-// [RequireAuthorization]
+[RequireAuthorization]
 public class AddNewSubjectCommand : IRequest<HandleResult<Guid>>
 {
     public required HttpRequest Request { get; init; }
@@ -25,21 +25,21 @@ public class AddNewSubjectCommand : IRequest<HandleResult<Guid>>
 internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectCommand, HandleResult<Guid>>
 {
     private readonly ILogger<AddNewSubjectCommandHandler> _logger;
-    // private readonly ICurrentPrincipal _currentPrincipal;
+    private readonly ICurrentPrincipal _currentPrincipal;
     private readonly IFileReceiver _fileReceiver;
     private readonly IRequestDispatcher _requestDispatcher;
     private readonly ISubjectRepository _subjectRepository;
 
     public AddNewSubjectCommandHandler(
         ILogger<AddNewSubjectCommandHandler> logger,
-        // ICurrentPrincipal currentPrincipal,
+        ICurrentPrincipal currentPrincipal,
         IFileReceiver fileReceiver,
         IRequestDispatcher requestDispatcher,
         ISubjectRepository subjectRepository
     )
     {
         _logger = logger;
-        // _currentPrincipal = currentPrincipal;
+        _currentPrincipal = currentPrincipal;
         _fileReceiver = fileReceiver;
         _requestDispatcher = requestDispatcher;
         _subjectRepository = subjectRepository;
@@ -50,7 +50,7 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
         var receiveResult = await _fileReceiver.ReceiveFilesAndFormValues(
             command.Request,
             maxSize: 10 * 1024 * 1024,
-            filePrefix: "bF2Ff171C3C4A63FBBD369ddb021c75934005e81".ToLower()
+            filePrefix: _currentPrincipal.Id
         );
         if (receiveResult.IsError)
         {
@@ -80,7 +80,7 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
 
         var result = await _requestDispatcher.GetResult(new ArchiveSubjectAttachmentsCommand
         {
-            SubmitterId = "bF2Ff171C3C4A63FBBD369ddb021c75934005e81".ToLower(),
+            SubmitterId = _currentPrincipal.Id,
             Input = input
         });
 
@@ -101,7 +101,7 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
             type: (SubjectType)successResult.Input.Type,
             imageIpfsCid: successResult.Input.ImageIpfsCid!,
             croppedImageIpfsCid: successResult.Input.CroppedImageIpfsCid!,
-            submitterId: "bF2Ff171C3C4A63FBBD369ddb021c75934005e81".ToLower()
+            submitterId: _currentPrincipal.Id
         );
         subject.AddTags(successResult.Input.Tags.Select(t => t.Id));
 

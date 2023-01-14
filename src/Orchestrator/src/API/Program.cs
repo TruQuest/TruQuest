@@ -67,7 +67,7 @@ public static class WebApplicationBuilderExtension
         );
 
         builder.Services.AddApplication();
-        builder.Services.AddInfrastructure(builder.Configuration);
+        builder.Services.AddInfrastructure(builder.Environment, builder.Configuration);
 
         builder.Services
             .AddSignalR()
