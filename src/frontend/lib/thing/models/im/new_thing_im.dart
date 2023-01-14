@@ -1,11 +1,18 @@
+import 'dart:typed_data';
+
+import 'package:dio/dio.dart';
+
+import '../../../general/models/im/tag_im.dart';
 import 'evidence_im.dart';
-import 'tag_im.dart';
 
 class NewThingIm {
   final String subjectId;
   final String title;
   final String details;
-  final String? imageUrl;
+  final String? imageExt;
+  final Uint8List? imageBytes;
+  final String? croppedImageExt;
+  final Uint8List? croppedImageBytes;
   final List<EvidenceIm> evidence;
   final List<TagIm> tags;
 
@@ -13,21 +20,35 @@ class NewThingIm {
     required this.subjectId,
     required this.title,
     required this.details,
-    required this.imageUrl,
+    required this.imageExt,
+    required this.imageBytes,
+    required this.croppedImageExt,
+    required this.croppedImageBytes,
     required this.evidence,
     required this.tags,
   });
 
-  Map<String, dynamic> toJson() {
-    var map = <String, dynamic>{};
+  FormData toFormData() {
+    // @@??: Is order of sections guaranteed?
+    var map = <String, dynamic>{
+      'subjectId': subjectId,
+      'title': title,
+      'details': details,
+      'evidence': evidence.map((e) => e.url).join('|'),
+      'tags': tags.map((t) => t.id).join('|'),
+    };
 
-    map['subjectId'] = subjectId;
-    map['title'] = title;
-    map['details'] = details;
-    map['imageUrl'] = imageUrl;
-    map['evidence'] = evidence.map((e) => e.toJson()).toList();
-    map['tags'] = tags.map((t) => t.toJson()).toList();
+    if (imageBytes != null && croppedImageBytes != null) {
+      map['image'] = MultipartFile.fromBytes(
+        imageBytes!,
+        filename: 'image.$imageExt',
+      );
+      map['croppedImage'] = MultipartFile.fromBytes(
+        croppedImageBytes!,
+        filename: 'cropped_image.$croppedImageExt',
+      );
+    }
 
-    return map;
+    return FormData.fromMap(map);
   }
 }

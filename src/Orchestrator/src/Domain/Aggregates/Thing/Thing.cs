@@ -9,6 +9,7 @@ public class Thing : Entity, IAggregateRoot
     public string Title { get; }
     public string Details { get; }
     public string? ImageIpfsCid { get; }
+    public string? CroppedImageIpfsCid { get; }
     public string SubmitterId { get; }
     public Guid SubjectId { get; }
 
@@ -21,12 +22,16 @@ public class Thing : Entity, IAggregateRoot
     private List<ThingVerifier> _verifiers = new();
     public IReadOnlyList<ThingVerifier> Verifiers => _verifiers;
 
-    public Thing(string title, string details, string? imageIpfsCid, string submitterId, Guid subjectId)
+    public Thing(
+        string title, string details, string? imageIpfsCid,
+        string? croppedImageIpfsCid, string submitterId, Guid subjectId
+    )
     {
         State = ThingState.AwaitingFunding;
         Title = title;
         Details = details;
         ImageIpfsCid = imageIpfsCid;
+        CroppedImageIpfsCid = croppedImageIpfsCid;
         SubmitterId = submitterId;
         SubjectId = subjectId;
     }

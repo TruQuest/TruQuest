@@ -6,7 +6,15 @@ T _resolveDependency<T>() => KiwiContainer().resolve<T>();
 class UseScope extends InheritedWidget {
   Map<Type, Object> _typeToInstance = {};
 
-  UseScope({super.key, required super.child});
+  UseScope({
+    super.key,
+    required super.child,
+    List<Object> useInstances = const [],
+  }) {
+    for (var dep in useInstances) {
+      _typeToInstance[dep.runtimeType] = dep;
+    }
+  }
 
   @override
   bool updateShouldNotify(covariant UseScope oldWidget) {

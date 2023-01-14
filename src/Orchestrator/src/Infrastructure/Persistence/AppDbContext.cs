@@ -30,7 +30,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.Property(s => s.Id).HasValueGenerator<GuidValueGenerator>();
             builder.Property(s => s.Name).IsRequired();
             builder.Property(s => s.Details).IsRequired();
-            builder.Property(s => s.Type).IsRequired();
+            builder.Property(s => s.Type).HasConversion<int>().IsRequired();
             builder.Property(s => s.ImageIpfsCid).IsRequired();
             builder.Property(s => s.CroppedImageIpfsCid).IsRequired();
 
@@ -76,6 +76,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.Property(t => t.Title).IsRequired();
             builder.Property(t => t.Details).IsRequired();
             builder.Property(t => t.ImageIpfsCid).IsRequired(false);
+            builder.Property(t => t.CroppedImageIpfsCid).IsRequired(false);
 
             builder
                 .HasOne<UserDm>()

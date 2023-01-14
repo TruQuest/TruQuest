@@ -2,7 +2,7 @@ namespace Application.Thing.Common.Models.IM;
 
 public class EvidenceIm
 {
-    public string Url { get; set; }
-    public string? IpfsCid { get; set; }
-    public string? PreviewImageIpfsCid { get; set; }
+    public required string Url { get; init; }
+    public string? IpfsCid { get; init; }
+    public string? PreviewImageIpfsCid { get; init; }
 }

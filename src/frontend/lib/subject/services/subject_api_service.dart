@@ -81,7 +81,7 @@ class SubjectApiService {
       );
 
       var response = await _dio.post(
-        '/subject/add',
+        '/subjects/add',
         // options: Options(
         //   headers: {'Authorization': 'Bearer ${_serverConnector.accessToken}'},
         // ),

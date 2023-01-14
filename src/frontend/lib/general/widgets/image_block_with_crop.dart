@@ -8,7 +8,9 @@ import '../contexts/document_context.dart';
 import '../../widget_extensions.dart';
 
 class ImageBlockWithCrop extends StatefulWidget {
-  const ImageBlockWithCrop({super.key});
+  final bool cropCircle;
+
+  const ImageBlockWithCrop({super.key, required this.cropCircle});
 
   @override
   State<ImageBlockWithCrop> createState() => _ImageBlockWithCropState();
@@ -44,7 +46,8 @@ class _ImageBlockWithCropState extends StateX<ImageBlockWithCrop> {
                 await showDialog<Tuple3<String, Uint8List, Uint8List>?>(
               context: context,
               barrierDismissible: true,
-              builder: (_) => ImageSelectionDialog(),
+              builder: (_) =>
+                  ImageSelectionDialog(cropCircle: widget.cropCircle),
             );
             if (result != null) {
               setState(() {
@@ -58,10 +61,26 @@ class _ImageBlockWithCropState extends StateX<ImageBlockWithCrop> {
         if (_documentContext.croppedImageBytes != null)
           Padding(
             padding: const EdgeInsets.only(top: 6),
-            child: CircleAvatar(
-              radius: 30,
-              foregroundImage: MemoryImage(_documentContext.croppedImageBytes!),
-            ),
+            child: widget.cropCircle
+                ? CircleAvatar(
+                    radius: 30,
+                    foregroundImage: MemoryImage(
+                      _documentContext.croppedImageBytes!,
+                    ),
+                  )
+                : AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(6)),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Image.memory(
+                        _documentContext.croppedImageBytes!,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
           ),
       ],
     );

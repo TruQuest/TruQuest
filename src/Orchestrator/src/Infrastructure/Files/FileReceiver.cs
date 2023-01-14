@@ -179,11 +179,6 @@ internal class FileReceiver : IFileReceiver
             section = await reader.ReadNextSectionAsync();
         }
 
-        if (!filePaths.Any())
-        {
-            return new ValidationError("No files provided");
-        }
-
         for (int i = 0; i < filePaths.Count; ++i)
         {
             formAccumulator.Append($"file{i + 1}", filePaths[i]);

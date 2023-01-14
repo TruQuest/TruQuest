@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../contexts/document_context.dart';
+import '../../widget_extensions.dart';
+
 class EvidenceBlock extends StatefulWidget {
   const EvidenceBlock({super.key});
 
@@ -7,12 +10,16 @@ class EvidenceBlock extends StatefulWidget {
   State<EvidenceBlock> createState() => _EvidenceBlockState();
 }
 
-class _EvidenceBlockState extends State<EvidenceBlock> {
-  final List<String> _links = [
-    'http://sports.ru/',
-    'https://media.istockphoto.com/id/1214625216/photo/elephant-with-a-zebra-skin-walking-in-savannah-this-is-a-3d-render-illustration.jpg?b=1&s=170667a&w=0&k=20&c=rRpDFrSK4uVCq73R2AaevGfq5RkqSq0MRZZ_RnYxLX8=',
-    'http://www.stackoverflow.com/',
-  ];
+class _EvidenceBlockState extends StateX<EvidenceBlock> {
+  late final _documentContext = useScoped<DocumentContext>();
+
+  final _textController = TextEditingController();
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,18 +44,45 @@ class _EvidenceBlockState extends State<EvidenceBlock> {
               ),
             ],
           ),
-          onPressed: () {
-            showDialog(
+          onPressed: () async {
+            _textController.clear();
+
+            var url = await showDialog<String?>(
               context: context,
               barrierDismissible: true,
               builder: (_) => AlertDialog(
-                title: Text('asdasd'),
+                title: Text('Add evidence link'),
+                content: Container(
+                  width: 400,
+                  height: 60,
+                  alignment: Alignment.center,
+                  child: TextField(
+                    controller: _textController,
+                    decoration: InputDecoration(
+                      hintText: 'Paste url here',
+                    ),
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    child: Text('Ok'),
+                    onPressed: () {
+                      Navigator.of(context).pop(_textController.text);
+                    },
+                  )
+                ],
               ),
             );
+
+            if (url != null && url != '') {
+              setState(() {
+                _documentContext.evidence.add(url);
+              });
+            }
           },
         ),
         SizedBox(height: 6),
-        ..._links.map(
+        ..._documentContext.evidence.map(
           (link) => Padding(
             padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
             child: OutlinedButton(

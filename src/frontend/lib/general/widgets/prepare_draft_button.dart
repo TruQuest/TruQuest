@@ -6,14 +6,14 @@ import '../contexts/document_context.dart';
 import '../../thing/bloc/thing_bloc.dart';
 import '../../widget_extensions.dart';
 
-class PreviewDraftButton extends StatefulWidget {
-  const PreviewDraftButton({super.key});
+class PrepareDraftButton extends StatefulWidget {
+  const PrepareDraftButton({super.key});
 
   @override
-  State<PreviewDraftButton> createState() => _PreviewDraftButtonState();
+  State<PrepareDraftButton> createState() => _PrepareDraftButtonState();
 }
 
-class _PreviewDraftButtonState extends StateX<PreviewDraftButton> {
+class _PrepareDraftButtonState extends StateX<PrepareDraftButton> {
   late final _documentContext = useScoped<DocumentContext>();
   late final _thingBloc = use<ThingBloc>();
 
@@ -30,11 +30,13 @@ class _PreviewDraftButtonState extends StateX<PreviewDraftButton> {
           vertical: 16,
         ),
       ),
-      child: _enabled ? Text('Preview draft') : CircularProgressIndicator(),
+      child: _enabled
+          ? Text('Prepare draft')
+          : CircularProgressIndicator(strokeWidth: 2),
       onPressed: _enabled
           ? () async {
               var action = CreateNewThingDraft(
-                documentContext: _documentContext,
+                documentContext: DocumentContext.fromEditable(_documentContext),
               );
               _thingBloc.dispatch(action);
 
@@ -45,9 +47,11 @@ class _PreviewDraftButtonState extends StateX<PreviewDraftButton> {
               var vm = await action.result;
               if (vm is CreateNewThingDraftFailureVm) {
                 // ...
+                return;
               }
 
               vm as CreateNewThingDraftSuccessVm;
+              Navigator.of(this.context).pop();
             }
           : null,
     );

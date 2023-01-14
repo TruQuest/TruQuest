@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../general/contexts/page_context.dart';
 import '../widgets/submit_button.dart';
 import '../widgets/type_selector_block.dart';
 import '../../general/widgets/document_composer.dart';
@@ -8,6 +9,8 @@ import '../../general/widgets/tags_block.dart';
 import '../../widget_extensions.dart';
 
 class SubjectsPage extends StatelessWidgetX {
+  late final _pageContext = useScoped<PageContext>();
+
   SubjectsPage({super.key});
 
   @override
@@ -16,8 +19,8 @@ class SubjectsPage extends StatelessWidgetX {
       body: Center(child: Text('Subjects')),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
-        onPressed: () {
-          showDialog(
+        onPressed: () async {
+          var jumpToRoute = await showDialog<String?>(
             context: context,
             barrierDismissible: false,
             builder: (_) => UseScope(
@@ -27,12 +30,17 @@ class SubjectsPage extends StatelessWidgetX {
                 submitButton: SubmitButton(),
                 sideBlocks: [
                   TypeSelectorBlock(),
-                  ImageBlockWithCrop(),
+                  ImageBlockWithCrop(cropCircle: true),
                   TagsBlock(),
                 ],
               ),
             ),
           );
+
+          if (jumpToRoute != null) {
+            _pageContext.route = jumpToRoute;
+            _pageContext.controller.jumpToPage(0);
+          }
         },
       ),
     );

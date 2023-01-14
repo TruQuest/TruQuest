@@ -45,7 +45,7 @@ class _SubmitButtonState extends StateX<SubmitButton> {
 
               AddNewSubjectSuccessResult? vm = await action.result;
               if (vm != null) {
-                Navigator.of(this.context).pop();
+                Navigator.of(this.context).pop('/subjects/${vm.subjectId}');
               }
             }
           : null,

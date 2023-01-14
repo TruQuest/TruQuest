@@ -7,6 +7,7 @@ import '../../subject/models/im/subject_type_im.dart';
 
 class DocumentContext {
   SubjectTypeIm? subjectType;
+  String? subjectId;
   String? nameOrTitle;
   final QuillController? quillController;
   final String? details;
@@ -25,6 +26,7 @@ class DocumentContext {
         details =
             jsonEncode(context.quillController!.document.toDelta().toJson()) {
     subjectType = context.subjectType;
+    subjectId = context.subjectId;
     nameOrTitle = context.nameOrTitle;
     imageExt = context.imageExt;
     imageBytes = context.imageBytes;

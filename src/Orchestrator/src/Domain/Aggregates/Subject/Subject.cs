@@ -8,7 +8,7 @@ public class Subject : Entity, IAggregateRoot
 
     public string Name { get; }
     public string Details { get; }
-    public int Type { get; }
+    public SubjectType Type { get; }
     public string ImageIpfsCid { get; }
     public string CroppedImageIpfsCid { get; }
     public string SubmitterId { get; }
@@ -17,7 +17,7 @@ public class Subject : Entity, IAggregateRoot
     public IReadOnlyList<SubjectAttachedTag> Tags => _tags;
 
     public Subject(
-        string name, string details, int type, string imageIpfsCid,
+        string name, string details, SubjectType type, string imageIpfsCid,
         string croppedImageIpfsCid, string submitterId
     )
     {

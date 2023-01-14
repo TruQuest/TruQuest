@@ -9,7 +9,9 @@ import 'package:image/image.dart';
 import '../../js.dart';
 
 class ImageSelectionDialog extends StatefulWidget {
-  const ImageSelectionDialog({super.key});
+  final bool cropCircle;
+
+  const ImageSelectionDialog({super.key, required this.cropCircle});
 
   @override
   State<ImageSelectionDialog> createState() => _ImageSelectionDialogState();
@@ -100,7 +102,8 @@ class _ImageSelectionDialogState extends State<ImageSelectionDialog> {
                           Tuple3(_imageExt!, _imageBytes!, croppedImageData),
                         );
                       },
-                      withCircleUi: true,
+                      withCircleUi: widget.cropCircle,
+                      aspectRatio: widget.cropCircle ? 1 : 16 / 9,
                     );
                   },
                 ),

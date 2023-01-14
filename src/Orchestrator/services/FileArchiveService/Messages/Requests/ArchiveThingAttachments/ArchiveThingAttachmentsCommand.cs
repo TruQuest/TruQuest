@@ -8,9 +8,9 @@ namespace Messages.Requests;
 
 internal class ArchiveThingAttachmentsCommand
 {
-    public string SubmitterId { get; set; }
-    public Guid ThingId { get; set; }
-    public NewThingIm Input { get; set; }
+    public required string SubmitterId { get; init; }
+    public required Guid ThingId { get; init; }
+    public required NewThingIm Input { get; init; }
 }
 
 internal class ArchiveThingAttachmentsCommandHandler : IMessageHandler<ArchiveThingAttachmentsCommand>

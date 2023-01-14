@@ -8,10 +8,10 @@ internal class EvidenceIm
         BackingField = nameof(IpfsCid),
         ExtraBackingField = nameof(PreviewImageIpfsCid)
     )]
-    public string Url { get; set; }
+    public required string Url { get; init; }
 
     [BackingField]
-    public string? IpfsCid { get; set; }
+    public required string? IpfsCid { get; set; }
     [BackingField]
-    public string? PreviewImageIpfsCid { get; set; }
+    public required string? PreviewImageIpfsCid { get; set; }
 }

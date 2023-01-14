@@ -20,7 +20,7 @@ class ThingBloc extends Bloc<ThingAction> {
   }
 
   void _createNewThingDraft(CreateNewThingDraft action) async {
-    var progress$ = await _thingService.createNewThingDraft();
-    action.complete(CreateNewThingDraftSuccessVm(progress$: progress$));
+    await _thingService.createNewThingDraft(action.documentContext);
+    action.complete(CreateNewThingDraftSuccessVm());
   }
 }

@@ -9,7 +9,7 @@ using API.Controllers.Filters;
 
 namespace API.Controllers;
 
-[Route("[controller]")]
+[Route("subjects")]
 public class SubjectController : ControllerBase
 {
     private readonly ISender _mediator;

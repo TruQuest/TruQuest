@@ -1,5 +1,6 @@
 import 'package:kiwi/kiwi.dart';
 
+import 'general/contexts/page_context.dart';
 import 'subject/bloc/subject_bloc.dart';
 import 'subject/services/subject_api_service.dart';
 import 'subject/services/subject_service.dart';
@@ -32,6 +33,7 @@ abstract class Injector {
   @Register.singleton(SubjectBloc)
   @Register.singleton(SubjectService)
   @Register.singleton(SubjectApiService)
+  @Register.factory(PageContext)
   void configure();
 }
 

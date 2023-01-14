@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'injector.dart';
 import 'general/pages/home_page.dart';
+import 'widget_extensions.dart';
 
 void main() {
   setup();
@@ -19,7 +20,7 @@ class App extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: HomePage(),
+      home: UseScope(child: HomePage()),
     );
   }
 }

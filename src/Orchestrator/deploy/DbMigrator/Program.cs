@@ -41,8 +41,15 @@ appDbContext.Users.AddRange(userIds.Select(id => new User
     UserName = id.Substring(2, 20).ToLower()
 }));
 
-appDbContext.Tags.Add(new Tag("Politics"));
+appDbContext.Tags.AddRange(new Tag("Politics"), new Tag("Sport"), new Tag("IT"));
 appDbContext.SaveChanges();
+
+// var s = new Subject("name", "details", 0, "image", "croppedImage", "bF2Ff171C3C4A63FBBD369ddb021c75934005e81".ToLower());
+// s.AddTags(new int[] { 1, 2, 3 });
+// appDbContext.Subjects.Add(s);
+// appDbContext.SaveChanges();
+
+// Console.WriteLine(s.Id);
 
 var eventDbContext = scope.ServiceProvider.GetRequiredService<EventDbContext>();
 eventDbContext.Database.Migrate();

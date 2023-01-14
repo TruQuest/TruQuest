@@ -4,12 +4,14 @@ namespace Application.Thing.Common.Models.IM;
 
 public class NewThingIm
 {
-    public Guid SubjectId { get; set; }
-    public string Title { get; set; }
-    public string Details { get; set; }
-    public string? ImageUrl { get; set; }
-    public IEnumerable<EvidenceIm> Evidence { get; set; }
-    public IEnumerable<TagIm> Tags { get; set; } = new List<TagIm>();
+    public required Guid SubjectId { get; init; }
+    public required string Title { get; init; }
+    public required string Details { get; init; }
+    public required string? ImagePath { get; init; }
+    public required string? CroppedImagePath { get; init; }
+    public required IEnumerable<EvidenceIm> Evidence { get; init; }
+    public required IEnumerable<TagIm> Tags { get; init; }
 
-    public string? ImageIpfsCid { get; set; }
+    public string? ImageIpfsCid { get; init; }
+    public string? CroppedImageIpfsCid { get; init; }
 }

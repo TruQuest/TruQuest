@@ -1,17 +1,22 @@
 using Attributes;
+using Common.Models.IM;
 
 namespace Messages.Requests;
 
 internal class NewThingIm
 {
-    public Guid SubjectId { get; set; }
-    public string Title { get; set; }
-    public string Details { get; set; }
-    [ImageUrl(BackingField = nameof(ImageIpfsCid))]
-    public string? ImageUrl { get; set; }
-    public IEnumerable<EvidenceIm> Evidence { get; set; }
-    public IEnumerable<TagIm> Tags { get; set; }
+    public required Guid SubjectId { get; init; }
+    public required string Title { get; init; }
+    public required string Details { get; init; }
+    [ImagePath(BackingField = nameof(ImageIpfsCid))]
+    public required string? ImagePath { get; init; }
+    [ImagePath(BackingField = nameof(CroppedImageIpfsCid))]
+    public required string? CroppedImagePath { get; init; }
+    public required IEnumerable<EvidenceIm> Evidence { get; init; }
+    public required IEnumerable<TagIm> Tags { get; init; }
 
     [BackingField]
-    public string? ImageIpfsCid { get; set; }
+    public required string? ImageIpfsCid { get; set; }
+    [BackingField]
+    public required string? CroppedImageIpfsCid { get; set; }
 }
