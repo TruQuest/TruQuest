@@ -1,3 +1,4 @@
+import '../models/rvm/thing_vm.dart';
 import '../../general/bloc/mixins.dart';
 import 'thing_result_vm.dart';
 import '../../general/contexts/document_context.dart';
@@ -14,8 +15,21 @@ class CreateNewThingDraft
   CreateNewThingDraft({required this.documentContext});
 }
 
-class SubmitNewThing extends ThingActionAwaitable<SubmitNewThingSuccessVm?> {
+class GetThing extends ThingAction {
   final String thingId;
 
-  SubmitNewThing({required this.thingId});
+  GetThing({required this.thingId});
+}
+
+class SubmitNewThing extends ThingAction {
+  final ThingVm thing;
+
+  SubmitNewThing({required this.thing});
+}
+
+class FundThing extends ThingAction {
+  final ThingVm thing;
+  final String signature;
+
+  FundThing({required this.thing, required this.signature});
 }

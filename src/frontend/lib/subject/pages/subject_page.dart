@@ -19,15 +19,7 @@ class SubjectPage extends StatelessWidgetX {
   @override
   Widget buildX(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: SizedBox(
-          width: double.infinity,
-          height: 2000,
-          child: Center(
-            child: Text('Subject'),
-          ),
-        ),
-      ),
+      body: Center(child: Text('Subject')),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         onPressed: () {

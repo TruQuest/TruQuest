@@ -3,22 +3,37 @@ import 'package:kiwi/kiwi.dart';
 
 T _resolveDependency<T>() => KiwiContainer().resolve<T>();
 
+abstract class IDisposable {
+  void dispose();
+}
+
 class UseScope extends InheritedWidget {
   Map<Type, Object> _typeToInstance = {};
+  final bool preserveOnRebuild;
 
   UseScope({
     super.key,
     required super.child,
     List<Object> useInstances = const [],
+    this.preserveOnRebuild = true,
   }) {
-    for (var dep in useInstances) {
-      _typeToInstance[dep.runtimeType] = dep;
+    for (var instance in useInstances) {
+      _typeToInstance[instance.runtimeType] = instance;
     }
   }
 
   @override
   bool updateShouldNotify(covariant UseScope oldWidget) {
-    _typeToInstance = oldWidget._typeToInstance;
+    if (preserveOnRebuild) {
+      _typeToInstance = oldWidget._typeToInstance;
+    } else {
+      for (var instance in oldWidget._typeToInstance.values) {
+        if (instance is IDisposable) {
+          instance.dispose();
+        }
+      }
+    }
+
     return false;
   }
 

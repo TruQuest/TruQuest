@@ -136,11 +136,11 @@ internal class Signer : ISigner
         return address.Substring(2);
     }
 
-    public string SignThing(ThingVm thing)
+    public string SignThing(Guid thingId)
     {
         var td = new ThingTd
         {
-            Id = thing.Id.ToByteArray()
+            Id = thingId.ToByteArray()
         };
         var tdDefinition = _getTypedDataDefinition(typeof(ThingTd));
         tdDefinition.SetMessage(td);

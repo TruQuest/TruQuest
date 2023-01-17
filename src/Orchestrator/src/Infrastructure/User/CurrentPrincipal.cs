@@ -7,14 +7,14 @@ namespace Infrastructure.User;
 
 internal class CurrentPrincipal : ICurrentPrincipal
 {
-    private readonly ClaimsPrincipal _principal;
+    private readonly ClaimsPrincipal? _principal;
 
     public CurrentPrincipal(IAuthenticationContext authenticationContext)
     {
-        _principal = authenticationContext.User!;
+        _principal = authenticationContext.User;
     }
 
-    public string Id => _principal.FindFirstValue(JwtRegisteredClaimNames.Sub)!;
+    public string? Id => _principal?.FindFirstValue(JwtRegisteredClaimNames.Sub);
 
-    public string Username => _principal.FindFirstValue("username")!;
+    public string? Username => _principal?.FindFirstValue("username")!;
 }

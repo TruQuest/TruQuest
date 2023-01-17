@@ -5,6 +5,7 @@ using MediatR;
 using Domain.Results;
 using Application.Thing.Commands.SubmitNewThing;
 using Application.Thing.Commands.CreateNewThingDraft;
+using Application.Thing.Queries.GetThing;
 
 using API.Controllers.Filters;
 
@@ -31,4 +32,8 @@ public class ThingController : ControllerBase
     [HttpPost("submit")]
     public Task<HandleResult<SubmitNewThingResultVm>> SubmitNewThing([FromBody] SubmitNewThingCommand command)
         => _mediator.Send(command);
+
+    [HttpGet("{id}")]
+    public Task<HandleResult<GetThingResultVm>> Get(string id) =>
+        _mediator.Send(new GetThingQuery { ThingId = Guid.Parse(id) });
 }

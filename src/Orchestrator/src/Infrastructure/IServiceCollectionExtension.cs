@@ -183,6 +183,7 @@ public static class IServiceCollectionExtension
         services.AddScoped<ICastedAssessmentPollVoteEventRepository, CastedAssessmentPollVoteEventRepository>();
 
         services.AddScoped<ISubjectQueryable, SubjectQueryable>();
+        services.AddScoped<IThingQueryable, ThingQueryable>();
 
         services.AddSingleton<IContractEventListener, ContractEventListener>();
 

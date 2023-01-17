@@ -1,10 +1,8 @@
-import 'thing_vm.dart';
-
 class SubmitNewThingResultVm {
-  final ThingVm thing;
+  final String thingId;
   final String signature;
 
   SubmitNewThingResultVm.fromMap(Map<String, dynamic> map)
-      : thing = ThingVm.fromMap(map['thing']),
+      : thingId = map['thingId'],
         signature = map['signature'];
 }

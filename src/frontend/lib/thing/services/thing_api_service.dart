@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:tuple/tuple.dart';
 
+import '../models/rvm/get_thing_result_vm.dart';
 import '../models/im/submit_new_thing_command.dart';
 import '../models/rvm/submit_new_thing_result_vm.dart';
 import '../../general/errors/api_error.dart';
@@ -146,6 +147,25 @@ class ThingApiService {
       _thingIdToProgressChannel[thingId] = progressChannel;
 
       return progressChannel.stream;
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future<GetThingResultVm> getThing(String thingId) async {
+    try {
+      var response = await _dio.get(
+        '/things/$thingId',
+        options: _serverConnector.accessToken != null
+            ? Options(
+                headers: {
+                  'Authorization': 'Bearer ${_serverConnector.accessToken}'
+                },
+              )
+            : null,
+      );
+
+      return GetThingResultVm.fromMap(response.data['data']);
     } on DioError catch (error) {
       throw _wrapError(error);
     }

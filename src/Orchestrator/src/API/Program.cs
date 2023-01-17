@@ -1,13 +1,19 @@
 using System.Text.Json;
 using System.Diagnostics;
+using System.Numerics;
 
 using Microsoft.AspNetCore.SignalR;
 
 using KafkaFlow;
+using Nethereum.Web3;
+using Nethereum.ABI.FunctionEncoding.Attributes;
+using Nethereum.Contracts;
+using Nethereum.JsonRpc.Client;
 
 using Application;
 using Application.Common.Interfaces;
 using Infrastructure;
+using Infrastructure.Ethereum;
 
 using API.BackgroundServices;
 using API.Hubs.Filters;
@@ -30,7 +36,8 @@ public class Program
             .ConfigurePipeline()
             .DeployContracts()
                 .ContinueWith(deployTask => deployTask.Result.RegisterDebeziumConnector()).Unwrap()
-                .ContinueWith(registerTask => registerTask.Result.StartKafkaBus()).Unwrap();
+                .ContinueWith(registerTask => registerTask.Result.StartKafkaBus()).Unwrap()
+                .ContinueWith(startBusTask => startBusTask.Result.DepositFunds()).Unwrap();
 
         app.Run();
     }
@@ -158,4 +165,101 @@ public static class WebApplicationBuilderExtension
         await bus.StartAsync();
         return app;
     }
+
+    public static async Task<WebApplication> DepositFunds(this WebApplication app)
+    {
+        var configuration = app.Configuration;
+        var network = configuration["Ethereum:Network"]!;
+        var rpcUrl = configuration[$"Ethereum:Networks:{network}:URL"]!;
+        var truthserumAddress = configuration[$"Ethereum:Contracts:{network}:Truthserum:Address"]!;
+        var truQuestAddress = configuration[$"Ethereum:Contracts:{network}:TruQuest:Address"]!;
+
+        var accountProvider = app.Services.GetRequiredService<AccountProvider>();
+
+        var users = new[]
+        {
+            "Submitter",
+            "Proposer",
+            "Verifier1",
+            "Verifier2",
+            "Verifier3",
+            "Verifier4",
+            "Verifier5",
+            "Verifier6",
+            "Verifier7",
+            "Verifier8",
+            "Verifier9",
+            "Verifier10",
+        };
+
+        var web3Orchestrator = new Web3(accountProvider.GetAccount("Orchestrator"), rpcUrl);
+
+        foreach (var user in users)
+        {
+            var txnDispatcher = web3Orchestrator.Eth.GetContractTransactionHandler<TransferMessage>();
+            var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
+                truthserumAddress,
+                new()
+                {
+                    To = accountProvider.GetAccount(user).Address,
+                    Amount = 500
+                }
+            );
+
+            await web3Orchestrator.Client.SendRequestAsync(new RpcRequest(Guid.NewGuid().ToString(), "evm_mine"));
+
+            var account = accountProvider.GetAccount(user);
+            var web3 = new Web3(account, rpcUrl);
+
+            var approveTxnDispatcher = web3.Eth.GetContractTransactionHandler<ApproveMessage>();
+            var approveTxnReceipt = await approveTxnDispatcher.SendRequestAndWaitForReceiptAsync(
+                truthserumAddress,
+                new()
+                {
+                    Spender = truQuestAddress,
+                    Amount = 500
+                }
+            );
+
+            await web3.Client.SendRequestAsync(new RpcRequest(Guid.NewGuid().ToString(), "evm_mine"));
+
+            var depositTxnDispatcher = web3.Eth.GetContractTransactionHandler<DepositMessage>();
+            var depositTxnReceipt = await depositTxnDispatcher.SendRequestAndWaitForReceiptAsync(
+                truQuestAddress,
+                new()
+                {
+                    Amount = 500
+                }
+            );
+
+            await web3.Client.SendRequestAsync(new RpcRequest(Guid.NewGuid().ToString(), "evm_mine"));
+        }
+
+        return app;
+    }
+}
+
+[Function("transfer", "bool")]
+public class TransferMessage : FunctionMessage
+{
+    [Parameter("address", "to", 1)]
+    public string To { get; init; }
+    [Parameter("uint256", "amount", 2)]
+    public BigInteger Amount { get; init; }
+}
+
+[Function("approve", "bool")]
+public class ApproveMessage : FunctionMessage
+{
+    [Parameter("address", "spender", 1)]
+    public string Spender { get; init; }
+    [Parameter("uint256", "amount", 2)]
+    public BigInteger Amount { get; init; }
+}
+
+[Function("deposit")]
+public class DepositMessage : FunctionMessage
+{
+    [Parameter("uint256", "_amount", 1)]
+    public BigInteger Amount { get; init; }
 }

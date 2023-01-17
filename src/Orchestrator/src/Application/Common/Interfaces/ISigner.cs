@@ -21,7 +21,7 @@ public interface ISigner
         NewSettlementProposalIm input, string signature
     );
 
-    string SignThing(ThingVm thing);
+    string SignThing(Guid thingId);
     string SignNewAcceptancePollVote(NewAcceptancePollVoteIm input, string voterId, string voterSignature);
     string SignAcceptancePollVoteAgg(IEnumerable<AcceptancePollVote> offChainVotes, IEnumerable<CastedAcceptancePollVoteEvent> onChainVotes);
     string SignSettlementProposal(SettlementProposalVm proposal);

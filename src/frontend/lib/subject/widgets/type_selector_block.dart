@@ -21,14 +21,13 @@ class _TypeSelectorBlockState extends StateX<TypeSelectorBlock> {
         Card(
           color: Colors.teal[600],
           elevation: 5,
-          child: SizedBox(
+          child: Container(
             width: double.infinity,
             height: 30,
-            child: Center(
-              child: Text(
-                'Type',
-                style: TextStyle(color: Colors.white),
-              ),
+            alignment: Alignment.center,
+            child: Text(
+              'Type',
+              style: TextStyle(color: Colors.white),
             ),
           ),
         ),

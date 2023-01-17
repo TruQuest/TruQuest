@@ -1,5 +1,6 @@
 import 'package:kiwi/kiwi.dart';
 
+import 'general/contracts/truquest_contract.dart';
 import 'general/contexts/page_context.dart';
 import 'subject/bloc/subject_bloc.dart';
 import 'subject/services/subject_api_service.dart';
@@ -34,6 +35,7 @@ abstract class Injector {
   @Register.singleton(SubjectService)
   @Register.singleton(SubjectApiService)
   @Register.factory(PageContext)
+  @Register.singleton(TruQuestContract)
   void configure();
 }
 

@@ -50,7 +50,7 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
         var receiveResult = await _fileReceiver.ReceiveFilesAndFormValues(
             command.Request,
             maxSize: 10 * 1024 * 1024,
-            filePrefix: _currentPrincipal.Id
+            filePrefix: _currentPrincipal.Id!
         );
         if (receiveResult.IsError)
         {
@@ -80,7 +80,7 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
 
         var result = await _requestDispatcher.GetResult(new ArchiveSubjectAttachmentsCommand
         {
-            SubmitterId = _currentPrincipal.Id,
+            SubmitterId = _currentPrincipal.Id!,
             Input = input
         });
 
@@ -101,7 +101,7 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
             type: (SubjectType)successResult.Input.Type,
             imageIpfsCid: successResult.Input.ImageIpfsCid!,
             croppedImageIpfsCid: successResult.Input.CroppedImageIpfsCid!,
-            submitterId: _currentPrincipal.Id
+            submitterId: _currentPrincipal.Id!
         );
         subject.AddTags(successResult.Input.Tags.Select(t => t.Id));
 

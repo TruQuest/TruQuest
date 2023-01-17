@@ -43,7 +43,7 @@ internal class SubmitNewThingCommandHandler : IRequestHandler<SubmitNewThingComm
     {
         var thing = await _thingRepository.FindById(command.ThingId);
         // @@??: Should check using resource-based authorization?
-        if (thing.SubmitterId != _currentPrincipal.Id)
+        if (thing.SubmitterId != _currentPrincipal.Id!)
         {
             return new()
             {
@@ -61,17 +61,12 @@ internal class SubmitNewThingCommandHandler : IRequestHandler<SubmitNewThingComm
         thing.SetState(ThingState.AwaitingFunding);
         await _thingRepository.SaveChanges();
 
-        var thingVm = new ThingVm
-        {
-            Id = thing.Id
-        };
-
         return new()
         {
             Data = new()
             {
-                Thing = thingVm,
-                Signature = _signer.SignThing(thingVm)
+                ThingId = thing.Id,
+                Signature = _signer.SignThing(thing.Id)
             }
         };
     }

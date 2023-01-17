@@ -13,3 +13,6 @@ class ImageResult {
   external ByteBuffer get buffer;
   external String get mimeType;
 }
+
+@JS('window.ethereum._state.initialized')
+external bool isMetamaskInitialized;

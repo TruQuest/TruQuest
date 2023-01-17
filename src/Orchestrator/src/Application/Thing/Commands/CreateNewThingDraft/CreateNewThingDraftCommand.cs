@@ -40,7 +40,7 @@ internal class CreateNewThingDraftCommandHandler : IRequestHandler<CreateNewThin
         var result = await _fileReceiver.ReceiveFilesAndFormValues(
             command.Request,
             maxSize: 10 * 1024 * 1024,
-            filePrefix: _currentPrincipal.Id
+            filePrefix: _currentPrincipal.Id!
         );
         if (result.IsError)
         {
@@ -78,7 +78,7 @@ internal class CreateNewThingDraftCommandHandler : IRequestHandler<CreateNewThin
 
         await _requestDispatcher.Send(new ArchiveThingAttachmentsCommand
         {
-            SubmitterId = _currentPrincipal.Id,
+            SubmitterId = _currentPrincipal.Id!,
             ThingId = thingId,
             Input = input
         });

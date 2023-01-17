@@ -118,7 +118,7 @@ public class ContractCaller
         _logger.LogInformation("User {Address} balance: {Balance}", account.Address, balance);
     }
 
-    public async Task FundThing(ThingVm thing, string signature)
+    public async Task FundThing(Guid thingId, string signature)
     {
         signature = signature.Substring(2);
         var r = signature.Substring(0, 64).HexToByteArray();
@@ -132,7 +132,7 @@ public class ContractCaller
             {
                 Thing = new ThingTd
                 {
-                    Id = thing.Id.ToByteArray()
+                    Id = thingId.ToByteArray()
                 },
                 V = v,
                 R = r,

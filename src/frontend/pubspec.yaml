@@ -47,6 +47,9 @@ dependencies:
   google_fonts: ^3.0.1
   easy_sidemenu: ^0.4.1
   crop_your_image: ^0.7.4
+  uuid: ^3.0.7
+  convert: ^3.1.1
+  tabbed_view: ^1.16.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

@@ -4,7 +4,9 @@ import 'dart:convert';
 import 'package:either_dart/either.dart';
 import 'package:flutter_web3/flutter_web3.dart';
 import 'package:tuple/tuple.dart';
+import 'package:universal_html/html.dart';
 
+import '../../js.dart';
 import '../errors/ethereum_error.dart';
 
 class EthereumService {
@@ -16,6 +18,8 @@ class EthereumService {
 
   String? _connectedAccount;
   String? get connectedAccount => _connectedAccount;
+
+  late final provider = Web3Provider(ethereum!);
 
   final StreamController<int> _connectedChainChangedEventChannel =
       StreamController<int>();
@@ -30,6 +34,13 @@ class EthereumService {
   EthereumService() : available = ethereum != null {
     var metamask = ethereum;
     if (metamask != null) {
+      if (!isMetamaskInitialized) {
+        window.location.reload();
+      }
+
+      metamask.removeAllListeners('chainChanged');
+      metamask.removeAllListeners('accountsChanged');
+
       metamask.onChainChanged((chainId) {
         print('Chain changed: $chainId');
         if (_connectedChainId != chainId) {
@@ -51,7 +62,7 @@ class EthereumService {
       metamask.getChainId().then((chainId) {
         print('Current chain: $chainId');
         _connectedChainId = chainId;
-        _connectedChainChangedEventChannel.add(chainId);
+        _connectedChainChangedEventChannel.add(_connectedChainId!);
       });
 
       // @@NOTE: ?? accountsChanged event doesn't fire on launch even though MM says it does ??
