@@ -237,6 +237,28 @@ contract ThingSubmissionVerifierLottery {
         return keccak256(abi.encodePacked(address(this), _data));
     }
 
+    function getLotteryDurationBlocks() public view returns (uint16) {
+        return s_durationBlocks;
+    }
+
+    function getLotteryInitBlock(bytes16 _thingId) public view returns (int64) {
+        return s_thingIdToLotteryCommitments[_thingId][s_orchestrator].block;
+    }
+
+    function checkAlreadyPreJoinedLottery(
+        bytes16 _thingId,
+        address _user
+    ) public view returns (bool) {
+        return s_thingIdToLotteryCommitments[_thingId][_user].block != 0;
+    }
+
+    function checkAlreadyJoinedLottery(
+        bytes16 _thingId,
+        address _user
+    ) public view returns (bool) {
+        return s_thingIdToLotteryCommitments[_thingId][_user].revealed;
+    }
+
     // onlyFunded
     function initLottery(
         bytes16 _thingId,

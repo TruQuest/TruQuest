@@ -14,6 +14,12 @@ class ThingBloc extends Bloc<ThingAction> {
       StreamController<GetThingResultVm>.broadcast();
   Stream<GetThingResultVm> get thing$ => _thingChannel.stream;
 
+  final StreamController<GetThingLotteryInfoSuccessVm>
+      _thingLotteryInfoChannel =
+      StreamController<GetThingLotteryInfoSuccessVm>.broadcast();
+  Stream<GetThingLotteryInfoSuccessVm> get thingLotteryInfo$ =>
+      _thingLotteryInfoChannel.stream;
+
   ThingBloc(this._thingService) {
     actionChannel.stream.listen((action) {
       if (action is CreateNewThingDraft) {
@@ -24,6 +30,12 @@ class ThingBloc extends Bloc<ThingAction> {
         _submitNewThing(action);
       } else if (action is FundThing) {
         _fundThing(action);
+      } else if (action is GetThingLotteryInfo) {
+        _getThingLotteryInfo(action);
+      } else if (action is PreJoinLottery) {
+        _preJoinLottery(action);
+      } else if (action is JoinLottery) {
+        _joinLottery(action);
       }
     });
   }
@@ -59,5 +71,48 @@ class ThingBloc extends Bloc<ThingAction> {
       ),
       signature: null,
     ));
+  }
+
+  void _getThingLotteryInfo(GetThingLotteryInfo action) async {
+    var info = await _thingService.getThingLotteryInfo(action.thingId);
+    _thingLotteryInfoChannel.add(
+      GetThingLotteryInfoSuccessVm(
+        initBlock: info.item1,
+        durationBlocks: info.item2,
+        alreadyPreJoined: info.item3,
+        alreadyJoined: info.item4,
+        latestBlockNumber: info.item5,
+      ),
+    );
+  }
+
+  void _preJoinLottery(PreJoinLottery action) async {
+    await _thingService.preJoinLottery(action.thingId);
+
+    var info = await _thingService.getThingLotteryInfo(action.thingId);
+    _thingLotteryInfoChannel.add(
+      GetThingLotteryInfoSuccessVm(
+        initBlock: info.item1,
+        durationBlocks: info.item2,
+        alreadyPreJoined: info.item3,
+        alreadyJoined: info.item4,
+        latestBlockNumber: info.item5,
+      ),
+    );
+  }
+
+  void _joinLottery(JoinLottery action) async {
+    await _thingService.joinLottery(action.thingId);
+
+    var info = await _thingService.getThingLotteryInfo(action.thingId);
+    _thingLotteryInfoChannel.add(
+      GetThingLotteryInfoSuccessVm(
+        initBlock: info.item1,
+        durationBlocks: info.item2,
+        alreadyPreJoined: info.item3,
+        alreadyJoined: info.item4,
+        latestBlockNumber: info.item5,
+      ),
+    );
   }
 }

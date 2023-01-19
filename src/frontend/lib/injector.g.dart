@@ -19,8 +19,11 @@ class _$Injector extends Injector {
       ..registerSingleton((c) => ServerConnector())
       ..registerSingleton((c) => UserApiService(c<ServerConnector>()))
       ..registerSingleton((c) => ThingApiService(c<ServerConnector>()))
-      ..registerSingleton(
-          (c) => ThingService(c<ThingApiService>(), c<TruQuestContract>()))
+      ..registerSingleton((c) => ThingService(
+          c<ThingApiService>(),
+          c<EthereumService>(),
+          c<TruQuestContract>(),
+          c<ThingSubmissionVerifierLotteryContract>()))
       ..registerSingleton((c) => ThingBloc(c<ThingService>()))
       ..registerFactory((c) => DocumentContext())
       ..registerSingleton(
@@ -29,6 +32,8 @@ class _$Injector extends Injector {
       ..registerSingleton((c) => SubjectService(c<SubjectApiService>()))
       ..registerSingleton((c) => SubjectApiService(c<ServerConnector>()))
       ..registerFactory((c) => PageContext())
-      ..registerSingleton((c) => TruQuestContract(c<EthereumService>()));
+      ..registerSingleton((c) => TruQuestContract(c<EthereumService>()))
+      ..registerSingleton(
+          (c) => ThingSubmissionVerifierLotteryContract(c<EthereumService>()));
   }
 }

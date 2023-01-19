@@ -17,6 +17,9 @@ class EthereumBloc extends Bloc<EthereumAction> {
   Stream<SwitchEthereumChainSuccessVm> get selectedChain$ =>
       _selectedChainChannel.stream;
 
+  final BehaviorSubject<int> _latestBlockNumberChannel = BehaviorSubject<int>();
+  Stream<int> get latestBlockNumber$ => _latestBlockNumberChannel.stream;
+
   EthereumBloc(this._ethereumService) {
     actionChannel.stream.listen((action) {
       if (action is SwitchEthereumChain) {
@@ -41,6 +44,10 @@ class EthereumBloc extends Bloc<EthereumAction> {
         chainId: chainId,
         shouldOfferToSwitchChain: chainId != _ethereumService.validChainId,
       ));
+    });
+
+    _ethereumService.blockMined$.listen((blockNumber) {
+      _latestBlockNumberChannel.add(blockNumber);
     });
   }
 

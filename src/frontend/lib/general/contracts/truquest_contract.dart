@@ -73,9 +73,9 @@ class TruQuestContract {
 
       print('Txn sent! Waiting for confirmations...');
 
-      await txnResponse.wait(1);
+      await txnResponse.wait(2);
 
-      print('Txn confirmed!');
+      print('Fund txn confirmed!');
     } catch (e) {
       print(e);
     }

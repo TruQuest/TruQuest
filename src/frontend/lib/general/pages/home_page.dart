@@ -117,6 +117,7 @@ class _HomePageState extends StateX<HomePage> {
           Expanded(
             child: PageView.builder(
               controller: _pageController,
+              physics: NeverScrollableScrollPhysics(),
               itemBuilder: (context, index) {
                 if (index == 1) {
                   return SubjectsPage();
@@ -140,9 +141,7 @@ class _HomePageState extends StateX<HomePage> {
                   return ThingPage(thingId: thingId);
                 }
 
-                return Center(
-                  child: Text('Not Found'),
-                );
+                return Center(child: Text('Not Found'));
               },
             ),
           ),

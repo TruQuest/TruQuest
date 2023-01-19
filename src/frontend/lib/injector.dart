@@ -1,5 +1,6 @@
 import 'package:kiwi/kiwi.dart';
 
+import 'general/contracts/thing_submission_verifier_lottery_contract.dart';
 import 'general/contracts/truquest_contract.dart';
 import 'general/contexts/page_context.dart';
 import 'subject/bloc/subject_bloc.dart';
@@ -36,6 +37,7 @@ abstract class Injector {
   @Register.singleton(SubjectApiService)
   @Register.factory(PageContext)
   @Register.singleton(TruQuestContract)
+  @Register.singleton(ThingSubmissionVerifierLotteryContract)
   void configure();
 }
 

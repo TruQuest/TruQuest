@@ -31,12 +31,17 @@ class EthereumService {
   Stream<String?> get connectedAccountChanged$ =>
       _connectedAccountChangedEventChannel.stream;
 
+  final StreamController<int> _blockMinedEventChannel = StreamController<int>();
+  Stream<int> get blockMined$ => _blockMinedEventChannel.stream;
+
   EthereumService() : available = ethereum != null {
     var metamask = ethereum;
     if (metamask != null) {
       if (!isMetamaskInitialized) {
         window.location.reload();
       }
+
+      // metamask.autoRefreshOnNetworkChange
 
       metamask.removeAllListeners('chainChanged');
       metamask.removeAllListeners('accountsChanged');
@@ -71,7 +76,20 @@ class EthereumService {
         print('Current account: $_connectedAccount');
         _connectedAccountChangedEventChannel.add(_connectedAccount);
       });
+
+      provider.onBlock((blockNumber) {
+        print('Latest block: $blockNumber');
+        _blockMinedEventChannel.add(blockNumber);
+      });
     }
+  }
+
+  Future<int> getLatestBlockNumber() async {
+    if (!available) {
+      return 0;
+    }
+
+    return await provider.getBlockNumber();
   }
 
   Future<EthereumError?> switchEthereumChain() async {

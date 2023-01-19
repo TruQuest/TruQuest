@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tabbed_view/tabbed_view.dart';
 
+import '../models/rvm/thing_state_vm.dart';
+import '../widgets/lottery.dart';
 import '../../general/widgets/tags_view_block.dart';
 import '../widgets/state_transition_block.dart';
 import '../../general/contexts/document_view_context.dart';
@@ -64,13 +66,12 @@ class _ThingPageState extends StateX<ThingPage> {
               ),
               closable: false,
             ),
-            TabData(
-              text: 'Verifiers',
-              content: Center(
-                child: Text('Verifiers'),
+            if (thing.state.index > ThingStateVm.awaitingFunding.index)
+              TabData(
+                text: 'Lottery',
+                content: Lottery(thing: thing),
+                closable: false,
               ),
-              closable: false,
-            ),
           ],
         );
 
