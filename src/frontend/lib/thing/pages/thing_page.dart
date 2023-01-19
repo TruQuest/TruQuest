@@ -3,6 +3,7 @@ import 'package:tabbed_view/tabbed_view.dart';
 
 import '../models/rvm/thing_state_vm.dart';
 import '../widgets/lottery.dart';
+import '../../general/widgets/evidence_view_block.dart';
 import '../../general/widgets/tags_view_block.dart';
 import '../widgets/state_transition_block.dart';
 import '../../general/contexts/document_view_context.dart';
@@ -62,6 +63,7 @@ class _ThingPageState extends StateX<ThingPage> {
                     TagsViewBlock(),
                     StateTransitionBlock(),
                   ],
+                  bottomBlock: EvidenceViewBlock(),
                 ),
               ),
               closable: false,
