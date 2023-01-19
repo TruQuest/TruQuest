@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flame/game.dart';
 import 'package:elegant_notification/elegant_notification.dart';
 import 'package:easy_sidemenu/easy_sidemenu.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
+import '../../pong/game.dart';
 import '../../subject/pages/subject_page.dart';
 import '../../thing/pages/thing_page.dart';
 import '../contexts/page_context.dart';
@@ -23,6 +25,9 @@ class _HomePageState extends StateX<HomePage> {
   late final _pageContext = useScoped<PageContext>();
 
   late final _pageController = _pageContext.controller;
+
+  PongGame? _game;
+  BoxConstraints? _gameWidgetConstraints;
 
   @override
   void initState() {
@@ -112,6 +117,12 @@ class _HomePageState extends StateX<HomePage> {
                 title: 'How To',
                 onTap: () => _pageController.jumpToPage(3),
               ),
+              SideMenuItem(
+                priority: 4,
+                icon: Icon(Icons.theater_comedy_outlined),
+                title: 'Pong!',
+                onTap: () => _pageController.jumpToPage(4),
+              ),
             ],
           ),
           Expanded(
@@ -128,6 +139,17 @@ class _HomePageState extends StateX<HomePage> {
                 } else if (index == 3) {
                   return Center(
                     child: Text('How To'),
+                  );
+                } else if (index == 4) {
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      if (_game == null ||
+                          _gameWidgetConstraints != constraints) {
+                        _game = PongGame();
+                        _gameWidgetConstraints = constraints;
+                      }
+                      return GameWidget(game: _game!);
+                    },
                   );
                 }
 
