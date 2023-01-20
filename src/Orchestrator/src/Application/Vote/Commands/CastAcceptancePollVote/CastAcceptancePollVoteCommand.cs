@@ -44,7 +44,7 @@ internal class CastAcceptancePollVoteCommandHandler : IRequestHandler<CastAccept
         // @@TODO: Check poll type is valid for the moment.
         bool isValidVerifier = await _thingRepository.CheckIsVerifierFor(
             command.Input.ThingId,
-            _currentPrincipal.Id
+            _currentPrincipal.Id!
         );
 
         if (!isValidVerifier)
@@ -76,7 +76,7 @@ internal class CastAcceptancePollVoteCommandHandler : IRequestHandler<CastAccept
             };
         }
 
-        var orchestratorSig = _signer.SignNewAcceptancePollVote(command.Input, _currentPrincipal.Id, command.Signature);
+        var orchestratorSig = _signer.SignNewAcceptancePollVote(command.Input, _currentPrincipal.Id!, command.Signature);
 
         var uploadResult = await _fileStorage.UploadJson(new
         {
@@ -102,7 +102,7 @@ internal class CastAcceptancePollVoteCommandHandler : IRequestHandler<CastAccept
 
         var vote = new AcceptancePollVote(
             thingId: command.Input.ThingId,
-            voterId: _currentPrincipal.Id,
+            voterId: _currentPrincipal.Id!,
             castedAtMs: DateTimeOffset.Parse(command.Input.CastedAt).ToUnixTimeMilliseconds(),
             decision: (AcceptancePollVote.VoteDecision)command.Input.Decision,
             reason: command.Input.Reason != string.Empty ? command.Input.Reason : null,

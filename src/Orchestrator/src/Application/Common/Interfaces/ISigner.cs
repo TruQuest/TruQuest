@@ -20,6 +20,8 @@ public interface ISigner
     Either<SettlementError, string> RecoverFromNewSettlementProposalMessage(
         NewSettlementProposalIm input, string signature
     );
+    bool CheckOrchestratorSignatureOnTimestamp(string timestamp, string signature);
+    string RecoverFromSignInMessage(string timestamp, string orchestratorSignature, string signature);
 
     string SignThing(Guid thingId);
     string SignNewAcceptancePollVote(NewAcceptancePollVoteIm input, string voterId, string voterSignature);
@@ -28,4 +30,5 @@ public interface ISigner
     string SignAssessmentPollVoteAgg(
         IEnumerable<AssessmentPollVote> offChainVotes, IEnumerable<CastedAssessmentPollVoteEvent> onChainVotes
     );
+    string SignTimestamp(DateTimeOffset timestamp);
 }

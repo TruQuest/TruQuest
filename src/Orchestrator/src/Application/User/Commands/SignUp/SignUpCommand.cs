@@ -66,7 +66,12 @@ internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResul
             };
         }
 
-        error = await _userRepository.AddClaimsTo(user, new Claim("username", user.UserName));
+        var claims = new List<Claim>
+        {
+            new("username", user.UserName)
+        };
+
+        error = await _userRepository.AddClaimsTo(user, claims);
         if (error != null)
         {
             return new()
@@ -77,7 +82,7 @@ internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResul
 
         await _userRepository.SaveChanges();
 
-        var jwt = _authTokenProvider.GenerateJwt(user.Id);
+        var jwt = _authTokenProvider.GenerateJwt(user.Id, claims);
 
         return new()
         {

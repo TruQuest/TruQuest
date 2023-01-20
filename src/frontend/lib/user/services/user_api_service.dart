@@ -1,6 +1,9 @@
 import 'package:dio/dio.dart';
 
+import '../models/im/sign_in_command.dart';
+import '../models/rvm/get_sign_in_data_rvm.dart';
 import '../../general/errors/error.dart';
+import '../models/rvm/sign_in_rvm.dart';
 import '../models/rvm/sign_up_rvm.dart';
 import '../../general/services/server_connector.dart';
 import '../errors/user_error.dart';
@@ -59,7 +62,7 @@ class UserApiService {
   Future<SignUpRvm> signUp(String username, String signature) async {
     try {
       var response = await _dio.post(
-        '/user/signup',
+        '/user/sign-up',
         data: SignUpCommand(
           input: SignUpIm(
             username: username,
@@ -69,6 +72,36 @@ class UserApiService {
       );
 
       return SignUpRvm.fromJson(response.data['data']);
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future<GetSignInDataRvm> getSignInData() async {
+    try {
+      var response = await _dio.get('/user/sign-in');
+      return GetSignInDataRvm.fromMap(response.data['data']);
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future<SignInRvm> signIn(
+    String timestamp,
+    String orchestratorSignature,
+    String signature,
+  ) async {
+    try {
+      var response = await _dio.post(
+        '/user/sign-in',
+        data: SignInCommand(
+          timestamp: timestamp,
+          orchestratorSignature: orchestratorSignature,
+          signature: signature,
+        ).toJson(),
+      );
+
+      return SignInRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
       throw _wrapError(error);
     }

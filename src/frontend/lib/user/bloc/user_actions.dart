@@ -19,3 +19,5 @@ class SignUp extends UserActionAwaitable<SignUpFailureVm?> {
     required this.signature,
   });
 }
+
+class SignIn extends UserAction {}

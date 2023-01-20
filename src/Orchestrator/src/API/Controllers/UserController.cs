@@ -4,6 +4,8 @@ using MediatR;
 
 using Domain.Results;
 using Application.User.Commands.SignUp;
+using Application.User.Queries.GetSignInData;
+using Application.User.Commands.SignIn;
 
 namespace API.Controllers;
 
@@ -18,6 +20,12 @@ public class UserController : ControllerBase
         _mediator = mediator;
     }
 
-    [HttpPost("signup")]
+    [HttpPost("sign-up")]
     public Task<HandleResult<SignUpResultVm>> SignUp(SignUpCommand command) => _mediator.Send(command);
+
+    [HttpGet("sign-in")]
+    public Task<HandleResult<GetSignInDataResultVm>> SignIn() => _mediator.Send(new GetSignInDataQuery());
+
+    [HttpPost("sign-in")]
+    public Task<HandleResult<SignInResultVm>> SignIn(SignInCommand command) => _mediator.Send(command);
 }

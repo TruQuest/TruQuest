@@ -88,4 +88,30 @@ class UserService {
 
     return null;
   }
+
+  Future signIn() async {
+    var data = await _userApiService.getSignInData();
+    var result = await _ethereumService.signSignInMessage(
+      data.timestamp,
+      data.signature,
+    );
+    if (result.isLeft) {
+      print(result.left);
+      return;
+    }
+
+    var account = result.right.item1;
+    var signature = result.right.item2;
+
+    var signInResult = await _userApiService.signIn(
+      data.timestamp,
+      data.signature,
+      signature,
+    );
+
+    _accountToJwt[account] = signInResult.token;
+    _accountToUsername[account] = signInResult.username;
+    // connectedAccount here can actually be different from account
+    _reloadUser(_ethereumService.connectedAccount);
+  }
 }

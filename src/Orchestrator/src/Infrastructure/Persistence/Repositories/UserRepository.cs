@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 
 using Domain.Aggregates;
 using Domain.Errors;
+using Domain.Results;
 using UserDm = Domain.Aggregates.User;
 using Application.Common.Interfaces;
 
@@ -41,7 +42,7 @@ internal class UserRepository : Repository<UserDm>, IUserRepository
         return null;
     }
 
-    public async Task<UserError?> AddClaimsTo(UserDm user, params Claim[] claims)
+    public async Task<UserError?> AddClaimsTo(UserDm user, List<Claim> claims)
     {
         var result = await _userManager.AddClaimsAsync(user, claims);
         if (!result.Succeeded)
@@ -50,5 +51,19 @@ internal class UserRepository : Repository<UserDm>, IUserRepository
         }
 
         return null;
+    }
+
+    // @@TODO: Should be implemented in queryable, not repo.
+    public async Task<Either<UserError, List<Claim>>> GetClaimsFor(string id)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            return new UserError($"User with id = {id} does not exist");
+        }
+
+        // @@??: Why can't return IList<Claim> ?
+        var claims = await _userManager.GetClaimsAsync(user);
+        return claims.ToList();
     }
 }

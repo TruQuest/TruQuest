@@ -199,4 +199,62 @@ class EthereumService {
       return Left(EthereumError(e.toString()));
     }
   }
+
+  Future<Either<EthereumError, Tuple2<String, String>>> signSignInMessage(
+    String timestamp,
+    String orchestratorSignature,
+  ) async {
+    var metamask = ethereum;
+    if (metamask == null) {
+      return Left(EthereumError('Metamask not installed'));
+    }
+
+    var connectedAccount = _connectedAccount;
+    if (connectedAccount == null) {
+      return Left(EthereumError('No account connected'));
+    }
+
+    Map<String, dynamic> map = {
+      'types': {
+        'EIP712Domain': [
+          {'name': 'name', 'type': 'string'},
+          {'name': 'version', 'type': 'string'},
+          {'name': 'chainId', 'type': 'uint256'},
+          {'name': 'verifyingContract', 'type': 'address'},
+          {'name': 'salt', 'type': 'bytes32'},
+        ],
+        'SignInTd': [
+          {'name': 'timestamp', 'type': 'string'},
+          {'name': 'orchestratorSignature', 'type': 'string'},
+        ],
+      },
+      'domain': {
+        'name': 'TruQuest',
+        'version': '0.0.1',
+        'chainId': validChainId,
+        'verifyingContract': '0x32D41E4e24F97ec7D52e3c43F8DbFe209CBd0e4c',
+        'salt':
+            '0xf2d857f4a3edcb9b78b4d503bfe733db1e3f6cdc2b7971ee739626c97e86a558',
+      },
+      'primaryType': 'SignInTd',
+      'message': {
+        'timestamp': timestamp,
+        'orchestratorSignature': orchestratorSignature,
+      }
+    };
+
+    var data = jsonEncode(map);
+
+    try {
+      var signature = await metamask.request<String>(
+        'eth_signTypedData_v4',
+        [connectedAccount, data],
+      );
+
+      return Right(Tuple2(connectedAccount, signature));
+    } catch (e) {
+      print(e);
+      return Left(EthereumError(e.toString()));
+    }
+  }
 }

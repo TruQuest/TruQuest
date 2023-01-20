@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../ethereum/bloc/ethereum_actions.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';
 import '../../ethereum/bloc/ethereum_result_vm.dart';
+import '../../user/bloc/user_actions.dart';
 import 'sign_up_dialog.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../../widget_extensions.dart';
@@ -90,10 +91,12 @@ class StatusPanel extends StatelessWidgetX {
               } else if (user.state == UserAccountState.connectedNotLoggedIn) {
                 return TextButton(
                   child: Text(
-                    'Log In/Sign Up',
+                    'Log In',
                     style: TextStyle(color: Colors.white),
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    _userBloc.dispatch(SignIn());
+                  },
                 );
               }
 

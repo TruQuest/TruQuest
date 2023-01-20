@@ -22,6 +22,8 @@ class UserBloc extends Bloc<UserAction> {
         _loadCurrentUser(action);
       } else if (action is SignUp) {
         _signUp(action);
+      } else if (action is SignIn) {
+        _signIn(action);
       }
     });
 
@@ -45,5 +47,9 @@ class UserBloc extends Bloc<UserAction> {
       action.signature,
     );
     action.complete(error != null ? SignUpFailureVm() : null);
+  }
+
+  void _signIn(SignIn action) async {
+    await _userService.signIn();
   }
 }

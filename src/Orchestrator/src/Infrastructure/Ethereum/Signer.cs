@@ -25,6 +25,7 @@ internal class Signer : ISigner
     private readonly Eip712TypedDataSigner _eip712Signer;
     private readonly DomainWithSalt _domain;
     private readonly EthECKey _orchestratorPrivateKey;
+    private readonly string _orchestratorAddress;
 
     public Signer(
         IConfiguration configuration,
@@ -45,7 +46,9 @@ internal class Signer : ISigner
             Salt = domainConfig["Salt"].HexToByteArray()
         };
 
-        _orchestratorPrivateKey = new EthECKey(accountProvider.GetAccount("Orchestrator").PrivateKey);
+        var orchestrator = accountProvider.GetAccount("Orchestrator");
+        _orchestratorPrivateKey = new EthECKey(orchestrator.PrivateKey);
+        _orchestratorAddress = orchestrator.Address;
     }
 
     private TypedData<DomainWithSalt> _getTypedDataDefinition(params Type[] types)
@@ -131,6 +134,31 @@ internal class Signer : ISigner
             Evidence = input.Evidence.Select(e => new SupportingEvidenceTd { Url = e.Url }).ToList()
         };
         var tdDefinition = _getTypedDataDefinition(typeof(NewSettlementProposalTd), typeof(SupportingEvidenceTd));
+        var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
+
+        return address.Substring(2);
+    }
+
+    public bool CheckOrchestratorSignatureOnTimestamp(string timestamp, string signature)
+    {
+        var td = new TimestampTd
+        {
+            Timestamp = timestamp
+        };
+        var tdDefinition = _getTypedDataDefinition(typeof(TimestampTd));
+        var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
+
+        return address == _orchestratorAddress;
+    }
+
+    public string RecoverFromSignInMessage(string timestamp, string orchestratorSignature, string signature)
+    {
+        var td = new SignInTd
+        {
+            Timestamp = timestamp,
+            OrchestratorSignature = orchestratorSignature
+        };
+        var tdDefinition = _getTypedDataDefinition(typeof(SignInTd));
         var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
 
         return address.Substring(2);
@@ -259,6 +287,18 @@ internal class Signer : ISigner
             typeof(OffChainAssessmentPollVoteTd),
             typeof(OnChainAssessmentPollVoteTd)
         );
+        tdDefinition.SetMessage(td);
+
+        return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);
+    }
+
+    public string SignTimestamp(DateTimeOffset timestamp)
+    {
+        var td = new TimestampTd
+        {
+            Timestamp = timestamp.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+        };
+        var tdDefinition = _getTypedDataDefinition(typeof(TimestampTd));
         tdDefinition.SetMessage(td);
 
         return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);
