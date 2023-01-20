@@ -1,8 +1,11 @@
 using Microsoft.Extensions.Configuration;
 
+using Dapper;
+
 using Application.Thing.Queries.GetThing;
 using Application.Common.Models.QM;
 using Application.Common.Interfaces;
+using Application.Thing.Queries.GetVerifierLotteryParticipants;
 
 namespace Infrastructure.Persistence.Queryables;
 
@@ -17,15 +20,15 @@ internal class ThingQueryable : Queryable, IThingQueryable
             @"
                 SELECT t.*, e.*, tag.*
                 FROM
-                    ""Things"" AS t
+                    truquest.""Things"" AS t
                         INNER JOIN
-                    ""Evidence"" AS e
+                    truquest.""Evidence"" AS e
                         ON t.""Id"" = e.""ThingId""
                         LEFT JOIN
-                    ""ThingAttachedTags"" AS tat
+                    truquest.""ThingAttachedTags"" AS tat
                         ON t.""Id"" = tat.""ThingId""
                         INNER JOIN
-                    ""Tags"" AS tag
+                    truquest.""Tags"" AS tag
                         ON tat.""TagId"" = tag.""Id""
                 WHERE t.""Id"" = @ThingId
             ",
@@ -35,5 +38,25 @@ internal class ThingQueryable : Queryable, IThingQueryable
         );
 
         return thing;
+    }
+
+    public async Task<IEnumerable<VerifierLotteryParticipantEntryQm>> GetVerifierLotteryParticipants(Guid thingId)
+    {
+        var dbConn = await getOpenConnection();
+        var entries = await dbConn.QueryAsync<VerifierLotteryParticipantEntryQm>(
+            @"
+                SELECT je.""BlockNumber"" AS ""JoinedBlockNumber"", pje.""UserId"", pje.""DataHash"", je.""Nonce""
+                FROM
+                    truquest_events.""PreJoinedThingSubmissionVerifierLotteryEvents"" AS pje
+                        LEFT JOIN
+                    truquest_events.""JoinedThingSubmissionVerifierLotteryEvents"" AS je
+                        ON (pje.""ThingId"" = je.""ThingId"" AND pje.""UserId"" = je.""UserId"")
+                WHERE pje.""ThingId"" = @ThingId
+                ORDER BY je.""BlockNumber"" DESC NULLS LAST, je.""TxnIndex"" DESC
+            ",
+            param: new { ThingId = thingId }
+        );
+
+        return entries;
     }
 }

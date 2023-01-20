@@ -65,7 +65,11 @@ contract ThingSubmissionVerifierLottery {
     mapping(bytes16 => mapping(address => Commitment))
         private s_thingIdToSubLotteryCommitments;
 
-    event LotteryInitiated(bytes16 indexed thingId, bytes32 dataHash);
+    event LotteryInitiated(
+        bytes16 indexed thingId,
+        address orchestrator,
+        bytes32 dataHash
+    );
 
     event PreJoinedLottery(
         bytes16 indexed thingId,
@@ -81,6 +85,7 @@ contract ThingSubmissionVerifierLottery {
 
     event LotteryClosedWithSuccess(
         bytes16 indexed thingId,
+        address orchestrator,
         uint256 nonce,
         address[] winners
     );
@@ -270,7 +275,7 @@ contract ThingSubmissionVerifierLottery {
             false
         );
 
-        emit LotteryInitiated(_thingId, _dataHash);
+        emit LotteryInitiated(_thingId, s_orchestrator, _dataHash);
     }
 
     function preJoinLottery(
@@ -400,7 +405,7 @@ contract ThingSubmissionVerifierLottery {
         uint256 nonce = uint256(keccak256(abi.encodePacked(blockHash, _data))) %
             MAX_NONCE;
 
-        emit LotteryClosedWithSuccess(_thingId, nonce, winners);
+        emit LotteryClosedWithSuccess(_thingId, s_orchestrator, nonce, winners);
     }
 
     // when not enough participants

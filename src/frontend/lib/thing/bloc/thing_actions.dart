@@ -34,10 +34,10 @@ class FundThing extends ThingAction {
   FundThing({required this.thing, required this.signature});
 }
 
-class GetThingLotteryInfo extends ThingAction {
+class GetVerifierLotteryInfo extends ThingAction {
   final String thingId;
 
-  GetThingLotteryInfo({required this.thingId});
+  GetVerifierLotteryInfo({required this.thingId});
 }
 
 class PreJoinLottery extends ThingAction {
@@ -50,4 +50,10 @@ class JoinLottery extends ThingAction {
   final String thingId;
 
   JoinLottery({required this.thingId});
+}
+
+class GetVerifierLotteryParticipants extends ThingAction {
+  final String thingId;
+
+  GetVerifierLotteryParticipants({required this.thingId});
 }

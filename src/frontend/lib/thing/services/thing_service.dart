@@ -7,6 +7,7 @@ import '../../general/contracts/thing_submission_verifier_lottery_contract.dart'
 import '../models/rvm/get_thing_result_vm.dart';
 import '../../general/contracts/truquest_contract.dart';
 import '../../general/contexts/document_context.dart';
+import '../models/rvm/get_verifier_lottery_participants_result_vm.dart';
 import '../models/rvm/submit_new_thing_result_vm.dart';
 import 'thing_api_service.dart';
 
@@ -96,5 +97,12 @@ class ThingService {
 
   Future joinLottery(String thingId) async {
     await _thingSubmissionVerifierLotteryContract.joinLottery(thingId);
+  }
+
+  Future<GetVerifierLotteryParticipantsResultVm> getVerifierLotteryParticipants(
+    String thingId,
+  ) async {
+    var result = await _thingApiService.getVerifierLotteryParticipants(thingId);
+    return result;
   }
 }

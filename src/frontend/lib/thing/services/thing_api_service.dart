@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:tuple/tuple.dart';
 
+import '../models/rvm/get_verifier_lottery_participants_result_vm.dart';
 import '../models/rvm/get_thing_result_vm.dart';
 import '../models/im/submit_new_thing_command.dart';
 import '../models/rvm/submit_new_thing_result_vm.dart';
@@ -182,6 +183,19 @@ class ThingApiService {
       );
 
       return SubmitNewThingResultVm.fromMap(response.data['data']);
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future<GetVerifierLotteryParticipantsResultVm> getVerifierLotteryParticipants(
+    String thingId,
+  ) async {
+    try {
+      var response = await _dio.get('/things/$thingId/lottery-participants');
+      return GetVerifierLotteryParticipantsResultVm.fromMap(
+        response.data['data'],
+      );
     } on DioError catch (error) {
       throw _wrapError(error);
     }

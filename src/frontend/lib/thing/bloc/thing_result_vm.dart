@@ -1,3 +1,5 @@
+import '../models/rvm/verifier_lottery_participant_entry_vm.dart';
+
 abstract class ThingResultVm {}
 
 abstract class CreateNewThingDraftResultVm extends ThingResultVm {}
@@ -6,18 +8,24 @@ class CreateNewThingDraftSuccessVm extends CreateNewThingDraftResultVm {}
 
 class CreateNewThingDraftFailureVm extends CreateNewThingDraftResultVm {}
 
-class GetThingLotteryInfoSuccessVm extends ThingResultVm {
+class GetVerifierLotteryInfoSuccessVm extends ThingResultVm {
   final int initBlock;
   final int durationBlocks;
   final int latestBlockNumber;
   final bool alreadyPreJoined;
   final bool alreadyJoined;
 
-  GetThingLotteryInfoSuccessVm({
+  GetVerifierLotteryInfoSuccessVm({
     required this.initBlock,
     required this.durationBlocks,
     required this.latestBlockNumber,
     required this.alreadyPreJoined,
     required this.alreadyJoined,
   });
+}
+
+class GetVerifierLotteryParticipantsSuccessVm extends ThingResultVm {
+  final List<VerifierLotteryParticipantEntryVm> entries;
+
+  GetVerifierLotteryParticipantsSuccessVm({required this.entries});
 }

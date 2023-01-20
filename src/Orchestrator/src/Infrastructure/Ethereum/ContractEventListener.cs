@@ -83,6 +83,7 @@ internal class ContractEventListener : IContractEventListener
             var eventHandlers = new ProcessorHandler<FilterLog>[]
             {
                 new EventLogProcessorHandler<ThingFundedEvent>(WriteToChannel),
+                new EventLogProcessorHandler<ThingSubmissionVerifierLottery.LotteryInitiatedEvent>(WriteToChannel),
                 new EventLogProcessorHandler<ThingSubmissionVerifierLottery.PreJoinedLotteryEvent>(WriteToChannel),
                 new EventLogProcessorHandler<ThingSubmissionVerifierLottery.JoinedLotteryEvent>(WriteToChannel),
                 new EventLogProcessorHandler<ThingSubmissionVerifierLottery.LotteryClosedWithSuccessEvent>(WriteToChannel),
@@ -140,6 +141,17 @@ internal class ContractEventListener : IContractEventListener
                     Stake = (decimal)thingFundedEvent.Event.Stake
                 };
             }
+            else if (@event is EventLog<ThingSubmissionVerifierLottery.LotteryInitiatedEvent> thingSubmissionVerifierLotteryInitiatedEvent)
+            {
+                yield return new AppEvents.ThingSubmissionVerifierLottery.PreJoinedLottery.PreJoinedLotteryEvent
+                {
+                    BlockNumber = (long)thingSubmissionVerifierLotteryInitiatedEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)thingSubmissionVerifierLotteryInitiatedEvent.Log.TransactionIndex.Value,
+                    ThingId = thingSubmissionVerifierLotteryInitiatedEvent.Event.ThingId,
+                    UserId = thingSubmissionVerifierLotteryInitiatedEvent.Event.Orchestrator.Substring(2).ToLower(),
+                    DataHash = thingSubmissionVerifierLotteryInitiatedEvent.Event.DataHash
+                };
+            }
             else if (@event is EventLog<ThingSubmissionVerifierLottery.PreJoinedLotteryEvent> preJoinedThingSubmissionVerifierLotteryEvent)
             {
                 yield return new AppEvents.ThingSubmissionVerifierLottery.PreJoinedLottery.PreJoinedLotteryEvent
@@ -169,6 +181,7 @@ internal class ContractEventListener : IContractEventListener
                     BlockNumber = (long)thingSubmissionVerifierLotteryClosedWithSuccessEvent.Log.BlockNumber.Value,
                     TxnIndex = (int)thingSubmissionVerifierLotteryClosedWithSuccessEvent.Log.TransactionIndex.Value,
                     ThingId = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.ThingId,
+                    Orchestrator = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.Orchestrator.Substring(2).ToLower(),
                     Nonce = (decimal)thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.Nonce,
                     WinnerIds = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.WinnerIds
                         .Select(id => id.Substring(2).ToLower())

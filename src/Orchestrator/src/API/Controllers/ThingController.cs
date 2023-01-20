@@ -6,6 +6,7 @@ using Domain.Results;
 using Application.Thing.Commands.SubmitNewThing;
 using Application.Thing.Commands.CreateNewThingDraft;
 using Application.Thing.Queries.GetThing;
+using Application.Thing.Queries.GetVerifierLotteryParticipants;
 
 using API.Controllers.Filters;
 
@@ -36,4 +37,8 @@ public class ThingController : ControllerBase
     [HttpGet("{id}")]
     public Task<HandleResult<GetThingResultVm>> Get(string id) =>
         _mediator.Send(new GetThingQuery { ThingId = Guid.Parse(id) });
+
+    [HttpGet("{id}/lottery-participants")]
+    public Task<HandleResult<GetVerifierLotteryParticipantsResultVm>> GetVerifierLotteryParticipants(string id) =>
+        _mediator.Send(new GetVerifierLotteryParticipantsQuery { ThingId = Guid.Parse(id) });
 }

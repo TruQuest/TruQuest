@@ -13,7 +13,7 @@ internal abstract class Queryable : IDisposable
 
     public Queryable(IConfiguration configuration)
     {
-        _dbConnectionString = configuration.GetConnectionString("Postgres") + "SearchPath=truquest;";
+        _dbConnectionString = configuration.GetConnectionString("Postgres")!;
     }
 
     public void Dispose() => _dbConnection?.Dispose();

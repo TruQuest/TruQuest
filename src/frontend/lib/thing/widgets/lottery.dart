@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
+import '../../general/widgets/lottery_participants_table.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../bloc/thing_actions.dart';
@@ -49,17 +50,25 @@ class _LotteryState extends StateX<Lottery> {
   double _degreeToRadians(double degrees) => (pi / 180) * degrees;
 
   @override
+  void initState() {
+    super.initState();
+    _thingBloc.dispatch(
+      GetVerifierLotteryParticipants(thingId: widget.thing.id),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return StreamBuilder(
       stream: _userBloc.currentUser$,
       builder: (context, _) {
-        _thingBloc.dispatch(GetThingLotteryInfo(thingId: widget.thing.id));
+        _thingBloc.dispatch(GetVerifierLotteryInfo(thingId: widget.thing.id));
 
         return Column(
           children: [
             Expanded(
               child: StreamBuilder(
-                stream: _thingBloc.thingLotteryInfo$,
+                stream: _thingBloc.verifierLotteryInfo$,
                 builder: (context, snapshot) {
                   if (snapshot.data == null) {
                     return Center(
@@ -80,9 +89,13 @@ class _LotteryState extends StateX<Lottery> {
                                 snapshot.data?.toDouble() ?? 0.0;
                             var startBlock = info.initBlock.toDouble();
                             var endBlock = startBlock + info.durationBlocks;
-                            var currentBlock =
-                                max(latestBlockNumber, info.latestBlockNumber)
-                                    .toDouble();
+                            var currentBlock = min(
+                              max(
+                                latestBlockNumber,
+                                info.latestBlockNumber,
+                              ),
+                              endBlock,
+                            ).toDouble();
 
                             return Center(
                               child: Stack(
@@ -196,7 +209,25 @@ class _LotteryState extends StateX<Lottery> {
               ),
             ),
             Expanded(
-              child: Center(child: Text('Participants')),
+              child: Column(
+                children: [
+                  Text('Smth'),
+                  Expanded(
+                    child: StreamBuilder(
+                      stream: _thingBloc.verifierLotteryParticipants$,
+                      builder: (context, snapshot) {
+                        if (snapshot.data == null) {
+                          return Center(child: CircularProgressIndicator());
+                        }
+
+                        var vm = snapshot.data!;
+
+                        return LotteryParticipantsTable(entries: vm.entries);
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         );

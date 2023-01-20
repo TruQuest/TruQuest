@@ -14,11 +14,18 @@ class ThingBloc extends Bloc<ThingAction> {
       StreamController<GetThingResultVm>.broadcast();
   Stream<GetThingResultVm> get thing$ => _thingChannel.stream;
 
-  final StreamController<GetThingLotteryInfoSuccessVm>
-      _thingLotteryInfoChannel =
-      StreamController<GetThingLotteryInfoSuccessVm>.broadcast();
-  Stream<GetThingLotteryInfoSuccessVm> get thingLotteryInfo$ =>
-      _thingLotteryInfoChannel.stream;
+  final StreamController<GetVerifierLotteryInfoSuccessVm>
+      _verifierLotteryInfoChannel =
+      StreamController<GetVerifierLotteryInfoSuccessVm>.broadcast();
+  Stream<GetVerifierLotteryInfoSuccessVm> get verifierLotteryInfo$ =>
+      _verifierLotteryInfoChannel.stream;
+
+  final StreamController<GetVerifierLotteryParticipantsSuccessVm>
+      _verifierLotteryParticipantsChannel =
+      StreamController<GetVerifierLotteryParticipantsSuccessVm>.broadcast();
+  Stream<GetVerifierLotteryParticipantsSuccessVm>
+      get verifierLotteryParticipants$ =>
+          _verifierLotteryParticipantsChannel.stream;
 
   ThingBloc(this._thingService) {
     actionChannel.stream.listen((action) {
@@ -30,12 +37,14 @@ class ThingBloc extends Bloc<ThingAction> {
         _submitNewThing(action);
       } else if (action is FundThing) {
         _fundThing(action);
-      } else if (action is GetThingLotteryInfo) {
-        _getThingLotteryInfo(action);
+      } else if (action is GetVerifierLotteryInfo) {
+        _getVerifierLotteryInfo(action);
       } else if (action is PreJoinLottery) {
         _preJoinLottery(action);
       } else if (action is JoinLottery) {
         _joinLottery(action);
+      } else if (action is GetVerifierLotteryParticipants) {
+        _getVerifierLotteryParticipants(action);
       }
     });
   }
@@ -73,10 +82,10 @@ class ThingBloc extends Bloc<ThingAction> {
     ));
   }
 
-  void _getThingLotteryInfo(GetThingLotteryInfo action) async {
+  void _getVerifierLotteryInfo(GetVerifierLotteryInfo action) async {
     var info = await _thingService.getThingLotteryInfo(action.thingId);
-    _thingLotteryInfoChannel.add(
-      GetThingLotteryInfoSuccessVm(
+    _verifierLotteryInfoChannel.add(
+      GetVerifierLotteryInfoSuccessVm(
         initBlock: info.item1,
         durationBlocks: info.item2,
         alreadyPreJoined: info.item3,
@@ -90,8 +99,8 @@ class ThingBloc extends Bloc<ThingAction> {
     await _thingService.preJoinLottery(action.thingId);
 
     var info = await _thingService.getThingLotteryInfo(action.thingId);
-    _thingLotteryInfoChannel.add(
-      GetThingLotteryInfoSuccessVm(
+    _verifierLotteryInfoChannel.add(
+      GetVerifierLotteryInfoSuccessVm(
         initBlock: info.item1,
         durationBlocks: info.item2,
         alreadyPreJoined: info.item3,
@@ -105,14 +114,25 @@ class ThingBloc extends Bloc<ThingAction> {
     await _thingService.joinLottery(action.thingId);
 
     var info = await _thingService.getThingLotteryInfo(action.thingId);
-    _thingLotteryInfoChannel.add(
-      GetThingLotteryInfoSuccessVm(
+    _verifierLotteryInfoChannel.add(
+      GetVerifierLotteryInfoSuccessVm(
         initBlock: info.item1,
         durationBlocks: info.item2,
         alreadyPreJoined: info.item3,
         alreadyJoined: info.item4,
         latestBlockNumber: info.item5,
       ),
+    );
+  }
+
+  void _getVerifierLotteryParticipants(
+    GetVerifierLotteryParticipants action,
+  ) async {
+    var result = await _thingService.getVerifierLotteryParticipants(
+      action.thingId,
+    );
+    _verifierLotteryParticipantsChannel.add(
+      GetVerifierLotteryParticipantsSuccessVm(entries: result.entries),
     );
   }
 }
