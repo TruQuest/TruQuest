@@ -4,10 +4,13 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:tuple/tuple.dart';
 
-import '../models/rvm/get_verifier_lottery_participants_result_vm.dart';
-import '../models/rvm/get_thing_result_vm.dart';
+import '../models/im/unsubscribe_from_updates_command.dart';
+import '../models/rvm/thing_state_vm.dart';
+import '../models/im/subscribe_to_updates_command.dart';
+import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
+import '../models/rvm/get_thing_rvm.dart';
 import '../models/im/submit_new_thing_command.dart';
-import '../models/rvm/submit_new_thing_result_vm.dart';
+import '../models/rvm/submit_new_thing_rvm.dart';
 import '../../general/errors/api_error.dart';
 import '../../general/errors/file_error.dart';
 import '../../general/models/im/tag_im.dart';
@@ -28,24 +31,34 @@ class ThingApiService {
 
   final Map<String, StreamController<int>> _thingIdToProgressChannel = {};
 
-  final StreamController<String> _thingEventChannel =
-      StreamController<String>();
-  Stream<String> get thingEvent$ => _thingEventChannel.stream;
+  final StreamController<Tuple3<ThingEventType, String, Object?>>
+      _thingEventChannel =
+      StreamController<Tuple3<ThingEventType, String, Object?>>();
+  Stream<Tuple3<ThingEventType, String, Object?>> get thingEvent$ =>
+      _thingEventChannel.stream;
 
   ThingApiService(this._serverConnector) : _dio = _serverConnector.dio {
     _serverConnector.serverEvent$
         .where((event) => event.item1 == ServerEventType.thing)
         .listen(
       (event) {
-        var data = event.item2 as Tuple2<String, int>;
-        var thingId = data.item1;
-        var percent = data.item2;
-        if (_thingIdToProgressChannel.containsKey(thingId)) {
-          _thingIdToProgressChannel[thingId]!.add(percent);
-          if (percent == 100) {
-            _thingIdToProgressChannel.remove(thingId)!.close();
-            _thingEventChannel.add(thingId);
+        var data = event.item2 as Tuple3<ThingEventType, String, Object?>;
+        var thingEventType = data.item1;
+        var thingId = data.item2;
+        if (thingEventType == ThingEventType.draftCreateProgress) {
+          var percent = data.item3 as int;
+          if (_thingIdToProgressChannel.containsKey(thingId)) {
+            _thingIdToProgressChannel[thingId]!.add(percent);
+            if (percent == 100) {
+              _thingIdToProgressChannel.remove(thingId)!.close();
+              _thingEventChannel.add(
+                Tuple3(ThingEventType.draftCreated, thingId, null),
+              );
+            }
           }
+        } else if (thingEventType == ThingEventType.stateChanged) {
+          var state = data.item3 as ThingStateVm;
+          _thingEventChannel.add(Tuple3(thingEventType, thingId, state));
         }
       },
     );
@@ -88,28 +101,28 @@ class ThingApiService {
     return ApiError();
   }
 
-  // Error _wrapHubException(Exception ex) {
-  //   var errorMessage = ex.toString();
-  //   if (errorMessage.contains('[AuthorizationError]')) {
-  //     if (errorMessage.contains('Forbidden')) {
-  //       return ForbiddenError();
-  //       // } else if (errorMessage.contains('token expired at')) {
-  //       //   return AuthenticationTokenExpiredError();
-  //     } else {
-  //       return InvalidAuthenticationTokenError(
-  //         errorMessage.split('[AuthorizationError] ').last,
-  //       );
-  //     }
-  //   } else if (errorMessage.contains('[ValidationError]')) {
-  //     return ValidationError();
-  //   } else if (errorMessage.contains('[ThingError]')) {
-  //     return ThingError(errorMessage.split('[ThingError] ').last);
-  //   }
+  Error _wrapHubException(Exception ex) {
+    var errorMessage = ex.toString();
+    if (errorMessage.contains('[AuthorizationError]')) {
+      if (errorMessage.contains('Forbidden')) {
+        return ForbiddenError();
+        // } else if (errorMessage.contains('token expired at')) {
+        //   return AuthenticationTokenExpiredError();
+      } else {
+        return InvalidAuthenticationTokenError(
+          errorMessage.split('[AuthorizationError] ').last,
+        );
+      }
+    } else if (errorMessage.contains('[ValidationError]')) {
+      return ValidationError();
+    } else if (errorMessage.contains('[ThingError]')) {
+      return ThingError(errorMessage.split('[ThingError] ').last);
+    }
 
-  //   print(ex);
+    print(ex);
 
-  //   return ServerError();
-  // }
+    return ServerError();
+  }
 
   Future<Stream<int>> createNewThingDraft(
     String subjectId,
@@ -153,7 +166,7 @@ class ThingApiService {
     }
   }
 
-  Future<GetThingResultVm> getThing(String thingId) async {
+  Future<GetThingRvm> getThing(String thingId) async {
     try {
       var response = await _dio.get(
         '/things/$thingId',
@@ -166,13 +179,32 @@ class ThingApiService {
             : null,
       );
 
-      return GetThingResultVm.fromMap(response.data['data']);
+      return GetThingRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
       throw _wrapError(error);
     }
   }
 
-  Future<SubmitNewThingResultVm> submitNewThing(String thingId) async {
+  Future subscribeToThing(String thingId) async {
+    var hubConnection = _serverConnector.hubConnection;
+    if (hubConnection == null) {
+      print('Not connected to hub!');
+      return;
+    }
+
+    try {
+      await hubConnection.invoke(
+        'SubscribeToThingUpdates',
+        args: [
+          SubscribeToUpdatesCommand(thingId: thingId),
+        ],
+      );
+    } on Exception catch (ex) {
+      throw _wrapHubException(ex);
+    }
+  }
+
+  Future<SubmitNewThingRvm> submitNewThing(String thingId) async {
     try {
       var response = await _dio.post(
         '/things/submit',
@@ -182,22 +214,41 @@ class ThingApiService {
         data: SubmitNewThingCommand(thingId: thingId).toJson(),
       );
 
-      return SubmitNewThingResultVm.fromMap(response.data['data']);
+      return SubmitNewThingRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
       throw _wrapError(error);
     }
   }
 
-  Future<GetVerifierLotteryParticipantsResultVm> getVerifierLotteryParticipants(
+  Future<GetVerifierLotteryParticipantsRvm> getVerifierLotteryParticipants(
     String thingId,
   ) async {
     try {
       var response = await _dio.get('/things/$thingId/lottery-participants');
-      return GetVerifierLotteryParticipantsResultVm.fromMap(
+      return GetVerifierLotteryParticipantsRvm.fromMap(
         response.data['data'],
       );
     } on DioError catch (error) {
       throw _wrapError(error);
+    }
+  }
+
+  Future unsubscribeFromThing(String thingId) async {
+    var hubConnection = _serverConnector.hubConnection;
+    if (hubConnection == null) {
+      print('Not connected to hub!');
+      return;
+    }
+
+    try {
+      await hubConnection.invoke(
+        'UnsubscribeFromThingUpdates',
+        args: [
+          UnsubscribeFromUpdatesCommand(thingId: thingId),
+        ],
+      );
+    } on Exception catch (ex) {
+      throw _wrapHubException(ex);
     }
   }
 }

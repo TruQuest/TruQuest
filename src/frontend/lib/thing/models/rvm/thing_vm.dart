@@ -14,6 +14,8 @@ class ThingVm {
   final List<EvidenceVm> evidence;
   final List<TagVm> tags;
 
+  final bool? fundedAwaitingConfirmation;
+
   ThingVm.fromMap(Map<String, dynamic> map)
       : id = map['id'],
         state = ThingStateVm.values[map['state']],
@@ -29,7 +31,8 @@ class ThingVm {
         ),
         tags = List.unmodifiable(
           (map['tags'] as List<dynamic>).map((submap) => TagVm.fromMap(submap)),
-        );
+        ),
+        fundedAwaitingConfirmation = null;
 
   ThingVm._({
     required this.id,
@@ -42,12 +45,13 @@ class ThingVm {
     required this.subjectId,
     required this.evidence,
     required this.tags,
+    required this.fundedAwaitingConfirmation,
   });
 
-  ThingVm copyWithNewState(ThingStateVm state) {
+  ThingVm copyWith({ThingStateVm? state, bool? fundedAwaitingConfirmation}) {
     return ThingVm._(
       id: id,
-      state: state,
+      state: state ?? this.state,
       title: title,
       details: details,
       imageIpfsCid: imageIpfsCid,
@@ -56,6 +60,8 @@ class ThingVm {
       subjectId: subjectId,
       evidence: evidence,
       tags: tags,
+      fundedAwaitingConfirmation:
+          fundedAwaitingConfirmation ?? this.fundedAwaitingConfirmation,
     );
   }
 }

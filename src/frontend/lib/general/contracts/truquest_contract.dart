@@ -10,6 +10,25 @@ class TruQuestContract {
         {
           "inputs": [
             {
+              "internalType": "bytes16",
+              "name": "_thingId",
+              "type": "bytes16"
+            }
+          ],
+          "name": "checkThingAlreadyFunded",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
               "components": [
                 {"internalType": "bytes16", "name": "id", "type": "bytes16"}
               ],
@@ -36,6 +55,17 @@ class TruQuestContract {
     if (_ethereumService.available) {
       _contract = Contract(_address, _abi, _ethereumService.provider);
     }
+  }
+
+  Future<bool> checkThingAlreadyFunded(String thingId) async {
+    var contract = _contract;
+    if (contract == null) {
+      return false;
+    }
+
+    var thingIdHex = thingId.toSolInputFormat();
+
+    return await contract.call<bool>('checkThingAlreadyFunded', [thingIdHex]);
   }
 
   Future fundThing(String thingId, String signature) async {

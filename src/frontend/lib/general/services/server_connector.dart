@@ -5,8 +5,16 @@ import 'package:logging/logging.dart';
 import 'package:signalr_netcore/signalr_client.dart';
 import 'package:tuple/tuple.dart';
 
+import '../../thing/models/rvm/thing_state_vm.dart';
+
 enum ServerEventType {
   thing,
+}
+
+enum ThingEventType {
+  draftCreateProgress,
+  draftCreated,
+  stateChanged,
 }
 
 class ServerConnector {
@@ -50,7 +58,7 @@ class ServerConnector {
     }
   }
 
-  Future _connectToHub(String token) async {
+  Future _connectToHub(String? token) async {
     _accessToken = token;
     var hubConnection = _hubConnection;
     if (hubConnection != null) {
@@ -72,7 +80,8 @@ class ServerConnector {
             transport: HttpTransportType.WebSockets,
             logger: transportLogger,
             logMessageContent: true,
-            accessTokenFactory: () => Future.value(token),
+            accessTokenFactory:
+                token != null ? () => Future.value(token) : null,
           ),
         )
         .configureLogging(hubLogger)
@@ -91,7 +100,32 @@ class ServerConnector {
         var thingId = args!.first as String;
         var percent = args.last as int;
         _serverEventChannel.add(
-          Tuple2(ServerEventType.thing, Tuple2(thingId, percent)),
+          Tuple2(
+            ServerEventType.thing,
+            Tuple3(
+              ThingEventType.draftCreateProgress,
+              thingId,
+              percent as Object,
+            ),
+          ),
+        );
+      },
+    );
+
+    hubConnection.on(
+      'NotifyThingStateChanged',
+      (List<Object?>? args) {
+        var thingId = args!.first as String;
+        var state = ThingStateVm.values[args.last as int];
+        _serverEventChannel.add(
+          Tuple2(
+            ServerEventType.thing,
+            Tuple3(
+              ThingEventType.stateChanged,
+              thingId,
+              state as Object,
+            ),
+          ),
         );
       },
     );
@@ -113,6 +147,6 @@ class ServerConnector {
 
   void disconnectFromHub() => _hubConnectionTaskChannel.add(_disconnectFromHub);
 
-  void connectToHub(String accessToken) =>
+  void connectToHub(String? accessToken) =>
       _hubConnectionTaskChannel.add(() => _connectToHub(accessToken));
 }

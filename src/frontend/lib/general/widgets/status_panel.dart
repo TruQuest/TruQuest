@@ -65,46 +65,68 @@ class StatusPanel extends StatelessWidgetX {
               },
             ),
           ),
-          SizedBox(width: 64),
-          StreamBuilder<LoadCurrentUserSuccessVm>(
-            stream: _userBloc.currentUser$,
-            builder: (context, snapshot) {
-              if (snapshot.data == null) {
-                return CircularProgressIndicator(color: Colors.white);
-              }
+          SizedBox(width: 24),
+          Expanded(
+            child: Center(
+              child: StreamBuilder<LoadCurrentUserSuccessVm>(
+                stream: _userBloc.currentUser$,
+                builder: (context, snapshot) {
+                  if (snapshot.data == null) {
+                    return CircularProgressIndicator(color: Colors.white);
+                  }
 
-              var user = snapshot.data!.user;
-              if (user.state == UserAccountState.guest) {
-                return TextButton(
-                  child: Text(
-                    'Sign Up',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      barrierDismissible: false,
-                      builder: (_) => SignUpDialog(),
+                  var user = snapshot.data!.user;
+                  if (user.state == UserAccountState.guest) {
+                    return TextButton(
+                      child: Text(
+                        'Sign Up',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (_) => SignUpDialog(),
+                        );
+                      },
                     );
-                  },
-                );
-              } else if (user.state == UserAccountState.connectedNotLoggedIn) {
-                return TextButton(
-                  child: Text(
-                    'Log In',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  onPressed: () {
-                    _userBloc.dispatch(SignIn());
-                  },
-                );
-              }
+                  } else if (user.state ==
+                      UserAccountState.connectedNotLoggedIn) {
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton(
+                          child: Text(
+                            'Log In',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          onPressed: () => _userBloc.dispatch(SignIn()),
+                        ),
+                        SizedBox(width: 12),
+                        TextButton(
+                          child: Text(
+                            'Sign Up',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (_) => SignUpDialog(),
+                            );
+                          },
+                        ),
+                      ],
+                    );
+                  }
 
-              return Text(
-                'Logged in as ${user.username}: ${user.ethereumAccountShort}',
-                style: TextStyle(color: Colors.white),
-              );
-            },
+                  return Text(
+                    'Logged in as ${user.username}: ${user.ethereumAccountShort}',
+                    style: TextStyle(color: Colors.white),
+                  );
+                },
+              ),
+            ),
           ),
         ],
       ),

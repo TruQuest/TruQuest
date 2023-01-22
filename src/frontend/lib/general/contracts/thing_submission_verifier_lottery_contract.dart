@@ -181,13 +181,13 @@ class ThingSubmissionVerifierLotteryContract {
         .toInt();
   }
 
-  Future<bool> checkAlreadyPreJoinedLottery(String thingId) async {
+  Future<bool?> checkAlreadyPreJoinedLottery(String thingId) async {
     var contract = _contract;
     if (contract == null) {
-      return false;
+      return null;
     }
     if (_ethereumService.connectedAccount == null) {
-      return false;
+      return null;
     }
 
     var thingIdHex = thingId.toSolInputFormat();
@@ -201,13 +201,13 @@ class ThingSubmissionVerifierLotteryContract {
     );
   }
 
-  Future<bool> checkAlreadyJoinedLottery(String thingId) async {
+  Future<bool?> checkAlreadyJoinedLottery(String thingId) async {
     var contract = _contract;
     if (contract == null) {
-      return false;
+      return null;
     }
     if (_ethereumService.connectedAccount == null) {
-      return false;
+      return null;
     }
 
     var thingIdHex = thingId.toSolInputFormat();

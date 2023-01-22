@@ -71,33 +71,32 @@ class _LotteryState extends StateX<Lottery> {
                 stream: _thingBloc.verifierLotteryInfo$,
                 builder: (context, snapshot) {
                   if (snapshot.data == null) {
-                    return Center(
-                      child: CircularProgressIndicator(),
-                    );
+                    return Center(child: CircularProgressIndicator());
                   }
 
                   var info = snapshot.data!;
 
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: StreamBuilder(
-                          stream: _ethereumBloc.latestBlockNumber$,
-                          builder: (context, snapshot) {
-                            var latestBlockNumber =
-                                snapshot.data?.toDouble() ?? 0.0;
-                            var startBlock = info.initBlock.toDouble();
-                            var endBlock = startBlock + info.durationBlocks;
-                            var currentBlock = min(
-                              max(
-                                latestBlockNumber,
-                                info.latestBlockNumber,
-                              ),
-                              endBlock,
-                            ).toDouble();
+                  return StreamBuilder(
+                    stream: _ethereumBloc.latestBlockNumber$,
+                    builder: (context, snapshot) {
+                      var latestBlockNumber = snapshot.data?.toDouble() ?? 0;
+                      var startBlock = info.initBlock?.toDouble() ?? 0;
+                      var endBlock = startBlock + info.durationBlocks;
+                      var currentBlock = 0.0;
+                      if (info.initBlock != null) {
+                        currentBlock = min(
+                          max(
+                            latestBlockNumber,
+                            info.latestBlockNumber,
+                          ),
+                          endBlock,
+                        ).toDouble();
+                      }
 
-                            return Center(
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: Center(
                               child: Stack(
                                 alignment: Alignment.center,
                                 children: [
@@ -110,100 +109,112 @@ class _LotteryState extends StateX<Lottery> {
                                     ),
                                     innerWidget: (_) => SizedBox.shrink(),
                                   ),
-                                  StreamBuilder(
-                                    stream: Stream.fromFutures(
-                                      [
-                                        Future.delayed(
-                                          Duration(seconds: 1),
-                                          () => true,
-                                        ),
-                                        Future.delayed(
-                                          Duration(seconds: 5),
-                                          () => false,
-                                        ),
-                                      ],
-                                    ),
-                                    initialData: false,
-                                    builder: (context, snapshot) {
-                                      return SleekCircularSlider(
-                                        min: 0,
-                                        max: 360,
-                                        initialValue: !snapshot.data! ? 0 : 360,
-                                        appearance: _counterAppearance,
-                                        innerWidget: (value) {
-                                          return Transform.rotate(
-                                            angle: _degreeToRadians(value),
-                                            child: Align(
-                                              alignment: Alignment.center,
-                                              child: Container(
-                                                width: value / 4,
-                                                height: value / 4,
-                                                decoration: BoxDecoration(
-                                                  gradient: LinearGradient(
-                                                    colors: [
-                                                      Color(0xffF9D3D2)
-                                                          .withOpacity(
-                                                              value / 360),
-                                                      Color(0xffBF79C2)
-                                                          .withOpacity(
-                                                              value / 360),
-                                                    ],
-                                                    begin: Alignment.bottomLeft,
-                                                    end: Alignment.topRight,
-                                                    tileMode: TileMode.clamp,
-                                                  ),
-                                                ),
+                                  if (info.initBlock != null)
+                                    StreamBuilder(
+                                      stream: Stream.fromFutures(
+                                        [
+                                          Future.delayed(
+                                            Duration(seconds: 1),
+                                            () => true,
+                                          ),
+                                          Future.delayed(
+                                            Duration(seconds: 5),
+                                            () => false,
+                                          ),
+                                        ],
+                                      ),
+                                      initialData: false,
+                                      builder: (context, snapshot) {
+                                        return SleekCircularSlider(
+                                          min: 0,
+                                          max: 360,
+                                          initialValue:
+                                              !snapshot.data! ? 0 : 360,
+                                          appearance: _counterAppearance,
+                                          innerWidget: (value) {
+                                            return Transform.rotate(
+                                              angle: _degreeToRadians(value),
+                                              child: Align(
                                                 alignment: Alignment.center,
-                                                child: FittedBox(
-                                                  child: Text(
-                                                    '${(endBlock - currentBlock)}\nBlocks\nRemaining',
+                                                child: Container(
+                                                  width: value / 4,
+                                                  height: value / 4,
+                                                  decoration: BoxDecoration(
+                                                    gradient: LinearGradient(
+                                                      colors: [
+                                                        Color(0xffF9D3D2)
+                                                            .withOpacity(
+                                                                value / 360),
+                                                        Color(0xffBF79C2)
+                                                            .withOpacity(
+                                                                value / 360),
+                                                      ],
+                                                      begin:
+                                                          Alignment.bottomLeft,
+                                                      end: Alignment.topRight,
+                                                      tileMode: TileMode.clamp,
+                                                    ),
+                                                  ),
+                                                  alignment: Alignment.center,
+                                                  child: FittedBox(
+                                                    child: Text(
+                                                      '${(endBlock - currentBlock)}\nBlocks\nRemaining',
+                                                    ),
                                                   ),
                                                 ),
                                               ),
-                                            ),
-                                          );
-                                        },
-                                      );
-                                    },
-                                  ),
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
                                 ],
                               ),
-                            );
-                          },
-                        ),
-                      ),
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            OutlinedButton(
-                              child: Text('Commit to lottery'),
-                              onPressed: !info.alreadyPreJoined
-                                  ? () {
-                                      _thingBloc.dispatch(
-                                        PreJoinLottery(
-                                          thingId: widget.thing.id,
-                                        ),
-                                      );
-                                    }
-                                  : null,
                             ),
-                            SizedBox(height: 12),
-                            OutlinedButton(
-                              child: Text('Join lottery'),
-                              onPressed: info.alreadyPreJoined &&
-                                      !info.alreadyJoined
-                                  ? () {
-                                      _thingBloc.dispatch(
-                                        JoinLottery(thingId: widget.thing.id),
-                                      );
-                                    }
-                                  : null,
+                          ),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                OutlinedButton(
+                                  child: Text('Commit to lottery'),
+                                  onPressed: info.initBlock != null &&
+                                          info.alreadyPreJoined != null &&
+                                          currentBlock < endBlock &&
+                                          !info.alreadyPreJoined!
+                                      ? () {
+                                          _thingBloc.dispatch(
+                                            PreJoinLottery(
+                                              thingId: widget.thing.id,
+                                            ),
+                                          );
+                                        }
+                                      : null,
+                                ),
+                                SizedBox(height: 12),
+                                OutlinedButton(
+                                  child: Text('Join lottery'),
+                                  onPressed: info.initBlock != null &&
+                                          info.alreadyPreJoined != null &&
+                                          info.alreadyJoined != null &&
+                                          currentBlock < endBlock &&
+                                          info.alreadyPreJoined! &&
+                                          !info.alreadyJoined!
+                                      ? () {
+                                          _thingBloc.dispatch(
+                                            JoinLottery(
+                                              thingId: widget.thing.id,
+                                            ),
+                                          );
+                                        }
+                                      : null,
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                    ],
+                          ),
+                        ],
+                      );
+                    },
                   );
                 },
               ),

@@ -276,6 +276,12 @@ contract TruQuest {
         return s_orchestrator == ecrecover(_hashThing(_thing), _v, _r, _s);
     }
 
+    function checkThingAlreadyFunded(
+        bytes16 _thingId
+    ) public view returns (bool) {
+        return s_thingSubmitter[_thingId] != address(0);
+    }
+
     function fundThing(
         ThingTd calldata _thing,
         uint8 _v,

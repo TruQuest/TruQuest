@@ -20,18 +20,21 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
     private readonly ITaskRepository _taskRepository;
     private readonly IContractCaller _contractCaller;
     private readonly IContractStorageQueryable _contractStorageQueryable;
+    private readonly IClientNotifier _clientNotifier;
 
     public InitVerifierLotteryCommandHandler(
         IThingRepository thingRepository,
         ITaskRepository taskRepository,
         IContractCaller contractCaller,
-        IContractStorageQueryable contractStorageQueryable
+        IContractStorageQueryable contractStorageQueryable,
+        IClientNotifier clientNotifier
     )
     {
         _thingRepository = thingRepository;
         _taskRepository = taskRepository;
         _contractCaller = contractCaller;
         _contractStorageQueryable = contractStorageQueryable;
+        _clientNotifier = clientNotifier;
     }
 
     public async Task<VoidResult> Handle(InitVerifierLotteryCommand command, CancellationToken ct)
@@ -63,6 +66,8 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
 
         await _taskRepository.SaveChanges();
         await _thingRepository.SaveChanges();
+
+        await _clientNotifier.NotifyThingStateChanged(thing.Id, thing.State);
 
         return VoidResult.Instance;
     }

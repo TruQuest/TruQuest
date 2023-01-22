@@ -27,7 +27,16 @@ class _ThingPageState extends StateX<ThingPage> {
   @override
   void initState() {
     super.initState();
-    _thingBloc.dispatch(GetThing(thingId: widget.thingId));
+    _thingBloc.dispatch(GetThing(
+      thingId: widget.thingId,
+      subscribe: true,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _thingBloc.dispatch(UnsubscribeFromThing(thingId: widget.thingId));
+    super.dispose();
   }
 
   @override
@@ -67,13 +76,29 @@ class _ThingPageState extends StateX<ThingPage> {
                 ),
               ),
               closable: false,
+              buttons: [
+                TabButton(
+                  icon: IconProvider.data(Icons.refresh),
+                  onPressed: () {
+                    _thingBloc.dispatch(GetThing(thingId: widget.thingId));
+                  },
+                ),
+              ],
             ),
-            if (thing.state.index > ThingStateVm.awaitingFunding.index)
+            if (thing.state.index >=
+                ThingStateVm.fundedAndSubmissionVerifierLotteryInitiated.index)
               TabData(
                 text: 'Lottery',
                 content: Lottery(thing: thing),
                 closable: false,
               ),
+            // if (thing.state.index >=
+            //     ThingStateVm.submissionVerifiersSelectedAndPollInitiated.index)
+            //   TabData(
+            //     text: 'Verifiers',
+            //     content: null,
+            //     closable: false,
+            //   ),
           ],
         );
 

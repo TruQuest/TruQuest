@@ -71,7 +71,7 @@ class UserApiService {
         ).toJson(),
       );
 
-      return SignUpRvm.fromJson(response.data['data']);
+      return SignUpRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
       throw _wrapError(error);
     }

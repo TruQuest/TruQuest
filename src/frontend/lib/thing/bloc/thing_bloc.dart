@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import '../models/rvm/thing_state_vm.dart';
-import '../models/rvm/get_thing_result_vm.dart';
+import '../models/rvm/get_thing_rvm.dart';
 import 'thing_result_vm.dart';
 import '../../general/bloc/bloc.dart';
 import '../services/thing_service.dart';
@@ -10,9 +10,9 @@ import 'thing_actions.dart';
 class ThingBloc extends Bloc<ThingAction> {
   final ThingService _thingService;
 
-  final StreamController<GetThingResultVm> _thingChannel =
-      StreamController<GetThingResultVm>.broadcast();
-  Stream<GetThingResultVm> get thing$ => _thingChannel.stream;
+  final StreamController<GetThingRvm> _thingChannel =
+      StreamController<GetThingRvm>.broadcast();
+  Stream<GetThingRvm> get thing$ => _thingChannel.stream;
 
   final StreamController<GetVerifierLotteryInfoSuccessVm>
       _verifierLotteryInfoChannel =
@@ -45,6 +45,8 @@ class ThingBloc extends Bloc<ThingAction> {
         _joinLottery(action);
       } else if (action is GetVerifierLotteryParticipants) {
         _getVerifierLotteryParticipants(action);
+      } else if (action is UnsubscribeFromThing) {
+        _unsubscribeFromThing(action);
       }
     });
   }
@@ -61,29 +63,48 @@ class ThingBloc extends Bloc<ThingAction> {
 
   void _getThing(GetThing action) async {
     var result = await _thingService.getThing(action.thingId);
+    if (action.subscribe) {
+      await _thingService.subscribeToThing(action.thingId);
+    }
+
+    if (result.thing.state == ThingStateVm.awaitingFunding) {
+      bool thingFunded =
+          await _thingService.checkThingAlreadyFunded(action.thingId);
+      result = GetThingRvm(
+        thing: result.thing.copyWith(
+          fundedAwaitingConfirmation: thingFunded,
+        ),
+        signature: result.signature,
+      );
+    }
+
     _thingChannel.add(result);
   }
 
   void _submitNewThing(SubmitNewThing action) async {
     var result = await _thingService.submitNewThing(action.thing.id);
-    _thingChannel.add(GetThingResultVm(
-      thing: action.thing.copyWithNewState(ThingStateVm.awaitingFunding),
+    _thingChannel.add(GetThingRvm(
+      thing: action.thing.copyWith(
+        state: ThingStateVm.awaitingFunding,
+        fundedAwaitingConfirmation: false,
+      ),
       signature: result.signature,
     ));
   }
 
   void _fundThing(FundThing action) async {
     await _thingService.fundThing(action.thing.id, action.signature);
-    _thingChannel.add(GetThingResultVm(
-      thing: action.thing.copyWithNewState(
-        ThingStateVm.fundedAndSubmissionVerifierLotteryInitiated,
+    _thingChannel.add(GetThingRvm(
+      thing: action.thing.copyWith(
+        // state: ThingStateVm.awaitingFunding,
+        fundedAwaitingConfirmation: true,
       ),
       signature: null,
     ));
   }
 
   void _getVerifierLotteryInfo(GetVerifierLotteryInfo action) async {
-    var info = await _thingService.getThingLotteryInfo(action.thingId);
+    var info = await _thingService.getVerifierLotteryInfo(action.thingId);
     _verifierLotteryInfoChannel.add(
       GetVerifierLotteryInfoSuccessVm(
         initBlock: info.item1,
@@ -98,7 +119,7 @@ class ThingBloc extends Bloc<ThingAction> {
   void _preJoinLottery(PreJoinLottery action) async {
     await _thingService.preJoinLottery(action.thingId);
 
-    var info = await _thingService.getThingLotteryInfo(action.thingId);
+    var info = await _thingService.getVerifierLotteryInfo(action.thingId);
     _verifierLotteryInfoChannel.add(
       GetVerifierLotteryInfoSuccessVm(
         initBlock: info.item1,
@@ -113,7 +134,7 @@ class ThingBloc extends Bloc<ThingAction> {
   void _joinLottery(JoinLottery action) async {
     await _thingService.joinLottery(action.thingId);
 
-    var info = await _thingService.getThingLotteryInfo(action.thingId);
+    var info = await _thingService.getVerifierLotteryInfo(action.thingId);
     _verifierLotteryInfoChannel.add(
       GetVerifierLotteryInfoSuccessVm(
         initBlock: info.item1,
@@ -134,5 +155,9 @@ class ThingBloc extends Bloc<ThingAction> {
     _verifierLotteryParticipantsChannel.add(
       GetVerifierLotteryParticipantsSuccessVm(entries: result.entries),
     );
+  }
+
+  void _unsubscribeFromThing(UnsubscribeFromThing action) async {
+    await _thingService.unsubscribeFromThing(action.thingId);
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
-import 'package:elegant_notification/elegant_notification.dart';
 import 'package:easy_sidemenu/easy_sidemenu.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
 import '../../pong/game.dart';
@@ -24,7 +24,8 @@ class _HomePageState extends StateX<HomePage> {
   late final _notificationBloc = use<NotificationBloc>();
   late final _pageContext = useScoped<PageContext>();
 
-  late final _pageController = _pageContext.controller;
+  late final PageController _pageController = _pageContext.controller;
+  late final FToast fToast;
 
   PongGame? _game;
   BoxConstraints? _gameWidgetConstraints;
@@ -32,18 +33,15 @@ class _HomePageState extends StateX<HomePage> {
   @override
   void initState() {
     super.initState();
-    _notificationBloc.notification$.listen((notification) {
-      ElegantNotification.success(
-        title: Text('Thing Draft Ready'),
-        description: Text(notification),
-        width: 300,
+    fToast = FToast();
+    fToast.init(context);
+
+    _notificationBloc.notification$.listen((toastBuilder) {
+      fToast.showToast(
+        child: toastBuilder(_pageContext),
+        gravity: ToastGravity.TOP_RIGHT,
         toastDuration: Duration(seconds: 5),
-        action: Icon(Icons.open_in_full),
-        onActionPressed: () {
-          _pageContext.route = '/things/$notification';
-          _pageController.jumpToPage(DateTime.now().millisecondsSinceEpoch);
-        },
-      ).show(context);
+      );
     });
   }
 
@@ -123,6 +121,12 @@ class _HomePageState extends StateX<HomePage> {
                 title: 'Pong!',
                 onTap: () => _pageController.jumpToPage(4),
               ),
+              SideMenuItem(
+                priority: 5,
+                icon: Icon(Icons.route),
+                title: 'Go To',
+                onTap: () => _pageController.jumpToPage(5),
+              ),
             ],
           ),
           Expanded(
@@ -150,6 +154,42 @@ class _HomePageState extends StateX<HomePage> {
                       }
                       return GameWidget(game: _game!);
                     },
+                  );
+                } else if (index == 5) {
+                  return Center(
+                    child: TextButton(
+                      child: Text('Go To'),
+                      onPressed: () async {
+                        var route = '';
+                        await showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text('Page'),
+                            content: SizedBox(
+                              width: 100,
+                              child: TextField(
+                                onChanged: (value) => route = value,
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                child: Text('Ok'),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (route.isNotEmpty) {
+                          _pageContext.route = route;
+                          _pageController.jumpToPage(
+                            DateTime.now().millisecondsSinceEpoch,
+                          );
+                        }
+                      },
+                    ),
                   );
                 }
 

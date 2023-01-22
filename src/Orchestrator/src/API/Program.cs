@@ -85,7 +85,7 @@ public static class WebApplicationBuilderExtension
 
                 options.AddFilter<ConvertHandleErrorToHubExceptionFilter>();
                 options.AddFilter<CopyAuthenticationContextToMethodInvocationScopeFilter>();
-                // options.AddFilter<AddConnectionIdProviderToMethodInvocationScopeFilter>();
+                options.AddFilter<AddConnectionIdProviderToMethodInvocationScopeFilter>();
             })
             .AddJsonProtocol(options =>
             {
@@ -95,8 +95,7 @@ public static class WebApplicationBuilderExtension
 
         builder.Services.AddSingleton<IUserIdProvider, UserIdProvider>();
         builder.Services.AddSingleton<IClientNotifier, ClientNotifier>();
-
-        // builder.Services.AddScoped<IConnectionIdProvider, ConnectionIdProvider>();
+        builder.Services.AddScoped<IConnectionIdProvider, ConnectionIdProvider>();
 
         builder.Services.AddHostedService<ContractEventTracker>();
         builder.Services.AddHostedService<BlockTracker>();

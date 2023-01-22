@@ -9,11 +9,11 @@ class CreateNewThingDraftSuccessVm extends CreateNewThingDraftResultVm {}
 class CreateNewThingDraftFailureVm extends CreateNewThingDraftResultVm {}
 
 class GetVerifierLotteryInfoSuccessVm extends ThingResultVm {
-  final int initBlock;
+  final int? initBlock;
   final int durationBlocks;
   final int latestBlockNumber;
-  final bool alreadyPreJoined;
-  final bool alreadyJoined;
+  final bool? alreadyPreJoined;
+  final bool? alreadyJoined;
 
   GetVerifierLotteryInfoSuccessVm({
     required this.initBlock,

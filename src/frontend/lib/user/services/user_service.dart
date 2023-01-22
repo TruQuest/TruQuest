@@ -34,10 +34,10 @@ class UserService {
     String? username;
     if (account == null) {
       state = UserAccountState.guest;
-      _serverConnector.disconnectFromHub();
+      _serverConnector.connectToHub(null);
     } else if (!_accountToJwt.containsKey(account)) {
       state = UserAccountState.connectedNotLoggedIn;
-      _serverConnector.disconnectFromHub();
+      _serverConnector.connectToHub(null);
     } else {
       state = UserAccountState.connectedAndLoggedIn;
       username = _accountToUsername[account];

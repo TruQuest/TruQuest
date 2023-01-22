@@ -4,11 +4,11 @@ import 'package:tuple/tuple.dart';
 
 import '../../ethereum/services/ethereum_service.dart';
 import '../../general/contracts/thing_submission_verifier_lottery_contract.dart';
-import '../models/rvm/get_thing_result_vm.dart';
+import '../models/rvm/get_thing_rvm.dart';
 import '../../general/contracts/truquest_contract.dart';
 import '../../general/contexts/document_context.dart';
-import '../models/rvm/get_verifier_lottery_participants_result_vm.dart';
-import '../models/rvm/submit_new_thing_result_vm.dart';
+import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
+import '../models/rvm/submit_new_thing_rvm.dart';
 import 'thing_api_service.dart';
 
 class ThingService {
@@ -47,18 +47,21 @@ class ThingService {
     return progress$;
   }
 
-  Future<GetThingResultVm> getThing(String thingId) async {
+  Future<GetThingRvm> getThing(String thingId) async {
     var result = await _thingApiService.getThing(thingId);
-    for (var e in result.thing.evidence) {
-      print('${e.originUrl} ${e.ipfsCid} ${e.previewImageIpfsCid}');
-    }
-    for (var t in result.thing.tags) {
-      print(t.name);
-    }
+    print('ThingId: ${result.thing.id}');
     return result;
   }
 
-  Future<SubmitNewThingResultVm> submitNewThing(String thingId) async {
+  Future subscribeToThing(String thingId) async {
+    await _thingApiService.subscribeToThing(thingId);
+  }
+
+  Future<bool> checkThingAlreadyFunded(String thingId) {
+    return _truQuestContract.checkThingAlreadyFunded(thingId);
+  }
+
+  Future<SubmitNewThingRvm> submitNewThing(String thingId) async {
     var result = await _thingApiService.submitNewThing(thingId);
     print(result.thingId);
     print(result.signature);
@@ -69,16 +72,20 @@ class ThingService {
     await _truQuestContract.fundThing(thingId, signature);
   }
 
-  Future<Tuple5<int, int, bool, bool, int>> getThingLotteryInfo(
+  Future<Tuple5<int?, int, bool?, bool?, int>> getVerifierLotteryInfo(
     String thingId,
   ) async {
-    int lotteryInitBlock = await _thingSubmissionVerifierLotteryContract
+    int? lotteryInitBlock = await _thingSubmissionVerifierLotteryContract
         .getLotteryInitBlock(thingId);
+    if (lotteryInitBlock == 0) {
+      lotteryInitBlock = null;
+    }
     int lotteryDurationBlocks = await _thingSubmissionVerifierLotteryContract
         .getLotteryDurationBlocks();
-    bool alreadyPreJoinedLottery = await _thingSubmissionVerifierLotteryContract
-        .checkAlreadyPreJoinedLottery(thingId);
-    bool alreadyJoinedLottery = await _thingSubmissionVerifierLotteryContract
+    bool? alreadyPreJoinedLottery =
+        await _thingSubmissionVerifierLotteryContract
+            .checkAlreadyPreJoinedLottery(thingId);
+    bool? alreadyJoinedLottery = await _thingSubmissionVerifierLotteryContract
         .checkAlreadyJoinedLottery(thingId);
     int latestBlockNumber = await _ethereumService.getLatestBlockNumber();
 
@@ -99,10 +106,14 @@ class ThingService {
     await _thingSubmissionVerifierLotteryContract.joinLottery(thingId);
   }
 
-  Future<GetVerifierLotteryParticipantsResultVm> getVerifierLotteryParticipants(
+  Future<GetVerifierLotteryParticipantsRvm> getVerifierLotteryParticipants(
     String thingId,
   ) async {
     var result = await _thingApiService.getVerifierLotteryParticipants(thingId);
     return result;
+  }
+
+  Future unsubscribeFromThing(String thingId) async {
+    await _thingApiService.unsubscribeFromThing(thingId);
   }
 }

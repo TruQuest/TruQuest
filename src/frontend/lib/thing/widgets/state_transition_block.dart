@@ -50,7 +50,8 @@ class _StateTransitionBlockState extends StateX<StateTransitionBlock> {
           ),
         ],
       );
-    } else if (thing.state == ThingStateVm.awaitingFunding) {
+    } else if (thing.state == ThingStateVm.awaitingFunding &&
+        !thing.fundedAwaitingConfirmation!) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -86,8 +87,10 @@ class _StateTransitionBlockState extends StateX<StateTransitionBlock> {
           ),
         ],
       );
-    } else if (thing.state ==
-        ThingStateVm.fundedAndSubmissionVerifierLotteryInitiated) {
+    } else if (thing.state == ThingStateVm.awaitingFunding &&
+            thing.fundedAwaitingConfirmation! ||
+        thing.state.index >=
+            ThingStateVm.fundedAndSubmissionVerifierLotteryInitiated.index) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [

@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.SignalR;
 using MediatR;
 
 using Domain.Results;
-using Application.Thing.Commands.CreateNewThingDraft;
+using Application.Thing.Commands.SubscribeToUpdates;
+using Application.Thing.Commands.UnsubscribeFromUpdates;
 
 using API.Hubs.Clients;
 using API.Hubs.Filters;
@@ -23,11 +24,14 @@ public class TruQuestHub : Hub<ITruQuestClient>
 
     public override Task OnConnectedAsync()
     {
-        _logger.LogInformation($"{Context.UserIdentifier} connected!");
+        _logger.LogInformation($"{Context.UserIdentifier ?? "Guest"} connected!");
         return base.OnConnectedAsync();
     }
 
-    [CopyAuthenticationContextToMethodInvocationScope]
-    public Task<HandleResult<Guid>> CreateNewThingDraft(CreateNewThingDraftCommand command) =>
+    [AddConnectionIdProviderToMethodInvocationScope]
+    public Task<VoidResult> SubscribeToThingUpdates(SubscribeToUpdatesCommand command) => _mediator.Send(command);
+
+    [AddConnectionIdProviderToMethodInvocationScope]
+    public Task<VoidResult> UnsubscribeFromThingUpdates(UnsubscribeFromUpdatesCommand command) =>
         _mediator.Send(command);
 }
