@@ -12,7 +12,7 @@ internal class SubjectQueryable : Queryable, ISubjectQueryable
 
     public async Task<SubjectQm?> GetById(Guid id)
     {
-        var dbConn = await getOpenConnection();
+        var dbConn = await _getOpenConnection();
         var subject = await dbConn.SingleWithMany<SubjectQm, TagQm, Guid>(
             @"
                 SELECT s.*, t.*

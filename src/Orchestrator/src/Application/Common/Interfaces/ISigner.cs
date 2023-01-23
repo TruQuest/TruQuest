@@ -6,7 +6,7 @@ using Domain.Aggregates.Events;
 using Application.User.Commands.SignUp;
 using Application.Subject.Commands.AddNewSubject;
 using Application.Thing.Commands.SubmitNewThing;
-using Application.Vote.Commands.CastAcceptancePollVote;
+using Application.Thing.Commands.CastAcceptancePollVote;
 using Application.Settlement.Commands.SubmitNewSettlementProposal;
 
 namespace Application.Common.Interfaces;

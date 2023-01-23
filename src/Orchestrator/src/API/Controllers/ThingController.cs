@@ -7,6 +7,8 @@ using Application.Thing.Commands.SubmitNewThing;
 using Application.Thing.Commands.CreateNewThingDraft;
 using Application.Thing.Queries.GetThing;
 using Application.Thing.Queries.GetVerifierLotteryParticipants;
+using Application.Thing.Queries.GetVerifiers;
+using Application.Thing.Commands.CastAcceptancePollVote;
 
 using API.Controllers.Filters;
 
@@ -41,4 +43,12 @@ public class ThingController : ControllerBase
     [HttpGet("{id}/lottery-participants")]
     public Task<HandleResult<GetVerifierLotteryParticipantsResultVm>> GetVerifierLotteryParticipants(string id) =>
         _mediator.Send(new GetVerifierLotteryParticipantsQuery { ThingId = Guid.Parse(id) });
+    [HttpPost("{id}/vote")]
+    public Task<HandleResult<string>> CastAcceptancePollVote(
+        [FromRoute] string id, [FromBody] CastAcceptancePollVoteCommand command
+    )
+    {
+        command.Input.ThingId = Guid.Parse(id);
+        return _mediator.Send(command);
+    }
 }

@@ -7,7 +7,7 @@ using Domain.Aggregates;
 using Domain.Aggregates.Events;
 
 using Application.Common.Interfaces;
-using Application.Vote.Commands.CastAcceptancePollVote;
+using Application.Thing.Commands.CastAcceptancePollVote;
 
 namespace Application.Thing.Commands.CloseAcceptancePoll;
 

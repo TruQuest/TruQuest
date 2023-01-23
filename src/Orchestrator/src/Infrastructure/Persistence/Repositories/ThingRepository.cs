@@ -26,7 +26,7 @@ internal class ThingRepository : Repository<Thing>, IThingRepository
 
     public Task<Thing> FindById(Guid id) => _dbContext.Things.SingleAsync(t => t.Id == id);
 
-    public async Task<bool> CheckIsVerifierFor(Guid thingId, string userId)
+    public async Task<bool> CheckIsDesignatedVerifierFor(Guid thingId, string userId)
     {
         var thing = await _dbContext.Things
             .AsNoTracking()

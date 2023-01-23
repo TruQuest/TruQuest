@@ -47,6 +47,12 @@ class ThingBloc extends Bloc<ThingAction> {
         _getVerifierLotteryParticipants(action);
       } else if (action is UnsubscribeFromThing) {
         _unsubscribeFromThing(action);
+      } else if (action is GetAcceptancePollInfo) {
+        _getAcceptancePollInfo(action);
+      } else if (action is CastVoteOffChain) {
+        _castVoteOffChain(action);
+      } else if (action is CastVoteOnChain) {
+        _castVoteOnChain(action);
       }
     });
   }
@@ -159,5 +165,33 @@ class ThingBloc extends Bloc<ThingAction> {
 
   void _unsubscribeFromThing(UnsubscribeFromThing action) async {
     await _thingService.unsubscribeFromThing(action.thingId);
+  }
+
+  void _getAcceptancePollInfo(GetAcceptancePollInfo action) async {
+    var info = await _thingService.getAcceptancePollInfo(action.thingId);
+    action.complete(
+      GetAcceptancePollInfoSuccessVm(
+        initBlock: info.item1,
+        durationBlocks: info.item2,
+        isDesignatedVerifier: info.item3,
+        latestBlockNumber: info.item4,
+      ),
+    );
+  }
+
+  void _castVoteOffChain(CastVoteOffChain action) async {
+    await _thingService.castVoteOffChain(
+      action.thingId,
+      action.decision,
+      action.reason,
+    );
+  }
+
+  void _castVoteOnChain(CastVoteOnChain action) async {
+    await _thingService.castVoteOnChain(
+      action.thingId,
+      action.decision,
+      action.reason,
+    );
   }
 }

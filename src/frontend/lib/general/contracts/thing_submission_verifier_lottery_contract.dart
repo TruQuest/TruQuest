@@ -247,7 +247,7 @@ class ThingSubmissionVerifierLotteryContract {
         'preJoinLottery',
         [thingIdHex, dataHashHex],
         TransactionOverride(
-          gasLimit: BigInt.from(150000),
+          gasLimit: BigInt.from(250000),
         ),
       );
 

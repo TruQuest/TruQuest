@@ -103,7 +103,7 @@ class TruQuestContract {
 
       print('Txn sent! Waiting for confirmations...');
 
-      await txnResponse.wait(2);
+      await txnResponse.wait(2); // @@??: Do not await confirmations?
 
       print('Fund txn confirmed!');
     } catch (e) {

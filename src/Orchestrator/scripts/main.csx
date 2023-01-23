@@ -8,78 +8,101 @@
 
 using Internal;
 
-using System.Data;
+using ContractStorageExplorer;
+using ContractStorageExplorer.SolTypes;
 
-using Dapper;
-using Npgsql;
+var thingId = Guid.Parse("ef39bb1b-2558-4a95-b274-5b9e4af9290f").ToByteArray();
 
-public class SubjectQm
-{
-    public Guid Id { get; }
-    public string Name { get; }
-    public string Details { get; }
-    public int Type { get; }
-    public string ImageIpfsCid { get; }
-    public string CroppedImageIpfsCid { get; }
-    public string SubmitterId { get; }
+var _thingSubmissionVerifierLotteryContract = ContractFinder.Create()
+    .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
+    .WithName("ThingSubmissionVerifierLottery")
+    .DeployedAt("0x05797936947e92b35438F3fcc0562fDbDA01E6ac")
+    .OnNetwork("http://localhost:7545")
+    .Find();
 
-    public List<TagQm> Tags { get; set; } = new();
-}
+var value = await _thingSubmissionVerifierLotteryContract
+    .WalkStorage()
+    .Field("s_participants")
+    .AsMapping()
+    .Key(new SolBytes16(thingId))
+    .AsArrayOf<SolAddress>()
+    .Index(3)
+    .GetValue<SolAddress>();
 
-public class TagQm
-{
-    public int Id { get; }
-    public string Name { get; }
-}
+Console.WriteLine(value.HexValue);
 
-var conn = new NpgsqlConnection("Host=localhost;Port=5433;Database=TruQuest;Username=postgres;Password=password;SslMode=Disable;SearchPath=truquest;");
-await conn.OpenAsync();
+// using System.Data;
 
-var cache = new Dictionary<Guid, SubjectQm>();
+// using Dapper;
+// using Npgsql;
 
-await conn.QueryAsync<SubjectQm, TagQm, SubjectQm>(
-    @"
-        SELECT s.*, t.*
-        FROM
-            ""Subjects"" s
-                LEFT JOIN
-            ""SubjectAttachedTags"" st
-                ON s.""Id"" = st.""SubjectId""
-                LEFT JOIN
-            ""Tags"" t
-                ON st.""TagId"" = t.""Id""
-        WHERE s.""Id"" = @SubjectId
-    ",
-    (root, joined) =>
-    {
-        Console.WriteLine((joined == null).ToString());
-        if (!cache.ContainsKey(root.Id))
-        {
-            cache.Add(root.Id, root);
-        }
+// public class SubjectQm
+// {
+//     public Guid Id { get; }
+//     public string Name { get; }
+//     public string Details { get; }
+//     public int Type { get; }
+//     public string ImageIpfsCid { get; }
+//     public string CroppedImageIpfsCid { get; }
+//     public string SubmitterId { get; }
 
-        var cachedParent = cache[root.Id];
+//     public List<TagQm> Tags { get; set; } = new();
+// }
 
-        if (joined != null)
-        {
-            var children = cachedParent.Tags;
-            children.Add(joined);
-        }
+// public class TagQm
+// {
+//     public int Id { get; }
+//     public string Name { get; }
+// }
 
-        return cachedParent;
-    },
-    param: new
-    {
-        SubjectId = Guid.Parse("ec8837fa-afc6-4dec-bb61-e98bcbaba434")
-    }
-);
+// var conn = new NpgsqlConnection("Host=localhost;Port=5433;Database=TruQuest;Username=postgres;Password=password;SslMode=Disable;SearchPath=truquest;");
+// await conn.OpenAsync();
 
-foreach (var kv in cache)
-{
-    Console.WriteLine(kv.Value.Name);
-    Console.WriteLine(kv.Value.Tags.Count.ToString());
-    foreach (var tag in kv.Value.Tags)
-    {
-        Console.WriteLine(tag.Name);
-    }
-}
+// var cache = new Dictionary<Guid, SubjectQm>();
+
+// await conn.QueryAsync<SubjectQm, TagQm, SubjectQm>(
+//     @"
+//         SELECT s.*, t.*
+//         FROM
+//             ""Subjects"" s
+//                 LEFT JOIN
+//             ""SubjectAttachedTags"" st
+//                 ON s.""Id"" = st.""SubjectId""
+//                 LEFT JOIN
+//             ""Tags"" t
+//                 ON st.""TagId"" = t.""Id""
+//         WHERE s.""Id"" = @SubjectId
+//     ",
+//     (root, joined) =>
+//     {
+//         Console.WriteLine((joined == null).ToString());
+//         if (!cache.ContainsKey(root.Id))
+//         {
+//             cache.Add(root.Id, root);
+//         }
+
+//         var cachedParent = cache[root.Id];
+
+//         if (joined != null)
+//         {
+//             var children = cachedParent.Tags;
+//             children.Add(joined);
+//         }
+
+//         return cachedParent;
+//     },
+//     param: new
+//     {
+//         SubjectId = Guid.Parse("ec8837fa-afc6-4dec-bb61-e98bcbaba434")
+//     }
+// );
+
+// foreach (var kv in cache)
+// {
+//     Console.WriteLine(kv.Value.Name);
+//     Console.WriteLine(kv.Value.Tags.Count.ToString());
+//     foreach (var tag in kv.Value.Tags)
+//     {
+//         Console.WriteLine(tag.Name);
+//     }
+// }

@@ -10,7 +10,7 @@ using Application.Common.Interfaces;
 using Application.Common.Models.IM;
 using Application.Subject.Commands.AddNewSubject;
 using Application.Thing.Commands.SubmitNewThing;
-using Application.Vote.Commands.CastAcceptancePollVote;
+using Application.Thing.Commands.CastAcceptancePollVote;
 using Application.Settlement.Commands.SubmitNewSettlementProposal;
 using Application.Thing.Commands.CreateNewThingDraft;
 using API.BackgroundServices;

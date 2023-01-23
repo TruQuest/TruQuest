@@ -1,3 +1,4 @@
+import '../models/im/decision_im.dart';
 import '../models/rvm/thing_vm.dart';
 import '../../general/bloc/mixins.dart';
 import 'thing_result_vm.dart';
@@ -63,4 +64,35 @@ class UnsubscribeFromThing extends ThingAction {
   final String thingId;
 
   UnsubscribeFromThing({required this.thingId});
+}
+
+class GetAcceptancePollInfo
+    extends ThingActionAwaitable<GetAcceptancePollInfoSuccessVm> {
+  final String thingId;
+
+  GetAcceptancePollInfo({required this.thingId});
+}
+
+class CastVoteOffChain extends ThingAction {
+  final String thingId;
+  final DecisionIm decision;
+  final String reason;
+
+  CastVoteOffChain({
+    required this.thingId,
+    required this.decision,
+    required this.reason,
+  });
+}
+
+class CastVoteOnChain extends ThingAction {
+  final String thingId;
+  final DecisionIm decision;
+  final String reason;
+
+  CastVoteOnChain({
+    required this.thingId,
+    required this.decision,
+    required this.reason,
+  });
 }

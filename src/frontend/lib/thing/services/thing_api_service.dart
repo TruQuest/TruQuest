@@ -4,6 +4,10 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:tuple/tuple.dart';
 
+import '../../general/errors/vote_error.dart';
+import '../models/im/cast_acceptance_poll_vote_command.dart';
+import '../models/im/decision_im.dart';
+import '../models/im/new_acceptance_poll_vote_im.dart';
 import '../models/im/unsubscribe_from_updates_command.dart';
 import '../models/rvm/thing_state_vm.dart';
 import '../models/im/subscribe_to_updates_command.dart';
@@ -85,6 +89,8 @@ class ThingApiService {
               return FileError(error['errors'].values.first.first);
             } else if (error['type'] == 'Thing') {
               return ThingError(error['errors'].values.first.first);
+            } else if (error['type'] == 'Vote') {
+              return VoteError(error['errors'].values.first.first);
             }
             break; // @@NOTE: Should never actually reach here.
           case 401:
@@ -249,6 +255,35 @@ class ThingApiService {
       );
     } on Exception catch (ex) {
       throw _wrapHubException(ex);
+    }
+  }
+
+  Future<String> castThingAcceptancePollVote(
+    String thingId,
+    String castedAt,
+    DecisionIm decision,
+    String reason,
+    String signature,
+  ) async {
+    try {
+      var response = await _dio.post(
+        '/things/$thingId/vote',
+        options: Options(
+          headers: {'Authorization': 'Bearer ${_serverConnector.accessToken}'},
+        ),
+        data: CastAcceptancePollVoteCommand(
+          input: NewAcceptancePollVoteIm(
+            castedAt: castedAt,
+            decision: decision,
+            reason: reason,
+          ),
+          signature: signature,
+        ).toJson(),
+      );
+
+      return response.data['data'] as String;
+    } on DioError catch (error) {
+      throw _wrapError(error);
     }
   }
 }

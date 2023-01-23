@@ -1,5 +1,6 @@
 import 'package:kiwi/kiwi.dart';
 
+import 'general/contracts/acceptance_poll_contract.dart';
 import 'general/contracts/thing_submission_verifier_lottery_contract.dart';
 import 'general/contracts/truquest_contract.dart';
 import 'general/contexts/page_context.dart';
@@ -38,6 +39,7 @@ abstract class Injector {
   @Register.factory(PageContext)
   @Register.singleton(TruQuestContract)
   @Register.singleton(ThingSubmissionVerifierLotteryContract)
+  @Register.singleton(AcceptancePollContract)
   void configure();
 }
 

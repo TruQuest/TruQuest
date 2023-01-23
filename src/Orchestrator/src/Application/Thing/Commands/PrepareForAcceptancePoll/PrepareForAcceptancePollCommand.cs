@@ -26,18 +26,21 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
     private readonly ITaskRepository _taskRepository;
     private readonly IJoinedThingSubmissionVerifierLotteryEventRepository _joinedThingSubmissionVerifierLotteryEventRepository;
     private readonly IContractStorageQueryable _contractStorageQueryable;
+    private readonly IClientNotifier _clientNotifier;
 
     public PrepareForAcceptancePollCommandHandler(
         IThingRepository thingRepository,
         ITaskRepository taskRepository,
         IJoinedThingSubmissionVerifierLotteryEventRepository joinedThingSubmissionVerifierLotteryEventRepository,
-        IContractStorageQueryable contractStorageQueryable
+        IContractStorageQueryable contractStorageQueryable,
+        IClientNotifier clientNotifier
     )
     {
         _thingRepository = thingRepository;
         _taskRepository = taskRepository;
         _joinedThingSubmissionVerifierLotteryEventRepository = joinedThingSubmissionVerifierLotteryEventRepository;
         _contractStorageQueryable = contractStorageQueryable;
+        _clientNotifier = clientNotifier;
     }
 
     public async Task<VoidResult> Handle(PrepareForAcceptancePollCommand command, CancellationToken ct)
@@ -72,6 +75,8 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
             await _thingRepository.SaveChanges();
             await _taskRepository.SaveChanges();
             await _joinedThingSubmissionVerifierLotteryEventRepository.SaveChanges();
+
+            await _clientNotifier.NotifyThingStateChanged(thing.Id, thing.State);
         }
 
         return VoidResult.Instance;

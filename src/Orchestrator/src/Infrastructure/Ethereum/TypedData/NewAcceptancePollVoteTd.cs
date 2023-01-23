@@ -7,12 +7,10 @@ public class NewAcceptancePollVoteTd
 {
     [Parameter("string", "thingId", 1)]
     public string ThingId { get; init; }
-    [Parameter("string", "pollType", 2)]
-    public string PollType { get; init; }
-    [Parameter("string", "castedAt", 3)]
+    [Parameter("string", "castedAt", 2)]
     public string CastedAt { get; init; }
-    [Parameter("string", "decision", 4)]
+    [Parameter("string", "decision", 3)]
     public string Decision { get; init; }
-    [Parameter("string", "reason", 5)]
+    [Parameter("string", "reason", 4)]
     public string Reason { get; init; }
 }

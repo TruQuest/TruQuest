@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 using Domain.Aggregates.Events;
@@ -24,23 +23,5 @@ internal class JoinedThingAssessmentVerifierLotteryEventRepository :
     public void Create(JoinedThingAssessmentVerifierLotteryEvent @event)
     {
         _dbContext.JoinedThingAssessmentVerifierLotteryEvents.Add(@event);
-    }
-
-    public Task<List<JoinedThingAssessmentVerifierLotteryEvent>> FindWithClosestNonces(
-        Guid thingId, Guid settlementProposalId, long latestBlockNumber, decimal nonce, int count
-    )
-    {
-        return _dbContext.JoinedThingAssessmentVerifierLotteryEvents
-            .AsNoTracking()
-            .Where(e =>
-                e.ThingId == thingId &&
-                e.SettlementProposalId == settlementProposalId &&
-                e.BlockNumber <= latestBlockNumber
-            )
-            .OrderBy(e => Math.Abs(nonce - e.Nonce))
-                .ThenBy(e => e.BlockNumber)
-                    .ThenBy(e => e.TxnIndex)
-            .Take(count)
-            .ToListAsync();
     }
 }

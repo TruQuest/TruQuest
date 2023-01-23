@@ -1,4 +1,4 @@
-namespace Application.Vote.Commands.CastAcceptancePollVote;
+namespace Application.Thing.Commands.CastAcceptancePollVote;
 
 public enum DecisionIm
 {

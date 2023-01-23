@@ -2,8 +2,11 @@ import 'dart:async';
 
 import 'package:tuple/tuple.dart';
 
+import '../../general/extensions/datetime_extension.dart';
+import '../../general/contracts/acceptance_poll_contract.dart';
 import '../../ethereum/services/ethereum_service.dart';
 import '../../general/contracts/thing_submission_verifier_lottery_contract.dart';
+import '../models/im/decision_im.dart';
 import '../models/rvm/get_thing_rvm.dart';
 import '../../general/contracts/truquest_contract.dart';
 import '../../general/contexts/document_context.dart';
@@ -17,6 +20,7 @@ class ThingService {
   final TruQuestContract _truQuestContract;
   final ThingSubmissionVerifierLotteryContract
       _thingSubmissionVerifierLotteryContract;
+  final AcceptancePollContract _acceptancePollContract;
 
   final StreamController<Stream<int>> _progress$Channel =
       StreamController<Stream<int>>();
@@ -27,6 +31,7 @@ class ThingService {
     this._ethereumService,
     this._truQuestContract,
     this._thingSubmissionVerifierLotteryContract,
+    this._acceptancePollContract,
   );
 
   Future<Stream<int>> createNewThingDraft(
@@ -75,25 +80,24 @@ class ThingService {
   Future<Tuple5<int?, int, bool?, bool?, int>> getVerifierLotteryInfo(
     String thingId,
   ) async {
-    int? lotteryInitBlock = await _thingSubmissionVerifierLotteryContract
+    int? initBlock = await _thingSubmissionVerifierLotteryContract
         .getLotteryInitBlock(thingId);
-    if (lotteryInitBlock == 0) {
-      lotteryInitBlock = null;
+    if (initBlock == 0) {
+      initBlock = null;
     }
-    int lotteryDurationBlocks = await _thingSubmissionVerifierLotteryContract
+    int durationBlocks = await _thingSubmissionVerifierLotteryContract
         .getLotteryDurationBlocks();
-    bool? alreadyPreJoinedLottery =
-        await _thingSubmissionVerifierLotteryContract
-            .checkAlreadyPreJoinedLottery(thingId);
-    bool? alreadyJoinedLottery = await _thingSubmissionVerifierLotteryContract
+    bool? alreadyPreJoined = await _thingSubmissionVerifierLotteryContract
+        .checkAlreadyPreJoinedLottery(thingId);
+    bool? alreadyJoined = await _thingSubmissionVerifierLotteryContract
         .checkAlreadyJoinedLottery(thingId);
     int latestBlockNumber = await _ethereumService.getLatestBlockNumber();
 
     return Tuple5(
-      lotteryInitBlock,
-      lotteryDurationBlocks,
-      alreadyPreJoinedLottery,
-      alreadyJoinedLottery,
+      initBlock,
+      durationBlocks,
+      alreadyPreJoined,
+      alreadyJoined,
       latestBlockNumber,
     );
   }
@@ -115,5 +119,61 @@ class ThingService {
 
   Future unsubscribeFromThing(String thingId) async {
     await _thingApiService.unsubscribeFromThing(thingId);
+  }
+
+  Future<Tuple4<int?, int, bool?, int>> getAcceptancePollInfo(
+    String thingId,
+  ) async {
+    int? initBlock = await _acceptancePollContract.getPollInitBlock(thingId);
+    if (initBlock == 0) {
+      initBlock = null;
+    }
+    int durationBlocks = await _acceptancePollContract.getPollDurationBlocks();
+    bool? isDesignatedVerifier = await _acceptancePollContract
+        .checkIsDesignatedVerifierForThing(thingId);
+    int latestBlockNumber = await _ethereumService.getLatestBlockNumber();
+
+    return Tuple4(
+      initBlock,
+      durationBlocks,
+      isDesignatedVerifier,
+      latestBlockNumber,
+    );
+  }
+
+  Future castVoteOffChain(
+    String thingId,
+    DecisionIm decision,
+    String reason,
+  ) async {
+    var castedAt = DateTime.now().getString();
+    var result = await _ethereumService.signThingAcceptancePollVote(
+      thingId,
+      castedAt,
+      decision,
+      reason,
+    );
+    if (result.isLeft) {
+      print(result.left);
+      return;
+    }
+
+    var ipfsCid = await _thingApiService.castThingAcceptancePollVote(
+      thingId,
+      castedAt,
+      decision,
+      reason,
+      result.right,
+    );
+
+    print('Vote cid: $ipfsCid');
+  }
+
+  Future castVoteOnChain(
+    String thingId,
+    DecisionIm decision,
+    String reason,
+  ) async {
+    await _acceptancePollContract.castVote(thingId, decision, reason);
   }
 }

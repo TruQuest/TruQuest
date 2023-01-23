@@ -15,7 +15,7 @@ internal class ThingQueryable : Queryable, IThingQueryable
 
     public async Task<ThingQm?> GetById(Guid id)
     {
-        var dbConn = await getOpenConnection();
+        var dbConn = await _getOpenConnection();
         var thing = await dbConn.SingleWithMultipleMany<ThingQm, EvidenceQm, TagQm>(
             @"
                 SELECT t.*, e.*, tag.*
@@ -42,7 +42,7 @@ internal class ThingQueryable : Queryable, IThingQueryable
 
     public async Task<IEnumerable<VerifierLotteryParticipantEntryQm>> GetVerifierLotteryParticipants(Guid thingId)
     {
-        var dbConn = await getOpenConnection();
+        var dbConn = await _getOpenConnection();
         var entries = await dbConn.QueryAsync<VerifierLotteryParticipantEntryQm>(
             @"
                 SELECT je.""BlockNumber"" AS ""JoinedBlockNumber"", pje.""UserId"", pje.""DataHash"", je.""Nonce""

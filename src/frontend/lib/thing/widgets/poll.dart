@@ -3,27 +3,20 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
-import '../../general/widgets/lottery_participants_table.dart';
+import 'vote_dialog.dart';
+import '../models/rvm/thing_vm.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';
-import '../../user/bloc/user_bloc.dart';
 import '../bloc/thing_actions.dart';
 import '../bloc/thing_bloc.dart';
-import '../models/rvm/thing_vm.dart';
+import '../../user/bloc/user_bloc.dart';
 import '../../widget_extensions.dart';
 
-class Lottery extends StatefulWidget {
-  final ThingVm thing;
-
-  const Lottery({super.key, required this.thing});
-
-  @override
-  State<Lottery> createState() => _LotteryState();
-}
-
-class _LotteryState extends StateX<Lottery> {
+class Poll extends StatelessWidgetX {
   late final _userBloc = use<UserBloc>();
   late final _thingBloc = use<ThingBloc>();
   late final _ethereumBloc = use<EthereumBloc>();
+
+  final ThingVm thing;
 
   final _counterAppearance = CircularSliderAppearance(
     customWidths: CustomSliderWidths(
@@ -47,28 +40,23 @@ class _LotteryState extends StateX<Lottery> {
     size: 220.0,
   );
 
+  Poll({super.key, required this.thing});
+
   double _degreesToRadians(double degrees) => (pi / 180) * degrees;
 
   @override
-  void initState() {
-    super.initState();
-    _thingBloc.dispatch(
-      GetVerifierLotteryParticipants(thingId: widget.thing.id),
-    );
-  }
+  Widget buildX(BuildContext context) {
+    return Column(
+      children: [
+        Expanded(
+          child: StreamBuilder(
+            stream: _userBloc.currentUser$,
+            builder: (context, _) {
+              var action = GetAcceptancePollInfo(thingId: thing.id);
+              _thingBloc.dispatch(action);
 
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: _userBloc.currentUser$,
-      builder: (context, _) {
-        _thingBloc.dispatch(GetVerifierLotteryInfo(thingId: widget.thing.id));
-
-        return Column(
-          children: [
-            Expanded(
-              child: StreamBuilder(
-                stream: _thingBloc.verifierLotteryInfo$,
+              return FutureBuilder(
+                future: action.result,
                 builder: (context, snapshot) {
                   if (snapshot.data == null) {
                     return Center(child: CircularProgressIndicator());
@@ -177,15 +165,24 @@ class _LotteryState extends StateX<Lottery> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 OutlinedButton(
-                                  child: Text('Commit to lottery'),
+                                  child: Text('Vote off-chain'),
                                   onPressed: info.initBlock != null &&
-                                          info.alreadyPreJoined != null &&
+                                          info.isDesignatedVerifier != null &&
                                           currentBlock < endBlock &&
-                                          !info.alreadyPreJoined!
+                                          info.isDesignatedVerifier!
                                       ? () {
-                                          _thingBloc.dispatch(
-                                            PreJoinLottery(
-                                              thingId: widget.thing.id,
+                                          showDialog(
+                                            context: context,
+                                            builder: (_) => VoteDialog(
+                                              onVote: (decision, reason) {
+                                                _thingBloc.dispatch(
+                                                  CastVoteOffChain(
+                                                    thingId: thing.id,
+                                                    decision: decision,
+                                                    reason: reason,
+                                                  ),
+                                                );
+                                              },
                                             ),
                                           );
                                         }
@@ -193,17 +190,24 @@ class _LotteryState extends StateX<Lottery> {
                                 ),
                                 SizedBox(height: 12),
                                 OutlinedButton(
-                                  child: Text('Join lottery'),
+                                  child: Text('Vote on-chain'),
                                   onPressed: info.initBlock != null &&
-                                          info.alreadyPreJoined != null &&
-                                          info.alreadyJoined != null &&
+                                          info.isDesignatedVerifier != null &&
                                           currentBlock < endBlock &&
-                                          info.alreadyPreJoined! &&
-                                          !info.alreadyJoined!
+                                          info.isDesignatedVerifier!
                                       ? () {
-                                          _thingBloc.dispatch(
-                                            JoinLottery(
-                                              thingId: widget.thing.id,
+                                          showDialog(
+                                            context: context,
+                                            builder: (_) => VoteDialog(
+                                              onVote: (decision, reason) {
+                                                _thingBloc.dispatch(
+                                                  CastVoteOnChain(
+                                                    thingId: thing.id,
+                                                    decision: decision,
+                                                    reason: reason,
+                                                  ),
+                                                );
+                                              },
                                             ),
                                           );
                                         }
@@ -217,32 +221,12 @@ class _LotteryState extends StateX<Lottery> {
                     },
                   );
                 },
-              ),
-            ),
-            Expanded(
-              child: Column(
-                children: [
-                  Text('Smth'),
-                  Expanded(
-                    child: StreamBuilder(
-                      stream: _thingBloc.verifierLotteryParticipants$,
-                      builder: (context, snapshot) {
-                        if (snapshot.data == null) {
-                          return Center(child: CircularProgressIndicator());
-                        }
-
-                        var vm = snapshot.data!;
-
-                        return LotteryParticipantsTable(entries: vm.entries);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
+              );
+            },
+          ),
+        ),
+        Expanded(child: Center(child: Text('Verifiers'))),
+      ],
     );
   }
 }

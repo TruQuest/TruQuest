@@ -7,13 +7,13 @@ using Domain.Aggregates;
 using Application.Common.Attributes;
 using Application.Common.Interfaces;
 
-namespace Application.Vote.Commands.CastAcceptancePollVote;
+namespace Application.Thing.Commands.CastAcceptancePollVote;
 
 [RequireAuthorization]
 public class CastAcceptancePollVoteCommand : IRequest<HandleResult<string>>
 {
-    public NewAcceptancePollVoteIm Input { get; set; }
-    public string Signature { get; set; }
+    public required NewAcceptancePollVoteIm Input { get; init; }
+    public required string Signature { get; init; }
 }
 
 internal class CastAcceptancePollVoteCommandHandler : IRequestHandler<CastAcceptancePollVoteCommand, HandleResult<string>>
@@ -41,17 +41,17 @@ internal class CastAcceptancePollVoteCommandHandler : IRequestHandler<CastAccept
 
     public async Task<HandleResult<string>> Handle(CastAcceptancePollVoteCommand command, CancellationToken ct)
     {
-        // @@TODO: Check poll type is valid for the moment.
-        bool isValidVerifier = await _thingRepository.CheckIsVerifierFor(
+        // @@TODO: Use queryable instead of repo.
+        bool isDesignatedVerifier = await _thingRepository.CheckIsDesignatedVerifierFor(
             command.Input.ThingId,
             _currentPrincipal.Id!
         );
 
-        if (!isValidVerifier)
+        if (!isDesignatedVerifier)
         {
             return new()
             {
-                Error = new VoteError($"Not a valid verifier for thing {command.Input.ThingId}")
+                Error = new VoteError($"Not a designated verifier for thing with id = {command.Input.ThingId}")
             };
         }
 
@@ -67,8 +67,10 @@ internal class CastAcceptancePollVoteCommandHandler : IRequestHandler<CastAccept
         // check that result.Data == _currentPrincipal.Id
         // @@??: Check current block ?
 
-        var castedAtUtc = DateTime.Parse(command.Input.CastedAt).ToUniversalTime();
-        if ((DateTime.UtcNow - castedAtUtc).Duration() > TimeSpan.FromMinutes(5)) // @@TODO: Config.
+        var castedAtUtc = DateTimeOffset
+            .ParseExact(command.Input.CastedAt, "yyyy-MM-dd HH:mm:sszzz", null)
+            .ToUniversalTime();
+        if ((DateTimeOffset.UtcNow - castedAtUtc).Duration() > TimeSpan.FromMinutes(5)) // @@TODO: Config.
         {
             return new()
             {
@@ -76,14 +78,15 @@ internal class CastAcceptancePollVoteCommandHandler : IRequestHandler<CastAccept
             };
         }
 
-        var orchestratorSig = _signer.SignNewAcceptancePollVote(command.Input, _currentPrincipal.Id!, command.Signature);
+        var orchestratorSig = _signer.SignNewAcceptancePollVote(
+            command.Input, _currentPrincipal.Id!, command.Signature
+        );
 
         var uploadResult = await _fileStorage.UploadJson(new
         {
             Vote = new
             {
                 ThingId = command.Input.ThingId,
-                PollType = "Acceptance",
                 CastedAt = command.Input.CastedAt,
                 Decision = command.Input.Decision.GetString(),
                 Reason = command.Input.Reason
@@ -103,7 +106,7 @@ internal class CastAcceptancePollVoteCommandHandler : IRequestHandler<CastAccept
         var vote = new AcceptancePollVote(
             thingId: command.Input.ThingId,
             voterId: _currentPrincipal.Id!,
-            castedAtMs: DateTimeOffset.Parse(command.Input.CastedAt).ToUnixTimeMilliseconds(),
+            castedAtMs: castedAtUtc.ToUnixTimeMilliseconds(),
             decision: (AcceptancePollVote.VoteDecision)command.Input.Decision,
             reason: command.Input.Reason != string.Empty ? command.Input.Reason : null,
             voterSignature: command.Signature,

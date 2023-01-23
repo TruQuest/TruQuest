@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using MediatR;
 
 using Domain.Results;
-using Domain.Aggregates.Events;
 
 using Application.Common.Interfaces;
 
@@ -20,22 +19,19 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 {
     private readonly ILogger<CloseVerifierLotteryCommandHandler> _logger;
     private readonly IContractCaller _contractCaller;
-    private readonly IPreJoinedThingSubmissionVerifierLotteryEventRepository _preJoinedThingSubmissionVerifierLotteryEventRepository;
-    private readonly IJoinedThingSubmissionVerifierLotteryEventRepository _joinedThingSubmissionVerifierLotteryEventRepository;
+    private readonly IThingAcceptancePollEventQueryable _thingAcceptancePollEventQueryable;
     private readonly IContractStorageQueryable _contractStorageQueryable;
 
     public CloseVerifierLotteryCommandHandler(
         ILogger<CloseVerifierLotteryCommandHandler> logger,
         IContractCaller contractCaller,
-        IPreJoinedThingSubmissionVerifierLotteryEventRepository preJoinedThingSubmissionVerifierLotteryEventRepository,
-        IJoinedThingSubmissionVerifierLotteryEventRepository joinedThingSubmissionVerifierLotteryEventRepository,
+        IThingAcceptancePollEventQueryable thingAcceptancePollEventQueryable,
         IContractStorageQueryable contractStorageQueryable
     )
     {
         _logger = logger;
         _contractCaller = contractCaller;
-        _preJoinedThingSubmissionVerifierLotteryEventRepository = preJoinedThingSubmissionVerifierLotteryEventRepository;
-        _joinedThingSubmissionVerifierLotteryEventRepository = joinedThingSubmissionVerifierLotteryEventRepository;
+        _thingAcceptancePollEventQueryable = thingAcceptancePollEventQueryable;
         _contractStorageQueryable = contractStorageQueryable;
     }
 
@@ -45,7 +41,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
         var nonce = (decimal)await _contractCaller.ComputeNonceForThingSubmissionVerifierLottery(thingId, command.Data);
         int numVerifiers = await _contractStorageQueryable.GetThingSubmissionNumVerifiers();
 
-        var winnerEvents = await _joinedThingSubmissionVerifierLotteryEventRepository.FindWithClosestNonces(
+        var winnerEvents = await _thingAcceptancePollEventQueryable.FindJoinedEventsWithClosestNonces(
             thingId: command.ThingId,
             latestBlockNumber: command.LatestIncludedBlockNumber,
             nonce: nonce,
@@ -54,7 +50,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 
         if (winnerEvents.Count == numVerifiers)
         {
-            var lotteryWinners = await _preJoinedThingSubmissionVerifierLotteryEventRepository.GetLotteryWinnerIndices(
+            var lotteryWinners = await _thingAcceptancePollEventQueryable.GetLotteryWinnerIndicesAccordingToPreJoinedEvents(
                 command.ThingId,
                 winnerEvents.Select(e => e.UserId)
             );

@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ValueGeneration;
 
-using Domain.QM;
 using Domain.Aggregates.Events;
+using Application.Common.Models.QM;
 
 namespace Infrastructure.Persistence;
 

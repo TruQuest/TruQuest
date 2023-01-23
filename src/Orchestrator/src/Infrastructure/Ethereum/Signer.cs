@@ -13,7 +13,7 @@ using Application.User.Commands.SignUp;
 using Application.Common.Interfaces;
 using Application.Subject.Commands.AddNewSubject;
 using Application.Thing.Commands.SubmitNewThing;
-using Application.Vote.Commands.CastAcceptancePollVote;
+using Application.Thing.Commands.CastAcceptancePollVote;
 using Application.Settlement.Commands.SubmitNewSettlementProposal;
 
 using Infrastructure.Ethereum.TypedData;
@@ -110,7 +110,6 @@ internal class Signer : ISigner
         var td = new NewAcceptancePollVoteTd
         {
             ThingId = input.ThingId.ToString(),
-            PollType = "Acceptance",
             CastedAt = input.CastedAt,
             Decision = input.Decision.GetString(),
             Reason = input.Reason
@@ -183,7 +182,6 @@ internal class Signer : ISigner
             Vote = new NewAcceptancePollVoteTd
             {
                 ThingId = input.ThingId.ToString(),
-                PollType = "Acceptance",
                 CastedAt = input.CastedAt,
                 Decision = input.Decision.GetString(),
                 Reason = input.Reason
@@ -191,7 +189,10 @@ internal class Signer : ISigner
             VoterId = voterId,
             VoterSignature = voterSignature
         };
-        var tdDefinition = _getTypedDataDefinition(typeof(SignedNewAcceptancePollVoteTd), typeof(NewAcceptancePollVoteTd));
+        var tdDefinition = _getTypedDataDefinition(
+            typeof(SignedNewAcceptancePollVoteTd),
+            typeof(NewAcceptancePollVoteTd)
+        );
         tdDefinition.SetMessage(td);
 
         return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);

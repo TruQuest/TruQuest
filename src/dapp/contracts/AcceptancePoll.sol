@@ -196,6 +196,14 @@ contract AcceptancePoll {
         );
     }
 
+    function getPollDurationBlocks() public view returns (uint16) {
+        return s_durationBlocks;
+    }
+
+    function getPollInitBlock(bytes16 _thingId) public view returns (uint64) {
+        return s_thingIdToPollInitBlock[_thingId];
+    }
+
     function initPoll(
         bytes16 _thingId,
         address[] memory _verifiers
@@ -203,6 +211,22 @@ contract AcceptancePoll {
         s_thingIdToPollInitBlock[_thingId] = uint64(block.number);
         s_thingVerifiers[_thingId] = _verifiers;
         s_thingPollStage[_thingId] = Stage.InProgress;
+    }
+
+    function checkIsDesignatedVerifierForThing(
+        bytes16 _thingId,
+        address _user
+    ) public view returns (bool) {
+        uint256 designatedVerifiersCount = s_thingVerifiers[_thingId].length;
+        bool isDesignatedVerifier = false;
+        for (uint8 i = 0; i < designatedVerifiersCount; ++i) {
+            if (_user == s_thingVerifiers[_thingId][i]) {
+                isDesignatedVerifier = true;
+                break;
+            }
+        }
+
+        return isDesignatedVerifier;
     }
 
     function castVote(

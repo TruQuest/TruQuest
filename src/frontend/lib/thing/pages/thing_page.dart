@@ -5,6 +5,7 @@ import '../models/rvm/thing_state_vm.dart';
 import '../widgets/lottery.dart';
 import '../../general/widgets/evidence_view_block.dart';
 import '../../general/widgets/tags_view_block.dart';
+import '../widgets/poll.dart';
 import '../widgets/state_transition_block.dart';
 import '../../general/contexts/document_view_context.dart';
 import '../../general/widgets/document_view.dart';
@@ -92,13 +93,13 @@ class _ThingPageState extends StateX<ThingPage> {
                 content: Lottery(thing: thing),
                 closable: false,
               ),
-            // if (thing.state.index >=
-            //     ThingStateVm.submissionVerifiersSelectedAndPollInitiated.index)
-            //   TabData(
-            //     text: 'Verifiers',
-            //     content: null,
-            //     closable: false,
-            //   ),
+            if (thing.state.index >=
+                ThingStateVm.submissionVerifiersSelectedAndPollInitiated.index)
+              TabData(
+                text: 'Poll',
+                content: Poll(thing: thing),
+                closable: false,
+              ),
           ],
         );
 

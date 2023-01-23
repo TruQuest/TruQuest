@@ -29,3 +29,17 @@ class GetVerifierLotteryParticipantsSuccessVm extends ThingResultVm {
 
   GetVerifierLotteryParticipantsSuccessVm({required this.entries});
 }
+
+class GetAcceptancePollInfoSuccessVm extends ThingResultVm {
+  final int? initBlock;
+  final int durationBlocks;
+  final bool? isDesignatedVerifier;
+  final int latestBlockNumber;
+
+  GetAcceptancePollInfoSuccessVm({
+    required this.initBlock,
+    required this.durationBlocks,
+    required this.isDesignatedVerifier,
+    required this.latestBlockNumber,
+  });
+}
