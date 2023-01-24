@@ -43,6 +43,11 @@ public class ThingController : ControllerBase
     [HttpGet("{id}/lottery-participants")]
     public Task<HandleResult<GetVerifierLotteryParticipantsResultVm>> GetVerifierLotteryParticipants(string id) =>
         _mediator.Send(new GetVerifierLotteryParticipantsQuery { ThingId = Guid.Parse(id) });
+
+    [HttpGet("{id}/verifiers")]
+    public Task<HandleResult<GetVerifiersResultVm>> GetVerifiers(string id) =>
+        _mediator.Send(new GetVerifiersQuery { ThingId = Guid.Parse(id) });
+
     [HttpPost("{id}/vote")]
     public Task<HandleResult<string>> CastAcceptancePollVote(
         [FromRoute] string id, [FromBody] CastAcceptancePollVoteCommand command

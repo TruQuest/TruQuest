@@ -186,6 +186,7 @@ public static class IServiceCollectionExtension
         services.AddScoped<IThingQueryable, ThingQueryable>();
         services.AddScoped<IThingAcceptancePollEventQueryable, ThingAcceptancePollEventQueryable>();
         services.AddScoped<IThingAssessmentPollEventQueryable, ThingAssessmentPollEventQueryable>();
+        services.AddScoped<IThingAcceptancePollVoteQueryable, ThingAcceptancePollVoteQueryable>();
 
         services.AddSingleton<IContractEventListener, ContractEventListener>();
 

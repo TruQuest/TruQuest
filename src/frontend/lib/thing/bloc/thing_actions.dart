@@ -96,3 +96,9 @@ class CastVoteOnChain extends ThingAction {
     required this.reason,
   });
 }
+
+class GetVerifiers extends ThingAction {
+  final String thingId;
+
+  GetVerifiers({required this.thingId});
+}

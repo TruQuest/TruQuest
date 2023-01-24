@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
+import '../../general/widgets/verifiers_table.dart';
 import 'vote_dialog.dart';
 import '../models/rvm/thing_vm.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';
@@ -11,12 +12,19 @@ import '../bloc/thing_bloc.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../../widget_extensions.dart';
 
-class Poll extends StatelessWidgetX {
+class Poll extends StatefulWidget {
+  final ThingVm thing;
+
+  const Poll({super.key, required this.thing});
+
+  @override
+  State<Poll> createState() => _PollState();
+}
+
+class _PollState extends StateX<Poll> {
   late final _userBloc = use<UserBloc>();
   late final _thingBloc = use<ThingBloc>();
   late final _ethereumBloc = use<EthereumBloc>();
-
-  final ThingVm thing;
 
   final _counterAppearance = CircularSliderAppearance(
     customWidths: CustomSliderWidths(
@@ -40,19 +48,23 @@ class Poll extends StatelessWidgetX {
     size: 220.0,
   );
 
-  Poll({super.key, required this.thing});
+  @override
+  void initState() {
+    super.initState();
+    _thingBloc.dispatch(GetVerifiers(thingId: widget.thing.id));
+  }
 
   double _degreesToRadians(double degrees) => (pi / 180) * degrees;
 
   @override
-  Widget buildX(BuildContext context) {
+  Widget build(BuildContext context) {
     return Column(
       children: [
         Expanded(
           child: StreamBuilder(
             stream: _userBloc.currentUser$,
             builder: (context, _) {
-              var action = GetAcceptancePollInfo(thingId: thing.id);
+              var action = GetAcceptancePollInfo(thingId: widget.thing.id);
               _thingBloc.dispatch(action);
 
               return FutureBuilder(
@@ -177,7 +189,7 @@ class Poll extends StatelessWidgetX {
                                               onVote: (decision, reason) {
                                                 _thingBloc.dispatch(
                                                   CastVoteOffChain(
-                                                    thingId: thing.id,
+                                                    thingId: widget.thing.id,
                                                     decision: decision,
                                                     reason: reason,
                                                   ),
@@ -202,7 +214,7 @@ class Poll extends StatelessWidgetX {
                                               onVote: (decision, reason) {
                                                 _thingBloc.dispatch(
                                                   CastVoteOnChain(
-                                                    thingId: thing.id,
+                                                    thingId: widget.thing.id,
                                                     decision: decision,
                                                     reason: reason,
                                                   ),
@@ -225,7 +237,21 @@ class Poll extends StatelessWidgetX {
             },
           ),
         ),
-        Expanded(child: Center(child: Text('Verifiers'))),
+        Expanded(
+          child: StreamBuilder(
+            stream: _thingBloc.verifiers$,
+            builder: (context, snapshot) {
+              if (snapshot.data == null) {
+                return Center(child: CircularProgressIndicator());
+              }
+
+              var vm = snapshot.data!;
+              var verifiers = vm.verifiers;
+
+              return VerifiersTable(verifiers: verifiers);
+            },
+          ),
+        ),
       ],
     );
   }

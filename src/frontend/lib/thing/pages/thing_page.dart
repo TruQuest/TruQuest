@@ -89,14 +89,14 @@ class _ThingPageState extends StateX<ThingPage> {
             if (thing.state.index >=
                 ThingStateVm.fundedAndSubmissionVerifierLotteryInitiated.index)
               TabData(
-                text: 'Lottery',
+                text: 'Verifier Lottery',
                 content: Lottery(thing: thing),
                 closable: false,
               ),
             if (thing.state.index >=
                 ThingStateVm.submissionVerifiersSelectedAndPollInitiated.index)
               TabData(
-                text: 'Poll',
+                text: 'Acceptance Poll',
                 content: Poll(thing: thing),
                 closable: false,
               ),

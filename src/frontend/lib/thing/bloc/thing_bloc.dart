@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../models/rvm/get_verifiers_rvm.dart';
 import '../models/rvm/thing_state_vm.dart';
 import '../models/rvm/get_thing_rvm.dart';
 import 'thing_result_vm.dart';
@@ -27,6 +28,10 @@ class ThingBloc extends Bloc<ThingAction> {
       get verifierLotteryParticipants$ =>
           _verifierLotteryParticipantsChannel.stream;
 
+  final StreamController<GetVerifiersRvm> _verifiersChannel =
+      StreamController<GetVerifiersRvm>.broadcast();
+  Stream<GetVerifiersRvm> get verifiers$ => _verifiersChannel.stream;
+
   ThingBloc(this._thingService) {
     actionChannel.stream.listen((action) {
       if (action is CreateNewThingDraft) {
@@ -53,6 +58,8 @@ class ThingBloc extends Bloc<ThingAction> {
         _castVoteOffChain(action);
       } else if (action is CastVoteOnChain) {
         _castVoteOnChain(action);
+      } else if (action is GetVerifiers) {
+        _getVerifiers(action);
       }
     });
   }
@@ -193,5 +200,10 @@ class ThingBloc extends Bloc<ThingAction> {
       action.decision,
       action.reason,
     );
+  }
+
+  void _getVerifiers(GetVerifiers action) async {
+    var result = await _thingService.getVerifiers(action.thingId);
+    _verifiersChannel.add(result);
   }
 }

@@ -1,3 +1,4 @@
+using Application.Common.Models.QM;
 using Application.Thing.Queries.GetThing;
 using Application.Thing.Queries.GetVerifierLotteryParticipants;
 
@@ -10,4 +11,6 @@ public interface IThingQueryable
     Task<IEnumerable<VerifierLotteryParticipantEntryQm>> GetVerifierLotteryParticipants(
         Guid thingId
     );
+
+    Task<IEnumerable<VerifierQm>> GetVerifiers(Guid thingId);
 }

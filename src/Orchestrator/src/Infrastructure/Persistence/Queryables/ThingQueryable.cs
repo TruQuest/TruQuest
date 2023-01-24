@@ -59,4 +59,26 @@ internal class ThingQueryable : Queryable, IThingQueryable
 
         return entries;
     }
+
+    public async Task<IEnumerable<VerifierQm>> GetVerifiers(Guid thingId)
+    {
+        var dbConn = await _getOpenConnection();
+        var verifiers = await dbConn.QueryAsync<VerifierQm>(
+            @"
+                SELECT v.""VerifierId"", u.""UserName""
+                FROM
+                    truquest.""Things"" AS t
+                        INNER JOIN
+                    truquest.""ThingVerifiers"" AS v
+                        ON t.""Id"" = v.""ThingId""
+                        INNER JOIN
+                    truquest.""AspNetUsers"" AS u
+                        ON v.""VerifierId"" = u.""Id""
+                WHERE t.""Id"" = @ThingId
+            ",
+            param: new { ThingId = thingId }
+        );
+
+        return verifiers;
+    }
 }

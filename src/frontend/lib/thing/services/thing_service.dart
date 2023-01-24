@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:tuple/tuple.dart';
 
+import '../models/rvm/get_verifiers_rvm.dart';
 import '../../general/extensions/datetime_extension.dart';
 import '../../general/contracts/acceptance_poll_contract.dart';
 import '../../ethereum/services/ethereum_service.dart';
@@ -175,5 +176,10 @@ class ThingService {
     String reason,
   ) async {
     await _acceptancePollContract.castVote(thingId, decision, reason);
+  }
+
+  Future<GetVerifiersRvm> getVerifiers(String thingId) async {
+    var result = await _thingApiService.getVerifiers(thingId);
+    return result;
   }
 }
