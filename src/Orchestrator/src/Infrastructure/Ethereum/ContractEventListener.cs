@@ -89,6 +89,7 @@ internal class ContractEventListener : IContractEventListener
                 new EventLogProcessorHandler<ThingSubmissionVerifierLottery.LotteryClosedWithSuccessEvent>(WriteToChannel),
                 new EventLogProcessorHandler<AcceptancePoll.CastedVoteEvent>(WriteToChannel),
                 new EventLogProcessorHandler<AcceptancePoll.CastedVoteWithReasonEvent>(WriteToChannel),
+                new EventLogProcessorHandler<AcceptancePoll.PollFinalizedEvent>(WriteToChannel),
                 new EventLogProcessorHandler<ThingSettlementProposalFundedEvent>(WriteToChannel),
                 new EventLogProcessorHandler<ThingAssessmentVerifierLottery.LotterySpotClaimedEvent>(WriteToChannel),
                 new EventLogProcessorHandler<ThingAssessmentVerifierLottery.PreJoinedLotteryEvent>(WriteToChannel),
@@ -209,6 +210,17 @@ internal class ContractEventListener : IContractEventListener
                     UserId = castedAcceptancePollVoteWithReasonEvent.Event.UserId.Substring(2).ToLower(),
                     Vote = castedAcceptancePollVoteWithReasonEvent.Event.Vote,
                     Reason = castedAcceptancePollVoteWithReasonEvent.Event.Reason
+                };
+            }
+            else if (@event is EventLog<AcceptancePoll.PollFinalizedEvent> thingAcceptancePollFinalizedEvent)
+            {
+                yield return new AppEvents.AcceptancePoll.PollFinalized.PollFinalizedEvent
+                {
+                    BlockNumber = (long)thingAcceptancePollFinalizedEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)thingAcceptancePollFinalizedEvent.Log.TransactionIndex.Value,
+                    ThingId = thingAcceptancePollFinalizedEvent.Event.ThingId,
+                    Decision = thingAcceptancePollFinalizedEvent.Event.Decision,
+                    VoteAggIpfsCid = thingAcceptancePollFinalizedEvent.Event.VoteAggIpfsCid
                 };
             }
             else if (@event is EventLog<ThingSettlementProposalFundedEvent> thingSettlementProposalFundedEvent)

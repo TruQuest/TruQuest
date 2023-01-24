@@ -46,7 +46,7 @@ class NotificationBloc extends Bloc {
           children: [
             Icon(Icons.new_releases_outlined),
             SizedBox(width: 12),
-            Text('Thing state updated: ${state.index}'),
+            Text('Thing updated: ${state.getString()}'),
           ],
         );
       }

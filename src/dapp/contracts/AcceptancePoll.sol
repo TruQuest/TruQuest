@@ -40,8 +40,6 @@ contract AcceptancePoll {
     ThingSubmissionVerifierLottery private s_verifierLottery;
     address private s_orchestrator;
 
-    uint256 private s_thingSubmissionAcceptedReward;
-    uint256 private s_verifierReward;
     uint16 private s_durationBlocks;
 
     mapping(bytes16 => uint64) private s_thingIdToPollInitBlock;
@@ -175,16 +173,9 @@ contract AcceptancePoll {
         _;
     }
 
-    constructor(
-        address _truQuestAddress,
-        uint256 _thingSubmissionAcceptedReward,
-        uint256 _verifierReward,
-        uint16 _durationBlocks
-    ) {
+    constructor(address _truQuestAddress, uint16 _durationBlocks) {
         i_truQuest = TruQuest(_truQuestAddress);
         s_orchestrator = tx.origin;
-        s_thingSubmissionAcceptedReward = _thingSubmissionAcceptedReward;
-        s_verifierReward = _verifierReward;
         s_durationBlocks = _durationBlocks;
     }
 
@@ -280,7 +271,7 @@ contract AcceptancePoll {
         s_thingPollStage[_thingId] = Stage.Frozen;
 
         for (uint8 i = 0; i < _verifiersToSlash.length; ++i) {
-            i_truQuest.slash(_verifiersToSlash[i], 0); // amount?
+            i_truQuest.unstakeAndSlashVerifier(_verifiersToSlash[i]);
         }
 
         s_thingVerifiers[_thingId] = _verifiersToKeep;
@@ -346,14 +337,14 @@ contract AcceptancePoll {
     ) public onlyOrchestrator onlyWhenPollOrSubPollInProgress(_thingId) {
         s_thingPollStage[_thingId] = Stage.Finalized;
         address submitter = i_truQuest.s_thingSubmitter(_thingId);
-        i_truQuest.unstakeAndReward(submitter, s_thingSubmissionAcceptedReward);
+        i_truQuest.unstakeAndRewardThingSubmitter(submitter);
 
         for (uint8 i = 0; i < _verifiersToReward.length; ++i) {
-            i_truQuest.reward(_verifiersToReward[i], s_verifierReward);
+            i_truQuest.unstakeAndRewardVerifier(_verifiersToReward[i]);
         }
 
         for (uint8 i = 0; i < _verifiersToSlash.length; ++i) {
-            i_truQuest.slash(_verifiersToSlash[i], 0); // amount?
+            i_truQuest.unstakeAndSlashVerifier(_verifiersToSlash[i]);
         }
 
         emit PollFinalized(
@@ -373,16 +364,16 @@ contract AcceptancePoll {
         address[] calldata _verifiersToSlash
     ) public onlyOrchestrator onlyWhenPollOrSubPollInProgress(_thingId) {
         s_thingPollStage[_thingId] = Stage.Finalized;
+        address submitter = i_truQuest.s_thingSubmitter(_thingId);
+        i_truQuest.unstakeThingSubmitter(submitter);
 
         for (uint8 i = 0; i < _verifiersToReward.length; ++i) {
-            i_truQuest.reward(_verifiersToReward[i], s_verifierReward);
+            i_truQuest.unstakeAndRewardVerifier(_verifiersToReward[i]);
         }
 
         for (uint8 i = 0; i < _verifiersToSlash.length; ++i) {
-            i_truQuest.slash(_verifiersToSlash[i], 0); // amount?
+            i_truQuest.unstakeAndSlashVerifier(_verifiersToSlash[i]);
         }
-
-        address submitter = i_truQuest.s_thingSubmitter(_thingId);
 
         emit PollFinalized(
             _thingId,
@@ -402,14 +393,14 @@ contract AcceptancePoll {
     ) public onlyOrchestrator onlyWhenPollOrSubPollInProgress(_thingId) {
         s_thingPollStage[_thingId] = Stage.Finalized;
         address submitter = i_truQuest.s_thingSubmitter(_thingId);
-        i_truQuest.slash(submitter, 0); // amount?
+        i_truQuest.unstakeAndSlashThingSubmitter(submitter);
 
         for (uint8 i = 0; i < _verifiersToReward.length; ++i) {
-            i_truQuest.reward(_verifiersToReward[i], s_verifierReward);
+            i_truQuest.unstakeAndRewardVerifier(_verifiersToReward[i]);
         }
 
         for (uint8 i = 0; i < _verifiersToSlash.length; ++i) {
-            i_truQuest.slash(_verifiersToSlash[i], 0); // amount?
+            i_truQuest.unstakeAndSlashVerifier(_verifiersToSlash[i]);
         }
 
         emit PollFinalized(

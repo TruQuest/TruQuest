@@ -15,6 +15,8 @@ error TruQuest__NotEnoughFunds(uint256 requiredAmount, uint256 availableAmount);
 error TruQuest__NotOrchestrator();
 error TruQuest__NotVerifierLottery();
 error TruQuest__NotPoll();
+error TruQuest__NotAcceptancePoll();
+error TruQuest__NotAssessmentPoll();
 error TruQuest__InvalidSignature();
 error TruQuest__ThingAlreadyHasSettlementProposalUnderAssessment(
     bytes16 thingId
@@ -54,13 +56,20 @@ contract TruQuest {
     address private s_orchestrator;
 
     uint256 private s_thingSubmissionStake;
+    uint256 private s_verifierStake;
+    uint256 private s_thingSettlementProposalStake;
+    uint256 private s_thingSubmissionAcceptedReward;
+    uint256 private s_thingSubmissionRejectedPenalty;
+    uint256 private s_verifierReward;
+    uint256 private s_verifierPenalty;
+    uint256 private s_thingSettlementProposalAcceptedReward;
+    uint256 private s_thingSettlementProposalRejectedPenalty;
 
     mapping(address => uint256) private s_balanceOf;
     mapping(address => uint256) private s_stakedBalanceOf;
 
     mapping(bytes16 => address) public s_thingSubmitter;
 
-    uint256 private s_thingSettlementProposalStake;
     mapping(bytes16 => SettlementProposal) public s_thingIdToSettlementProposal;
 
     event FundsDeposited(address indexed user, uint256 amount);
@@ -113,6 +122,20 @@ contract TruQuest {
         _;
     }
 
+    modifier onlyAcceptancePoll() {
+        if (msg.sender != address(s_acceptancePoll)) {
+            revert TruQuest__NotAcceptancePoll();
+        }
+        _;
+    }
+
+    modifier onlyAssessmentPoll() {
+        if (msg.sender != address(s_assessmentPoll)) {
+            revert TruQuest__NotAssessmentPoll();
+        }
+        _;
+    }
+
     modifier onlyWhenNotFunded(bytes16 _thingId) {
         if (s_thingSubmitter[_thingId] != address(0)) {
             revert TruQuest__ThingAlreadyFunded(_thingId);
@@ -135,35 +158,33 @@ contract TruQuest {
         uint256 _verifierStake,
         uint256 _thingSubmissionStake,
         uint256 _thingSubmissionAcceptedReward,
+        uint256 _thingSubmissionRejectedPenalty,
         uint256 _verifierReward,
+        uint256 _verifierPenalty,
         uint16 _verifierLotteryDurationBlocks,
         uint16 _pollDurationBlocks,
-        uint256 _thingSettlementProposalStake,
-        uint256 _proposalAcceptedReward
-    ) {
+        uint256 _thingSettlementProposalStake // uint256 _thingSettlementProposalAcceptedReward,
+    ) // uint256 _thingSettlementProposalRejectedPenalty
+    {
+        uint256 _thingSettlementProposalAcceptedReward = 7;
+        uint256 _thingSettlementProposalRejectedPenalty = 3;
         i_truthserum = Truthserum(_truthserumAddress);
         s_thingSubmissionVerifierLottery = new ThingSubmissionVerifierLottery(
             address(this),
             _numVerifiers,
-            _verifierStake,
             _verifierLotteryDurationBlocks
         );
         s_acceptancePoll = new AcceptancePoll(
             address(this),
-            _thingSubmissionAcceptedReward,
-            _verifierReward,
             _pollDurationBlocks
         );
         s_thingAssessmentVerifierLottery = new ThingAssessmentVerifierLottery(
             address(this),
             _numVerifiers,
-            _verifierStake,
             _verifierLotteryDurationBlocks
         );
         s_assessmentPoll = new AssessmentPoll(
             address(this),
-            _proposalAcceptedReward,
-            _verifierReward,
             _pollDurationBlocks
         );
         s_thingSubmissionVerifierLottery.connectToAcceptancePoll(
@@ -178,9 +199,17 @@ contract TruQuest {
         s_assessmentPoll.connectToThingAssessmentVerifierLottery(
             address(s_thingAssessmentVerifierLottery)
         );
+
         s_orchestrator = msg.sender;
         s_thingSubmissionStake = _thingSubmissionStake;
+        s_verifierStake = _verifierStake;
+        s_thingSubmissionAcceptedReward = _thingSubmissionAcceptedReward;
+        s_thingSubmissionRejectedPenalty = _thingSubmissionRejectedPenalty;
+        s_verifierReward = _verifierReward;
+        s_verifierPenalty = _verifierPenalty;
         s_thingSettlementProposalStake = _thingSettlementProposalStake;
+        s_thingSettlementProposalAcceptedReward = _thingSettlementProposalAcceptedReward;
+        s_thingSettlementProposalRejectedPenalty = _thingSettlementProposalRejectedPenalty;
 
         i_domainSeparator = keccak256(
             abi.encode(
@@ -202,20 +231,6 @@ contract TruQuest {
         emit FundsDeposited(msg.sender, _amount);
     }
 
-    function stake(
-        address _user,
-        uint256 _amount
-    ) external onlyVerifierLottery {
-        s_stakedBalanceOf[_user] += _amount;
-    }
-
-    function unstake(
-        address _user,
-        uint256 _amount
-    ) external onlyVerifierLottery {
-        s_stakedBalanceOf[_user] -= _amount;
-    }
-
     function _stake(address _user, uint256 _amount) private {
         s_stakedBalanceOf[_user] += _amount;
     }
@@ -224,34 +239,70 @@ contract TruQuest {
         s_stakedBalanceOf[_user] -= _amount;
     }
 
-    function slash(address _user, uint256 _amount) external onlyPoll {
-        s_balanceOf[_user] -= _amount;
-        s_stakedBalanceOf[_user] -= _amount;
+    function stakeAsVerifier(address _user) external onlyVerifierLottery {
+        s_stakedBalanceOf[_user] += s_verifierStake;
     }
 
-    function unstakeAndReward(
-        address _user,
-        uint256 _amount
-    ) external onlyPoll {
-        // ...
+    function unstakeAsVerifier(address _user) external onlyVerifierLottery {
+        s_stakedBalanceOf[_user] -= s_verifierStake;
+    }
+
+    function unstakeThingSubmitter(address _user) external onlyAcceptancePoll {
         _unstake(_user, s_thingSubmissionStake);
-        s_balanceOf[_user] += _amount;
     }
 
-    function reward(address _user, uint256 _amount) external onlyPoll {
-        // i_truthserum.transfer(_user, _amount);
-        s_balanceOf[_user] += _amount;
+    function unstakeProposalSubmitter(
+        address _user
+    ) external onlyAssessmentPoll {
+        _unstake(_user, s_thingSettlementProposalStake);
+    }
+
+    function unstakeAndRewardThingSubmitter(
+        address _user
+    ) external onlyAcceptancePoll {
+        _unstake(_user, s_thingSubmissionStake);
+        s_balanceOf[_user] += s_thingSubmissionAcceptedReward;
+    }
+
+    function unstakeAndSlashThingSubmitter(
+        address _user
+    ) external onlyAcceptancePoll {
+        _unstake(_user, s_thingSubmissionStake);
+        s_balanceOf[_user] -= s_thingSubmissionRejectedPenalty;
+    }
+
+    function unstakeAndRewardVerifier(address _user) external onlyPoll {
+        _unstake(_user, s_verifierStake);
+        s_balanceOf[_user] += s_verifierReward;
+    }
+
+    function unstakeAndSlashVerifier(address _user) external onlyPoll {
+        _unstake(_user, s_verifierStake);
+        s_balanceOf[_user] -= s_verifierPenalty;
+    }
+
+    function unstakeAndRewardProposalSubmitter(
+        address _user
+    ) external onlyAssessmentPoll {
+        _unstake(_user, s_thingSettlementProposalStake);
+        s_balanceOf[_user] += s_thingSettlementProposalAcceptedReward;
+    }
+
+    function unstakeAndSlashProposalSubmitter(
+        address _user
+    ) external onlyAssessmentPoll {
+        _unstake(_user, s_thingSettlementProposalStake);
+        s_balanceOf[_user] -= s_thingSettlementProposalRejectedPenalty;
     }
 
     function getAvailableFunds(address _user) public view returns (uint256) {
         return s_balanceOf[_user] - s_stakedBalanceOf[_user];
     }
 
-    function checkHasAtLeast(
-        address _user,
-        uint256 _requiredFunds
+    function checkHasEnoughFundsToStakeAsVerifier(
+        address _user
     ) external view returns (bool) {
-        return getAvailableFunds(_user) >= _requiredFunds;
+        return getAvailableFunds(_user) >= s_verifierStake;
     }
 
     function _hashThing(

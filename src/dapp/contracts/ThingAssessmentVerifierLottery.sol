@@ -12,7 +12,7 @@ error ThingAssessmentVerifierLottery__AlreadyCommittedToLottery(
 );
 error ThingAssessmentVerifierLottery__LotteryNotActive(bytes16 thingId);
 error ThingAssessmentVerifierLottery__LotteryExpired(bytes16 thingId);
-error ThingAssessmentVerifierLottery__NotEnoughFunds(uint256 requiredFunds);
+error ThingAssessmentVerifierLottery__NotEnoughFunds();
 error ThingAssessmentVerifierLottery__NotCommittedToLottery(bytes16 thingId);
 error ThingAssessmentVerifierLottery__AlreadyJoinedLottery(bytes16 thingId);
 error ThingAssessmentVerifierLottery__InvalidLotteryReveal(bytes16 thingId);
@@ -53,7 +53,6 @@ contract ThingAssessmentVerifierLottery {
     address private s_orchestrator;
 
     uint8 private s_numVerifiers;
-    uint256 private s_verifierStake;
     uint16 private s_durationBlocks;
 
     mapping(bytes16 => mapping(address => Commitment))
@@ -146,11 +145,9 @@ contract ThingAssessmentVerifierLottery {
         _;
     }
 
-    modifier whenHasAtLeast(uint256 _requiredFunds) {
-        if (!i_truQuest.checkHasAtLeast(msg.sender, _requiredFunds)) {
-            revert ThingAssessmentVerifierLottery__NotEnoughFunds(
-                _requiredFunds
-            );
+    modifier whenHasEnoughFundsToStakeAsVerifier() {
+        if (!i_truQuest.checkHasEnoughFundsToStakeAsVerifier(msg.sender)) {
+            revert ThingAssessmentVerifierLottery__NotEnoughFunds();
         }
         _;
     }
@@ -235,13 +232,11 @@ contract ThingAssessmentVerifierLottery {
     constructor(
         address _truQuestAddress,
         uint8 _numVerifiers,
-        uint256 _verifierStake,
         uint16 _durationBlocks
     ) {
         i_truQuest = TruQuest(_truQuestAddress);
         s_orchestrator = tx.origin;
         s_numVerifiers = _numVerifiers;
-        s_verifierStake = _verifierStake;
         s_durationBlocks = _durationBlocks;
     }
 
@@ -283,10 +278,10 @@ contract ThingAssessmentVerifierLottery {
     )
         public
         onlyWhenLotteryActiveAndNotExpired(_thingId, 0)
-        whenHasAtLeast(s_verifierStake)
+        whenHasEnoughFundsToStakeAsVerifier
         onlyOncePerLottery(_thingId)
     {
-        i_truQuest.stake(msg.sender, s_verifierStake);
+        i_truQuest.stakeAsVerifier(msg.sender);
         s_thingIdToLotteryCommitments[_thingId][msg.sender] = Commitment(
             bytes32(0),
             int64(uint64(block.number)),
@@ -307,10 +302,10 @@ contract ThingAssessmentVerifierLottery {
     )
         public
         onlyWhenLotteryActiveAndNotExpired(_thingId, 1)
-        whenHasAtLeast(s_verifierStake)
+        whenHasEnoughFundsToStakeAsVerifier
         onlyOncePerLottery(_thingId)
     {
-        i_truQuest.stake(msg.sender, s_verifierStake);
+        i_truQuest.stakeAsVerifier(msg.sender);
         s_thingIdToLotteryCommitments[_thingId][msg.sender] = Commitment(
             _dataHash,
             int64(uint64(block.number)),
@@ -400,7 +395,7 @@ contract ThingAssessmentVerifierLottery {
             uint64 nextWinnerIndex = _winnerClaimantIndices[i];
             winners[i] = claimants[nextWinnerIndex];
             for (; j < nextWinnerIndex; ++j) {
-                i_truQuest.unstake(claimants[j], s_verifierStake);
+                i_truQuest.unstakeAsVerifier(claimants[j]);
             }
             ++j;
         }
@@ -422,7 +417,7 @@ contract ThingAssessmentVerifierLottery {
             uint64 nextWinnerIndex = _winnerIndices[i];
             winners[i] = participants[nextWinnerIndex];
             for (; j < nextWinnerIndex; ++j) {
-                i_truQuest.unstake(participants[j], s_verifierStake);
+                i_truQuest.unstakeAsVerifier(participants[j]);
             }
             ++j;
         }
@@ -511,7 +506,7 @@ contract ThingAssessmentVerifierLottery {
 
         address[] memory participants = s_participants[_thingId];
         for (uint64 i = 0; i < participants.length; ++i) {
-            i_truQuest.unstake(participants[i], s_verifierStake);
+            i_truQuest.unstakeAsVerifier(participants[i]);
         }
 
         s_participants[_thingId] = new address[](0); // unnecessary?

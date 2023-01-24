@@ -12,17 +12,14 @@ error ThingSubmissionVerifierLottery__AlreadyCommittedToLottery(
 );
 error ThingSubmissionVerifierLottery__LotteryNotActive(bytes16 thingId);
 error ThingSubmissionVerifierLottery__LotteryExpired(bytes16 thingId);
-error ThingSubmissionVerifierLottery__NotEnoughFunds(uint256 requiredFunds);
+error ThingSubmissionVerifierLottery__NotEnoughFunds();
 error ThingSubmissionVerifierLottery__NotCommittedToLottery(bytes16 thingId);
 error ThingSubmissionVerifierLottery__AlreadyJoinedLottery(bytes16 thingId);
 error ThingSubmissionVerifierLottery__InvalidLotteryReveal(bytes16 thingId);
 error ThingSubmissionVerifierLottery__PreJoinAndJoinLotteryInTheSameBlock(
     bytes16 thingId
 );
-error ThingSubmissionVerifierLottery__InvalidNumberOfLotteryWinners(
-    uint8 numRequiredVerifiers,
-    uint256 numWinners
-);
+error ThingSubmissionVerifierLottery__InvalidNumberOfLotteryWinners();
 error ThingSubmissionVerifierLottery__InitAndCloseLotteryInTheSameBlock(
     bytes16 thingId
 );
@@ -56,7 +53,6 @@ contract ThingSubmissionVerifierLottery {
     address private s_orchestrator;
 
     uint8 private s_numVerifiers;
-    uint256 private s_verifierStake;
     uint16 private s_durationBlocks;
 
     mapping(bytes16 => mapping(address => Commitment))
@@ -133,11 +129,9 @@ contract ThingSubmissionVerifierLottery {
         _;
     }
 
-    modifier whenHasAtLeast(uint256 _requiredFunds) {
-        if (!i_truQuest.checkHasAtLeast(msg.sender, _requiredFunds)) {
-            revert ThingSubmissionVerifierLottery__NotEnoughFunds(
-                _requiredFunds
-            );
+    modifier whenHasEnoughFundsToStakeAsVerifier() {
+        if (!i_truQuest.checkHasEnoughFundsToStakeAsVerifier(msg.sender)) {
+            revert ThingSubmissionVerifierLottery__NotEnoughFunds();
         }
         _;
     }
@@ -222,13 +216,11 @@ contract ThingSubmissionVerifierLottery {
     constructor(
         address _truQuestAddress,
         uint8 _numVerifiers,
-        uint256 _verifierStake,
         uint16 _durationBlocks
     ) {
         i_truQuest = TruQuest(_truQuestAddress);
         s_orchestrator = tx.origin;
         s_numVerifiers = _numVerifiers;
-        s_verifierStake = _verifierStake;
         s_durationBlocks = _durationBlocks;
     }
 
@@ -284,10 +276,10 @@ contract ThingSubmissionVerifierLottery {
     )
         public
         onlyWhenLotteryActiveAndNotExpired(_thingId, 1)
-        whenHasAtLeast(s_verifierStake)
+        whenHasEnoughFundsToStakeAsVerifier
         onlyOncePerLottery(_thingId)
     {
-        i_truQuest.stake(msg.sender, s_verifierStake);
+        i_truQuest.stakeAsVerifier(msg.sender);
         s_thingIdToLotteryCommitments[_thingId][msg.sender] = Commitment(
             _dataHash,
             int64(uint64(block.number)),
@@ -359,10 +351,7 @@ contract ThingSubmissionVerifierLottery {
         uint64[] calldata _winnerIndices // sorted asc indices of users in prejoin array
     ) public onlyOrchestrator onlyWhenLotteryActive(_thingId) {
         if (_winnerIndices.length != s_numVerifiers) {
-            revert ThingSubmissionVerifierLottery__InvalidNumberOfLotteryWinners(
-                s_numVerifiers,
-                _winnerIndices.length
-            );
+            revert ThingSubmissionVerifierLottery__InvalidNumberOfLotteryWinners();
         }
 
         Commitment memory commitment = s_thingIdToLotteryCommitments[_thingId][
@@ -391,7 +380,7 @@ contract ThingSubmissionVerifierLottery {
             uint64 nextWinnerIndex = _winnerIndices[i];
             winners[i] = participants[nextWinnerIndex];
             for (; j < nextWinnerIndex; ++j) {
-                i_truQuest.unstake(participants[j], s_verifierStake);
+                i_truQuest.unstakeAsVerifier(participants[j]);
             }
             ++j;
         }
@@ -418,7 +407,7 @@ contract ThingSubmissionVerifierLottery {
 
         address[] memory participants = s_participants[_thingId];
         for (uint64 i = 0; i < participants.length; ++i) {
-            i_truQuest.unstake(participants[i], s_verifierStake);
+            i_truQuest.unstakeAsVerifier(participants[i]);
         }
 
         s_participants[_thingId] = new address[](0); // unnecessary?
@@ -446,10 +435,10 @@ contract ThingSubmissionVerifierLottery {
     )
         public
         onlyWhenSubLotteryActiveAndNotExpired(_thingId, 1)
-        whenHasAtLeast(s_verifierStake)
+        whenHasEnoughFundsToStakeAsVerifier
         onlyOncePerSubLottery(_thingId)
     {
-        i_truQuest.stake(msg.sender, s_verifierStake);
+        i_truQuest.stakeAsVerifier(msg.sender);
         s_thingIdToSubLotteryCommitments[_thingId][msg.sender] = Commitment(
             _dataHash,
             int64(uint64(block.number)),
@@ -508,10 +497,7 @@ contract ThingSubmissionVerifierLottery {
         uint8 numSubstituteVerifiers = s_numVerifiers -
             uint8(s_acceptancePoll.getVerifierCount(_thingId));
         if (_winnerIndices.length != numSubstituteVerifiers) {
-            revert ThingSubmissionVerifierLottery__InvalidNumberOfLotteryWinners(
-                numSubstituteVerifiers,
-                _winnerIndices.length
-            );
+            revert ThingSubmissionVerifierLottery__InvalidNumberOfLotteryWinners();
         }
 
         Commitment memory commitment = s_thingIdToSubLotteryCommitments[
@@ -541,7 +527,7 @@ contract ThingSubmissionVerifierLottery {
             uint64 nextWinnerIndex = _winnerIndices[i];
             winners[i] = participants[nextWinnerIndex];
             for (; j < nextWinnerIndex; ++j) {
-                i_truQuest.unstake(participants[j], s_verifierStake);
+                i_truQuest.unstakeAsVerifier(participants[j]);
             }
             ++j;
         }

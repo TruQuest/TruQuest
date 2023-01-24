@@ -5,8 +5,10 @@ namespace Infrastructure.Ethereum.TypedData;
 [Struct("SignedAcceptancePollVoteAggTd")]
 public class SignedAcceptancePollVoteAggTd
 {
-    [Parameter("tuple[]", "offChainVotes", 1, "OffChainAcceptancePollVoteTd[]")]
+    [Parameter("string", "thingId", 1)]
+    public string ThingId { get; init; }
+    [Parameter("tuple[]", "offChainVotes", 2, "OffChainAcceptancePollVoteTd[]")]
     public List<OffChainAcceptancePollVoteTd> OffChainVotes { get; init; }
-    [Parameter("tuple[]", "onChainVotes", 2, "OnChainAcceptancePollVoteTd[]")]
+    [Parameter("tuple[]", "onChainVotes", 3, "OnChainAcceptancePollVoteTd[]")]
     public List<OnChainAcceptancePollVoteTd> OnChainVotes { get; init; }
 }

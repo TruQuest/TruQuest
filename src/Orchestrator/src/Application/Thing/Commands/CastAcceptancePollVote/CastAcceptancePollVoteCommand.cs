@@ -91,7 +91,7 @@ internal class CastAcceptancePollVoteCommandHandler : IRequestHandler<CastAccept
                 Decision = command.Input.Decision.GetString(),
                 Reason = command.Input.Reason
             },
-            VoterId = _currentPrincipal.Id,
+            VoterId = _currentPrincipal.Id!, // @@TODO: EIP-55 encode
             VoterSignature = command.Signature,
             OrchestratorSignature = orchestratorSig
         });

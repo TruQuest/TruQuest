@@ -193,10 +193,21 @@ public static class WebApplicationBuilderExtension
 
         var web3Orchestrator = new Web3(accountProvider.GetAccount("Orchestrator"), rpcUrl);
 
+        var txnDispatcher = web3Orchestrator.Eth.GetContractTransactionHandler<TransferMessage>();
+        var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
+            truthserumAddress,
+            new()
+            {
+                To = truQuestAddress,
+                Amount = 20000
+            }
+        );
+
+        await web3Orchestrator.Client.SendRequestAsync(new RpcRequest(Guid.NewGuid().ToString(), "evm_mine"));
+
         foreach (var user in users)
         {
-            var txnDispatcher = web3Orchestrator.Eth.GetContractTransactionHandler<TransferMessage>();
-            var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
+            txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
                 truthserumAddress,
                 new()
                 {

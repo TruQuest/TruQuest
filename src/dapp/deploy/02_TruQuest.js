@@ -9,7 +9,21 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
   await deploy("TruQuest", {
     from: deployer,
-    args: [truthserum.address, 3, 5, 25, 3, 1, 100, 100, 25, 3],
+    args: [
+      truthserum.address,
+      3 /* _numVerifiers */,
+      5 /* _verifierStake */,
+      25 /* _thingSubmissionStake */,
+      7 /* _thingSubmissionAcceptedReward */,
+      3 /* _thingSubmissionRejectedPenalty */,
+      2 /* _verifierReward */,
+      1 /* _verifierPenalty */,
+      100 /* _verifierLotteryDurationBlocks */,
+      100 /* _pollDurationBlocks */,
+      25 /* _thingSettlementProposalStake */,
+      // 7 /* _thingSettlementProposalAcceptedReward */,
+      // 3 /* _thingSettlementProposalRejectedPenalty */,
+    ],
     log: true,
     waitConfirmations: 1,
   });

@@ -25,7 +25,11 @@ public interface ISigner
 
     string SignThing(Guid thingId);
     string SignNewAcceptancePollVote(NewAcceptancePollVoteIm input, string voterId, string voterSignature);
-    string SignAcceptancePollVoteAgg(IEnumerable<AcceptancePollVote> offChainVotes, IEnumerable<CastedAcceptancePollVoteEvent> onChainVotes);
+    string SignAcceptancePollVoteAgg(
+        Guid thingId,
+        IEnumerable<AcceptancePollVote> offChainVotes,
+        IEnumerable<CastedAcceptancePollVoteEvent> onChainVotes
+    );
     string SignSettlementProposal(SettlementProposalVm proposal);
     string SignAssessmentPollVoteAgg(
         IEnumerable<AssessmentPollVote> offChainVotes, IEnumerable<CastedAssessmentPollVoteEvent> onChainVotes

@@ -12,6 +12,7 @@ public class Thing : Entity, IAggregateRoot
     public string? CroppedImageIpfsCid { get; }
     public string SubmitterId { get; }
     public Guid SubjectId { get; }
+    public string? VoteAggIpfsCid { get; private set; }
 
     private List<Evidence> _evidence = new();
     public IReadOnlyList<Evidence> Evidence => _evidence;
@@ -55,5 +56,10 @@ public class Thing : Entity, IAggregateRoot
     public void AddVerifiers(IEnumerable<string> verifierIds)
     {
         _verifiers.AddRange(verifierIds.Select(id => new ThingVerifier(id)));
+    }
+
+    public void SetVoteAggIpfsCid(string voteAggIpfsCid)
+    {
+        VoteAggIpfsCid = voteAggIpfsCid;
     }
 }

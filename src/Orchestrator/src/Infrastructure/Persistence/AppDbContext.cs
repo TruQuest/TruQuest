@@ -76,6 +76,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.Property(t => t.Details).IsRequired();
             builder.Property(t => t.ImageIpfsCid).IsRequired(false);
             builder.Property(t => t.CroppedImageIpfsCid).IsRequired(false);
+            builder.Property(t => t.VoteAggIpfsCid).IsRequired(false);
 
             builder
                 .HasOne<UserDm>()

@@ -22,6 +22,6 @@ internal class BlockchainQueryable : IBlockchainQueryable
         var block = await _web3.Eth.Blocks.GetBlockWithTransactionsHashesByNumber.SendRequestAsync(
             new HexBigInteger(blockNumber)
         );
-        return (long)block.Timestamp.Value;
+        return (long)block.Timestamp.Value * 1000;
     }
 }

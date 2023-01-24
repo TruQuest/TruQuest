@@ -199,22 +199,18 @@ internal class Signer : ISigner
     }
 
     public string SignAcceptancePollVoteAgg(
-        IEnumerable<AcceptancePollVote> offChainVotes, IEnumerable<CastedAcceptancePollVoteEvent> onChainVotes
+        Guid thingId,
+        IEnumerable<AcceptancePollVote> offChainVotes,
+        IEnumerable<CastedAcceptancePollVoteEvent> onChainVotes
     )
     {
         var td = new SignedAcceptancePollVoteAggTd
         {
+            ThingId = thingId.ToString(),
             OffChainVotes = offChainVotes
                 .Select(v => new OffChainAcceptancePollVoteTd
                 {
-                    ThingId = v.ThingId.ToString(),
-                    VoterId = "0x" + v.VoterId,
-                    PollType = "Acceptance",
-                    CastedAt = DateTimeOffset.FromUnixTimeMilliseconds(v.CastedAtMs).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
-                    Decision = v.Decision.GetString(),
-                    Reason = v.Reason ?? string.Empty,
-                    IpfsCid = v.IpfsCid,
-                    VoterSignature = v.VoterSignature
+                    IpfsCid = v.IpfsCid
                 })
                 .ToList(),
             OnChainVotes = onChainVotes
@@ -222,8 +218,7 @@ internal class Signer : ISigner
                 {
                     BlockNumber = v.BlockNumber,
                     TxnIndex = v.TxnIndex,
-                    ThingId = v.ThingId.ToString(),
-                    UserId = "0x" + v.UserId,
+                    UserId = "0x" + v.UserId, // @@TODO: EIP-55 encode
                     Decision = v.Decision.GetString(),
                     Reason = v.Reason ?? string.Empty
                 })
