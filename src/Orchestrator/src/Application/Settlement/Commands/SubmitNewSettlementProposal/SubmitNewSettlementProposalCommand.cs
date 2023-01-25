@@ -4,6 +4,7 @@ using MediatR;
 
 using Domain.Results;
 using Domain.Aggregates;
+using Domain.Errors;
 
 using Application.Common.Attributes;
 using Application.Common.Interfaces;
@@ -13,30 +14,27 @@ namespace Application.Settlement.Commands.SubmitNewSettlementProposal;
 [RequireAuthorization]
 public class SubmitNewSettlementProposalCommand : IRequest<HandleResult<SubmitNewSettlementProposalResultVm>>
 {
-    public NewSettlementProposalIm Input { get; set; }
-    public string Signature { get; set; }
+    public required Guid ProposalId { get; init; }
 }
 
-internal class SubmitNewSettlementProposalCommandHandler : IRequestHandler<SubmitNewSettlementProposalCommand, HandleResult<SubmitNewSettlementProposalResultVm>>
+internal class SubmitNewSettlementProposalCommandHandler :
+    IRequestHandler<SubmitNewSettlementProposalCommand, HandleResult<SubmitNewSettlementProposalResultVm>>
 {
     private readonly ILogger<SubmitNewSettlementProposalCommandHandler> _logger;
     private readonly ICurrentPrincipal _currentPrincipal;
     private readonly ISigner _signer;
-    private readonly IFileArchiver _fileArchiver;
     private readonly ISettlementProposalRepository _settlementProposalRepository;
 
     public SubmitNewSettlementProposalCommandHandler(
         ILogger<SubmitNewSettlementProposalCommandHandler> logger,
         ICurrentPrincipal currentPrincipal,
         ISigner signer,
-        IFileArchiver fileArchiver,
         ISettlementProposalRepository settlementProposalRepository
     )
     {
         _logger = logger;
         _currentPrincipal = currentPrincipal;
         _signer = signer;
-        _fileArchiver = fileArchiver;
         _settlementProposalRepository = settlementProposalRepository;
     }
 
@@ -44,53 +42,33 @@ internal class SubmitNewSettlementProposalCommandHandler : IRequestHandler<Submi
         SubmitNewSettlementProposalCommand command, CancellationToken ct
     )
     {
-        // @@TODO: Check that there isn't an already funded proposal.
-
-        var result = _signer.RecoverFromNewSettlementProposalMessage(command.Input, command.Signature);
-        if (result.IsError)
+        var proposal = await _settlementProposalRepository.FindById(command.ProposalId);
+        // @@??: Should check using resource-based authorization?
+        if (proposal.SubmitterId != _currentPrincipal.Id!)
         {
             return new()
             {
-                Error = result.Error
+                Error = new SettlementError("Invalid request")
+            };
+        }
+        if (proposal.State != SettlementProposalState.Draft)
+        {
+            return new()
+            {
+                Error = new SettlementError("Already submitted")
             };
         }
 
-        // check that result.Data == _currentPrincipal.Id
-
-        await _fileArchiver.ArchiveAll(command.Input);
-
-        var proposal = new SettlementProposal(
-            thingId: command.Input.ThingId,
-            title: command.Input.Title,
-            verdict: (Verdict)command.Input.Verdict,
-            details: command.Input.Details,
-            submitterId: _currentPrincipal.Id
-        );
-        proposal.AddEvidence(command.Input.Evidence.Select(e =>
-        {
-            return new SupportingEvidence(
-                originUrl: e.Url,
-                ipfsCid: e.HtmlIpfsCid!,
-                previewImageIpfsCid: e.JpgIpfsCid!
-            );
-        }));
-
-        _settlementProposalRepository.Create(proposal);
-
+        proposal.SetState(SettlementProposalState.AwaitingFunding);
         await _settlementProposalRepository.SaveChanges();
-
-        var proposalVm = new SettlementProposalVm
-        {
-            ThingId = proposal.ThingId,
-            Id = proposal.Id!.Value
-        };
 
         return new()
         {
             Data = new()
             {
-                SettlementProposal = proposalVm,
-                Signature = _signer.SignSettlementProposal(proposalVm)
+                ThingId = proposal.ThingId,
+                ProposalId = proposal.Id,
+                Signature = _signer.SignSettlementProposal(proposal.ThingId, proposal.Id)
             }
         };
     }

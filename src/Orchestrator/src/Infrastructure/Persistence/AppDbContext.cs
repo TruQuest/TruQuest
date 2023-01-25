@@ -182,11 +182,12 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
         modelBuilder.Entity<SettlementProposal>(builder =>
         {
             builder.HasKey(p => p.Id);
-            builder.Property(p => p.Id).HasValueGenerator<GuidValueGenerator>();
             builder.Property(p => p.State).HasConversion<int>().IsRequired();
             builder.Property(p => p.Title).IsRequired();
             builder.Property(p => p.Verdict).HasConversion<int>().IsRequired();
             builder.Property(p => p.Details).IsRequired();
+            builder.Property(p => p.ImageIpfsCid).IsRequired(false);
+            builder.Property(p => p.CroppedImageIpfsCid).IsRequired(false);
 
             builder
                 .HasOne<UserDm>()

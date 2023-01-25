@@ -35,9 +35,7 @@ class ThingService {
     this._acceptancePollContract,
   );
 
-  Future<Stream<int>> createNewThingDraft(
-    DocumentContext documentContext,
-  ) async {
+  Future createNewThingDraft(DocumentContext documentContext) async {
     var progress$ = await _thingApiService.createNewThingDraft(
       documentContext.subjectId!,
       documentContext.nameOrTitle!,
@@ -50,7 +48,6 @@ class ThingService {
     );
 
     _progress$Channel.add(progress$);
-    return progress$;
   }
 
   Future<GetThingRvm> getThing(String thingId) async {

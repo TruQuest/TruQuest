@@ -137,12 +137,18 @@ namespace Infrastructure.Persistence.Migrations.App
 
             modelBuilder.Entity("Domain.Aggregates.SettlementProposal", b =>
                 {
-                    b.Property<Guid?>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("CroppedImageIpfsCid")
+                        .HasColumnType("text");
+
                     b.Property<string>("Details")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ImageIpfsCid")
                         .HasColumnType("text");
 
                     b.Property<int>("State")

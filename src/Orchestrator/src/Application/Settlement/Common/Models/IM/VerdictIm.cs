@@ -1,4 +1,4 @@
-namespace Application.Settlement.Commands.SubmitNewSettlementProposal;
+namespace Application.Settlement.Common.Models.IM;
 
 public enum VerdictIm
 {

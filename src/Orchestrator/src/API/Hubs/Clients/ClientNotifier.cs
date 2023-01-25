@@ -36,4 +36,9 @@ internal class ClientNotifier : IClientNotifier
     {
         return _hubContext.Clients.Group($"thing:{thingId}").NotifyThingStateChanged(thingId.ToString(), (int)state);
     }
+
+    public Task TellAboutNewSettlementProposalDraftCreationProgress(string userId, Guid proposalId, int percent) =>
+        _hubContext.Clients.User(userId).TellAboutNewSettlementProposalDraftCreationProgress(
+            proposalId.ToString(), percent
+        );
 }

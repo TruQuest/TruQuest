@@ -11,10 +11,7 @@ using Domain.Aggregates.Events;
 using Domain.Aggregates;
 using Application.User.Commands.SignUp;
 using Application.Common.Interfaces;
-using Application.Subject.Commands.AddNewSubject;
-using Application.Thing.Commands.SubmitNewThing;
 using Application.Thing.Commands.CastAcceptancePollVote;
-using Application.Settlement.Commands.SubmitNewSettlementProposal;
 
 using Infrastructure.Ethereum.TypedData;
 
@@ -72,39 +69,6 @@ internal class Signer : ISigner
         return address.Substring(2);
     }
 
-    public Either<SubjectError, string> RecoverFromNewSubjectMessage(NewSubjectIm input, string signature)
-    {
-        var td = new NewSubjectTd
-        {
-            Type = (int)input.Type,
-            Name = input.Name,
-            Details = input.Details,
-            ImageUrl = input.ImageUrl,
-            Tags = input.Tags.Select(t => new TagTd { Id = t.Id }).ToList()
-        };
-        var tdDefinition = _getTypedDataDefinition(typeof(NewSubjectTd), typeof(TagTd));
-        var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
-
-        return address.Substring(2);
-    }
-
-    public Either<ThingError, string> RecoverFromNewThingMessage(NewThingIm input, string signature)
-    {
-        var td = new NewThingTd
-        {
-            SubjectId = input.SubjectId.ToString(),
-            Title = input.Title,
-            Details = input.Details,
-            ImageUrl = input.ImageUrl,
-            Evidence = input.Evidence.Select(e => new EvidenceTd { Url = e.Url }).ToList(),
-            Tags = input.Tags.Select(t => new TagTd { Id = t.Id }).ToList()
-        };
-        var tdDefinition = _getTypedDataDefinition(typeof(NewThingTd), typeof(EvidenceTd), typeof(TagTd));
-        var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
-
-        return address.Substring(2);
-    }
-
     public Either<VoteError, string> RecoverFromNewAcceptancePollVoteMessage(NewAcceptancePollVoteIm input, string signature)
     {
         var td = new NewAcceptancePollVoteTd
@@ -115,24 +79,6 @@ internal class Signer : ISigner
             Reason = input.Reason
         };
         var tdDefinition = _getTypedDataDefinition(typeof(NewAcceptancePollVoteTd));
-        var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
-
-        return address.Substring(2);
-    }
-
-    public Either<SettlementError, string> RecoverFromNewSettlementProposalMessage(
-        NewSettlementProposalIm input, string signature
-    )
-    {
-        var td = new NewSettlementProposalTd
-        {
-            ThingId = input.ThingId.ToString(),
-            Title = input.Title,
-            Verdict = (int)input.Verdict,
-            Details = input.Details,
-            Evidence = input.Evidence.Select(e => new SupportingEvidenceTd { Url = e.Url }).ToList()
-        };
-        var tdDefinition = _getTypedDataDefinition(typeof(NewSettlementProposalTd), typeof(SupportingEvidenceTd));
         var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
 
         return address.Substring(2);
@@ -234,12 +180,12 @@ internal class Signer : ISigner
         return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);
     }
 
-    public string SignSettlementProposal(SettlementProposalVm proposal)
+    public string SignSettlementProposal(Guid thingId, Guid proposalId)
     {
         var td = new SettlementProposalTd
         {
-            ThingId = proposal.ThingId.ToByteArray(),
-            Id = proposal.Id.ToByteArray()
+            ThingId = thingId.ToByteArray(),
+            Id = proposalId.ToByteArray()
         };
         var tdDefinition = _getTypedDataDefinition(typeof(SettlementProposalTd));
         tdDefinition.SetMessage(td);

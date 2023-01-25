@@ -7,8 +7,8 @@ namespace Application.Thing.Events.AttachmentsArchivingProgress;
 public class AttachmentsArchivingProgressEvent : INotification
 {
     public required string SubmitterId { get; init; }
-    public Guid ThingId { get; init; }
-    public int Percent { get; init; }
+    public required Guid ThingId { get; init; }
+    public required int Percent { get; init; }
 }
 
 internal class AttachmentsArchivingProgressEventHandler : INotificationHandler<AttachmentsArchivingProgressEvent>

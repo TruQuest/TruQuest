@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tabbed_view/tabbed_view.dart';
 
+import '../../settlement/widgets/settlement_proposals.dart';
 import '../models/rvm/thing_state_vm.dart';
 import '../widgets/lottery.dart';
 import '../../general/widgets/evidence_view_block.dart';
@@ -98,6 +99,12 @@ class _ThingPageState extends StateX<ThingPage> {
               TabData(
                 text: 'Acceptance Poll',
                 content: Poll(thing: thing),
+                closable: false,
+              ),
+            if (thing.state.index >= ThingStateVm.awaitingSettlement.index)
+              TabData(
+                text: 'Settlement proposals',
+                content: SettlementProposals(thingId: thing.id),
                 closable: false,
               ),
           ],

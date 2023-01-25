@@ -9,8 +9,8 @@ using KafkaFlow;
 
 using Application.Common.Interfaces;
 using Application.Common.Messages.Responses;
-using Application.Thing.Events.AttachmentsArchivingProgress;
-using Application.Thing.Events.AttachmentsArchivingCompleted;
+using ThingEvents = Application.Thing.Events;
+using SettlementEvents = Application.Settlement.Events;
 
 namespace Infrastructure.Kafka;
 
@@ -53,22 +53,40 @@ internal class MessageConsumer : IMessageMiddleware
         var requestId = Encoding.UTF8.GetString(context.Headers["requestId"]);
         if (requestId == Guid.Empty.ToString())
         {
-            if (message is ArchiveThingAttachmentsProgress progressResult)
+            if (message is ArchiveThingAttachmentsProgress thingProgress)
             {
-                await _mediator.Publish(new AttachmentsArchivingProgressEvent
+                await _mediator.Publish(new ThingEvents.AttachmentsArchivingProgress.AttachmentsArchivingProgressEvent
                 {
-                    SubmitterId = progressResult.SubmitterId,
-                    ThingId = progressResult.ThingId,
-                    Percent = progressResult.Percent
+                    SubmitterId = thingProgress.SubmitterId,
+                    ThingId = thingProgress.ThingId,
+                    Percent = thingProgress.Percent
                 });
             }
-            else if (message is ArchiveThingAttachmentsSuccessResult successResult)
+            else if (message is ArchiveThingAttachmentsSuccessResult thingSuccessResult)
             {
-                await _mediator.Publish(new AttachmentsArchivingCompletedEvent
+                await _mediator.Publish(new ThingEvents.AttachmentsArchivingCompleted.AttachmentsArchivingCompletedEvent
                 {
-                    SubmitterId = successResult.SubmitterId,
-                    ThingId = successResult.ThingId,
-                    Input = successResult.Input
+                    SubmitterId = thingSuccessResult.SubmitterId,
+                    ThingId = thingSuccessResult.ThingId,
+                    Input = thingSuccessResult.Input
+                });
+            }
+            else if (message is ArchiveSettlementProposalAttachmentsProgress proposalProgress)
+            {
+                await _mediator.Publish(new SettlementEvents.AttachmentsArchivingProgress.AttachmentsArchivingProgressEvent
+                {
+                    SubmitterId = proposalProgress.SubmitterId,
+                    ProposalId = proposalProgress.ProposalId,
+                    Percent = proposalProgress.Percent
+                });
+            }
+            else if (message is ArchiveSettlementProposalAttachmentsSuccessResult proposalSuccessResult)
+            {
+                await _mediator.Publish(new SettlementEvents.AttachmentsArchivingCompleted.AttachmentsArchivingCompletedEvent
+                {
+                    SubmitterId = proposalSuccessResult.SubmitterId,
+                    ProposalId = proposalSuccessResult.ProposalId,
+                    Input = proposalSuccessResult.Input
                 });
             }
         }

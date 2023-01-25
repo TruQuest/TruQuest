@@ -4,12 +4,14 @@ namespace Domain.Aggregates;
 
 public class SettlementProposal : Entity, IAggregateRoot
 {
-    public Guid? Id { get; private set; }
+    public Guid Id { get; }
     public Guid ThingId { get; }
     public SettlementProposalState State { get; private set; }
     public string Title { get; }
     public Verdict Verdict { get; }
     public string Details { get; }
+    public string? ImageIpfsCid { get; }
+    public string? CroppedImageIpfsCid { get; }
     public string SubmitterId { get; }
 
     private List<SupportingEvidence> _evidence = new();
@@ -18,13 +20,19 @@ public class SettlementProposal : Entity, IAggregateRoot
     private List<SettlementProposalVerifier> _verifiers = new();
     public IReadOnlyList<SettlementProposalVerifier> Verifiers => _verifiers;
 
-    public SettlementProposal(Guid thingId, string title, Verdict verdict, string details, string submitterId)
+    public SettlementProposal(
+        Guid id, Guid thingId, string title, Verdict verdict, string details,
+        string? imageIpfsCid, string? croppedImageIpfsCid, string submitterId
+    )
     {
+        Id = id;
         ThingId = thingId;
-        State = SettlementProposalState.AwaitingFunding;
+        State = SettlementProposalState.Draft;
         Title = title;
         Verdict = verdict;
         Details = details;
+        ImageIpfsCid = imageIpfsCid;
+        CroppedImageIpfsCid = croppedImageIpfsCid;
         SubmitterId = submitterId;
     }
 

@@ -76,6 +76,8 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
             await _taskRepository.SaveChanges();
             await _joinedThingSubmissionVerifierLotteryEventRepository.SaveChanges();
 
+            // @@TODO: Should monitor state changes with debezium and notify /then/, because notifying here
+            // risks false positives, since txn gets committed only later and it might get reverted.
             await _clientNotifier.NotifyThingStateChanged(thing.Id, thing.State);
         }
 

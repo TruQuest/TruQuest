@@ -9,4 +9,5 @@ public interface IClientNotifier
     Task SubscribeToThing(string connectionId, Guid thingId);
     Task UnsubscribeFromThing(string connectionId, Guid thingId);
     Task NotifyThingStateChanged(Guid thingId, ThingState state);
+    Task TellAboutNewSettlementProposalDraftCreationProgress(string userId, Guid proposalId, int percent);
 }

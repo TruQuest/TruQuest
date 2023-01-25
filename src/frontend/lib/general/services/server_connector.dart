@@ -9,9 +9,16 @@ import '../../thing/models/rvm/thing_state_vm.dart';
 
 enum ServerEventType {
   thing,
+  settlement,
 }
 
 enum ThingEventType {
+  draftCreateProgress,
+  draftCreated,
+  stateChanged,
+}
+
+enum SettlementEventType {
   draftCreateProgress,
   draftCreated,
   stateChanged,
@@ -124,6 +131,24 @@ class ServerConnector {
               ThingEventType.stateChanged,
               thingId,
               state as Object,
+            ),
+          ),
+        );
+      },
+    );
+
+    hubConnection.on(
+      'TellAboutNewSettlementProposalDraftCreationProgress',
+      (List<Object?>? args) {
+        var proposalId = args!.first as String;
+        var percent = args.last as int;
+        _serverEventChannel.add(
+          Tuple2(
+            ServerEventType.settlement,
+            Tuple3(
+              SettlementEventType.draftCreateProgress,
+              proposalId,
+              percent as Object,
             ),
           ),
         );

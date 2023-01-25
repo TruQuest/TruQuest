@@ -66,7 +66,7 @@ internal class FileArchiver : IFileArchiver
                 propType = elemType = propType.GetGenericArguments().First();
             }
 
-            if (propType.Assembly == Assembly.GetExecutingAssembly())
+            if (propType.Assembly == Assembly.GetExecutingAssembly() && !propType.IsEnum)
             {
                 if (elemType != null)
                 {

@@ -4,4 +4,5 @@ public interface ITruQuestClient
 {
     Task TellAboutNewThingDraftCreationProgress(string thingId, int percent);
     Task NotifyThingStateChanged(string thingId, int state);
+    Task TellAboutNewSettlementProposalDraftCreationProgress(string proposalId, int percent);
 }
