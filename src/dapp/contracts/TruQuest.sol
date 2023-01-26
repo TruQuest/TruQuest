@@ -163,9 +163,8 @@ contract TruQuest {
         uint256 _verifierPenalty,
         uint16 _verifierLotteryDurationBlocks,
         uint16 _pollDurationBlocks,
-        uint256 _thingSettlementProposalStake // uint256 _thingSettlementProposalAcceptedReward,
-    ) // uint256 _thingSettlementProposalRejectedPenalty
-    {
+        uint256 _thingSettlementProposalStake // uint256 _thingSettlementProposalAcceptedReward, // uint256 _thingSettlementProposalRejectedPenalty
+    ) {
         uint256 _thingSettlementProposalAcceptedReward = 7;
         uint256 _thingSettlementProposalRejectedPenalty = 3;
         i_truthserum = Truthserum(_truthserumAddress);
@@ -379,6 +378,12 @@ contract TruQuest {
         return
             s_orchestrator ==
             ecrecover(_hashSettlementProposal(_settlementProposal), _v, _r, _s);
+    }
+
+    function checkThingAlreadyHasSettlementProposalUnderAssessment(
+        bytes16 _thingId
+    ) public view returns (bool) {
+        return s_thingIdToSettlementProposal[_thingId].submitter != address(0);
     }
 
     function fundThingSettlementProposal(

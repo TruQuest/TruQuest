@@ -6,6 +6,7 @@ using Domain.Results;
 using Application.Settlement.Commands.CreateNewSettlementProposalDraft;
 using Application.Settlement.Commands.SubmitNewSettlementProposal;
 using Application.Settlement.Queries.GetSettlementProposals;
+using Application.Settlement.Queries.GetSettlementProposal;
 
 using API.Controllers.Filters;
 
@@ -36,6 +37,10 @@ public class SettlementProposalController : ControllerBase
         {
             ThingId = Guid.Parse(thingId)
         });
+
+    [HttpGet("{id}")]
+    public Task<HandleResult<GetSettlementProposalResultVm>> Get(string id) =>
+        _mediator.Send(new GetSettlementProposalQuery { ProposalId = Guid.Parse(id) });
 
     [HttpPost("submit")]
     public Task<HandleResult<SubmitNewSettlementProposalResultVm>> SubmitNewSettlementProposal(

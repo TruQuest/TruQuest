@@ -8,3 +8,9 @@ class CreateNewSettlementProposalDraftSuccessVm
 
 class CreateNewSettlementProposalDraftFailureVm
     extends CreateNewSettlementProposalDraftResultVm {}
+
+class SubmitNewSettlementProposalSuccessVm extends SettlementResultVm {
+  final String signature;
+
+  SubmitNewSettlementProposalSuccessVm({required this.signature});
+}

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Domain.Aggregates;
 using Application.Settlement.Queries.GetSettlementProposals;
 using Application.Common.Interfaces;
+using Application.Settlement.Queries.GetSettlementProposal;
 
 namespace Infrastructure.Persistence.Queryables;
 
@@ -44,4 +45,29 @@ internal class SettlementProposalQueryable : Queryable, ISettlementProposalQuery
                 SubmitterId = p.SubmitterId
             })
             .ToListAsync();
+
+    public Task<SettlementProposalQm?> GetById(Guid id)
+    {
+        return _dbContext.SettlementProposals
+            .Where(p => p.Id == id)
+            .Select(p => new SettlementProposalQm
+            {
+                Id = p.Id,
+                ThingId = p.ThingId,
+                State = p.State,
+                Title = p.Title,
+                Verdict = p.Verdict,
+                Details = p.Details,
+                ImageIpfsCid = p.ImageIpfsCid,
+                CroppedImageIpfsCid = p.CroppedImageIpfsCid,
+                SubmitterId = p.SubmitterId,
+                Evidence = p.Evidence.Select(e => new SupportingEvidenceQm
+                {
+                    OriginUrl = e.OriginUrl,
+                    IpfsCid = e.IpfsCid,
+                    PreviewImageIpfsCid = e.PreviewImageIpfsCid
+                }).ToList(),
+            })
+            .SingleOrDefaultAsync();
+    }
 }

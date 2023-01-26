@@ -59,24 +59,43 @@ class _VerdictSelectionBlockState extends StateX<VerdictSelectionBlock> {
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButtonHideUnderline(
-      child: DropdownButton2<VerdictIm>(
-        isExpanded: true,
-        hint: Text(
-          'Your verdict',
-          style: TextStyle(
-            fontSize: 14,
-            color: Theme.of(context).hintColor,
+    return Column(
+      children: [
+        Card(
+          color: Colors.teal[600],
+          elevation: 5,
+          child: Container(
+            width: double.infinity,
+            height: 30,
+            alignment: Alignment.center,
+            child: Text(
+              'Verdict',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ),
-        items: _items,
-        customItemsHeights: _customHeights,
-        value: _documentContext.verdict,
-        onChanged: (value) => setState(() => _documentContext.verdict = value),
-        buttonHeight: 40,
-        dropdownMaxHeight: 200,
-        itemPadding: EdgeInsets.symmetric(horizontal: 8),
-      ),
+        SizedBox(height: 6),
+        DropdownButtonHideUnderline(
+          child: DropdownButton2<VerdictIm>(
+            isExpanded: true,
+            hint: Text(
+              'Your verdict',
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).hintColor,
+              ),
+            ),
+            items: _items,
+            customItemsHeights: _customHeights,
+            value: _documentContext.verdict,
+            onChanged: (value) =>
+                setState(() => _documentContext.verdict = value),
+            buttonHeight: 40,
+            dropdownMaxHeight: 200,
+            itemPadding: EdgeInsets.symmetric(horizontal: 8),
+          ),
+        ),
+      ],
     );
   }
 }

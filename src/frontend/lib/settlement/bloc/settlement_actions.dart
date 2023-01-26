@@ -19,3 +19,17 @@ class CreateNewSettlementProposalDraft extends SettlementActionAwaitable<
 
   CreateNewSettlementProposalDraft({required this.documentContext});
 }
+
+class GetSettlementProposal extends SettlementAction {
+  final String proposalId;
+  final bool subscribe;
+
+  GetSettlementProposal({required this.proposalId, this.subscribe = false});
+}
+
+class SubmitNewSettlementProposal
+    extends SettlementActionAwaitable<SubmitNewSettlementProposalSuccessVm?> {
+  final String proposalId;
+
+  SubmitNewSettlementProposal({required this.proposalId});
+}

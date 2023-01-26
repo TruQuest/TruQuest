@@ -504,6 +504,8 @@ contract ThingAssessmentVerifierLottery {
         // checks?
         s_thingIdToLotteryCommitments[_thingId][msg.sender].block = -1;
 
+        // @@TODO: unstake submitter with slashing?
+
         address[] memory participants = s_participants[_thingId];
         for (uint64 i = 0; i < participants.length; ++i) {
             i_truQuest.unstakeAsVerifier(participants[i]);

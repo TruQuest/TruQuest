@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:tuple/tuple.dart';
 
+import '../models/rvm/get_settlement_proposal_rvm.dart';
 import '../models/rvm/get_settlement_proposals_rvm.dart';
 import '../models/im/new_settlement_proposal_im.dart';
 import '../models/im/submit_new_settlement_proposal_command.dart';
@@ -162,6 +163,27 @@ class SettlementApiService {
       _proposalIdToProgressChannel[proposalId] = progressChannel;
 
       return progressChannel.stream;
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future<GetSettlementProposalRvm> getSettlementProposal(
+    String proposalId,
+  ) async {
+    try {
+      var response = await _dio.get(
+        '/proposals/$proposalId',
+        options: _serverConnector.accessToken != null
+            ? Options(
+                headers: {
+                  'Authorization': 'Bearer ${_serverConnector.accessToken}'
+                },
+              )
+            : null,
+      );
+
+      return GetSettlementProposalRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
       throw _wrapError(error);
     }

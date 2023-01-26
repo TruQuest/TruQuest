@@ -44,6 +44,65 @@ class TruQuestContract {
           "outputs": [],
           "stateMutability": "nonpayable",
           "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes16",
+              "name": "_thingId",
+              "type": "bytes16"
+            }
+          ],
+          "name": "checkThingAlreadyHasSettlementProposalUnderAssessment",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "components": [
+                {
+                  "internalType": "bytes16",
+                  "name": "thingId",
+                  "type": "bytes16"
+                },
+                {
+                  "internalType": "bytes16",
+                  "name": "id",
+                  "type": "bytes16"
+                }
+              ],
+              "internalType": "struct TruQuest.SettlementProposalTd",
+              "name": "_settlementProposal",
+              "type": "tuple"
+            },
+            {
+              "internalType": "uint8",
+              "name": "_v",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "_r",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "_s",
+              "type": "bytes32"
+            }
+          ],
+          "name": "fundThingSettlementProposal",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
         }
       ]''';
 
@@ -109,5 +168,21 @@ class TruQuestContract {
     } catch (e) {
       print(e);
     }
+  }
+
+  Future<bool> checkThingAlreadyHasSettlementProposalUnderAssessment(
+    String thingId,
+  ) async {
+    var contract = _contract;
+    if (contract == null) {
+      return false;
+    }
+
+    var thingIdHex = thingId.toSolInputFormat();
+
+    return await contract.call<bool>(
+      'checkThingAlreadyHasSettlementProposalUnderAssessment',
+      [thingIdHex],
+    );
   }
 }

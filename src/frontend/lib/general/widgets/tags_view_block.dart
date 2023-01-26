@@ -37,7 +37,7 @@ class _TagsViewBlockState extends StateX<TagsViewBlock> {
           child: Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: _documentViewContext.tags
+            children: _documentViewContext.tags!
                 .map(
                   (tag) => Card(
                     color: Colors.white,

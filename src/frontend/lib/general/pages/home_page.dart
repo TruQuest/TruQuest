@@ -4,6 +4,7 @@ import 'package:easy_sidemenu/easy_sidemenu.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
+import '../../settlement/pages/settlement_proposal_page.dart';
 import '../../pong/game.dart';
 import '../../subject/pages/subject_page.dart';
 import '../../thing/pages/thing_page.dart';
@@ -201,6 +202,9 @@ class _HomePageState extends StateX<HomePage> {
                 } else if (routeSplit[1] == 'things') {
                   var thingId = routeSplit.last;
                   return ThingPage(thingId: thingId);
+                } else if (routeSplit[1] == 'proposals') {
+                  var proposalId = routeSplit.last;
+                  return SettlementProposalPage(proposalId: proposalId);
                 }
 
                 return Center(child: Text('Not Found'));
