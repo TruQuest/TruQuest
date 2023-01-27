@@ -5,7 +5,6 @@ using Dapper;
 using Application.Thing.Queries.GetThing;
 using Application.Common.Models.QM;
 using Application.Common.Interfaces;
-using Application.Thing.Queries.GetVerifierLotteryParticipants;
 
 namespace Infrastructure.Persistence.Queryables;
 

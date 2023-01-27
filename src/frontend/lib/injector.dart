@@ -1,5 +1,6 @@
 import 'package:kiwi/kiwi.dart';
 
+import 'general/contracts/thing_assessment_verifier_lottery_contract.dart';
 import 'settlement/bloc/settlement_bloc.dart';
 import 'settlement/services/settlement_api_service.dart';
 import 'settlement/services/settlement_service.dart';
@@ -46,6 +47,7 @@ abstract class Injector {
   @Register.singleton(SettlementBloc)
   @Register.singleton(SettlementService)
   @Register.singleton(SettlementApiService)
+  @Register.singleton(ThingAssessmentVerifierLotteryContract)
   void configure();
 }
 

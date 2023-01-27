@@ -1,4 +1,4 @@
-import '../models/rvm/verifier_lottery_participant_entry_vm.dart';
+import '../../general/models/rvm/verifier_lottery_participant_entry_vm.dart';
 
 abstract class ThingResultVm {}
 

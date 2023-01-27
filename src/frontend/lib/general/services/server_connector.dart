@@ -5,6 +5,7 @@ import 'package:logging/logging.dart';
 import 'package:signalr_netcore/signalr_client.dart';
 import 'package:tuple/tuple.dart';
 
+import '../../settlement/models/rvm/settlement_proposal_state_vm.dart';
 import '../../thing/models/rvm/thing_state_vm.dart';
 
 enum ServerEventType {
@@ -149,6 +150,24 @@ class ServerConnector {
               SettlementEventType.draftCreateProgress,
               proposalId,
               percent as Object,
+            ),
+          ),
+        );
+      },
+    );
+
+    hubConnection.on(
+      'NotifySettlementProposalStateChanged',
+      (List<Object?>? args) {
+        var proposalId = args!.first as String;
+        var state = SettlementProposalStateVm.values[args.last as int];
+        _serverEventChannel.add(
+          Tuple2(
+            ServerEventType.settlement,
+            Tuple3(
+              SettlementEventType.stateChanged,
+              proposalId,
+              state as Object,
             ),
           ),
         );

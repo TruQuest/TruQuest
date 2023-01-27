@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
 import '../models/rvm/settlement_proposal_state_vm.dart';
 import '../models/rvm/get_settlement_proposal_rvm.dart';
 import '../models/rvm/get_settlement_proposals_rvm.dart';
@@ -19,6 +20,18 @@ class SettlementBloc extends Bloc<SettlementAction> {
       StreamController<GetSettlementProposalRvm>.broadcast();
   Stream<GetSettlementProposalRvm> get proposal$ => _proposalChannel.stream;
 
+  final StreamController<GetVerifierLotteryInfoSuccessVm>
+      _verifierLotteryInfoChannel =
+      StreamController<GetVerifierLotteryInfoSuccessVm>.broadcast();
+  Stream<GetVerifierLotteryInfoSuccessVm> get verifierLotteryInfo$ =>
+      _verifierLotteryInfoChannel.stream;
+
+  final StreamController<GetVerifierLotteryParticipantsRvm>
+      _verifierLotteryParticipantsChannel =
+      StreamController<GetVerifierLotteryParticipantsRvm>.broadcast();
+  Stream<GetVerifierLotteryParticipantsRvm> get verifierLotteryParticipants$ =>
+      _verifierLotteryParticipantsChannel.stream;
+
   SettlementBloc(this._settlementService) {
     actionChannel.stream.listen((action) {
       if (action is GetSettlementProposalsFor) {
@@ -29,6 +42,20 @@ class SettlementBloc extends Bloc<SettlementAction> {
         _getSettlementProposal(action);
       } else if (action is SubmitNewSettlementProposal) {
         _submitNewSettlementProposal(action);
+      } else if (action is FundSettlementProposal) {
+        _fundSettlementProposal(action);
+      } else if (action is GetVerifierLotteryInfo) {
+        _getVerifierLotteryInfo(action);
+      } else if (action is ClaimLotterySpot) {
+        _claimLotterySpot(action);
+      } else if (action is PreJoinLottery) {
+        _preJoinLottery(action);
+      } else if (action is JoinLottery) {
+        _joinLottery(action);
+      } else if (action is GetVerifierLotteryParticipants) {
+        _getVerifierLotteryParticipants(action);
+      } else if (action is UnsubscribeFromProposal) {
+        _unsubscribeFromProposal(action);
       }
     });
   }
@@ -59,7 +86,7 @@ class SettlementBloc extends Bloc<SettlementAction> {
       action.proposalId,
     );
     if (action.subscribe) {
-      // await _settlementService.subscribeToProposal(action.proposalId);
+      await _settlementService.subscribeToProposal(action.proposalId);
     }
 
     if (result.proposal.state == SettlementProposalStateVm.awaitingFunding) {
@@ -78,12 +105,103 @@ class SettlementBloc extends Bloc<SettlementAction> {
     _proposalChannel.add(result);
   }
 
+  void _unsubscribeFromProposal(UnsubscribeFromProposal action) async {
+    await _settlementService.unsubscribeFromProposal(action.proposalId);
+  }
+
   void _submitNewSettlementProposal(SubmitNewSettlementProposal action) async {
-    var result = await _settlementService.submitNewSettlementProposal(
+    await _settlementService.submitNewSettlementProposal(action.proposalId);
+    action.complete(SubmitNewSettlementProposalSuccessVm());
+  }
+
+  void _fundSettlementProposal(FundSettlementProposal action) async {
+    await _settlementService.fundSettlementProposal(
+      action.thingId,
+      action.proposalId,
+      action.signature,
+    );
+    action.complete(FundSettlementProposalSuccessVm());
+  }
+
+  void _getVerifierLotteryInfo(GetVerifierLotteryInfo action) async {
+    var info = await _settlementService.getVerifierLotteryInfo(
+      action.thingId,
       action.proposalId,
     );
-    action.complete(
-      SubmitNewSettlementProposalSuccessVm(signature: result.signature),
+    _verifierLotteryInfoChannel.add(
+      GetVerifierLotteryInfoSuccessVm(
+        initBlock: info.item1,
+        durationBlocks: info.item2,
+        alreadyPreJoined: info.item3,
+        alreadyJoined: info.item4,
+        latestBlockNumber: info.item5,
+      ),
     );
+  }
+
+  void _claimLotterySpot(ClaimLotterySpot action) async {
+    await _settlementService.claimLotterySpot(
+      action.thingId,
+      action.proposalId,
+    );
+
+    var info = await _settlementService.getVerifierLotteryInfo(
+      action.thingId,
+      action.proposalId,
+    );
+    _verifierLotteryInfoChannel.add(
+      GetVerifierLotteryInfoSuccessVm(
+        initBlock: info.item1,
+        durationBlocks: info.item2,
+        alreadyPreJoined: info.item3,
+        alreadyJoined: info.item4,
+        latestBlockNumber: info.item5,
+      ),
+    );
+  }
+
+  void _preJoinLottery(PreJoinLottery action) async {
+    await _settlementService.preJoinLottery(action.thingId, action.proposalId);
+
+    var info = await _settlementService.getVerifierLotteryInfo(
+      action.thingId,
+      action.proposalId,
+    );
+    _verifierLotteryInfoChannel.add(
+      GetVerifierLotteryInfoSuccessVm(
+        initBlock: info.item1,
+        durationBlocks: info.item2,
+        alreadyPreJoined: info.item3,
+        alreadyJoined: info.item4,
+        latestBlockNumber: info.item5,
+      ),
+    );
+  }
+
+  void _joinLottery(JoinLottery action) async {
+    await _settlementService.joinLottery(action.thingId, action.proposalId);
+
+    var info = await _settlementService.getVerifierLotteryInfo(
+      action.thingId,
+      action.proposalId,
+    );
+    _verifierLotteryInfoChannel.add(
+      GetVerifierLotteryInfoSuccessVm(
+        initBlock: info.item1,
+        durationBlocks: info.item2,
+        alreadyPreJoined: info.item3,
+        alreadyJoined: info.item4,
+        latestBlockNumber: info.item5,
+      ),
+    );
+  }
+
+  void _getVerifierLotteryParticipants(
+    GetVerifierLotteryParticipants action,
+  ) async {
+    var result = await _settlementService.getVerifierLotteryParticipants(
+      action.proposalId,
+    );
+    _verifierLotteryParticipantsChannel.add(result);
   }
 }

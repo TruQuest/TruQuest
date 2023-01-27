@@ -92,16 +92,38 @@ class _TimelineBlockState extends StateX<TimelineBlock> {
         proposal.state == SettlementProposalStateVm.awaitingFunding &&
             proposal.canBeFunded!; // && isCreator
     var btnController = RoundedLoadingButtonController();
+    var ignoreClick = false;
 
     return RoundedLoadingButton(
       controller: btnController,
       onPressed: canBeFunded
           ? () async {
-              print('Fund');
-              await Future.delayed(Duration(seconds: 2));
+              if (ignoreClick) return;
+              var action = FundSettlementProposal(
+                thingId: proposal.thingId,
+                proposalId: proposal.id,
+                signature: _documentViewContext.signature!,
+              );
+              _settlementBloc.dispatch(action);
+
+              var vm = await action.result;
+              if (vm == null) {
+                btnController.error();
+                await Future.delayed(Duration(seconds: 2));
+                btnController.reset();
+                return;
+              }
+
               btnController.success();
-              await Future.delayed(Duration(seconds: 2));
+              await Future.delayed(Duration(seconds: 1));
+
+              ignoreClick = true;
               btnController.reset();
+              await Future.delayed(Duration(seconds: 1));
+
+              _settlementBloc.dispatch(
+                GetSettlementProposal(proposalId: proposal.id),
+              );
             }
           : null,
       child: Text('Fund'),
@@ -117,36 +139,34 @@ class _TimelineBlockState extends StateX<TimelineBlock> {
     return canBeFunded ? DotIndicator() : OutlinedDotIndicator();
   }
 
-  // Widget _buildLotteryTile() {
-  //   var state = _documentViewContext.proposal!.state;
-  //   return InkWell(
-  //     onTap: state ==
-  //             SettlementProposalStateVm
-  //                 .fundedAndAssessmentVerifierLotteryInitiated
-  //         ? () {}
-  //         : null,
-  //     child: Card(
-  //       elevation: state ==
-  //               SettlementProposalStateVm
-  //                   .fundedAndAssessmentVerifierLotteryInitiated
-  //           ? 5
-  //           : 0,
-  //       child: Padding(
-  //         padding: EdgeInsets.all(8),
-  //         child: Text('Verifier lottery\nin progress'),
-  //       ),
-  //     ),
-  //   );
-  // }
+  Widget _buildLotteryTile() {
+    var state = _documentViewContext.proposal!.state;
+    return RoundedLoadingButton(
+      controller: RoundedLoadingButtonController(),
+      animateOnTap: false,
+      child: Text('Verifier lottery\nin progress'),
+      onPressed: state.index >=
+              SettlementProposalStateVm
+                  .fundedAndAssessmentVerifierLotteryInitiated.index
+          ? () {}
+          : null,
+    );
+  }
 
-  // Widget _buildLotteryTileIndicator() {
-  //   var state = _documentViewContext.proposal!.state;
-  //   return state ==
-  //           SettlementProposalStateVm
-  //               .fundedAndAssessmentVerifierLotteryInitiated
-  //       ? DotIndicator(child: CircularProgressIndicator(color: Colors.white))
-  //       : OutlinedDotIndicator();
-  // }
+  Widget _buildLotteryTileIndicator() {
+    var state = _documentViewContext.proposal!.state;
+    return state ==
+            SettlementProposalStateVm
+                .fundedAndAssessmentVerifierLotteryInitiated
+        ? DotIndicator(
+            size: 15,
+            child: Padding(
+              padding: EdgeInsets.all(2),
+              child: CircularProgressIndicator(color: Colors.white),
+            ),
+          )
+        : OutlinedDotIndicator();
+  }
 
   // Widget _buildPollTile() {
   //   var state = _documentViewContext.proposal!.state;
@@ -182,7 +202,7 @@ class _TimelineBlockState extends StateX<TimelineBlock> {
   TimelineTileBuilder _buildTimeline() {
     // Draft -> Submit -> Fund -> Verifier lottery in progress -> Assessment poll in progress -> Assessment
     return TimelineTileBuilder.connected(
-      itemCount: 3,
+      itemCount: 4,
       contentsAlign: ContentsAlign.basic,
       connectionDirection: ConnectionDirection.after,
       indicatorBuilder: (context, index) {
@@ -193,8 +213,8 @@ class _TimelineBlockState extends StateX<TimelineBlock> {
             return _buildDraftTileIndicator();
           case 2:
             return _buildFundTileIndicator();
-          // case 3:
-          //   return _buildLotteryTileIndicator();
+          case 3:
+            return _buildLotteryTileIndicator();
           // case 4:
           //   return _buildPollTileIndicator();
         }
@@ -213,8 +233,8 @@ class _TimelineBlockState extends StateX<TimelineBlock> {
           case 2:
             child = _buildFundTile();
             break;
-          // case 3:
-          //   return _buildLotteryTile();
+          case 3:
+            child = _buildLotteryTile();
           // case 4:
           //   return _buildPollTile();
         }
@@ -230,15 +250,33 @@ class _TimelineBlockState extends StateX<TimelineBlock> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 400,
-      child: FixedTimeline.tileBuilder(
-        theme: TimelineThemeData(
-          nodePosition: 0,
+    return Column(
+      children: [
+        Card(
+          color: Colors.blue[600],
+          elevation: 5,
+          child: Container(
+            width: double.infinity,
+            height: 30,
+            alignment: Alignment.center,
+            child: Text(
+              'Timeline',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
         ),
-        builder: _buildTimeline(),
-      ),
+        SizedBox(height: 6),
+        SizedBox(
+          width: double.infinity,
+          height: 400,
+          child: FixedTimeline.tileBuilder(
+            theme: TimelineThemeData(
+              nodePosition: 0,
+            ),
+            builder: _buildTimeline(),
+          ),
+        ),
+      ],
     );
   }
 }

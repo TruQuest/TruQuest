@@ -218,14 +218,12 @@ contract AssessmentPoll {
     }
 
     function initPoll(
-        bytes16 _thingId,
-        bytes16 _settlementProposalId,
+        bytes32 _thingProposalId,
         address[] memory _verifiers
     ) external onlyThingAssessmentVerifierLottery {
-        bytes32 combinedId = _combineIds(_thingId, _settlementProposalId);
-        s_proposalIdToPollInitBlock[combinedId] = uint64(block.number);
-        s_proposalVerifiers[combinedId] = _verifiers;
-        s_proposalPollStage[combinedId] = Stage.InProgress;
+        s_proposalIdToPollInitBlock[_thingProposalId] = uint64(block.number);
+        s_proposalVerifiers[_thingProposalId] = _verifiers;
+        s_proposalPollStage[_thingProposalId] = Stage.InProgress;
     }
 
     function castVote(

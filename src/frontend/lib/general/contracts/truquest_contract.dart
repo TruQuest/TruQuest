@@ -160,7 +160,7 @@ class TruQuestContract {
         ),
       );
 
-      print('Txn sent! Waiting for confirmations...');
+      print('Fund txn sent! Awaiting confirmations...');
 
       await txnResponse.wait(2); // @@??: Do not await confirmations?
 
@@ -184,5 +184,52 @@ class TruQuestContract {
       'checkThingAlreadyHasSettlementProposalUnderAssessment',
       [thingIdHex],
     );
+  }
+
+  Future fundThingSettlementProposal(
+    String thingId,
+    String proposalId,
+    String signature,
+  ) async {
+    var contract = _contract;
+    if (contract == null) {
+      return;
+    }
+    if (_ethereumService.connectedAccount == null) {
+      return;
+    }
+
+    var signer = _ethereumService.provider.getSigner();
+    contract = contract.connect(signer);
+
+    var thingIdHex = thingId.toSolInputFormat();
+    var proposalIdHex = proposalId.toSolInputFormat();
+    signature = signature.substring(2);
+    var r = '0x' + signature.substring(0, 64);
+    var s = '0x' + signature.substring(64, 128);
+    var v = hex.decode(signature.substring(128, 130)).first;
+
+    try {
+      var txnResponse = await contract.send(
+        'fundThingSettlementProposal',
+        [
+          [thingIdHex, proposalIdHex],
+          v,
+          r,
+          s,
+        ],
+        TransactionOverride(
+          gasLimit: BigInt.from(150000),
+        ),
+      );
+
+      print('Fund txn sent! Awaiting confirmations...');
+
+      await txnResponse.wait(2); // @@??: Do not await confirmations?
+
+      print('Fund txn confirmed!');
+    } catch (e) {
+      print(e);
+    }
   }
 }

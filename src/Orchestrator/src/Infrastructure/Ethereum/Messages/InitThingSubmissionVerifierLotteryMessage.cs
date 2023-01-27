@@ -4,7 +4,7 @@ using Nethereum.Contracts;
 namespace Infrastructure.Ethereum.Messages;
 
 [Function("initLottery")]
-public class InitVerifierLotteryMessage : FunctionMessage
+public class InitThingSubmissionVerifierLotteryMessage : FunctionMessage
 {
     [Parameter("bytes16", "_thingId", 1)]
     public byte[] ThingId { get; init; }

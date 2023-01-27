@@ -110,13 +110,15 @@ internal class ContractStorageQueryable : IContractStorageQueryable
         return value.Value;
     }
 
-    public async Task<string> GetThingAssessmentVerifierLotterySpotClaimantAt(byte[] thingId, int index)
+    public async Task<string> GetThingAssessmentVerifierLotterySpotClaimantAt(
+        byte[] thingId, byte[] proposalId, int index
+    )
     {
         var value = await _thingAssessmentVerifierLotteryContract
             .WalkStorage()
             .Field("s_claimants")
             .AsMapping()
-            .Key(new SolBytes16(thingId))
+            .Key(new SolBytes32(thingId.Concat(proposalId).ToArray()))
             .AsArrayOf<SolAddress>()
             .Index(index)
             .GetValue<SolAddress>();
@@ -124,13 +126,15 @@ internal class ContractStorageQueryable : IContractStorageQueryable
         return value.Value;
     }
 
-    public async Task<string> GetThingAssessmentVerifierLotteryParticipantAt(byte[] thingId, int index)
+    public async Task<string> GetThingAssessmentVerifierLotteryParticipantAt(
+        byte[] thingId, byte[] proposalId, int index
+    )
     {
         var value = await _thingAssessmentVerifierLotteryContract
             .WalkStorage()
             .Field("s_participants")
             .AsMapping()
-            .Key(new SolBytes16(thingId))
+            .Key(new SolBytes32(thingId.Concat(proposalId).ToArray()))
             .AsArrayOf<SolAddress>()
             .Index(index)
             .GetValue<SolAddress>();

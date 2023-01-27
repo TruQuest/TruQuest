@@ -41,8 +41,13 @@ class _$Injector extends Injector {
           (c) => ThingSubmissionVerifierLotteryContract(c<EthereumService>()))
       ..registerSingleton((c) => AcceptancePollContract(c<EthereumService>()))
       ..registerSingleton((c) => SettlementBloc(c<SettlementService>()))
-      ..registerSingleton((c) =>
-          SettlementService(c<TruQuestContract>(), c<SettlementApiService>()))
-      ..registerSingleton((c) => SettlementApiService(c<ServerConnector>()));
+      ..registerSingleton((c) => SettlementService(
+          c<TruQuestContract>(),
+          c<SettlementApiService>(),
+          c<EthereumService>(),
+          c<ThingAssessmentVerifierLotteryContract>()))
+      ..registerSingleton((c) => SettlementApiService(c<ServerConnector>()))
+      ..registerSingleton(
+          (c) => ThingAssessmentVerifierLotteryContract(c<EthereumService>()));
   }
 }

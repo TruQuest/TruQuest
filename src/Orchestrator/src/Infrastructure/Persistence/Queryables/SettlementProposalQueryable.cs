@@ -1,9 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 
+using Dapper;
+
 using Domain.Aggregates;
 using Application.Settlement.Queries.GetSettlementProposals;
 using Application.Common.Interfaces;
 using Application.Settlement.Queries.GetSettlementProposal;
+using Application.Common.Models.QM;
 
 namespace Infrastructure.Persistence.Queryables;
 
@@ -69,5 +72,34 @@ internal class SettlementProposalQueryable : Queryable, ISettlementProposalQuery
                 }).ToList(),
             })
             .SingleOrDefaultAsync();
+    }
+
+    public async Task<IEnumerable<VerifierLotteryParticipantEntryQm>> GetVerifierLotteryParticipants(
+        Guid proposalId
+    )
+    {
+        var dbConn = await _getOpenConnection();
+        var entries = await dbConn.QueryAsync<VerifierLotteryParticipantEntryQm>(
+            @"
+                SELECT je.""BlockNumber"" AS ""JoinedBlockNumber"", pje.""UserId"", pje.""DataHash"", je.""Nonce""
+                FROM
+                    truquest_events.""PreJoinedThingAssessmentVerifierLotteryEvents"" AS pje
+                        LEFT JOIN
+                    truquest_events.""JoinedThingAssessmentVerifierLotteryEvents"" AS je
+                        ON (
+                            pje.""ThingId"" = je.""ThingId"" AND
+                            pje.""SettlementProposalId"" = je.""SettlementProposalId"" AND
+                            pje.""UserId"" = je.""UserId""
+                        )
+                WHERE pje.""SettlementProposalId"" = @SettlementProposalId
+                ORDER BY je.""BlockNumber"" DESC NULLS LAST, je.""TxnIndex"" DESC
+            ",
+            param: new
+            {
+                SettlementProposalId = proposalId
+            }
+        );
+
+        return entries;
     }
 }

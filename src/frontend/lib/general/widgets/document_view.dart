@@ -24,11 +24,13 @@ class _DocumentViewState extends StateX<DocumentView> {
   late final QuillController _controller = _documentViewContext.quillController;
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
+  final _sideBlocksScrollController = ScrollController();
 
   @override
   void dispose() {
     _scrollController.dispose();
     _focusNode.dispose();
+    _sideBlocksScrollController.dispose();
     super.dispose();
   }
 
@@ -68,6 +70,8 @@ class _DocumentViewState extends StateX<DocumentView> {
           VerticalDivider(),
           Expanded(
             child: SingleChildScrollView(
+              key: PageStorageKey('side-blocks'),
+              controller: _sideBlocksScrollController,
               child: Column(
                 children: widget.sideBlocks
                     .map(

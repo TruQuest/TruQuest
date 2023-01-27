@@ -37,8 +37,25 @@ internal class ClientNotifier : IClientNotifier
         return _hubContext.Clients.Group($"thing:{thingId}").NotifyThingStateChanged(thingId.ToString(), (int)state);
     }
 
+    public Task SubscribeToSettlementProposal(string connectionId, Guid proposalId)
+    {
+        return _hubContext.Groups.AddToGroupAsync(connectionId, $"proposal:{proposalId}");
+    }
+
+    public Task UnsubscribeFromSettlementProposal(string connectionId, Guid proposalId)
+    {
+        return _hubContext.Groups.RemoveFromGroupAsync(connectionId, $"proposal:{proposalId}");
+    }
+
     public Task TellAboutNewSettlementProposalDraftCreationProgress(string userId, Guid proposalId, int percent) =>
         _hubContext.Clients.User(userId).TellAboutNewSettlementProposalDraftCreationProgress(
             proposalId.ToString(), percent
         );
+
+    public Task NotifySettlementProposalStateChanged(Guid proposalId, SettlementProposalState state)
+    {
+        return _hubContext.Clients
+            .Group($"proposal:{proposalId}")
+            .NotifySettlementProposalStateChanged(proposalId.ToString(), (int)state);
+    }
 }

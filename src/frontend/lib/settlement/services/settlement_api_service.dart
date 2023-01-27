@@ -4,6 +4,9 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:tuple/tuple.dart';
 
+import '../models/im/subscribe_to_updates_command.dart';
+import '../models/im/unsubscribe_from_updates_command.dart';
+import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
 import '../models/rvm/get_settlement_proposal_rvm.dart';
 import '../models/rvm/get_settlement_proposals_rvm.dart';
 import '../models/im/new_settlement_proposal_im.dart';
@@ -104,6 +107,29 @@ class SettlementApiService {
     return ApiError();
   }
 
+  Error _wrapHubException(Exception ex) {
+    var errorMessage = ex.toString();
+    if (errorMessage.contains('[AuthorizationError]')) {
+      if (errorMessage.contains('Forbidden')) {
+        return ForbiddenError();
+        // } else if (errorMessage.contains('token expired at')) {
+        //   return AuthenticationTokenExpiredError();
+      } else {
+        return InvalidAuthenticationTokenError(
+          errorMessage.split('[AuthorizationError] ').last,
+        );
+      }
+    } else if (errorMessage.contains('[ValidationError]')) {
+      return ValidationError();
+    } else if (errorMessage.contains('[SettlementError]')) {
+      return SettlementError(errorMessage.split('[SettlementError] ').last);
+    }
+
+    print(ex);
+
+    return ServerError();
+  }
+
   Future<GetSettlementProposalsRvm> getSettlementProposalsFor(
     String thingId,
   ) async {
@@ -189,6 +215,44 @@ class SettlementApiService {
     }
   }
 
+  Future subscribeToProposal(String proposalId) async {
+    var hubConnection = _serverConnector.hubConnection;
+    if (hubConnection == null) {
+      print('Not connected to hub!');
+      return;
+    }
+
+    try {
+      await hubConnection.invoke(
+        'SubscribeToProposalUpdates',
+        args: [
+          SubscribeToUpdatesCommand(proposalId: proposalId),
+        ],
+      );
+    } on Exception catch (ex) {
+      throw _wrapHubException(ex);
+    }
+  }
+
+  Future unsubscribeFromProposal(String proposalId) async {
+    var hubConnection = _serverConnector.hubConnection;
+    if (hubConnection == null) {
+      print('Not connected to hub!');
+      return;
+    }
+
+    try {
+      await hubConnection.invoke(
+        'UnsubscribeFromProposalUpdates',
+        args: [
+          UnsubscribeFromUpdatesCommand(proposalId: proposalId),
+        ],
+      );
+    } on Exception catch (ex) {
+      throw _wrapHubException(ex);
+    }
+  }
+
   Future<SubmitNewSettlementProposalRvm> submitNewSettlementProposal(
     String proposalId,
   ) async {
@@ -204,6 +268,20 @@ class SettlementApiService {
       );
 
       return SubmitNewSettlementProposalRvm.fromMap(response.data['data']);
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future<GetVerifierLotteryParticipantsRvm> getVerifierLotteryParticipants(
+    String proposalId,
+  ) async {
+    try {
+      var response = await _dio.get(
+        '/proposals/$proposalId/lottery-participants',
+      );
+
+      return GetVerifierLotteryParticipantsRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
       throw _wrapError(error);
     }

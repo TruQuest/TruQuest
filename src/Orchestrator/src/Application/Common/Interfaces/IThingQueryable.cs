@@ -1,6 +1,5 @@
 using Application.Common.Models.QM;
 using Application.Thing.Queries.GetThing;
-using Application.Thing.Queries.GetVerifierLotteryParticipants;
 
 namespace Application.Common.Interfaces;
 

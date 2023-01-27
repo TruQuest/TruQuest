@@ -12,11 +12,11 @@ public interface IContractCaller
         byte[] thingId, string voteAggIpfsCid,
         List<string> verifiersToReward, List<string> verifiersToSlash
     );
-    Task<long> InitThingAssessmentVerifierLottery(byte[] thingId, byte[] dataHash);
-    Task<BigInteger> ComputeNonceForThingAssessmentVerifierLottery(byte[] thingId, byte[] data);
+    Task<long> InitThingAssessmentVerifierLottery(byte[] thingId, byte[] proposalId, byte[] dataHash);
+    Task<BigInteger> ComputeNonceForThingAssessmentVerifierLottery(byte[] thingId, byte[] proposalId, byte[] data);
     Task<byte[]> ComputeHashForThingAssessmentVerifierLottery(byte[] data);
     Task CloseThingAssessmentVerifierLotteryWithSuccess(
-        byte[] thingId, byte[] data, List<ulong> winnerClaimantIndices, List<ulong> winnerIndices
+        byte[] thingId, byte[] proposalId, byte[] data, List<ulong> winnerClaimantIndices, List<ulong> winnerIndices
     );
     Task FinalizeAssessmentPollForSettlementProposalAsAccepted(
         byte[] thingId, byte[] settlementProposalId, string voteAggIpfsCid,

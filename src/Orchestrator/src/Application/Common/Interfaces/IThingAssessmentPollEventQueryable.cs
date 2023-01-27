@@ -14,7 +14,7 @@ public interface IThingAssessmentPollEventQueryable
         Guid thingId, Guid settlementProposalId, long latestBlockNumber, decimal nonce, int count
     );
 
-    Task<List<VerifierLotteryWinnerQm>> GetLotteryWinnerIndicesAccordingToPreJoinedEvents(
+    Task<IEnumerable<VerifierLotteryWinnerQm>> GetLotteryWinnerIndicesAccordingToPreJoinedEvents(
         Guid thingId, Guid settlementProposalId, IEnumerable<string> winnerIds
     );
 }

@@ -1,9 +1,9 @@
 using Application.Common.Models.QM;
 
-namespace Application.Thing.Queries.GetVerifierLotteryParticipants;
+namespace Application.Settlement.Queries.GetVerifierLotteryParticipants;
 
 public class GetVerifierLotteryParticipantsResultVm
 {
-    public required Guid ThingId { get; init; }
+    public required Guid ProposalId { get; init; }
     public required IEnumerable<VerifierLotteryParticipantEntryQm> Entries { get; init; }
 }

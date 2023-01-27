@@ -27,9 +27,74 @@ class GetSettlementProposal extends SettlementAction {
   GetSettlementProposal({required this.proposalId, this.subscribe = false});
 }
 
+class UnsubscribeFromProposal extends SettlementAction {
+  final String proposalId;
+
+  UnsubscribeFromProposal({required this.proposalId});
+}
+
 class SubmitNewSettlementProposal
     extends SettlementActionAwaitable<SubmitNewSettlementProposalSuccessVm?> {
   final String proposalId;
 
   SubmitNewSettlementProposal({required this.proposalId});
+}
+
+class FundSettlementProposal
+    extends SettlementActionAwaitable<FundSettlementProposalSuccessVm?> {
+  final String thingId;
+  final String proposalId;
+  final String signature;
+
+  FundSettlementProposal({
+    required this.thingId,
+    required this.proposalId,
+    required this.signature,
+  });
+}
+
+class GetVerifierLotteryInfo extends SettlementAction {
+  final String thingId;
+  final String proposalId;
+
+  GetVerifierLotteryInfo({
+    required this.thingId,
+    required this.proposalId,
+  });
+}
+
+class ClaimLotterySpot extends SettlementAction {
+  final String thingId;
+  final String proposalId;
+
+  ClaimLotterySpot({
+    required this.thingId,
+    required this.proposalId,
+  });
+}
+
+class PreJoinLottery extends SettlementAction {
+  final String thingId;
+  final String proposalId;
+
+  PreJoinLottery({
+    required this.thingId,
+    required this.proposalId,
+  });
+}
+
+class JoinLottery extends SettlementAction {
+  final String thingId;
+  final String proposalId;
+
+  JoinLottery({
+    required this.thingId,
+    required this.proposalId,
+  });
+}
+
+class GetVerifierLotteryParticipants extends SettlementAction {
+  final String proposalId;
+
+  GetVerifierLotteryParticipants({required this.proposalId});
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tabbed_view/tabbed_view.dart';
 
+import '../widgets/lottery.dart';
+import '../widgets/verdict_view_block.dart';
 import '../widgets/timeline_block.dart';
 import '../models/rvm/settlement_proposal_state_vm.dart';
 import '../../general/contexts/document_view_context.dart';
@@ -34,6 +36,14 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
   }
 
   @override
+  void dispose() {
+    _settlementBloc.dispatch(
+      UnsubscribeFromProposal(proposalId: widget.proposalId),
+    );
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return StreamBuilder(
       stream: _settlementBloc.proposal$,
@@ -62,6 +72,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
                 preserveOnRebuild: false,
                 child: DocumentView(
                   sideBlocks: [
+                    VerdictViewBlock(),
                     TimelineBlock(),
                   ],
                   bottomBlock: EvidenceViewBlock(),
@@ -79,14 +90,14 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
                 ),
               ],
             ),
-            // if (proposal.state.index >=
-            //     SettlementProposalStateVm
-            //         .fundedAndAssessmentVerifierLotteryInitiated.index)
-            //   TabData(
-            //     text: 'Verifier Lottery',
-            //     content: Lottery(thing: proposal),
-            //     closable: false,
-            //   ),
+            if (proposal.state.index >=
+                SettlementProposalStateVm
+                    .fundedAndAssessmentVerifierLotteryInitiated.index)
+              TabData(
+                text: 'Verifier Lottery',
+                content: Lottery(proposal: proposal),
+                closable: false,
+              ),
             // if (proposal.state.index >=
             //     SettlementProposalStateVm.assessmentVerifiersSelectedAndPollInitiated.index)
             //   TabData(

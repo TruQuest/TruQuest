@@ -1,11 +1,9 @@
-using System.Numerics;
-
 using Nethereum.ABI.FunctionEncoding.Attributes;
 
 namespace Infrastructure.Ethereum.Events.ThingAssessmentVerifierLottery;
 
-[Event("LotteryClosedWithSuccess")]
-public class LotteryClosedWithSuccessEvent : IEventDTO
+[Event("LotteryInitiated")]
+public class LotteryInitiatedEvent : IEventDTO
 {
     [Parameter("bytes16", "thingId", 1, true)]
     public byte[] ThingId { get; set; }
@@ -13,10 +11,6 @@ public class LotteryClosedWithSuccessEvent : IEventDTO
     public byte[] SettlementProposalId { get; set; }
     [Parameter("address", "orchestrator", 3, false)]
     public string Orchestrator { get; set; }
-    [Parameter("uint256", "nonce", 4, false)]
-    public BigInteger Nonce { get; set; }
-    [Parameter("address[]", "claimants", 5, false)]
-    public List<string> ClaimantIds { get; set; }
-    [Parameter("address[]", "winners", 6, false)]
-    public List<string> WinnerIds { get; set; }
+    [Parameter("bytes32", "dataHash", 4, false)]
+    public byte[] DataHash { get; set; }
 }

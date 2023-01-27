@@ -9,8 +9,22 @@ class CreateNewSettlementProposalDraftSuccessVm
 class CreateNewSettlementProposalDraftFailureVm
     extends CreateNewSettlementProposalDraftResultVm {}
 
-class SubmitNewSettlementProposalSuccessVm extends SettlementResultVm {
-  final String signature;
+class SubmitNewSettlementProposalSuccessVm extends SettlementResultVm {}
 
-  SubmitNewSettlementProposalSuccessVm({required this.signature});
+class FundSettlementProposalSuccessVm extends SettlementResultVm {}
+
+class GetVerifierLotteryInfoSuccessVm extends SettlementResultVm {
+  final int? initBlock;
+  final int durationBlocks;
+  final int latestBlockNumber;
+  final bool? alreadyPreJoined;
+  final bool? alreadyJoined;
+
+  GetVerifierLotteryInfoSuccessVm({
+    required this.initBlock,
+    required this.durationBlocks,
+    required this.latestBlockNumber,
+    required this.alreadyPreJoined,
+    required this.alreadyJoined,
+  });
 }

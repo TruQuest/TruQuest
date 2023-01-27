@@ -40,34 +40,36 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
     public async Task<VoidResult> Handle(InitVerifierLotteryCommand command, CancellationToken ct)
     {
         var thing = await _thingRepository.FindById(command.ThingId);
-
-        var data = RandomNumberGenerator.GetBytes(32);
-        var dataHash = await _contractCaller.ComputeHashForThingSubmissionVerifierLottery(data);
-
-        long lotteryInitBlockNumber = await _contractCaller.InitThingSubmissionVerifierLottery(
-            thing.Id.ToByteArray(), dataHash
-        );
-
-        int lotteryDurationBlocks = await _contractStorageQueryable.GetThingSubmissionVerifierLotteryDurationBlocks();
-
-        var task = new DeferredTask(
-            type: TaskType.CloseThingSubmissionVerifierLottery,
-            scheduledBlockNumber: lotteryInitBlockNumber + lotteryDurationBlocks
-        );
-        task.SetPayload(new()
+        if (thing.State == ThingState.AwaitingFunding)
         {
-            ["thingId"] = thing.Id!,
-            ["data"] = Convert.ToBase64String(data)
-        });
+            var data = RandomNumberGenerator.GetBytes(32);
+            var dataHash = await _contractCaller.ComputeHashForThingSubmissionVerifierLottery(data);
 
-        _taskRepository.Create(task);
+            long lotteryInitBlockNumber = await _contractCaller.InitThingSubmissionVerifierLottery(
+                thing.Id.ToByteArray(), dataHash
+            );
 
-        thing.SetState(ThingState.FundedAndSubmissionVerifierLotteryInitiated);
+            int lotteryDurationBlocks = await _contractStorageQueryable.GetThingSubmissionVerifierLotteryDurationBlocks();
 
-        await _taskRepository.SaveChanges();
-        await _thingRepository.SaveChanges();
+            var task = new DeferredTask(
+                type: TaskType.CloseThingSubmissionVerifierLottery,
+                scheduledBlockNumber: lotteryInitBlockNumber + lotteryDurationBlocks
+            );
+            task.SetPayload(new()
+            {
+                ["thingId"] = thing.Id!,
+                ["data"] = Convert.ToBase64String(data)
+            });
 
-        await _clientNotifier.NotifyThingStateChanged(thing.Id, thing.State);
+            _taskRepository.Create(task);
+
+            thing.SetState(ThingState.FundedAndSubmissionVerifierLotteryInitiated);
+
+            await _taskRepository.SaveChanges();
+            await _thingRepository.SaveChanges();
+
+            await _clientNotifier.NotifyThingStateChanged(thing.Id, thing.State);
+        }
 
         return VoidResult.Instance;
     }

@@ -1,4 +1,4 @@
-namespace Application.Thing.Queries.GetVerifierLotteryParticipants;
+namespace Application.Common.Models.QM;
 
 public class VerifierLotteryParticipantEntryQm
 {

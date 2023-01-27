@@ -2,7 +2,7 @@ import 'package:convert/convert.dart';
 import 'package:uuid/uuid.dart';
 
 extension UuidExtension on String {
-  String toSolInputFormat() {
+  String toSolInputFormat({bool prefix = true}) {
     var thingIdBytes = Uuid.parse(this, validate: false);
     int b0 = thingIdBytes[0];
     int b1 = thingIdBytes[1];
@@ -23,6 +23,6 @@ extension UuidExtension on String {
     thingIdBytes[6] = b7;
     thingIdBytes[7] = b6;
 
-    return '0x' + hex.encode(thingIdBytes);
+    return (prefix ? '0x' : '') + hex.encode(thingIdBytes);
   }
 }

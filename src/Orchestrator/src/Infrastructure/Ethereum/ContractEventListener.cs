@@ -91,6 +91,7 @@ internal class ContractEventListener : IContractEventListener
                 new EventLogProcessorHandler<AcceptancePoll.CastedVoteWithReasonEvent>(WriteToChannel),
                 new EventLogProcessorHandler<AcceptancePoll.PollFinalizedEvent>(WriteToChannel),
                 new EventLogProcessorHandler<ThingSettlementProposalFundedEvent>(WriteToChannel),
+                new EventLogProcessorHandler<ThingAssessmentVerifierLottery.LotteryInitiatedEvent>(WriteToChannel),
                 new EventLogProcessorHandler<ThingAssessmentVerifierLottery.LotterySpotClaimedEvent>(WriteToChannel),
                 new EventLogProcessorHandler<ThingAssessmentVerifierLottery.PreJoinedLotteryEvent>(WriteToChannel),
                 new EventLogProcessorHandler<ThingAssessmentVerifierLottery.JoinedLotteryEvent>(WriteToChannel),
@@ -235,6 +236,18 @@ internal class ContractEventListener : IContractEventListener
                     Stake = (decimal)thingSettlementProposalFundedEvent.Event.Stake
                 };
             }
+            else if (@event is EventLog<ThingAssessmentVerifierLottery.LotteryInitiatedEvent> thingAssessmentVerifierLotteryInitiatedEvent)
+            {
+                yield return new AppEvents.ThingAssessmentVerifierLottery.PreJoinedLottery.PreJoinedLotteryEvent
+                {
+                    BlockNumber = (long)thingAssessmentVerifierLotteryInitiatedEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)thingAssessmentVerifierLotteryInitiatedEvent.Log.TransactionIndex.Value,
+                    ThingId = thingAssessmentVerifierLotteryInitiatedEvent.Event.ThingId,
+                    SettlementProposalId = thingAssessmentVerifierLotteryInitiatedEvent.Event.SettlementProposalId,
+                    UserId = thingAssessmentVerifierLotteryInitiatedEvent.Event.Orchestrator.Substring(2).ToLower(),
+                    DataHash = thingAssessmentVerifierLotteryInitiatedEvent.Event.DataHash
+                };
+            }
             else if (@event is EventLog<ThingAssessmentVerifierLottery.PreJoinedLotteryEvent> preJoinedThingAssessmentVerifierLotteryEvent)
             {
                 yield return new AppEvents.ThingAssessmentVerifierLottery.PreJoinedLottery.PreJoinedLotteryEvent
@@ -278,6 +291,7 @@ internal class ContractEventListener : IContractEventListener
                     TxnIndex = (int)thingAssessmentVerifierLotteryClosedWithSuccessEvent.Log.TransactionIndex.Value,
                     ThingId = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.ThingId,
                     SettlementProposalId = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.SettlementProposalId,
+                    Orchestrator = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.Orchestrator.Substring(2).ToLower(),
                     Nonce = (decimal)thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.Nonce,
                     ClaimantIds = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.ClaimantIds
                         .Select(id => id.Substring(2).ToLower())

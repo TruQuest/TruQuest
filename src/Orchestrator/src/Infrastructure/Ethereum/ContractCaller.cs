@@ -48,7 +48,7 @@ internal class ContractCaller : IContractCaller
 
     public async Task<long> InitThingSubmissionVerifierLottery(byte[] thingId, byte[] dataHash)
     {
-        var txnDispatcher = _web3.Eth.GetContractTransactionHandler<InitVerifierLotteryMessage>();
+        var txnDispatcher = _web3.Eth.GetContractTransactionHandler<InitThingSubmissionVerifierLotteryMessage>();
         var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
             _thingSubmissionVerifierLotteryAddress,
             new()
@@ -65,14 +65,16 @@ internal class ContractCaller : IContractCaller
 
     public Task<BigInteger> ComputeNonceForThingSubmissionVerifierLottery(byte[] thingId, byte[] data)
     {
-        return _web3.Eth.GetContractQueryHandler<ComputeNonceMessage>().QueryAsync<BigInteger>(
-            _thingSubmissionVerifierLotteryAddress,
-            new()
-            {
-                ThingId = thingId,
-                Data = data
-            }
-        );
+        return _web3.Eth
+            .GetContractQueryHandler<ComputeNonceForThingSubmissionVerifierLotteryMessage>()
+            .QueryAsync<BigInteger>(
+                _thingSubmissionVerifierLotteryAddress,
+                new()
+                {
+                    ThingId = thingId,
+                    Data = data
+                }
+            );
     }
 
     public async Task CloseThingSubmissionVerifierLotteryWithSuccess(
@@ -113,14 +115,14 @@ internal class ContractCaller : IContractCaller
         _logger.LogInformation("=============== FinalizeAcceptancePollForThingAsAccepted: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
-    public async Task<long> InitThingAssessmentVerifierLottery(byte[] thingId, byte[] dataHash)
+    public async Task<long> InitThingAssessmentVerifierLottery(byte[] thingId, byte[] proposalId, byte[] dataHash)
     {
-        var txnDispatcher = _web3.Eth.GetContractTransactionHandler<InitVerifierLotteryMessage>();
+        var txnDispatcher = _web3.Eth.GetContractTransactionHandler<InitThingAssessmentVerifierLotteryMessage>();
         var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
             _thingAssessmentVerifierLotteryAddress,
             new()
             {
-                ThingId = thingId,
+                ThingProposalId = thingId.Concat(proposalId).ToArray(),
                 DataHash = dataHash
             }
         );
@@ -130,16 +132,20 @@ internal class ContractCaller : IContractCaller
         return (long)txnReceipt.BlockNumber.Value;
     }
 
-    public Task<BigInteger> ComputeNonceForThingAssessmentVerifierLottery(byte[] thingId, byte[] data)
+    public Task<BigInteger> ComputeNonceForThingAssessmentVerifierLottery(
+        byte[] thingId, byte[] proposalId, byte[] data
+    )
     {
-        return _web3.Eth.GetContractQueryHandler<ComputeNonceMessage>().QueryAsync<BigInteger>(
-            _thingAssessmentVerifierLotteryAddress,
-            new()
-            {
-                ThingId = thingId,
-                Data = data
-            }
-        );
+        return _web3.Eth
+            .GetContractQueryHandler<ComputeNonceForThingAssessmentVerifierLotteryMessage>()
+            .QueryAsync<BigInteger>(
+                _thingAssessmentVerifierLotteryAddress,
+                new()
+                {
+                    ThingProposalId = thingId.Concat(proposalId).ToArray(),
+                    Data = data
+                }
+            );
     }
 
     public Task<byte[]> ComputeHashForThingAssessmentVerifierLottery(byte[] data)
@@ -149,20 +155,21 @@ internal class ContractCaller : IContractCaller
     }
 
     public async Task CloseThingAssessmentVerifierLotteryWithSuccess(
-        byte[] thingId, byte[] data, List<ulong> winnerClaimantIndices, List<ulong> winnerIndices
+        byte[] thingId, byte[] proposalId, byte[] data, List<ulong> winnerClaimantIndices, List<ulong> winnerIndices
     )
     {
-        var txnDispatcher = _web3.Eth.GetContractTransactionHandler<CloseThingAssessmentVerifierLotteryWithSuccessMessage>();
-        var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
-            _thingAssessmentVerifierLotteryAddress,
-            new()
-            {
-                ThingId = thingId,
-                Data = data,
-                WinnerClaimantIndices = winnerClaimantIndices,
-                WinnerIndices = winnerIndices
-            }
-        );
+        var txnReceipt = await _web3.Eth
+            .GetContractTransactionHandler<CloseThingAssessmentVerifierLotteryWithSuccessMessage>()
+            .SendRequestAndWaitForReceiptAsync(
+                _thingAssessmentVerifierLotteryAddress,
+                new()
+                {
+                    ThingProposalId = thingId.Concat(proposalId).ToArray(),
+                    Data = data,
+                    WinnerClaimantIndices = winnerClaimantIndices,
+                    WinnerIndices = winnerIndices
+                }
+            );
 
         _logger.LogInformation("=============== CloseThingAssessmentVerifierLotteryWithSuccess: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }

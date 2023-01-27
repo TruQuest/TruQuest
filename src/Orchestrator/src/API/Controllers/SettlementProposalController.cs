@@ -7,6 +7,7 @@ using Application.Settlement.Commands.CreateNewSettlementProposalDraft;
 using Application.Settlement.Commands.SubmitNewSettlementProposal;
 using Application.Settlement.Queries.GetSettlementProposals;
 using Application.Settlement.Queries.GetSettlementProposal;
+using Application.Settlement.Queries.GetVerifierLotteryParticipants;
 
 using API.Controllers.Filters;
 
@@ -46,4 +47,11 @@ public class SettlementProposalController : ControllerBase
     public Task<HandleResult<SubmitNewSettlementProposalResultVm>> SubmitNewSettlementProposal(
         [FromBody] SubmitNewSettlementProposalCommand command
     ) => _mediator.Send(command);
+
+    [HttpGet("{id}/lottery-participants")]
+    public Task<HandleResult<GetVerifierLotteryParticipantsResultVm>> GetVerifierLotteryParticipants(string id) =>
+        _mediator.Send(new GetVerifierLotteryParticipantsQuery
+        {
+            ProposalId = Guid.Parse(id)
+        });
 }
