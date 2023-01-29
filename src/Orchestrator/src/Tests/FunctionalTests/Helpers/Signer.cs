@@ -5,10 +5,7 @@ using Nethereum.Hex.HexConvertors.Extensions;
 using Nethereum.Signer;
 using Nethereum.Signer.EIP712;
 
-using Application.Subject.Commands.AddNewSubject;
-using Application.Thing.Commands.SubmitNewThing;
 using Application.Thing.Commands.CastAcceptancePollVote;
-using Application.Settlement.Commands.SubmitNewSettlementProposal;
 using Infrastructure.Ethereum;
 using Infrastructure.Ethereum.TypedData;
 
@@ -18,12 +15,12 @@ public class Signer
 {
     private readonly Eip712TypedDataSigner _eip712Signer;
     private readonly DomainWithSalt _domain;
-    private readonly EthECKey _submitterPrivateKey;
-    private readonly EthECKey _proposerPrivateKey;
+    private readonly AccountProvider _accountProvider;
 
     public Signer(IConfiguration configuration, AccountProvider accountProvider)
     {
         _eip712Signer = new Eip712TypedDataSigner();
+        _accountProvider = accountProvider;
 
         var network = configuration["Ethereum:Network"]!;
         var domainConfig = configuration.GetSection("Ethereum:Domain");
@@ -35,9 +32,6 @@ public class Signer
             VerifyingContract = configuration[$"Ethereum:Contracts:{network}:TruQuest:Address"],
             Salt = domainConfig["Salt"].HexToByteArray()
         };
-
-        _submitterPrivateKey = new EthECKey(accountProvider.GetAccount("Submitter").PrivateKey);
-        _proposerPrivateKey = new EthECKey(accountProvider.GetAccount("Proposer").PrivateKey);
     }
 
     private TypedData<DomainWithSalt> _getTypedDataDefinition(params Type[] types)
@@ -52,41 +46,9 @@ public class Signer
         };
     }
 
-    public string SignNewSubjectMessage(NewSubjectIm input)
+    public string SignNewAcceptancePollVoteMessageAs(string accountName, NewAcceptancePollVoteIm input)
     {
-        var td = new NewSubjectTd
-        {
-            Type = (int)input.Type,
-            Name = input.Name,
-            Details = input.Details,
-            ImageUrl = input.ImageUrl,
-            Tags = input.Tags.Select(t => new TagTd { Id = t.Id }).ToList()
-        };
-        var tdDefinition = _getTypedDataDefinition(typeof(NewSubjectTd), typeof(TagTd));
-        tdDefinition.SetMessage(td);
-
-        return _eip712Signer.SignTypedDataV4(tdDefinition, _submitterPrivateKey);
-    }
-
-    public string SignNewThingMessage(NewThingIm input)
-    {
-        var td = new NewThingTd
-        {
-            SubjectId = input.SubjectId.ToString(),
-            Title = input.Title,
-            Details = input.Details,
-            ImageUrl = input.ImageUrl,
-            Evidence = input.Evidence.Select(e => new EvidenceTd { Url = e.Url }).ToList(),
-            Tags = input.Tags.Select(t => new TagTd { Id = t.Id }).ToList()
-        };
-        var tdDefinition = _getTypedDataDefinition(typeof(NewThingTd), typeof(EvidenceTd), typeof(TagTd));
-        tdDefinition.SetMessage(td);
-
-        return _eip712Signer.SignTypedDataV4(tdDefinition, _submitterPrivateKey);
-    }
-
-    public string SignNewAcceptancePollVoteMessage(NewAcceptancePollVoteIm input)
-    {
+        var privateKey = new EthECKey(_accountProvider.GetAccount(accountName).PrivateKey);
         var td = new NewAcceptancePollVoteTd
         {
             ThingId = input.ThingId.ToString(),
@@ -97,22 +59,6 @@ public class Signer
         var tdDefinition = _getTypedDataDefinition(typeof(NewAcceptancePollVoteTd));
         tdDefinition.SetMessage(td);
 
-        return _eip712Signer.SignTypedDataV4(tdDefinition, _submitterPrivateKey);
-    }
-
-    public string SignNewSettlementProposalMessage(NewSettlementProposalIm input)
-    {
-        var td = new NewSettlementProposalTd
-        {
-            ThingId = input.ThingId.ToString(),
-            Title = input.Title,
-            Verdict = (int)input.Verdict,
-            Details = input.Details,
-            Evidence = input.Evidence.Select(e => new SupportingEvidenceTd { Url = e.Url }).ToList()
-        };
-        var tdDefinition = _getTypedDataDefinition(typeof(NewSettlementProposalTd), typeof(SupportingEvidenceTd));
-        tdDefinition.SetMessage(td);
-
-        return _eip712Signer.SignTypedDataV4(tdDefinition, _proposerPrivateKey);
+        return _eip712Signer.SignTypedDataV4(tdDefinition, privateKey);
     }
 }

@@ -74,7 +74,6 @@ public static class IServiceCollectionExtension
 
         services.AddDataProtection();
         services.AddHttpContextAccessor();
-        // services.TryAddScoped<SignInManager<User>>();
 
         services.AddScoped<ISharedTxnScope, SharedTxnScope>();
         services.AddScoped<IUserRepository, UserRepository>();
@@ -155,8 +154,6 @@ public static class IServiceCollectionExtension
         services.AddSingleton<IFileReceiver, FileReceiver>();
         services.AddSingleton<MultipartRequestHelper>();
         services.AddSingleton<ImageFileValidator>();
-
-        services.AddSingleton<IFileArchiver, FileArchiver>();
 
         services.AddHttpClient("ipfs", (sp, client) =>
         {

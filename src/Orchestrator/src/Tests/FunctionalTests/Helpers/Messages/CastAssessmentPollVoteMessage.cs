@@ -4,10 +4,10 @@ using Nethereum.Contracts;
 namespace Tests.FunctionalTests.Helpers.Messages;
 
 [Function("castVote")]
-public class CastVoteMessage : FunctionMessage
+public class CastAssessmentPollVoteMessage : FunctionMessage
 {
-    [Parameter("bytes32", "_combinedId", 1)]
-    public byte[] CombinedId { get; init; }
+    [Parameter("bytes32", "_thingProposalId", 1)]
+    public byte[] ThingProposalId { get; init; }
     [Parameter("uint8", "_vote", 2)]
     public Vote Vote { get; init; }
 }

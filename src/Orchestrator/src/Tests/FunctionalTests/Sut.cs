@@ -6,6 +6,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Hosting;
 
 using Respawn;
 using Respawn.Graph;
@@ -24,6 +26,15 @@ namespace Tests.FunctionalTests;
 
 public class Sut : IAsyncLifetime
 {
+    public class HttpRequestForFileUpload : IDisposable
+    {
+        public required HttpRequest Request { get; init; }
+        public required Action OnDispose { get; init; }
+
+        public void Dispose() => OnDispose();
+    }
+
+    private IWebHostEnvironment _hostEnvironment;
     private WebApplication _app;
     private Respawner _respawner;
 
@@ -65,8 +76,11 @@ public class Sut : IAsyncLifetime
         }
 
         _app = appBuilder.Build().ConfigurePipeline();
+        _hostEnvironment = _app.Services.GetRequiredService<IWebHostEnvironment>();
+
         await _app.DeployContracts();
         await _app.RegisterDebeziumConnector();
+        await _app.DepositFunds();
 
         AccountProvider = _app.Services.GetRequiredService<AccountProvider>();
         Signer = new Signer(_app.Configuration, AccountProvider);
@@ -111,16 +125,6 @@ public class Sut : IAsyncLifetime
 
         var userIds = new[]
         {
-            "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
-            "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
-            "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
-            "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc",
-            "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
-            "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955",
-            "0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f",
-            "0xa0Ee7A142d267C1f36714E4a8F75612F20a79720",
-            "0xBcd4042DE499D14e55001CcbB24a551F3b954096",
-
             // "0xC7e4C4A64a6EC2821921596770C784580B94b701",
             "0xbF2Ff171C3C4A63FBBD369ddb021c75934005e81",
             "0x529A3efb0F113a2FB6dB0818639EEa26e0661450",
@@ -148,7 +152,7 @@ public class Sut : IAsyncLifetime
             UserName = id.Substring(2, 20).ToLower()
         }));
 
-        appDbContext.Tags.Add(new Tag("Politics"));
+        appDbContext.Tags.AddRange(new("Politics"), new("Sport"), new("IT"));
         await appDbContext.SaveChangesAsync();
 
         var eventDbContext = scope.ServiceProvider.GetRequiredService<EventDbContext>();
@@ -186,6 +190,48 @@ public class Sut : IAsyncLifetime
     public void RunAsGuest()
     {
         _user = null;
+    }
+
+    private Stream _getFile(string path)
+    {
+        var fileInfo = _hostEnvironment.ContentRootFileProvider.GetFileInfo(path);
+        if (fileInfo.Exists)
+        {
+            return fileInfo.CreateReadStream();
+        }
+
+        throw new FileNotFoundException();
+    }
+
+    public HttpRequestForFileUpload PrepareHttpRequestForFileUpload(
+        string[] fileNames, params (string Key, string Value)[] formValues
+    )
+    {
+        var boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
+        var form = new MultipartFormDataContent(boundary);
+        foreach (var fileName in fileNames)
+        {
+            form.Add(
+                new StreamContent(_getFile($"TestData/{fileName}")),
+                Path.GetFileNameWithoutExtension(fileName),
+                fileName
+            );
+        }
+
+        foreach (var kv in formValues)
+        {
+            form.Add(new StringContent(kv.Value), kv.Key);
+        }
+
+        var context = new DefaultHttpContext();
+        context.Request.Headers.Add("Content-Type", $"multipart/form-data; boundary={boundary}");
+        context.Request.Body = form.ReadAsStream();
+
+        return new HttpRequestForFileUpload
+        {
+            Request = context.Request,
+            OnDispose = () => form.Dispose()
+        };
     }
 
     public async Task<T> SendRequest<T>(IRequest<T> request)

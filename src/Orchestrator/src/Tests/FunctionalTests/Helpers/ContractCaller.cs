@@ -1,5 +1,3 @@
-using System.Numerics;
-
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -8,8 +6,6 @@ using Nethereum.Web3;
 using Nethereum.Web3.Accounts;
 using Nethereum.Contracts;
 
-using Application.Thing.Commands.SubmitNewThing;
-using Application.Settlement.Commands.SubmitNewSettlementProposal;
 using Infrastructure.Ethereum;
 using Infrastructure.Ethereum.TypedData;
 
@@ -62,63 +58,7 @@ public class ContractCaller
         _orchestrator = accountProvider.GetAccount("Orchestrator");
     }
 
-    public async Task TransferTruthserumTo(string accountName, BigInteger amount)
-    {
-        var web3 = new Web3(_orchestrator, _rpcUrl);
-        var txnDispatcher = web3.Eth.GetContractTransactionHandler<TransferMessage>();
-        var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
-            _truthserumAddress,
-            new()
-            {
-                To = _accountProvider.GetAccount(accountName).Address,
-                Amount = amount
-            }
-        );
-
-        await _blockchainManipulator.Mine(1);
-    }
-
-    public async Task DepositFundsAs(string accountName, BigInteger amount)
-    {
-        var account = _accountProvider.GetAccount(accountName);
-        var web3 = new Web3(account, _rpcUrl);
-
-        var approveTxnDispatcher = web3.Eth.GetContractTransactionHandler<ApproveMessage>();
-        var approveTxnReceipt = await approveTxnDispatcher.SendRequestAndWaitForReceiptAsync(
-            _truthserumAddress,
-            new()
-            {
-                Spender = _truQuestAddress,
-                Amount = amount
-            }
-        );
-
-        await _blockchainManipulator.Mine(1);
-
-        var depositTxnDispatcher = web3.Eth.GetContractTransactionHandler<DepositMessage>();
-        var depositTxnReceipt = await depositTxnDispatcher.SendRequestAndWaitForReceiptAsync(
-            _truQuestAddress,
-            new()
-            {
-                Amount = amount
-            }
-        );
-
-        await _blockchainManipulator.Mine(1);
-
-        var balance = await web3.Eth.GetContractQueryHandler<GetAvailableFundsMessage>()
-            .QueryAsync<BigInteger>(
-                _truQuestAddress,
-                new()
-                {
-                    User = account.Address
-                }
-            );
-
-        _logger.LogInformation("User {Address} balance: {Balance}", account.Address, balance);
-    }
-
-    public async Task FundThing(Guid thingId, string signature)
+    public async Task FundThing(byte[] thingId, string signature)
     {
         signature = signature.Substring(2);
         var r = signature.Substring(0, 64).HexToByteArray();
@@ -132,7 +72,7 @@ public class ContractCaller
             {
                 Thing = new ThingTd
                 {
-                    Id = thingId.ToByteArray()
+                    Id = thingId
                 },
                 V = v,
                 R = r,
@@ -148,7 +88,7 @@ public class ContractCaller
         var account = _accountProvider.GetAccount(accountName);
         var web3 = new Web3(account, _rpcUrl);
 
-        var txnDispatcher = web3.Eth.GetContractTransactionHandler<PreJoinLotteryMessage>();
+        var txnDispatcher = web3.Eth.GetContractTransactionHandler<PreJoinThingSubmissionVerifierLotteryMessage>();
         var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
             _thingSubmissionVerifierLotteryAddress,
             new()
@@ -166,7 +106,7 @@ public class ContractCaller
         var account = _accountProvider.GetAccount(accountName);
         var web3 = new Web3(account, _rpcUrl);
 
-        var txnDispatcher = web3.Eth.GetContractTransactionHandler<JoinLotteryMessage>();
+        var txnDispatcher = web3.Eth.GetContractTransactionHandler<JoinThingSubmissionVerifierLotteryMessage>();
         var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
             _thingSubmissionVerifierLotteryAddress,
             new()
@@ -179,7 +119,7 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task FundThingSettlementProposal(SettlementProposalVm proposal, string signature)
+    public async Task FundThingSettlementProposal(byte[] thingId, byte[] proposalId, string signature)
     {
         var network = _configuration["Ethereum:Network"]!;
         var proposer = _accountProvider.GetAccount("Proposer");
@@ -197,8 +137,8 @@ public class ContractCaller
             {
                 SettlementProposal = new SettlementProposalTd
                 {
-                    ThingId = proposal.ThingId.ToByteArray(),
-                    Id = proposal.Id.ToByteArray()
+                    ThingId = thingId,
+                    Id = proposalId
                 },
                 V = v,
                 R = r,
@@ -209,7 +149,7 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task ClaimThingAssessmentVerifierLotterySpotAs(string accountName, byte[] thingId)
+    public async Task ClaimThingAssessmentVerifierLotterySpotAs(string accountName, byte[] thingProposalId)
     {
         var account = _accountProvider.GetAccount(accountName);
         var web3 = new Web3(account, _rpcUrl);
@@ -221,7 +161,7 @@ public class ContractCaller
                 _thingAssessmentVerifierLotteryAddress,
                 new()
                 {
-                    ThingId = thingId
+                    ThingProposalId = thingProposalId
                 }
             );
 
@@ -249,17 +189,19 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task PreJoinThingAssessmentVerifierLotteryAs(string accountName, byte[] thingId, byte[] dataHash)
+    public async Task PreJoinThingAssessmentVerifierLotteryAs(
+        string accountName, byte[] thingProposalId, byte[] dataHash
+    )
     {
         var account = _accountProvider.GetAccount(accountName);
         var web3 = new Web3(account, _rpcUrl);
 
-        var txnDispatcher = web3.Eth.GetContractTransactionHandler<PreJoinLotteryMessage>();
+        var txnDispatcher = web3.Eth.GetContractTransactionHandler<PreJoinThingAssessmentVerifierLotteryMessage>();
         var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
             _thingAssessmentVerifierLotteryAddress,
             new()
             {
-                ThingId = thingId,
+                ThingProposalId = thingProposalId,
                 DataHash = dataHash
             }
         );
@@ -267,17 +209,17 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task JoinThingAssessmentVerifierLotteryAs(string accountName, byte[] thingId, byte[] data)
+    public async Task JoinThingAssessmentVerifierLotteryAs(string accountName, byte[] thingProposalId, byte[] data)
     {
         var account = _accountProvider.GetAccount(accountName);
         var web3 = new Web3(account, _rpcUrl);
 
-        var txnDispatcher = web3.Eth.GetContractTransactionHandler<JoinLotteryMessage>();
+        var txnDispatcher = web3.Eth.GetContractTransactionHandler<JoinThingAssessmentVerifierLotteryMessage>();
         var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
             _thingAssessmentVerifierLotteryAddress,
             new()
             {
-                ThingId = thingId,
+                ThingProposalId = thingProposalId,
                 Data = data
             }
         );
@@ -285,17 +227,17 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task CastAssessmentPollVoteAs(string accountName, byte[] combinedId, Vote vote)
+    public async Task CastAssessmentPollVoteAs(string accountName, byte[] thingProposalId, Vote vote)
     {
         var account = _accountProvider.GetAccount(accountName);
         var web3 = new Web3(account, _rpcUrl);
 
-        var txnDispatcher = web3.Eth.GetContractTransactionHandler<CastVoteMessage>();
+        var txnDispatcher = web3.Eth.GetContractTransactionHandler<CastAssessmentPollVoteMessage>();
         var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
             _assessmentPollAddress,
             new()
             {
-                CombinedId = combinedId,
+                ThingProposalId = thingProposalId,
                 Vote = vote
             }
         );
