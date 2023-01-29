@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tabbed_view/tabbed_view.dart';
 
 import '../widgets/lottery.dart';
+import '../widgets/poll.dart';
 import '../widgets/verdict_view_block.dart';
 import '../widgets/timeline_block.dart';
 import '../models/rvm/settlement_proposal_state_vm.dart';
@@ -98,13 +99,14 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
                 content: Lottery(proposal: proposal),
                 closable: false,
               ),
-            // if (proposal.state.index >=
-            //     SettlementProposalStateVm.assessmentVerifiersSelectedAndPollInitiated.index)
-            //   TabData(
-            //     text: 'Assessment Poll',
-            //     content: Poll(thing: proposal),
-            //     closable: false,
-            //   ),
+            if (proposal.state.index >=
+                SettlementProposalStateVm
+                    .assessmentVerifiersSelectedAndPollInitiated.index)
+              TabData(
+                text: 'Assessment Poll',
+                content: Poll(proposal: proposal),
+                closable: false,
+              ),
           ],
         );
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
+import '../models/rvm/get_verifiers_rvm.dart';
 import '../models/rvm/settlement_proposal_state_vm.dart';
 import '../models/rvm/get_settlement_proposal_rvm.dart';
 import '../models/rvm/get_settlement_proposals_rvm.dart';
@@ -32,6 +33,10 @@ class SettlementBloc extends Bloc<SettlementAction> {
   Stream<GetVerifierLotteryParticipantsRvm> get verifierLotteryParticipants$ =>
       _verifierLotteryParticipantsChannel.stream;
 
+  final StreamController<GetVerifiersRvm> _verifiersChannel =
+      StreamController<GetVerifiersRvm>.broadcast();
+  Stream<GetVerifiersRvm> get verifiers$ => _verifiersChannel.stream;
+
   SettlementBloc(this._settlementService) {
     actionChannel.stream.listen((action) {
       if (action is GetSettlementProposalsFor) {
@@ -56,6 +61,14 @@ class SettlementBloc extends Bloc<SettlementAction> {
         _getVerifierLotteryParticipants(action);
       } else if (action is UnsubscribeFromProposal) {
         _unsubscribeFromProposal(action);
+      } else if (action is GetAssessmentPollInfo) {
+        _getAssessmentPollInfo(action);
+      } else if (action is CastVoteOffChain) {
+        _castVoteOffChain(action);
+      } else if (action is CastVoteOnChain) {
+        _castVoteOnChain(action);
+      } else if (action is GetVerifiers) {
+        _getVerifiers(action);
       }
     });
   }
@@ -203,5 +216,43 @@ class SettlementBloc extends Bloc<SettlementAction> {
       action.proposalId,
     );
     _verifierLotteryParticipantsChannel.add(result);
+  }
+
+  void _getAssessmentPollInfo(GetAssessmentPollInfo action) async {
+    var info = await _settlementService.getAssessmentPollInfo(
+      action.thingId,
+      action.proposalId,
+    );
+    action.complete(
+      GetAssessmentPollInfoSuccessVm(
+        initBlock: info.item1,
+        durationBlocks: info.item2,
+        isDesignatedVerifier: info.item3,
+        latestBlockNumber: info.item4,
+      ),
+    );
+  }
+
+  void _castVoteOffChain(CastVoteOffChain action) async {
+    await _settlementService.castVoteOffChain(
+      action.thingId,
+      action.proposalId,
+      action.decision,
+      action.reason,
+    );
+  }
+
+  void _castVoteOnChain(CastVoteOnChain action) async {
+    await _settlementService.castVoteOnChain(
+      action.thingId,
+      action.proposalId,
+      action.decision,
+      action.reason,
+    );
+  }
+
+  void _getVerifiers(GetVerifiers action) async {
+    var result = await _settlementService.getVerifiers(action.proposalId);
+    _verifiersChannel.add(result);
   }
 }

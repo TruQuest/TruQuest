@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:data_table_2/data_table_2.dart';
 
 import '../extensions/iterable_extension.dart';
-import '../../thing/models/rvm/verifier_vm.dart';
+import '../models/rvm/verifier_vm.dart';
 
 class VerifiersTable extends StatelessWidget {
   final List<VerifierVm> verifiers;

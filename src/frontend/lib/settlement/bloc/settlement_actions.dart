@@ -1,4 +1,5 @@
 import '../../general/bloc/mixins.dart';
+import '../models/im/decision_im.dart';
 import 'settlement_result_vm.dart';
 import '../../general/contexts/document_context.dart';
 
@@ -97,4 +98,49 @@ class GetVerifierLotteryParticipants extends SettlementAction {
   final String proposalId;
 
   GetVerifierLotteryParticipants({required this.proposalId});
+}
+
+class GetAssessmentPollInfo
+    extends SettlementActionAwaitable<GetAssessmentPollInfoSuccessVm> {
+  final String thingId;
+  final String proposalId;
+
+  GetAssessmentPollInfo({
+    required this.thingId,
+    required this.proposalId,
+  });
+}
+
+class CastVoteOffChain extends SettlementAction {
+  final String thingId;
+  final String proposalId;
+  final DecisionIm decision;
+  final String reason;
+
+  CastVoteOffChain({
+    required this.thingId,
+    required this.proposalId,
+    required this.decision,
+    required this.reason,
+  });
+}
+
+class CastVoteOnChain extends SettlementAction {
+  final String thingId;
+  final String proposalId;
+  final DecisionIm decision;
+  final String reason;
+
+  CastVoteOnChain({
+    required this.thingId,
+    required this.proposalId,
+    required this.decision,
+    required this.reason,
+  });
+}
+
+class GetVerifiers extends SettlementAction {
+  final String proposalId;
+
+  GetVerifiers({required this.proposalId});
 }

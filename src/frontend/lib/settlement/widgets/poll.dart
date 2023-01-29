@@ -3,20 +3,20 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
+import '../models/rvm/settlement_proposal_vm.dart';
+import '../bloc/settlement_bloc.dart';
 import '../../general/widgets/verifiers_table.dart';
 import '../../general/widgets/vote_dialog.dart';
+import '../bloc/settlement_actions.dart';
 import '../models/im/decision_im.dart';
-import '../models/rvm/thing_vm.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';
-import '../bloc/thing_actions.dart';
-import '../bloc/thing_bloc.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../../widget_extensions.dart';
 
 class Poll extends StatefulWidget {
-  final ThingVm thing;
+  final SettlementProposalVm proposal;
 
-  const Poll({super.key, required this.thing});
+  const Poll({super.key, required this.proposal});
 
   @override
   State<Poll> createState() => _PollState();
@@ -24,7 +24,7 @@ class Poll extends StatefulWidget {
 
 class _PollState extends StateX<Poll> {
   late final _userBloc = use<UserBloc>();
-  late final _thingBloc = use<ThingBloc>();
+  late final _settlementBloc = use<SettlementBloc>();
   late final _ethereumBloc = use<EthereumBloc>();
 
   final _counterAppearance = CircularSliderAppearance(
@@ -52,7 +52,7 @@ class _PollState extends StateX<Poll> {
   @override
   void initState() {
     super.initState();
-    _thingBloc.dispatch(GetVerifiers(thingId: widget.thing.id));
+    _settlementBloc.dispatch(GetVerifiers(proposalId: widget.proposal.id));
   }
 
   double _degreesToRadians(double degrees) => (pi / 180) * degrees;
@@ -65,8 +65,11 @@ class _PollState extends StateX<Poll> {
           child: StreamBuilder(
             stream: _userBloc.currentUser$,
             builder: (context, _) {
-              var action = GetAcceptancePollInfo(thingId: widget.thing.id);
-              _thingBloc.dispatch(action);
+              var action = GetAssessmentPollInfo(
+                thingId: widget.proposal.thingId,
+                proposalId: widget.proposal.id,
+              );
+              _settlementBloc.dispatch(action);
 
               return FutureBuilder(
                 future: action.result,
@@ -196,9 +199,12 @@ class _PollState extends StateX<Poll> {
                                               getDisplayString: (decision) =>
                                                   decision.getString(),
                                               onVote: (decision, reason) {
-                                                _thingBloc.dispatch(
+                                                _settlementBloc.dispatch(
                                                   CastVoteOffChain(
-                                                    thingId: widget.thing.id,
+                                                    thingId:
+                                                        widget.proposal.thingId,
+                                                    proposalId:
+                                                        widget.proposal.id,
                                                     decision: decision,
                                                     reason: reason,
                                                   ),
@@ -229,9 +235,12 @@ class _PollState extends StateX<Poll> {
                                               getDisplayString: (decision) =>
                                                   decision.getString(),
                                               onVote: (decision, reason) {
-                                                _thingBloc.dispatch(
+                                                _settlementBloc.dispatch(
                                                   CastVoteOnChain(
-                                                    thingId: widget.thing.id,
+                                                    thingId:
+                                                        widget.proposal.thingId,
+                                                    proposalId:
+                                                        widget.proposal.id,
                                                     decision: decision,
                                                     reason: reason,
                                                   ),
@@ -256,7 +265,7 @@ class _PollState extends StateX<Poll> {
         ),
         Expanded(
           child: StreamBuilder(
-            stream: _thingBloc.verifiers$,
+            stream: _settlementBloc.verifiers$,
             builder: (context, snapshot) {
               if (snapshot.data == null) {
                 return Center(child: CircularProgressIndicator());

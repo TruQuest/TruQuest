@@ -8,6 +8,8 @@ using Application.Settlement.Commands.SubmitNewSettlementProposal;
 using Application.Settlement.Queries.GetSettlementProposals;
 using Application.Settlement.Queries.GetSettlementProposal;
 using Application.Settlement.Queries.GetVerifierLotteryParticipants;
+using Application.Settlement.Commands.CastAssessmentPollVote;
+using Application.Settlement.Queries.GetVerifiers;
 
 using API.Controllers.Filters;
 
@@ -54,4 +56,17 @@ public class SettlementProposalController : ControllerBase
         {
             ProposalId = Guid.Parse(id)
         });
+
+    [HttpPost("{id}/vote")]
+    public Task<HandleResult<string>> CastAssessmentPollVote(
+        [FromRoute] string id, [FromBody] CastAssessmentPollVoteCommand command
+    )
+    {
+        command.Input.SettlementProposalId = Guid.Parse(id);
+        return _mediator.Send(command);
+    }
+
+    [HttpGet("{id}/verifiers")]
+    public Task<HandleResult<GetVerifiersResultVm>> GetVerifiers(string id) =>
+        _mediator.Send(new GetVerifiersQuery { ProposalId = Guid.Parse(id) });
 }

@@ -1,4 +1,4 @@
-import '../../../general/extensions/datetime_extension.dart';
+import '../../extensions/datetime_extension.dart';
 
 class VoteVm {
   final String userId;

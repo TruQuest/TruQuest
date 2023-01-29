@@ -4,6 +4,9 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:tuple/tuple.dart';
 
+import '../models/im/cast_assessment_poll_vote_command.dart';
+import '../models/im/decision_im.dart';
+import '../models/im/new_assessment_poll_vote_im.dart';
 import '../models/im/subscribe_to_updates_command.dart';
 import '../models/im/unsubscribe_from_updates_command.dart';
 import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
@@ -24,6 +27,7 @@ import '../../general/errors/vote_error.dart';
 import '../../general/services/server_connector.dart';
 import '../errors/settlement_error.dart';
 import '../models/im/supporting_evidence_im.dart';
+import '../models/rvm/get_verifiers_rvm.dart';
 import '../models/rvm/settlement_proposal_state_vm.dart';
 import '../models/rvm/submit_new_settlement_proposal_rvm.dart';
 
@@ -282,6 +286,46 @@ class SettlementApiService {
       );
 
       return GetVerifierLotteryParticipantsRvm.fromMap(response.data['data']);
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future<String> castThingSettlementProposalAssessmentPollVote(
+    String thingId,
+    String proposalId,
+    String castedAt,
+    DecisionIm decision,
+    String reason,
+    String signature,
+  ) async {
+    try {
+      var response = await _dio.post(
+        '/proposals/$proposalId/vote',
+        options: Options(
+          headers: {'Authorization': 'Bearer ${_serverConnector.accessToken}'},
+        ),
+        data: CastAssessmentPollVoteCommand(
+          input: NewAssessmentPollVoteIm(
+            thingId: thingId,
+            castedAt: castedAt,
+            decision: decision,
+            reason: reason,
+          ),
+          signature: signature,
+        ).toJson(),
+      );
+
+      return response.data['data'] as String;
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future<GetVerifiersRvm> getVerifiers(String proposalId) async {
+    try {
+      var response = await _dio.get('/proposals/$proposalId/verifiers');
+      return GetVerifiersRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
       throw _wrapError(error);
     }

@@ -86,12 +86,15 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
                 count: thingSubmissionVerifiers.Count / 2
             );
 
-        var winnerClaimantIndices = joinedThingSubmissionVerifierLotteryEvents.Join(
-            validSpotClaimedEvents,
-            je => je.UserId,
-            ce => ce.Event.UserId,
-            (je, ce) => (ulong)ce.Index
-        ).Order().ToList();
+        var winnerClaimantIndices = joinedThingSubmissionVerifierLotteryEvents
+            .Join(
+                validSpotClaimedEvents,
+                je => je.UserId,
+                ce => ce.Event.UserId,
+                (je, ce) => (ulong)ce.Index
+            )
+            .Order()
+            .ToList();
 
         int availableSpots = numVerifiers - winnerClaimantIndices.Count;
 

@@ -12,4 +12,5 @@ public interface ISettlementProposalQueryable
     Task<IEnumerable<VerifierLotteryParticipantEntryQm>> GetVerifierLotteryParticipants(
         Guid proposalId
     );
+    Task<IEnumerable<VerifierQm>> GetVerifiers(Guid proposalId);
 }

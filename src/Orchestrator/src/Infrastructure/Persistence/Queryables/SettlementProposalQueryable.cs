@@ -102,4 +102,26 @@ internal class SettlementProposalQueryable : Queryable, ISettlementProposalQuery
 
         return entries;
     }
+
+    public async Task<IEnumerable<VerifierQm>> GetVerifiers(Guid proposalId)
+    {
+        var dbConn = await _getOpenConnection();
+        var verifiers = await dbConn.QueryAsync<VerifierQm>(
+            @"
+                SELECT v.""VerifierId"", u.""UserName""
+                FROM
+                    truquest.""SettlementProposals"" AS p
+                        INNER JOIN
+                    truquest.""SettlementProposalVerifiers"" AS v
+                        ON p.""Id"" = v.""SettlementProposalId""
+                        INNER JOIN
+                    truquest.""AspNetUsers"" AS u
+                        ON v.""VerifierId"" = u.""Id""
+                WHERE p.""Id"" = @ProposalId
+            ",
+            param: new { ProposalId = proposalId }
+        );
+
+        return verifiers;
+    }
 }

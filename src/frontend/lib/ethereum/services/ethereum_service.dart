@@ -6,7 +6,8 @@ import 'package:flutter_web3/flutter_web3.dart';
 import 'package:tuple/tuple.dart';
 import 'package:universal_html/html.dart';
 
-import '../../thing/models/im/decision_im.dart';
+import '../../thing/models/im/decision_im.dart' as thing;
+import '../../settlement/models/im/decision_im.dart' as settlement;
 import '../../js.dart';
 import '../errors/ethereum_error.dart';
 
@@ -262,7 +263,7 @@ class EthereumService {
   Future<Either<EthereumError, String>> signThingAcceptancePollVote(
     String thingId,
     String castedAt,
-    DecisionIm decision,
+    thing.DecisionIm decision,
     String reason,
   ) async {
     var metamask = ethereum;
@@ -302,6 +303,74 @@ class EthereumService {
       'primaryType': 'NewAcceptancePollVoteTd',
       'message': {
         'thingId': thingId,
+        'castedAt': castedAt,
+        'decision': decision.getString(),
+        'reason': reason,
+      },
+    };
+
+    var data = jsonEncode(map);
+
+    try {
+      var signature = await metamask.request<String>(
+        'eth_signTypedData_v4',
+        [connectedAccount, data],
+      );
+
+      return Right(signature);
+    } catch (e) {
+      print(e);
+      return Left(EthereumError(e.toString()));
+    }
+  }
+
+  Future<Either<EthereumError, String>>
+      signThingSettlementProposalAssessmentPollVote(
+    String thingId,
+    String proposalId,
+    String castedAt,
+    settlement.DecisionIm decision,
+    String reason,
+  ) async {
+    var metamask = ethereum;
+    if (metamask == null) {
+      return Left(EthereumError('Metamask not installed'));
+    }
+
+    var connectedAccount = _connectedAccount;
+    if (connectedAccount == null) {
+      return Left(EthereumError('No account connected'));
+    }
+
+    Map<String, dynamic> map = {
+      'types': {
+        'EIP712Domain': [
+          {'name': 'name', 'type': 'string'},
+          {'name': 'version', 'type': 'string'},
+          {'name': 'chainId', 'type': 'uint256'},
+          {'name': 'verifyingContract', 'type': 'address'},
+          {'name': 'salt', 'type': 'bytes32'},
+        ],
+        'NewAssessmentPollVoteTd': [
+          {'name': 'thingId', 'type': 'string'},
+          {'name': 'settlementProposalId', 'type': 'string'},
+          {'name': 'castedAt', 'type': 'string'},
+          {'name': 'decision', 'type': 'string'},
+          {'name': 'reason', 'type': 'string'},
+        ],
+      },
+      'domain': {
+        'name': 'TruQuest',
+        'version': '0.0.1',
+        'chainId': validChainId,
+        'verifyingContract': '0x32D41E4e24F97ec7D52e3c43F8DbFe209CBd0e4c',
+        'salt':
+            '0xf2d857f4a3edcb9b78b4d503bfe733db1e3f6cdc2b7971ee739626c97e86a558',
+      },
+      'primaryType': 'NewAssessmentPollVoteTd',
+      'message': {
+        'thingId': thingId,
+        'settlementProposalId': proposalId,
         'castedAt': castedAt,
         'decision': decision.getString(),
         'reason': reason,

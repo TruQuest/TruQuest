@@ -140,16 +140,11 @@ class _TimelineBlockState extends StateX<TimelineBlock> {
   }
 
   Widget _buildLotteryTile() {
-    var state = _documentViewContext.proposal!.state;
     return RoundedLoadingButton(
       controller: RoundedLoadingButtonController(),
-      animateOnTap: false,
+      disabledColor: Colors.lightBlue,
       child: Text('Verifier lottery\nin progress'),
-      onPressed: state.index >=
-              SettlementProposalStateVm
-                  .fundedAndAssessmentVerifierLotteryInitiated.index
-          ? () {}
-          : null,
+      onPressed: null,
     );
   }
 
@@ -158,51 +153,38 @@ class _TimelineBlockState extends StateX<TimelineBlock> {
     return state ==
             SettlementProposalStateVm
                 .fundedAndAssessmentVerifierLotteryInitiated
-        ? DotIndicator(
-            size: 15,
-            child: Padding(
-              padding: EdgeInsets.all(2),
-              child: CircularProgressIndicator(color: Colors.white),
-            ),
+        ? SizedBox.square(
+            dimension: 15,
+            child: CircularProgressIndicator(strokeWidth: 2),
           )
         : OutlinedDotIndicator();
   }
 
-  // Widget _buildPollTile() {
-  //   var state = _documentViewContext.proposal!.state;
-  //   return InkWell(
-  //     onTap: state ==
-  //             SettlementProposalStateVm
-  //                 .assessmentVerifiersSelectedAndPollInitiated
-  //         ? () {}
-  //         : null,
-  //     child: Card(
-  //       elevation: state ==
-  //               SettlementProposalStateVm
-  //                   .assessmentVerifiersSelectedAndPollInitiated
-  //           ? 5
-  //           : 0,
-  //       child: Padding(
-  //         padding: EdgeInsets.all(8),
-  //         child: Text('Assessment poll\nin progress'),
-  //       ),
-  //     ),
-  //   );
-  // }
+  Widget _buildPollTile() {
+    return RoundedLoadingButton(
+      controller: RoundedLoadingButtonController(),
+      disabledColor: Colors.lightBlue,
+      child: Text('Assessment poll\nin progress'),
+      onPressed: null,
+    );
+  }
 
-  // Widget _buildPollTileIndicator() {
-  //   var state = _documentViewContext.proposal!.state;
-  //   return state ==
-  //           SettlementProposalStateVm
-  //               .assessmentVerifiersSelectedAndPollInitiated
-  //       ? DotIndicator(child: CircularProgressIndicator(color: Colors.white))
-  //       : OutlinedDotIndicator();
-  // }
+  Widget _buildPollTileIndicator() {
+    var state = _documentViewContext.proposal!.state;
+    return state ==
+            SettlementProposalStateVm
+                .assessmentVerifiersSelectedAndPollInitiated
+        ? SizedBox.square(
+            dimension: 15,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : OutlinedDotIndicator();
+  }
 
   TimelineTileBuilder _buildTimeline() {
     // Draft -> Submit -> Fund -> Verifier lottery in progress -> Assessment poll in progress -> Assessment
     return TimelineTileBuilder.connected(
-      itemCount: 4,
+      itemCount: 5,
       contentsAlign: ContentsAlign.basic,
       connectionDirection: ConnectionDirection.after,
       indicatorBuilder: (context, index) {
@@ -215,8 +197,8 @@ class _TimelineBlockState extends StateX<TimelineBlock> {
             return _buildFundTileIndicator();
           case 3:
             return _buildLotteryTileIndicator();
-          // case 4:
-          //   return _buildPollTileIndicator();
+          case 4:
+            return _buildPollTileIndicator();
         }
 
         throw UnimplementedError();
@@ -235,8 +217,10 @@ class _TimelineBlockState extends StateX<TimelineBlock> {
             break;
           case 3:
             child = _buildLotteryTile();
-          // case 4:
-          //   return _buildPollTile();
+            break;
+          case 4:
+            child = _buildPollTile();
+            break;
         }
 
         return Padding(

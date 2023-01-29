@@ -12,6 +12,7 @@ using Domain.Aggregates;
 using Application.User.Commands.SignUp;
 using Application.Common.Interfaces;
 using Application.Thing.Commands.CastAcceptancePollVote;
+using Application.Settlement.Commands.CastAssessmentPollVote;
 
 using Infrastructure.Ethereum.TypedData;
 
@@ -69,7 +70,9 @@ internal class Signer : ISigner
         return address.Substring(2);
     }
 
-    public Either<VoteError, string> RecoverFromNewAcceptancePollVoteMessage(NewAcceptancePollVoteIm input, string signature)
+    public Either<VoteError, string> RecoverFromNewAcceptancePollVoteMessage(
+        NewAcceptancePollVoteIm input, string signature
+    )
     {
         var td = new NewAcceptancePollVoteTd
         {
@@ -79,6 +82,24 @@ internal class Signer : ISigner
             Reason = input.Reason
         };
         var tdDefinition = _getTypedDataDefinition(typeof(NewAcceptancePollVoteTd));
+        var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
+
+        return address.Substring(2);
+    }
+
+    public Either<VoteError, string> RecoverFromNewAssessmentPollVoteMessage(
+        NewAssessmentPollVoteIm input, string signature
+    )
+    {
+        var td = new NewAssessmentPollVoteTd
+        {
+            ThingId = input.ThingId.ToString(),
+            SettlementProposalId = input.SettlementProposalId.ToString(),
+            CastedAt = input.CastedAt,
+            Decision = input.Decision.GetString(),
+            Reason = input.Reason
+        };
+        var tdDefinition = _getTypedDataDefinition(typeof(NewAssessmentPollVoteTd));
         var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
 
         return address.Substring(2);
@@ -138,6 +159,30 @@ internal class Signer : ISigner
         var tdDefinition = _getTypedDataDefinition(
             typeof(SignedNewAcceptancePollVoteTd),
             typeof(NewAcceptancePollVoteTd)
+        );
+        tdDefinition.SetMessage(td);
+
+        return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);
+    }
+
+    public string SignNewAssessmentPollVote(NewAssessmentPollVoteIm input, string voterId, string voterSignature)
+    {
+        var td = new SignedNewAssessmentPollVoteTd
+        {
+            Vote = new NewAssessmentPollVoteTd
+            {
+                ThingId = input.ThingId.ToString(),
+                SettlementProposalId = input.SettlementProposalId.ToString(),
+                CastedAt = input.CastedAt,
+                Decision = input.Decision.GetString(),
+                Reason = input.Reason
+            },
+            VoterId = voterId,
+            VoterSignature = voterSignature
+        };
+        var tdDefinition = _getTypedDataDefinition(
+            typeof(SignedNewAssessmentPollVoteTd),
+            typeof(NewAssessmentPollVoteTd)
         );
         tdDefinition.SetMessage(td);
 

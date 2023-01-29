@@ -3,28 +3,27 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 
-import '../models/im/decision_im.dart';
+class VoteDialog<T> extends StatefulWidget {
+  final List<T> decisions;
+  final String Function(T) getDisplayString;
+  final FutureOr<void> Function(T decision, String reason) onVote;
 
-class VoteDialog extends StatefulWidget {
-  final FutureOr<void> Function(DecisionIm decision, String reason) onVote;
-
-  const VoteDialog({super.key, required this.onVote});
+  const VoteDialog({
+    super.key,
+    required this.decisions,
+    required this.getDisplayString,
+    required this.onVote,
+  });
 
   @override
-  State<VoteDialog> createState() => _VoteDialogState();
+  State<VoteDialog> createState() => _VoteDialogState<T>();
 }
 
-class _VoteDialogState extends State<VoteDialog> {
-  DecisionIm? _decision;
+class _VoteDialogState<T> extends State<VoteDialog<T>> {
+  T? _decision;
   final _textController = TextEditingController();
 
-  final List<DecisionIm> _decisions = [
-    DecisionIm.accept,
-    DecisionIm.softDecline,
-    DecisionIm.hardDecline,
-  ];
-
-  late final List<DropdownMenuItem<DecisionIm>> _items = _getItems(_decisions);
+  late final List<DropdownMenuItem<T>> _items = _getItems(widget.decisions);
   late final List<double> _customHeights = _getCustomItemHeights();
 
   @override
@@ -33,17 +32,17 @@ class _VoteDialogState extends State<VoteDialog> {
     super.dispose();
   }
 
-  List<DropdownMenuItem<DecisionIm>> _getItems(List<DecisionIm> decisions) {
-    var items = <DropdownMenuItem<DecisionIm>>[];
+  List<DropdownMenuItem<T>> _getItems(List<T> decisions) {
+    var items = <DropdownMenuItem<T>>[];
     for (var decision in decisions) {
       items.addAll(
         [
-          DropdownMenuItem<DecisionIm>(
+          DropdownMenuItem<T>(
             value: decision,
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 8),
               child: Text(
-                decision.getString(),
+                widget.getDisplayString(decision),
                 style: TextStyle(
                   fontSize: 14,
                 ),
@@ -51,7 +50,7 @@ class _VoteDialogState extends State<VoteDialog> {
             ),
           ),
           if (decision != decisions.last)
-            DropdownMenuItem<DecisionIm>(
+            DropdownMenuItem<T>(
               enabled: false,
               child: Divider(),
             ),
@@ -81,7 +80,7 @@ class _VoteDialogState extends State<VoteDialog> {
         child: Column(
           children: [
             DropdownButtonHideUnderline(
-              child: DropdownButton2<DecisionIm>(
+              child: DropdownButton2<T>(
                 isExpanded: true,
                 hint: Text(
                   'Your decision',
@@ -98,7 +97,6 @@ class _VoteDialogState extends State<VoteDialog> {
                 },
                 buttonHeight: 40,
                 dropdownMaxHeight: 200,
-                // buttonWidth: 140,
                 itemPadding: EdgeInsets.symmetric(horizontal: 8),
               ),
             ),

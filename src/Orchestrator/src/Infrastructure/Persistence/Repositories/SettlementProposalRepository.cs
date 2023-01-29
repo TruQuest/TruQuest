@@ -36,4 +36,15 @@ internal class SettlementProposalRepository : Repository<SettlementProposal>, IS
 
         return settlementProposal.Verifiers;
     }
+
+    public async Task<bool> CheckIsDesignatedVerifierFor(Guid proposalId, string userId)
+    {
+        var proposal = await _dbContext.SettlementProposals
+            .AsNoTracking()
+            .Include(p => p.Verifiers.Where(v => v.VerifierId == userId))
+            .Where(p => p.Id == proposalId)
+            .SingleAsync();
+
+        return proposal.Verifiers.Any();
+    }
 }
