@@ -52,7 +52,7 @@ internal class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssess
             return new()
             {
                 Error = new VoteError(
-                    $"Not a designated verifier for proposal with id = {command.Input.SettlementProposalId}"
+                    $"Not a designated verifier for proposal {command.Input.SettlementProposalId}"
                 )
             };
         }
@@ -66,7 +66,7 @@ internal class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssess
             };
         }
 
-        // check that result.Data == _currentPrincipal.Id
+        // @@TODO: Check that result.Data == _currentPrincipal.Id
         // @@??: Check current block ?
 
         var castedAtUtc = DateTimeOffset

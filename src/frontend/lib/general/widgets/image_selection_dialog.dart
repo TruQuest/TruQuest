@@ -21,7 +21,7 @@ class _ImageSelectionDialogState extends State<ImageSelectionDialog> {
   final _textController = TextEditingController();
   final _cropController = CropController();
 
-  Future<Tuple2<Uint8List, String>>? _future;
+  Future<Tuple2<Uint8List, String>>? _getImageFuture;
   String? _imageExt;
   Uint8List? _imageBytes;
 
@@ -35,11 +35,10 @@ class _ImageSelectionDialogState extends State<ImageSelectionDialog> {
     var result = await promiseToFuture<ImageResult>(
       fetchAndResizeImage(url),
     );
-    print(result.mimeType);
     var imageBytes = result.buffer.asUint8List();
     var mimeType = result.mimeType;
 
-    String? ext;
+    final String ext;
     if (mimeType == 'image/png') {
       ext = 'png';
     } else if (mimeType == 'image/jpeg') {
@@ -49,12 +48,12 @@ class _ImageSelectionDialogState extends State<ImageSelectionDialog> {
         ext = 'jpg';
       } else if (PngDecoder().isValidFile(imageBytes)) {
         ext = 'png';
+      } else {
+        throw UnimplementedError();
       }
     }
 
-    print(ext);
-
-    return Tuple2(imageBytes, ext!);
+    return Tuple2(imageBytes, ext);
   }
 
   @override
@@ -76,17 +75,17 @@ class _ImageSelectionDialogState extends State<ImageSelectionDialog> {
                     if (_textController.text.isNotEmpty) {
                       setState(() {
                         // @@TODO: Investigate what happens with discarded futures.
-                        _future = _getImage(_textController.text);
+                        _getImageFuture = _getImage(_textController.text);
                       });
                     }
                   },
                 ),
               ),
             ),
-            if (_future != null)
+            if (_getImageFuture != null)
               Expanded(
                 child: FutureBuilder(
-                  future: _future,
+                  future: _getImageFuture,
                   builder: (context, snapshot) {
                     if (snapshot.data == null) {
                       return Center(child: CircularProgressIndicator());

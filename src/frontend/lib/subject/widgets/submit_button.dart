@@ -17,7 +17,7 @@ class _SubmitButtonState extends StateX<SubmitButton> {
   late final _documentContext = useScoped<DocumentContext>();
   late final _subjectBloc = use<SubjectBloc>();
 
-  bool _enabled = true;
+  var _enabled = true;
 
   @override
   Widget build(BuildContext context) {

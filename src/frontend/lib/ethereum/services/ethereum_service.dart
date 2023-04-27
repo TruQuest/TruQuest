@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:either_dart/either.dart';
 import 'package:flutter_web3/flutter_web3.dart';
 import 'package:tuple/tuple.dart';
-import 'package:universal_html/html.dart';
+import 'package:universal_html/html.dart' as html;
 
 import '../../thing/models/im/decision_im.dart' as thing;
 import '../../settlement/models/im/decision_im.dart' as settlement;
@@ -23,9 +23,9 @@ class EthereumService {
 
   late final provider = Web3Provider(ethereum!);
 
-  final StreamController<int> _connectedChainChangedEventChannel =
-      StreamController<int>();
-  Stream<int> get connectedChainChanged$ =>
+  final StreamController<Tuple2<int, bool>> _connectedChainChangedEventChannel =
+      StreamController<Tuple2<int, bool>>();
+  Stream<Tuple2<int, bool>> get connectedChainChanged$ =>
       _connectedChainChangedEventChannel.stream;
 
   final StreamController<String?> _connectedAccountChangedEventChannel =
@@ -40,19 +40,22 @@ class EthereumService {
     var metamask = ethereum;
     if (metamask != null) {
       if (!isMetamaskInitialized) {
-        window.location.reload();
+        html.window.location.reload();
       }
 
-      // metamask.autoRefreshOnNetworkChange
+      // @@??: metamask.autoRefreshOnNetworkChange ?
 
       metamask.removeAllListeners('chainChanged');
       metamask.removeAllListeners('accountsChanged');
 
       metamask.onChainChanged((chainId) {
         print('Chain changed: $chainId');
+        // is this redundant?
         if (_connectedChainId != chainId) {
           _connectedChainId = chainId;
-          _connectedChainChangedEventChannel.add(chainId);
+          _connectedChainChangedEventChannel.add(
+            Tuple2(_connectedChainId!, true),
+          );
         }
       });
 
@@ -69,7 +72,9 @@ class EthereumService {
       metamask.getChainId().then((chainId) {
         print('Current chain: $chainId');
         _connectedChainId = chainId;
-        _connectedChainChangedEventChannel.add(_connectedChainId!);
+        _connectedChainChangedEventChannel.add(
+          Tuple2(_connectedChainId!, false),
+        );
       });
 
       // @@NOTE: ?? accountsChanged event doesn't fire on launch even though MM says it does ??
@@ -103,7 +108,7 @@ class EthereumService {
     try {
       await metamask.walletSwitchChain(validChainId);
     } catch (e) {
-      // catching EthereumUnrecognizedChainException doesn't work fsr
+      // @@TODO: Find out why catching EthereumUnrecognizedChainException doesn't work.
       print(e);
       try {
         await metamask.walletAddChain(
@@ -147,7 +152,7 @@ class EthereumService {
     return null;
   }
 
-  Future<Either<EthereumError, Tuple2<String, String>>> signAuthMessage(
+  Future<Either<EthereumError, Tuple2<String, String>>> signSignUpMessage(
     String username,
   ) async {
     var metamask = ethereum;

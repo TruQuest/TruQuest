@@ -15,7 +15,7 @@ class GetSettlementProposalsFor extends SettlementAction {
 }
 
 class CreateNewSettlementProposalDraft extends SettlementActionAwaitable<
-    CreateNewSettlementProposalDraftResultVm> {
+    CreateNewSettlementProposalDraftFailureVm?> {
   final DocumentContext documentContext;
 
   CreateNewSettlementProposalDraft({required this.documentContext});

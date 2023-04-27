@@ -19,12 +19,19 @@ class DocumentView extends StatefulWidget {
 }
 
 class _DocumentViewState extends StateX<DocumentView> {
-  late final _documentViewContext = useScoped<DocumentViewContext>();
+  late DocumentViewContext _documentViewContext;
 
-  late final QuillController _controller = _documentViewContext.quillController;
+  late QuillController _controller;
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
   final _sideBlocksScrollController = ScrollController();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _documentViewContext = useScoped<DocumentViewContext>();
+    _controller = _documentViewContext.quillController;
+  }
 
   @override
   void dispose() {

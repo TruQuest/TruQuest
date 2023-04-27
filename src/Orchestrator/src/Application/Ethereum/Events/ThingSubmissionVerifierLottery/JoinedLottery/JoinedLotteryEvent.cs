@@ -9,11 +9,11 @@ namespace Application.Ethereum.Events.ThingSubmissionVerifierLottery.JoinedLotte
 
 public class JoinedLotteryEvent : INotification
 {
-    public long BlockNumber { get; init; }
-    public int TxnIndex { get; init; }
+    public required long BlockNumber { get; init; }
+    public required int TxnIndex { get; init; }
     public required byte[] ThingId { get; init; }
     public required string UserId { get; init; }
-    public BigInteger Nonce { get; init; }
+    public required BigInteger Nonce { get; init; }
 }
 
 internal class JoinedLotteryEventHandler : INotificationHandler<JoinedLotteryEvent>

@@ -8,8 +8,8 @@ namespace Infrastructure.Kafka.Messages;
 
 internal class ThingVerifierSelectedEvent
 {
-    public Guid ThingId { get; set; }
-    public string VerifierId { get; set; }
+    public required Guid ThingId { get; init; }
+    public required string VerifierId { get; init; }
 }
 
 internal class ThingVerifierSelectedEventHandler : IMessageHandler<ThingVerifierSelectedEvent>

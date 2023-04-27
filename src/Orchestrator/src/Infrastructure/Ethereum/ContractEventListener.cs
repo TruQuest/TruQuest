@@ -98,6 +98,7 @@ internal class ContractEventListener : IContractEventListener
                 new EventLogProcessorHandler<ThingAssessmentVerifierLottery.LotteryClosedWithSuccessEvent>(WriteToChannel),
                 new EventLogProcessorHandler<AssessmentPoll.CastedVoteEvent>(WriteToChannel),
                 new EventLogProcessorHandler<AssessmentPoll.CastedVoteWithReasonEvent>(WriteToChannel),
+                new EventLogProcessorHandler<AssessmentPoll.PollFinalizedEvent>(WriteToChannel),
             };
 
             var contractFilter = new NewFilterInput
@@ -324,6 +325,18 @@ internal class ContractEventListener : IContractEventListener
                     UserId = castedAssessmentPollVoteWithReasonEvent.Event.UserId.Substring(2).ToLower(),
                     Vote = castedAssessmentPollVoteWithReasonEvent.Event.Vote,
                     Reason = castedAssessmentPollVoteWithReasonEvent.Event.Reason
+                };
+            }
+            else if (@event is EventLog<AssessmentPoll.PollFinalizedEvent> assessmentPollFinalizedEvent)
+            {
+                yield return new AppEvents.AssessmentPoll.PollFinalized.PollFinalizedEvent
+                {
+                    BlockNumber = (long)assessmentPollFinalizedEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)assessmentPollFinalizedEvent.Log.TransactionIndex.Value,
+                    ThingId = assessmentPollFinalizedEvent.Event.ThingId,
+                    SettlementProposalId = assessmentPollFinalizedEvent.Event.SettlementProposalId,
+                    Decision = assessmentPollFinalizedEvent.Event.Decision,
+                    VoteAggIpfsCid = assessmentPollFinalizedEvent.Event.VoteAggIpfsCid
                 };
             }
 

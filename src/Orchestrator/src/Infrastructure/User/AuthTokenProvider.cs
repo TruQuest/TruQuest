@@ -20,7 +20,7 @@ public class AuthTokenProvider : IAuthTokenProvider
     {
         var jwtConfig = configuration.GetSection("JWT");
 
-        var rsaPrivateKey = RSA.Create(); // @@NOTE: Important to not dispose.
+        var rsaPrivateKey = RSA.Create(); // @@??: Important to not dispose?
         rsaPrivateKey.FromXmlString(jwtConfig["PrivateKey"]!);
         _credentials = new SigningCredentials(
             key: new RsaSecurityKey(rsaPrivateKey),

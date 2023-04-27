@@ -6,11 +6,11 @@ namespace Application.Ethereum.Events.ThingFunded;
 
 public class ThingFundedEvent : INotification
 {
-    public long BlockNumber { get; init; }
-    public int TxnIndex { get; init; }
+    public required long BlockNumber { get; init; }
+    public required int TxnIndex { get; init; }
     public required byte[] ThingId { get; init; }
     public required string UserId { get; init; }
-    public decimal Stake { get; init; }
+    public required decimal Stake { get; init; }
 }
 
 internal class ThingFundedEventHandler : INotificationHandler<ThingFundedEvent>

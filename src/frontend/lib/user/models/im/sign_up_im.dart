@@ -3,10 +3,5 @@ class SignUpIm {
 
   SignUpIm({required this.username});
 
-  Map<String, dynamic> toJson() {
-    var map = <String, dynamic>{};
-    map['username'] = username;
-
-    return map;
-  }
+  Map<String, dynamic> toJson() => {'username': username};
 }

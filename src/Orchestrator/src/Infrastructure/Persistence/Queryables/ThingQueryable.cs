@@ -23,7 +23,7 @@ internal class ThingQueryable : Queryable, IThingQueryable
                         INNER JOIN
                     truquest.""Evidence"" AS e
                         ON t.""Id"" = e.""ThingId""
-                        LEFT JOIN
+                        INNER JOIN
                     truquest.""ThingAttachedTags"" AS tat
                         ON t.""Id"" = tat.""ThingId""
                         INNER JOIN
@@ -44,13 +44,13 @@ internal class ThingQueryable : Queryable, IThingQueryable
         var dbConn = await _getOpenConnection();
         var entries = await dbConn.QueryAsync<VerifierLotteryParticipantEntryQm>(
             @"
-                SELECT je.""BlockNumber"" AS ""JoinedBlockNumber"", pje.""UserId"", pje.""DataHash"", je.""Nonce""
+                SELECT je.""BlockNumber"" AS ""JoinedBlockNumber"", ""UserId"", pje.""DataHash"", je.""Nonce""
                 FROM
                     truquest_events.""PreJoinedThingSubmissionVerifierLotteryEvents"" AS pje
                         LEFT JOIN
                     truquest_events.""JoinedThingSubmissionVerifierLotteryEvents"" AS je
-                        ON (pje.""ThingId"" = je.""ThingId"" AND pje.""UserId"" = je.""UserId"")
-                WHERE pje.""ThingId"" = @ThingId
+                        USING (""ThingId"", ""UserId"")
+                WHERE ""ThingId"" = @ThingId
                 ORDER BY je.""BlockNumber"" DESC NULLS LAST, je.""TxnIndex"" DESC
             ",
             param: new { ThingId = thingId }

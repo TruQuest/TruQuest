@@ -31,17 +31,13 @@ internal class ThingAcceptancePollEventQueryable : Queryable, IThingAcceptancePo
             .ToListAsync();
     }
 
-    public Task<List<JoinedThingSubmissionVerifierLotteryEvent>> FindJoinedEventsWithClosestNoncesAmongUsers(
-        Guid thingId, IEnumerable<string> userIds, decimal nonce, int count
+    public Task<List<JoinedThingSubmissionVerifierLotteryEvent>> GetJoinedEventsFor(
+        Guid thingId, IEnumerable<string> userIds
     )
     {
         return _dbContext.JoinedThingSubmissionVerifierLotteryEvents
             .AsNoTracking()
             .Where(e => e.ThingId == thingId && userIds.Contains(e.UserId))
-            .OrderBy(e => Math.Abs(nonce - e.Nonce))
-                .ThenBy(e => e.BlockNumber)
-                    .ThenBy(e => e.TxnIndex)
-            .Take(count)
             .ToListAsync();
     }
 

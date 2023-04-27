@@ -7,8 +7,8 @@ namespace Application.Ethereum.Events.ThingSubmissionVerifierLottery.PreJoinedLo
 
 public class PreJoinedLotteryEvent : INotification
 {
-    public long BlockNumber { get; init; }
-    public int TxnIndex { get; init; }
+    public required long BlockNumber { get; init; }
+    public required int TxnIndex { get; init; }
     public required byte[] ThingId { get; init; }
     public required string UserId { get; init; }
     public required byte[] DataHash { get; init; }

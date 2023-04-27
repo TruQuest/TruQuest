@@ -2,5 +2,5 @@ namespace Application.User.Commands.SignUp;
 
 public class SignUpIm
 {
-    public string Username { get; set; }
+    public required string Username { get; init; }
 }

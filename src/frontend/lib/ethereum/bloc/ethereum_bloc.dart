@@ -26,19 +26,19 @@ class EthereumBloc extends Bloc<EthereumAction> {
         _switchEthereumChain(action);
       } else if (action is ConnectEthereumAccount) {
         _connectEthereumAccount(action);
-      } else if (action is SignAuthMessage) {
-        _signAuthMessage(action);
+      } else if (action is SignSignUpMessage) {
+        _signSignUpMessage(action);
       }
     });
 
-    var first = true;
-    _ethereumService.connectedChainChanged$.listen((chainId) {
-      if (!first) {
+    _ethereumService.connectedChainChanged$.listen((event) {
+      int chainId = event.item1;
+      bool shouldReloadPage = event.item2;
+      if (shouldReloadPage) {
         SchedulerBinding.instance.addPostFrameCallback(
           (_) => html.window.location.reload(),
         );
       }
-      first = false;
 
       _selectedChainChannel.add(SwitchEthereumChainSuccessVm(
         chainId: chainId,
@@ -51,9 +51,6 @@ class EthereumBloc extends Bloc<EthereumAction> {
     });
   }
 
-  @override
-  void dispose({EthereumAction? cleanupAction}) {}
-
   void _switchEthereumChain(SwitchEthereumChain action) async {
     var error = await _ethereumService.switchEthereumChain();
     action.complete(error != null ? SwitchEthereumChainFailureVm() : null);
@@ -64,14 +61,14 @@ class EthereumBloc extends Bloc<EthereumAction> {
     action.complete(error != null ? ConnectEthereumAccountFailureVm() : null);
   }
 
-  void _signAuthMessage(SignAuthMessage action) async {
-    var result = await _ethereumService.signAuthMessage(action.username);
+  void _signSignUpMessage(SignSignUpMessage action) async {
+    var result = await _ethereumService.signSignUpMessage(action.username);
     if (result.isLeft) {
-      action.complete(SignAuthMessageFailureVm());
+      action.complete(SignSignUpMessageFailureVm());
       return;
     }
 
-    action.complete(SignAuthMessageSuccessVm(
+    action.complete(SignSignUpMessageSuccessVm(
       account: result.right.item1,
       signature: result.right.item2,
     ));

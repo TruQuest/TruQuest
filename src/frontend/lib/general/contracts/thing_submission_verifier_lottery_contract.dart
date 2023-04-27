@@ -274,6 +274,7 @@ class ThingSubmissionVerifierLotteryContract {
 
     var signer = _ethereumService.provider.getSigner();
     var address = await signer.getAddress();
+    contract = contract.connect(signer);
 
     if (!_commitmentIdToData.containsKey('$thingId|$address')) {
       return;
@@ -281,8 +282,6 @@ class ThingSubmissionVerifierLotteryContract {
 
     var thingIdHex = thingId.toSolInputFormat();
     var dataHex = _commitmentIdToData['$thingId|$address'];
-
-    contract = contract.connect(signer);
 
     try {
       var txnResponse = await contract.send(

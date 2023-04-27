@@ -66,9 +66,9 @@ class _ThingPageState extends StateX<ThingPage> {
           [
             TabData(
               text: 'Details',
-              content: UseScope(
+              content: ScopeX(
                 useInstances: [documentViewContext],
-                preserveOnRebuild: false,
+                updatesShouldNotify: true,
                 child: DocumentView(
                   sideBlocks: [
                     TagsViewBlock(),
@@ -88,14 +88,14 @@ class _ThingPageState extends StateX<ThingPage> {
               ],
             ),
             if (thing.state.index >=
-                ThingStateVm.fundedAndSubmissionVerifierLotteryInitiated.index)
+                ThingStateVm.fundedAndVerifierLotteryInitiated.index)
               TabData(
                 text: 'Verifier Lottery',
                 content: Lottery(thing: thing),
                 closable: false,
               ),
             if (thing.state.index >=
-                ThingStateVm.submissionVerifiersSelectedAndPollInitiated.index)
+                ThingStateVm.verifiersSelectedAndPollInitiated.index)
               TabData(
                 text: 'Acceptance Poll',
                 content: Poll(thing: thing),

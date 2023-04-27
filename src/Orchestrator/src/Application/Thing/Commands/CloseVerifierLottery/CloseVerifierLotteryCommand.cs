@@ -10,8 +10,8 @@ namespace Application.Thing.Commands.CloseVerifierLottery;
 
 internal class CloseVerifierLotteryCommand : IRequest<VoidResult>
 {
-    public long LatestIncludedBlockNumber { get; init; }
-    public Guid ThingId { get; init; }
+    public required long LatestIncludedBlockNumber { get; init; }
+    public required Guid ThingId { get; init; }
     public required byte[] Data { get; init; }
 }
 
@@ -71,6 +71,13 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
                 thingId,
                 command.Data,
                 lotteryWinners.Select(w => w.Index).ToList()
+            );
+        }
+        else
+        {
+            _logger.LogInformation(
+                "Thing {ThingId} submission verifier selection lottery: Not enough participants",
+                command.ThingId
             );
         }
 

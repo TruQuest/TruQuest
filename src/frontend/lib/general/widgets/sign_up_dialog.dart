@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../user/models/vm/user_vm.dart';
-import '../../user/bloc/user_result_vm.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';
 import '../../user/bloc/user_actions.dart';
 import '../../user/bloc/user_bloc.dart';
@@ -26,55 +24,24 @@ class _SignUpDialogState extends StateX<SignUpDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text('Sign Up'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            onChanged: (value) {
-              _username = value;
-            },
-            decoration: InputDecoration(hintText: 'Username'),
-          ),
-          SizedBox(height: 12),
-          StreamBuilder<LoadCurrentUserSuccessVm>(
-            stream: _userBloc.currentUser$,
-            initialData: _userBloc.currentUser$last,
-            builder: (context, snapshot) {
-              var user = snapshot.data!.user;
-              if (user.state == UserAccountState.guest) {
-                return TextButton(
-                  child: Text('Connect account'),
-                  onPressed: () async {
-                    var action = ConnectEthereumAccount();
-                    _ethereumBloc.dispatch(action);
-
-                    var error = await action.result;
-                    if (error != null) {
-                      // do smth
-                    }
-                  },
-                );
-              }
-
-              return Text(user.ethereumAccount!);
-            },
-          ),
-        ],
+      content: TextField(
+        onChanged: (value) => _username = value,
+        decoration: InputDecoration(hintText: 'Username'),
       ),
       actions: [
         TextButton(
           child: Text('Sign Up'),
           onPressed: () async {
             if (_username != null) {
-              var signAction = SignAuthMessage(username: _username!);
+              var signAction = SignSignUpMessage(username: _username!);
               _ethereumBloc.dispatch(signAction);
 
               var vm = await signAction.result;
-              if (vm is SignAuthMessageFailureVm) {
+              if (vm is SignSignUpMessageFailureVm) {
                 return;
               }
 
-              vm as SignAuthMessageSuccessVm;
+              vm as SignSignUpMessageSuccessVm;
 
               var signUpAction = SignUp(
                 account: vm.account,

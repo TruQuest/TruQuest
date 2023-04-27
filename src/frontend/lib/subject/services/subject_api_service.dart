@@ -44,7 +44,7 @@ class SubjectApiService {
             } else if (error['type'] == 'Subject') {
               return SubjectError(error['errors'].values.first.first);
             }
-            break; // @@NOTE: Should never actually reach here.
+            break;
           case 401:
             var errorMessage =
                 dioError.response!.data['error']['errors'].values.first.first;
@@ -52,11 +52,12 @@ class SubjectApiService {
           case 403:
             return ForbiddenError();
         }
+
+        throw UnimplementedError();
+      default:
+        print(dioError);
+        return ApiError();
     }
-
-    print(dioError);
-
-    return ApiError();
   }
 
   Future<String> addNewSubject(

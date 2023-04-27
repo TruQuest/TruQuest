@@ -36,7 +36,7 @@ public class ThingController : ControllerBase
     public Task<HandleResult<SubmitNewThingResultVm>> SubmitNewThing([FromBody] SubmitNewThingCommand command)
         => _mediator.Send(command);
 
-    [HttpGet("{id}")]
+    [HttpGet("{id}")] // @@TODO: Check direct binding to Guid.
     public Task<HandleResult<GetThingResultVm>> Get(string id) =>
         _mediator.Send(new GetThingQuery { ThingId = Guid.Parse(id) });
 

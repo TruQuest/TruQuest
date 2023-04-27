@@ -168,6 +168,9 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.Property<int>("Verdict")
                         .HasColumnType("integer");
 
+                    b.Property<string>("VoteAggIpfsCid")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("SubmitterId");
@@ -292,6 +295,9 @@ namespace Infrastructure.Persistence.Migrations.App
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AcceptedSettlementProposalId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("CroppedImageIpfsCid")

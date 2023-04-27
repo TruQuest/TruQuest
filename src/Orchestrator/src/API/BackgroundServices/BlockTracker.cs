@@ -26,7 +26,7 @@ public class BlockTracker : BackgroundService
     {
         await foreach (long blockNumber in _blockListener.GetNext(stoppingToken))
         {
-            _logger.LogInformation("Latest confirmed block {BlockNumber}", blockNumber);
+            _logger.LogInformation("Latest confirmed block: {BlockNumber}", blockNumber);
 
             using var scope = _serviceProvider.CreateScope();
             var mediator = scope.ServiceProvider.GetRequiredService<IPublisher>();

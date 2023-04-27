@@ -3,11 +3,5 @@ class UnsubscribeFromUpdatesCommand {
 
   UnsubscribeFromUpdatesCommand({required this.thingId});
 
-  Map<String, dynamic> toJson() {
-    var map = <String, dynamic>{};
-
-    map['thingId'] = thingId;
-
-    return map;
-  }
+  Map<String, dynamic> toJson() => {'thingId': thingId};
 }

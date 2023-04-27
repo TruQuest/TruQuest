@@ -11,7 +11,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     from: deployer,
     args: [
       truthserum.address,
-      3 /* _numVerifiers */,
+      5 /* _numVerifiers */,
       5 /* _verifierStake */,
       25 /* _thingSubmissionStake */,
       7 /* _thingSubmissionAcceptedReward */,

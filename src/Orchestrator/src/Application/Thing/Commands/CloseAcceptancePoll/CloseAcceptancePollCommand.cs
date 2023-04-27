@@ -8,32 +8,18 @@ using Domain.Aggregates.Events;
 
 using Application.Common.Interfaces;
 using Application.Thing.Commands.CastAcceptancePollVote;
+using Application.Common.Misc;
 
 namespace Application.Thing.Commands.CloseAcceptancePoll;
 
 internal class CloseAcceptancePollCommand : IRequest<VoidResult>
 {
-    public long LatestIncludedBlockNumber { get; init; }
-    public Guid ThingId { get; init; }
+    public required long LatestIncludedBlockNumber { get; init; }
+    public required Guid ThingId { get; init; }
 }
 
 internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptancePollCommand, VoidResult>
 {
-    private class VoteToTakeIntoAccount
-    {
-        public required string VoterId { get; init; }
-        public required AcceptancePollVote.VoteDecision Decision { get; init; }
-
-        public override bool Equals(object? obj)
-        {
-            var other = obj as VoteToTakeIntoAccount;
-            if (other == null) return false;
-            return VoterId == other.VoterId;
-        }
-
-        public override int GetHashCode() => VoterId.GetHashCode();
-    }
-
     private readonly ILogger<CloseAcceptancePollCommandHandler> _logger;
     private readonly IBlockchainQueryable _blockchainQueryable;
     private readonly IAcceptancePollVoteRepository _voteRepository;
@@ -68,18 +54,20 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
     {
         long upperLimitTs = await _blockchainQueryable.GetBlockTimestamp(command.LatestIncludedBlockNumber);
 
+        // @@TODO: Use queryable instead of repo.
         var offChainVotes = await _voteRepository.GetForThingCastedAt(
             command.ThingId,
             noLaterThanTs: upperLimitTs
         );
 
+        // @@TODO: Use queryable instead of repo.
         var castedVoteEvents = await _castedAcceptancePollVoteEventRepository.GetAllFor(command.ThingId);
 
         var orchestratorSig = _signer.SignAcceptancePollVoteAgg(command.ThingId, offChainVotes, castedVoteEvents);
 
         var result = await _fileStorage.UploadJson(new
         {
-            ThingId = command.ThingId,
+            command.ThingId,
             OffChainVotes = offChainVotes
                 .Select(v => new
                 {
@@ -90,7 +78,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
                 {
                     BlockNumber = v.BlockNumber,
                     TxnIndex = v.TxnIndex,
-                    UserId = "0x" + v.UserId, // @@TODO: EIP-55 encode
+                    UserId = v.UserId, // @@TODO: EIP-55 encode
                     Decision = v.Decision.GetString(),
                     Reason = v.Reason ?? string.Empty
                 }),
@@ -105,42 +93,43 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
             };
         }
 
-        var votesToTakeIntoAccount = new HashSet<VoteToTakeIntoAccount>();
+        var accountedVotes = new HashSet<AccountedVote>();
         foreach (var onChainVote in
             castedVoteEvents
                 .OrderByDescending(e => e.BlockNumber)
                     .ThenByDescending(e => e.TxnIndex)
         )
         {
-            votesToTakeIntoAccount.Add(new()
+            accountedVotes.Add(new()
             {
                 VoterId = onChainVote.UserId,
-                Decision = onChainVote.Decision
+                Decision = (int)onChainVote.Decision
             });
         }
         foreach (var offChainVote in offChainVotes.OrderByDescending(v => v.CastedAtMs))
         {
-            votesToTakeIntoAccount.Add(new()
+            accountedVotes.Add(new()
             {
                 VoterId = offChainVote.VoterId,
-                Decision = offChainVote.Decision
+                Decision = (int)offChainVote.Decision
             });
         }
 
         // @@TODO!!: Calculate poll results!
 
-        var votedVerifiers = votesToTakeIntoAccount
+        var votedVerifiers = accountedVotes
             .Select(v => v.VoterId)
             .ToList();
 
+        // @@TODO: Use queryable instead of repo.
         var verifiers = (await _thingRepository.GetAllVerifiersFor(command.ThingId))
             .Select(v => v.VerifierId)
             .ToList();
-        var verifiersToSlash = verifiers.Except(votedVerifiers);
 
+        var verifiersToSlash = verifiers.Except(votedVerifiers);
         foreach (var verifier in verifiersToSlash)
         {
-            _logger.LogInformation("No vote from verifier with id = {UserId}. Slashing...", verifier);
+            _logger.LogInformation("No vote from verifier {UserId}. Slashing...", verifier);
         }
 
         await _contractCaller.FinalizeAcceptancePollForThingAsAccepted(

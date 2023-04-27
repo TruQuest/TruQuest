@@ -9,12 +9,8 @@ class SignUpCommand {
     required this.signature,
   });
 
-  Map<String, dynamic> toJson() {
-    var map = <String, dynamic>{};
-
-    map['input'] = input.toJson();
-    map['signature'] = signature;
-
-    return map;
-  }
+  Map<String, dynamic> toJson() => {
+        'input': input.toJson(),
+        'signature': signature,
+      };
 }

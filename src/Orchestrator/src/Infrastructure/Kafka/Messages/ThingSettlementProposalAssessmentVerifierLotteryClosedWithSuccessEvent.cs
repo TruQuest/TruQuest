@@ -10,14 +10,15 @@ namespace Infrastructure.Kafka.Messages;
 
 internal class ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent
 {
-    public Guid SettlementProposalId { get; set; }
-    public string Orchestrator { get; set; }
-    public decimal Nonce { get; set; }
-    public List<string> ClaimantIds { get; set; }
-    public List<string> WinnerIds { get; set; }
+    public required Guid SettlementProposalId { get; init; }
+    public required string Orchestrator { get; init; }
+    public required decimal Nonce { get; init; }
+    public required List<string> ClaimantIds { get; init; }
+    public required List<string> WinnerIds { get; init; }
 }
 
-internal class ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccessEventHandler : IMessageHandler<ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent>
+internal class ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccessEventHandler :
+    IMessageHandler<ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent>
 {
     private const string _blockNumberHeaderName = "BlockNumber";
     private const string _txnIndexHeaderName = "TxnIndex";
@@ -29,16 +30,21 @@ internal class ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccess
         _mediator = mediator;
     }
 
-    public Task Handle(IMessageContext context, ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent message) =>
-        _mediator.Send(new PrepareForAssessmentPollCommand
-        {
-            AssessmentPollInitBlockNumber = long.Parse(Encoding.UTF8.GetString((byte[])context.Headers[_blockNumberHeaderName])),
-            AssessmentPollInitTxnIndex = int.Parse(Encoding.UTF8.GetString((byte[])context.Headers[_txnIndexHeaderName])),
-            ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
-            SettlementProposalId = message.SettlementProposalId,
-            Orchestrator = message.Orchestrator,
-            Nonce = message.Nonce,
-            ClaimantIds = message.ClaimantIds,
-            WinnerIds = message.WinnerIds
-        });
+    public Task Handle(
+        IMessageContext context, ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent message
+    ) => _mediator.Send(new PrepareForAssessmentPollCommand
+    {
+        AssessmentPollInitBlockNumber = long.Parse(
+            Encoding.UTF8.GetString((byte[])context.Headers[_blockNumberHeaderName])
+        ),
+        AssessmentPollInitTxnIndex = int.Parse(
+            Encoding.UTF8.GetString((byte[])context.Headers[_txnIndexHeaderName])
+        ),
+        ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
+        SettlementProposalId = message.SettlementProposalId,
+        Orchestrator = message.Orchestrator,
+        Nonce = message.Nonce,
+        ClaimantIds = message.ClaimantIds,
+        WinnerIds = message.WinnerIds
+    });
 }

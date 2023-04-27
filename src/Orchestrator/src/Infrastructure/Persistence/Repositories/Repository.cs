@@ -17,7 +17,7 @@ internal abstract class Repository<T> : IRepository<T> where T : IAggregateRoot
     private readonly DbContext? _dbContext;
     private NpgsqlConnection? _dbConnection;
 
-    private bool _useSharedDbConnection;
+    private bool _useSharedDbConnection = false;
     private TransactionScope? _txnScope;
 
     private Repository(IConfiguration configuration)
@@ -34,7 +34,9 @@ internal abstract class Repository<T> : IRepository<T> where T : IAggregateRoot
         }
     }
 
-    protected Repository(IConfiguration configuration, DbContext dbContext, ISharedTxnScope sharedTxnScope) : this(configuration)
+    protected Repository(
+        IConfiguration configuration, DbContext dbContext, ISharedTxnScope sharedTxnScope
+    ) : this(configuration)
     {
         _dbContext = dbContext;
         if (sharedTxnScope.DbConnection != null && !sharedTxnScope.ExcludeRepos!.Contains(GetType()))
@@ -78,7 +80,7 @@ internal abstract class Repository<T> : IRepository<T> where T : IAggregateRoot
             if (!_useSharedDbConnection)
             {
                 _txnScope!.Complete();
-                _txnScope.Dispose();
+                _txnScope.Dispose(); // @@??: Do I need to dispose and null it here? Why can't it be done in Dispose?
                 _txnScope = null;
             }
         }
@@ -109,7 +111,7 @@ internal abstract class Repository<T> : IRepository<T> where T : IAggregateRoot
     protected async ValueTask<NpgsqlCommand> CreateCommand(
         string commandText,
         CommandType commandType = CommandType.Text
-    ) => new NpgsqlCommand
+    ) => new()
     {
         Connection = await _ensureConnectionOpen(),
         CommandText = commandText,

@@ -11,9 +11,9 @@ namespace Application.Settlement.Commands.CloseVerifierLottery;
 
 internal class CloseVerifierLotteryCommand : IRequest<VoidResult>
 {
-    public long LatestIncludedBlockNumber { get; init; }
-    public Guid ThingId { get; init; }
-    public Guid SettlementProposalId { get; init; }
+    public required long LatestIncludedBlockNumber { get; init; }
+    public required Guid ThingId { get; init; }
+    public required Guid SettlementProposalId { get; init; }
     public required byte[] Data { get; init; }
 }
 
@@ -53,6 +53,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
         );
         int numVerifiers = await _contractStorageQueryable.GetThingAssessmentNumVerifiers();
 
+        // @@TODO: Use queryable instead of repo.
         var thingSubmissionVerifiers = await _thingRepository.GetAllVerifiersFor(command.ThingId);
 
         var spotClaimedEvents = await _thingAssessmentPollEventQueryable.FindAllSpotClaimedEventsFor(
@@ -78,23 +79,34 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
             }
         }
 
-        var joinedThingSubmissionVerifierLotteryEvents =
-            await _thingAcceptancePollEventQueryable.FindJoinedEventsWithClosestNoncesAmongUsers(
-                thingId: command.ThingId,
-                userIds: validSpotClaimedEvents.Select(e => e.Event.UserId).ToList(),
-                nonce: nonce,
-                count: thingSubmissionVerifiers.Count / 2
-            );
+        var joinedThingSubmissionVerifierLotteryEvents = await _thingAcceptancePollEventQueryable.GetJoinedEventsFor(
+            thingId: command.ThingId,
+            userIds: validSpotClaimedEvents.Select(e => e.Event.UserId).ToList()
+        );
 
         var winnerClaimantIndices = joinedThingSubmissionVerifierLotteryEvents
             .Join(
                 validSpotClaimedEvents,
                 je => je.UserId,
                 ce => ce.Event.UserId,
-                (je, ce) => (ulong)ce.Index
+                (je, ce) => new
+                {
+                    ce.Index,
+                    je.Nonce
+                }
             )
+            .OrderBy(e => Math.Abs(nonce - e.Nonce))
+                .ThenBy(e => e.Index)
+            .Select(e => (ulong)e.Index)
+            .Take(thingSubmissionVerifiers.Count / 2)
             .Order()
             .ToList();
+
+        _logger.LogInformation(
+            "Proposal {ProposalId} verifier lottery: {NumClaimants} spots claimed",
+            command.SettlementProposalId,
+            winnerClaimantIndices.Count
+        );
 
         int availableSpots = numVerifiers - winnerClaimantIndices.Count;
 
@@ -138,7 +150,10 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
         }
         else
         {
-            _logger.LogWarning("Not enough participants");
+            _logger.LogInformation(
+                "Proposal {ProposalId} assessment verifier selection lottery: Not enough participants",
+                command.SettlementProposalId
+            );
         }
 
         return VoidResult.Instance;

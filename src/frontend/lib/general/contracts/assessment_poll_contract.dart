@@ -135,12 +135,12 @@ class AssessmentPollContract {
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    var initBloc = await contract.call<BigInt>(
+    var initBlock = await contract.call<BigInt>(
       'getPollInitBlock',
       [thingProposalIdHex],
     );
 
-    return initBloc.toInt();
+    return initBlock.toInt();
   }
 
   Future<bool?> checkIsDesignatedVerifierForProposal(
@@ -213,6 +213,7 @@ class AssessmentPollContract {
       print('Vote casted! Awaiting confirmation...');
 
       await txnResponse.wait(2);
+
       print('Cast vote txn confirmed!');
     } catch (e) {
       print(e);

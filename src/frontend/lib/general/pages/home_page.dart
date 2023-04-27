@@ -7,7 +7,7 @@ import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 import '../../settlement/pages/settlement_proposal_page.dart';
 import '../../pong/game.dart';
 import '../../subject/pages/subject_page.dart';
-import '../../thing/pages/thing_page.dart';
+import '../../thing/pages/thing_page_3.dart';
 import '../contexts/page_context.dart';
 import '../../subject/pages/subjects_page.dart';
 import '../bloc/notification_bloc.dart';
@@ -162,7 +162,7 @@ class _HomePageState extends StateX<HomePage> {
                       child: Text('Go To'),
                       onPressed: () async {
                         var route = '';
-                        await showDialog(
+                        var shouldGo = await showDialog<bool>(
                           context: context,
                           builder: (context) => AlertDialog(
                             title: Text('Page'),
@@ -176,14 +176,14 @@ class _HomePageState extends StateX<HomePage> {
                               TextButton(
                                 child: Text('Ok'),
                                 onPressed: () {
-                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop(true);
                                 },
                               ),
                             ],
                           ),
                         );
 
-                        if (route.isNotEmpty) {
+                        if (shouldGo != null && shouldGo && route.isNotEmpty) {
                           _pageContext.route = route;
                           _pageController.jumpToPage(
                             DateTime.now().millisecondsSinceEpoch,
@@ -201,7 +201,7 @@ class _HomePageState extends StateX<HomePage> {
                   return SubjectPage(subjectId: subjectId);
                 } else if (routeSplit[1] == 'things') {
                   var thingId = routeSplit.last;
-                  return ThingPage(thingId: thingId);
+                  return ThingPage3(thingId: thingId);
                 } else if (routeSplit[1] == 'proposals') {
                   var proposalId = routeSplit.last;
                   return SettlementProposalPage(proposalId: proposalId);

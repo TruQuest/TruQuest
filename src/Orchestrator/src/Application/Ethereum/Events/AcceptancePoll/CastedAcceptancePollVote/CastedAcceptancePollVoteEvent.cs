@@ -8,11 +8,11 @@ namespace Application.Ethereum.Events.AcceptancePoll.CastedAcceptancePollVote;
 
 public class CastedAcceptancePollVoteEvent : INotification
 {
-    public long BlockNumber { get; init; }
-    public int TxnIndex { get; init; }
+    public required long BlockNumber { get; init; }
+    public required int TxnIndex { get; init; }
     public required byte[] ThingId { get; init; }
     public required string UserId { get; init; }
-    public int Vote { get; init; }
+    public required int Vote { get; init; }
     public string? Reason { get; init; }
 }
 

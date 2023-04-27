@@ -42,12 +42,11 @@ class _ImageBlockWithCropState extends StateX<ImageBlockWithCrop> {
             ],
           ),
           onPressed: () async {
-            var result =
-                await showDialog<Tuple3<String, Uint8List, Uint8List>?>(
+            var result = await showDialog<Tuple3<String, Uint8List, Uint8List>>(
               context: context,
-              barrierDismissible: true,
-              builder: (_) =>
-                  ImageSelectionDialog(cropCircle: widget.cropCircle),
+              builder: (_) => ImageSelectionDialog(
+                cropCircle: widget.cropCircle,
+              ),
             );
             if (result != null) {
               setState(() {
@@ -72,7 +71,7 @@ class _ImageBlockWithCropState extends StateX<ImageBlockWithCrop> {
                     aspectRatio: 16 / 9,
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(6)),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                       clipBehavior: Clip.antiAlias,
                       child: Image.memory(

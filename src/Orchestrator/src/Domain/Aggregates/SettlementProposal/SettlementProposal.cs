@@ -13,6 +13,7 @@ public class SettlementProposal : Entity, IAggregateRoot
     public string? ImageIpfsCid { get; }
     public string? CroppedImageIpfsCid { get; }
     public string SubmitterId { get; }
+    public string? VoteAggIpfsCid { get; private set; }
 
     private List<SupportingEvidence> _evidence = new();
     public IReadOnlyList<SupportingEvidence> Evidence => _evidence;
@@ -49,5 +50,10 @@ public class SettlementProposal : Entity, IAggregateRoot
     public void AddVerifiers(IEnumerable<string> verifierIds)
     {
         _verifiers.AddRange(verifierIds.Select(id => new SettlementProposalVerifier(id)));
+    }
+
+    public void SetVoteAggIpfsCid(string voteAggIpfsCid)
+    {
+        VoteAggIpfsCid = voteAggIpfsCid;
     }
 }

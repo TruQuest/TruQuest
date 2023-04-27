@@ -1,21 +1,21 @@
 FROM ubuntu:focal AS base
 
-RUN apt update; apt clean
+RUN apt-get update -y; apt-get clean
 
-RUN apt install -y xvfb fluxbox wget wmctrl gnupg2 curl
+RUN apt-get install -y xvfb fluxbox wget wmctrl gnupg2 curl
 
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
     && echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list
-RUN apt update && apt -y install google-chrome-stable
+RUN apt-get update -y && apt-get -y install google-chrome-stable
 
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
-RUN apt install -y nodejs
+RUN apt-get install -y nodejs
 RUN npm install -g --production single-file-cli
 
 RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
 RUN dpkg -i packages-microsoft-prod.deb
 RUN rm packages-microsoft-prod.deb
-RUN apt update && apt install -y aspnetcore-runtime-7.0
+RUN apt-get update -y && apt-get install -y aspnetcore-runtime-7.0
 
 WORKDIR /singlefile
 
@@ -38,7 +38,14 @@ COPY ["FileArchiveService.csproj", "FileArchiveService.csproj"]
 
 RUN dotnet restore
 
-COPY . .
+COPY Attributes/ Attributes/
+COPY Common/ Common/
+COPY Messages/ Messages/
+COPY Properties/ Properties/
+COPY Services/ Services/
+COPY Utils/ Utils/
+COPY *.json ./
+COPY *.cs ./
 
 RUN dotnet publish --no-restore -c Release -o /app
 

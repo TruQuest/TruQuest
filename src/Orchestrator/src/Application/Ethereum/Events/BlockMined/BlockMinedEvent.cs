@@ -11,7 +11,7 @@ namespace Application.Ethereum.Events.BlockMined;
 
 public class BlockMinedEvent : INotification
 {
-    public long BlockNumber { get; init; }
+    public required long BlockNumber { get; init; }
 }
 
 internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>

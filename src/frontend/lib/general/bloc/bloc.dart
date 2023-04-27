@@ -7,5 +7,5 @@ abstract class Bloc<TAction> {
     actionChannel.add(action);
   }
 
-  void dispose({TAction? cleanupAction});
+  void dispose({TAction? cleanupAction}) {}
 }

@@ -20,10 +20,10 @@ class SubjectsPage extends StatelessWidgetX {
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         onPressed: () async {
-          var jumpToRoute = await showDialog<String?>(
+          var jumpToRoute = await showDialog<String>(
             context: context,
             barrierDismissible: false,
-            builder: (_) => UseScope(
+            builder: (_) => ScopeX(
               child: DocumentComposer(
                 title: 'New subject',
                 nameFieldLabel: 'Name',
@@ -39,8 +39,9 @@ class SubjectsPage extends StatelessWidgetX {
 
           if (jumpToRoute != null) {
             _pageContext.route = jumpToRoute;
-            _pageContext.controller
-                .jumpToPage(DateTime.now().millisecondsSinceEpoch);
+            _pageContext.controller.jumpToPage(
+              DateTime.now().millisecondsSinceEpoch,
+            );
           }
         },
       ),

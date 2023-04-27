@@ -64,14 +64,9 @@ class ThingBloc extends Bloc<ThingAction> {
     });
   }
 
-  @override
-  void dispose({ThingAction? cleanupAction}) {
-    // TODO: implement dispose
-  }
-
   void _createNewThingDraft(CreateNewThingDraft action) async {
     await _thingService.createNewThingDraft(action.documentContext);
-    action.complete(CreateNewThingDraftSuccessVm());
+    action.complete(null);
   }
 
   void _getThing(GetThing action) async {
@@ -108,16 +103,13 @@ class ThingBloc extends Bloc<ThingAction> {
   void _fundThing(FundThing action) async {
     await _thingService.fundThing(action.thing.id, action.signature);
     _thingChannel.add(GetThingRvm(
-      thing: action.thing.copyWith(
-        // state: ThingStateVm.awaitingFunding,
-        fundedAwaitingConfirmation: true,
-      ),
+      thing: action.thing.copyWith(fundedAwaitingConfirmation: true),
       signature: null,
     ));
   }
 
-  void _getVerifierLotteryInfo(GetVerifierLotteryInfo action) async {
-    var info = await _thingService.getVerifierLotteryInfo(action.thingId);
+  void _refreshVerifierLotteryInfo(String thingId) async {
+    var info = await _thingService.getVerifierLotteryInfo(thingId);
     _verifierLotteryInfoChannel.add(
       GetVerifierLotteryInfoSuccessVm(
         initBlock: info.item1,
@@ -127,36 +119,20 @@ class ThingBloc extends Bloc<ThingAction> {
         latestBlockNumber: info.item5,
       ),
     );
+  }
+
+  void _getVerifierLotteryInfo(GetVerifierLotteryInfo action) {
+    _refreshVerifierLotteryInfo(action.thingId);
   }
 
   void _preJoinLottery(PreJoinLottery action) async {
     await _thingService.preJoinLottery(action.thingId);
-
-    var info = await _thingService.getVerifierLotteryInfo(action.thingId);
-    _verifierLotteryInfoChannel.add(
-      GetVerifierLotteryInfoSuccessVm(
-        initBlock: info.item1,
-        durationBlocks: info.item2,
-        alreadyPreJoined: info.item3,
-        alreadyJoined: info.item4,
-        latestBlockNumber: info.item5,
-      ),
-    );
+    _refreshVerifierLotteryInfo(action.thingId);
   }
 
   void _joinLottery(JoinLottery action) async {
     await _thingService.joinLottery(action.thingId);
-
-    var info = await _thingService.getVerifierLotteryInfo(action.thingId);
-    _verifierLotteryInfoChannel.add(
-      GetVerifierLotteryInfoSuccessVm(
-        initBlock: info.item1,
-        durationBlocks: info.item2,
-        alreadyPreJoined: info.item3,
-        alreadyJoined: info.item4,
-        latestBlockNumber: info.item5,
-      ),
-    );
+    _refreshVerifierLotteryInfo(action.thingId);
   }
 
   void _getVerifierLotteryParticipants(

@@ -51,25 +51,6 @@ class UserService {
     ));
   }
 
-  UserVm getCurrentUser() {
-    final UserAccountState state;
-    String? username;
-    if (_ethereumService.connectedAccount == null) {
-      state = UserAccountState.guest;
-    } else if (!_accountToJwt.containsKey(_ethereumService.connectedAccount)) {
-      state = UserAccountState.connectedNotLoggedIn;
-    } else {
-      state = UserAccountState.connectedAndLoggedIn;
-      username = _accountToUsername[_ethereumService.connectedAccount];
-    }
-
-    return UserVm(
-      state: state,
-      ethereumAccount: _ethereumService.connectedAccount,
-      username: username,
-    );
-  }
-
   Future<Error?> signUp(
     String account,
     String username,

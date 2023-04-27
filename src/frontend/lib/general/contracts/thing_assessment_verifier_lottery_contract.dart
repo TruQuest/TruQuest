@@ -192,12 +192,12 @@ class ThingAssessmentVerifierLotteryContract {
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    var initBloc = await contract.call<BigInt>(
+    var initBlock = await contract.call<BigInt>(
       'getLotteryInitBlock',
       [thingProposalIdHex],
     );
 
-    return initBloc.toInt();
+    return initBlock.toInt();
   }
 
   Future<bool?> checkAlreadyPreJoinedLottery(
@@ -340,6 +340,7 @@ class ThingAssessmentVerifierLotteryContract {
 
     var signer = _ethereumService.provider.getSigner();
     var address = await signer.getAddress();
+    contract = contract.connect(signer);
 
     if (!_commitmentIdToData.containsKey('$thingId|$proposalId|$address')) {
       return;
@@ -349,8 +350,6 @@ class ThingAssessmentVerifierLotteryContract {
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
     var dataHex = _commitmentIdToData['$thingId|$proposalId|$address'];
-
-    contract = contract.connect(signer);
 
     try {
       var txnResponse = await contract.send(
@@ -367,7 +366,7 @@ class ThingAssessmentVerifierLotteryContract {
 
       print('Join txn confirmed!');
 
-      _commitmentIdToData.remove('$thingId|$address');
+      _commitmentIdToData.remove('$thingId|$proposalId|$address');
     } catch (e) {
       print(e);
     }

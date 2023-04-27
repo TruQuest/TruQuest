@@ -7,19 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Functions/SelectWinnerIndicesAccordingToPreJoinedVerifierLotteryEvents/SelectWinnerIndicesAccordingToPreJoinedVerifierLotteryEvents.v0.sql" />
-        <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Functions/SelectWinnerIndicesAccordingToPreJoinedThingAssessmentVerifierLotteryEvents/SelectWinnerIndicesAccordingToPreJoinedThingAssessmentVerifierLotteryEvents.v0.sql" />
-        <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Functions/SelectWinnerIndicesAccordingToPreJoinedVerifierLotteryEvents/SelectWinnerIndicesAccordingToPreJoinedVerifierLotteryEvents.v1.sql" />
-        <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Functions/SelectWinnerIndicesAccordingToPreJoinedThingAssessmentVerifierLotteryEvents/SelectWinnerIndicesAccordingToPreJoinedThingAssessmentVerifierLotteryEvents.v1.sql" />
-        <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Functions/SelectWinnerIndicesAccordingToPreJoinedThingSubmissionVerifierLotteryEvents/SelectWinnerIndicesAccordingToPreJoinedThingSubmissionVerifierLotteryEvents.v0.sql" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="../Application/Application.csproj" />
-        <ProjectReference Include="../../lib/ContractStorageExplorer/src/ContractStorageExplorer.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
         <PackageReference Include="KafkaFlow.LogHandler.Microsoft" Version="2.2.13" />
         <PackageReference Include="KafkaFlow.Microsoft.DependencyInjection" Version="2.2.13" />
         <PackageReference Include="KafkaFlow.Serializer" Version="2.2.13" />
@@ -31,6 +18,11 @@
         <PackageReference Include="Nethereum.HdWallet" Version="4.11.0" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.0" />
         <PackageReference Include="Dapper" Version="2.0.123" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../Application/Application.csproj" />
+        <ProjectReference Include="../../lib/ContractStorageExplorer/src/ContractStorageExplorer.csproj" />
     </ItemGroup>
 
 </Project>

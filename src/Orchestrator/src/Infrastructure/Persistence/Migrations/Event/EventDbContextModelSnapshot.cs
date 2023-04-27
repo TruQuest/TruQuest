@@ -283,20 +283,6 @@ namespace Infrastructure.Persistence.Migrations.Event
 
                     b.ToTable("ThingAssessmentVerifierLotterySpotClaimedEvents", "truquest_events");
                 });
-
-            modelBuilder.Entity("Domain.QM.VerifierLotteryWinnerQm", b =>
-                {
-                    b.Property<decimal>("Index")
-                        .HasColumnType("numeric(20,0)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.ToTable((string)null);
-
-                    b.ToView("VerifierLotteryWinners", "truquest_events");
-                });
 #pragma warning restore 612, 618
         }
     }

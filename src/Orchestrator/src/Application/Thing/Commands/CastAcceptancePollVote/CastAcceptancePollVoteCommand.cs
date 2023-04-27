@@ -16,7 +16,8 @@ public class CastAcceptancePollVoteCommand : IRequest<HandleResult<string>>
     public required string Signature { get; init; }
 }
 
-internal class CastAcceptancePollVoteCommandHandler : IRequestHandler<CastAcceptancePollVoteCommand, HandleResult<string>>
+internal class CastAcceptancePollVoteCommandHandler :
+    IRequestHandler<CastAcceptancePollVoteCommand, HandleResult<string>>
 {
     private readonly ICurrentPrincipal _currentPrincipal;
     private readonly ISigner _signer;
@@ -51,7 +52,7 @@ internal class CastAcceptancePollVoteCommandHandler : IRequestHandler<CastAccept
         {
             return new()
             {
-                Error = new VoteError($"Not a designated verifier for thing with id = {command.Input.ThingId}")
+                Error = new VoteError($"Not a designated verifier for thing {command.Input.ThingId}")
             };
         }
 
@@ -64,7 +65,7 @@ internal class CastAcceptancePollVoteCommandHandler : IRequestHandler<CastAccept
             };
         }
 
-        // check that result.Data == _currentPrincipal.Id
+        // @@TODO: Check that result.Data == _currentPrincipal.Id
         // @@??: Check current block ?
 
         var castedAtUtc = DateTimeOffset

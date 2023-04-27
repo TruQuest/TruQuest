@@ -31,6 +31,6 @@ class DocumentViewContext implements IDisposable {
 
   @override
   void dispose() {
-    quillController.dispose();
+    // quillController.dispose();
   }
 }

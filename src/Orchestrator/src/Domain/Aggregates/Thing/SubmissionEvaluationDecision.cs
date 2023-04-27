@@ -1,6 +1,6 @@
 namespace Domain.Aggregates;
 
-public enum SubmissionAcceptanceDecision
+public enum SubmissionEvaluationDecision
 {
     UnsettledDueToInsufficientVotingVolume,
     UnsettledDueToMajorityThresholdNotReached,

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
 
-import '../bloc/settlement_result_vm.dart';
 import 'verdict_selection_block.dart';
 import '../../general/contexts/document_context.dart';
 import '../../general/widgets/document_composer.dart';
@@ -58,13 +57,13 @@ class _SettlementProposalsState extends StateX<SettlementProposals> {
           showDialog(
             context: context,
             barrierDismissible: false,
-            builder: (context) => UseScope(
+            builder: (context) => ScopeX(
               useInstances: [documentContext],
               child: DocumentComposer(
                 title: 'New settlement proposal',
                 nameFieldLabel: 'Title',
                 submitButton: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: RoundedLoadingButton(
                     child: Text('Prepare draft'),
                     controller: btnController,
@@ -76,8 +75,8 @@ class _SettlementProposalsState extends StateX<SettlementProposals> {
                       );
                       _settlementBloc.dispatch(action);
 
-                      var vm = await action.result;
-                      if (vm is CreateNewSettlementProposalDraftFailureVm) {
+                      var failure = await action.result;
+                      if (failure != null) {
                         btnController.error();
                         return;
                       }

@@ -148,7 +148,8 @@ namespace Infrastructure.Persistence.Migrations.App
                     Name = table.Column<string>(type: "text", nullable: false),
                     Details = table.Column<string>(type: "text", nullable: false),
                     Type = table.Column<int>(type: "integer", nullable: false),
-                    ImageUrl = table.Column<string>(type: "text", nullable: true),
+                    ImageIpfsCid = table.Column<string>(type: "text", nullable: false),
+                    CroppedImageIpfsCid = table.Column<string>(type: "text", nullable: false),
                     SubmitterId = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
@@ -196,13 +197,15 @@ namespace Infrastructure.Persistence.Migrations.App
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    IdHash = table.Column<string>(type: "text", nullable: false),
                     State = table.Column<int>(type: "integer", nullable: false),
                     Title = table.Column<string>(type: "text", nullable: false),
                     Details = table.Column<string>(type: "text", nullable: false),
-                    ImageUrl = table.Column<string>(type: "text", nullable: true),
+                    ImageIpfsCid = table.Column<string>(type: "text", nullable: true),
+                    CroppedImageIpfsCid = table.Column<string>(type: "text", nullable: true),
                     SubmitterId = table.Column<string>(type: "text", nullable: false),
-                    SubjectId = table.Column<Guid>(type: "uuid", nullable: false)
+                    SubjectId = table.Column<Guid>(type: "uuid", nullable: false),
+                    VoteAggIpfsCid = table.Column<string>(type: "text", nullable: true),
+                    AcceptedSettlementProposalId = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -230,7 +233,8 @@ namespace Infrastructure.Persistence.Migrations.App
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     OriginUrl = table.Column<string>(type: "text", nullable: false),
-                    TruUrl = table.Column<string>(type: "text", nullable: false),
+                    IpfsCid = table.Column<string>(type: "text", nullable: false),
+                    PreviewImageIpfsCid = table.Column<string>(type: "text", nullable: false),
                     ThingId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -238,6 +242,41 @@ namespace Infrastructure.Persistence.Migrations.App
                     table.PrimaryKey("PK_Evidence", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Evidence_Things_ThingId",
+                        column: x => x.ThingId,
+                        principalSchema: "truquest",
+                        principalTable: "Things",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SettlementProposals",
+                schema: "truquest",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ThingId = table.Column<Guid>(type: "uuid", nullable: false),
+                    State = table.Column<int>(type: "integer", nullable: false),
+                    Title = table.Column<string>(type: "text", nullable: false),
+                    Verdict = table.Column<int>(type: "integer", nullable: false),
+                    Details = table.Column<string>(type: "text", nullable: false),
+                    ImageIpfsCid = table.Column<string>(type: "text", nullable: true),
+                    CroppedImageIpfsCid = table.Column<string>(type: "text", nullable: true),
+                    SubmitterId = table.Column<string>(type: "text", nullable: false),
+                    VoteAggIpfsCid = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SettlementProposals", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SettlementProposals_AspNetUsers_SubmitterId",
+                        column: x => x.SubmitterId,
+                        principalSchema: "truquest",
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_SettlementProposals_Things_ThingId",
                         column: x => x.ThingId,
                         principalSchema: "truquest",
                         principalTable: "Things",
@@ -299,6 +338,106 @@ namespace Infrastructure.Persistence.Migrations.App
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "SettlementProposalVerifiers",
+                schema: "truquest",
+                columns: table => new
+                {
+                    SettlementProposalId = table.Column<Guid>(type: "uuid", nullable: false),
+                    VerifierId = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SettlementProposalVerifiers", x => new { x.SettlementProposalId, x.VerifierId });
+                    table.ForeignKey(
+                        name: "FK_SettlementProposalVerifiers_AspNetUsers_VerifierId",
+                        column: x => x.VerifierId,
+                        principalSchema: "truquest",
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_SettlementProposalVerifiers_SettlementProposals_SettlementP~",
+                        column: x => x.SettlementProposalId,
+                        principalSchema: "truquest",
+                        principalTable: "SettlementProposals",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SupportingEvidence",
+                schema: "truquest",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    OriginUrl = table.Column<string>(type: "text", nullable: false),
+                    IpfsCid = table.Column<string>(type: "text", nullable: false),
+                    PreviewImageIpfsCid = table.Column<string>(type: "text", nullable: false),
+                    ProposalId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SupportingEvidence", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SupportingEvidence_SettlementProposals_ProposalId",
+                        column: x => x.ProposalId,
+                        principalSchema: "truquest",
+                        principalTable: "SettlementProposals",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AcceptancePollVotes",
+                schema: "truquest",
+                columns: table => new
+                {
+                    ThingId = table.Column<Guid>(type: "uuid", nullable: false),
+                    VoterId = table.Column<string>(type: "text", nullable: false),
+                    CastedAtMs = table.Column<long>(type: "bigint", nullable: false),
+                    Decision = table.Column<int>(type: "integer", nullable: false),
+                    Reason = table.Column<string>(type: "text", nullable: true),
+                    VoterSignature = table.Column<string>(type: "text", nullable: false),
+                    IpfsCid = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AcceptancePollVotes", x => new { x.ThingId, x.VoterId });
+                    table.ForeignKey(
+                        name: "FK_AcceptancePollVotes_ThingVerifiers_ThingId_VoterId",
+                        columns: x => new { x.ThingId, x.VoterId },
+                        principalSchema: "truquest",
+                        principalTable: "ThingVerifiers",
+                        principalColumns: new[] { "ThingId", "VerifierId" },
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AssessmentPollVotes",
+                schema: "truquest",
+                columns: table => new
+                {
+                    SettlementProposalId = table.Column<Guid>(type: "uuid", nullable: false),
+                    VoterId = table.Column<string>(type: "text", nullable: false),
+                    CastedAtMs = table.Column<long>(type: "bigint", nullable: false),
+                    Decision = table.Column<int>(type: "integer", nullable: false),
+                    Reason = table.Column<string>(type: "text", nullable: true),
+                    VoterSignature = table.Column<string>(type: "text", nullable: false),
+                    IpfsCid = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AssessmentPollVotes", x => new { x.SettlementProposalId, x.VoterId });
+                    table.ForeignKey(
+                        name: "FK_AssessmentPollVotes_SettlementProposalVerifiers_SettlementP~",
+                        columns: x => new { x.SettlementProposalId, x.VoterId },
+                        principalSchema: "truquest",
+                        principalTable: "SettlementProposalVerifiers",
+                        principalColumns: new[] { "SettlementProposalId", "VerifierId" },
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetUserClaims_UserId",
                 schema: "truquest",
@@ -331,6 +470,24 @@ namespace Infrastructure.Persistence.Migrations.App
                 column: "ThingId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_SettlementProposals_SubmitterId",
+                schema: "truquest",
+                table: "SettlementProposals",
+                column: "SubmitterId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SettlementProposals_ThingId",
+                schema: "truquest",
+                table: "SettlementProposals",
+                column: "ThingId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SettlementProposalVerifiers_VerifierId",
+                schema: "truquest",
+                table: "SettlementProposalVerifiers",
+                column: "VerifierId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_SubjectAttachedTags_TagId",
                 schema: "truquest",
                 table: "SubjectAttachedTags",
@@ -343,16 +500,16 @@ namespace Infrastructure.Persistence.Migrations.App
                 column: "SubmitterId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_SupportingEvidence_ProposalId",
+                schema: "truquest",
+                table: "SupportingEvidence",
+                column: "ProposalId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ThingAttachedTags_TagId",
                 schema: "truquest",
                 table: "ThingAttachedTags",
                 column: "TagId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Things_IdHash",
-                schema: "truquest",
-                table: "Things",
-                column: "IdHash");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Things_SubjectId",
@@ -377,6 +534,10 @@ namespace Infrastructure.Persistence.Migrations.App
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "AcceptancePollVotes",
+                schema: "truquest");
+
+            migrationBuilder.DropTable(
                 name: "AspNetUserClaims",
                 schema: "truquest");
 
@@ -389,11 +550,19 @@ namespace Infrastructure.Persistence.Migrations.App
                 schema: "truquest");
 
             migrationBuilder.DropTable(
+                name: "AssessmentPollVotes",
+                schema: "truquest");
+
+            migrationBuilder.DropTable(
                 name: "Evidence",
                 schema: "truquest");
 
             migrationBuilder.DropTable(
                 name: "SubjectAttachedTags",
+                schema: "truquest");
+
+            migrationBuilder.DropTable(
+                name: "SupportingEvidence",
                 schema: "truquest");
 
             migrationBuilder.DropTable(
@@ -409,7 +578,15 @@ namespace Infrastructure.Persistence.Migrations.App
                 schema: "truquest");
 
             migrationBuilder.DropTable(
+                name: "SettlementProposalVerifiers",
+                schema: "truquest");
+
+            migrationBuilder.DropTable(
                 name: "Tags",
+                schema: "truquest");
+
+            migrationBuilder.DropTable(
+                name: "SettlementProposals",
                 schema: "truquest");
 
             migrationBuilder.DropTable(

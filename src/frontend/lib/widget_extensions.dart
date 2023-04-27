@@ -7,15 +7,15 @@ abstract class IDisposable {
   void dispose();
 }
 
-class UseScope extends InheritedWidget {
+class ScopeX extends InheritedWidget {
   Map<Type, Object> _typeToInstance = {};
-  final bool preserveOnRebuild;
+  final bool updatesShouldNotify;
 
-  UseScope({
+  ScopeX({
     super.key,
     required super.child,
     List<Object> useInstances = const [],
-    this.preserveOnRebuild = true,
+    this.updatesShouldNotify = false,
   }) {
     for (var instance in useInstances) {
       _typeToInstance[instance.runtimeType] = instance;
@@ -23,18 +23,18 @@ class UseScope extends InheritedWidget {
   }
 
   @override
-  bool updateShouldNotify(covariant UseScope oldWidget) {
-    if (preserveOnRebuild) {
-      _typeToInstance = oldWidget._typeToInstance;
-    } else {
+  bool updateShouldNotify(covariant ScopeX oldWidget) {
+    if (updatesShouldNotify) {
       for (var instance in oldWidget._typeToInstance.values) {
         if (instance is IDisposable) {
           instance.dispose();
         }
       }
+    } else {
+      _typeToInstance = oldWidget._typeToInstance;
     }
 
-    return false;
+    return updatesShouldNotify;
   }
 
   T _resolve<T>() {
@@ -52,7 +52,7 @@ abstract class StatelessWidgetX extends StatelessWidget {
   StatelessWidgetX({super.key});
 
   T _resolveScoped<T>() {
-    var provider = _context.dependOnInheritedWidgetOfExactType<UseScope>();
+    var provider = _context.dependOnInheritedWidgetOfExactType<ScopeX>();
     return provider!._resolve<T>();
   }
 
@@ -71,7 +71,7 @@ abstract class StatelessWidgetX extends StatelessWidget {
 
 abstract class StateX<TWidget extends StatefulWidget> extends State<TWidget> {
   T _resolveScoped<T>() {
-    var provider = context.dependOnInheritedWidgetOfExactType<UseScope>();
+    var provider = context.dependOnInheritedWidgetOfExactType<ScopeX>();
     return provider!._resolve<T>();
   }
 

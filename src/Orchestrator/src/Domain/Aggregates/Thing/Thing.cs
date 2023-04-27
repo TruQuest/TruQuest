@@ -13,6 +13,7 @@ public class Thing : Entity, IAggregateRoot
     public string SubmitterId { get; }
     public Guid SubjectId { get; }
     public string? VoteAggIpfsCid { get; private set; }
+    public Guid? AcceptedSettlementProposalId { get; private set; }
 
     private List<Evidence> _evidence = new();
     public IReadOnlyList<Evidence> Evidence => _evidence;
@@ -61,5 +62,10 @@ public class Thing : Entity, IAggregateRoot
     public void SetVoteAggIpfsCid(string voteAggIpfsCid)
     {
         VoteAggIpfsCid = voteAggIpfsCid;
+    }
+
+    public void AcceptSettlementProposal(Guid settlementProposalId)
+    {
+        AcceptedSettlementProposalId = settlementProposalId;
     }
 }

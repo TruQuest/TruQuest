@@ -22,7 +22,7 @@ class App extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: UseScope(child: HomePage()),
+      home: ScopeX(child: HomePage()),
     );
   }
 }

@@ -47,10 +47,10 @@ class ThingApiService {
         .where((event) => event.item1 == ServerEventType.thing)
         .listen(
       (event) {
-        var data = event.item2 as Tuple3<ThingEventType, String, Object?>;
+        var data = event.item2 as Tuple3<ThingEventType, String, Object>;
         var thingEventType = data.item1;
         var thingId = data.item2;
-        if (thingEventType == ThingEventType.draftCreateProgress) {
+        if (thingEventType == ThingEventType.draftCreationProgress) {
           var percent = data.item3 as int;
           if (_thingIdToProgressChannel.containsKey(thingId)) {
             _thingIdToProgressChannel[thingId]!.add(percent);
@@ -93,7 +93,7 @@ class ThingApiService {
             } else if (error['type'] == 'Vote') {
               return VoteError(error['errors'].values.first.first);
             }
-            break; // @@NOTE: Should never actually reach here.
+            break;
           case 401:
             var errorMessage =
                 dioError.response!.data['error']['errors'].values.first.first;
@@ -101,11 +101,12 @@ class ThingApiService {
           case 403:
             return ForbiddenError();
         }
+
+        throw UnimplementedError();
+      default:
+        print(dioError);
+        return ApiError();
     }
-
-    print(dioError);
-
-    return ApiError();
   }
 
   Error _wrapHubException(Exception ex) {

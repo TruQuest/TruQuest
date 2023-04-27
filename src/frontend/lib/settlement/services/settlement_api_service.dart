@@ -48,10 +48,10 @@ class SettlementApiService {
         .where((event) => event.item1 == ServerEventType.settlement)
         .listen(
       (event) {
-        var data = event.item2 as Tuple3<SettlementEventType, String, Object?>;
+        var data = event.item2 as Tuple3<SettlementEventType, String, Object>;
         var settlementEventType = data.item1;
         var proposalId = data.item2;
-        if (settlementEventType == SettlementEventType.draftCreateProgress) {
+        if (settlementEventType == SettlementEventType.draftCreationProgress) {
           var percent = data.item3 as int;
           if (_proposalIdToProgressChannel.containsKey(proposalId)) {
             _proposalIdToProgressChannel[proposalId]!.add(percent);
@@ -96,7 +96,7 @@ class SettlementApiService {
             } else if (error['type'] == 'Vote') {
               return VoteError(error['errors'].values.first.first);
             }
-            break; // @@NOTE: Should never actually reach here.
+            break;
           case 401:
             var errorMessage =
                 dioError.response!.data['error']['errors'].values.first.first;
@@ -104,11 +104,12 @@ class SettlementApiService {
           case 403:
             return ForbiddenError();
         }
+
+        throw UnimplementedError();
+      default:
+        print(dioError);
+        return ApiError();
     }
-
-    print(dioError);
-
-    return ApiError();
   }
 
   Error _wrapHubException(Exception ex) {

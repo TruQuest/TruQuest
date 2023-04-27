@@ -4,8 +4,8 @@ public enum ThingStateQm
 {
     Draft,
     AwaitingFunding,
-    FundedAndSubmissionVerifierLotteryInitiated,
-    SubmissionVerifiersSelectedAndPollInitiated,
-    SettlementProposalFundedAndAssessmentVerifierLotteryInitiated,
-    SettlementProposalAssessmentVerifiersSelectedAndPollInitiated,
+    FundedAndVerifierLotteryInitiated,
+    VerifiersSelectedAndPollInitiated,
+    AwaitingSettlement,
+    Settled,
 }

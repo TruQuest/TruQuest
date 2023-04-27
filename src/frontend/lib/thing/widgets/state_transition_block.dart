@@ -14,8 +14,14 @@ class StateTransitionBlock extends StatefulWidget {
 }
 
 class _StateTransitionBlockState extends StateX<StateTransitionBlock> {
-  late final _documentViewContext = useScoped<DocumentViewContext>();
+  late DocumentViewContext _documentViewContext;
   late final _thingBloc = use<ThingBloc>();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _documentViewContext = useScoped<DocumentViewContext>();
+  }
 
   Widget _buildLabelsAndActions() {
     var thing = _documentViewContext.thing!;
@@ -90,7 +96,7 @@ class _StateTransitionBlockState extends StateX<StateTransitionBlock> {
     } else if (thing.state == ThingStateVm.awaitingFunding &&
             thing.fundedAwaitingConfirmation! ||
         thing.state.index >=
-            ThingStateVm.fundedAndSubmissionVerifierLotteryInitiated.index) {
+            ThingStateVm.fundedAndVerifierLotteryInitiated.index) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [

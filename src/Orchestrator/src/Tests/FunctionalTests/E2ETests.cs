@@ -16,6 +16,8 @@ using Application.Settlement.Commands.CreateNewSettlementProposalDraft;
 using Application.Settlement.Commands.SubmitNewSettlementProposal;
 using API.BackgroundServices;
 
+using Tests.FunctionalTests.Helpers.Messages;
+
 namespace Tests.FunctionalTests;
 
 [Collection(nameof(TruQuestTestCollection))]
@@ -119,7 +121,7 @@ public class E2ETests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task ShouldDoDo()
+    public async Task ShouldDoStuff()
     {
         var network = _sut.GetConfigurationValue<string>("Ethereum:Network");
 
@@ -134,7 +136,7 @@ public class E2ETests : IAsyncLifetime
             ("tags", "1|2|3")
         ))
         {
-            _sut.RunAs(userId: submitterAddress, username: submitterAddress.Substring(2, 20));
+            _sut.RunAs(userId: submitterAddress, username: submitterAddress.Substring(0, 20));
 
             var subjectResult = await _sut.SendRequest(new AddNewSubjectCommand
             {
@@ -162,7 +164,7 @@ public class E2ETests : IAsyncLifetime
             thingId = thingDraftResult.Data;
         }
 
-        await Task.Delay(TimeSpan.FromSeconds(30)); // giving time to archive attachments
+        await Task.Delay(TimeSpan.FromSeconds(20)); // giving time to archive attachments
 
         var thingSubmitResult = await _sut.SendRequest(new SubmitNewThingCommand
         {
@@ -273,7 +275,7 @@ public class E2ETests : IAsyncLifetime
 
             thingSubmissionVerifierAccountNames.Add(verifierAccountName);
 
-            _sut.RunAs(userId: verifier.Value.ToLower(), username: verifier.Value.ToLower().Substring(2, 20));
+            _sut.RunAs(userId: verifier.Value.ToLower(), username: verifier.Value.ToLower().Substring(0, 20));
 
             var voteInput = new NewAcceptancePollVoteIm
             {
@@ -299,6 +301,10 @@ public class E2ETests : IAsyncLifetime
 
         await Task.Delay(TimeSpan.FromSeconds(15)); // giving time to finalize poll
 
+        await _sut.BlockchainManipulator.Mine(1);
+
+        await Task.Delay(TimeSpan.FromSeconds(15)); // giving time to update the thing's state and ipfs cid
+
         var pollStage = await _acceptancePollContract
             .WalkStorage()
             .Field("s_thingPollStage")
@@ -320,7 +326,7 @@ public class E2ETests : IAsyncLifetime
             ("evidence", "https://facebook.com")
         ))
         {
-            _sut.RunAs(userId: proposerAddress, username: proposerAddress.Substring(2, 20));
+            _sut.RunAs(userId: proposerAddress, username: proposerAddress.Substring(0, 20));
 
             var proposalDraftResult = await _sut.SendRequest(new CreateNewSettlementProposalDraftCommand
             {
@@ -330,7 +336,7 @@ public class E2ETests : IAsyncLifetime
             proposalId = proposalDraftResult.Data;
         }
 
-        await Task.Delay(TimeSpan.FromSeconds(30)); // giving time to archive attachments
+        await Task.Delay(TimeSpan.FromSeconds(20)); // giving time to archive attachments
 
         var proposalSubmitResult = await _sut.SendRequest(new SubmitNewSettlementProposalCommand
         {
@@ -484,43 +490,47 @@ public class E2ETests : IAsyncLifetime
 
         verifierCount.Should().Be(requiredVerifierCount);
 
-        // var settlementProposalAssessmentVerifierAccountNames = new List<string>();
+        var settlementProposalAssessmentVerifierAccountNames = new List<string>();
 
-        // for (int i = 0; i < verifierCount; ++i)
-        // {
-        //     var verifier = await _assessmentPollContract
-        //         .WalkStorage()
-        //         .Field("s_proposalVerifiers")
-        //         .AsMapping()
-        //         .Key(new SolBytes32(thingProposalIdBytes))
-        //         .AsArrayOf<SolAddress>()
-        //         .Index(i)
-        //         .GetValue<SolAddress>();
+        for (int i = 0; i < verifierCount; ++i)
+        {
+            var verifier = await _assessmentPollContract
+                .WalkStorage()
+                .Field("s_proposalVerifiers")
+                .AsMapping()
+                .Key(new SolBytes32(thingProposalIdBytes))
+                .AsArrayOf<SolAddress>()
+                .Index(i)
+                .GetValue<SolAddress>();
 
-        //     var verifierAccountName = _sut.AccountProvider.LookupNameByAddress(verifier.Value);
-        //     settlementProposalAssessmentVerifierAccountNames.Add(verifierAccountName);
+            var verifierAccountName = _sut.AccountProvider.LookupNameByAddress(verifier.Value);
+            settlementProposalAssessmentVerifierAccountNames.Add(verifierAccountName);
 
-        //     await _sut.ContractCaller.CastAssessmentPollVoteAs(verifierAccountName, thingProposalIdBytes, Vote.Accept);
-        // }
+            await _sut.ContractCaller.CastAssessmentPollVoteAs(verifierAccountName, thingProposalIdBytes, Vote.Accept);
+        }
 
-        // await Task.Delay(TimeSpan.FromSeconds(15)); // giving time to handle CastedVote events
+        await Task.Delay(TimeSpan.FromSeconds(15)); // giving time to handle CastedVote events
 
-        // pollDurationBlocks = await _assessmentPollContract
-        //     .WalkStorage()
-        //     .Field("s_durationBlocks")
-        //     .GetValue<SolUint16>();
+        pollDurationBlocks = await _assessmentPollContract
+            .WalkStorage()
+            .Field("s_durationBlocks")
+            .GetValue<SolUint16>();
 
-        // await _sut.BlockchainManipulator.Mine(pollDurationBlocks.Value);
+        await _sut.BlockchainManipulator.Mine(pollDurationBlocks.Value);
 
-        // await Task.Delay(TimeSpan.FromSeconds(20)); // giving time to finalize poll
+        await Task.Delay(TimeSpan.FromSeconds(20)); // giving time to finalize poll
 
-        // pollStage = await _assessmentPollContract
-        //     .WalkStorage()
-        //     .Field("s_proposalPollStage")
-        //     .AsMapping()
-        //     .Key(new SolBytes32(thingProposalIdBytes))
-        //     .GetValue<SolUint8>();
+        await _sut.BlockchainManipulator.Mine(1);
 
-        // pollStage.Value.Should().Be(4);
+        await Task.Delay(TimeSpan.FromSeconds(15)); // giving time to update the proposal and thing's states and the like
+
+        pollStage = await _assessmentPollContract
+            .WalkStorage()
+            .Field("s_proposalPollStage")
+            .AsMapping()
+            .Key(new SolBytes32(thingProposalIdBytes))
+            .GetValue<SolUint8>();
+
+        pollStage.Value.Should().Be(4);
     }
 }

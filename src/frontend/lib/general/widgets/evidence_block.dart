@@ -45,11 +45,8 @@ class _EvidenceBlockState extends StateX<EvidenceBlock> {
             ],
           ),
           onPressed: () async {
-            _textController.clear();
-
-            var url = await showDialog<String?>(
+            var ok = await showDialog<bool>(
               context: context,
-              barrierDismissible: true,
               builder: (_) => AlertDialog(
                 title: Text('Add evidence link'),
                 content: Container(
@@ -67,16 +64,17 @@ class _EvidenceBlockState extends StateX<EvidenceBlock> {
                   TextButton(
                     child: Text('Ok'),
                     onPressed: () {
-                      Navigator.of(context).pop(_textController.text);
+                      Navigator.of(context).pop(true);
                     },
                   )
                 ],
               ),
             );
 
-            if (url != null && url != '') {
+            if (ok != null && ok && _textController.text.isNotEmpty) {
               setState(() {
-                _documentContext.evidence.add(url);
+                _documentContext.evidence.add(_textController.text);
+                _textController.clear();
               });
             }
           },

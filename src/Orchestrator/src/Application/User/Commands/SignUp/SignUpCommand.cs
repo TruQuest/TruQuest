@@ -16,8 +16,8 @@ namespace Application.User.Commands.SignUp;
 [ExecuteInTxn]
 public class SignUpCommand : IRequest<HandleResult<SignUpResultVm>>
 {
-    public SignUpIm Input { get; set; }
-    public string Signature { get; set; }
+    public required SignUpIm Input { get; init; }
+    public required string Signature { get; init; }
 }
 
 internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<SignUpResultVm>>

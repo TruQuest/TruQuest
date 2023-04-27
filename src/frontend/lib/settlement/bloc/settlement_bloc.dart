@@ -73,11 +73,6 @@ class SettlementBloc extends Bloc<SettlementAction> {
     });
   }
 
-  @override
-  void dispose({SettlementAction? cleanupAction}) {
-    // TODO: implement dispose
-  }
-
   void _getSettlementProposalsFor(GetSettlementProposalsFor action) async {
     var result = await _settlementService.getSettlementProposalsFor(
       action.thingId,
@@ -91,7 +86,7 @@ class SettlementBloc extends Bloc<SettlementAction> {
     await _settlementService.createNewSettlementProposalDraft(
       action.documentContext,
     );
-    action.complete(CreateNewSettlementProposalDraftSuccessVm());
+    action.complete(null);
   }
 
   void _getSettlementProposal(GetSettlementProposal action) async {
@@ -136,10 +131,13 @@ class SettlementBloc extends Bloc<SettlementAction> {
     action.complete(FundSettlementProposalSuccessVm());
   }
 
-  void _getVerifierLotteryInfo(GetVerifierLotteryInfo action) async {
+  void _refreshVerifierLotteryInfo(
+    String thingId,
+    String proposalId,
+  ) async {
     var info = await _settlementService.getVerifierLotteryInfo(
-      action.thingId,
-      action.proposalId,
+      thingId,
+      proposalId,
     );
     _verifierLotteryInfoChannel.add(
       GetVerifierLotteryInfoSuccessVm(
@@ -150,6 +148,10 @@ class SettlementBloc extends Bloc<SettlementAction> {
         latestBlockNumber: info.item5,
       ),
     );
+  }
+
+  void _getVerifierLotteryInfo(GetVerifierLotteryInfo action) {
+    _refreshVerifierLotteryInfo(action.thingId, action.proposalId);
   }
 
   void _claimLotterySpot(ClaimLotterySpot action) async {
@@ -157,55 +159,25 @@ class SettlementBloc extends Bloc<SettlementAction> {
       action.thingId,
       action.proposalId,
     );
-
-    var info = await _settlementService.getVerifierLotteryInfo(
+    _refreshVerifierLotteryInfo(
       action.thingId,
       action.proposalId,
-    );
-    _verifierLotteryInfoChannel.add(
-      GetVerifierLotteryInfoSuccessVm(
-        initBlock: info.item1,
-        durationBlocks: info.item2,
-        alreadyPreJoined: info.item3,
-        alreadyJoined: info.item4,
-        latestBlockNumber: info.item5,
-      ),
     );
   }
 
   void _preJoinLottery(PreJoinLottery action) async {
     await _settlementService.preJoinLottery(action.thingId, action.proposalId);
-
-    var info = await _settlementService.getVerifierLotteryInfo(
+    _refreshVerifierLotteryInfo(
       action.thingId,
       action.proposalId,
-    );
-    _verifierLotteryInfoChannel.add(
-      GetVerifierLotteryInfoSuccessVm(
-        initBlock: info.item1,
-        durationBlocks: info.item2,
-        alreadyPreJoined: info.item3,
-        alreadyJoined: info.item4,
-        latestBlockNumber: info.item5,
-      ),
     );
   }
 
   void _joinLottery(JoinLottery action) async {
     await _settlementService.joinLottery(action.thingId, action.proposalId);
-
-    var info = await _settlementService.getVerifierLotteryInfo(
+    _refreshVerifierLotteryInfo(
       action.thingId,
       action.proposalId,
-    );
-    _verifierLotteryInfoChannel.add(
-      GetVerifierLotteryInfoSuccessVm(
-        initBlock: info.item1,
-        durationBlocks: info.item2,
-        alreadyPreJoined: info.item3,
-        alreadyJoined: info.item4,
-        latestBlockNumber: info.item5,
-      ),
     );
   }
 

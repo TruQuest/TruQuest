@@ -1,11 +1,10 @@
 enum ThingStateVm {
   draft,
   awaitingFunding,
-  fundedAndSubmissionVerifierLotteryInitiated,
-  submissionVerifiersSelectedAndPollInitiated,
+  fundedAndVerifierLotteryInitiated,
+  verifiersSelectedAndPollInitiated,
   awaitingSettlement,
-  settlementProposalFundedAndAssessmentVerifierLotteryInitiated,
-  settlementProposalAssessmentVerifiersSelectedAndPollInitiated,
+  settled,
 }
 
 extension ThingStateVmExtension on ThingStateVm {
@@ -15,18 +14,14 @@ extension ThingStateVmExtension on ThingStateVm {
         return 'Draft';
       case ThingStateVm.awaitingFunding:
         return 'Awaiting funding';
-      case ThingStateVm.fundedAndSubmissionVerifierLotteryInitiated:
+      case ThingStateVm.fundedAndVerifierLotteryInitiated:
         return 'Awaiting verifier lottery results';
-      case ThingStateVm.submissionVerifiersSelectedAndPollInitiated:
+      case ThingStateVm.verifiersSelectedAndPollInitiated:
         return 'Awaiting acceptance poll results';
       case ThingStateVm.awaitingSettlement:
         return 'Awaiting settlement';
-      case ThingStateVm
-          .settlementProposalFundedAndAssessmentVerifierLotteryInitiated:
-        return 'Settlement proposal under review';
-      case ThingStateVm
-          .settlementProposalAssessmentVerifiersSelectedAndPollInitiated:
-        return 'Settlement proposal under review';
+      case ThingStateVm.settled:
+        return 'Settled';
     }
   }
 }

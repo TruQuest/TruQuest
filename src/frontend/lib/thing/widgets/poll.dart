@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
+import '../../general/utils/utils.dart';
 import '../../general/widgets/verifiers_table.dart';
 import '../../general/widgets/vote_dialog.dart';
 import '../models/im/decision_im.dart';
@@ -54,8 +55,6 @@ class _PollState extends StateX<Poll> {
     super.initState();
     _thingBloc.dispatch(GetVerifiers(thingId: widget.thing.id));
   }
-
-  double _degreesToRadians(double degrees) => (pi / 180) * degrees;
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +133,7 @@ class _PollState extends StateX<Poll> {
                                           appearance: _counterAppearance,
                                           innerWidget: (value) {
                                             return Transform.rotate(
-                                              angle: _degreesToRadians(value),
+                                              angle: degreesToRadians(value),
                                               child: Align(
                                                 alignment: Alignment.center,
                                                 child: Container(
@@ -159,7 +158,7 @@ class _PollState extends StateX<Poll> {
                                                   alignment: Alignment.center,
                                                   child: FittedBox(
                                                     child: Text(
-                                                      '${(endBlock - currentBlock)}\nBlocks\nRemaining',
+                                                      '${endBlock - currentBlock}\nBlocks\nRemaining',
                                                     ),
                                                   ),
                                                 ),

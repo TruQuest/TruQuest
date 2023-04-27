@@ -4,7 +4,7 @@ using KafkaFlow;
 
 internal class MessageSerializer : ISerializer
 {
-    private readonly JsonSerializerOptions _options = new JsonSerializerOptions
+    private readonly JsonSerializerOptions _options = new()
     {
         PropertyNameCaseInsensitive = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase

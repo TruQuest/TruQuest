@@ -27,7 +27,7 @@ class _VerdictSelectionBlockState extends StateX<VerdictSelectionBlock> {
           DropdownMenuItem<VerdictIm>(
             value: verdict,
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Text(
                 verdict.getString(),
                 style: TextStyle(
@@ -88,11 +88,12 @@ class _VerdictSelectionBlockState extends StateX<VerdictSelectionBlock> {
             items: _items,
             customItemsHeights: _customHeights,
             value: _documentContext.verdict,
-            onChanged: (value) =>
-                setState(() => _documentContext.verdict = value),
+            onChanged: (value) => setState(
+              () => _documentContext.verdict = value,
+            ),
             buttonHeight: 40,
             dropdownMaxHeight: 200,
-            itemPadding: EdgeInsets.symmetric(horizontal: 8),
+            itemPadding: const EdgeInsets.symmetric(horizontal: 8),
           ),
         ),
       ],

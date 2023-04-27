@@ -51,10 +51,10 @@ class _EvidenceViewBlockState extends StateX<EvidenceViewBlock> {
               ]
                   .map(
                     (url) => Card(
-                      margin: EdgeInsets.fromLTRB(6, 6, 6, 6),
+                      margin: const EdgeInsets.fromLTRB(6, 6, 6, 6),
                       elevation: 5,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       clipBehavior: Clip.antiAlias,
                       child: Stack(
@@ -72,7 +72,7 @@ class _EvidenceViewBlockState extends StateX<EvidenceViewBlock> {
                             right: 0,
                             child: Container(
                               color: Colors.black54,
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
                                 vertical: 8,
                               ),

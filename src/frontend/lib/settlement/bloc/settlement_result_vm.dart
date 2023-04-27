@@ -1,13 +1,6 @@
 abstract class SettlementResultVm {}
 
-abstract class CreateNewSettlementProposalDraftResultVm
-    extends SettlementResultVm {}
-
-class CreateNewSettlementProposalDraftSuccessVm
-    extends CreateNewSettlementProposalDraftResultVm {}
-
-class CreateNewSettlementProposalDraftFailureVm
-    extends CreateNewSettlementProposalDraftResultVm {}
+class CreateNewSettlementProposalDraftFailureVm extends SettlementResultVm {}
 
 class SubmitNewSettlementProposalSuccessVm extends SettlementResultVm {}
 

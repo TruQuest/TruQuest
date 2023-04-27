@@ -14,11 +14,6 @@ class SubjectBloc extends Bloc<SubjectAction> {
     });
   }
 
-  @override
-  void dispose({SubjectAction? cleanupAction}) {
-    // TODO: implement dispose
-  }
-
   void _addNewSubject(AddNewSubject action) async {
     var subjectId = await _subjectService.addNewSubject(action.documentContext);
     print('SubjectId: $subjectId');

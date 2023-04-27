@@ -11,13 +11,12 @@ namespace Application.Settlement.Commands.InitVerifierLottery;
 
 public class InitVerifierLotteryCommand : IRequest<VoidResult>
 {
-    public Guid ThingId { get; init; }
-    public Guid SettlementProposalId { get; init; }
+    public required Guid ThingId { get; init; }
+    public required Guid SettlementProposalId { get; init; }
 }
 
 internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierLotteryCommand, VoidResult>
 {
-    private readonly IThingRepository _thingRepository;
     private readonly ISettlementProposalRepository _settlementProposalRepository;
     private readonly ITaskRepository _taskRepository;
     private readonly IContractCaller _contractCaller;
@@ -25,7 +24,6 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
     private readonly IClientNotifier _clientNotifier;
 
     public InitVerifierLotteryCommandHandler(
-        IThingRepository thingRepository,
         ISettlementProposalRepository settlementProposalRepository,
         ITaskRepository taskRepository,
         IContractCaller contractCaller,
@@ -33,7 +31,6 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
         IClientNotifier clientNotifier
     )
     {
-        _thingRepository = thingRepository;
         _settlementProposalRepository = settlementProposalRepository;
         _taskRepository = taskRepository;
         _contractCaller = contractCaller;
@@ -43,7 +40,6 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
 
     public async Task<VoidResult> Handle(InitVerifierLotteryCommand command, CancellationToken ct)
     {
-        var thing = await _thingRepository.FindById(command.ThingId);
         var proposal = await _settlementProposalRepository.FindById(command.SettlementProposalId);
         if (proposal.State == SettlementProposalState.AwaitingFunding)
         {
@@ -51,7 +47,7 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
             var dataHash = await _contractCaller.ComputeHashForThingAssessmentVerifierLottery(data);
 
             long lotteryInitBlockNumber = await _contractCaller.InitThingAssessmentVerifierLottery(
-                thing.Id.ToByteArray(), proposal.Id.ToByteArray(), dataHash
+                command.ThingId.ToByteArray(), command.SettlementProposalId.ToByteArray(), dataHash
             );
 
             int lotteryDurationBlocks = await _contractStorageQueryable
@@ -63,18 +59,16 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
             );
             task.SetPayload(new()
             {
-                ["thingId"] = thing.Id,
+                ["thingId"] = command.ThingId,
                 ["settlementProposalId"] = proposal.Id,
                 ["data"] = Convert.ToBase64String(data)
             });
 
             _taskRepository.Create(task);
 
-            thing.SetState(ThingState.SettlementProposalFundedAndAssessmentVerifierLotteryInitiated);
-            proposal.SetState(SettlementProposalState.FundedAndAssessmentVerifierLotteryInitiated);
+            proposal.SetState(SettlementProposalState.FundedAndVerifierLotteryInitiated);
 
             await _taskRepository.SaveChanges();
-            await _thingRepository.SaveChanges();
             await _settlementProposalRepository.SaveChanges();
 
             await _clientNotifier.NotifySettlementProposalStateChanged(proposal.Id, proposal.State);

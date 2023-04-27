@@ -39,7 +39,6 @@ class _TagsBlockState extends StateX<TagsBlock> {
           onPressed: () {
             showDialog(
               context: context,
-              barrierDismissible: true,
               builder: (_) => AlertDialog(
                 title: Text('asdasd'),
                 content: Center(

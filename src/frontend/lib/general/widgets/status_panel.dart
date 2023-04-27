@@ -79,16 +79,12 @@ class StatusPanel extends StatelessWidgetX {
                   if (user.state == UserAccountState.guest) {
                     return TextButton(
                       child: Text(
-                        'Sign Up',
+                        'Connect account',
                         style: TextStyle(color: Colors.white),
                       ),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (_) => SignUpDialog(),
-                        );
-                      },
+                      onPressed: () => _ethereumBloc.dispatch(
+                        ConnectEthereumAccount(),
+                      ),
                     );
                   } else if (user.state ==
                       UserAccountState.connectedNotLoggedIn) {
@@ -111,7 +107,6 @@ class StatusPanel extends StatelessWidgetX {
                           onPressed: () {
                             showDialog(
                               context: context,
-                              barrierDismissible: false,
                               builder: (_) => SignUpDialog(),
                             );
                           },

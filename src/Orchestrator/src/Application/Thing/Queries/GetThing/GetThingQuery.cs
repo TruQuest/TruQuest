@@ -39,6 +39,13 @@ internal class GetThingQueryHandler : IRequestHandler<GetThingQuery, HandleResul
                 Error = new ThingError("Not Found")
             };
         }
+        if (thing.State == ThingStateQm.Draft && _currentPrincipal.Id != thing.SubmitterId)
+        {
+            return new()
+            {
+                Error = new ThingError("Invalid request")
+            };
+        }
 
         string? signature = null;
         if (

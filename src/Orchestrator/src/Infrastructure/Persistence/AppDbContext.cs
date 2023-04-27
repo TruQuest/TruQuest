@@ -41,8 +41,8 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
                 .IsRequired();
 
             builder.Metadata
-                .FindNavigation(nameof(Subject.Tags))
-                !.SetPropertyAccessMode(PropertyAccessMode.Field);
+                .FindNavigation(nameof(Subject.Tags))!
+                .SetPropertyAccessMode(PropertyAccessMode.Field);
         });
 
         modelBuilder.Entity<Tag>(builder =>
@@ -77,6 +77,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.Property(t => t.ImageIpfsCid).IsRequired(false);
             builder.Property(t => t.CroppedImageIpfsCid).IsRequired(false);
             builder.Property(t => t.VoteAggIpfsCid).IsRequired(false);
+            builder.Property(t => t.AcceptedSettlementProposalId).IsRequired(false);
 
             builder
                 .HasOne<UserDm>()
@@ -91,16 +92,16 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
                 .IsRequired();
 
             builder.Metadata
-                .FindNavigation(nameof(Thing.Evidence))
-                !.SetPropertyAccessMode(PropertyAccessMode.Field);
+                .FindNavigation(nameof(Thing.Evidence))!
+                .SetPropertyAccessMode(PropertyAccessMode.Field);
 
             builder.Metadata
-                .FindNavigation(nameof(Thing.Tags))
-                !.SetPropertyAccessMode(PropertyAccessMode.Field);
+                .FindNavigation(nameof(Thing.Tags))!
+                .SetPropertyAccessMode(PropertyAccessMode.Field);
 
             builder.Metadata
-                .FindNavigation(nameof(Thing.Verifiers))
-                !.SetPropertyAccessMode(PropertyAccessMode.Field);
+                .FindNavigation(nameof(Thing.Verifiers))!
+                .SetPropertyAccessMode(PropertyAccessMode.Field);
         });
 
         modelBuilder.Entity<Evidence>(builder =>
@@ -188,6 +189,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.Property(p => p.Details).IsRequired();
             builder.Property(p => p.ImageIpfsCid).IsRequired(false);
             builder.Property(p => p.CroppedImageIpfsCid).IsRequired(false);
+            builder.Property(p => p.VoteAggIpfsCid).IsRequired(false);
 
             builder
                 .HasOne<UserDm>()
@@ -202,12 +204,12 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
                 .IsRequired();
 
             builder.Metadata
-                .FindNavigation(nameof(SettlementProposal.Evidence))
-                !.SetPropertyAccessMode(PropertyAccessMode.Field);
+                .FindNavigation(nameof(SettlementProposal.Evidence))!
+                .SetPropertyAccessMode(PropertyAccessMode.Field);
 
             builder.Metadata
-                .FindNavigation(nameof(SettlementProposal.Verifiers))
-                !.SetPropertyAccessMode(PropertyAccessMode.Field);
+                .FindNavigation(nameof(SettlementProposal.Verifiers))!
+                .SetPropertyAccessMode(PropertyAccessMode.Field);
         });
 
         modelBuilder.Entity<SupportingEvidence>(builder =>

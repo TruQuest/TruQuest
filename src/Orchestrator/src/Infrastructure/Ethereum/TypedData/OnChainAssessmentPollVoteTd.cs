@@ -9,12 +9,10 @@ public class OnChainAssessmentPollVoteTd
     public long BlockNumber { get; init; }
     [Parameter("int32", "txnIndex", 2)]
     public int TxnIndex { get; init; }
-    [Parameter("string", "settlementProposalId", 3)]
-    public string SettlementProposalId { get; init; }
-    [Parameter("address", "userId", 4)]
+    [Parameter("address", "userId", 3)]
     public string UserId { get; init; }
-    [Parameter("string", "decision", 5)]
+    [Parameter("string", "decision", 4)]
     public string Decision { get; init; }
-    [Parameter("string", "reason", 6)]
+    [Parameter("string", "reason", 5)]
     public string Reason { get; init; }
 }

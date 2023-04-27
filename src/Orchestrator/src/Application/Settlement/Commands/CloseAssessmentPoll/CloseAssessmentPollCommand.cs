@@ -7,14 +7,15 @@ using Domain.Aggregates.Events;
 using Domain.Results;
 
 using Application.Common.Interfaces;
+using Application.Common.Misc;
 
 namespace Application.Settlement.Commands.CloseAssessmentPoll;
 
 internal class CloseAssessmentPollCommand : IRequest<VoidResult>
 {
-    public long LatestIncludedBlockNumber { get; init; }
-    public Guid ThingId { get; init; }
-    public Guid SettlementProposalId { get; init; }
+    public required long LatestIncludedBlockNumber { get; init; }
+    public required Guid ThingId { get; init; }
+    public required Guid SettlementProposalId { get; init; }
 }
 
 internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessmentPollCommand, VoidResult>
@@ -56,38 +57,36 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
     {
         long upperLimitTs = await _blockchainQueryable.GetBlockTimestamp(command.LatestIncludedBlockNumber);
 
+        // @@TODO: Use queryable instead of repo.
         var offChainVotes = await _voteRepository.GetForThingSettlementProposalCastedAt(
             command.SettlementProposalId,
             noLaterThanTs: upperLimitTs
         );
 
+        // @@TODO: Use queryable instead of repo.
         var castedVoteEvents = await _castedAssessmentPollVoteEventRepository.GetAllFor(
             command.ThingId, command.SettlementProposalId
         );
 
-        var orchestratorSig = _signer.SignAssessmentPollVoteAgg(offChainVotes, castedVoteEvents);
+        var orchestratorSig = _signer.SignAssessmentPollVoteAgg(
+            command.ThingId, command.SettlementProposalId, offChainVotes, castedVoteEvents
+        );
 
         var result = await _fileStorage.UploadJson(new
         {
+            command.ThingId,
+            command.SettlementProposalId,
             OffChainVotes = offChainVotes
                 .Select(v => new
                 {
-                    SettlementProposalId = v.SettlementProposalId,
-                    VoterId = "0x" + v.VoterId,
-                    PollType = "Assessment",
-                    CastedAt = DateTimeOffset.FromUnixTimeMilliseconds(v.CastedAtMs).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
-                    Decision = v.Decision.GetString(),
-                    Reason = v.Reason ?? string.Empty,
-                    IpfsCid = v.IpfsCid,
-                    VoterSignature = v.VoterSignature
+                    IpfsCid = v.IpfsCid
                 }),
             OnChainVotes = castedVoteEvents
                 .Select(v => new
                 {
                     BlockNumber = v.BlockNumber,
                     TxnIndex = v.TxnIndex,
-                    SettlementProposalId = v.SettlementProposalId,
-                    UserId = "0x" + v.UserId,
+                    UserId = v.UserId,
                     Decision = v.Decision.GetString(),
                     Reason = v.Reason ?? string.Empty
                 }),
@@ -102,16 +101,44 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
             };
         }
 
-        var votedVerifiers = offChainVotes
+        var accountedVotes = new HashSet<AccountedVote>();
+        foreach (var onChainVote in
+            castedVoteEvents
+                .OrderByDescending(e => e.BlockNumber)
+                    .ThenByDescending(e => e.TxnIndex)
+        )
+        {
+            accountedVotes.Add(new()
+            {
+                VoterId = onChainVote.UserId,
+                Decision = (int)onChainVote.Decision
+            });
+        }
+        foreach (var offChainVote in offChainVotes.OrderByDescending(v => v.CastedAtMs))
+        {
+            accountedVotes.Add(new()
+            {
+                VoterId = offChainVote.VoterId,
+                Decision = (int)offChainVote.Decision
+            });
+        }
+
+        // @@TODO!!: Calculate poll results!
+
+        var votedVerifiers = accountedVotes
             .Select(v => v.VoterId)
-            .Concat(castedVoteEvents.Select(e => e.UserId))
-            .Distinct()
             .ToList();
 
+        // @@TODO: Use queryable instead of repo.
         var verifiers = (await _settlementProposalRepository.GetAllVerifiersFor(command.SettlementProposalId))
             .Select(v => v.VerifierId)
             .ToList();
+
         var verifiersToSlash = verifiers.Except(votedVerifiers);
+        foreach (var verifier in verifiersToSlash)
+        {
+            _logger.LogInformation("No vote from verifier {UserId}. Slashing...", verifier);
+        }
 
         await _contractCaller.FinalizeAssessmentPollForSettlementProposalAsAccepted(
             thingId: command.ThingId.ToByteArray(),

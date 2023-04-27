@@ -49,7 +49,7 @@ class VerdictViewBlock extends StatelessWidgetX {
                 color:
                     _verdict.index == index ? Colors.green[700] : Colors.white,
                 child: Padding(
-                  padding: EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(12),
                   child: Text(
                     VerdictVm.values[index].getString(),
                     style: TextStyle(

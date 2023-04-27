@@ -1,8 +1,11 @@
 enum SettlementProposalStateVm {
   draft,
   awaitingFunding,
-  fundedAndAssessmentVerifierLotteryInitiated,
-  assessmentVerifiersSelectedAndPollInitiated,
+  fundedAndVerifierLotteryInitiated,
+  verifiersSelectedAndPollInitiated,
+  softDeclined,
+  hardDeclined,
+  accepted,
 }
 
 extension SettlementProposalStateVmExtension on SettlementProposalStateVm {
@@ -12,12 +15,16 @@ extension SettlementProposalStateVmExtension on SettlementProposalStateVm {
         return 'Draft';
       case SettlementProposalStateVm.awaitingFunding:
         return 'Awaiting funding';
-      case SettlementProposalStateVm
-          .fundedAndAssessmentVerifierLotteryInitiated:
+      case SettlementProposalStateVm.fundedAndVerifierLotteryInitiated:
         return 'Awaiting verifier lottery results';
-      case SettlementProposalStateVm
-          .assessmentVerifiersSelectedAndPollInitiated:
+      case SettlementProposalStateVm.verifiersSelectedAndPollInitiated:
         return 'Awaiting assessment poll results';
+      case SettlementProposalStateVm.softDeclined:
+        return 'Soft declined';
+      case SettlementProposalStateVm.hardDeclined:
+        return 'Hard declined';
+      case SettlementProposalStateVm.accepted:
+        return 'Accepted';
     }
   }
 }

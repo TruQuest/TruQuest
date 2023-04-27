@@ -209,15 +209,13 @@ contract AcceptancePoll {
         address _user
     ) public view returns (bool) {
         uint256 designatedVerifiersCount = s_thingVerifiers[_thingId].length;
-        bool isDesignatedVerifier = false;
         for (uint8 i = 0; i < designatedVerifiersCount; ++i) {
             if (_user == s_thingVerifiers[_thingId][i]) {
-                isDesignatedVerifier = true;
-                break;
+                return true;
             }
         }
 
-        return isDesignatedVerifier;
+        return false;
     }
 
     function castVote(

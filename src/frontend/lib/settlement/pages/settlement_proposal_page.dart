@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:tabbed_view/tabbed_view.dart';
+import 'package:tab_container/tab_container.dart';
 
+import '../models/rvm/get_settlement_proposal_rvm.dart';
+import '../models/rvm/settlement_proposal_vm.dart';
 import '../widgets/lottery.dart';
 import '../widgets/poll.dart';
 import '../widgets/verdict_view_block.dart';
@@ -44,6 +46,59 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
     super.dispose();
   }
 
+  List<Widget> _buildTabs(SettlementProposalVm proposal) {
+    var state = proposal.state;
+    var items = [Icon(Icons.content_paste)];
+
+    if (state.index >=
+        SettlementProposalStateVm.fundedAndVerifierLotteryInitiated.index) {
+      items.add(Icon(Icons.people));
+      if (state.index >=
+          SettlementProposalStateVm.verifiersSelectedAndPollInitiated.index) {
+        items.add(Icon(Icons.poll_outlined));
+      }
+    }
+
+    return items;
+  }
+
+  List<Widget> _buildContent(GetSettlementProposalRvm vm) {
+    var proposal = vm.proposal;
+    var state = proposal.state;
+
+    var items = <Widget>[
+      ScopeX(
+        updatesShouldNotify: true,
+        useInstances: [
+          DocumentViewContext(
+            nameOrTitle: proposal.title,
+            details: proposal.details,
+            proposal: proposal,
+            signature: vm.signature,
+          ),
+        ],
+        child: DocumentView(
+          sideBlocks: [
+            VerdictViewBlock(),
+            TimelineBlock(),
+          ],
+          bottomBlock: EvidenceViewBlock(),
+        ),
+      ),
+    ];
+
+    if (state.index >=
+        SettlementProposalStateVm.fundedAndVerifierLotteryInitiated.index) {
+      items.add(Lottery(proposal: proposal));
+      if (state.index >=
+          SettlementProposalStateVm.verifiersSelectedAndPollInitiated.index) {
+        items.add(Poll(proposal: proposal));
+      }
+    }
+
+    return items;
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
@@ -54,63 +109,17 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
         }
 
         var vm = snapshot.data!;
-        var proposal = vm.proposal;
+        var tabs = _buildTabs(vm.proposal);
 
-        var documentViewContext = DocumentViewContext(
-          nameOrTitle: proposal.title,
-          details: proposal.details,
-          proposal: proposal,
-          signature: vm.signature,
+        return TabContainer(
+          controller: TabContainerController(length: tabs.length),
+          tabEnd: 0.3,
+          color: Colors.purple,
+          isStringTabs: false,
+          tabEdge: TabEdge.right,
+          tabs: tabs,
+          children: _buildContent(vm),
         );
-
-        // @@!!: Not being disposed of!
-        var controller = TabbedViewController(
-          [
-            TabData(
-              text: 'Details',
-              content: UseScope(
-                useInstances: [documentViewContext],
-                preserveOnRebuild: false,
-                child: DocumentView(
-                  sideBlocks: [
-                    VerdictViewBlock(),
-                    TimelineBlock(),
-                  ],
-                  bottomBlock: EvidenceViewBlock(),
-                ),
-              ),
-              closable: false,
-              buttons: [
-                TabButton(
-                  icon: IconProvider.data(Icons.refresh),
-                  onPressed: () {
-                    _settlementBloc.dispatch(
-                      GetSettlementProposal(proposalId: widget.proposalId),
-                    );
-                  },
-                ),
-              ],
-            ),
-            if (proposal.state.index >=
-                SettlementProposalStateVm
-                    .fundedAndAssessmentVerifierLotteryInitiated.index)
-              TabData(
-                text: 'Verifier Lottery',
-                content: Lottery(proposal: proposal),
-                closable: false,
-              ),
-            if (proposal.state.index >=
-                SettlementProposalStateVm
-                    .assessmentVerifiersSelectedAndPollInitiated.index)
-              TabData(
-                text: 'Assessment Poll',
-                content: Poll(proposal: proposal),
-                closable: false,
-              ),
-          ],
-        );
-
-        return TabbedView(controller: controller);
       },
     );
   }

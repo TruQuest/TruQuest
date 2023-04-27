@@ -80,6 +80,12 @@ public class ContractCaller
             }
         );
 
+        _logger.LogInformation(
+            "FundThing gas used: {CumulativeGas} {Gas}",
+            txnReceipt.CumulativeGasUsed.Value,
+            txnReceipt.GasUsed.Value
+        ); // 83375
+
         await _blockchainManipulator.Mine(1);
     }
 
@@ -98,6 +104,12 @@ public class ContractCaller
             }
         );
 
+        _logger.LogInformation(
+            "PreJoinThing gas used: {CumulativeGas} {Gas}",
+            txnReceipt.CumulativeGasUsed.Value,
+            txnReceipt.GasUsed.Value
+        ); // 153762 first time, then 136662
+
         await _blockchainManipulator.Mine(1);
     }
 
@@ -115,6 +127,12 @@ public class ContractCaller
                 Data = data
             }
         );
+
+        _logger.LogInformation(
+            "JoinThing gas used: {CumulativeGas} {Gas}",
+            txnReceipt.CumulativeGasUsed.Value,
+            txnReceipt.GasUsed.Value
+        ); // 39180, but there is 39168 in the middle
 
         await _blockchainManipulator.Mine(1);
     }
@@ -146,6 +164,12 @@ public class ContractCaller
             }
         );
 
+        _logger.LogInformation(
+            "FundPro gas used: {CumulativeGas} {Gas}",
+            txnReceipt.CumulativeGasUsed.Value,
+            txnReceipt.GasUsed.Value
+        ); // 107233
+
         await _blockchainManipulator.Mine(1);
     }
 
@@ -165,6 +189,11 @@ public class ContractCaller
                 }
             );
 
+            _logger.LogInformation(
+                "ClaimSpot gas used: {CumulativeGas} {Gas}",
+                txnReceipt.CumulativeGasUsed.Value,
+                txnReceipt.GasUsed.Value
+            ); // 135546 first time, then 118446
         }
         catch (SmartContractCustomErrorRevertException ex)
         {
@@ -206,6 +235,12 @@ public class ContractCaller
             }
         );
 
+        _logger.LogInformation(
+            "PreJoinPro gas used: {CumulativeGas} {Gas}",
+            txnReceipt.CumulativeGasUsed.Value,
+            txnReceipt.GasUsed.Value
+        ); // 156558 first time, then 139458 x3, and 122358 last
+
         await _blockchainManipulator.Mine(1);
     }
 
@@ -224,6 +259,12 @@ public class ContractCaller
             }
         );
 
+        _logger.LogInformation(
+            "JoinPro gas used: {CumulativeGas} {Gas}",
+            txnReceipt.CumulativeGasUsed.Value,
+            txnReceipt.GasUsed.Value
+        ); // 39786, then 39774 once in the middle, and 39786 again
+
         await _blockchainManipulator.Mine(1);
     }
 
@@ -241,6 +282,12 @@ public class ContractCaller
                 Vote = vote
             }
         );
+
+        _logger.LogInformation(
+            "CastPro gas used: {CumulativeGas} {Gas}",
+            txnReceipt.CumulativeGasUsed.Value,
+            txnReceipt.GasUsed.Value
+        ); // 36458 39075 41692 44309 46926
 
         await _blockchainManipulator.Mine(1);
     }

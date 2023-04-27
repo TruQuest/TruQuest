@@ -20,7 +20,7 @@ internal class RequestDispatcher : IRequestDispatcher
 
     public void SetResponseFor(string requestId, object response)
     {
-        if (_requestIdToResponseReceivedTcs.TryGetValue(requestId, out TaskCompletionSource<object>? tcs))
+        if (_requestIdToResponseReceivedTcs.TryRemove(requestId, out TaskCompletionSource<object>? tcs))
         {
             tcs.SetResult(response);
         }

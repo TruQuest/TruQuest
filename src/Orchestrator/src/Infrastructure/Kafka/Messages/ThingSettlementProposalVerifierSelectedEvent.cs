@@ -8,8 +8,8 @@ namespace Infrastructure.Kafka.Messages;
 
 internal class ThingSettlementProposalVerifierSelectedEvent
 {
-    public Guid SettlementProposalId { get; set; }
-    public string VerifierId { get; set; }
+    public required Guid SettlementProposalId { get; init; }
+    public required string VerifierId { get; init; }
 }
 
 internal class ThingSettlementProposalVerifierSelectedEventHandler : IMessageHandler<ThingSettlementProposalVerifierSelectedEvent>

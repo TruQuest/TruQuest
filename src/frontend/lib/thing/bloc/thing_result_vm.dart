@@ -2,11 +2,7 @@ import '../../general/models/rvm/verifier_lottery_participant_entry_vm.dart';
 
 abstract class ThingResultVm {}
 
-abstract class CreateNewThingDraftResultVm extends ThingResultVm {}
-
-class CreateNewThingDraftSuccessVm extends CreateNewThingDraftResultVm {}
-
-class CreateNewThingDraftFailureVm extends CreateNewThingDraftResultVm {}
+class CreateNewThingDraftFailureVm extends ThingResultVm {}
 
 class GetVerifierLotteryInfoSuccessVm extends ThingResultVm {
   final int? initBlock;

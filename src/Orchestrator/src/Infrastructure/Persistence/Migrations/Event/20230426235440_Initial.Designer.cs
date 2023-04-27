@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Persistence.Migrations.Event
 {
     [DbContext(typeof(EventDbContext))]
-    [Migration("20221220025529_SelectWinnerIndicesFuncsV1")]
-    partial class SelectWinnerIndicesFuncsV1
+    [Migration("20230426235440_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -99,6 +99,41 @@ namespace Infrastructure.Persistence.Migrations.Event
                     b.ToTable("CastedAcceptancePollVoteEvents", "truquest_events");
                 });
 
+            modelBuilder.Entity("Domain.Aggregates.Events.CastedAssessmentPollVoteEvent", b =>
+                {
+                    b.Property<long?>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long?>("Id"));
+
+                    b.Property<long>("BlockNumber")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Decision")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("SettlementProposalId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ThingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("TxnIndex")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CastedAssessmentPollVoteEvents", "truquest_events");
+                });
+
             modelBuilder.Entity("Domain.Aggregates.Events.JoinedThingAssessmentVerifierLotteryEvent", b =>
                 {
                     b.Property<long?>("Id")
@@ -131,7 +166,7 @@ namespace Infrastructure.Persistence.Migrations.Event
                     b.ToTable("JoinedThingAssessmentVerifierLotteryEvents", "truquest_events");
                 });
 
-            modelBuilder.Entity("Domain.Aggregates.Events.JoinedVerifierLotteryEvent", b =>
+            modelBuilder.Entity("Domain.Aggregates.Events.JoinedThingSubmissionVerifierLotteryEvent", b =>
                 {
                     b.Property<long?>("Id")
                         .ValueGeneratedOnAdd()
@@ -157,7 +192,7 @@ namespace Infrastructure.Persistence.Migrations.Event
 
                     b.HasKey("Id");
 
-                    b.ToTable("JoinedVerifierLotteryEvents", "truquest_events");
+                    b.ToTable("JoinedThingSubmissionVerifierLotteryEvents", "truquest_events");
                 });
 
             modelBuilder.Entity("Domain.Aggregates.Events.PreJoinedThingAssessmentVerifierLotteryEvent", b =>
@@ -193,7 +228,7 @@ namespace Infrastructure.Persistence.Migrations.Event
                     b.ToTable("PreJoinedThingAssessmentVerifierLotteryEvents", "truquest_events");
                 });
 
-            modelBuilder.Entity("Domain.Aggregates.Events.PreJoinedVerifierLotteryEvent", b =>
+            modelBuilder.Entity("Domain.Aggregates.Events.PreJoinedThingSubmissionVerifierLotteryEvent", b =>
                 {
                     b.Property<long?>("Id")
                         .ValueGeneratedOnAdd()
@@ -220,7 +255,7 @@ namespace Infrastructure.Persistence.Migrations.Event
 
                     b.HasKey("Id");
 
-                    b.ToTable("PreJoinedVerifierLotteryEvents", "truquest_events");
+                    b.ToTable("PreJoinedThingSubmissionVerifierLotteryEvents", "truquest_events");
                 });
 
             modelBuilder.Entity("Domain.Aggregates.Events.ThingAssessmentVerifierLotterySpotClaimedEvent", b =>
@@ -250,20 +285,6 @@ namespace Infrastructure.Persistence.Migrations.Event
                     b.HasKey("Id");
 
                     b.ToTable("ThingAssessmentVerifierLotterySpotClaimedEvents", "truquest_events");
-                });
-
-            modelBuilder.Entity("Domain.QM.VerifierLotteryWinnerQm", b =>
-                {
-                    b.Property<decimal>("Index")
-                        .HasColumnType("numeric(20,0)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.ToTable((string)null);
-
-                    b.ToView("VerifierLotteryWinners", "truquest_events");
                 });
 #pragma warning restore 612, 618
         }

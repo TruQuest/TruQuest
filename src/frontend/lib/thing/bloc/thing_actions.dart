@@ -10,7 +10,7 @@ abstract class ThingActionAwaitable<T extends ThingResultVm?>
     extends ThingAction with AwaitableResult<T> {}
 
 class CreateNewThingDraft
-    extends ThingActionAwaitable<CreateNewThingDraftResultVm> {
+    extends ThingActionAwaitable<CreateNewThingDraftFailureVm?> {
   final DocumentContext documentContext;
 
   CreateNewThingDraft({required this.documentContext});

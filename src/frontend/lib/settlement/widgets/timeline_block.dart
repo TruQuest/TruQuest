@@ -16,8 +16,14 @@ class TimelineBlock extends StatefulWidget {
 }
 
 class _TimelineBlockState extends StateX<TimelineBlock> {
-  late final _documentViewContext = useScoped<DocumentViewContext>();
+  late DocumentViewContext _documentViewContext;
   late final _settlementBloc = use<SettlementBloc>();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _documentViewContext = useScoped<DocumentViewContext>();
+  }
 
   Widget _buildDraftTile() {
     var proposal = _documentViewContext.proposal!;
@@ -25,15 +31,12 @@ class _TimelineBlockState extends StateX<TimelineBlock> {
 
     return RoundedLoadingButton(
       controller: btnController,
-      onPressed: // draft proposal should only be available to its creator
-          proposal.state == SettlementProposalStateVm.draft
-              ? () async {
-                  print('Edit draft');
-
-                  await Future.delayed(Duration(seconds: 2));
-                  btnController.success();
-                }
-              : null,
+      onPressed: proposal.state == SettlementProposalStateVm.draft
+          ? () async {
+              await Future.delayed(Duration(seconds: 2));
+              btnController.success();
+            }
+          : null,
       child: Text('Draft'),
     );
   }
@@ -48,40 +51,39 @@ class _TimelineBlockState extends StateX<TimelineBlock> {
   Widget _buildSubmitTile() {
     var proposal = _documentViewContext.proposal!;
     var btnController = RoundedLoadingButtonController();
-    var ignoreClick = false; // @@!!: Think of a better way!
+    var ignoreClick = false; // @@TODO!!: Think of a better way!
 
     return RoundedLoadingButton(
       controller: btnController,
-      onPressed: // draft proposal should only be available to its creator
-          proposal.state == SettlementProposalStateVm.draft
-              ? () async {
-                  if (ignoreClick) return;
+      onPressed: proposal.state == SettlementProposalStateVm.draft
+          ? () async {
+              if (ignoreClick) return;
 
-                  var action = SubmitNewSettlementProposal(
-                    proposalId: proposal.id,
-                  );
-                  _settlementBloc.dispatch(action);
+              var action = SubmitNewSettlementProposal(
+                proposalId: proposal.id,
+              );
+              _settlementBloc.dispatch(action);
 
-                  var vm = await action.result;
-                  if (vm == null) {
-                    btnController.error();
-                    await Future.delayed(Duration(seconds: 2));
-                    btnController.reset();
-                    return;
-                  }
+              var success = await action.result;
+              if (success == null) {
+                btnController.error();
+                await Future.delayed(Duration(seconds: 2));
+                btnController.reset();
+                return;
+              }
 
-                  btnController.success();
-                  await Future.delayed(Duration(seconds: 1));
+              btnController.success();
+              await Future.delayed(Duration(seconds: 1));
 
-                  ignoreClick = true;
-                  btnController.reset();
-                  await Future.delayed(Duration(seconds: 1));
+              ignoreClick = true;
+              btnController.reset();
+              await Future.delayed(Duration(seconds: 1));
 
-                  _settlementBloc.dispatch(
-                    GetSettlementProposal(proposalId: proposal.id),
-                  );
-                }
-              : null,
+              _settlementBloc.dispatch(
+                GetSettlementProposal(proposalId: proposal.id),
+              );
+            }
+          : null,
       child: Text('Submit'),
     );
   }
@@ -90,7 +92,7 @@ class _TimelineBlockState extends StateX<TimelineBlock> {
     var proposal = _documentViewContext.proposal!;
     bool canBeFunded =
         proposal.state == SettlementProposalStateVm.awaitingFunding &&
-            proposal.canBeFunded!; // && isCreator
+            proposal.canBeFunded!; // @@TODO: && isCreator
     var btnController = RoundedLoadingButtonController();
     var ignoreClick = false;
 
@@ -99,6 +101,7 @@ class _TimelineBlockState extends StateX<TimelineBlock> {
       onPressed: canBeFunded
           ? () async {
               if (ignoreClick) return;
+
               var action = FundSettlementProposal(
                 thingId: proposal.thingId,
                 proposalId: proposal.id,
@@ -106,8 +109,8 @@ class _TimelineBlockState extends StateX<TimelineBlock> {
               );
               _settlementBloc.dispatch(action);
 
-              var vm = await action.result;
-              if (vm == null) {
+              var success = await action.result;
+              if (success == null) {
                 btnController.error();
                 await Future.delayed(Duration(seconds: 2));
                 btnController.reset();
@@ -134,7 +137,7 @@ class _TimelineBlockState extends StateX<TimelineBlock> {
     var proposal = _documentViewContext.proposal!;
     bool canBeFunded =
         proposal.state == SettlementProposalStateVm.awaitingFunding &&
-            proposal.canBeFunded!; // && isCreator
+            proposal.canBeFunded!; // @@TODO: && isCreator
 
     return canBeFunded ? DotIndicator() : OutlinedDotIndicator();
   }
@@ -150,9 +153,7 @@ class _TimelineBlockState extends StateX<TimelineBlock> {
 
   Widget _buildLotteryTileIndicator() {
     var state = _documentViewContext.proposal!.state;
-    return state ==
-            SettlementProposalStateVm
-                .fundedAndAssessmentVerifierLotteryInitiated
+    return state == SettlementProposalStateVm.fundedAndVerifierLotteryInitiated
         ? SizedBox.square(
             dimension: 15,
             child: CircularProgressIndicator(strokeWidth: 2),
@@ -171,9 +172,7 @@ class _TimelineBlockState extends StateX<TimelineBlock> {
 
   Widget _buildPollTileIndicator() {
     var state = _documentViewContext.proposal!.state;
-    return state ==
-            SettlementProposalStateVm
-                .assessmentVerifiersSelectedAndPollInitiated
+    return state == SettlementProposalStateVm.verifiersSelectedAndPollInitiated
         ? SizedBox.square(
             dimension: 15,
             child: CircularProgressIndicator(strokeWidth: 2),
@@ -182,7 +181,6 @@ class _TimelineBlockState extends StateX<TimelineBlock> {
   }
 
   TimelineTileBuilder _buildTimeline() {
-    // Draft -> Submit -> Fund -> Verifier lottery in progress -> Assessment poll in progress -> Assessment
     return TimelineTileBuilder.connected(
       itemCount: 5,
       contentsAlign: ContentsAlign.basic,
@@ -224,7 +222,7 @@ class _TimelineBlockState extends StateX<TimelineBlock> {
         }
 
         return Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
           child: child,
         );
       },

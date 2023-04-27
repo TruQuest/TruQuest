@@ -9,13 +9,9 @@ class SignInCommand {
     required this.signature,
   });
 
-  Map<String, dynamic> toJson() {
-    var map = <String, dynamic>{};
-
-    map['timestamp'] = timestamp;
-    map['orchestratorSignature'] = orchestratorSignature;
-    map['signature'] = signature;
-
-    return map;
-  }
+  Map<String, dynamic> toJson() => {
+        'timestamp': timestamp,
+        'orchestratorSignature': orchestratorSignature,
+        'signature': signature,
+      };
 }

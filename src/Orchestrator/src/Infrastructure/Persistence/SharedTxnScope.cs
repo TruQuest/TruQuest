@@ -22,7 +22,7 @@ public class SharedTxnScope : ISharedTxnScope
     public void Init(Type[]? excludeRepos)
     {
         DbConnection = new NpgsqlConnection(_dbConnectionString);
-        ExcludeRepos = new(excludeRepos ?? new Type[] { });
+        ExcludeRepos = new(excludeRepos ?? new Type[] { }); // @@TODO: Empty static readonly array.
     }
 
     void IDisposable.Dispose()

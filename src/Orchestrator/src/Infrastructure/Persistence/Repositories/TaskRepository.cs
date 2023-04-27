@@ -25,5 +25,7 @@ internal class TaskRepository : Repository<DeferredTask>, ITaskRepository
     }
 
     public Task<List<DeferredTask>> FindAllWithScheduledBlockNumber(long leBlockNumber) =>
-        _dbContext.Tasks.Where(t => t.ScheduledBlockNumber > 0 && t.ScheduledBlockNumber <= leBlockNumber).ToListAsync();
+        _dbContext.Tasks
+            .Where(t => t.ScheduledBlockNumber > 0 && t.ScheduledBlockNumber <= leBlockNumber)
+            .ToListAsync();
 }

@@ -21,7 +21,9 @@ internal class GetVerifierLotteryParticipantsQueryHandler :
         _settlementProposalQueryable = settlementProposalQueryable;
     }
 
-    public async Task<HandleResult<GetVerifierLotteryParticipantsResultVm>> Handle(GetVerifierLotteryParticipantsQuery query, CancellationToken ct)
+    public async Task<HandleResult<GetVerifierLotteryParticipantsResultVm>> Handle(
+        GetVerifierLotteryParticipantsQuery query, CancellationToken ct
+    )
     {
         var entries = await _settlementProposalQueryable.GetVerifierLotteryParticipants(
             query.ProposalId

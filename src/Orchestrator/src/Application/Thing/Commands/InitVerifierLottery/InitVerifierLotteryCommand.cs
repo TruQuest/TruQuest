@@ -11,7 +11,7 @@ namespace Application.Thing.Commands.InitVerifierLottery;
 
 public class InitVerifierLotteryCommand : IRequest<VoidResult>
 {
-    public Guid ThingId { get; init; }
+    public required Guid ThingId { get; init; }
 }
 
 internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierLotteryCommand, VoidResult>
@@ -63,7 +63,7 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
 
             _taskRepository.Create(task);
 
-            thing.SetState(ThingState.FundedAndSubmissionVerifierLotteryInitiated);
+            thing.SetState(ThingState.FundedAndVerifierLotteryInitiated);
 
             await _taskRepository.SaveChanges();
             await _thingRepository.SaveChanges();

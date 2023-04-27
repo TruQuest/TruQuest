@@ -6,8 +6,6 @@ abstract class UserAction {}
 abstract class UserActionAwaitable<T extends UserResultVm?> extends UserAction
     with AwaitableResult<T> {}
 
-class LoadCurrentUser extends UserAction {}
-
 class SignUp extends UserActionAwaitable<SignUpFailureVm?> {
   final String account;
   final String username;

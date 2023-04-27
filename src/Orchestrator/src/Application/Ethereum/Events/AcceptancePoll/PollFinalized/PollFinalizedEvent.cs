@@ -1,8 +1,8 @@
 using MediatR;
 
-using Application.Common.Interfaces;
-
 using Domain.Aggregates;
+
+using Application.Common.Interfaces;
 
 namespace Application.Ethereum.Events.AcceptancePoll.PollFinalized;
 
@@ -29,14 +29,12 @@ internal class PollFinalizedEventHandler : INotificationHandler<PollFinalizedEve
     public async Task Handle(PollFinalizedEvent @event, CancellationToken ct)
     {
         var thing = await _thingRepository.FindById(new Guid(@event.ThingId));
-        if (thing.State == ThingState.SubmissionVerifiersSelectedAndPollInitiated)
+        if (thing.State == ThingState.VerifiersSelectedAndPollInitiated)
         {
-            var decision = (SubmissionAcceptanceDecision)@event.Decision;
-            if (decision == SubmissionAcceptanceDecision.Accepted)
-            {
-                thing.SetState(ThingState.AwaitingSettlement);
-            }
+            var decision = (SubmissionEvaluationDecision)@event.Decision;
+            System.Diagnostics.Debug.Assert(decision == SubmissionEvaluationDecision.Accepted);
 
+            thing.SetState(ThingState.AwaitingSettlement);
             thing.SetVoteAggIpfsCid(@event.VoteAggIpfsCid);
             await _thingRepository.SaveChanges();
 

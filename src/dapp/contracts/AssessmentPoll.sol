@@ -237,15 +237,13 @@ contract AssessmentPoll {
     ) public view returns (bool) {
         uint256 designatedVerifiersCount = s_proposalVerifiers[_thingProposalId]
             .length;
-        bool isDesignatedVerifier = false;
         for (uint8 i = 0; i < designatedVerifiersCount; ++i) {
             if (_user == s_proposalVerifiers[_thingProposalId][i]) {
-                isDesignatedVerifier = true;
-                break;
+                return true;
             }
         }
 
-        return isDesignatedVerifier;
+        return false;
     }
 
     function castVote(

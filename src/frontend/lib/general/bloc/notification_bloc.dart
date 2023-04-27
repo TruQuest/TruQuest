@@ -50,7 +50,7 @@ class NotificationBloc extends Bloc {
           ],
         );
       } else {
-        var state = (data as ThingStateVm);
+        var state = data as ThingStateVm;
         toastContent = Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -69,7 +69,7 @@ class NotificationBloc extends Bloc {
               );
             },
             child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(25),
                 color: Colors.greenAccent,
@@ -110,7 +110,7 @@ class NotificationBloc extends Bloc {
           ],
         );
       } else {
-        var state = (data as SettlementProposalStateVm);
+        var state = data as SettlementProposalStateVm;
         toastContent = Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -129,7 +129,7 @@ class NotificationBloc extends Bloc {
               );
             },
             child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(25),
                 color: Colors.greenAccent,
@@ -153,10 +153,5 @@ class NotificationBloc extends Bloc {
         );
       });
     });
-  }
-
-  @override
-  void dispose({cleanupAction}) {
-    // TODO: implement dispose
   }
 }

@@ -4,6 +4,9 @@ public enum SettlementProposalState
 {
     Draft,
     AwaitingFunding,
-    FundedAndAssessmentVerifierLotteryInitiated,
-    AssessmentVerifiersSelectedAndPollInitiated,
+    FundedAndVerifierLotteryInitiated,
+    VerifiersSelectedAndPollInitiated,
+    SoftDeclined,
+    HardDeclined,
+    Accepted,
 }

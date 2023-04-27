@@ -6,36 +6,35 @@ namespace Infrastructure.Persistence;
 
 internal static class IDbConnectionExtension
 {
-    public static async Task<IEnumerable<TRoot>> QueryWithMany<TRoot, TJoined, TRootKey>(
+    public static async Task<IEnumerable<TRoot>> QueryWithMany<TRoot, TJoined>(
         this IDbConnection dbConn,
         string sql,
-        Func<TRoot, TRootKey> rootKeySelector,
-        Func<TRoot, IList<TJoined>> joinedCollectionSelector,
+        Func<TRoot, ICollection<TJoined>> joinedCollectionSelector,
         object? param = null,
         IDbTransaction? transaction = null,
         bool buffered = true,
         string splitOn = "Id",
         int? commandTimeout = null,
         CommandType? commandType = null
-    ) where TRootKey : notnull
+    )
     {
-        var cache = new Dictionary<TRootKey, TRoot>();
+        var roots = new HashSet<TRoot>();
 
         await dbConn.QueryAsync<TRoot, TJoined, TRoot>(
             sql,
             (root, joined) =>
             {
-                var rootKey = rootKeySelector(root);
-                if (!cache.ContainsKey(rootKey))
+                TRoot? cachedRoot;
+                if (!roots.TryGetValue(root, out cachedRoot))
                 {
-                    cache.Add(rootKey, root);
+                    roots.Add(root);
+                    cachedRoot = root;
                 }
 
-                TRoot cachedRoot = cache[rootKey];
                 if (joined != null)
                 {
-                    IList<TJoined> joinedCollection = joinedCollectionSelector(cachedRoot);
-                    joinedCollection.Add(joined);
+                    ICollection<TJoined> joined1Collection = joinedCollectionSelector(cachedRoot);
+                    joined1Collection.Add(joined);
                 }
 
                 return cachedRoot;
@@ -43,39 +42,38 @@ internal static class IDbConnectionExtension
             param, transaction, buffered, splitOn, commandTimeout, commandType
         );
 
-        return cache.Values;
+        return roots;
     }
 
-    public static async Task<TRoot?> SingleWithMany<TRoot, TJoined, TRootKey>(
+    public static async Task<TRoot?> SingleWithMany<TRoot, TJoined>(
         this IDbConnection dbConn,
         string sql,
-        Func<TRoot, TRootKey> rootKeySelector,
-        Func<TRoot, IList<TJoined>> joinedCollectionSelector,
+        Func<TRoot, ICollection<TJoined>> joinedCollectionSelector,
         object? param = null,
         IDbTransaction? transaction = null,
         bool buffered = true,
         string splitOn = "Id",
         int? commandTimeout = null,
         CommandType? commandType = null
-    ) where TRootKey : notnull
+    )
     {
-        var cache = new Dictionary<TRootKey, TRoot>();
+        var roots = new HashSet<TRoot>();
 
         await dbConn.QueryAsync<TRoot, TJoined, TRoot>(
             sql,
             (root, joined) =>
             {
-                var rootKey = rootKeySelector(root);
-                if (!cache.ContainsKey(rootKey))
+                TRoot? cachedRoot;
+                if (!roots.TryGetValue(root, out cachedRoot))
                 {
-                    cache.Add(rootKey, root);
+                    roots.Add(root);
+                    cachedRoot = root;
                 }
 
-                TRoot cachedRoot = cache[rootKey];
                 if (joined != null)
                 {
-                    IList<TJoined> joinedCollection = joinedCollectionSelector(cachedRoot);
-                    joinedCollection.Add(joined);
+                    ICollection<TJoined> joined1Collection = joinedCollectionSelector(cachedRoot);
+                    joined1Collection.Add(joined);
                 }
 
                 return cachedRoot;
@@ -83,7 +81,7 @@ internal static class IDbConnectionExtension
             param, transaction, buffered, splitOn, commandTimeout, commandType
         );
 
-        return cache.Values.SingleOrDefault();
+        return roots.SingleOrDefault();
     }
 
     public static async Task<TRoot?> SingleWithMultipleMany<TRoot, TJoined1, TJoined2>(

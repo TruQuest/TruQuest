@@ -29,7 +29,7 @@ class SubjectPage extends StatelessWidgetX {
           showDialog(
             context: context,
             barrierDismissible: false,
-            builder: (_) => UseScope(
+            builder: (_) => ScopeX(
               useInstances: [documentContext],
               child: DocumentComposer(
                 title: 'New thing',

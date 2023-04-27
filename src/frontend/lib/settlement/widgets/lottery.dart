@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
+import '../../general/utils/utils.dart';
 import '../bloc/settlement_actions.dart';
 import '../bloc/settlement_bloc.dart';
 import '../models/rvm/settlement_proposal_vm.dart';
@@ -47,8 +48,6 @@ class _LotteryState extends StateX<Lottery> {
     size: 220.0,
   );
 
-  double _degreesToRadians(double degrees) => (pi / 180) * degrees;
-
   @override
   void initState() {
     super.initState();
@@ -61,7 +60,8 @@ class _LotteryState extends StateX<Lottery> {
   Widget build(BuildContext context) {
     return StreamBuilder(
       stream: _userBloc.currentUser$,
-      builder: (context, _) {
+      builder: (context, snapshot) {
+        var user = snapshot.data?.user;
         _settlementBloc.dispatch(
           GetVerifierLotteryInfo(
             thingId: widget.proposal.thingId,
@@ -138,7 +138,7 @@ class _LotteryState extends StateX<Lottery> {
                                           appearance: _counterAppearance,
                                           innerWidget: (value) {
                                             return Transform.rotate(
-                                              angle: _degreesToRadians(value),
+                                              angle: degreesToRadians(value),
                                               child: Align(
                                                 alignment: Alignment.center,
                                                 child: Container(
@@ -163,7 +163,7 @@ class _LotteryState extends StateX<Lottery> {
                                                   alignment: Alignment.center,
                                                   child: FittedBox(
                                                     child: Text(
-                                                      '${(endBlock - currentBlock)}\nBlocks\nRemaining',
+                                                      '${endBlock - currentBlock}\nBlocks\nRemaining',
                                                     ),
                                                   ),
                                                 ),
@@ -181,6 +181,7 @@ class _LotteryState extends StateX<Lottery> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
+                                // @@TODO: Should only be available if user is one of the thing's submission verifiers.
                                 OutlinedButton(
                                   child: Text('Claim lottery spot'),
                                   onPressed: info.initBlock != null &&
@@ -202,6 +203,7 @@ class _LotteryState extends StateX<Lottery> {
                                   child: Text('Commit to lottery'),
                                   onPressed: info.initBlock != null &&
                                           info.alreadyPreJoined != null &&
+                                          // @@TODO: Margin
                                           currentBlock < endBlock &&
                                           !info.alreadyPreJoined!
                                       ? () {
@@ -257,7 +259,10 @@ class _LotteryState extends StateX<Lottery> {
 
                         var vm = snapshot.data!;
 
-                        return LotteryParticipantsTable(entries: vm.entries);
+                        return LotteryParticipantsTable(
+                          entries: vm.entries,
+                          currentUserId: user?.ethereumAccount?.toLowerCase(),
+                        );
                       },
                     ),
                   ),

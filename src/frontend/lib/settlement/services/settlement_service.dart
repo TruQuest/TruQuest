@@ -84,12 +84,9 @@ class SettlementService {
   }
 
   Future submitNewSettlementProposal(String proposalId) async {
-    var result = await _settlementApiService.submitNewSettlementProposal(
+    await _settlementApiService.submitNewSettlementProposal(
       proposalId,
     );
-    print(result.thingId);
-    print(result.proposalId);
-    print(result.signature);
   }
 
   Future fundSettlementProposal(

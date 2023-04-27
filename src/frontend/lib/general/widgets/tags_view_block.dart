@@ -3,18 +3,13 @@ import 'package:flutter/material.dart';
 import '../contexts/document_view_context.dart';
 import '../../widget_extensions.dart';
 
-class TagsViewBlock extends StatefulWidget {
-  const TagsViewBlock({super.key});
-
-  @override
-  State<TagsViewBlock> createState() => _TagsViewBlockState();
-}
-
-class _TagsViewBlockState extends StateX<TagsViewBlock> {
+class TagsViewBlock extends StatelessWidgetX {
   late final _documentViewContext = useScoped<DocumentViewContext>();
 
+  TagsViewBlock({super.key});
+
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -46,7 +41,7 @@ class _TagsViewBlockState extends StateX<TagsViewBlock> {
                     ),
                     elevation: 5,
                     child: Padding(
-                      padding: EdgeInsets.fromLTRB(12, 8, 12, 8),
+                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
                       child: Text(
                         tag,
                         overflow: TextOverflow.fade,

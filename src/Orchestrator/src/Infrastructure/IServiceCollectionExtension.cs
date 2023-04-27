@@ -85,7 +85,7 @@ public static class IServiceCollectionExtension
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
-                var rsa = RSA.Create(); // @@NOTE: Important to not dispose.
+                var rsa = RSA.Create(); // @@??: Important to not dispose?
                 rsa.FromXmlString(configuration["JWT:PublicKey"]!);
 
                 options.MapInboundClaims = false;

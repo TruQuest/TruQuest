@@ -66,8 +66,6 @@ class ThingService {
 
   Future<SubmitNewThingRvm> submitNewThing(String thingId) async {
     var result = await _thingApiService.submitNewThing(thingId);
-    print(result.thingId);
-    print(result.signature);
     return result;
   }
 

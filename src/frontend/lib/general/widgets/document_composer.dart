@@ -41,37 +41,34 @@ class _DocumentComposerState extends StateX<DocumentComposer> {
   Widget build(BuildContext context) {
     return SimpleDialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(12)),
+        borderRadius: BorderRadius.circular(12),
       ),
       titlePadding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
       title: SizedBox(
         width: 800,
         height: 30,
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(widget.title),
-            Row(
-              children: [
-                IconButton(
-                  padding: EdgeInsets.zero,
-                  icon: Icon(Icons.help_outline),
-                  iconSize: 20,
-                  splashRadius: 13,
-                  color: Colors.blue[900],
-                  onPressed: () {},
-                ),
-                IconButton(
-                  padding: EdgeInsets.zero,
-                  icon: Icon(Icons.close),
-                  iconSize: 20,
-                  splashRadius: 13,
-                  color: Colors.red[800],
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ],
+            Spacer(),
+            IconButton(
+              padding: EdgeInsets.zero,
+              icon: Icon(Icons.help_outline),
+              iconSize: 20,
+              splashRadius: 13,
+              color: Colors.blue[900],
+              onPressed: () {},
+            ),
+            SizedBox(width: 20),
+            IconButton(
+              padding: EdgeInsets.zero,
+              icon: Icon(Icons.close),
+              iconSize: 20,
+              splashRadius: 13,
+              color: Colors.red[800],
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
             ),
           ],
         ),
@@ -104,7 +101,7 @@ class _DocumentComposerState extends StateX<DocumentComposer> {
                           border: Border.all(
                             color: Colors.black.withOpacity(0.3),
                           ),
-                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         padding: const EdgeInsets.all(4),
                         child: QuillEditor(

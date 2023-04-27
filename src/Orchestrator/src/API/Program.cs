@@ -127,7 +127,7 @@ public static class WebApplicationBuilderExtension
         var processInfo = new ProcessStartInfo()
         {
             FileName = "cmd.exe",
-            Arguments = "/c cd c:/chekh/projects/truquest/src/dapp && rm -r deployments/ && yarn hardhat deploy",
+            Arguments = "/c cd c:/chekh/projects/truquest/src/dapp && rm -rf deployments/ && yarn hardhat deploy",
             UseShellExecute = false,
             RedirectStandardOutput = true
         };
@@ -147,7 +147,7 @@ public static class WebApplicationBuilderExtension
     {
         using var client = new HttpClient();
         var body = await File.ReadAllTextAsync("pg-connector.conf.json");
-        var request = new HttpRequestMessage(HttpMethod.Post, "http://localhost:8083/connectors");
+        using var request = new HttpRequestMessage(HttpMethod.Post, "http://localhost:8083/connectors");
         request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
         var response = await client.SendAsync(request);
         if (!(response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.Conflict))

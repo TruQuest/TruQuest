@@ -10,8 +10,8 @@ public interface IThingAcceptancePollEventQueryable
         Guid thingId, long latestBlockNumber, decimal nonce, int count
     );
 
-    Task<List<JoinedThingSubmissionVerifierLotteryEvent>> FindJoinedEventsWithClosestNoncesAmongUsers(
-        Guid thingId, IEnumerable<string> userIds, decimal nonce, int count
+    Task<List<JoinedThingSubmissionVerifierLotteryEvent>> GetJoinedEventsFor(
+        Guid thingId, IEnumerable<string> userIds
     );
 
     Task<IEnumerable<VerifierLotteryWinnerQm>> GetLotteryWinnerIndicesAccordingToPreJoinedEvents(

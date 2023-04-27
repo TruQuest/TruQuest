@@ -24,7 +24,6 @@ public class PrepareForAssessmentPollCommand : IRequest<VoidResult>
 
 internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareForAssessmentPollCommand, VoidResult>
 {
-    private readonly IThingRepository _thingRepository;
     private readonly ISettlementProposalRepository _settlementProposalRepository;
     private readonly ITaskRepository _taskRepository;
     private readonly IJoinedThingAssessmentVerifierLotteryEventRepository _joinedThingAssessmentVerifierLotteryEventRepository;
@@ -32,7 +31,6 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
     private readonly IClientNotifier _clientNotifier;
 
     public PrepareForAssessmentPollCommandHandler(
-        IThingRepository thingRepository,
         ISettlementProposalRepository settlementProposalRepository,
         ITaskRepository taskRepository,
         IJoinedThingAssessmentVerifierLotteryEventRepository joinedThingAssessmentVerifierLotteryEventRepository,
@@ -40,7 +38,6 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
         IClientNotifier clientNotifier
     )
     {
-        _thingRepository = thingRepository;
         _settlementProposalRepository = settlementProposalRepository;
         _taskRepository = taskRepository;
         _joinedThingAssessmentVerifierLotteryEventRepository = joinedThingAssessmentVerifierLotteryEventRepository;
@@ -50,12 +47,10 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
 
     public async Task<VoidResult> Handle(PrepareForAssessmentPollCommand command, CancellationToken ct)
     {
-        var thing = await _thingRepository.FindById(command.ThingId);
         var proposal = await _settlementProposalRepository.FindById(command.SettlementProposalId);
-        if (proposal.State == SettlementProposalState.FundedAndAssessmentVerifierLotteryInitiated)
+        if (proposal.State == SettlementProposalState.FundedAndVerifierLotteryInitiated)
         {
-            thing.SetState(ThingState.SettlementProposalAssessmentVerifiersSelectedAndPollInitiated);
-            proposal.SetState(SettlementProposalState.AssessmentVerifiersSelectedAndPollInitiated);
+            proposal.SetState(SettlementProposalState.VerifiersSelectedAndPollInitiated);
             proposal.AddVerifiers(command.ClaimantIds.Concat(command.WinnerIds));
 
             int pollDurationBlocks = await _contractStorageQueryable.GetAssessmentPollDurationBlocks();
@@ -66,8 +61,8 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
             );
             task.SetPayload(new()
             {
-                ["thingId"] = command.ThingId,
-                ["settlementProposalId"] = proposal.Id!
+                ["thingId"] = proposal.ThingId,
+                ["settlementProposalId"] = proposal.Id
             });
             _taskRepository.Create(task);
 
@@ -81,7 +76,6 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
             );
             _joinedThingAssessmentVerifierLotteryEventRepository.Create(joinedThingAssessmentVerifierLotteryEvent);
 
-            await _thingRepository.SaveChanges();
             await _settlementProposalRepository.SaveChanges();
             await _taskRepository.SaveChanges();
             await _joinedThingAssessmentVerifierLotteryEventRepository.SaveChanges();

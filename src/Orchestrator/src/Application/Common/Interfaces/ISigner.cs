@@ -28,7 +28,9 @@ public interface ISigner
     );
     string SignSettlementProposal(Guid thingId, Guid proposalId);
     string SignAssessmentPollVoteAgg(
-        IEnumerable<AssessmentPollVote> offChainVotes, IEnumerable<CastedAssessmentPollVoteEvent> onChainVotes
+        Guid thingId, Guid proposalId,
+        IEnumerable<AssessmentPollVote> offChainVotes,
+        IEnumerable<CastedAssessmentPollVoteEvent> onChainVotes
     );
     string SignTimestamp(DateTimeOffset timestamp);
 }

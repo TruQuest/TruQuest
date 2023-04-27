@@ -10,8 +10,8 @@ namespace Infrastructure.Kafka.Messages;
 
 internal class ThingFundedEvent
 {
-    public string UserId { get; set; }
-    public decimal Stake { get; set; }
+    public required string UserId { get; init; }
+    public required decimal Stake { get; init; }
 }
 
 internal class ThingFundedEventHandler : IMessageHandler<ThingFundedEvent>

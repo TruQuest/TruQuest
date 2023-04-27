@@ -14,13 +14,13 @@ enum ServerEventType {
 }
 
 enum ThingEventType {
-  draftCreateProgress,
+  draftCreationProgress,
   draftCreated,
   stateChanged,
 }
 
 enum SettlementEventType {
-  draftCreateProgress,
+  draftCreationProgress,
   draftCreated,
   stateChanged,
 }
@@ -34,7 +34,7 @@ class ServerConnector {
   String? _accessToken;
   String? get accessToken => _accessToken;
 
-  final StreamController<Future Function()> _hubConnectionTaskChannel =
+  final StreamController<Future Function()> _hubConnectionTaskQueue =
       StreamController<Future Function()>();
 
   final StreamController<Tuple2<ServerEventType, Object>> _serverEventChannel =
@@ -58,8 +58,8 @@ class ServerConnector {
   }
 
   void _monitorHubConnectionTasks() async {
-    // debounce?
-    var iterator = StreamIterator(_hubConnectionTaskChannel.stream);
+    // @@??: debounce?
+    var iterator = StreamIterator(_hubConnectionTaskQueue.stream);
     while (await iterator.moveNext()) {
       var task = iterator.current;
       await task();
@@ -106,14 +106,13 @@ class ServerConnector {
       'TellAboutNewThingDraftCreationProgress',
       (List<Object?>? args) {
         var thingId = args!.first as String;
-        var percent = args.last as int;
         _serverEventChannel.add(
           Tuple2(
             ServerEventType.thing,
             Tuple3(
-              ThingEventType.draftCreateProgress,
+              ThingEventType.draftCreationProgress,
               thingId,
-              percent as Object,
+              args.last!,
             ),
           ),
         );
@@ -124,14 +123,14 @@ class ServerConnector {
       'NotifyThingStateChanged',
       (List<Object?>? args) {
         var thingId = args!.first as String;
-        var state = ThingStateVm.values[args.last as int];
+        Object state = ThingStateVm.values[args.last as int];
         _serverEventChannel.add(
           Tuple2(
             ServerEventType.thing,
             Tuple3(
               ThingEventType.stateChanged,
               thingId,
-              state as Object,
+              state,
             ),
           ),
         );
@@ -142,14 +141,13 @@ class ServerConnector {
       'TellAboutNewSettlementProposalDraftCreationProgress',
       (List<Object?>? args) {
         var proposalId = args!.first as String;
-        var percent = args.last as int;
         _serverEventChannel.add(
           Tuple2(
             ServerEventType.settlement,
             Tuple3(
-              SettlementEventType.draftCreateProgress,
+              SettlementEventType.draftCreationProgress,
               proposalId,
-              percent as Object,
+              args.last!,
             ),
           ),
         );
@@ -160,21 +158,21 @@ class ServerConnector {
       'NotifySettlementProposalStateChanged',
       (List<Object?>? args) {
         var proposalId = args!.first as String;
-        var state = SettlementProposalStateVm.values[args.last as int];
+        Object state = SettlementProposalStateVm.values[args.last as int];
         _serverEventChannel.add(
           Tuple2(
             ServerEventType.settlement,
             Tuple3(
               SettlementEventType.stateChanged,
               proposalId,
-              state as Object,
+              state,
             ),
           ),
         );
       },
     );
 
-    await hubConnection.start();
+    await hubConnection.start(); // @@TODO: Handle error.
   }
 
   Future _disconnectFromHub() async {
@@ -189,8 +187,8 @@ class ServerConnector {
     }
   }
 
-  void disconnectFromHub() => _hubConnectionTaskChannel.add(_disconnectFromHub);
+  void disconnectFromHub() => _hubConnectionTaskQueue.add(_disconnectFromHub);
 
   void connectToHub(String? accessToken) =>
-      _hubConnectionTaskChannel.add(() => _connectToHub(accessToken));
+      _hubConnectionTaskQueue.add(() => _connectToHub(accessToken));
 }

@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ValueGeneration;
 
 using Domain.Aggregates.Events;
-using Application.Common.Models.QM;
 
 namespace Infrastructure.Persistence;
 
@@ -19,8 +18,6 @@ public class EventDbContext : DbContext
     public DbSet<CastedAssessmentPollVoteEvent> CastedAssessmentPollVoteEvents { get; set; }
 
     public DbSet<BlockProcessedEvent> BlockProcessedEvent { get; set; }
-
-    public DbSet<VerifierLotteryWinnerQm> VerifierLotteryWinners { get; set; }
 
     public EventDbContext(DbContextOptions<EventDbContext> options) : base(options) { }
 
@@ -63,12 +60,6 @@ public class EventDbContext : DbContext
             builder.Property(e => e.ThingId).IsRequired();
             builder.Property(e => e.UserId).IsRequired();
             builder.Property(e => e.Nonce).IsRequired();
-        });
-
-        modelBuilder.Entity<VerifierLotteryWinnerQm>(builder =>
-        {
-            builder.HasNoKey();
-            builder.ToView(nameof(VerifierLotteryWinners));
         });
 
         modelBuilder.Entity<CastedAcceptancePollVoteEvent>(builder =>

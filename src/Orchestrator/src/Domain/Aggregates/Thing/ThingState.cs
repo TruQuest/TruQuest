@@ -4,9 +4,8 @@ public enum ThingState
 {
     Draft,
     AwaitingFunding,
-    FundedAndSubmissionVerifierLotteryInitiated,
-    SubmissionVerifiersSelectedAndPollInitiated,
+    FundedAndVerifierLotteryInitiated,
+    VerifiersSelectedAndPollInitiated,
     AwaitingSettlement,
-    SettlementProposalFundedAndAssessmentVerifierLotteryInitiated,
-    SettlementProposalAssessmentVerifiersSelectedAndPollInitiated,
+    Settled,
 }

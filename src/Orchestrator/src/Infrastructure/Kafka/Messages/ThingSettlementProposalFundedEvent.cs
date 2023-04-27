@@ -10,9 +10,9 @@ namespace Infrastructure.Kafka.Messages;
 
 internal class ThingSettlementProposalFundedEvent
 {
-    public Guid SettlementProposalId { get; set; }
-    public string UserId { get; set; }
-    public decimal Stake { get; set; }
+    public required Guid SettlementProposalId { get; init; }
+    public required string UserId { get; init; }
+    public required decimal Stake { get; init; }
 }
 
 internal class ThingSettlementProposalFundedEventHandler : IMessageHandler<ThingSettlementProposalFundedEvent>

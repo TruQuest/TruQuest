@@ -209,7 +209,7 @@ internal class Signer : ISigner
                 {
                     BlockNumber = v.BlockNumber,
                     TxnIndex = v.TxnIndex,
-                    UserId = "0x" + v.UserId, // @@TODO: EIP-55 encode
+                    UserId = v.UserId, // @@TODO: EIP-55 encode
                     Decision = v.Decision.GetString(),
                     Reason = v.Reason ?? string.Empty
                 })
@@ -239,22 +239,19 @@ internal class Signer : ISigner
     }
 
     public string SignAssessmentPollVoteAgg(
-        IEnumerable<AssessmentPollVote> offChainVotes, IEnumerable<CastedAssessmentPollVoteEvent> onChainVotes
+        Guid thingId, Guid proposalId,
+        IEnumerable<AssessmentPollVote> offChainVotes,
+        IEnumerable<CastedAssessmentPollVoteEvent> onChainVotes
     )
     {
         var td = new SignedAssessmentPollVoteAggTd
         {
+            ThingId = thingId.ToString(),
+            SettlementProposalId = proposalId.ToString(),
             OffChainVotes = offChainVotes
                 .Select(v => new OffChainAssessmentPollVoteTd
                 {
-                    SettlementProposalId = v.SettlementProposalId.ToString(),
-                    VoterId = "0x" + v.VoterId,
-                    PollType = "Assessment",
-                    CastedAt = DateTimeOffset.FromUnixTimeMilliseconds(v.CastedAtMs).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
-                    Decision = v.Decision.GetString(),
-                    Reason = v.Reason ?? string.Empty,
-                    IpfsCid = v.IpfsCid,
-                    VoterSignature = v.VoterSignature
+                    IpfsCid = v.IpfsCid
                 })
                 .ToList(),
             OnChainVotes = onChainVotes
@@ -262,8 +259,7 @@ internal class Signer : ISigner
                 {
                     BlockNumber = v.BlockNumber,
                     TxnIndex = v.TxnIndex,
-                    SettlementProposalId = v.SettlementProposalId.ToString(),
-                    UserId = "0x" + v.UserId,
+                    UserId = v.UserId,
                     Decision = v.Decision.GetString(),
                     Reason = v.Reason ?? string.Empty
                 })

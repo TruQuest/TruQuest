@@ -61,6 +61,7 @@ internal class FileArchiver : IFileArchiver
         {
             var propType = prop.PropertyType;
             Type? elemType = null;
+            // @@TODO: Check against IEnumerable<T>.
             if (propType.IsAssignableTo(typeof(IEnumerable)) && propType != typeof(string))
             {
                 propType = elemType = propType.GetGenericArguments().First();
@@ -173,6 +174,8 @@ internal class FileArchiver : IFileArchiver
                 .Where(t => t.AttachmentType == AttachmentType.ImagePath)
                 .Select(t => t.Uri)
             );
+
+            // @@TODO: Check non-emptiness of filePaths.
 
             List<string> ipfsCids;
             try

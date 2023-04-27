@@ -40,7 +40,7 @@ class _VoteDialogState<T> extends State<VoteDialog<T>> {
           DropdownMenuItem<T>(
             value: decision,
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Text(
                 widget.getDisplayString(decision),
                 style: TextStyle(
@@ -92,12 +92,10 @@ class _VoteDialogState<T> extends State<VoteDialog<T>> {
                 items: _items,
                 customItemsHeights: _customHeights,
                 value: _decision,
-                onChanged: (value) {
-                  setState(() => _decision = value);
-                },
+                onChanged: (value) => setState(() => _decision = value),
                 buttonHeight: 40,
                 dropdownMaxHeight: 200,
-                itemPadding: EdgeInsets.symmetric(horizontal: 8),
+                itemPadding: const EdgeInsets.symmetric(horizontal: 8),
               ),
             ),
             SizedBox(height: 12),
