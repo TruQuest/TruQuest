@@ -7,7 +7,7 @@ import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 import '../../settlement/pages/settlement_proposal_page.dart';
 import '../../pong/game.dart';
 import '../../subject/pages/subject_page.dart';
-import '../../thing/pages/thing_page_3.dart';
+import '../../thing/pages/thing_page.dart';
 import '../contexts/page_context.dart';
 import '../../subject/pages/subjects_page.dart';
 import '../bloc/notification_bloc.dart';
@@ -201,7 +201,7 @@ class _HomePageState extends StateX<HomePage> {
                   return SubjectPage(subjectId: subjectId);
                 } else if (routeSplit[1] == 'things') {
                   var thingId = routeSplit.last;
-                  return ThingPage3(thingId: thingId);
+                  return ThingPage(thingId: thingId);
                 } else if (routeSplit[1] == 'proposals') {
                   var proposalId = routeSplit.last;
                   return SettlementProposalPage(proposalId: proposalId);

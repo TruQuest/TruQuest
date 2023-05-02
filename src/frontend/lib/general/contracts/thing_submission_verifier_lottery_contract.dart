@@ -253,7 +253,10 @@ class ThingSubmissionVerifierLotteryContract {
 
       print('PreJoined lottery! Awaiting confirmations...');
 
+      // @@??: Why is it enough to mine just 1 block for this to complete?
       await txnResponse.wait(2);
+      // @@NOTE: Because we await confirmation, the lottery info does not get updated right away, which leads to
+      // Commit to Lottery button being active for longer than it should be.
 
       print('PreJoin txn confirmed!');
 

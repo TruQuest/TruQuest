@@ -17,9 +17,15 @@ internal class ThingQueryable : Queryable, IThingQueryable
         var dbConn = await _getOpenConnection();
         var thing = await dbConn.SingleWithMultipleMany<ThingQm, EvidenceQm, TagQm>(
             @"
-                SELECT t.*, e.*, tag.*
+                SELECT
+                    t.*,
+                    s.""Name"" AS ""SubjectName"", s.""CroppedImageIpfsCid"" AS ""SubjectCroppedImageIpfsCid"",
+                    e.*, tag.*
                 FROM
                     truquest.""Things"" AS t
+                        INNER JOIN
+                    truquest.""Subjects"" AS s
+                        ON t.""SubjectId"" = s.""Id""
                         INNER JOIN
                     truquest.""Evidence"" AS e
                         ON t.""Id"" = e.""ThingId""

@@ -7,6 +7,7 @@ public class SettlementProposal : Entity, IAggregateRoot
     public Guid Id { get; }
     public Guid ThingId { get; }
     public SettlementProposalState State { get; private set; }
+    public long SubmittedAt { get; }
     public string Title { get; }
     public Verdict Verdict { get; }
     public string Details { get; }
@@ -29,6 +30,7 @@ public class SettlementProposal : Entity, IAggregateRoot
         Id = id;
         ThingId = thingId;
         State = SettlementProposalState.Draft;
+        SubmittedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         Title = title;
         Verdict = verdict;
         Details = details;

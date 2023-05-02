@@ -114,7 +114,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
         return TabContainer(
           controller: TabContainerController(length: tabs.length),
           tabEnd: 0.3,
-          color: Colors.purple,
+          color: Colors.purple[200],
           isStringTabs: false,
           tabEdge: TabEdge.right,
           tabs: tabs,

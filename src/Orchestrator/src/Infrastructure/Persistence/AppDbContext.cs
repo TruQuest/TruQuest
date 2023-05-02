@@ -72,6 +72,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
         {
             builder.HasKey(t => t.Id);
             builder.Property(t => t.State).HasConversion<int>().IsRequired();
+            builder.Property(t => t.SubmittedAt).IsRequired();
             builder.Property(t => t.Title).IsRequired();
             builder.Property(t => t.Details).IsRequired();
             builder.Property(t => t.ImageIpfsCid).IsRequired(false);
@@ -184,6 +185,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
         {
             builder.HasKey(p => p.Id);
             builder.Property(p => p.State).HasConversion<int>().IsRequired();
+            builder.Property(p => p.SubmittedAt).IsRequired();
             builder.Property(p => p.Title).IsRequired();
             builder.Property(p => p.Verdict).HasConversion<int>().IsRequired();
             builder.Property(p => p.Details).IsRequired();

@@ -6,6 +6,7 @@ public class Thing : Entity, IAggregateRoot
 {
     public Guid Id { get; private set; }
     public ThingState State { get; private set; }
+    public long SubmittedAt { get; }
     public string Title { get; }
     public string Details { get; }
     public string? ImageIpfsCid { get; }
@@ -31,6 +32,7 @@ public class Thing : Entity, IAggregateRoot
     {
         Id = id;
         State = ThingState.Draft;
+        SubmittedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         Title = title;
         Details = details;
         ImageIpfsCid = imageIpfsCid;
