@@ -45,3 +45,26 @@ async function fetchAndResizeImage(url) {
 
   return { buffer: buffer, mimeType: blob.type };
 }
+
+async function getImagePalette(url) {
+  var promise = new Promise((resolve, _) => {
+    var image = new Image();
+    image.crossOrigin = "Anonymous";
+    image.src = url;
+
+    image.onload = (_) => {
+      console.log("Image loaded!");
+      var colorThief = new ColorThief();
+      var palette = colorThief.getPalette(image);
+      resolve(palette);
+    };
+  });
+
+  var palette = await promise;
+  var colors = [];
+  palette.forEach((color) => {
+    colors.push({ red: color[0], green: color[1], blue: color[2] });
+  });
+
+  return { colors: colors };
+}
