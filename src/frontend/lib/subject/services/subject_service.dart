@@ -1,4 +1,5 @@
 import '../../general/contexts/document_context.dart';
+import '../models/rvm/subject_vm.dart';
 import 'subject_api_service.dart';
 
 class SubjectService {
@@ -18,5 +19,11 @@ class SubjectService {
     );
 
     return subjectId;
+  }
+
+  Future<SubjectVm> getSubject(String subjectId) async {
+    var subject = await _subjectApiService.getSubject(subjectId);
+    print('SubjectId: ${subject.id}');
+    return subject;
   }
 }

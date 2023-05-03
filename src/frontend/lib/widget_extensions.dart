@@ -46,6 +46,7 @@ class ScopeX extends InheritedWidget {
   }
 }
 
+// ignore: must_be_immutable
 abstract class StatelessWidgetX extends StatelessWidget {
   late BuildContext _context;
 

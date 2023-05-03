@@ -7,7 +7,7 @@ import 'thing_state_vm.dart';
 class ThingVm {
   final String id;
   final ThingStateVm state;
-  final DateTime submittedAt;
+  final DateTime? submittedAt;
   final String title;
   final String details;
   final String? imageIpfsCid;
@@ -16,17 +16,26 @@ class ThingVm {
   final String subjectId;
   final String subjectName;
   final String subjectCroppedImageIpfsCid;
+  final DateTime? settledAt;
   final List<EvidenceVm> evidence;
   final List<TagVm> tags;
 
   final bool? fundedAwaitingConfirmation;
 
-  String get lastEditedAt => DateFormat.yMMMMd('en_US').format(submittedAt);
+  String get submittedAtFormatted =>
+      DateFormat.yMMMMd('en_US').format(submittedAt!);
+
+  String get submitterIdShort =>
+      submitterId.substring(0, 6) +
+      '...' +
+      submitterId.substring(submitterId.length - 4, submitterId.length);
 
   ThingVm.fromMap(Map<String, dynamic> map)
       : id = map['id'],
         state = ThingStateVm.values[map['state']],
-        submittedAt = DateTime.fromMillisecondsSinceEpoch(map['submittedAt']),
+        submittedAt = map['submittedAt'] != null
+            ? DateTime.fromMillisecondsSinceEpoch(map['submittedAt'])
+            : null,
         title = map['title'],
         details = map['details'],
         imageIpfsCid = map['imageIpfsCid'],
@@ -35,6 +44,9 @@ class ThingVm {
         subjectId = map['subjectId'],
         subjectName = map['subjectName'],
         subjectCroppedImageIpfsCid = map['subjectCroppedImageIpfsCid'],
+        settledAt = map['settledAt'] != null
+            ? DateTime.fromMillisecondsSinceEpoch(map['settledAt'])
+            : null,
         evidence = List.unmodifiable(
           (map['evidence'] as List<dynamic>)
               .map((submap) => EvidenceVm.fromMap(submap)),
@@ -56,6 +68,7 @@ class ThingVm {
     required this.subjectId,
     required this.subjectName,
     required this.subjectCroppedImageIpfsCid,
+    required this.settledAt,
     required this.evidence,
     required this.tags,
     required this.fundedAwaitingConfirmation,
@@ -74,6 +87,7 @@ class ThingVm {
       subjectId: subjectId,
       subjectName: subjectName,
       subjectCroppedImageIpfsCid: subjectCroppedImageIpfsCid,
+      settledAt: settledAt,
       evidence: evidence,
       tags: tags,
       fundedAwaitingConfirmation:

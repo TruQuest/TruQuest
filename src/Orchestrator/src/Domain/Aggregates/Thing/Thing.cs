@@ -6,7 +6,7 @@ public class Thing : Entity, IAggregateRoot
 {
     public Guid Id { get; private set; }
     public ThingState State { get; private set; }
-    public long SubmittedAt { get; }
+    public long? SubmittedAt { get; private set; }
     public string Title { get; }
     public string Details { get; }
     public string? ImageIpfsCid { get; }
@@ -15,6 +15,7 @@ public class Thing : Entity, IAggregateRoot
     public Guid SubjectId { get; }
     public string? VoteAggIpfsCid { get; private set; }
     public Guid? AcceptedSettlementProposalId { get; private set; }
+    public long? SettledAt { get; private set; }
 
     private List<Evidence> _evidence = new();
     public IReadOnlyList<Evidence> Evidence => _evidence;
@@ -32,7 +33,6 @@ public class Thing : Entity, IAggregateRoot
     {
         Id = id;
         State = ThingState.Draft;
-        SubmittedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         Title = title;
         Details = details;
         ImageIpfsCid = imageIpfsCid;
@@ -54,6 +54,14 @@ public class Thing : Entity, IAggregateRoot
     public void SetState(ThingState state)
     {
         State = state;
+        if (State == ThingState.AwaitingFunding)
+        {
+            SubmittedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        }
+        else if (State == ThingState.Settled)
+        {
+            SettledAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        }
     }
 
     public void AddVerifiers(IEnumerable<string> verifierIds)

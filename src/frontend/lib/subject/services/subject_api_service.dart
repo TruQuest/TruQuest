@@ -15,6 +15,7 @@ import '../../general/errors/invalid_authentication_token_error.dart';
 import '../../general/errors/server_error.dart';
 import '../../general/errors/validation_error.dart';
 import '../../general/services/server_connector.dart';
+import '../models/rvm/subject_vm.dart';
 
 class SubjectApiService {
   final ServerConnector _serverConnector;
@@ -90,6 +91,15 @@ class SubjectApiService {
       );
 
       return response.data['data'] as String;
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future<SubjectVm> getSubject(String subjectId) async {
+    try {
+      var response = await _dio.get('/subjects/$subjectId');
+      return SubjectVm.fromMap(response.data['data']);
     } on DioError catch (error) {
       throw _wrapError(error);
     }

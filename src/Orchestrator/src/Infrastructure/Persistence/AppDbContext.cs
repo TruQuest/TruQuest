@@ -28,6 +28,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
         {
             builder.HasKey(s => s.Id);
             builder.Property(s => s.Id).HasValueGenerator<GuidValueGenerator>();
+            builder.Property(s => s.SubmittedAt).IsRequired();
             builder.Property(s => s.Name).IsRequired();
             builder.Property(s => s.Details).IsRequired();
             builder.Property(s => s.Type).HasConversion<int>().IsRequired();
@@ -72,13 +73,14 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
         {
             builder.HasKey(t => t.Id);
             builder.Property(t => t.State).HasConversion<int>().IsRequired();
-            builder.Property(t => t.SubmittedAt).IsRequired();
+            builder.Property(t => t.SubmittedAt).IsRequired(false);
             builder.Property(t => t.Title).IsRequired();
             builder.Property(t => t.Details).IsRequired();
             builder.Property(t => t.ImageIpfsCid).IsRequired(false);
             builder.Property(t => t.CroppedImageIpfsCid).IsRequired(false);
             builder.Property(t => t.VoteAggIpfsCid).IsRequired(false);
             builder.Property(t => t.AcceptedSettlementProposalId).IsRequired(false);
+            builder.Property(t => t.SettledAt).IsRequired(false);
 
             builder
                 .HasOne<UserDm>()
@@ -185,13 +187,14 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
         {
             builder.HasKey(p => p.Id);
             builder.Property(p => p.State).HasConversion<int>().IsRequired();
-            builder.Property(p => p.SubmittedAt).IsRequired();
+            builder.Property(p => p.SubmittedAt).IsRequired(false);
             builder.Property(p => p.Title).IsRequired();
             builder.Property(p => p.Verdict).HasConversion<int>().IsRequired();
             builder.Property(p => p.Details).IsRequired();
             builder.Property(p => p.ImageIpfsCid).IsRequired(false);
             builder.Property(p => p.CroppedImageIpfsCid).IsRequired(false);
             builder.Property(p => p.VoteAggIpfsCid).IsRequired(false);
+            builder.Property(p => p.AssessmentPronouncedAt).IsRequired(false);
 
             builder
                 .HasOne<UserDm>()

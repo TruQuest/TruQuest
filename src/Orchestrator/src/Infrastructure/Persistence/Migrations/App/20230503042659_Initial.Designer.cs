@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Persistence.Migrations.App
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20230502001938_AddSubmittedAtToThingAndProposal")]
-    partial class AddSubmittedAtToThingAndProposal
+    [Migration("20230503042659_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -144,6 +144,9 @@ namespace Infrastructure.Persistence.Migrations.App
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<long?>("AssessmentPronouncedAt")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("CroppedImageIpfsCid")
                         .HasColumnType("text");
 
@@ -157,7 +160,7 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.Property<int>("State")
                         .HasColumnType("integer");
 
-                    b.Property<long>("SubmittedAt")
+                    b.Property<long?>("SubmittedAt")
                         .HasColumnType("bigint");
 
                     b.Property<string>("SubmitterId")
@@ -222,6 +225,9 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<long>("SubmittedAt")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("SubmitterId")
                         .IsRequired()
@@ -316,13 +322,16 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.Property<string>("ImageIpfsCid")
                         .HasColumnType("text");
 
+                    b.Property<long?>("SettledAt")
+                        .HasColumnType("bigint");
+
                     b.Property<int>("State")
                         .HasColumnType("integer");
 
                     b.Property<Guid>("SubjectId")
                         .HasColumnType("uuid");
 
-                    b.Property<long>("SubmittedAt")
+                    b.Property<long?>("SubmittedAt")
                         .HasColumnType("bigint");
 
                     b.Property<string>("SubmitterId")

@@ -1,4 +1,4 @@
-namespace Application.Thing.Queries.GetThing;
+namespace Application.Common.Models.QM;
 
 public enum ThingStateQm
 {

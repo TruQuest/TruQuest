@@ -4,6 +4,7 @@ using Domain.Results;
 using Domain.Errors;
 
 using Application.Common.Interfaces;
+using Application.Common.Models.QM;
 
 namespace Application.Thing.Queries.GetThing;
 

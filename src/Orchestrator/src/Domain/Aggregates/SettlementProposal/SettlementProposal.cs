@@ -7,7 +7,7 @@ public class SettlementProposal : Entity, IAggregateRoot
     public Guid Id { get; }
     public Guid ThingId { get; }
     public SettlementProposalState State { get; private set; }
-    public long SubmittedAt { get; }
+    public long? SubmittedAt { get; private set; }
     public string Title { get; }
     public Verdict Verdict { get; }
     public string Details { get; }
@@ -15,6 +15,7 @@ public class SettlementProposal : Entity, IAggregateRoot
     public string? CroppedImageIpfsCid { get; }
     public string SubmitterId { get; }
     public string? VoteAggIpfsCid { get; private set; }
+    public long? AssessmentPronouncedAt { get; private set; }
 
     private List<SupportingEvidence> _evidence = new();
     public IReadOnlyList<SupportingEvidence> Evidence => _evidence;
@@ -30,7 +31,6 @@ public class SettlementProposal : Entity, IAggregateRoot
         Id = id;
         ThingId = thingId;
         State = SettlementProposalState.Draft;
-        SubmittedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         Title = title;
         Verdict = verdict;
         Details = details;
@@ -47,6 +47,18 @@ public class SettlementProposal : Entity, IAggregateRoot
     public void SetState(SettlementProposalState state)
     {
         State = state;
+        if (State == SettlementProposalState.AwaitingFunding)
+        {
+            SubmittedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        }
+        else if (State is
+            SettlementProposalState.SoftDeclined or
+            SettlementProposalState.HardDeclined or
+            SettlementProposalState.Accepted
+        )
+        {
+            AssessmentPronouncedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        }
     }
 
     public void AddVerifiers(IEnumerable<string> verifierIds)

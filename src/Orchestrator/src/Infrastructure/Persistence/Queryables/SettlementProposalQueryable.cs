@@ -58,12 +58,14 @@ internal class SettlementProposalQueryable : Queryable, ISettlementProposalQuery
                 Id = p.Id,
                 ThingId = p.ThingId,
                 State = p.State,
+                SubmittedAt = p.SubmittedAt,
                 Title = p.Title,
                 Verdict = p.Verdict,
                 Details = p.Details,
                 ImageIpfsCid = p.ImageIpfsCid,
                 CroppedImageIpfsCid = p.CroppedImageIpfsCid,
                 SubmitterId = p.SubmitterId,
+                AssessmentPronouncedAt = p.AssessmentPronouncedAt,
                 Evidence = p.Evidence.Select(e => new SupportingEvidenceQm
                 {
                     OriginUrl = e.OriginUrl,

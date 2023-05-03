@@ -1,3 +1,4 @@
+// @@??: Move to general?
 enum ThingStateVm {
   draft,
   awaitingFunding,

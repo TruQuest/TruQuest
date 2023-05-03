@@ -145,6 +145,7 @@ namespace Infrastructure.Persistence.Migrations.App
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    SubmittedAt = table.Column<long>(type: "bigint", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     Details = table.Column<string>(type: "text", nullable: false),
                     Type = table.Column<int>(type: "integer", nullable: false),
@@ -198,6 +199,7 @@ namespace Infrastructure.Persistence.Migrations.App
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     State = table.Column<int>(type: "integer", nullable: false),
+                    SubmittedAt = table.Column<long>(type: "bigint", nullable: true),
                     Title = table.Column<string>(type: "text", nullable: false),
                     Details = table.Column<string>(type: "text", nullable: false),
                     ImageIpfsCid = table.Column<string>(type: "text", nullable: true),
@@ -205,7 +207,8 @@ namespace Infrastructure.Persistence.Migrations.App
                     SubmitterId = table.Column<string>(type: "text", nullable: false),
                     SubjectId = table.Column<Guid>(type: "uuid", nullable: false),
                     VoteAggIpfsCid = table.Column<string>(type: "text", nullable: true),
-                    AcceptedSettlementProposalId = table.Column<Guid>(type: "uuid", nullable: true)
+                    AcceptedSettlementProposalId = table.Column<Guid>(type: "uuid", nullable: true),
+                    SettledAt = table.Column<long>(type: "bigint", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -257,13 +260,15 @@ namespace Infrastructure.Persistence.Migrations.App
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ThingId = table.Column<Guid>(type: "uuid", nullable: false),
                     State = table.Column<int>(type: "integer", nullable: false),
+                    SubmittedAt = table.Column<long>(type: "bigint", nullable: true),
                     Title = table.Column<string>(type: "text", nullable: false),
                     Verdict = table.Column<int>(type: "integer", nullable: false),
                     Details = table.Column<string>(type: "text", nullable: false),
                     ImageIpfsCid = table.Column<string>(type: "text", nullable: true),
                     CroppedImageIpfsCid = table.Column<string>(type: "text", nullable: true),
                     SubmitterId = table.Column<string>(type: "text", nullable: false),
-                    VoteAggIpfsCid = table.Column<string>(type: "text", nullable: true)
+                    VoteAggIpfsCid = table.Column<string>(type: "text", nullable: true),
+                    AssessmentPronouncedAt = table.Column<long>(type: "bigint", nullable: true)
                 },
                 constraints: table =>
                 {

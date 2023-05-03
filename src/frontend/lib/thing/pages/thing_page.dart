@@ -80,10 +80,34 @@ class _ThingPageState extends StateX<ThingPage> {
         ],
         child: DocumentView(
           sideBlocks: [
-            AvatarWithReputationGauge(
-              subjectId: thing.subjectId,
-              subjectName: thing.subjectName,
-              subjectAvatarIpfsCid: thing.subjectCroppedImageIpfsCid,
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Column(
+                  children: [
+                    Card(
+                      color: Colors.deepOrange[600],
+                      elevation: 5,
+                      child: Container(
+                        width: double.infinity,
+                        height: 30,
+                        alignment: Alignment.center,
+                        child: Text(
+                          thing.subjectName,
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    AvatarWithReputationGauge(
+                      subjectId: thing.subjectId,
+                      subjectAvatarIpfsCid: thing.subjectCroppedImageIpfsCid,
+                      big: false,
+                      color: Colors.white70,
+                    ),
+                  ],
+                ),
+              ),
             ),
             TimelineBlock(),
           ],
@@ -153,16 +177,17 @@ class _ThingPageState extends StateX<ThingPage> {
                 ),
               ),
               SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text('Last edited at'),
-                  SizedBox(height: 8),
-                  Text(thing.lastEditedAt),
-                  SizedBox(height: 8),
-                  Text('by ${thing.submitterId.substring(0, 6)}..'),
-                ],
-              ),
+              if (thing.state.index >= ThingStateVm.awaitingFunding.index)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text('Submitted at'),
+                    SizedBox(height: 8),
+                    Text(thing.submittedAtFormatted),
+                    SizedBox(height: 8),
+                    Text('by ${thing.submitterIdShort}'),
+                  ],
+                ),
             ],
           ),
         ),

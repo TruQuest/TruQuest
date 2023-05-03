@@ -4,6 +4,7 @@ using MediatR;
 
 using Domain.Results;
 using Application.Subject.Commands.AddNewSubject;
+using Application.Subject.Queries.GetSubject;
 
 using API.Controllers.Filters;
 
@@ -25,5 +26,11 @@ public class SubjectController : ControllerBase
     public Task<HandleResult<Guid>> AddNewSubject() => _mediator.Send(new AddNewSubjectCommand
     {
         Request = HttpContext.Request
+    });
+
+    [HttpGet("{id}")]
+    public Task<HandleResult<SubjectQm>> Get(Guid id) => _mediator.Send(new GetSubjectQuery
+    {
+        Id = id
     });
 }
