@@ -5,6 +5,7 @@ using Dapper;
 using Application.Subject.Queries.GetSubject;
 using Application.Common.Interfaces;
 using Application.Common.Models.QM;
+using Application.Subject.Common.Models.QM;
 
 namespace Infrastructure.Persistence.Queryables;
 
@@ -64,13 +65,13 @@ internal class SubjectQueryable : Queryable, ISubjectQueryable
         {
             using var multiQuery = await dbConn.QueryMultipleAsync(
                 @"
-                    SELECT ""Id"", ""State"", ""Title"", ""CroppedImageIpfsCid"", ""SettledAt"" AS ""SortedByDate""
+                    SELECT ""Id"", ""State"", ""Title"", ""CroppedImageIpfsCid"", ""SettledAt"" AS ""DisplayedTimestamp""
                     FROM truquest.""Things""
                     WHERE ""SubjectId"" = @SubjectId AND ""SettledAt"" IS NOT NULL
                     ORDER BY ""SettledAt"" DESC
                     LIMIT 3;
 
-                    SELECT ""Id"", ""State"", ""Title"", ""CroppedImageIpfsCid"", ""SubmittedAt"" AS ""SortedByDate""
+                    SELECT ""Id"", ""State"", ""Title"", ""CroppedImageIpfsCid"", ""SubmittedAt"" AS ""DisplayedTimestamp""
                     FROM truquest.""Things""
                     WHERE ""SubjectId"" = @SubjectId AND ""SettledAt"" IS NULL AND ""SubmittedAt"" IS NOT NULL
                     ORDER BY ""SubmittedAt"" DESC

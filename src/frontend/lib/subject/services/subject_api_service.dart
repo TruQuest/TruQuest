@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 
+import '../models/rvm/get_things_list_rvm.dart';
 import '../models/im/new_subject_im.dart';
 import '../../general/errors/file_error.dart';
 import '../../general/models/im/tag_im.dart';
@@ -100,6 +101,25 @@ class SubjectApiService {
     try {
       var response = await _dio.get('/subjects/$subjectId');
       return SubjectVm.fromMap(response.data['data']);
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future<GetThingsListRvm> getThingsList(String subjectId) async {
+    try {
+      var response = await _dio.get(
+        '/subjects/$subjectId/things',
+        options: _serverConnector.accessToken != null
+            ? Options(
+                headers: {
+                  'Authorization': 'Bearer ${_serverConnector.accessToken}'
+                },
+              )
+            : null,
+      );
+
+      return GetThingsListRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
       throw _wrapError(error);
     }

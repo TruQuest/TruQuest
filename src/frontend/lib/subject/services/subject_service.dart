@@ -1,3 +1,4 @@
+import '../models/rvm/get_things_list_rvm.dart';
 import '../../general/contexts/document_context.dart';
 import '../models/rvm/subject_vm.dart';
 import 'subject_api_service.dart';
@@ -25,5 +26,10 @@ class SubjectService {
     var subject = await _subjectApiService.getSubject(subjectId);
     print('SubjectId: ${subject.id}');
     return subject;
+  }
+
+  Future<GetThingsListRvm> getThingsList(String subjectId) async {
+    var result = await _subjectApiService.getThingsList(subjectId);
+    return result;
   }
 }

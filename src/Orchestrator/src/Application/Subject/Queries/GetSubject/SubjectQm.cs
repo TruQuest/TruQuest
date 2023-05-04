@@ -1,4 +1,5 @@
 using Application.Common.Models.QM;
+using Application.Subject.Common.Models.QM;
 
 namespace Application.Subject.Queries.GetSubject;
 

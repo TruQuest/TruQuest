@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tab_container/tab_container.dart';
 
+import '../widgets/things_list.dart';
 import '../../general/widgets/document_view.dart';
 import '../models/rvm/subject_vm.dart';
 import '../widgets/avatar_with_reputation_gauge.dart';
@@ -8,12 +9,6 @@ import '../widgets/latest_things_block.dart';
 import '../../general/contexts/document_view_context.dart';
 import '../../general/widgets/arc_banner_image.dart';
 import '../bloc/subject_actions.dart';
-import '../../general/contexts/document_context.dart';
-import '../../general/widgets/evidence_block.dart';
-import '../../general/widgets/prepare_draft_button.dart';
-import '../../general/widgets/document_composer.dart';
-import '../../general/widgets/image_block_with_crop.dart';
-import '../../general/widgets/tags_block.dart';
 import '../bloc/subject_bloc.dart';
 import '../../widget_extensions.dart';
 
@@ -120,12 +115,7 @@ class _SubjectPageState extends StateX<SubjectPage> {
           ],
         ),
       ),
-      Center(
-        child: Text('Settled things'),
-      ),
-      Center(
-        child: Text('Unsettled things'),
-      ),
+      ThingsList(subjectId: subject.id),
     ];
 
     return items;
@@ -134,8 +124,7 @@ class _SubjectPageState extends StateX<SubjectPage> {
   Widget _buildContent(SubjectVm subject) {
     var tabs = [
       Icon(Icons.content_paste),
-      Icon(Icons.checklist),
-      Icon(Icons.list),
+      Icon(Icons.checklist_rtl),
     ];
 
     return SizedBox(

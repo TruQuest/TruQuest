@@ -5,6 +5,7 @@ using MediatR;
 using Domain.Results;
 using Application.Subject.Commands.AddNewSubject;
 using Application.Subject.Queries.GetSubject;
+using Application.Subject.Queries.GetThingsList;
 
 using API.Controllers.Filters;
 
@@ -33,4 +34,8 @@ public class SubjectController : ControllerBase
     {
         Id = id
     });
+
+    [HttpGet("{subjectId}/things")]
+    public Task<HandleResult<GetThingsListResultVm>> GetThingsList(GetThingsListQuery query) =>
+        _mediator.Send(query);
 }

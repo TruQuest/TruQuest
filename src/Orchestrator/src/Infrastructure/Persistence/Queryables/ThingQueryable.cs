@@ -5,12 +5,40 @@ using Dapper;
 using Application.Thing.Queries.GetThing;
 using Application.Common.Models.QM;
 using Application.Common.Interfaces;
+using Application.Subject.Common.Models.QM;
 
 namespace Infrastructure.Persistence.Queryables;
 
 internal class ThingQueryable : Queryable, IThingQueryable
 {
     public ThingQueryable(IConfiguration configuration) : base(configuration) { }
+
+    public async Task<IEnumerable<ThingPreviewQm>> GetForSubject(Guid subjectId, string? userId)
+    {
+        var dbConn = await _getOpenConnection();
+        var things = await dbConn.QueryAsync<ThingPreviewQm>(
+            @"
+                SELECT
+                    t.""Id"", t.""State"", t.""Title"", t.""CroppedImageIpfsCid"",
+                    COALESCE(t.""SettledAt"", t.""SubmittedAt"") AS ""DisplayedTimestamp"",
+                    p.""Verdict""
+                FROM
+                    truquest.""Things"" AS t
+                        LEFT JOIN
+                    truquest.""SettlementProposals"" AS p
+                        ON t.""AcceptedSettlementProposalId"" = p.""Id""
+                WHERE t.""SubjectId"" = @SubjectId AND (t.""State"" > 0 OR t.""SubmitterId"" = @UserId);
+                -- @@TODO: Check that it works with UserId == null as intended
+            ",
+            param: new
+            {
+                SubjectId = subjectId,
+                UserId = userId
+            }
+        );
+
+        return things;
+    }
 
     public async Task<ThingQm?> GetById(Guid id)
     {

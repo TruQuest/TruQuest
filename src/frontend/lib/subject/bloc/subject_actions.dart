@@ -19,3 +19,9 @@ class GetSubject extends SubjectAction {
 
   GetSubject({required this.subjectId});
 }
+
+class GetThingsList extends SubjectAction {
+  final String subjectId;
+
+  GetThingsList({required this.subjectId});
+}

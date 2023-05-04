@@ -1,6 +1,6 @@
 using Application.Common.Models.QM;
 
-namespace Application.Subject.Queries.GetSubject;
+namespace Application.Subject.Common.Models.QM;
 
 public class ThingPreviewQm
 {
@@ -8,5 +8,6 @@ public class ThingPreviewQm
     public ThingStateQm State { get; }
     public string Title { get; }
     public string? CroppedImageIpfsCid { get; }
-    public long SortedByDate { get; }
+    public long? DisplayedTimestamp { get; }
+    public VerdictQm? Verdict { get; }
 }
