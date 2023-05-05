@@ -6,6 +6,7 @@ using Domain.Results;
 using Application.Subject.Commands.AddNewSubject;
 using Application.Subject.Queries.GetSubject;
 using Application.Subject.Queries.GetThingsList;
+using Application.Subject.Queries.GetSubjects;
 
 using API.Controllers.Filters;
 
@@ -28,6 +29,9 @@ public class SubjectController : ControllerBase
     {
         Request = HttpContext.Request
     });
+
+    [HttpGet]
+    public Task<HandleResult<IEnumerable<SubjectPreviewQm>>> GetSubjects() => _mediator.Send(new GetSubjectsQuery());
 
     [HttpGet("{id}")]
     public Task<HandleResult<SubjectQm>> Get(Guid id) => _mediator.Send(new GetSubjectQuery

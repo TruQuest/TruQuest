@@ -102,7 +102,7 @@ class _ThingPageState extends StateX<ThingPage> {
                     AvatarWithReputationGauge(
                       subjectId: thing.subjectId,
                       subjectAvatarIpfsCid: thing.subjectCroppedImageIpfsCid,
-                      big: false,
+                      size: AvatarSize.medium,
                       color: Colors.white70,
                     ),
                   ],

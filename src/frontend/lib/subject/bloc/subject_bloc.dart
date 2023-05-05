@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../models/rvm/subject_preview_vm.dart';
 import '../models/rvm/get_things_list_rvm.dart';
 import '../models/rvm/subject_vm.dart';
 import 'subject_result_vm.dart';
@@ -9,6 +10,10 @@ import '../../general/bloc/bloc.dart';
 
 class SubjectBloc extends Bloc<SubjectAction> {
   final SubjectService _subjectService;
+
+  final StreamController<List<SubjectPreviewVm>> _subjectsChannel =
+      StreamController<List<SubjectPreviewVm>>.broadcast();
+  Stream<List<SubjectPreviewVm>> get subjects$ => _subjectsChannel.stream;
 
   final StreamController<SubjectVm> _subjectChannel =
       StreamController<SubjectVm>.broadcast();
@@ -22,6 +27,8 @@ class SubjectBloc extends Bloc<SubjectAction> {
     actionChannel.stream.listen((action) {
       if (action is AddNewSubject) {
         _addNewSubject(action);
+      } else if (action is GetSubjects) {
+        _getSubjects(action);
       } else if (action is GetSubject) {
         _getSubject(action);
       } else if (action is GetThingsList) {
@@ -34,6 +41,11 @@ class SubjectBloc extends Bloc<SubjectAction> {
     var subjectId = await _subjectService.addNewSubject(action.documentContext);
     print('SubjectId: $subjectId');
     action.complete(AddNewSubjectSuccessResult(subjectId: subjectId));
+  }
+
+  void _getSubjects(GetSubjects action) async {
+    var subjects = await _subjectService.getSubjects();
+    _subjectsChannel.add(subjects);
   }
 
   void _getSubject(GetSubject action) async {

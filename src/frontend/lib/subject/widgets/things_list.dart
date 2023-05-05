@@ -132,12 +132,14 @@ class _ThingsListState extends StateX<ThingsList> {
                       // fromNarrowToWide: true,
                     ),
                     CornerBanner(
+                      position: Alignment.topLeft,
                       size: 50,
                       cornerRadius: 12,
                       color: thing.verdict != null
                           ? thing.verdictColor
                           : Colors.grey[400]!,
                       icon: thing.stateIcon,
+                      iconSize: 22,
                     )
                   ],
                 );

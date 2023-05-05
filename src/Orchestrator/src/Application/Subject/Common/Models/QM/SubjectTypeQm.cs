@@ -1,4 +1,4 @@
-namespace Application.Subject.Queries.GetSubject;
+namespace Application.Subject.Common.Models.QM;
 
 public enum SubjectTypeQm
 {

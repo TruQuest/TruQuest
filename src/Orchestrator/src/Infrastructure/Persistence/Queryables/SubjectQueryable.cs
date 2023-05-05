@@ -6,12 +6,64 @@ using Application.Subject.Queries.GetSubject;
 using Application.Common.Interfaces;
 using Application.Common.Models.QM;
 using Application.Subject.Common.Models.QM;
+using Application.Subject.Queries.GetSubjects;
 
 namespace Infrastructure.Persistence.Queryables;
 
 internal class SubjectQueryable : Queryable, ISubjectQueryable
 {
     public SubjectQueryable(IConfiguration configuration) : base(configuration) { }
+
+    public async Task<IEnumerable<SubjectPreviewQm>> GetAll()
+    {
+        var dbConn = await _getOpenConnection();
+        var subjects = await dbConn.QueryWithMany<SubjectPreviewQm, TagQm>(
+            @"
+                WITH ""SubjectAvgScore"" AS (
+                    SELECT
+                        s.""Id"",
+                        COUNT(*)::INTEGER AS ""SettledThingsCount"",
+                        AVG(
+                            CASE
+                                WHEN p.""Verdict"" = 0 THEN 100
+                                WHEN p.""Verdict"" = 1 THEN 75
+                                WHEN p.""Verdict"" = 2 THEN 40
+                                WHEN p.""Verdict"" = 3 THEN 0
+                                WHEN p.""Verdict"" = 4 THEN -40
+                                WHEN p.""Verdict"" = 5 THEN -100
+                            END
+                        )::INTEGER AS ""AvgScore""
+                    FROM
+                        truquest.""Subjects"" AS s
+                            INNER JOIN
+                        truquest.""Things"" AS t
+                            ON (s.""Id"" = t.""SubjectId"" AND t.""State"" = 5) -- Settled
+                            INNER JOIN
+                        truquest.""SettlementProposals"" AS p
+                            ON t.""AcceptedSettlementProposalId"" = p.""Id""
+                    GROUP BY s.""Id""
+                )
+                SELECT
+                    s.""Id"", s.""SubmittedAt"", s.""Name"", s.""Type"", s.""CroppedImageIpfsCid"", s.""SubmitterId"",
+                    sas.""SettledThingsCount"", sas.""AvgScore"",
+                    t.*
+                FROM
+                    truquest.""Subjects"" AS s
+                        LEFT JOIN
+                    ""SubjectAvgScore"" AS sas
+                        ON s.""Id"" = sas.""Id""
+                        INNER JOIN
+                    truquest.""SubjectAttachedTags"" AS sat
+                        ON s.""Id"" = sat.""SubjectId""
+                        INNER JOIN
+                    truquest.""Tags"" AS t
+                        ON sat.""TagId"" = t.""Id""
+            ",
+            joinedCollectionSelector: subject => subject.Tags
+        );
+
+        return subjects;
+    }
 
     public async Task<SubjectQm?> GetById(Guid id)
     {

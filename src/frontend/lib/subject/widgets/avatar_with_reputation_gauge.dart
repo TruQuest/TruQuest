@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
+enum AvatarSize {
+  small,
+  medium,
+  big,
+}
+
 class AvatarWithReputationGauge extends StatelessWidget {
   final String subjectId;
   final String subjectAvatarIpfsCid;
-  final bool big;
+  final AvatarSize size;
   final Color color;
 
   const AvatarWithReputationGauge({
     super.key,
     required this.subjectId,
     required this.subjectAvatarIpfsCid,
-    required this.big,
+    required this.size,
     required this.color,
   });
 
@@ -23,7 +29,11 @@ class AvatarWithReputationGauge extends StatelessWidget {
         SleekCircularSlider(
           appearance: CircularSliderAppearance(
             angleRange: 300,
-            size: big ? 270 : 165,
+            size: size == AvatarSize.big
+                ? 270
+                : size == AvatarSize.medium
+                    ? 165
+                    : 145,
             animationEnabled: false,
             customColors: CustomSliderColors(
               trackColor: color,
@@ -42,7 +52,7 @@ class AvatarWithReputationGauge extends StatelessWidget {
             return Align(
               alignment: Alignment.bottomLeft,
               child: Transform.translate(
-                offset: big
+                offset: size == AvatarSize.big
                     ? Offset(40, 0)
                     : Offset(
                         reputation < 10 ? 40 : 20,
@@ -60,23 +70,51 @@ class AvatarWithReputationGauge extends StatelessWidget {
           },
         ),
         Container(
-          width: big ? 210 : 130,
-          height: big ? 210 : 130,
+          width: size == AvatarSize.big
+              ? 210
+              : size == AvatarSize.medium
+                  ? 130
+                  : 110,
+          height: size == AvatarSize.big
+              ? 210
+              : size == AvatarSize.medium
+                  ? 130
+                  : 110,
           decoration: BoxDecoration(
             border: Border.all(
               width: 3,
               color: Colors.white,
             ),
-            borderRadius: BorderRadius.circular(big ? 105 : 65),
+            borderRadius: BorderRadius.circular(
+              size == AvatarSize.big
+                  ? 105
+                  : size == AvatarSize.medium
+                      ? 65
+                      : 55,
+            ),
             color: Color(0xff4361ee),
           ),
         ),
         Container(
-          width: big ? 200 : 120,
-          height: big ? 200 : 120,
+          width: size == AvatarSize.big
+              ? 200
+              : size == AvatarSize.medium
+                  ? 120
+                  : 100,
+          height: size == AvatarSize.big
+              ? 200
+              : size == AvatarSize.medium
+                  ? 120
+                  : 100,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(big ? 100 : 60),
+            borderRadius: BorderRadius.circular(
+              size == AvatarSize.big
+                  ? 100
+                  : size == AvatarSize.medium
+                      ? 60
+                      : 50,
+            ),
           ),
           clipBehavior: Clip.antiAlias,
           child: Image.network(

@@ -62,7 +62,7 @@ class _SubjectPageState extends StateX<SubjectPage> {
               AvatarWithReputationGauge(
                 subjectId: subject.id,
                 subjectAvatarIpfsCid: subject.croppedImageIpfsCid,
-                big: true,
+                size: AvatarSize.big,
                 color: Colors.black87,
               ),
               SizedBox(width: 16),

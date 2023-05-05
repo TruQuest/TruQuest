@@ -14,6 +14,8 @@ class AddNewSubject
   AddNewSubject({required this.documentContext});
 }
 
+class GetSubjects extends SubjectAction {}
+
 class GetSubject extends SubjectAction {
   final String subjectId;
 

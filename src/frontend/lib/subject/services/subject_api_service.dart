@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 
+import '../models/rvm/subject_preview_vm.dart';
 import '../models/rvm/get_things_list_rvm.dart';
 import '../models/im/new_subject_im.dart';
 import '../../general/errors/file_error.dart';
@@ -92,6 +93,18 @@ class SubjectApiService {
       );
 
       return response.data['data'] as String;
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future<List<SubjectPreviewVm>> getSubjects() async {
+    try {
+      var response = await _dio.get('/subjects');
+      return List.unmodifiable(
+        (response.data['data'] as List<dynamic>)
+            .map((map) => SubjectPreviewVm.fromMap(map)),
+      );
     } on DioError catch (error) {
       throw _wrapError(error);
     }
