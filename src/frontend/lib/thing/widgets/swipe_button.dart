@@ -296,12 +296,12 @@ class _SwipeButtonState extends State<_SwipeButton>
 
 class SwipeButton extends StatefulWidget {
   final String text;
-  final Future<bool> Function() onCompleteSwipe;
+  final Future<bool> Function() onCompletedSwipe;
 
   const SwipeButton({
     super.key,
     required this.text,
-    required this.onCompleteSwipe,
+    required this.onCompletedSwipe,
   });
 
   @override
@@ -334,7 +334,7 @@ class SwipeButtonState extends State<SwipeButton> {
           _enabled = false;
         });
 
-        if (!await widget.onCompleteSwipe()) {
+        if (!await widget.onCompletedSwipe()) {
           setState(() {
             _enabled = true;
           });

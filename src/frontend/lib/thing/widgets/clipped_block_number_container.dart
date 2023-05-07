@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 
 class ClippedBlockNumberContainer extends StatelessWidget {
+  final Color color;
+  final double height;
   final Widget child;
 
   const ClippedBlockNumberContainer({
     super.key,
+    required this.color,
+    required this.height,
     required this.child,
   });
 
@@ -14,9 +18,9 @@ class ClippedBlockNumberContainer extends StatelessWidget {
       clipper: ContainerClipper(),
       child: Container(
         width: 140,
-        height: 120,
+        height: height,
         decoration: BoxDecoration(
-          color: Colors.blueAccent,
+          color: color,
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(12),
             bottomLeft: Radius.circular(12),
