@@ -4,6 +4,10 @@ abstract class ThingResultVm {}
 
 class CreateNewThingDraftFailureVm extends ThingResultVm {}
 
+class SubmitNewThingSuccessVm extends ThingResultVm {}
+
+class FundThingSuccessVm extends ThingResultVm {}
+
 class GetVerifierLotteryInfoSuccessVm extends ThingResultVm {
   final int? initBlock;
   final int durationBlocks;
@@ -43,3 +47,5 @@ class GetAcceptancePollInfoSuccessVm extends ThingResultVm {
 class PreJoinLotteryFailureVm extends ThingResultVm {}
 
 class JoinLotteryFailureVm extends ThingResultVm {}
+
+class CastVoteResultVm extends ThingResultVm {}

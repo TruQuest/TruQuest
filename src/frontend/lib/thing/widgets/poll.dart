@@ -1,18 +1,19 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
-import '../../general/utils/utils.dart';
-import '../../general/widgets/verifiers_table.dart';
-import '../../general/widgets/vote_dialog.dart';
-import '../models/im/decision_im.dart';
-import '../models/rvm/thing_vm.dart';
+import 'block_countdown.dart';
+import 'clipped_block_number_container.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';
+import '../../subject/widgets/corner_banner.dart';
+import '../../user/bloc/user_bloc.dart';
 import '../bloc/thing_actions.dart';
 import '../bloc/thing_bloc.dart';
-import '../../user/bloc/user_bloc.dart';
+import '../models/rvm/thing_vm.dart';
 import '../../widget_extensions.dart';
+import 'poll_stepper.dart';
 
 class Poll extends StatefulWidget {
   final ThingVm thing;
@@ -28,28 +29,6 @@ class _PollState extends StateX<Poll> {
   late final _thingBloc = use<ThingBloc>();
   late final _ethereumBloc = use<EthereumBloc>();
 
-  final _counterAppearance = CircularSliderAppearance(
-    customWidths: CustomSliderWidths(
-      trackWidth: 4,
-      progressBarWidth: 30,
-      shadowWidth: 60,
-    ),
-    customColors: CustomSliderColors(
-      dotColor: Colors.white.withOpacity(0.1),
-      trackColor: Color(0xffF9EBE0).withOpacity(0.5),
-      progressBarColors: [
-        Color(0xffA586EE).withOpacity(0.3),
-        Color(0xffF9D3D2).withOpacity(0.3),
-        Color(0xffBF79C2).withOpacity(0.3),
-      ],
-      shadowColor: Color(0xff7F5ED9),
-      shadowMaxOpacity: 0.05,
-    ),
-    startAngle: 180,
-    angleRange: 360,
-    size: 220.0,
-  );
-
   @override
   void initState() {
     super.initState();
@@ -58,16 +37,203 @@ class _PollState extends StateX<Poll> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: StreamBuilder(
-            stream: _userBloc.currentUser$,
-            builder: (context, _) {
-              var action = GetAcceptancePollInfo(thingId: widget.thing.id);
-              _thingBloc.dispatch(action);
+    return StreamBuilder(
+      stream: _userBloc.currentUser$,
+      builder: (context, snapshot) {
+        var user = snapshot.data?.user;
+        var action = GetAcceptancePollInfo(thingId: widget.thing.id);
+        _thingBloc.dispatch(action);
 
-              return FutureBuilder(
+        return Row(
+          children: [
+            Expanded(
+              child: StreamBuilder(
+                stream: _thingBloc.verifiers$,
+                builder: (context, snapshot) {
+                  if (snapshot.data == null) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+
+                  var verifiers = snapshot.data!.verifiers;
+
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: Stack(
+                          children: [
+                            Card(
+                              margin: EdgeInsets.zero,
+                              color: Colors.white,
+                              elevation: 25,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                  left: 150,
+                                  right: 16,
+                                ),
+                                child: SizedBox(
+                                  width: 380,
+                                  height: 80,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      AutoSizeText(
+                                        'User Id',
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 18,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        'Username',
+                                        style: TextStyle(
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        'On-/Off-Chain',
+                                        style: TextStyle(
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            ClippedBlockNumberContainer(
+                              color: Colors.indigo[900]!,
+                              height: 80,
+                              child: Text(
+                                'Block/Time',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            CornerBanner(
+                              position: Alignment.topLeft,
+                              size: 40,
+                              cornerRadius: 12,
+                              color: Colors.white,
+                              child: Icon(
+                                Icons.numbers,
+                                size: 14,
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: verifiers.length,
+                          itemBuilder: (context, index) {
+                            var verifier = verifiers[index];
+                            return Center(
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                  top: index == 0 ? 16 : 8,
+                                  bottom: 8,
+                                ),
+                                child: Stack(
+                                  children: [
+                                    Card(
+                                      margin: EdgeInsets.zero,
+                                      color: Colors.white,
+                                      elevation: 15,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(
+                                          left: 150,
+                                          right: 16,
+                                        ),
+                                        child: SizedBox(
+                                          width: 350,
+                                          height: 120,
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              AutoSizeText(
+                                                verifier.verifierId,
+                                                style: TextStyle(
+                                                  color: Colors.black,
+                                                  fontSize: 18,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              SizedBox(height: 12),
+                                              Text(
+                                                verifier.username,
+                                                style: TextStyle(
+                                                  color: Colors.black54,
+                                                ),
+                                              ),
+                                              SizedBox(height: 12),
+                                              Text(
+                                                verifier.vote == null
+                                                    ? 'No vote'
+                                                    : verifier.vote!
+                                                                .blockNumber !=
+                                                            null
+                                                        ? 'On-chain'
+                                                        : 'Off-chain',
+                                                style: TextStyle(
+                                                  color: Colors.black54,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    ClippedBlockNumberContainer(
+                                      color: Colors.blueAccent,
+                                      height: 120,
+                                      child: Text(
+                                        verifier.castedVoteAt,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 26,
+                                        ),
+                                      ),
+                                    ),
+                                    CornerBanner(
+                                      position: Alignment.topLeft,
+                                      size: 40,
+                                      cornerRadius: 12,
+                                      color: Colors.white,
+                                      child: Text((index + 1).toString()),
+                                    )
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            Expanded(
+              child: FutureBuilder(
                 future: action.result,
                 builder: (context, snapshot) {
                   if (snapshot.data == null) {
@@ -79,7 +245,11 @@ class _PollState extends StateX<Poll> {
                   return StreamBuilder(
                     stream: _ethereumBloc.latestBlockNumber$,
                     builder: (context, snapshot) {
-                      var latestBlockNumber = snapshot.data?.toDouble() ?? 0;
+                      if (snapshot.data == null) {
+                        return Center(child: CircularProgressIndicator());
+                      }
+
+                      var latestBlockNumber = snapshot.data!.toDouble();
                       var startBlock = info.initBlock?.toDouble() ?? 0;
                       var endBlock = startBlock + info.durationBlocks;
                       var currentBlock = 0.0;
@@ -93,182 +263,46 @@ class _PollState extends StateX<Poll> {
                         ).toDouble();
                       }
 
-                      return Row(
-                        children: [
-                          Expanded(
-                            child: Center(
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  SleekCircularSlider(
-                                    min: startBlock,
-                                    max: endBlock,
-                                    initialValue: currentBlock,
-                                    appearance: CircularSliderAppearance(
-                                      size: 300,
-                                    ),
-                                    innerWidget: (_) => SizedBox.shrink(),
-                                  ),
-                                  if (info.initBlock != null)
-                                    StreamBuilder(
-                                      stream: Stream.fromFutures(
-                                        [
-                                          Future.delayed(
-                                            Duration(seconds: 1),
-                                            () => true,
-                                          ),
-                                          Future.delayed(
-                                            Duration(seconds: 5),
-                                            () => false,
-                                          ),
-                                        ],
-                                      ),
-                                      initialData: false,
-                                      builder: (context, snapshot) {
-                                        return SleekCircularSlider(
-                                          min: 0,
-                                          max: 360,
-                                          initialValue:
-                                              !snapshot.data! ? 0 : 360,
-                                          appearance: _counterAppearance,
-                                          innerWidget: (value) {
-                                            return Transform.rotate(
-                                              angle: degreesToRadians(value),
-                                              child: Align(
-                                                alignment: Alignment.center,
-                                                child: Container(
-                                                  width: value / 4,
-                                                  height: value / 4,
-                                                  decoration: BoxDecoration(
-                                                    gradient: LinearGradient(
-                                                      colors: [
-                                                        Color(0xffF9D3D2)
-                                                            .withOpacity(
-                                                                value / 360),
-                                                        Color(0xffBF79C2)
-                                                            .withOpacity(
-                                                                value / 360),
-                                                      ],
-                                                      begin:
-                                                          Alignment.bottomLeft,
-                                                      end: Alignment.topRight,
-                                                      tileMode: TileMode.clamp,
-                                                    ),
-                                                  ),
-                                                  alignment: Alignment.center,
-                                                  child: FittedBox(
-                                                    child: Text(
-                                                      '${endBlock - currentBlock}\nBlocks\nRemaining',
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        );
-                                      },
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                      return Center(
+                        child: Column(
+                          children: [
+                            SizedBox(height: 24),
+                            Stack(
+                              alignment: Alignment.center,
                               children: [
-                                OutlinedButton(
-                                  child: Text('Vote off-chain'),
-                                  onPressed: info.initBlock != null &&
-                                          info.isDesignatedVerifier != null &&
-                                          currentBlock < endBlock &&
-                                          info.isDesignatedVerifier!
-                                      ? () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (_) =>
-                                                VoteDialog<DecisionIm>(
-                                              decisions: [
-                                                DecisionIm.accept,
-                                                DecisionIm.softDecline,
-                                                DecisionIm.hardDecline,
-                                              ],
-                                              getDisplayString: (decision) =>
-                                                  decision.getString(),
-                                              onVote: (decision, reason) {
-                                                _thingBloc.dispatch(
-                                                  CastVoteOffChain(
-                                                    thingId: widget.thing.id,
-                                                    decision: decision,
-                                                    reason: reason,
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          );
-                                        }
-                                      : null,
+                                SleekCircularSlider(
+                                  min: startBlock,
+                                  max: endBlock,
+                                  initialValue: currentBlock,
+                                  appearance: CircularSliderAppearance(
+                                    size: 300,
+                                  ),
+                                  innerWidget: (_) => SizedBox.shrink(),
                                 ),
-                                SizedBox(height: 12),
-                                OutlinedButton(
-                                  child: Text('Vote on-chain'),
-                                  onPressed: info.initBlock != null &&
-                                          info.isDesignatedVerifier != null &&
-                                          currentBlock < endBlock &&
-                                          info.isDesignatedVerifier!
-                                      ? () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (_) =>
-                                                VoteDialog<DecisionIm>(
-                                              decisions: [
-                                                DecisionIm.accept,
-                                                DecisionIm.softDecline,
-                                                DecisionIm.hardDecline,
-                                              ],
-                                              getDisplayString: (decision) =>
-                                                  decision.getString(),
-                                              onVote: (decision, reason) {
-                                                _thingBloc.dispatch(
-                                                  CastVoteOnChain(
-                                                    thingId: widget.thing.id,
-                                                    decision: decision,
-                                                    reason: reason,
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          );
-                                        }
-                                      : null,
-                                ),
+                                if (info.initBlock != null)
+                                  BlockCountdown(
+                                    blocksLeft:
+                                        (endBlock - currentBlock).toInt(),
+                                  ),
                               ],
                             ),
-                          ),
-                        ],
+                            PollStepper(
+                              thing: widget.thing,
+                              info: info,
+                              currentBlock: currentBlock.toInt(),
+                              endBlock: endBlock.toInt(),
+                            ),
+                          ],
+                        ),
                       );
                     },
                   );
                 },
-              );
-            },
-          ),
-        ),
-        Expanded(
-          child: StreamBuilder(
-            stream: _thingBloc.verifiers$,
-            builder: (context, snapshot) {
-              if (snapshot.data == null) {
-                return Center(child: CircularProgressIndicator());
-              }
-
-              var vm = snapshot.data!;
-              var verifiers = vm.verifiers;
-
-              return VerifiersTable(verifiers: verifiers);
-            },
-          ),
-        ),
-      ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

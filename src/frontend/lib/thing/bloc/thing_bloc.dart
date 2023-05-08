@@ -90,22 +90,13 @@ class ThingBloc extends Bloc<ThingAction> {
   }
 
   void _submitNewThing(SubmitNewThing action) async {
-    var result = await _thingService.submitNewThing(action.thing.id);
-    _thingChannel.add(GetThingRvm(
-      thing: action.thing.copyWith(
-        state: ThingStateVm.awaitingFunding,
-        fundedAwaitingConfirmation: false,
-      ),
-      signature: result.signature,
-    ));
+    await _thingService.submitNewThing(action.thing.id);
+    action.complete(SubmitNewThingSuccessVm());
   }
 
   void _fundThing(FundThing action) async {
     await _thingService.fundThing(action.thing.id, action.signature);
-    _thingChannel.add(GetThingRvm(
-      thing: action.thing.copyWith(fundedAwaitingConfirmation: true),
-      signature: null,
-    ));
+    action.complete(FundThingSuccessVm());
   }
 
   void _refreshVerifierLotteryInfo(String thingId) async {
@@ -170,6 +161,7 @@ class ThingBloc extends Bloc<ThingAction> {
       action.decision,
       action.reason,
     );
+    action.complete(CastVoteResultVm());
   }
 
   void _castVoteOnChain(CastVoteOnChain action) async {
@@ -178,6 +170,7 @@ class ThingBloc extends Bloc<ThingAction> {
       action.decision,
       action.reason,
     );
+    action.complete(CastVoteResultVm());
   }
 
   void _getVerifiers(GetVerifiers action) async {

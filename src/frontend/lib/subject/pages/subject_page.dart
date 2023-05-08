@@ -165,36 +165,4 @@ class _SubjectPageState extends StateX<SubjectPage> {
       },
     );
   }
-
-  // @override
-  // Widget build(BuildContext context) {
-  //   return Scaffold(
-  //     body: Center(child: Text('Subject')),
-  //     floatingActionButton: FloatingActionButton(
-  //       child: Icon(Icons.add),
-  //       onPressed: () {
-  //         var documentContext = DocumentContext();
-  //         documentContext.subjectId = widget.subjectId;
-
-  //         showDialog(
-  //           context: context,
-  //           barrierDismissible: false,
-  //           builder: (_) => ScopeX(
-  //             useInstances: [documentContext],
-  //             child: DocumentComposer(
-  //               title: 'New thing',
-  //               nameFieldLabel: 'Title',
-  //               submitButton: PrepareDraftButton(),
-  //               sideBlocks: [
-  //                 ImageBlockWithCrop(cropCircle: false),
-  //                 TagsBlock(),
-  //                 EvidenceBlock(),
-  //               ],
-  //             ),
-  //           ),
-  //         );
-  //       },
-  //     ),
-  //   );
-  // }
 }

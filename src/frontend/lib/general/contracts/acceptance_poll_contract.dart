@@ -192,11 +192,14 @@ class AcceptancePollContract {
         );
       }
 
-      print('Vote casted! Awaiting confirmation...');
+      // print('Vote casted! Awaiting confirmation...');
 
-      await txnResponse.wait(2);
+      // await txnResponse.wait(2);
 
-      print('Cast vote txn confirmed!');
+      // print('Cast vote txn confirmed!');
+
+      await txnResponse.wait();
+      print('Cast vote txn mined!');
     } catch (e) {
       print(e);
     }

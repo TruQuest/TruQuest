@@ -31,8 +31,8 @@ class VerifiersTable extends StatelessWidget {
                   DataCell(Text((i + 1).toString())),
                   DataCell(Text(v.verifierId)),
                   DataCell(Text(v.username)),
-                  DataCell(Text(v.vote?.castedOffChainAt ?? '–')),
-                  DataCell(Text(v.vote?.castedOnChainAtBlockNo ?? '–')),
+                  DataCell(Text('–')),
+                  DataCell(Text('–')),
                 ],
               ),
             )

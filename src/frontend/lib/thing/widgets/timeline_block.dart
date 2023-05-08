@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
 import 'package:timelines/timelines.dart';
 
+import '../bloc/thing_actions.dart';
 import '../bloc/thing_bloc.dart';
 import '../../general/contexts/document_view_context.dart';
 import '../models/rvm/thing_state_vm.dart';
@@ -56,31 +57,27 @@ class _TimelineBlockState extends StateX<TimelineBlock> {
       controller: btnController,
       onPressed: thing.state == ThingStateVm.draft
           ? () async {
-              // if (ignoreClick) return;
+              if (ignoreClick) return;
 
-              // var action = SubmitNewSettlementProposal(
-              //   proposalId: thing.id,
-              // );
-              // _settlementBloc.dispatch(action);
+              var action = SubmitNewThing(thing: thing);
+              _thingBloc.dispatch(action);
 
-              // var success = await action.result;
-              // if (success == null) {
-              //   btnController.error();
-              //   await Future.delayed(Duration(seconds: 2));
-              //   btnController.reset();
-              //   return;
-              // }
+              var success = await action.result;
+              if (success == null) {
+                btnController.error();
+                await Future.delayed(Duration(seconds: 2));
+                btnController.reset();
+                return;
+              }
 
-              // btnController.success();
-              // await Future.delayed(Duration(seconds: 1));
+              btnController.success();
+              await Future.delayed(Duration(seconds: 1));
 
-              // ignoreClick = true;
-              // btnController.reset();
-              // await Future.delayed(Duration(seconds: 1));
+              ignoreClick = true;
+              btnController.reset();
+              await Future.delayed(Duration(seconds: 1));
 
-              // _settlementBloc.dispatch(
-              //   GetSettlementProposal(proposalId: thing.id),
-              // );
+              _thingBloc.dispatch(GetThing(thingId: thing.id));
             }
           : null,
       child: Text('Submit'),
@@ -98,33 +95,30 @@ class _TimelineBlockState extends StateX<TimelineBlock> {
       controller: btnController,
       onPressed: canBeFunded
           ? () async {
-              // if (ignoreClick) return;
+              if (ignoreClick) return;
 
-              // var action = FundSettlementProposal(
-              //   thingId: thing.thingId,
-              //   proposalId: thing.id,
-              //   signature: _documentViewContext.signature!,
-              // );
-              // _settlementBloc.dispatch(action);
+              var action = FundThing(
+                thing: thing,
+                signature: _documentViewContext.signature!,
+              );
+              _thingBloc.dispatch(action);
 
-              // var success = await action.result;
-              // if (success == null) {
-              //   btnController.error();
-              //   await Future.delayed(Duration(seconds: 2));
-              //   btnController.reset();
-              //   return;
-              // }
+              var success = await action.result;
+              if (success == null) {
+                btnController.error();
+                await Future.delayed(Duration(seconds: 2));
+                btnController.reset();
+                return;
+              }
 
-              // btnController.success();
-              // await Future.delayed(Duration(seconds: 1));
+              btnController.success();
+              await Future.delayed(Duration(seconds: 1));
 
-              // ignoreClick = true;
-              // btnController.reset();
-              // await Future.delayed(Duration(seconds: 1));
+              ignoreClick = true;
+              btnController.reset();
+              await Future.delayed(Duration(seconds: 1));
 
-              // _settlementBloc.dispatch(
-              //   GetSettlementProposal(proposalId: thing.id),
-              // );
+              _thingBloc.dispatch(GetThing(thingId: thing.id));
             }
           : null,
       child: Text('Fund'),

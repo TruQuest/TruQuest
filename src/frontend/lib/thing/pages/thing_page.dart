@@ -9,7 +9,7 @@ import '../models/rvm/get_thing_rvm.dart';
 import '../models/rvm/thing_vm.dart';
 import '../../settlement/widgets/settlement_proposals.dart';
 import '../models/rvm/thing_state_vm.dart';
-import '../widgets/lottery1.dart';
+import '../widgets/lottery.dart';
 import '../../general/widgets/evidence_view_block.dart';
 import '../widgets/poll.dart';
 import '../../general/contexts/document_view_context.dart';

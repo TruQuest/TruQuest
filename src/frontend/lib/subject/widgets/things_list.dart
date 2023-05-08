@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 
+import '../../general/contexts/document_context.dart';
+import '../../general/widgets/document_composer.dart';
+import '../../general/widgets/evidence_block.dart';
+import '../../general/widgets/image_block_with_crop.dart';
+import '../../general/widgets/prepare_draft_button.dart';
+import '../../general/widgets/tags_block.dart';
 import 'corner_banner.dart';
 import '../bloc/subject_actions.dart';
 import '../bloc/subject_bloc.dart';
@@ -36,7 +42,33 @@ class _ThingsListState extends StateX<ThingsList> {
 
         var things = snapshot.data!.things;
         if (things.isEmpty) {
-          return Center(child: Text('Nothing here yet'));
+          return Center(
+            child: IconButton(
+              icon: Icon(Icons.add_box_outlined),
+              onPressed: () {
+                var documentContext = DocumentContext();
+                documentContext.subjectId = widget.subjectId;
+
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) => ScopeX(
+                    useInstances: [documentContext],
+                    child: DocumentComposer(
+                      title: 'New thing',
+                      nameFieldLabel: 'Title',
+                      submitButton: PrepareDraftButton(),
+                      sideBlocks: [
+                        ImageBlockWithCrop(cropCircle: false),
+                        TagsBlock(),
+                        EvidenceBlock(),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          );
         }
 
         return Column(
@@ -46,7 +78,28 @@ class _ThingsListState extends StateX<ThingsList> {
               children: [
                 IconButton(
                   icon: Icon(Icons.add_box_outlined),
-                  onPressed: () {},
+                  onPressed: () {
+                    var documentContext = DocumentContext();
+                    documentContext.subjectId = widget.subjectId;
+
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (_) => ScopeX(
+                        useInstances: [documentContext],
+                        child: DocumentComposer(
+                          title: 'New thing',
+                          nameFieldLabel: 'Title',
+                          submitButton: PrepareDraftButton(),
+                          sideBlocks: [
+                            ImageBlockWithCrop(cropCircle: false),
+                            TagsBlock(),
+                            EvidenceBlock(),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -129,7 +182,7 @@ class _ThingsListState extends StateX<ThingsList> {
                       imageIpfsCid: thing.croppedImageIpfsCid!,
                       width: 240,
                       height: 135,
-                      // fromNarrowToWide: true,
+                      fromNarrowToWide: index % 2 == 1,
                     ),
                     CornerBanner(
                       position: Alignment.topLeft,
@@ -138,8 +191,10 @@ class _ThingsListState extends StateX<ThingsList> {
                       color: thing.verdict != null
                           ? thing.verdictColor
                           : Colors.grey[400]!,
-                      icon: thing.stateIcon,
-                      iconSize: 22,
+                      child: Icon(
+                        thing.stateIcon,
+                        size: 22,
+                      ),
                     )
                   ],
                 );

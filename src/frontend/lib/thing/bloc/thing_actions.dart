@@ -23,13 +23,13 @@ class GetThing extends ThingAction {
   GetThing({required this.thingId, this.subscribe = false});
 }
 
-class SubmitNewThing extends ThingAction {
+class SubmitNewThing extends ThingActionAwaitable<SubmitNewThingSuccessVm?> {
   final ThingVm thing;
 
   SubmitNewThing({required this.thing});
 }
 
-class FundThing extends ThingAction {
+class FundThing extends ThingActionAwaitable<FundThingSuccessVm?> {
   final ThingVm thing;
   final String signature;
 
@@ -73,7 +73,7 @@ class GetAcceptancePollInfo
   GetAcceptancePollInfo({required this.thingId});
 }
 
-class CastVoteOffChain extends ThingAction {
+class CastVoteOffChain extends ThingActionAwaitable<CastVoteResultVm> {
   final String thingId;
   final DecisionIm decision;
   final String reason;
@@ -85,7 +85,7 @@ class CastVoteOffChain extends ThingAction {
   });
 }
 
-class CastVoteOnChain extends ThingAction {
+class CastVoteOnChain extends ThingActionAwaitable<CastVoteResultVm> {
   final String thingId;
   final DecisionIm decision;
   final String reason;

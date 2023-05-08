@@ -5,8 +5,7 @@ class CornerBanner extends StatelessWidget {
   final double size;
   final double cornerRadius;
   final Color color;
-  final IconData icon;
-  final double iconSize;
+  final Widget child;
 
   const CornerBanner({
     super.key,
@@ -14,8 +13,7 @@ class CornerBanner extends StatelessWidget {
     required this.size,
     required this.cornerRadius,
     required this.color,
-    required this.icon,
-    required this.iconSize,
+    required this.child,
   });
 
   @override
@@ -41,7 +39,7 @@ class CornerBanner extends StatelessWidget {
         alignment: position == Alignment.topLeft
             ? Alignment(-0.65, -0.5)
             : Alignment(0.65, 0.5),
-        child: Icon(icon, size: iconSize),
+        child: child,
       ),
     );
   }
