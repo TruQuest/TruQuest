@@ -282,7 +282,12 @@ class _LotteryState extends StateX<Lottery> {
                                   ),
                               ],
                             ),
-                            LotteryStepper(),
+                            LotteryStepper(
+                              thing: widget.thing,
+                              info: info,
+                              currentBlock: currentBlock.toInt(),
+                              endBlock: endBlock.toInt(),
+                            ),
                           ],
                         ),
                       );

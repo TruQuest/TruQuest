@@ -120,6 +120,72 @@ public class E2ETests : IAsyncLifetime
         await _sut.StopHostedService<BlockTracker>();
     }
 
+    private async Task Dodo()
+    {
+        var network = _sut.GetConfigurationValue<string>("Ethereum:Network");
+
+        var submitterAddress = _sut.AccountProvider.GetAccount("Submitter").Address.Substring(2).ToLower();
+
+        Guid subjectId;
+        using (var request = _sut.PrepareHttpRequestForFileUpload(
+            fileNames: new[] { "full-image.jpg", "cropped-image-circle.png" },
+            ("type", $"{(int)SubjectTypeIm.Person}"),
+            ("name", "Peter Marlboro"),
+            ("details", _dummyQuillContentJson),
+            ("tags", "1|2|3")
+        ))
+        {
+            _sut.RunAs(userId: submitterAddress, username: submitterAddress.Substring(0, 20));
+
+            var subjectResult = await _sut.SendRequest(new AddNewSubjectCommand
+            {
+                Request = request.Request
+            });
+
+            subjectId = subjectResult.Data;
+        }
+
+        Guid thingId;
+        using (var request = _sut.PrepareHttpRequestForFileUpload(
+            fileNames: new[] { "full-image.jpg", "cropped-image-rect.png" },
+            ("subjectId", subjectId.ToString()),
+            ("title", "Go to the Moooooon..."),
+            ("details", _dummyQuillContentJson),
+            ("evidence", "https://google.com"),
+            ("tags", "1|2|3")
+        ))
+        {
+            var thingDraftResult = await _sut.SendRequest(new CreateNewThingDraftCommand
+            {
+                Request = request.Request
+            });
+
+            thingId = thingDraftResult.Data;
+        }
+
+        await Task.Delay(TimeSpan.FromSeconds(20)); // giving time to archive attachments
+
+        var thingSubmitResult = await _sut.SendRequest(new SubmitNewThingCommand
+        {
+            ThingId = thingId
+        });
+
+        var thingIdBytes = thingId.ToByteArray();
+
+        await _sut.ContractCaller.FundThing(thingIdBytes, thingSubmitResult.Data!.Signature);
+
+        var submitter = await _truQuestContract
+            .WalkStorage()
+            .Field("s_thingSubmitter")
+            .AsMapping()
+            .Key(new SolBytes16(thingIdBytes))
+            .GetValue<SolAddress>();
+
+        submitter.Value.ToLower().Should().Be(submitterAddress);
+
+        await Task.Delay(TimeSpan.FromSeconds(25)); // @@TODO: Wait for LotteryInitiated event instead.
+    }
+
     [Fact]
     public async Task ShouldDoStuff()
     {
@@ -532,5 +598,7 @@ public class E2ETests : IAsyncLifetime
             .GetValue<SolUint8>();
 
         pollStage.Value.Should().Be(4);
+
+        await Dodo();
     }
 }

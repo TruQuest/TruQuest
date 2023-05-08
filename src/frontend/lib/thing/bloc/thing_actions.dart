@@ -42,13 +42,13 @@ class GetVerifierLotteryInfo extends ThingAction {
   GetVerifierLotteryInfo({required this.thingId});
 }
 
-class PreJoinLottery extends ThingAction {
+class PreJoinLottery extends ThingActionAwaitable<PreJoinLotteryFailureVm?> {
   final String thingId;
 
   PreJoinLottery({required this.thingId});
 }
 
-class JoinLottery extends ThingAction {
+class JoinLottery extends ThingActionAwaitable<JoinLotteryFailureVm?> {
   final String thingId;
 
   JoinLottery({required this.thingId});

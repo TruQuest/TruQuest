@@ -39,3 +39,7 @@ class GetAcceptancePollInfoSuccessVm extends ThingResultVm {
     required this.latestBlockNumber,
   });
 }
+
+class PreJoinLotteryFailureVm extends ThingResultVm {}
+
+class JoinLotteryFailureVm extends ThingResultVm {}

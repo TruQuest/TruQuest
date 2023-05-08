@@ -126,12 +126,14 @@ class ThingBloc extends Bloc<ThingAction> {
   }
 
   void _preJoinLottery(PreJoinLottery action) async {
-    await _thingService.preJoinLottery(action.thingId);
+    var error = await _thingService.preJoinLottery(action.thingId);
+    action.complete(error != null ? PreJoinLotteryFailureVm() : null);
     _refreshVerifierLotteryInfo(action.thingId);
   }
 
   void _joinLottery(JoinLottery action) async {
-    await _thingService.joinLottery(action.thingId);
+    var error = await _thingService.joinLottery(action.thingId);
+    action.complete(error != null ? JoinLotteryFailureVm() : null);
     _refreshVerifierLotteryInfo(action.thingId);
   }
 

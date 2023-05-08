@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:convert/convert.dart';
 import 'package:flutter_web3/flutter_web3.dart';
 
+import '../../ethereum/errors/ethereum_error.dart';
 import '../../ethereum/services/ethereum_service.dart';
 import '../extensions/uuid_extension.dart';
 
@@ -221,13 +222,13 @@ class ThingSubmissionVerifierLotteryContract {
     );
   }
 
-  Future preJoinLottery(String thingId) async {
+  Future<EthereumError?> preJoinLottery(String thingId) async {
     var contract = _contract;
     if (contract == null) {
-      return;
+      return EthereumError('Metamask not installed');
     }
     if (_ethereumService.connectedAccount == null) {
-      return;
+      return EthereumError('No account connected');
     }
 
     var signer = _ethereumService.provider.getSigner();
@@ -251,28 +252,34 @@ class ThingSubmissionVerifierLotteryContract {
         ),
       );
 
-      print('PreJoined lottery! Awaiting confirmations...');
+      // print('PreJoined lottery! Awaiting confirmations...');
 
       // @@??: Why is it enough to mine just 1 block for this to complete?
-      await txnResponse.wait(2);
+      // await txnResponse.wait(2);
       // @@NOTE: Because we await confirmation, the lottery info does not get updated right away, which leads to
       // Commit to Lottery button being active for longer than it should be.
 
-      print('PreJoin txn confirmed!');
+      // print('PreJoin txn confirmed!');
+
+      await txnResponse.wait();
+      print('PreJoin txn mined!');
 
       _commitmentIdToData['$thingId|$address'] = dataHex;
+
+      return null;
     } catch (e) {
       print(e);
+      return EthereumError(e.toString());
     }
   }
 
-  Future joinLottery(String thingId) async {
+  Future<EthereumError?> joinLottery(String thingId) async {
     var contract = _contract;
     if (contract == null) {
-      return;
+      return EthereumError('Metamask not installed');
     }
     if (_ethereumService.connectedAccount == null) {
-      return;
+      return EthereumError('No account connected');
     }
 
     var signer = _ethereumService.provider.getSigner();
@@ -280,7 +287,7 @@ class ThingSubmissionVerifierLotteryContract {
     contract = contract.connect(signer);
 
     if (!_commitmentIdToData.containsKey('$thingId|$address')) {
-      return;
+      return EthereumError('Not committed to lottery');
     }
 
     var thingIdHex = thingId.toSolInputFormat();
@@ -295,15 +302,21 @@ class ThingSubmissionVerifierLotteryContract {
         ),
       );
 
-      print('Joined lottery! Awaiting confirmations...');
+      // print('Joined lottery! Awaiting confirmations...');
 
-      await txnResponse.wait(2);
+      // await txnResponse.wait(2);
 
-      print('Join txn confirmed!');
+      // print('Join txn confirmed!');
+
+      await txnResponse.wait();
+      print('Join txn mined!');
 
       _commitmentIdToData.remove('$thingId|$address');
+
+      return null;
     } catch (e) {
       print(e);
+      return EthereumError(e.toString());
     }
   }
 }

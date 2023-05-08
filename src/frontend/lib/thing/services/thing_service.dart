@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:tuple/tuple.dart';
 
+import '../../ethereum/errors/ethereum_error.dart';
 import '../models/rvm/get_verifiers_rvm.dart';
 import '../../general/extensions/datetime_extension.dart';
 import '../../general/contracts/acceptance_poll_contract.dart';
@@ -98,12 +99,18 @@ class ThingService {
     );
   }
 
-  Future preJoinLottery(String thingId) async {
-    await _thingSubmissionVerifierLotteryContract.preJoinLottery(thingId);
+  Future<EthereumError?> preJoinLottery(String thingId) async {
+    var error = await _thingSubmissionVerifierLotteryContract.preJoinLottery(
+      thingId,
+    );
+    return error;
   }
 
-  Future joinLottery(String thingId) async {
-    await _thingSubmissionVerifierLotteryContract.joinLottery(thingId);
+  Future<EthereumError?> joinLottery(String thingId) async {
+    var error = await _thingSubmissionVerifierLotteryContract.joinLottery(
+      thingId,
+    );
+    return error;
   }
 
   Future<GetVerifierLotteryParticipantsRvm> getVerifierLotteryParticipants(

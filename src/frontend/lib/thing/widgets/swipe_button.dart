@@ -35,30 +35,7 @@ class _SwipeButton extends StatefulWidget {
 
   final Duration duration;
 
-  const _SwipeButton({
-    Key? key,
-    required this.child,
-    this.thumb,
-    this.activeThumbColor,
-    this.inactiveThumbColor,
-    this.thumbPadding = EdgeInsets.zero,
-    this.activeTrackColor,
-    this.inactiveTrackColor,
-    this.trackPadding = EdgeInsets.zero,
-    this.borderRadius,
-    this.width = double.infinity,
-    this.height = 50,
-    this.enabled = true,
-    this.elevationThumb = 0,
-    this.elevationTrack = 0,
-    this.onSwipeStart,
-    this.onSwipe,
-    this.onSwipeEnd,
-    this.duration = const Duration(milliseconds: 250),
-  })  : assert(elevationThumb >= 0.0),
-        assert(elevationTrack >= 0.0),
-        _swipeButtonType = _SwipeButtonType.swipe,
-        super(key: key);
+  final bool swiped;
 
   const _SwipeButton.expand({
     Key? key,
@@ -80,6 +57,7 @@ class _SwipeButton extends StatefulWidget {
     this.onSwipe,
     this.onSwipeEnd,
     this.duration = const Duration(milliseconds: 250),
+    this.swiped = false,
   })  : assert(elevationThumb >= 0.0),
         assert(elevationTrack >= 0.0),
         _swipeButtonType = _SwipeButtonType.expand,
@@ -102,7 +80,7 @@ class _SwipeButtonState extends State<_SwipeButton>
     super.initState();
   }
 
-  _initAnimationControllers() {
+  void _initAnimationControllers() {
     swipeAnimationController = AnimationController(
       vsync: this,
       duration: widget.duration,
@@ -115,20 +93,25 @@ class _SwipeButtonState extends State<_SwipeButton>
       duration: widget.duration,
       lowerBound: 0,
       upperBound: 1,
-      value: 0,
+      value: widget.swiped ? 1 : 0,
     );
   }
 
   @override
   void didUpdateWidget(covariant _SwipeButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
     if (oldWidget.duration != widget.duration) {
       _initAnimationControllers();
     }
-    if (oldWidget.enabled != widget.enabled && !oldWidget.enabled) {
-      swipeAnimationController.animateTo(0);
-      expandAnimationController.animateTo(0);
+
+    if (widget.swiped != oldWidget.swiped) {
+      if (widget.swiped && expandAnimationController.value != 1) {
+        expandAnimationController.animateTo(1);
+      } else if (!widget.swiped && expandAnimationController.value != 0) {
+        expandAnimationController.animateTo(0);
+      }
     }
-    super.didUpdateWidget(oldWidget);
   }
 
   @override
@@ -286,7 +269,6 @@ class _SwipeButtonState extends State<_SwipeButton>
   _onHorizontalDragEnd(DragEndDetails details) {
     if (!swiped) {
       setState(() {
-        swipeAnimationController.animateTo(0);
         expandAnimationController.animateTo(0);
       });
     }
@@ -296,25 +278,45 @@ class _SwipeButtonState extends State<_SwipeButton>
 
 class SwipeButton extends StatefulWidget {
   final String text;
+  final bool enabled;
+  final bool swiped;
   final Future<bool> Function() onCompletedSwipe;
 
   const SwipeButton({
     super.key,
     required this.text,
+    required this.enabled,
+    required this.swiped,
     required this.onCompletedSwipe,
-  });
+  }) : assert(!(enabled && swiped));
 
   @override
   State<SwipeButton> createState() => SwipeButtonState();
 }
 
 class SwipeButtonState extends State<SwipeButton> {
-  bool _enabled = true;
+  late bool _enabled;
+  late bool _swiped;
+
+  @override
+  void initState() {
+    super.initState();
+    _enabled = widget.enabled;
+    _swiped = widget.swiped;
+  }
+
+  @override
+  void didUpdateWidget(covariant SwipeButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _enabled = widget.enabled;
+    _swiped = widget.swiped;
+  }
 
   @override
   Widget build(BuildContext context) {
     return _SwipeButton.expand(
       enabled: _enabled,
+      swiped: _swiped,
       thumb: Icon(
         Icons.double_arrow_rounded,
         color: Colors.white,
@@ -327,16 +329,18 @@ class SwipeButtonState extends State<SwipeButton> {
       ),
       activeThumbColor: Colors.red,
       activeTrackColor: Colors.grey,
-      inactiveThumbColor: Colors.red,
+      inactiveThumbColor: Colors.blue[300],
       inactiveTrackColor: Colors.grey,
       onSwipe: () async {
         setState(() {
           _enabled = false;
+          _swiped = true;
         });
 
         if (!await widget.onCompletedSwipe()) {
           setState(() {
             _enabled = true;
+            _swiped = false;
           });
         }
       },

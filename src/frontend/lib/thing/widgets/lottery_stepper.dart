@@ -1,17 +1,60 @@
 import 'package:flutter/material.dart';
 
+import '../bloc/thing_result_vm.dart';
+import '../bloc/thing_actions.dart';
+import '../bloc/thing_bloc.dart';
+import '../models/rvm/thing_vm.dart';
 import 'swipe_button.dart';
 import '../../widget_extensions.dart';
 
 class LotteryStepper extends StatefulWidget {
-  const LotteryStepper({super.key});
+  final ThingVm thing;
+  final GetVerifierLotteryInfoSuccessVm info;
+  final int currentBlock;
+  final int endBlock;
+
+  const LotteryStepper({
+    super.key,
+    required this.thing,
+    required this.info,
+    required this.currentBlock,
+    required this.endBlock,
+  });
 
   @override
   State<LotteryStepper> createState() => _LotteryStepperState();
 }
 
 class _LotteryStepperState extends StateX<LotteryStepper> {
+  late final _thingBloc = use<ThingBloc>();
+
   int _currentStep = 0;
+
+  bool _checkButtonShouldBeEnabled(int stepIndex) {
+    var info = widget.info;
+    if (stepIndex == 0) {
+      return info.initBlock != null &&
+          info.alreadyPreJoined != null &&
+          !info.alreadyPreJoined! &&
+          widget.currentBlock < widget.endBlock - 1;
+    }
+
+    return info.initBlock != null &&
+        info.alreadyPreJoined != null &&
+        info.alreadyJoined != null &&
+        info.alreadyPreJoined! &&
+        !info.alreadyJoined! &&
+        widget.currentBlock < widget.endBlock;
+  }
+
+  bool _checkButtonShouldBeSwiped(int stepIndex) {
+    var info = widget.info;
+    if (stepIndex == 0) {
+      return info.alreadyPreJoined != null && info.alreadyPreJoined!;
+    }
+
+    return info.alreadyJoined != null && info.alreadyJoined!;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,12 +62,27 @@ class _LotteryStepperState extends StateX<LotteryStepper> {
       currentStep: _currentStep,
       controlsBuilder: (context, details) => SwipeButton(
         text: 'Slide to ${details.currentStep == 0 ? 'commit' : 'join'}',
+        enabled: _checkButtonShouldBeEnabled(details.currentStep),
+        swiped: _checkButtonShouldBeSwiped(details.currentStep),
         onCompletedSwipe: () async {
-          await Future.delayed(Duration(seconds: 2));
           if (details.currentStep == 0) {
-            details.onStepContinue!();
+            var action = PreJoinLottery(thingId: widget.thing.id);
+            _thingBloc.dispatch(action);
+
+            var error = await action.result;
+            if (error == null) {
+              details.onStepContinue!();
+              return true;
+            }
+
+            return false;
           }
-          return true;
+
+          var action = JoinLottery(thingId: widget.thing.id);
+          _thingBloc.dispatch(action);
+
+          var error = await action.result;
+          return error == null;
         },
       ),
       onStepContinue: () => setState(() {
