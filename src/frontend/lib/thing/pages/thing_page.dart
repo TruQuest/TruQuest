@@ -195,7 +195,7 @@ class _ThingPageState extends StateX<ThingPage> {
     );
   }
 
-  Widget _buildContent(GetThingRvm vm) {
+  Widget _buildBody(GetThingRvm vm) {
     var tabs = _buildTabs(vm.thing);
 
     return SizedBox(
@@ -229,7 +229,7 @@ class _ThingPageState extends StateX<ThingPage> {
             children: [
               _buildHeader(vm.thing),
               SizedBox(height: 30),
-              _buildContent(vm),
+              _buildBody(vm),
             ],
           ),
         );

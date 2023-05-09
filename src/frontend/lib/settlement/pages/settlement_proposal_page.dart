@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tab_container/tab_container.dart';
 
+import '../../general/widgets/arc_banner_image.dart';
+import '../../general/widgets/poster.dart';
 import '../models/rvm/get_settlement_proposal_rvm.dart';
 import '../models/rvm/settlement_proposal_vm.dart';
 import '../widgets/lottery.dart';
@@ -62,7 +64,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
     return items;
   }
 
-  List<Widget> _buildContent(GetSettlementProposalRvm vm) {
+  List<Widget> _buildTabContents(GetSettlementProposalRvm vm) {
     var proposal = vm.proposal;
     var state = proposal.state;
 
@@ -99,6 +101,76 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
     return items;
   }
 
+  Widget _buildHeader(SettlementProposalVm proposal) {
+    var textTheme = Theme.of(context).textTheme;
+
+    return Stack(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 100),
+          child: ArcBannerImage(proposal.imageIpfsCid!),
+        ),
+        Positioned(
+          bottom: 10,
+          left: 40,
+          right: 16,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Poster(
+                proposal.croppedImageIpfsCid!,
+                height: 200,
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      proposal.title,
+                      style: textTheme.titleLarge,
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 16),
+              if (proposal.state.index >=
+                  SettlementProposalStateVm.awaitingFunding.index)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text('Submitted at'),
+                    SizedBox(height: 8),
+                    Text(proposal.submittedAtFormatted),
+                    SizedBox(height: 8),
+                    Text('by ${proposal.submitterIdShort}'),
+                  ],
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBody(GetSettlementProposalRvm vm) {
+    var tabs = _buildTabs(vm.proposal);
+
+    return SizedBox(
+      width: double.infinity,
+      height: 800,
+      child: TabContainer(
+        controller: TabContainerController(length: tabs.length),
+        tabEdge: TabEdge.top,
+        tabEnd: 0.3,
+        color: Colors.blue[200],
+        isStringTabs: false,
+        tabs: tabs,
+        children: _buildTabContents(vm),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
@@ -109,16 +181,15 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
         }
 
         var vm = snapshot.data!;
-        var tabs = _buildTabs(vm.proposal);
 
-        return TabContainer(
-          controller: TabContainerController(length: tabs.length),
-          tabEnd: 0.3,
-          color: Colors.purple[200],
-          isStringTabs: false,
-          tabEdge: TabEdge.right,
-          tabs: tabs,
-          children: _buildContent(vm),
+        return SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildHeader(vm.proposal),
+              SizedBox(height: 30),
+              _buildBody(vm),
+            ],
+          ),
         );
       },
     );

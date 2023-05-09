@@ -121,7 +121,7 @@ class _SubjectPageState extends StateX<SubjectPage> {
     return items;
   }
 
-  Widget _buildContent(SubjectVm subject) {
+  Widget _buildBody(SubjectVm subject) {
     var tabs = [
       Icon(Icons.content_paste),
       Icon(Icons.checklist_rtl),
@@ -158,7 +158,7 @@ class _SubjectPageState extends StateX<SubjectPage> {
             children: [
               _buildHeader(subject),
               SizedBox(height: 30),
-              _buildContent(subject),
+              _buildBody(subject),
             ],
           ),
         );

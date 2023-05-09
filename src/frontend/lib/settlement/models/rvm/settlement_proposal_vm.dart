@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 import 'settlement_proposal_state_vm.dart';
 import 'supporting_evidence_vm.dart';
 import 'verdict_vm.dart';
@@ -17,6 +19,14 @@ class SettlementProposalVm {
   final List<SupportingEvidenceVm> evidence;
 
   final bool? canBeFunded;
+
+  String get submittedAtFormatted =>
+      DateFormat.yMMMMd('en_US').format(submittedAt!);
+
+  String get submitterIdShort =>
+      submitterId.substring(0, 6) +
+      '...' +
+      submitterId.substring(submitterId.length - 4, submitterId.length);
 
   SettlementProposalVm.fromMap(Map<String, dynamic> map)
       : id = map['id'],
