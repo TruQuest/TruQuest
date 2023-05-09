@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:tuple/tuple.dart';
 
+import '../../ethereum/errors/ethereum_error.dart';
 import '../../general/extensions/datetime_extension.dart';
 import '../models/im/decision_im.dart';
 import '../../general/contracts/assessment_poll_contract.dart';
@@ -93,7 +94,7 @@ class SettlementService {
     );
   }
 
-  Future<Tuple5<int?, int, bool?, bool?, int>> getVerifierLotteryInfo(
+  Future<Tuple6<int?, int, bool?, bool?, bool?, int>> getVerifierLotteryInfo(
     String thingId,
     String proposalId,
   ) async {
@@ -107,6 +108,11 @@ class SettlementService {
     }
     int durationBlocks = await _thingAssessmentVerifierLotteryContract
         .getLotteryDurationBlocks();
+    bool? alreadyClaimedASpot = await _thingAssessmentVerifierLotteryContract
+        .checkAlreadyClaimedALotterySpot(
+      thingId,
+      proposalId,
+    );
     bool? alreadyPreJoined = await _thingAssessmentVerifierLotteryContract
         .checkAlreadyPreJoinedLottery(
       thingId,
@@ -119,34 +125,44 @@ class SettlementService {
     );
     int latestBlockNumber = await _ethereumService.getLatestBlockNumber();
 
-    return Tuple5(
+    return Tuple6(
       initBlock,
       durationBlocks,
+      alreadyClaimedASpot,
       alreadyPreJoined,
       alreadyJoined,
       latestBlockNumber,
     );
   }
 
-  Future claimLotterySpot(String thingId, String proposalId) async {
-    await _thingAssessmentVerifierLotteryContract.claimLotterySpot(
+  Future<EthereumError?> claimLotterySpot(
+    String thingId,
+    String proposalId,
+  ) async {
+    var error = await _thingAssessmentVerifierLotteryContract.claimLotterySpot(
       thingId,
       proposalId,
     );
+    return error;
   }
 
-  Future preJoinLottery(String thingId, String proposalId) async {
-    await _thingAssessmentVerifierLotteryContract.preJoinLottery(
+  Future<EthereumError?> preJoinLottery(
+    String thingId,
+    String proposalId,
+  ) async {
+    var error = await _thingAssessmentVerifierLotteryContract.preJoinLottery(
       thingId,
       proposalId,
     );
+    return error;
   }
 
-  Future joinLottery(String thingId, String proposalId) async {
-    await _thingAssessmentVerifierLotteryContract.joinLottery(
+  Future<EthereumError?> joinLottery(String thingId, String proposalId) async {
+    var error = await _thingAssessmentVerifierLotteryContract.joinLottery(
       thingId,
       proposalId,
     );
+    return error;
   }
 
   Future<GetVerifierLotteryParticipantsRvm> getVerifierLotteryParticipants(

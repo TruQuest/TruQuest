@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:convert/convert.dart';
 import 'package:flutter_web3/flutter_web3.dart';
 
+import '../../ethereum/errors/ethereum_error.dart';
 import '../../ethereum/services/ethereum_service.dart';
 import '../extensions/uuid_extension.dart';
 
@@ -36,6 +37,30 @@ class ThingAssessmentVerifierLotteryContract {
           "internalType": "int64",
           "name": "",
           "type": "int64"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_thingProposalId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "checkAlreadyClaimedALotterySpot",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
         }
       ],
       "stateMutability": "view",
@@ -200,6 +225,31 @@ class ThingAssessmentVerifierLotteryContract {
     return initBlock.toInt();
   }
 
+  Future<bool?> checkAlreadyClaimedALotterySpot(
+    String thingId,
+    String proposalId,
+  ) async {
+    var contract = _contract;
+    if (contract == null) {
+      return null;
+    }
+    if (_ethereumService.connectedAccount == null) {
+      return null;
+    }
+
+    var thingIdHex = thingId.toSolInputFormat(prefix: false);
+    var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
+    var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
+
+    return await contract.call<bool>(
+      'checkAlreadyClaimedALotterySpot',
+      [
+        thingProposalIdHex,
+        _ethereumService.connectedAccount,
+      ],
+    );
+  }
+
   Future<bool?> checkAlreadyPreJoinedLottery(
     String thingId,
     String proposalId,
@@ -250,13 +300,16 @@ class ThingAssessmentVerifierLotteryContract {
     );
   }
 
-  Future claimLotterySpot(String thingId, String proposalId) async {
+  Future<EthereumError?> claimLotterySpot(
+    String thingId,
+    String proposalId,
+  ) async {
     var contract = _contract;
     if (contract == null) {
-      return;
+      return EthereumError('Metamask not installed');
     }
     if (_ethereumService.connectedAccount == null) {
-      return;
+      return EthereumError('No account connected');
     }
 
     var signer = _ethereumService.provider.getSigner();
@@ -275,23 +328,32 @@ class ThingAssessmentVerifierLotteryContract {
         ),
       );
 
-      print('Claimed lottery spot! Awaiting confirmations...');
+      // print('Claimed lottery spot! Awaiting confirmations...');
 
-      await txnResponse.wait(2);
+      // await txnResponse.wait(2);
 
-      print('Claim txn confirmed!');
+      // print('Claim txn confirmed!');
+
+      await txnResponse.wait();
+      print('Claim txn mined!');
+
+      return null;
     } catch (e) {
       print(e);
+      return EthereumError(e.toString());
     }
   }
 
-  Future preJoinLottery(String thingId, String proposalId) async {
+  Future<EthereumError?> preJoinLottery(
+    String thingId,
+    String proposalId,
+  ) async {
     var contract = _contract;
     if (contract == null) {
-      return;
+      return EthereumError('Metamask not installed');
     }
     if (_ethereumService.connectedAccount == null) {
-      return;
+      return EthereumError('No account connected');
     }
 
     var signer = _ethereumService.provider.getSigner();
@@ -317,25 +379,31 @@ class ThingAssessmentVerifierLotteryContract {
         ),
       );
 
-      print('PreJoined lottery! Awaiting confirmations...');
+      // print('PreJoined lottery! Awaiting confirmations...');
 
-      await txnResponse.wait(2);
+      // await txnResponse.wait(2);
 
-      print('PreJoin txn confirmed!');
+      // print('PreJoin txn confirmed!');
+
+      await txnResponse.wait();
+      print('PreJoin txn mined!');
 
       _commitmentIdToData['$thingId|$proposalId|$address'] = dataHex;
+
+      return null;
     } catch (e) {
       print(e);
+      return EthereumError(e.toString());
     }
   }
 
-  Future joinLottery(String thingId, String proposalId) async {
+  Future<EthereumError?> joinLottery(String thingId, String proposalId) async {
     var contract = _contract;
     if (contract == null) {
-      return;
+      return EthereumError('Metamask not installed');
     }
     if (_ethereumService.connectedAccount == null) {
-      return;
+      return EthereumError('No account connected');
     }
 
     var signer = _ethereumService.provider.getSigner();
@@ -343,7 +411,7 @@ class ThingAssessmentVerifierLotteryContract {
     contract = contract.connect(signer);
 
     if (!_commitmentIdToData.containsKey('$thingId|$proposalId|$address')) {
-      return;
+      return EthereumError('Not committed to the lottery');
     }
 
     var thingIdHex = thingId.toSolInputFormat(prefix: false);
@@ -360,15 +428,21 @@ class ThingAssessmentVerifierLotteryContract {
         ),
       );
 
-      print('Joined lottery! Awaiting confirmations...');
+      // print('Joined lottery! Awaiting confirmations...');
 
-      await txnResponse.wait(2);
+      // await txnResponse.wait(2);
 
-      print('Join txn confirmed!');
+      // print('Join txn confirmed!');
+
+      await txnResponse.wait();
+      print('Join txn mined!');
 
       _commitmentIdToData.remove('$thingId|$proposalId|$address');
+
+      return null;
     } catch (e) {
       print(e);
+      return EthereumError(e.toString());
     }
   }
 }

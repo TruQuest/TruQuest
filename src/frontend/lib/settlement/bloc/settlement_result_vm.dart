@@ -10,6 +10,7 @@ class GetVerifierLotteryInfoSuccessVm extends SettlementResultVm {
   final int? initBlock;
   final int durationBlocks;
   final int latestBlockNumber;
+  final bool? alreadyClaimedASpot;
   final bool? alreadyPreJoined;
   final bool? alreadyJoined;
 
@@ -17,6 +18,7 @@ class GetVerifierLotteryInfoSuccessVm extends SettlementResultVm {
     required this.initBlock,
     required this.durationBlocks,
     required this.latestBlockNumber,
+    required this.alreadyClaimedASpot,
     required this.alreadyPreJoined,
     required this.alreadyJoined,
   });
@@ -35,3 +37,11 @@ class GetAssessmentPollInfoSuccessVm extends SettlementResultVm {
     required this.latestBlockNumber,
   });
 }
+
+class ClaimLotterySpotFailureVm extends SettlementResultVm {}
+
+class PreJoinLotteryFailureVm extends SettlementResultVm {}
+
+class JoinLotteryFailureVm extends SettlementResultVm {}
+
+class CastVoteResultVm extends SettlementResultVm {}

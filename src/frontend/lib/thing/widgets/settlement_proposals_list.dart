@@ -11,7 +11,7 @@ import '../../general/widgets/image_block_with_crop.dart';
 import '../../settlement/bloc/settlement_actions.dart';
 import '../../settlement/widgets/verdict_selection_block.dart';
 import '../../subject/widgets/clipped_image.dart';
-import '../../subject/widgets/corner_banner.dart';
+import '../../general/widgets/corner_banner.dart';
 import '../bloc/thing_bloc.dart';
 import '../../widget_extensions.dart';
 import '../bloc/thing_actions.dart';

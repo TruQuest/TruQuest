@@ -130,7 +130,7 @@ public class E2ETests : IAsyncLifetime
         using (var request = _sut.PrepareHttpRequestForFileUpload(
             fileNames: new[] { "full-image.jpg", "cropped-image-circle.png" },
             ("type", $"{(int)SubjectTypeIm.Person}"),
-            ("name", "Peter Marlboro"),
+            ("name", "Alex Wurtz"),
             ("details", _dummyQuillContentJson),
             ("tags", "1|2|3")
         ))
@@ -184,6 +184,182 @@ public class E2ETests : IAsyncLifetime
         submitter.Value.ToLower().Should().Be(submitterAddress);
 
         await Task.Delay(TimeSpan.FromSeconds(25)); // @@TODO: Wait for LotteryInitiated event instead.
+
+        for (int i = 1; i <= 10; ++i)
+        {
+            var verifierAccountName = $"Verifier{i}";
+            var verifier = _sut.AccountProvider.GetAccount(verifierAccountName);
+
+            var data = RandomNumberGenerator.GetBytes(32);
+            var dataHash = await _sut.ExecWithService<IContractCaller, byte[]>(async contractCaller =>
+            {
+                return await contractCaller.ComputeHashForThingSubmissionVerifierLottery(data);
+            });
+
+            await _sut.ContractCaller.PreJoinThingSubmissionVerifierLotteryAs(verifierAccountName, thingIdBytes, dataHash);
+            await _sut.ContractCaller.JoinThingSubmissionVerifierLotteryAs(verifierAccountName, thingIdBytes, data);
+
+            var committedDataHash = await _thingSubmissionVerifierLotteryContract
+                .WalkStorage()
+                .Field("s_thingIdToLotteryCommitments")
+                .AsMapping()
+                .Key(new SolBytes16(thingIdBytes))
+                .AsMapping()
+                .Key(new SolAddress(verifier.Address))
+                .AsStruct("Commitment")
+                .Field("dataHash")
+                .GetValue<SolBytes32>();
+
+            committedDataHash.Value.Should().Equal(dataHash);
+
+            var revealed = await _thingSubmissionVerifierLotteryContract
+                .WalkStorage()
+                .Field("s_thingIdToLotteryCommitments")
+                .AsMapping()
+                .Key(new SolBytes16(thingIdBytes))
+                .AsMapping()
+                .Key(new SolAddress(verifier.Address))
+                .AsStruct("Commitment")
+                .Field("revealed")
+                .GetValue<SolBool>();
+
+            revealed.Value.Should().BeTrue();
+        }
+
+        await Task.Delay(TimeSpan.FromSeconds(15)); // giving time for (Pre-)Joined events to be handled.
+
+        var lotteryDurationBlocks = await _thingSubmissionVerifierLotteryContract
+            .WalkStorage()
+            .Field("s_durationBlocks")
+            .GetValue<SolUint16>();
+
+        await _sut.BlockchainManipulator.Mine(lotteryDurationBlocks.Value);
+
+        await Task.Delay(TimeSpan.FromSeconds(15)); // giving time to close verifier lottery
+
+        await _sut.BlockchainManipulator.Mine(1);
+        // giving time to add verifiers, change the thing's state, and create an acceptance poll closing task
+        await Task.Delay(TimeSpan.FromSeconds(30));
+
+        // @@TODO: Check that winners are who they should be.
+
+        int requiredVerifierCount = await _sut.ExecWithService<IContractStorageQueryable, int>(
+            contractStorageQueryable => contractStorageQueryable.GetThingSubmissionNumVerifiers()
+        );
+
+        int verifierCount = await _acceptancePollContract
+            .WalkStorage()
+            .Field("s_thingVerifiers")
+            .AsMapping()
+            .Key(new SolBytes16(thingIdBytes))
+            .AsArrayOf<SolAddress>()
+            .Length();
+
+        verifierCount.Should().Be(requiredVerifierCount);
+
+        var thingSubmissionVerifierAccountNames = new List<string>();
+
+        for (int i = 0; i < verifierCount; ++i)
+        {
+            var verifier = await _acceptancePollContract
+                .WalkStorage()
+                .Field("s_thingVerifiers")
+                .AsMapping()
+                .Key(new SolBytes16(thingIdBytes))
+                .AsArrayOf<SolAddress>()
+                .Index(i)
+                .GetValue<SolAddress>();
+
+            var verifierAccountName = _sut.AccountProvider.LookupNameByAddress(verifier.Value);
+
+            thingSubmissionVerifierAccountNames.Add(verifierAccountName);
+
+            _sut.RunAs(userId: verifier.Value.ToLower(), username: verifier.Value.ToLower().Substring(0, 20));
+
+            var voteInput = new NewAcceptancePollVoteIm
+            {
+                ThingId = thingId,
+                CastedAt = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
+                Decision = DecisionIm.Accept,
+                Reason = "Some reason"
+            };
+
+            await _sut.SendRequest(new CastAcceptancePollVoteCommand
+            {
+                Input = voteInput,
+                Signature = _sut.Signer.SignNewAcceptancePollVoteMessageAs(verifierAccountName, voteInput)
+            });
+        }
+
+        var pollDurationBlocks = await _acceptancePollContract
+            .WalkStorage()
+            .Field("s_durationBlocks")
+            .GetValue<SolUint16>();
+
+        await _sut.BlockchainManipulator.Mine(pollDurationBlocks.Value + 10);
+
+        await Task.Delay(TimeSpan.FromSeconds(15)); // giving time to finalize poll
+
+        await _sut.BlockchainManipulator.Mine(1);
+
+        await Task.Delay(TimeSpan.FromSeconds(15)); // giving time to update the thing's state and ipfs cid
+
+        var pollStage = await _acceptancePollContract
+            .WalkStorage()
+            .Field("s_thingPollStage")
+            .AsMapping()
+            .Key(new SolBytes16(thingIdBytes))
+            .GetValue<SolUint8>();
+
+        pollStage.Value.Should().Be(4);
+
+        var proposerAddress = _sut.AccountProvider.GetAccount("Proposer").Address.Substring(2).ToLower();
+
+        Guid proposalId;
+        using (var request = _sut.PrepareHttpRequestForFileUpload(
+            fileNames: new[] { "full-image.jpg", "cropped-image-rect.png" },
+            ("thingId", thingId.ToString()),
+            ("title", "Go to the Moooooon..."),
+            ("verdict", $"{(int)VerdictIm.NoEffortWhatsoever}"),
+            ("details", _dummyQuillContentJson),
+            ("evidence", "https://facebook.com")
+        ))
+        {
+            _sut.RunAs(userId: proposerAddress, username: proposerAddress.Substring(0, 20));
+
+            var proposalDraftResult = await _sut.SendRequest(new CreateNewSettlementProposalDraftCommand
+            {
+                Request = request.Request
+            });
+
+            proposalId = proposalDraftResult.Data;
+        }
+
+        await Task.Delay(TimeSpan.FromSeconds(20)); // giving time to archive attachments
+
+        var proposalSubmitResult = await _sut.SendRequest(new SubmitNewSettlementProposalCommand
+        {
+            ProposalId = proposalId
+        });
+
+        var proposalIdBytes = proposalId.ToByteArray();
+
+        await _sut.ContractCaller.FundThingSettlementProposal(
+            thingIdBytes, proposalIdBytes, proposalSubmitResult.Data!.Signature
+        );
+
+        var proposer = await _truQuestContract
+            .WalkStorage()
+            .Field("s_thingIdToSettlementProposal")
+            .AsMapping()
+            .Key(new SolBytes16(thingIdBytes))
+            .AsStruct("SettlementProposal")
+            .Field("submitter")
+            .GetValue<SolAddress>();
+
+        proposer.Value.ToLower().Should().Be(proposerAddress);
+
+        await Task.Delay(TimeSpan.FromSeconds(20)); // giving time to init thing assessment verifier lottery
     }
 
     [Fact]

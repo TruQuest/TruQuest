@@ -3,7 +3,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 
 import '../widgets/clipped_avatar_container.dart';
 import '../widgets/avatar_with_reputation_gauge.dart';
-import '../widgets/corner_banner.dart';
+import '../../general/widgets/corner_banner.dart';
 import '../../general/contexts/page_context.dart';
 import '../bloc/subject_actions.dart';
 import '../bloc/subject_bloc.dart';

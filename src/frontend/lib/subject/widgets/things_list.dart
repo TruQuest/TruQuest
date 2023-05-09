@@ -7,7 +7,7 @@ import '../../general/widgets/evidence_block.dart';
 import '../../general/widgets/image_block_with_crop.dart';
 import '../../general/widgets/prepare_draft_button.dart';
 import '../../general/widgets/tags_block.dart';
-import 'corner_banner.dart';
+import '../../general/widgets/corner_banner.dart';
 import '../bloc/subject_actions.dart';
 import '../bloc/subject_bloc.dart';
 import '../../widget_extensions.dart';

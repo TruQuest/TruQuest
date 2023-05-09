@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
-import 'block_countdown.dart';
+import '../../general/widgets/clipped_block_number_container.dart';
+import '../../general/widgets/block_countdown.dart';
 import 'lottery_stepper.dart';
-import 'clipped_block_number_container.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';
-import '../../subject/widgets/corner_banner.dart';
+import '../../general/widgets/corner_banner.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../bloc/thing_actions.dart';
 import '../bloc/thing_bloc.dart';

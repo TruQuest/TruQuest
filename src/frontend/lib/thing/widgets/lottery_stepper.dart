@@ -4,7 +4,7 @@ import '../bloc/thing_result_vm.dart';
 import '../bloc/thing_actions.dart';
 import '../bloc/thing_bloc.dart';
 import '../models/rvm/thing_vm.dart';
-import 'swipe_button.dart';
+import '../../general/widgets/swipe_button.dart';
 import '../../widget_extensions.dart';
 
 class LotteryStepper extends StatefulWidget {

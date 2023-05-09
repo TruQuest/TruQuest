@@ -287,7 +287,7 @@ class ThingSubmissionVerifierLotteryContract {
     contract = contract.connect(signer);
 
     if (!_commitmentIdToData.containsKey('$thingId|$address')) {
-      return EthereumError('Not committed to lottery');
+      return EthereumError('Not committed to the lottery');
     }
 
     var thingIdHex = thingId.toSolInputFormat();

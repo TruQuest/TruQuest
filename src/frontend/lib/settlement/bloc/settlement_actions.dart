@@ -58,7 +58,8 @@ class GetVerifierLotteryInfo extends SettlementAction {
   });
 }
 
-class ClaimLotterySpot extends SettlementAction {
+class ClaimLotterySpot
+    extends SettlementActionAwaitable<ClaimLotterySpotFailureVm?> {
   final String thingId;
   final String proposalId;
 
@@ -68,7 +69,8 @@ class ClaimLotterySpot extends SettlementAction {
   });
 }
 
-class PreJoinLottery extends SettlementAction {
+class PreJoinLottery
+    extends SettlementActionAwaitable<PreJoinLotteryFailureVm?> {
   final String thingId;
   final String proposalId;
 
@@ -78,7 +80,7 @@ class PreJoinLottery extends SettlementAction {
   });
 }
 
-class JoinLottery extends SettlementAction {
+class JoinLottery extends SettlementActionAwaitable<JoinLotteryFailureVm?> {
   final String thingId;
   final String proposalId;
 
@@ -105,7 +107,7 @@ class GetAssessmentPollInfo
   });
 }
 
-class CastVoteOffChain extends SettlementAction {
+class CastVoteOffChain extends SettlementActionAwaitable<CastVoteResultVm> {
   final String thingId;
   final String proposalId;
   final DecisionIm decision;
@@ -119,7 +121,7 @@ class CastVoteOffChain extends SettlementAction {
   });
 }
 
-class CastVoteOnChain extends SettlementAction {
+class CastVoteOnChain extends SettlementActionAwaitable<CastVoteResultVm> {
   final String thingId;
   final String proposalId;
   final DecisionIm decision;

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
 
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -69,6 +70,7 @@ public class Sut : IAsyncLifetime
                         "__EFMigrationsHistory",
                         "Tags",
                         "AspNetUsers",
+                        "AspNetUserClaims",
                         "BlockProcessedEvent"
                     },
                     DbAdapter = DbAdapter.Postgres
@@ -150,6 +152,14 @@ public class Sut : IAsyncLifetime
         {
             Id = id.Substring(2).ToLower(),
             UserName = id.Substring(2, 20).ToLower()
+        }));
+        await appDbContext.SaveChangesAsync();
+
+        appDbContext.UserClaims.AddRange(userIds.Select(id => new IdentityUserClaim<string>
+        {
+            UserId = id.Substring(2).ToLower(),
+            ClaimType = "username",
+            ClaimValue = id.Substring(2, 20).ToLower()
         }));
 
         appDbContext.Tags.AddRange(new("Politics"), new("Sport"), new("IT"));

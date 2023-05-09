@@ -284,6 +284,18 @@ contract ThingAssessmentVerifierLottery {
             ].block;
     }
 
+    function checkAlreadyClaimedALotterySpot(
+        bytes32 _thingProposalId,
+        address _user
+    ) public view returns (bool) {
+        return
+            s_thingProposalIdToLotteryCommitments[_thingProposalId][_user]
+                .revealed &&
+            s_thingProposalIdToLotteryCommitments[_thingProposalId][_user]
+                .dataHash ==
+            bytes32(0);
+    }
+
     function checkAlreadyPreJoinedLottery(
         bytes32 _thingProposalId,
         address _user

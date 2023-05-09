@@ -129,9 +129,10 @@ class SettlementBloc extends Bloc<SettlementAction> {
       GetVerifierLotteryInfoSuccessVm(
         initBlock: info.item1,
         durationBlocks: info.item2,
-        alreadyPreJoined: info.item3,
-        alreadyJoined: info.item4,
-        latestBlockNumber: info.item5,
+        alreadyClaimedASpot: info.item3,
+        alreadyPreJoined: info.item4,
+        alreadyJoined: info.item5,
+        latestBlockNumber: info.item6,
       ),
     );
   }
@@ -141,10 +142,11 @@ class SettlementBloc extends Bloc<SettlementAction> {
   }
 
   void _claimLotterySpot(ClaimLotterySpot action) async {
-    await _settlementService.claimLotterySpot(
+    var error = await _settlementService.claimLotterySpot(
       action.thingId,
       action.proposalId,
     );
+    action.complete(error != null ? ClaimLotterySpotFailureVm() : null);
     _refreshVerifierLotteryInfo(
       action.thingId,
       action.proposalId,
@@ -152,7 +154,11 @@ class SettlementBloc extends Bloc<SettlementAction> {
   }
 
   void _preJoinLottery(PreJoinLottery action) async {
-    await _settlementService.preJoinLottery(action.thingId, action.proposalId);
+    var error = await _settlementService.preJoinLottery(
+      action.thingId,
+      action.proposalId,
+    );
+    action.complete(error != null ? PreJoinLotteryFailureVm() : null);
     _refreshVerifierLotteryInfo(
       action.thingId,
       action.proposalId,
@@ -160,7 +166,11 @@ class SettlementBloc extends Bloc<SettlementAction> {
   }
 
   void _joinLottery(JoinLottery action) async {
-    await _settlementService.joinLottery(action.thingId, action.proposalId);
+    var error = await _settlementService.joinLottery(
+      action.thingId,
+      action.proposalId,
+    );
+    action.complete(error != null ? JoinLotteryFailureVm() : null);
     _refreshVerifierLotteryInfo(
       action.thingId,
       action.proposalId,
@@ -198,6 +208,7 @@ class SettlementBloc extends Bloc<SettlementAction> {
       action.decision,
       action.reason,
     );
+    action.complete(CastVoteResultVm());
   }
 
   void _castVoteOnChain(CastVoteOnChain action) async {
@@ -207,6 +218,7 @@ class SettlementBloc extends Bloc<SettlementAction> {
       action.decision,
       action.reason,
     );
+    action.complete(CastVoteResultVm());
   }
 
   void _getVerifiers(GetVerifiers action) async {

@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 
-import '../bloc/thing_actions.dart';
-import '../bloc/thing_result_vm.dart';
+import '../bloc/settlement_bloc.dart';
+import '../models/rvm/settlement_proposal_vm.dart';
 import '../../general/widgets/vote_dialog.dart';
 import '../../widget_extensions.dart';
-import '../bloc/thing_bloc.dart';
+import '../bloc/settlement_actions.dart';
+import '../bloc/settlement_result_vm.dart';
 import '../models/im/decision_im.dart';
-import '../models/rvm/thing_vm.dart';
 import '../../general/widgets/swipe_button.dart';
 
 class PollStepper extends StatefulWidget {
-  final ThingVm thing;
-  final GetAcceptancePollInfoSuccessVm info;
+  final SettlementProposalVm proposal;
+  final GetAssessmentPollInfoSuccessVm info;
   final int currentBlock;
   final int endBlock;
 
   const PollStepper({
     super.key,
-    required this.thing,
+    required this.proposal,
     required this.info,
     required this.currentBlock,
     required this.endBlock,
@@ -28,7 +28,7 @@ class PollStepper extends StatefulWidget {
 }
 
 class _PollStepperState extends StateX<PollStepper> {
-  late final _thingBloc = use<ThingBloc>();
+  late final _settlementBloc = use<SettlementBloc>();
 
   int _currentStep = 0;
 
@@ -59,20 +59,22 @@ class _PollStepperState extends StateX<PollStepper> {
               ],
               getDisplayString: (decision) => decision.getString(),
               onVote: (decision, reason) async {
-                ThingActionAwaitable<CastVoteResultVm> action =
+                SettlementActionAwaitable<CastVoteResultVm> action =
                     details.currentStep == 0
                         ? CastVoteOffChain(
-                            thingId: widget.thing.id,
+                            thingId: widget.proposal.thingId,
+                            proposalId: widget.proposal.id,
                             decision: decision,
                             reason: reason,
                           )
                         : CastVoteOnChain(
-                            thingId: widget.thing.id,
+                            thingId: widget.proposal.thingId,
+                            proposalId: widget.proposal.id,
                             decision: decision,
                             reason: reason,
                           );
 
-                _thingBloc.dispatch(action);
+                _settlementBloc.dispatch(action);
                 await action.result;
               },
             ),
