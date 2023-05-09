@@ -102,3 +102,9 @@ class GetVerifiers extends ThingAction {
 
   GetVerifiers({required this.thingId});
 }
+
+class GetSettlementProposalsList extends ThingAction {
+  final String thingId;
+
+  GetSettlementProposalsList({required this.thingId});
+}

@@ -1,10 +1,10 @@
 import 'settlement_proposal_preview_vm.dart';
 
-class GetSettlementProposalsRvm {
+class GetSettlementProposalsListRvm {
   final String thingId;
   final List<SettlementProposalPreviewVm> proposals;
 
-  GetSettlementProposalsRvm.fromMap(Map<String, dynamic> map)
+  GetSettlementProposalsListRvm.fromMap(Map<String, dynamic> map)
       : thingId = map['thingId'],
         proposals = List.unmodifiable(
           (map['proposals'] as List<dynamic>)

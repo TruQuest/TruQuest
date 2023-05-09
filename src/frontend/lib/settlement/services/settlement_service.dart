@@ -10,7 +10,6 @@ import '../../ethereum/services/ethereum_service.dart';
 import '../../general/contracts/thing_assessment_verifier_lottery_contract.dart';
 import '../../general/contracts/truquest_contract.dart';
 import '../models/rvm/get_settlement_proposal_rvm.dart';
-import '../models/rvm/get_settlement_proposals_rvm.dart';
 import '../../general/contexts/document_context.dart';
 import '../models/rvm/get_verifiers_rvm.dart';
 import 'settlement_api_service.dart';
@@ -34,13 +33,6 @@ class SettlementService {
     this._thingAssessmentVerifierLotteryContract,
     this._assessmentPollContract,
   );
-
-  Future<GetSettlementProposalsRvm> getSettlementProposalsFor(
-    String thingId,
-  ) async {
-    var result = await _settlementApiService.getSettlementProposalsFor(thingId);
-    return result;
-  }
 
   Future createNewSettlementProposalDraft(
     DocumentContext documentContext,

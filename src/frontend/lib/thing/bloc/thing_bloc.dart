@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../models/rvm/get_settlement_proposals_list_rvm.dart';
 import '../models/rvm/get_verifiers_rvm.dart';
 import '../models/rvm/thing_state_vm.dart';
 import '../models/rvm/get_thing_rvm.dart';
@@ -32,6 +33,11 @@ class ThingBloc extends Bloc<ThingAction> {
       StreamController<GetVerifiersRvm>.broadcast();
   Stream<GetVerifiersRvm> get verifiers$ => _verifiersChannel.stream;
 
+  final StreamController<GetSettlementProposalsListRvm> _proposalsListChannel =
+      StreamController<GetSettlementProposalsListRvm>.broadcast();
+  Stream<GetSettlementProposalsListRvm> get proposalsList$ =>
+      _proposalsListChannel.stream;
+
   ThingBloc(this._thingService) {
     actionChannel.stream.listen((action) {
       if (action is CreateNewThingDraft) {
@@ -60,6 +66,8 @@ class ThingBloc extends Bloc<ThingAction> {
         _castVoteOnChain(action);
       } else if (action is GetVerifiers) {
         _getVerifiers(action);
+      } else if (action is GetSettlementProposalsList) {
+        _getSettlementProposalsList(action);
       }
     });
   }
@@ -176,5 +184,10 @@ class ThingBloc extends Bloc<ThingAction> {
   void _getVerifiers(GetVerifiers action) async {
     var result = await _thingService.getVerifiers(action.thingId);
     _verifiersChannel.add(result);
+  }
+
+  void _getSettlementProposalsList(GetSettlementProposalsList action) async {
+    var result = await _thingService.getSettlementProposalsList(action.thingId);
+    _proposalsListChannel.add(result);
   }
 }

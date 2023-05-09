@@ -1,6 +1,6 @@
-namespace Application.Settlement.Queries.GetSettlementProposals;
+namespace Application.Thing.Queries.GetSettlementProposalsList;
 
-public class GetSettlementProposalsResultVm
+public class GetSettlementProposalsListResultVm
 {
     public required Guid ThingId { get; init; }
     public required IEnumerable<SettlementProposalPreviewQm> Proposals { get; init; }

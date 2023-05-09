@@ -5,7 +5,6 @@ using MediatR;
 using Domain.Results;
 using Application.Settlement.Commands.CreateNewSettlementProposalDraft;
 using Application.Settlement.Commands.SubmitNewSettlementProposal;
-using Application.Settlement.Queries.GetSettlementProposals;
 using Application.Settlement.Queries.GetSettlementProposal;
 using Application.Settlement.Queries.GetVerifierLotteryParticipants;
 using Application.Settlement.Commands.CastAssessmentPollVote;
@@ -32,13 +31,6 @@ public class SettlementProposalController : ControllerBase
         _mediator.Send(new CreateNewSettlementProposalDraftCommand
         {
             Request = HttpContext.Request
-        });
-
-    [HttpGet("/things/{thingId}/settlement-proposals")]
-    public Task<HandleResult<GetSettlementProposalsResultVm>> GetAllFor(string thingId) =>
-        _mediator.Send(new GetSettlementProposalsQuery
-        {
-            ThingId = Guid.Parse(thingId)
         });
 
     [HttpGet("{id}")]

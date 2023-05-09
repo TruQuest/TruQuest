@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:tab_container/tab_container.dart';
 
 import '../../subject/widgets/avatar_with_reputation_gauge.dart';
+import '../widgets/settlement_proposals_list.dart';
 import '../widgets/timeline_block.dart';
 import '../../general/widgets/arc_banner_image.dart';
 import '../../general/widgets/poster.dart';
 import '../models/rvm/get_thing_rvm.dart';
 import '../models/rvm/thing_vm.dart';
-import '../../settlement/widgets/settlement_proposals.dart';
 import '../models/rvm/thing_state_vm.dart';
 import '../widgets/lottery.dart';
 import '../../general/widgets/evidence_view_block.dart';
@@ -121,7 +121,7 @@ class _ThingPageState extends StateX<ThingPage> {
       if (state.index >= ThingStateVm.verifiersSelectedAndPollInitiated.index) {
         items.add(Poll(thing: thing));
         if (state.index >= ThingStateVm.awaitingSettlement.index) {
-          items.add(SettlementProposals(thingId: thing.id));
+          items.add(SettlementProposalsList(thingId: thing.id));
         }
       }
     }

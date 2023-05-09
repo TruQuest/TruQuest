@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:tuple/tuple.dart';
 
+import '../models/rvm/get_settlement_proposals_list_rvm.dart';
 import '../models/rvm/get_verifiers_rvm.dart';
 import '../../general/errors/vote_error.dart';
 import '../models/im/cast_acceptance_poll_vote_command.dart';
@@ -293,6 +294,27 @@ class ThingApiService {
     try {
       var response = await _dio.get('/things/$thingId/verifiers');
       return GetVerifiersRvm.fromMap(response.data['data']);
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future<GetSettlementProposalsListRvm> getSettlementProposalsList(
+    String thingId,
+  ) async {
+    try {
+      var response = await _dio.get(
+        '/things/$thingId/settlement-proposals',
+        options: _serverConnector.accessToken != null
+            ? Options(
+                headers: {
+                  'Authorization': 'Bearer ${_serverConnector.accessToken}'
+                },
+              )
+            : null,
+      );
+
+      return GetSettlementProposalsListRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
       throw _wrapError(error);
     }

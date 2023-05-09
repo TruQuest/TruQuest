@@ -9,6 +9,7 @@ using Application.Thing.Queries.GetThing;
 using Application.Thing.Queries.GetVerifierLotteryParticipants;
 using Application.Thing.Queries.GetVerifiers;
 using Application.Thing.Commands.CastAcceptancePollVote;
+using Application.Thing.Queries.GetSettlementProposalsList;
 
 using API.Controllers.Filters;
 
@@ -56,4 +57,9 @@ public class ThingController : ControllerBase
         command.Input.ThingId = Guid.Parse(id);
         return _mediator.Send(command);
     }
+
+    [HttpGet("{thingId}/settlement-proposals")]
+    public Task<HandleResult<GetSettlementProposalsListResultVm>> GetSettlementProposalsList(
+        GetSettlementProposalsListQuery query
+    ) => _mediator.Send(query);
 }

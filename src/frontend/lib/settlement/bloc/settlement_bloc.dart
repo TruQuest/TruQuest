@@ -4,7 +4,6 @@ import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
 import '../models/rvm/get_verifiers_rvm.dart';
 import '../models/rvm/settlement_proposal_state_vm.dart';
 import '../models/rvm/get_settlement_proposal_rvm.dart';
-import '../models/rvm/get_settlement_proposals_rvm.dart';
 import '../../general/bloc/bloc.dart';
 import 'settlement_actions.dart';
 import 'settlement_result_vm.dart';
@@ -12,10 +11,6 @@ import '../services/settlement_service.dart';
 
 class SettlementBloc extends Bloc<SettlementAction> {
   final SettlementService _settlementService;
-
-  final StreamController<GetSettlementProposalsRvm> _proposalsChannel =
-      StreamController<GetSettlementProposalsRvm>.broadcast();
-  Stream<GetSettlementProposalsRvm> get proposals$ => _proposalsChannel.stream;
 
   final StreamController<GetSettlementProposalRvm> _proposalChannel =
       StreamController<GetSettlementProposalRvm>.broadcast();
@@ -39,9 +34,7 @@ class SettlementBloc extends Bloc<SettlementAction> {
 
   SettlementBloc(this._settlementService) {
     actionChannel.stream.listen((action) {
-      if (action is GetSettlementProposalsFor) {
-        _getSettlementProposalsFor(action);
-      } else if (action is CreateNewSettlementProposalDraft) {
+      if (action is CreateNewSettlementProposalDraft) {
         _createNewSettlementProposalDraft(action);
       } else if (action is GetSettlementProposal) {
         _getSettlementProposal(action);
@@ -71,13 +64,6 @@ class SettlementBloc extends Bloc<SettlementAction> {
         _getVerifiers(action);
       }
     });
-  }
-
-  void _getSettlementProposalsFor(GetSettlementProposalsFor action) async {
-    var result = await _settlementService.getSettlementProposalsFor(
-      action.thingId,
-    );
-    _proposalsChannel.add(result);
   }
 
   void _createNewSettlementProposalDraft(

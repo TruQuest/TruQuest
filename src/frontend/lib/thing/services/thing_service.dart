@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:tuple/tuple.dart';
 
 import '../../ethereum/errors/ethereum_error.dart';
+import '../models/rvm/get_settlement_proposals_list_rvm.dart';
 import '../models/rvm/get_verifiers_rvm.dart';
 import '../../general/extensions/datetime_extension.dart';
 import '../../general/contracts/acceptance_poll_contract.dart';
@@ -182,6 +183,13 @@ class ThingService {
 
   Future<GetVerifiersRvm> getVerifiers(String thingId) async {
     var result = await _thingApiService.getVerifiers(thingId);
+    return result;
+  }
+
+  Future<GetSettlementProposalsListRvm> getSettlementProposalsList(
+    String thingId,
+  ) async {
+    var result = await _thingApiService.getSettlementProposalsList(thingId);
     return result;
   }
 }

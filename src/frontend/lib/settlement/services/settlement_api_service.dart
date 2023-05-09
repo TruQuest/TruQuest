@@ -11,7 +11,6 @@ import '../models/im/subscribe_to_updates_command.dart';
 import '../models/im/unsubscribe_from_updates_command.dart';
 import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
 import '../models/rvm/get_settlement_proposal_rvm.dart';
-import '../models/rvm/get_settlement_proposals_rvm.dart';
 import '../models/im/new_settlement_proposal_im.dart';
 import '../models/im/submit_new_settlement_proposal_command.dart';
 import '../models/im/verdict_im.dart';
@@ -133,27 +132,6 @@ class SettlementApiService {
     print(ex);
 
     return ServerError();
-  }
-
-  Future<GetSettlementProposalsRvm> getSettlementProposalsFor(
-    String thingId,
-  ) async {
-    try {
-      var response = await _dio.get(
-        '/things/$thingId/settlement-proposals',
-        options: _serverConnector.accessToken != null
-            ? Options(
-                headers: {
-                  'Authorization': 'Bearer ${_serverConnector.accessToken}'
-                },
-              )
-            : null,
-      );
-
-      return GetSettlementProposalsRvm.fromMap(response.data['data']);
-    } on DioError catch (error) {
-      throw _wrapError(error);
-    }
   }
 
   Future<Stream<int>> createNewSettlementProposalDraft(

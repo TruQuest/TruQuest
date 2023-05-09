@@ -1,40 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../settlement/models/rvm/settlement_proposal_state_vm.dart';
 import '../../../settlement/models/rvm/verdict_vm.dart';
-import '../../../thing/models/rvm/thing_state_vm.dart';
 
-class ThingPreviewVm {
+class SettlementProposalPreviewVm {
   final String id;
-  final ThingStateVm state;
+  final SettlementProposalStateVm state;
   final String title;
+  final VerdictVm verdict;
   final String? croppedImageIpfsCid;
+  final String submitterId;
   final DateTime? displayedTimestamp;
-  final VerdictVm? verdict;
-
-  IconData get stateIcon {
-    switch (state) {
-      case ThingStateVm.draft:
-        return Icons.drive_file_rename_outline_outlined;
-      case ThingStateVm.awaitingFunding:
-        return Icons.attach_money;
-      case ThingStateVm.fundedAndVerifierLotteryInitiated:
-        return Icons.people;
-      case ThingStateVm.verifiersSelectedAndPollInitiated:
-        return Icons.poll_outlined;
-      case ThingStateVm.awaitingSettlement:
-        return Icons.pending_outlined;
-      case ThingStateVm.settled:
-        return Icons.handshake;
-    }
-  }
 
   String get displayedTimestampFormatted => displayedTimestamp != null
       ? DateFormat('EEE, M/d/y').format(displayedTimestamp!)
       : 'Not submitted yet';
 
   Color get verdictColor {
-    switch (verdict!) {
+    switch (verdict) {
       case VerdictVm.delivered:
         return Colors.green;
       case VerdictVm.guessItCounts:
@@ -50,14 +34,33 @@ class ThingPreviewVm {
     }
   }
 
-  ThingPreviewVm.fromMap(Map<String, dynamic> map)
+  IconData get stateIcon {
+    switch (state) {
+      case SettlementProposalStateVm.draft:
+        return Icons.drive_file_rename_outline_outlined;
+      case SettlementProposalStateVm.awaitingFunding:
+        return Icons.attach_money;
+      case SettlementProposalStateVm.fundedAndVerifierLotteryInitiated:
+        return Icons.people;
+      case SettlementProposalStateVm.verifiersSelectedAndPollInitiated:
+        return Icons.poll_outlined;
+      case SettlementProposalStateVm.softDeclined:
+        return Icons.thumbs_up_down;
+      case SettlementProposalStateVm.hardDeclined:
+        return Icons.thumb_down;
+      case SettlementProposalStateVm.accepted:
+        return Icons.thumb_up;
+    }
+  }
+
+  SettlementProposalPreviewVm.fromMap(Map<String, dynamic> map)
       : id = map['id'],
-        state = ThingStateVm.values[map['state']],
+        state = SettlementProposalStateVm.values[map['state']],
         title = map['title'],
+        verdict = VerdictVm.values[map['verdict']],
         croppedImageIpfsCid = map['croppedImageIpfsCid'],
+        submitterId = map['submitterId'],
         displayedTimestamp = map['displayedTimestamp'] != null
             ? DateTime.fromMillisecondsSinceEpoch(map['displayedTimestamp'])
-            : null,
-        verdict =
-            map['verdict'] != null ? VerdictVm.values[map['verdict']] : null;
+            : null;
 }

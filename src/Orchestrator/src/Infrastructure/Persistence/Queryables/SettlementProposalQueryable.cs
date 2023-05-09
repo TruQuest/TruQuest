@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Dapper;
 
 using Domain.Aggregates;
-using Application.Settlement.Queries.GetSettlementProposals;
+using Application.Thing.Queries.GetSettlementProposalsList;
 using Application.Common.Interfaces;
 using Application.Settlement.Queries.GetSettlementProposal;
 using Application.Common.Models.QM;
@@ -19,35 +19,28 @@ internal class SettlementProposalQueryable : Queryable, ISettlementProposalQuery
         _dbContext = dbContext;
     }
 
-    public Task<List<SettlementProposalPreviewQm>> GetAllExceptDraftsOfOthersFor(Guid thingId, string userId) =>
-        _dbContext.SettlementProposals
+    public async Task<List<SettlementProposalPreviewQm>> GetForThing(Guid thingId, string? userId)
+    {
+        var proposals = await _dbContext.SettlementProposals
             .AsNoTracking()
             .Where(p => p.ThingId == thingId && (p.State > SettlementProposalState.Draft || p.SubmitterId == userId))
             .Select(p => new SettlementProposalPreviewQm
             {
                 Id = p.Id,
                 State = p.State,
+                SubmittedAt = p.SubmittedAt,
                 Title = p.Title,
                 Verdict = p.Verdict,
                 CroppedImageIpfsCid = p.CroppedImageIpfsCid,
-                SubmitterId = p.SubmitterId
+                SubmitterId = p.SubmitterId,
+                AssessmentPronouncedAt = p.AssessmentPronouncedAt
             })
             .ToListAsync();
 
-    public Task<List<SettlementProposalPreviewQm>> GetAllExceptDraftsFor(Guid thingId) =>
-        _dbContext.SettlementProposals
-            .AsNoTracking()
-            .Where(p => p.ThingId == thingId && p.State > SettlementProposalState.Draft)
-            .Select(p => new SettlementProposalPreviewQm
-            {
-                Id = p.Id,
-                State = p.State,
-                Title = p.Title,
-                Verdict = p.Verdict,
-                CroppedImageIpfsCid = p.CroppedImageIpfsCid,
-                SubmitterId = p.SubmitterId
-            })
-            .ToListAsync();
+        proposals.ForEach(p => p.DisplayedTimestamp = p.AssessmentPronouncedAt ?? p.SubmittedAt);
+
+        return proposals;
+    }
 
     public Task<SettlementProposalQm?> GetById(Guid id)
     {
