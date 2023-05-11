@@ -4,6 +4,7 @@ import '../../ethereum/bloc/ethereum_actions.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';
 import '../../ethereum/bloc/ethereum_result_vm.dart';
 import '../../user/bloc/user_actions.dart';
+import 'notification_tracker.dart';
 import 'sign_up_dialog.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../../widget_extensions.dart';
@@ -19,7 +20,7 @@ class StatusPanel extends StatelessWidgetX {
   @override
   Widget buildX(BuildContext context) {
     return LimitedBox(
-      maxWidth: 400,
+      maxWidth: 500,
       child: Row(
         children: [
           Expanded(
@@ -123,6 +124,8 @@ class StatusPanel extends StatelessWidgetX {
               ),
             ),
           ),
+          SizedBox(width: 12),
+          NotificationTracker(),
         ],
       ),
     );

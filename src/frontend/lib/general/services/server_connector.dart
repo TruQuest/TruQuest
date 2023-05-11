@@ -5,12 +5,19 @@ import 'package:logging/logging.dart';
 import 'package:signalr_netcore/signalr_client.dart';
 import 'package:tuple/tuple.dart';
 
+import '../models/rvm/watched_item_type_vm.dart';
 import '../../settlement/models/rvm/settlement_proposal_state_vm.dart';
 import '../../thing/models/rvm/thing_state_vm.dart';
 
 enum ServerEventType {
+  notification,
   thing,
   settlement,
+}
+
+enum NotificationEventType {
+  initialRetrieve,
+  newOne,
 }
 
 enum ThingEventType {
@@ -166,6 +173,33 @@ class ServerConnector {
               SettlementEventType.stateChanged,
               proposalId,
               state,
+            ),
+          ),
+        );
+      },
+    );
+
+    hubConnection.on(
+      'NotifyAboutItemUpdate',
+      (List<Object?>? args) {
+        var updateTimestamp = args!.first as int;
+        var itemType = WatchedItemTypeVm.values[args[1] as int];
+        var itemId = args[2] as String;
+        var title = args[3] as String;
+        var details = args.last as String?;
+
+        _serverEventChannel.add(
+          Tuple2(
+            ServerEventType.notification,
+            Tuple2<NotificationEventType, Object>(
+              NotificationEventType.newOne,
+              Tuple5(
+                updateTimestamp,
+                itemType,
+                itemId,
+                title,
+                details,
+              ),
             ),
           ),
         );

@@ -58,4 +58,11 @@ internal class ClientNotifier : IClientNotifier
             .Group($"proposal:{proposalId}")
             .NotifySettlementProposalStateChanged(proposalId.ToString(), (int)state);
     }
+
+    public Task NotifyUsersAboutItemUpdate(
+        IEnumerable<string> userIds, long updateTimestamp, WatchedItemType itemType,
+        Guid itemId, string title, string? details
+    ) => _hubContext.Clients.Users(userIds).NotifyAboutItemUpdate(
+        updateTimestamp, (int)itemType, itemId.ToString(), title, details
+    );
 }

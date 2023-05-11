@@ -50,6 +50,7 @@ class _$Injector extends Injector {
       ..registerSingleton((c) => SettlementApiService(c<ServerConnector>()))
       ..registerSingleton(
           (c) => ThingAssessmentVerifierLotteryContract(c<EthereumService>()))
-      ..registerSingleton((c) => AssessmentPollContract(c<EthereumService>()));
+      ..registerSingleton((c) => AssessmentPollContract(c<EthereumService>()))
+      ..registerSingleton((c) => NotificationsCache(c<ServerConnector>()));
   }
 }

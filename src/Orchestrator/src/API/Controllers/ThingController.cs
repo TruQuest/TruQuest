@@ -10,6 +10,7 @@ using Application.Thing.Queries.GetVerifierLotteryParticipants;
 using Application.Thing.Queries.GetVerifiers;
 using Application.Thing.Commands.CastAcceptancePollVote;
 using Application.Thing.Queries.GetSettlementProposalsList;
+using Application.Thing.Commands.Watch;
 
 using API.Controllers.Filters;
 
@@ -62,4 +63,7 @@ public class ThingController : ControllerBase
     public Task<HandleResult<GetSettlementProposalsListResultVm>> GetSettlementProposalsList(
         GetSettlementProposalsListQuery query
     ) => _mediator.Send(query);
+
+    [HttpPost("{thingId}/watch")]
+    public Task<VoidResult> Watch(WatchCommand command) => _mediator.Send(command);
 }

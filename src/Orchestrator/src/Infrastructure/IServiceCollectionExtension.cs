@@ -168,6 +168,8 @@ public static class IServiceCollectionExtension
         services.AddScoped<IAcceptancePollVoteRepository, AcceptancePollVoteRepository>();
         services.AddScoped<ISettlementProposalRepository, SettlementProposalRepository>();
         services.AddScoped<IAssessmentPollVoteRepository, AssessmentPollVoteRepository>();
+        services.AddScoped<IWatchedItemRepository, WatchedItemRepository>();
+        services.AddScoped<IThingUpdateRepository, ThingUpdateRepository>();
 
         services.AddSingleton<IBlockProgressRepository, BlockProgressRepository>();
         services.AddScoped<IActionableThingRelatedEventRepository, ActionableThingRelatedEventRepository>();
@@ -186,6 +188,7 @@ public static class IServiceCollectionExtension
         services.AddScoped<IThingAcceptancePollVoteQueryable, ThingAcceptancePollVoteQueryable>();
         services.AddScoped<IThingAssessmentPollVoteQueryable, ThingAssessmentPollVoteQueryable>();
         services.AddScoped<ISettlementProposalQueryable, SettlementProposalQueryable>();
+        services.AddScoped<IWatchListQueryable, WatchListQueryable>();
 
         services.AddSingleton<IContractEventListener, ContractEventListener>();
 
@@ -225,7 +228,8 @@ public static class IServiceCollectionExtension
                                                         typeof(ThingSettlementProposalFundedEventHandler),
                                                         typeof(ThingSettlementProposalVerifierSelectedEventHandler),
                                                         typeof(ThingSubmissionVerifierLotteryClosedWithSuccessEventHandler),
-                                                        typeof(ThingVerifierSelectedEventHandler)
+                                                        typeof(ThingVerifierSelectedEventHandler),
+                                                        typeof(ThingUpdateEventHandler)
                                                     })
                                             )
                                     )

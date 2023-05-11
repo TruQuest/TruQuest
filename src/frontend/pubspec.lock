@@ -737,6 +737,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.3"
+  side_sheet:
+    dependency: "direct main"
+    description:
+      name: side_sheet
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.4"
   signalr_netcore:
     dependency: "direct main"
     description:

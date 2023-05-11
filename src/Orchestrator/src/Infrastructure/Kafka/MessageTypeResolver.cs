@@ -30,7 +30,7 @@ internal class MessageTypeResolver : IMessageTypeResolver
                     return typeof(ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent);
             }
         }
-        else if (context.ConsumerContext.Topic == "verifiers")
+        else if (context.ConsumerContext.Topic == "Verifiers")
         {
             var table = Encoding.UTF8.GetString(context.Headers["__table"]);
             if (table == "ThingVerifiers")
@@ -40,6 +40,14 @@ internal class MessageTypeResolver : IMessageTypeResolver
             else if (table == "SettlementProposalVerifiers")
             {
                 return typeof(ThingSettlementProposalVerifierSelectedEvent);
+            }
+        }
+        else if (context.ConsumerContext.Topic == "Updates")
+        {
+            var table = Encoding.UTF8.GetString(context.Headers["__table"]);
+            if (table == "ThingUpdates")
+            {
+                return typeof(ThingUpdateEvent);
             }
         }
 

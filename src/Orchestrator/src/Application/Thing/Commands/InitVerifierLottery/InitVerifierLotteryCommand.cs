@@ -17,24 +17,24 @@ public class InitVerifierLotteryCommand : IRequest<VoidResult>
 internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierLotteryCommand, VoidResult>
 {
     private readonly IThingRepository _thingRepository;
+    private readonly IThingUpdateRepository _thingUpdateRepository;
     private readonly ITaskRepository _taskRepository;
     private readonly IContractCaller _contractCaller;
     private readonly IContractStorageQueryable _contractStorageQueryable;
-    private readonly IClientNotifier _clientNotifier;
 
     public InitVerifierLotteryCommandHandler(
         IThingRepository thingRepository,
+        IThingUpdateRepository thingUpdateRepository,
         ITaskRepository taskRepository,
         IContractCaller contractCaller,
-        IContractStorageQueryable contractStorageQueryable,
-        IClientNotifier clientNotifier
+        IContractStorageQueryable contractStorageQueryable
     )
     {
         _thingRepository = thingRepository;
+        _thingUpdateRepository = thingUpdateRepository;
         _taskRepository = taskRepository;
         _contractCaller = contractCaller;
         _contractStorageQueryable = contractStorageQueryable;
-        _clientNotifier = clientNotifier;
     }
 
     public async Task<VoidResult> Handle(InitVerifierLotteryCommand command, CancellationToken ct)
@@ -65,10 +65,16 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
 
             thing.SetState(ThingState.FundedAndVerifierLotteryInitiated);
 
+            _thingUpdateRepository.Add(new ThingUpdate(
+                thingId: thing.Id,
+                updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                title: "Thing updated!!!",
+                details: "Some details"
+            ));
+
             await _taskRepository.SaveChanges();
             await _thingRepository.SaveChanges();
-
-            await _clientNotifier.NotifyThingStateChanged(thing.Id, thing.State);
+            await _thingUpdateRepository.SaveChanges();
         }
 
         return VoidResult.Instance;

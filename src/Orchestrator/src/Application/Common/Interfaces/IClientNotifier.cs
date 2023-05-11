@@ -13,4 +13,8 @@ public interface IClientNotifier
     Task UnsubscribeFromSettlementProposal(string connectionId, Guid proposalId);
     Task TellAboutNewSettlementProposalDraftCreationProgress(string userId, Guid proposalId, int percent);
     Task NotifySettlementProposalStateChanged(Guid proposalId, SettlementProposalState state);
+    Task NotifyUsersAboutItemUpdate(
+        IEnumerable<string> userIds, long updateTimestamp, WatchedItemType itemType,
+        Guid itemId, string title, string? details
+    );
 }

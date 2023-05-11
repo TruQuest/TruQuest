@@ -16,6 +16,10 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
     public DbSet<AcceptancePollVote> AcceptancePollVotes { get; set; }
     public DbSet<SettlementProposal> SettlementProposals { get; set; }
     public DbSet<AssessmentPollVote> AssessmentPollVotes { get; set; }
+    public DbSet<WatchedItem> WatchList { get; set; }
+    public DbSet<SubjectUpdate> SubjectUpdates { get; set; }
+    public DbSet<ThingUpdate> ThingUpdates { get; set; }
+    public DbSet<SettlementProposalUpdate> SettlementProposalUpdates { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -262,6 +266,34 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
                 .WithOne()
                 .HasForeignKey<AssessmentPollVote>(v => new { v.SettlementProposalId, v.VoterId })
                 .IsRequired();
+        });
+
+        modelBuilder.Entity<WatchedItem>(builder =>
+        {
+            builder.HasKey(w => new { w.UserId, w.ItemType, w.ItemId });
+            builder.Property(w => w.ItemType).HasConversion<int>();
+            builder.Property(w => w.LastCheckedAt).IsRequired();
+        });
+
+        modelBuilder.Entity<SubjectUpdate>(builder =>
+        {
+            builder.HasKey(u => new { u.SubjectId, u.UpdateTimestamp });
+            builder.Property(u => u.Title).IsRequired();
+            builder.Property(u => u.Details).IsRequired(false);
+        });
+
+        modelBuilder.Entity<ThingUpdate>(builder =>
+        {
+            builder.HasKey(u => new { u.ThingId, u.UpdateTimestamp });
+            builder.Property(u => u.Title).IsRequired();
+            builder.Property(u => u.Details).IsRequired(false);
+        });
+
+        modelBuilder.Entity<SettlementProposalUpdate>(builder =>
+        {
+            builder.HasKey(u => new { u.SettlementProposalId, u.UpdateTimestamp });
+            builder.Property(u => u.Title).IsRequired();
+            builder.Property(u => u.Details).IsRequired(false);
         });
     }
 }
