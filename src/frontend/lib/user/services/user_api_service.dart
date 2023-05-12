@@ -1,5 +1,9 @@
 import 'package:dio/dio.dart';
 
+import '../models/im/mark_notifications_as_read_command.dart';
+import '../models/im/notification_im.dart';
+import '../models/im/watched_item_type_im.dart';
+import '../../general/models/rvm/notification_vm.dart';
 import '../models/im/sign_in_command.dart';
 import '../models/rvm/get_sign_in_data_rvm.dart';
 import '../../general/errors/error.dart';
@@ -17,9 +21,10 @@ import '../../general/errors/validation_error.dart';
 import '../models/im/sign_up_im.dart';
 
 class UserApiService {
+  final ServerConnector _serverConnector;
   final Dio _dio;
 
-  UserApiService(ServerConnector serverConnector) : _dio = serverConnector.dio;
+  UserApiService(this._serverConnector) : _dio = _serverConnector.dio;
 
   Error _wrapError(DioError dioError) {
     switch (dioError.type) {
@@ -103,6 +108,31 @@ class UserApiService {
       );
 
       return SignInRvm.fromMap(response.data['data']);
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future markNotificationsAsRead(List<NotificationVm> notifications) async {
+    try {
+      await _dio.post(
+        '/user/watch-list',
+        options: Options(
+          headers: {'Authorization': 'Bearer ${_serverConnector.accessToken}'},
+        ),
+        data: MarkNotificationsAsReadCommand(
+          notifications: notifications
+              .map(
+                (n) => NotificationIm(
+                  updateTimestamp: n.updateTimestamp,
+                  itemType: WatchedItemTypeIm.values[n.itemType.index],
+                  itemId: n.itemId,
+                  itemUpdateCategory: n.itemUpdateCategory,
+                ),
+              )
+              .toList(),
+        ).toJson(),
+      );
     } on DioError catch (error) {
       throw _wrapError(error);
     }

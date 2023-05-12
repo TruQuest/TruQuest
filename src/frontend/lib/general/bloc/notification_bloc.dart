@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
 
+import '../services/notifications_cache.dart';
+import 'notification_actions.dart';
 import '../../settlement/models/rvm/settlement_proposal_state_vm.dart';
 import '../../settlement/services/settlement_api_service.dart';
 import '../../settlement/services/settlement_service.dart';
@@ -13,7 +15,8 @@ import '../../thing/services/thing_api_service.dart';
 import '../contexts/page_context.dart';
 import 'bloc.dart';
 
-class NotificationBloc extends Bloc {
+class NotificationBloc extends Bloc<NotificationAction> {
+  final NotificationsCache _notificationsCache;
   final ThingService _thingService;
   final ThingApiService _thingApiService;
   final SettlementService _settlementService;
@@ -29,11 +32,18 @@ class NotificationBloc extends Bloc {
   Stream<Stream<int>?> get progress$$ => _progress$Channel.stream;
 
   NotificationBloc(
+    this._notificationsCache,
     this._thingService,
     this._thingApiService,
     this._settlementService,
     this._settlementApiService,
   ) {
+    actionChannel.stream.listen((action) {
+      if (action is Dismiss) {
+        _dismiss(action);
+      }
+    });
+
     _thingApiService.thingEvent$.listen((event) {
       ThingEventType eventType = event.item1;
       String thingId = event.item2;
@@ -153,5 +163,9 @@ class NotificationBloc extends Bloc {
         );
       });
     });
+  }
+
+  void _dismiss(Dismiss action) async {
+    await _notificationsCache.remove(action.notifications);
   }
 }

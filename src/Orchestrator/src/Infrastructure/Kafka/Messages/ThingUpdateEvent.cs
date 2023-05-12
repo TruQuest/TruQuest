@@ -4,6 +4,7 @@ using MediatR;
 
 using Domain.Aggregates;
 using Application.User.Commands.NotifyWatchers;
+using Application.User.Common.Models.IM;
 
 namespace Infrastructure.Kafka.Messages;
 

@@ -1,4 +1,4 @@
-namespace Application.User.Commands.NotifyWatchers;
+namespace Application.User.Common.Models.IM;
 
 public enum WatchedItemTypeIm
 {

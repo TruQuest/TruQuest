@@ -6,6 +6,7 @@ using Domain.Results;
 using Domain.Aggregates;
 
 using Application.Common.Interfaces;
+using Application.User.Common.Models.IM;
 
 namespace Application.User.Commands.NotifyWatchers;
 

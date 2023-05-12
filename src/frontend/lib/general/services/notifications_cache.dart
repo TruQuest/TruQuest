@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:tuple/tuple.dart';
 
+import '../../user/services/user_api_service.dart';
 import '../models/rvm/notification_vm.dart';
 import '../models/rvm/watched_item_type_vm.dart';
 import 'server_connector.dart';
 
 class NotificationsCache {
+  final UserApiService _userApiService;
+
   final List<NotificationVm> _unreadNotifications = [];
 
   final StreamController<int> _unreadNotificationsCountChannel =
@@ -19,7 +22,7 @@ class NotificationsCache {
   Stream<List<NotificationVm>> get unreadNotifications$ =>
       _unreadNotificationsChannel.stream;
 
-  NotificationsCache(ServerConnector serverConnector) {
+  NotificationsCache(this._userApiService, ServerConnector serverConnector) {
     serverConnector.serverEvent$
         .where((event) => event.item1 == ServerEventType.notification)
         .listen((event) {
@@ -76,5 +79,16 @@ class NotificationsCache {
       details: details,
     ));
     _notify();
+  }
+
+  Future remove(List<NotificationVm> notifications) async {
+    _unreadNotifications.removeWhere(
+      (n) =>
+          notifications.indexWhere((notification) => notification.equals(n)) !=
+          -1,
+    );
+    _notify();
+
+    await _userApiService.markNotificationsAsRead(notifications);
   }
 }

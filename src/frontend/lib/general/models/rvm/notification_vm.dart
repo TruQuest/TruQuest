@@ -26,4 +26,10 @@ class NotificationVm {
         ),
         title = map['title'],
         details = map['details'];
+
+  bool equals(NotificationVm other) =>
+      itemType == other.itemType &&
+      itemId == other.itemId &&
+      itemUpdateCategory == other.itemUpdateCategory &&
+      updateTimestamp == other.updateTimestamp;
 }

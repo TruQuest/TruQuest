@@ -6,6 +6,7 @@ using Domain.Results;
 using Application.User.Commands.SignUp;
 using Application.User.Queries.GetSignInData;
 using Application.User.Commands.SignIn;
+using Application.User.Commands.MarkNotificationsAsRead;
 
 namespace API.Controllers;
 
@@ -28,4 +29,7 @@ public class UserController : ControllerBase
 
     [HttpPost("sign-in")]
     public Task<HandleResult<SignInResultVm>> SignIn(SignInCommand command) => _mediator.Send(command);
+
+    [HttpPost("watch-list")]
+    public Task<VoidResult> MarkNotificationsAsRead(MarkNotificationsAsReadCommand command) => _mediator.Send(command);
 }
