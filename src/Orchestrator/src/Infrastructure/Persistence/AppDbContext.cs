@@ -270,28 +270,34 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
 
         modelBuilder.Entity<WatchedItem>(builder =>
         {
-            builder.HasKey(w => new { w.UserId, w.ItemType, w.ItemId });
+            builder.HasKey(w => new { w.UserId, w.ItemType, w.ItemId, w.ItemUpdateCategory });
             builder.Property(w => w.ItemType).HasConversion<int>();
-            builder.Property(w => w.LastCheckedAt).IsRequired();
+            builder.Property(w => w.LastSeenUpdateTimestamp).IsRequired();
         });
 
         modelBuilder.Entity<SubjectUpdate>(builder =>
         {
-            builder.HasKey(u => new { u.SubjectId, u.UpdateTimestamp });
+            builder.HasKey(u => new { u.SubjectId, u.Category });
+            builder.Property(u => u.Category).HasConversion<int>();
+            builder.Property(u => u.UpdateTimestamp).IsRequired();
             builder.Property(u => u.Title).IsRequired();
             builder.Property(u => u.Details).IsRequired(false);
         });
 
         modelBuilder.Entity<ThingUpdate>(builder =>
         {
-            builder.HasKey(u => new { u.ThingId, u.UpdateTimestamp });
+            builder.HasKey(u => new { u.ThingId, u.Category });
+            builder.Property(u => u.Category).HasConversion<int>();
+            builder.Property(u => u.UpdateTimestamp).IsRequired();
             builder.Property(u => u.Title).IsRequired();
             builder.Property(u => u.Details).IsRequired(false);
         });
 
         modelBuilder.Entity<SettlementProposalUpdate>(builder =>
         {
-            builder.HasKey(u => new { u.SettlementProposalId, u.UpdateTimestamp });
+            builder.HasKey(u => new { u.SettlementProposalId, u.Category });
+            builder.Property(u => u.Category).HasConversion<int>();
+            builder.Property(u => u.UpdateTimestamp).IsRequired();
             builder.Property(u => u.Title).IsRequired();
             builder.Property(u => u.Details).IsRequired(false);
         });

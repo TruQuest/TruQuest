@@ -15,6 +15,6 @@ public interface IClientNotifier
     Task NotifySettlementProposalStateChanged(Guid proposalId, SettlementProposalState state);
     Task NotifyUsersAboutItemUpdate(
         IEnumerable<string> userIds, long updateTimestamp, WatchedItemType itemType,
-        Guid itemId, string title, string? details
+        Guid itemId, int itemUpdateCategory, string title, string? details
     );
 }

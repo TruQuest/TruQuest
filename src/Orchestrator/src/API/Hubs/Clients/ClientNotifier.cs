@@ -61,8 +61,8 @@ internal class ClientNotifier : IClientNotifier
 
     public Task NotifyUsersAboutItemUpdate(
         IEnumerable<string> userIds, long updateTimestamp, WatchedItemType itemType,
-        Guid itemId, string title, string? details
+        Guid itemId, int itemUpdateCategory, string title, string? details
     ) => _hubContext.Clients.Users(userIds).NotifyAboutItemUpdate(
-        updateTimestamp, (int)itemType, itemId.ToString(), title, details
+        updateTimestamp, (int)itemType, itemId.ToString(), itemUpdateCategory, title, details
     );
 }

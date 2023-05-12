@@ -19,10 +19,13 @@ internal class WatchListQueryable : Queryable, IWatchListQueryable
 
     public async Task<IEnumerable<string>> GetWatchersFor(WatchedItemType itemType, Guid itemId)
     {
-        var watchers = await _dbContext.WatchList
-            .Where(w => w.ItemType == itemType && w.ItemId == itemId)
-            .Select(w => w.UserId)
-            .ToListAsync();
+        // @@TODO: Use db distinct instead of client-side.
+        var watchers = (
+            await _dbContext.WatchList
+                .Where(w => w.ItemType == itemType && w.ItemId == itemId)
+                .Select(w => w.UserId)
+                .ToListAsync()
+        ).Distinct();
 
         return watchers;
     }
@@ -33,11 +36,13 @@ internal class WatchListQueryable : Queryable, IWatchListQueryable
         var updates = await dbConn.QueryAsync<WatchedItemUpdateQm>(
             @"
                 WITH ""UserWatchList"" AS (
-                    SELECT ""ItemType"", ""ItemId"", ""LastCheckedAt""
+                    SELECT ""ItemType"", ""ItemId"", ""ItemUpdateCategory"", ""LastSeenUpdateTimestamp""
                     FROM truquest.""WatchList""
                     WHERE ""UserId"" = @UserId
                 )
-                SELECT u.""ItemType"", u.""ItemId"", s.""UpdateTimestamp"", s.""Title"", s.""Details""
+                SELECT
+                    u.""ItemType"", u.""ItemId"", u.""ItemUpdateCategory"",
+                    s.""UpdateTimestamp"", s.""Title"", s.""Details""
                 FROM
                     ""UserWatchList"" AS u
                         INNER JOIN
@@ -45,12 +50,15 @@ internal class WatchListQueryable : Queryable, IWatchListQueryable
                         ON (
                             u.""ItemType"" = 0 AND
                             u.""ItemId"" = s.""SubjectId"" AND
-                            u.""LastCheckedAt"" < s.""UpdateTimestamp""
+                            u.""ItemUpdateCategory"" = s.""Category"" AND
+                            u.""LastSeenUpdateTimestamp"" < s.""UpdateTimestamp""
                         )
                 
                 UNION ALL
 
-                SELECT u.""ItemType"", u.""ItemId"", t.""UpdateTimestamp"", t.""Title"", t.""Details""
+                SELECT
+                    u.""ItemType"", u.""ItemId"", u.""ItemUpdateCategory"",
+                    t.""UpdateTimestamp"", t.""Title"", t.""Details""
                 FROM
                     ""UserWatchList"" AS u
                         INNER JOIN
@@ -58,12 +66,15 @@ internal class WatchListQueryable : Queryable, IWatchListQueryable
                         ON (
                             u.""ItemType"" = 1 AND
                             u.""ItemId"" = t.""ThingId"" AND
-                            u.""LastCheckedAt"" < t.""UpdateTimestamp""
+                            u.""ItemUpdateCategory"" = t.""Category"" AND
+                            u.""LastSeenUpdateTimestamp"" < t.""UpdateTimestamp""
                         )
                         
                 UNION ALL
 
-                SELECT u.""ItemType"", u.""ItemId"", p.""UpdateTimestamp"", p.""Title"", p.""Details""
+                SELECT
+                    u.""ItemType"", u.""ItemId"", u.""ItemUpdateCategory"",
+                    p.""UpdateTimestamp"", p.""Title"", p.""Details""
                 FROM
                     ""UserWatchList"" AS u
                         INNER JOIN
@@ -71,10 +82,11 @@ internal class WatchListQueryable : Queryable, IWatchListQueryable
                         ON (
                             u.""ItemType"" = 2 AND
                             u.""ItemId"" = p.""SettlementProposalId"" AND
-                            u.""LastCheckedAt"" < p.""UpdateTimestamp""
+                            u.""ItemUpdateCategory"" = p.""Category"" AND
+                            u.""LastSeenUpdateTimestamp"" < p.""UpdateTimestamp""
                         )
                 ORDER BY ""UpdateTimestamp"" DESC
-                LIMIT 30
+                LIMIT 30 -- @@TODO: Config.
             ",
             param: new { UserId = userId }
         );

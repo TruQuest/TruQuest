@@ -31,22 +31,32 @@ internal class WatchCommandHandler : IRequestHandler<WatchCommand, VoidResult>
 
     public async Task<VoidResult> Handle(WatchCommand command, CancellationToken ct)
     {
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
         if (command.MarkedAsWatched)
         {
-            _watchedItemRepository.Add(new WatchedItem(
-                userId: _currentPrincipal.Id!,
-                itemType: WatchedItemType.Thing,
-                itemId: command.ThingId,
-                lastCheckedAt: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-            ));
+            foreach (var category in Enum.GetValues<ThingUpdateCategory>())
+            {
+                _watchedItemRepository.Add(new WatchedItem(
+                    userId: _currentPrincipal.Id!,
+                    itemType: WatchedItemType.Thing,
+                    itemId: command.ThingId,
+                    itemUpdateCategory: (int)category,
+                    lastSeenUpdateTimestamp: now
+                ));
+            }
         }
         else
         {
-            _watchedItemRepository.Remove(new WatchedItem(
-                userId: _currentPrincipal.Id!,
-                itemType: WatchedItemType.Thing,
-                itemId: command.ThingId
-            ));
+            foreach (var category in Enum.GetValues<ThingUpdateCategory>())
+            {
+                _watchedItemRepository.Remove(new WatchedItem(
+                    userId: _currentPrincipal.Id!,
+                    itemType: WatchedItemType.Thing,
+                    itemId: command.ThingId,
+                    itemUpdateCategory: (int)category
+                ));
+            }
         }
 
         await _watchedItemRepository.SaveChanges();

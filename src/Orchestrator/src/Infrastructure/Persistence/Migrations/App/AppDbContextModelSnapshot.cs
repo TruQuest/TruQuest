@@ -191,8 +191,8 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.Property<Guid>("SettlementProposalId")
                         .HasColumnType("uuid");
 
-                    b.Property<long>("UpdateTimestamp")
-                        .HasColumnType("bigint");
+                    b.Property<int>("Category")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Details")
                         .HasColumnType("text");
@@ -201,7 +201,10 @@ namespace Infrastructure.Persistence.Migrations.App
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("SettlementProposalId", "UpdateTimestamp");
+                    b.Property<long>("UpdateTimestamp")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("SettlementProposalId", "Category");
 
                     b.ToTable("SettlementProposalUpdates", "truquest");
                 });
@@ -280,8 +283,8 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.Property<Guid>("SubjectId")
                         .HasColumnType("uuid");
 
-                    b.Property<long>("UpdateTimestamp")
-                        .HasColumnType("bigint");
+                    b.Property<int>("Category")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Details")
                         .HasColumnType("text");
@@ -290,7 +293,10 @@ namespace Infrastructure.Persistence.Migrations.App
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("SubjectId", "UpdateTimestamp");
+                    b.Property<long>("UpdateTimestamp")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("SubjectId", "Category");
 
                     b.ToTable("SubjectUpdates", "truquest");
                 });
@@ -411,8 +417,8 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.Property<Guid>("ThingId")
                         .HasColumnType("uuid");
 
-                    b.Property<long>("UpdateTimestamp")
-                        .HasColumnType("bigint");
+                    b.Property<int>("Category")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Details")
                         .HasColumnType("text");
@@ -421,7 +427,10 @@ namespace Infrastructure.Persistence.Migrations.App
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("ThingId", "UpdateTimestamp");
+                    b.Property<long>("UpdateTimestamp")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("ThingId", "Category");
 
                     b.ToTable("ThingUpdates", "truquest");
                 });
@@ -516,10 +525,13 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.Property<Guid>("ItemId")
                         .HasColumnType("uuid");
 
-                    b.Property<long>("LastCheckedAt")
+                    b.Property<int>("ItemUpdateCategory")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("LastSeenUpdateTimestamp")
                         .HasColumnType("bigint");
 
-                    b.HasKey("UserId", "ItemType", "ItemId");
+                    b.HasKey("UserId", "ItemType", "ItemId", "ItemUpdateCategory");
 
                     b.ToTable("WatchList", "truquest");
                 });

@@ -4,6 +4,7 @@ class NotificationVm {
   final DateTime updateTimestamp;
   final WatchedItemTypeVm itemType;
   final String itemId;
+  final int itemUpdateCategory;
   final String title;
   final String? details;
 
@@ -11,6 +12,7 @@ class NotificationVm {
     required this.updateTimestamp,
     required this.itemType,
     required this.itemId,
+    required this.itemUpdateCategory,
     required this.title,
     required this.details,
   });
@@ -18,6 +20,7 @@ class NotificationVm {
   NotificationVm.fromMap(Map<String, dynamic> map)
       : itemType = WatchedItemTypeVm.values[map['itemType']],
         itemId = map['itemId'],
+        itemUpdateCategory = map['itemUpdateCategory'],
         updateTimestamp = DateTime.fromMillisecondsSinceEpoch(
           map['updateTimestamp'],
         ),

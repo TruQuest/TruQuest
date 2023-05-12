@@ -65,7 +65,7 @@ internal class ThingQueryable : Queryable, IThingQueryable
                         ON tat.""TagId"" = tag.""Id""
                 WHERE t.""Id"" = @ThingId;
 
-                SELECT 1
+                SELECT COUNT(*)
                 FROM truquest.""WatchList""
                 WHERE ""UserId"" = @UserId AND ""ItemType"" = 1 AND ""ItemId"" = @ThingId;
             ",
@@ -82,7 +82,7 @@ internal class ThingQueryable : Queryable, IThingQueryable
         );
         if (thing != null)
         {
-            thing.Watched = multiQuery.ReadSingleOrDefault<int?>() != null;
+            thing.Watched = multiQuery.ReadSingleOrDefault<long>() != 0;
         }
 
         return thing;

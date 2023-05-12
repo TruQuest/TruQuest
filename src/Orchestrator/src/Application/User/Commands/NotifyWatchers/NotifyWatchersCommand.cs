@@ -13,6 +13,7 @@ public class NotifyWatchersCommand : IRequest<VoidResult>
 {
     public required WatchedItemTypeIm ItemType { get; init; }
     public required Guid ItemId { get; init; }
+    public required int ItemUpdateCategory { get; init; }
     public required long UpdateTimestamp { get; init; }
     public required string Title { get; init; }
     public required string? Details { get; init; }
@@ -44,7 +45,7 @@ internal class NotifyWatchersCommandHandler : IRequestHandler<NotifyWatchersComm
         {
             await _clientNotifier.NotifyUsersAboutItemUpdate(
                 watcherIds, command.UpdateTimestamp, (WatchedItemType)command.ItemType,
-                command.ItemId, command.Title, command.Details
+                command.ItemId, command.ItemUpdateCategory, command.Title, command.Details
             );
         }
 

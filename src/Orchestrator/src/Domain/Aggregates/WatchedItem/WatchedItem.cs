@@ -7,18 +7,23 @@ public class WatchedItem : Entity, IAggregateRoot
     public string UserId { get; }
     public WatchedItemType ItemType { get; }
     public Guid ItemId { get; }
-    public long LastCheckedAt { get; private set; }
+    public int ItemUpdateCategory { get; }
+    public long LastSeenUpdateTimestamp { get; private set; }
 
-    public WatchedItem(string userId, WatchedItemType itemType, Guid itemId, long lastCheckedAt = -1)
+    public WatchedItem(
+        string userId, WatchedItemType itemType, Guid itemId,
+        int itemUpdateCategory, long lastSeenUpdateTimestamp = -1
+    )
     {
         UserId = userId;
         ItemType = itemType;
         ItemId = itemId;
-        LastCheckedAt = lastCheckedAt;
+        ItemUpdateCategory = itemUpdateCategory;
+        LastSeenUpdateTimestamp = lastSeenUpdateTimestamp;
     }
 
-    public void SetLastCheckedAt(long lastCheckedAt)
+    public void SetLastSeenUpdateTimestamp(long lastSeenUpdateTimestamp)
     {
-        LastCheckedAt = lastCheckedAt;
+        LastSeenUpdateTimestamp = lastSeenUpdateTimestamp;
     }
 }

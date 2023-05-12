@@ -2,6 +2,7 @@ using KafkaFlow;
 using KafkaFlow.TypedHandler;
 using MediatR;
 
+using Domain.Aggregates;
 using Application.User.Commands.NotifyWatchers;
 
 namespace Infrastructure.Kafka.Messages;
@@ -9,6 +10,7 @@ namespace Infrastructure.Kafka.Messages;
 internal class ThingUpdateEvent
 {
     public required Guid ThingId { get; init; }
+    public required ThingUpdateCategory Category { get; init; }
     public required long UpdateTimestamp { get; init; }
     public required string Title { get; init; }
     public required string? Details { get; init; }
@@ -28,6 +30,7 @@ internal class ThingUpdateEventHandler : IMessageHandler<ThingUpdateEvent>
         {
             ItemType = WatchedItemTypeIm.Thing,
             ItemId = message.ThingId,
+            ItemUpdateCategory = (int)message.Category,
             UpdateTimestamp = message.UpdateTimestamp,
             Title = message.Title,
             Details = message.Details

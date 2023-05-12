@@ -186,7 +186,8 @@ class ServerConnector {
         var updateTimestamp = args!.first as int;
         var itemType = WatchedItemTypeVm.values[args[1] as int];
         var itemId = args[2] as String;
-        var title = args[3] as String;
+        var itemUpdateCategory = args[3] as int;
+        var title = args[4] as String;
         var details = args.last as String?;
 
         _serverEventChannel.add(
@@ -194,10 +195,11 @@ class ServerConnector {
             ServerEventType.notification,
             Tuple2<NotificationEventType, Object>(
               NotificationEventType.newOne,
-              Tuple5(
+              Tuple6(
                 updateTimestamp,
                 itemType,
                 itemId,
+                itemUpdateCategory,
                 title,
                 details,
               ),

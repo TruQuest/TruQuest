@@ -29,13 +29,22 @@ class NotificationsCache {
         _onInitialRetrieve(notifications);
       } else if (notification.item1 == NotificationEventType.newOne) {
         var payload = notification.item2
-            as Tuple5<int, WatchedItemTypeVm, String, String, String?>;
+            as Tuple6<int, WatchedItemTypeVm, String, int, String, String?>;
         var updateTimestamp = payload.item1;
         var itemType = payload.item2;
         var itemId = payload.item3;
-        var title = payload.item4;
-        var details = payload.item5;
-        _onNewNotification(updateTimestamp, itemType, itemId, title, details);
+        var itemUpdateCategory = payload.item4;
+        var title = payload.item5;
+        var details = payload.item6;
+
+        _onNewNotification(
+          updateTimestamp,
+          itemType,
+          itemId,
+          itemUpdateCategory,
+          title,
+          details,
+        );
       }
     });
   }
@@ -54,6 +63,7 @@ class NotificationsCache {
     int updateTimestamp,
     WatchedItemTypeVm itemType,
     String itemId,
+    int itemUpdateCategory,
     String title,
     String? details,
   ) {
@@ -61,6 +71,7 @@ class NotificationsCache {
       updateTimestamp: DateTime.fromMillisecondsSinceEpoch(updateTimestamp),
       itemType: itemType,
       itemId: itemId,
+      itemUpdateCategory: itemUpdateCategory,
       title: title,
       details: details,
     ));

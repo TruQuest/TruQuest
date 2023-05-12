@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Persistence.Migrations.App
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20230511043729_AddWatchList")]
-    partial class AddWatchList
+    [Migration("20230512053531_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -189,23 +189,6 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.ToTable("SettlementProposals", "truquest");
                 });
 
-            modelBuilder.Entity("Domain.Aggregates.SettlementProposalUpdate", b =>
-                {
-                    b.Property<Guid>("SettlementProposalId")
-                        .HasColumnType("uuid");
-
-                    b.Property<long>("UpdateTimestamp")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Details")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("SettlementProposalId", "UpdateTimestamp");
-
-                    b.ToTable("SettlementProposalUpdates", "truquest");
-                });
-
             modelBuilder.Entity("Domain.Aggregates.SettlementProposalVerifier", b =>
                 {
                     b.Property<Guid?>("SettlementProposalId")
@@ -273,23 +256,6 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.HasIndex("TagId");
 
                     b.ToTable("SubjectAttachedTags", "truquest");
-                });
-
-            modelBuilder.Entity("Domain.Aggregates.SubjectUpdate", b =>
-                {
-                    b.Property<Guid>("SubjectId")
-                        .HasColumnType("uuid");
-
-                    b.Property<long>("UpdateTimestamp")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Details")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("SubjectId", "UpdateTimestamp");
-
-                    b.ToTable("SubjectUpdates", "truquest");
                 });
 
             modelBuilder.Entity("Domain.Aggregates.SupportingEvidence", b =>
@@ -403,23 +369,6 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.ToTable("ThingAttachedTags", "truquest");
                 });
 
-            modelBuilder.Entity("Domain.Aggregates.ThingUpdate", b =>
-                {
-                    b.Property<Guid>("ThingId")
-                        .HasColumnType("uuid");
-
-                    b.Property<long>("UpdateTimestamp")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Details")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("ThingId", "UpdateTimestamp");
-
-                    b.ToTable("ThingUpdates", "truquest");
-                });
-
             modelBuilder.Entity("Domain.Aggregates.ThingVerifier", b =>
                 {
                     b.Property<Guid?>("ThingId")
@@ -497,25 +446,6 @@ namespace Infrastructure.Persistence.Migrations.App
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("AspNetUsers", "truquest");
-                });
-
-            modelBuilder.Entity("Domain.Aggregates.WatchedItem", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("text");
-
-                    b.Property<int>("ItemType")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("ItemId")
-                        .HasColumnType("uuid");
-
-                    b.Property<long>("LastCheckedAt")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("UserId", "ItemType", "ItemId");
-
-                    b.ToTable("WatchList", "truquest");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>

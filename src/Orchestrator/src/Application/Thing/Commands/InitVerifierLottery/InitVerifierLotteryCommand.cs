@@ -6,9 +6,11 @@ using Domain.Aggregates;
 using Domain.Results;
 
 using Application.Common.Interfaces;
+using Application.Common.Attributes;
 
 namespace Application.Thing.Commands.InitVerifierLottery;
 
+[ExecuteInTxn]
 public class InitVerifierLotteryCommand : IRequest<VoidResult>
 {
     public required Guid ThingId { get; init; }
@@ -65,8 +67,9 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
 
             thing.SetState(ThingState.FundedAndVerifierLotteryInitiated);
 
-            _thingUpdateRepository.Add(new ThingUpdate(
+            await _thingUpdateRepository.AddOrUpdate(new ThingUpdate(
                 thingId: thing.Id,
+                category: ThingUpdateCategory.General,
                 updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 title: "Thing updated!!!",
                 details: "Some details"
