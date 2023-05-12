@@ -40,10 +40,10 @@ internal class ThingQueryable : Queryable, IThingQueryable
         return things;
     }
 
-    public async Task<ThingQm?> GetById(Guid id)
+    public async Task<ThingQm?> GetById(Guid id, string? userId)
     {
         var dbConn = await _getOpenConnection();
-        var thing = await dbConn.SingleWithMultipleMany<ThingQm, EvidenceQm, TagQm>(
+        using var multiQuery = await dbConn.QueryMultipleAsync(
             @"
                 SELECT
                     t.*,
@@ -63,12 +63,27 @@ internal class ThingQueryable : Queryable, IThingQueryable
                         INNER JOIN
                     truquest.""Tags"" AS tag
                         ON tat.""TagId"" = tag.""Id""
-                WHERE t.""Id"" = @ThingId
+                WHERE t.""Id"" = @ThingId;
+
+                SELECT 1
+                FROM truquest.""WatchList""
+                WHERE ""UserId"" = @UserId AND ""ItemType"" = 1 AND ""ItemId"" = @ThingId;
             ",
-            joined1CollectionSelector: thing => thing.Evidence,
-            joined2CollectionSelector: thing => thing.Tags,
-            param: new { ThingId = id }
+            param: new
+            {
+                ThingId = id,
+                UserId = userId
+            }
         );
+
+        var thing = multiQuery.SingleWithMultipleMany<ThingQm, EvidenceQm, TagQm>(
+            joined1CollectionSelector: thing => thing.Evidence,
+            joined2CollectionSelector: thing => thing.Tags
+        );
+        if (thing != null)
+        {
+            thing.Watched = multiQuery.ReadSingleOrDefault<int?>() != null;
+        }
 
         return thing;
     }

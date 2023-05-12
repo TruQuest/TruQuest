@@ -8,7 +8,7 @@ public interface IThingQueryable
 {
     Task<IEnumerable<ThingPreviewQm>> GetForSubject(Guid subjectId, string? userId);
 
-    Task<ThingQm?> GetById(Guid id);
+    Task<ThingQm?> GetById(Guid id, string? userId);
 
     Task<IEnumerable<VerifierLotteryParticipantEntryQm>> GetVerifierLotteryParticipants(
         Guid thingId

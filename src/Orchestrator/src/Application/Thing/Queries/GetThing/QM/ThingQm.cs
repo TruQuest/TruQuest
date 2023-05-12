@@ -18,6 +18,7 @@ public class ThingQm
     public long? SettledAt { get; }
     public HashSet<EvidenceQm> Evidence { get; } = new();
     public HashSet<TagQm> Tags { get; } = new();
+    public bool Watched { get; set; }
 
     public override bool Equals(object? obj)
     {

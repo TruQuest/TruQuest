@@ -196,7 +196,7 @@ class _ThingPageState extends StateX<ThingPage> {
           bottom: 130,
           right: 20,
           child: WatchButton(
-            markedAsWatched: false,
+            markedAsWatched: thing.watched,
             onPressed: (markedAsWatched) => _thingBloc.dispatch(
               Watch(
                 thingId: widget.thingId,

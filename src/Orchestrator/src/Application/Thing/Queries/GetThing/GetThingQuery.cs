@@ -32,7 +32,7 @@ internal class GetThingQueryHandler : IRequestHandler<GetThingQuery, HandleResul
 
     public async Task<HandleResult<GetThingResultVm>> Handle(GetThingQuery query, CancellationToken ct)
     {
-        var thing = await _thingQueryable.GetById(query.ThingId);
+        var thing = await _thingQueryable.GetById(query.ThingId, _currentPrincipal.Id);
         if (thing == null)
         {
             return new()

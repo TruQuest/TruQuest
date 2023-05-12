@@ -19,6 +19,7 @@ class ThingVm {
   final DateTime? settledAt;
   final List<EvidenceVm> evidence;
   final List<TagVm> tags;
+  final bool watched;
 
   final bool? fundedAwaitingConfirmation;
 
@@ -54,6 +55,7 @@ class ThingVm {
         tags = List.unmodifiable(
           (map['tags'] as List<dynamic>).map((submap) => TagVm.fromMap(submap)),
         ),
+        watched = map['watched'],
         fundedAwaitingConfirmation = null;
 
   ThingVm._({
@@ -71,6 +73,7 @@ class ThingVm {
     required this.settledAt,
     required this.evidence,
     required this.tags,
+    required this.watched,
     required this.fundedAwaitingConfirmation,
   });
 
@@ -90,6 +93,7 @@ class ThingVm {
       settledAt: settledAt,
       evidence: evidence,
       tags: tags,
+      watched: watched,
       fundedAwaitingConfirmation:
           fundedAwaitingConfirmation ?? this.fundedAwaitingConfirmation,
     );

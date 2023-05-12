@@ -210,11 +210,8 @@ class ServerConnector {
     hubConnection.on(
       'OnInitialNotificationRetrieve',
       (List<Object?>? args) {
-        print('********** OnInitialNotificationRetrieve *****************');
-        print(args!.length);
-        var updates = args.first as List<dynamic>;
-        print(updates);
-        var itemUpdates =
+        var updates = args!.first as List<dynamic>;
+        var notifications =
             updates.map((map) => NotificationVm.fromMap(map)).toList();
 
         _serverEventChannel.add(
@@ -222,7 +219,7 @@ class ServerConnector {
             ServerEventType.notification,
             Tuple2<NotificationEventType, Object>(
               NotificationEventType.initialRetrieve,
-              itemUpdates,
+              notifications,
             ),
           ),
         );
