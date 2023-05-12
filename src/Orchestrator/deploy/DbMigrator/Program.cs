@@ -124,14 +124,14 @@ thing.SetState(ThingState.AwaitingFunding);
 appDbContext.Things.Add(thing);
 appDbContext.SaveChanges();
 
-appDbContext.WatchList.Add(new WatchedItem(
-    submitterId,
-    WatchedItemType.Thing,
-    thing.Id,
-    DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-));
+// appDbContext.WatchList.Add(new WatchedItem(
+//     submitterId,
+//     WatchedItemType.Thing,
+//     thing.Id,
+//     DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+// ));
 
-appDbContext.SaveChanges();
+// appDbContext.SaveChanges();
 
 var eventDbContext = scope.ServiceProvider.GetRequiredService<EventDbContext>();
 eventDbContext.Database.Migrate();

@@ -192,4 +192,8 @@ class ThingService {
     var result = await _thingApiService.getSettlementProposalsList(thingId);
     return result;
   }
+
+  Future watch(String thingId, bool markedAsWatched) async {
+    await _thingApiService.watch(thingId, markedAsWatched);
+  }
 }

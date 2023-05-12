@@ -14,4 +14,13 @@ class NotificationVm {
     required this.title,
     required this.details,
   });
+
+  NotificationVm.fromMap(Map<String, dynamic> map)
+      : itemType = WatchedItemTypeVm.values[map['itemType']],
+        itemId = map['itemId'],
+        updateTimestamp = DateTime.fromMillisecondsSinceEpoch(
+          map['updateTimestamp'],
+        ),
+        title = map['title'],
+        details = map['details'];
 }

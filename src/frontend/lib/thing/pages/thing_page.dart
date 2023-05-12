@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tab_container/tab_container.dart';
 
+import '../../general/widgets/watch_button.dart';
 import '../../subject/widgets/avatar_with_reputation_gauge.dart';
 import '../widgets/settlement_proposals_list.dart';
 import '../widgets/timeline_block.dart';
@@ -189,6 +190,19 @@ class _ThingPageState extends StateX<ThingPage> {
                   ],
                 ),
             ],
+          ),
+        ),
+        Positioned(
+          bottom: 130,
+          right: 20,
+          child: WatchButton(
+            markedAsWatched: false,
+            onPressed: (markedAsWatched) => _thingBloc.dispatch(
+              Watch(
+                thingId: widget.thingId,
+                markedAsWatched: markedAsWatched,
+              ),
+            ),
           ),
         ),
       ],

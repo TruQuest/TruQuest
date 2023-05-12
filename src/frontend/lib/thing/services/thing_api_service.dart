@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:tuple/tuple.dart';
 
+import '../../general/models/im/watch_command.dart';
 import '../models/rvm/get_settlement_proposals_list_rvm.dart';
 import '../models/rvm/get_verifiers_rvm.dart';
 import '../../general/errors/vote_error.dart';
@@ -315,6 +316,23 @@ class ThingApiService {
       );
 
       return GetSettlementProposalsListRvm.fromMap(response.data['data']);
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future watch(String thingId, bool markedAsWatched) async {
+    try {
+      await _dio.post(
+        '/things/watch',
+        options: Options(
+          headers: {'Authorization': 'Bearer ${_serverConnector.accessToken}'},
+        ),
+        data: WatchCommand(
+          thingId: thingId,
+          markedAsWatched: markedAsWatched,
+        ).toJson(),
+      );
     } on DioError catch (error) {
       throw _wrapError(error);
     }

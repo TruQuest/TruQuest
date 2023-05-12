@@ -20,6 +20,7 @@ internal class ThingUpdateRepository : Repository<ThingUpdate>, IThingUpdateRepo
 
     public void Add(ThingUpdate updateEvent)
     {
+        // @@TODO: Handle possible primary key constraint violation.
         _dbContext.ThingUpdates.Add(updateEvent);
     }
 }

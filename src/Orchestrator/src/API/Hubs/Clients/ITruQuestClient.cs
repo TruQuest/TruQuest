@@ -1,3 +1,5 @@
+using Application.User.Queries.GetWatchListUpdates;
+
 namespace API.Hubs.Clients;
 
 public interface ITruQuestClient
@@ -7,4 +9,5 @@ public interface ITruQuestClient
     Task TellAboutNewSettlementProposalDraftCreationProgress(string proposalId, int percent);
     Task NotifySettlementProposalStateChanged(string proposalId, int state);
     Task NotifyAboutItemUpdate(long updateTimestamp, int itemType, string itemId, string title, string? details);
+    Task OnInitialNotificationRetrieve(IEnumerable<WatchedItemUpdateQm> updates);
 }

@@ -108,3 +108,13 @@ class GetSettlementProposalsList extends ThingAction {
 
   GetSettlementProposalsList({required this.thingId});
 }
+
+class Watch extends ThingAction {
+  final String thingId;
+  final bool markedAsWatched;
+
+  Watch({
+    required this.thingId,
+    required this.markedAsWatched,
+  });
+}

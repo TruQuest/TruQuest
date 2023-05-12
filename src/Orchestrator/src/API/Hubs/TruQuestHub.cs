@@ -5,6 +5,7 @@ using MediatR;
 using Domain.Results;
 using ThingCommands = Application.Thing.Commands;
 using SettlementCommands = Application.Settlement.Commands;
+using Application.User.Queries.GetWatchListUpdates;
 
 using API.Hubs.Clients;
 using API.Hubs.Filters;
@@ -22,10 +23,26 @@ public class TruQuestHub : Hub<ITruQuestClient>
         _mediator = mediator;
     }
 
-    public override Task OnConnectedAsync()
+    public override async Task OnConnectedAsync()
     {
+        await base.OnConnectedAsync();
         _logger.LogInformation($"{Context.UserIdentifier ?? "Guest"} connected!");
-        return base.OnConnectedAsync();
+
+        if (Context.UserIdentifier != null)
+        {
+            var result = await _mediator.Send(new GetWatchListUpdatesQuery
+            {
+                UserId = Context.UserIdentifier
+            });
+
+            _logger.LogInformation(
+                "User {UserId}: Retrieved {Count} notifications",
+                Context.UserIdentifier,
+                result.Data!.Count()
+            );
+
+            await Clients.Caller.OnInitialNotificationRetrieve(result.Data!);
+        }
     }
 
     [AddConnectionIdProviderToMethodInvocationScope]

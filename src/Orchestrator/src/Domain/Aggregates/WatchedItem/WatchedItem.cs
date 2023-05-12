@@ -9,7 +9,7 @@ public class WatchedItem : Entity, IAggregateRoot
     public Guid ItemId { get; }
     public long LastCheckedAt { get; private set; }
 
-    public WatchedItem(string userId, WatchedItemType itemType, Guid itemId, long lastCheckedAt)
+    public WatchedItem(string userId, WatchedItemType itemType, Guid itemId, long lastCheckedAt = -1)
     {
         UserId = userId;
         ItemType = itemType;

@@ -24,7 +24,10 @@ class NotificationsCache {
         .where((event) => event.item1 == ServerEventType.notification)
         .listen((event) {
       var notification = event.item2 as Tuple2<NotificationEventType, Object>;
-      if (notification.item1 == NotificationEventType.newOne) {
+      if (notification.item1 == NotificationEventType.initialRetrieve) {
+        var notifications = notification.item2 as List<NotificationVm>;
+        _onInitialRetrieve(notifications);
+      } else if (notification.item1 == NotificationEventType.newOne) {
         var payload = notification.item2
             as Tuple5<int, WatchedItemTypeVm, String, String, String?>;
         var updateTimestamp = payload.item1;
@@ -40,6 +43,11 @@ class NotificationsCache {
   void _notify() {
     _unreadNotificationsChannel.add(List.unmodifiable(_unreadNotifications));
     _unreadNotificationsCountChannel.add(_unreadNotifications.length);
+  }
+
+  void _onInitialRetrieve(List<NotificationVm> notifications) {
+    _unreadNotifications.addAll(notifications);
+    _notify();
   }
 
   void _onNewNotification(

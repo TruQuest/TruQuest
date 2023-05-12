@@ -12,6 +12,7 @@ namespace Application.Thing.Commands.Watch;
 public class WatchCommand : IRequest<VoidResult>
 {
     public required Guid ThingId { get; init; }
+    public required bool MarkedAsWatched { get; init; }
 }
 
 internal class WatchCommandHandler : IRequestHandler<WatchCommand, VoidResult>
@@ -30,12 +31,23 @@ internal class WatchCommandHandler : IRequestHandler<WatchCommand, VoidResult>
 
     public async Task<VoidResult> Handle(WatchCommand command, CancellationToken ct)
     {
-        _watchedItemRepository.Add(new WatchedItem(
-            userId: _currentPrincipal.Id!,
-            itemType: WatchedItemType.Thing,
-            itemId: command.ThingId,
-            lastCheckedAt: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-        ));
+        if (command.MarkedAsWatched)
+        {
+            _watchedItemRepository.Add(new WatchedItem(
+                userId: _currentPrincipal.Id!,
+                itemType: WatchedItemType.Thing,
+                itemId: command.ThingId,
+                lastCheckedAt: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+            ));
+        }
+        else
+        {
+            _watchedItemRepository.Remove(new WatchedItem(
+                userId: _currentPrincipal.Id!,
+                itemType: WatchedItemType.Thing,
+                itemId: command.ThingId
+            ));
+        }
 
         await _watchedItemRepository.SaveChanges();
 

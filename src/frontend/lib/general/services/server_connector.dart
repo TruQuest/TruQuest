@@ -5,6 +5,7 @@ import 'package:logging/logging.dart';
 import 'package:signalr_netcore/signalr_client.dart';
 import 'package:tuple/tuple.dart';
 
+import '../models/rvm/notification_vm.dart';
 import '../models/rvm/watched_item_type_vm.dart';
 import '../../settlement/models/rvm/settlement_proposal_state_vm.dart';
 import '../../thing/models/rvm/thing_state_vm.dart';
@@ -200,6 +201,28 @@ class ServerConnector {
                 title,
                 details,
               ),
+            ),
+          ),
+        );
+      },
+    );
+
+    hubConnection.on(
+      'OnInitialNotificationRetrieve',
+      (List<Object?>? args) {
+        print('********** OnInitialNotificationRetrieve *****************');
+        print(args!.length);
+        var updates = args.first as List<dynamic>;
+        print(updates);
+        var itemUpdates =
+            updates.map((map) => NotificationVm.fromMap(map)).toList();
+
+        _serverEventChannel.add(
+          Tuple2(
+            ServerEventType.notification,
+            Tuple2<NotificationEventType, Object>(
+              NotificationEventType.initialRetrieve,
+              itemUpdates,
             ),
           ),
         );

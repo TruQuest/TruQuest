@@ -64,6 +64,7 @@ public class ThingController : ControllerBase
         GetSettlementProposalsListQuery query
     ) => _mediator.Send(query);
 
-    [HttpPost("{thingId}/watch")]
-    public Task<VoidResult> Watch(WatchCommand command) => _mediator.Send(command);
+    // @@TODO: Mixed model binding {thingId}/watch: thingId from route, markedAsWatched from json body.
+    [HttpPost("watch")]
+    public Task<VoidResult> Watch([FromBody] WatchCommand command) => _mediator.Send(command);
 }

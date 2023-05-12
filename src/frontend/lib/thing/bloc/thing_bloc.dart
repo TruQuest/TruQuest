@@ -68,6 +68,8 @@ class ThingBloc extends Bloc<ThingAction> {
         _getVerifiers(action);
       } else if (action is GetSettlementProposalsList) {
         _getSettlementProposalsList(action);
+      } else if (action is Watch) {
+        _watch(action);
       }
     });
   }
@@ -189,5 +191,9 @@ class ThingBloc extends Bloc<ThingAction> {
   void _getSettlementProposalsList(GetSettlementProposalsList action) async {
     var result = await _thingService.getSettlementProposalsList(action.thingId);
     _proposalsListChannel.add(result);
+  }
+
+  void _watch(Watch action) async {
+    await _thingService.watch(action.thingId, action.markedAsWatched);
   }
 }

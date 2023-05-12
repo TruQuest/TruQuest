@@ -22,4 +22,9 @@ internal class WatchedItemRepository : Repository<WatchedItem>, IWatchedItemRepo
     {
         _dbContext.WatchList.Add(watchedItem);
     }
+
+    public void Remove(WatchedItem watchedItem)
+    {
+        _dbContext.WatchList.Remove(watchedItem);
+    }
 }
