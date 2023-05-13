@@ -7,62 +7,53 @@ namespace API.Hubs.Clients;
 
 internal class ClientNotifier : IClientNotifier
 {
+    private readonly ILogger<ClientNotifier> _logger;
     private readonly IHubContext<TruQuestHub, ITruQuestClient> _hubContext;
 
-    public ClientNotifier(IHubContext<TruQuestHub, ITruQuestClient> hubContext)
+    public ClientNotifier(
+        ILogger<ClientNotifier> logger,
+        IHubContext<TruQuestHub, ITruQuestClient> hubContext
+    )
     {
+        _logger = logger;
         _hubContext = hubContext;
+    }
+
+    public Task SubscribeToStream(string connectionId, string updateStreamIdentifier)
+    {
+        return _hubContext.Groups.AddToGroupAsync(connectionId, updateStreamIdentifier);
+    }
+
+    public Task UnsubscribeFromStream(string connectionId, string updateStreamIdentifier)
+    {
+        return _hubContext.Groups.RemoveFromGroupAsync(connectionId, updateStreamIdentifier);
     }
 
     public Task TellAboutNewThingDraftCreationProgress(string userId, Guid thingId, int percent) =>
         _hubContext.Clients.User(userId).TellAboutNewThingDraftCreationProgress(thingId.ToString(), percent);
-
-    public Task TellThatNewThingDraftCreatedSuccessfully(string userId, Guid thingId)
-    {
-        return Task.CompletedTask;
-    }
-
-    public Task SubscribeToThing(string connectionId, Guid thingId)
-    {
-        return _hubContext.Groups.AddToGroupAsync(connectionId, $"thing:{thingId}");
-    }
-
-    public Task UnsubscribeFromThing(string connectionId, Guid thingId)
-    {
-        return _hubContext.Groups.RemoveFromGroupAsync(connectionId, $"thing:{thingId}");
-    }
-
-    public Task NotifyThingStateChanged(Guid thingId, ThingState state)
-    {
-        return _hubContext.Clients.Group($"thing:{thingId}").NotifyThingStateChanged(thingId.ToString(), (int)state);
-    }
-
-    public Task SubscribeToSettlementProposal(string connectionId, Guid proposalId)
-    {
-        return _hubContext.Groups.AddToGroupAsync(connectionId, $"proposal:{proposalId}");
-    }
-
-    public Task UnsubscribeFromSettlementProposal(string connectionId, Guid proposalId)
-    {
-        return _hubContext.Groups.RemoveFromGroupAsync(connectionId, $"proposal:{proposalId}");
-    }
 
     public Task TellAboutNewSettlementProposalDraftCreationProgress(string userId, Guid proposalId, int percent) =>
         _hubContext.Clients.User(userId).TellAboutNewSettlementProposalDraftCreationProgress(
             proposalId.ToString(), percent
         );
 
-    public Task NotifySettlementProposalStateChanged(Guid proposalId, SettlementProposalState state)
-    {
-        return _hubContext.Clients
-            .Group($"proposal:{proposalId}")
-            .NotifySettlementProposalStateChanged(proposalId.ToString(), (int)state);
-    }
-
-    public Task NotifyUsersAboutItemUpdate(
+    public async Task NotifyUsersAboutItemUpdate(
         IEnumerable<string> userIds, long updateTimestamp, WatchedItemType itemType,
         Guid itemId, int itemUpdateCategory, string title, string? details
-    ) => _hubContext.Clients.Users(userIds).NotifyAboutItemUpdate(
-        updateTimestamp, (int)itemType, itemId.ToString(), itemUpdateCategory, title, details
-    );
+    )
+    {
+        var updateStreamIdentifier = (itemType == WatchedItemType.Subject ? "/subjects" :
+            itemType == WatchedItemType.Thing ? "/things" : "/proposals") + $"/{itemId}";
+
+        await _hubContext.Clients.Group(updateStreamIdentifier).NotifyAboutItemUpdate(
+            updateTimestamp, (int)itemType, itemId.ToString(), itemUpdateCategory, title, details
+        );
+
+        // @@TODO: If user watches an item and also happens to be on the item's page at the moment,
+        // he will receive the same update notification twice. Is there some way to deal with it server-side?
+
+        await _hubContext.Clients.Users(userIds).NotifyAboutItemUpdate(
+            updateTimestamp, (int)itemType, itemId.ToString(), itemUpdateCategory, title, details
+        );
+    }
 }

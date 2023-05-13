@@ -3,9 +3,10 @@ using Microsoft.AspNetCore.SignalR;
 using MediatR;
 
 using Domain.Results;
-using ThingCommands = Application.Thing.Commands;
-using SettlementCommands = Application.Settlement.Commands;
 using Application.User.Queries.GetWatchListUpdates;
+using Application.User.Commands.SubscribeToUpdates;
+using Application.User.Commands.UnsubscribeFromUpdates;
+using Application.User.Commands.UnsubThenSubToUpdates;
 
 using API.Hubs.Clients;
 using API.Hubs.Filters;
@@ -46,22 +47,11 @@ public class TruQuestHub : Hub<ITruQuestClient>
     }
 
     [AddConnectionIdProviderToMethodInvocationScope]
-    public Task<VoidResult> SubscribeToThingUpdates(
-        ThingCommands.SubscribeToUpdates.SubscribeToUpdatesCommand command
-    ) => _mediator.Send(command);
+    public Task<VoidResult> SubscribeToUpdates(SubscribeToUpdatesCommand command) => _mediator.Send(command);
 
     [AddConnectionIdProviderToMethodInvocationScope]
-    public Task<VoidResult> UnsubscribeFromThingUpdates(
-        ThingCommands.UnsubscribeFromUpdates.UnsubscribeFromUpdatesCommand command
-    ) => _mediator.Send(command);
+    public Task<VoidResult> UnsubscribeFromUpdates(UnsubscribeFromUpdatesCommand command) => _mediator.Send(command);
 
     [AddConnectionIdProviderToMethodInvocationScope]
-    public Task<VoidResult> SubscribeToProposalUpdates(
-        SettlementCommands.SubscribeToUpdates.SubscribeToUpdatesCommand command
-    ) => _mediator.Send(command);
-
-    [AddConnectionIdProviderToMethodInvocationScope]
-    public Task<VoidResult> UnsubscribeFromProposalUpdates(
-        SettlementCommands.UnsubscribeFromUpdates.UnsubscribeFromUpdatesCommand command
-    ) => _mediator.Send(command);
+    public Task<VoidResult> UnsubThenSubToUpdates(UnsubThenSubToUpdatesCommand command) => _mediator.Send(command);
 }

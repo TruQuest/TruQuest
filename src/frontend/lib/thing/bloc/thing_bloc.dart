@@ -56,8 +56,6 @@ class ThingBloc extends Bloc<ThingAction> {
         _joinLottery(action);
       } else if (action is GetVerifierLotteryParticipants) {
         _getVerifierLotteryParticipants(action);
-      } else if (action is UnsubscribeFromThing) {
-        _unsubscribeFromThing(action);
       } else if (action is GetAcceptancePollInfo) {
         _getAcceptancePollInfo(action);
       } else if (action is CastVoteOffChain) {
@@ -81,10 +79,6 @@ class ThingBloc extends Bloc<ThingAction> {
 
   void _getThing(GetThing action) async {
     var result = await _thingService.getThing(action.thingId);
-    if (action.subscribe) {
-      await _thingService.subscribeToThing(action.thingId);
-    }
-
     if (result.thing.state == ThingStateVm.awaitingFunding) {
       bool thingFunded =
           await _thingService.checkThingAlreadyFunded(action.thingId);
@@ -147,10 +141,6 @@ class ThingBloc extends Bloc<ThingAction> {
     _verifierLotteryParticipantsChannel.add(
       GetVerifierLotteryParticipantsSuccessVm(entries: result.entries),
     );
-  }
-
-  void _unsubscribeFromThing(UnsubscribeFromThing action) async {
-    await _thingService.unsubscribeFromThing(action.thingId);
   }
 
   void _getAcceptancePollInfo(GetAcceptancePollInfo action) async {

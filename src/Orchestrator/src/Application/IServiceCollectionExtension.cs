@@ -2,8 +2,6 @@ using System.Reflection;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using MediatR;
-
 using Application.Common.Behaviors;
 
 namespace Application;
@@ -12,9 +10,14 @@ public static class IServiceCollectionExtension
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        services.AddMediatR(Assembly.GetExecutingAssembly());
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(AuthorizationBehavior<,>));
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>));
+        services.AddMediatR(config =>
+        {
+            config.Lifetime = ServiceLifetime.Scoped;
+            config.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+            config.NotificationPublisherType = typeof(NotificationPublisher);
+            config.AddOpenBehavior(typeof(AuthorizationBehavior<,>), ServiceLifetime.Scoped);
+            config.AddOpenBehavior(typeof(TransactionBehavior<,>), ServiceLifetime.Scoped);
+        });
 
         return services;
     }

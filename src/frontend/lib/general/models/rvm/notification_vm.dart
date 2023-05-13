@@ -26,4 +26,18 @@ class NotificationVm {
         ),
         title = map['title'],
         details = map['details'];
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is NotificationVm &&
+          runtimeType == other.runtimeType &&
+          itemType == other.itemType &&
+          itemId == other.itemId &&
+          itemUpdateCategory == other.itemUpdateCategory &&
+          updateTimestamp == other.updateTimestamp;
+
+  @override
+  int get hashCode =>
+      '$itemType:$itemId:$itemUpdateCategory:$updateTimestamp'.hashCode;
 }

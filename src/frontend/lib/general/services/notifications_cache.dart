@@ -11,7 +11,7 @@ import 'server_connector.dart';
 class NotificationsCache {
   final UserApiService _userApiService;
 
-  final List<NotificationVm> _unreadNotifications = [];
+  final Set<NotificationVm> _unreadNotifications = {};
 
   final BehaviorSubject<int> _unreadNotificationsCountChannel =
       BehaviorSubject<int>();
@@ -83,9 +83,8 @@ class NotificationsCache {
   }
 
   Future remove(List<NotificationVm> notifications) async {
-    _unreadNotifications.removeWhere((n) => notifications.contains(n));
+    _unreadNotifications.removeAll(notifications);
     _notify();
-
     await _userApiService.markNotificationsAsRead(notifications);
   }
 }

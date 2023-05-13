@@ -58,10 +58,6 @@ class ThingService {
     return result;
   }
 
-  Future subscribeToThing(String thingId) async {
-    await _thingApiService.subscribeToThing(thingId);
-  }
-
   Future<bool> checkThingAlreadyFunded(String thingId) {
     return _truQuestContract.checkThingAlreadyFunded(thingId);
   }
@@ -119,10 +115,6 @@ class ThingService {
   ) async {
     var result = await _thingApiService.getVerifierLotteryParticipants(thingId);
     return result;
-  }
-
-  Future unsubscribeFromThing(String thingId) async {
-    await _thingApiService.unsubscribeFromThing(thingId);
   }
 
   Future<Tuple4<int?, int, bool?, int>> getAcceptancePollInfo(

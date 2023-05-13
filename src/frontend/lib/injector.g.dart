@@ -28,15 +28,11 @@ class _$Injector extends Injector {
       ..registerSingleton((c) => ThingBloc(c<ThingService>()))
       ..registerFactory((c) => DocumentContext())
       ..registerSingleton((c) => NotificationBloc(
-          c<NotificationsCache>(),
-          c<ThingService>(),
-          c<ThingApiService>(),
-          c<SettlementService>(),
-          c<SettlementApiService>()))
+          c<NotificationsCache>(), c<ThingService>(), c<SettlementService>()))
       ..registerSingleton((c) => SubjectBloc(c<SubjectService>()))
       ..registerSingleton((c) => SubjectService(c<SubjectApiService>()))
       ..registerSingleton((c) => SubjectApiService(c<ServerConnector>()))
-      ..registerFactory((c) => PageContext())
+      ..registerSingleton((c) => PageContext())
       ..registerSingleton((c) => TruQuestContract(c<EthereumService>()))
       ..registerSingleton(
           (c) => ThingSubmissionVerifierLotteryContract(c<EthereumService>()))
@@ -53,6 +49,8 @@ class _$Injector extends Injector {
           (c) => ThingAssessmentVerifierLotteryContract(c<EthereumService>()))
       ..registerSingleton((c) => AssessmentPollContract(c<EthereumService>()))
       ..registerSingleton(
-          (c) => NotificationsCache(c<UserApiService>(), c<ServerConnector>()));
+          (c) => NotificationsCache(c<UserApiService>(), c<ServerConnector>()))
+      ..registerSingleton(
+          (c) => SubscriptionManager(c<PageContext>(), c<ServerConnector>()));
   }
 }

@@ -18,9 +18,8 @@ class CreateNewThingDraft
 
 class GetThing extends ThingAction {
   final String thingId;
-  final bool subscribe;
 
-  GetThing({required this.thingId, this.subscribe = false});
+  GetThing({required this.thingId});
 }
 
 class SubmitNewThing extends ThingActionAwaitable<SubmitNewThingSuccessVm?> {
@@ -58,12 +57,6 @@ class GetVerifierLotteryParticipants extends ThingAction {
   final String thingId;
 
   GetVerifierLotteryParticipants({required this.thingId});
-}
-
-class UnsubscribeFromThing extends ThingAction {
-  final String thingId;
-
-  UnsubscribeFromThing({required this.thingId});
 }
 
 class GetAcceptancePollInfo

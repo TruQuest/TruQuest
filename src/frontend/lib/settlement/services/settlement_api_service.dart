@@ -7,8 +7,6 @@ import 'package:tuple/tuple.dart';
 import '../models/im/cast_assessment_poll_vote_command.dart';
 import '../models/im/decision_im.dart';
 import '../models/im/new_assessment_poll_vote_im.dart';
-import '../models/im/subscribe_to_updates_command.dart';
-import '../models/im/unsubscribe_from_updates_command.dart';
 import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
 import '../models/rvm/get_settlement_proposal_rvm.dart';
 import '../models/im/new_settlement_proposal_im.dart';
@@ -27,7 +25,6 @@ import '../../general/services/server_connector.dart';
 import '../errors/settlement_error.dart';
 import '../models/im/supporting_evidence_im.dart';
 import '../models/rvm/get_verifiers_rvm.dart';
-import '../models/rvm/settlement_proposal_state_vm.dart';
 import '../models/rvm/submit_new_settlement_proposal_rvm.dart';
 
 class SettlementApiService {
@@ -35,12 +32,6 @@ class SettlementApiService {
   final Dio _dio;
 
   final Map<String, StreamController<int>> _proposalIdToProgressChannel = {};
-
-  final StreamController<Tuple3<SettlementEventType, String, Object?>>
-      _proposalEventChannel =
-      StreamController<Tuple3<SettlementEventType, String, Object?>>();
-  Stream<Tuple3<SettlementEventType, String, Object?>> get proposalEvent$ =>
-      _proposalEventChannel.stream;
 
   SettlementApiService(this._serverConnector) : _dio = _serverConnector.dio {
     _serverConnector.serverEvent$
@@ -56,16 +47,8 @@ class SettlementApiService {
             _proposalIdToProgressChannel[proposalId]!.add(percent);
             if (percent == 100) {
               _proposalIdToProgressChannel.remove(proposalId)!.close();
-              _proposalEventChannel.add(
-                Tuple3(SettlementEventType.draftCreated, proposalId, null),
-              );
             }
           }
-        } else if (settlementEventType == SettlementEventType.stateChanged) {
-          var state = data.item3 as SettlementProposalStateVm;
-          _proposalEventChannel.add(
-            Tuple3(settlementEventType, proposalId, state),
-          );
         }
       },
     );
@@ -195,44 +178,6 @@ class SettlementApiService {
       return GetSettlementProposalRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
       throw _wrapError(error);
-    }
-  }
-
-  Future subscribeToProposal(String proposalId) async {
-    var hubConnection = _serverConnector.hubConnection;
-    if (hubConnection == null) {
-      print('Not connected to hub!');
-      return;
-    }
-
-    try {
-      await hubConnection.invoke(
-        'SubscribeToProposalUpdates',
-        args: [
-          SubscribeToUpdatesCommand(proposalId: proposalId),
-        ],
-      );
-    } on Exception catch (ex) {
-      throw _wrapHubException(ex);
-    }
-  }
-
-  Future unsubscribeFromProposal(String proposalId) async {
-    var hubConnection = _serverConnector.hubConnection;
-    if (hubConnection == null) {
-      print('Not connected to hub!');
-      return;
-    }
-
-    try {
-      await hubConnection.invoke(
-        'UnsubscribeFromProposalUpdates',
-        args: [
-          UnsubscribeFromUpdatesCommand(proposalId: proposalId),
-        ],
-      );
-    } on Exception catch (ex) {
-      throw _wrapHubException(ex);
     }
   }
 

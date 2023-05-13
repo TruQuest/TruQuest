@@ -5,9 +5,11 @@ using ThingDm = Domain.Aggregates.Thing;
 
 using Application.Thing.Common.Models.IM;
 using Application.Common.Interfaces;
+using Application.Common.Attributes;
 
 namespace Application.Thing.Events.AttachmentsArchivingCompleted;
 
+[ExecuteInTxn]
 public class AttachmentsArchivingCompletedEvent : INotification
 {
     public required string SubmitterId { get; init; }
@@ -19,14 +21,20 @@ internal class AttachmentsArchivingCompletedEventHandler : INotificationHandler<
 {
     private readonly IClientNotifier _clientNotifier;
     private readonly IThingRepository _thingRepository;
+    private readonly IThingUpdateRepository _thingUpdateRepository;
+    private readonly IWatchedItemRepository _watchedItemRepository;
 
     public AttachmentsArchivingCompletedEventHandler(
         IClientNotifier clientNotifier,
-        IThingRepository thingRepository
+        IThingRepository thingRepository,
+        IThingUpdateRepository thingUpdateRepository,
+        IWatchedItemRepository watchedItemRepository
     )
     {
         _clientNotifier = clientNotifier;
         _thingRepository = thingRepository;
+        _thingUpdateRepository = thingUpdateRepository;
+        _watchedItemRepository = watchedItemRepository;
     }
 
     public async Task Handle(AttachmentsArchivingCompletedEvent @event, CancellationToken ct)
@@ -54,6 +62,28 @@ internal class AttachmentsArchivingCompletedEventHandler : INotificationHandler<
 
         _thingRepository.Create(thing);
 
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        foreach (var category in Enum.GetValues<ThingUpdateCategory>())
+        {
+            _watchedItemRepository.Add(new WatchedItem(
+                userId: @event.SubmitterId,
+                itemType: WatchedItemType.Thing,
+                itemId: thing.Id,
+                itemUpdateCategory: (int)category,
+                lastSeenUpdateTimestamp: now
+            ));
+        }
+
+        await _thingUpdateRepository.AddOrUpdate(new ThingUpdate(
+            thingId: thing.Id,
+            category: ThingUpdateCategory.General,
+            updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            title: "Draft created",
+            details: "Click to open the newly created draft"
+        ));
+
         await _thingRepository.SaveChanges();
+        await _watchedItemRepository.SaveChanges();
+        await _thingUpdateRepository.SaveChanges();
     }
 }

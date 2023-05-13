@@ -34,16 +34,7 @@ class _ThingPageState extends StateX<ThingPage> {
   @override
   void initState() {
     super.initState();
-    _thingBloc.dispatch(GetThing(
-      thingId: widget.thingId,
-      subscribe: true,
-    ));
-  }
-
-  @override
-  void dispose() {
-    _thingBloc.dispatch(UnsubscribeFromThing(thingId: widget.thingId));
-    super.dispose();
+    _thingBloc.dispatch(GetThing(thingId: widget.thingId));
   }
 
   List<Widget> _buildTabs(ThingVm thing) {

@@ -33,19 +33,8 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
   void initState() {
     super.initState();
     _settlementBloc.dispatch(
-      GetSettlementProposal(
-        proposalId: widget.proposalId,
-        subscribe: true,
-      ),
+      GetSettlementProposal(proposalId: widget.proposalId),
     );
-  }
-
-  @override
-  void dispose() {
-    _settlementBloc.dispatch(
-      UnsubscribeFromProposal(proposalId: widget.proposalId),
-    );
-    super.dispose();
   }
 
   List<Widget> _buildTabs(SettlementProposalVm proposal) {

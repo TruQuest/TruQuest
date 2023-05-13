@@ -6,7 +6,6 @@ using NpgsqlTypes;
 
 using Domain.Aggregates;
 using Application.Common.Interfaces;
-using Application.User.Commands.MarkNotificationsAsRead;
 
 namespace Infrastructure.Persistence.Repositories;
 

@@ -52,8 +52,6 @@ class SettlementBloc extends Bloc<SettlementAction> {
         _joinLottery(action);
       } else if (action is GetVerifierLotteryParticipants) {
         _getVerifierLotteryParticipants(action);
-      } else if (action is UnsubscribeFromProposal) {
-        _unsubscribeFromProposal(action);
       } else if (action is GetAssessmentPollInfo) {
         _getAssessmentPollInfo(action);
       } else if (action is CastVoteOffChain) {
@@ -79,10 +77,6 @@ class SettlementBloc extends Bloc<SettlementAction> {
     var result = await _settlementService.getSettlementProposal(
       action.proposalId,
     );
-    if (action.subscribe) {
-      await _settlementService.subscribeToProposal(action.proposalId);
-    }
-
     if (result.proposal.state == SettlementProposalStateVm.awaitingFunding) {
       bool aProposalAlreadyBeingAssessed = await _settlementService
           .checkThingAlreadyHasSettlementProposalUnderAssessment(
@@ -97,10 +91,6 @@ class SettlementBloc extends Bloc<SettlementAction> {
     }
 
     _proposalChannel.add(result);
-  }
-
-  void _unsubscribeFromProposal(UnsubscribeFromProposal action) async {
-    await _settlementService.unsubscribeFromProposal(action.proposalId);
   }
 
   void _submitNewSettlementProposal(SubmitNewSettlementProposal action) async {

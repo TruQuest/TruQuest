@@ -4,11 +4,11 @@ using Domain.Results;
 
 using Application.Common.Interfaces;
 
-namespace Application.Settlement.Commands.SubscribeToUpdates;
+namespace Application.User.Commands.SubscribeToUpdates;
 
 public class SubscribeToUpdatesCommand : IRequest<VoidResult>
 {
-    public required Guid ProposalId { get; init; }
+    public required string UpdateStreamIdentifier { get; init; }
 }
 
 internal class SubscribeToUpdatesCommandHandler : IRequestHandler<SubscribeToUpdatesCommand, VoidResult>
@@ -27,7 +27,7 @@ internal class SubscribeToUpdatesCommandHandler : IRequestHandler<SubscribeToUpd
 
     public async Task<VoidResult> Handle(SubscribeToUpdatesCommand command, CancellationToken ct)
     {
-        await _clientNotifier.SubscribeToSettlementProposal(_connectionIdProvider.ConnectionId, command.ProposalId);
+        await _clientNotifier.SubscribeToStream(_connectionIdProvider.ConnectionId, command.UpdateStreamIdentifier);
         return VoidResult.Instance;
     }
 }

@@ -22,7 +22,7 @@ class SubjectsPage extends StatefulWidget {
 }
 
 class _SubjectsPageState extends StateX<SubjectsPage> {
-  late final _pageContext = useScoped<PageContext>();
+  late final _pageContext = use<PageContext>();
   late final _subjectBloc = use<SubjectBloc>();
 
   @override
@@ -194,10 +194,7 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
           );
 
           if (jumpToRoute != null) {
-            _pageContext.route = jumpToRoute;
-            _pageContext.controller.jumpToPage(
-              DateTime.now().millisecondsSinceEpoch,
-            );
+            _pageContext.goto(jumpToRoute);
           }
         },
       ),

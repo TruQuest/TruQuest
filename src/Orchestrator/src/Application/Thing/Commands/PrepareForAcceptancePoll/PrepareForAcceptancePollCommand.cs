@@ -25,22 +25,22 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
     private readonly IThingRepository _thingRepository;
     private readonly ITaskRepository _taskRepository;
     private readonly IJoinedThingSubmissionVerifierLotteryEventRepository _joinedThingSubmissionVerifierLotteryEventRepository;
+    private readonly IThingUpdateRepository _thingUpdateRepository;
     private readonly IContractStorageQueryable _contractStorageQueryable;
-    private readonly IClientNotifier _clientNotifier;
 
     public PrepareForAcceptancePollCommandHandler(
         IThingRepository thingRepository,
         ITaskRepository taskRepository,
         IJoinedThingSubmissionVerifierLotteryEventRepository joinedThingSubmissionVerifierLotteryEventRepository,
-        IContractStorageQueryable contractStorageQueryable,
-        IClientNotifier clientNotifier
+        IThingUpdateRepository thingUpdateRepository,
+        IContractStorageQueryable contractStorageQueryable
     )
     {
         _thingRepository = thingRepository;
         _taskRepository = taskRepository;
         _joinedThingSubmissionVerifierLotteryEventRepository = joinedThingSubmissionVerifierLotteryEventRepository;
+        _thingUpdateRepository = thingUpdateRepository;
         _contractStorageQueryable = contractStorageQueryable;
-        _clientNotifier = clientNotifier;
     }
 
     public async Task<VoidResult> Handle(PrepareForAcceptancePollCommand command, CancellationToken ct)
@@ -72,13 +72,18 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
             );
             _joinedThingSubmissionVerifierLotteryEventRepository.Create(joinedThingSubmissionVerifierLotteryEvent);
 
+            await _thingUpdateRepository.AddOrUpdate(new ThingUpdate(
+                thingId: thing.Id,
+                category: ThingUpdateCategory.General,
+                updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                title: "Thing verifier lottery completed",
+                details: "Acceptance poll initiated"
+            ));
+
             await _thingRepository.SaveChanges();
             await _taskRepository.SaveChanges();
             await _joinedThingSubmissionVerifierLotteryEventRepository.SaveChanges();
-
-            // @@TODO: Should monitor state changes with debezium and notify /then/, because notifying here
-            // risks false positives, since txn gets committed only later and it might get reverted.
-            await _clientNotifier.NotifyThingStateChanged(thing.Id, thing.State);
+            await _thingUpdateRepository.SaveChanges();
         }
 
         return VoidResult.Instance;

@@ -61,14 +61,6 @@ class SettlementService {
     return result;
   }
 
-  Future subscribeToProposal(String proposalId) async {
-    await _settlementApiService.subscribeToProposal(proposalId);
-  }
-
-  Future unsubscribeFromProposal(String proposalId) async {
-    await _settlementApiService.unsubscribeFromProposal(proposalId);
-  }
-
   Future<bool> checkThingAlreadyHasSettlementProposalUnderAssessment(
     String thingId,
   ) {

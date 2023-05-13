@@ -7,8 +7,6 @@ import 'package:tuple/tuple.dart';
 
 import '../models/rvm/notification_vm.dart';
 import '../models/rvm/watched_item_type_vm.dart';
-import '../../settlement/models/rvm/settlement_proposal_state_vm.dart';
-import '../../thing/models/rvm/thing_state_vm.dart';
 
 enum ServerEventType {
   notification,
@@ -23,14 +21,10 @@ enum NotificationEventType {
 
 enum ThingEventType {
   draftCreationProgress,
-  draftCreated,
-  stateChanged,
 }
 
 enum SettlementEventType {
   draftCreationProgress,
-  draftCreated,
-  stateChanged,
 }
 
 class ServerConnector {
@@ -128,24 +122,6 @@ class ServerConnector {
     );
 
     hubConnection.on(
-      'NotifyThingStateChanged',
-      (List<Object?>? args) {
-        var thingId = args!.first as String;
-        Object state = ThingStateVm.values[args.last as int];
-        _serverEventChannel.add(
-          Tuple2(
-            ServerEventType.thing,
-            Tuple3(
-              ThingEventType.stateChanged,
-              thingId,
-              state,
-            ),
-          ),
-        );
-      },
-    );
-
-    hubConnection.on(
       'TellAboutNewSettlementProposalDraftCreationProgress',
       (List<Object?>? args) {
         var proposalId = args!.first as String;
@@ -156,24 +132,6 @@ class ServerConnector {
               SettlementEventType.draftCreationProgress,
               proposalId,
               args.last!,
-            ),
-          ),
-        );
-      },
-    );
-
-    hubConnection.on(
-      'NotifySettlementProposalStateChanged',
-      (List<Object?>? args) {
-        var proposalId = args!.first as String;
-        Object state = SettlementProposalStateVm.values[args.last as int];
-        _serverEventChannel.add(
-          Tuple2(
-            ServerEventType.settlement,
-            Tuple3(
-              SettlementEventType.stateChanged,
-              proposalId,
-              state,
             ),
           ),
         );

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
 import 'package:easy_sidemenu/easy_sidemenu.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
 import '../../settlement/pages/settlement_proposal_page.dart';
@@ -12,6 +11,7 @@ import '../contexts/page_context.dart';
 import '../../subject/pages/subjects_page.dart';
 import '../bloc/notification_bloc.dart';
 import '../../widget_extensions.dart';
+import '../services/subscription_manager.dart';
 import '../widgets/status_panel.dart';
 
 class HomePage extends StatefulWidget {
@@ -23,10 +23,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends StateX<HomePage> {
   late final _notificationBloc = use<NotificationBloc>();
-  late final _pageContext = useScoped<PageContext>();
-
-  late final PageController _pageController = _pageContext.controller;
-  late final FToast fToast;
+  late final _subscriptionManager = use<SubscriptionManager>();
+  late final _pageContext = use<PageContext>();
 
   PongGame? _game;
   BoxConstraints? _gameWidgetConstraints;
@@ -34,22 +32,7 @@ class _HomePageState extends StateX<HomePage> {
   @override
   void initState() {
     super.initState();
-    fToast = FToast();
-    fToast.init(context);
-
-    _notificationBloc.notification$.listen((toastBuilder) {
-      fToast.showToast(
-        child: toastBuilder(_pageContext),
-        gravity: ToastGravity.TOP_RIGHT,
-        toastDuration: Duration(seconds: 5),
-      );
-    });
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
+    _subscriptionManager.init();
   }
 
   @override
@@ -64,7 +47,7 @@ class _HomePageState extends StateX<HomePage> {
       body: Row(
         children: [
           SideMenu(
-            controller: _pageController,
+            controller: _pageContext.controller,
             style: SideMenuStyle(
               displayMode: SideMenuDisplayMode.open,
             ),
@@ -99,53 +82,53 @@ class _HomePageState extends StateX<HomePage> {
             ),
             items: [
               SideMenuItem(
-                priority: 1,
+                priority: 0,
                 icon: Icon(Icons.person_pin),
                 title: 'Subjects',
-                onTap: () => _pageController.jumpToPage(1),
+                onTap: () => _pageContext.goto('/subjects'),
+              ),
+              SideMenuItem(
+                priority: 1,
+                icon: Icon(Icons.note),
+                title: 'Things',
+                onTap: () => _pageContext.goto('/things'),
               ),
               SideMenuItem(
                 priority: 2,
-                icon: Icon(Icons.note),
-                title: 'Things',
-                onTap: () => _pageController.jumpToPage(2),
+                icon: Icon(Icons.question_answer),
+                title: 'How To',
+                onTap: () => _pageContext.goto('/how-to'),
               ),
               SideMenuItem(
                 priority: 3,
-                icon: Icon(Icons.question_answer),
-                title: 'How To',
-                onTap: () => _pageController.jumpToPage(3),
+                icon: Icon(Icons.theater_comedy_outlined),
+                title: 'Pong!',
+                onTap: () => _pageContext.goto('/pong'),
               ),
               SideMenuItem(
                 priority: 4,
-                icon: Icon(Icons.theater_comedy_outlined),
-                title: 'Pong!',
-                onTap: () => _pageController.jumpToPage(4),
-              ),
-              SideMenuItem(
-                priority: 5,
                 icon: Icon(Icons.route),
                 title: 'Go To',
-                onTap: () => _pageController.jumpToPage(5),
+                onTap: () => _pageContext.goto('/goto'),
               ),
             ],
           ),
           Expanded(
             child: PageView.builder(
-              controller: _pageController,
+              controller: _pageContext.controller,
               physics: NeverScrollableScrollPhysics(),
               itemBuilder: (context, index) {
-                if (index == 1) {
+                if (index == 0) {
                   return SubjectsPage();
-                } else if (index == 2) {
+                } else if (index == 1) {
                   return Center(
                     child: Text('Things'),
                   );
-                } else if (index == 3) {
+                } else if (index == 2) {
                   return Center(
                     child: Text('How To'),
                   );
-                } else if (index == 4) {
+                } else if (index == 3) {
                   return LayoutBuilder(
                     builder: (context, constraints) {
                       if (_game == null ||
@@ -156,7 +139,7 @@ class _HomePageState extends StateX<HomePage> {
                       return GameWidget(game: _game!);
                     },
                   );
-                } else if (index == 5) {
+                } else if (index == 4) {
                   return Center(
                     child: TextButton(
                       child: Text('Go To'),
@@ -184,17 +167,14 @@ class _HomePageState extends StateX<HomePage> {
                         );
 
                         if (shouldGo != null && shouldGo && route.isNotEmpty) {
-                          _pageContext.route = route;
-                          _pageController.jumpToPage(
-                            DateTime.now().millisecondsSinceEpoch,
-                          );
+                          _pageContext.goto(route);
                         }
                       },
                     ),
                   );
                 }
 
-                var route = _pageContext.route!;
+                var route = _pageContext.currentRoute;
                 var routeSplit = route.split('/');
                 if (routeSplit[1] == 'subjects') {
                   var subjectId = routeSplit.last;

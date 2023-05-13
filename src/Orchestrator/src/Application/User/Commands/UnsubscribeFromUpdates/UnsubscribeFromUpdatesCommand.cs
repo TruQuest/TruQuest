@@ -4,11 +4,11 @@ using Domain.Results;
 
 using Application.Common.Interfaces;
 
-namespace Application.Thing.Commands.UnsubscribeFromUpdates;
+namespace Application.User.Commands.UnsubscribeFromUpdates;
 
 public class UnsubscribeFromUpdatesCommand : IRequest<VoidResult>
 {
-    public required Guid ThingId { get; init; }
+    public required string UpdateStreamIdentifier { get; init; }
 }
 
 internal class UnsubscribeFromUpdatesCommandHandler : IRequestHandler<UnsubscribeFromUpdatesCommand, VoidResult>
@@ -27,7 +27,7 @@ internal class UnsubscribeFromUpdatesCommandHandler : IRequestHandler<Unsubscrib
 
     public async Task<VoidResult> Handle(UnsubscribeFromUpdatesCommand command, CancellationToken ct)
     {
-        await _clientNotifier.UnsubscribeFromThing(_connectionIdProvider.ConnectionId, command.ThingId);
+        await _clientNotifier.UnsubscribeFromStream(_connectionIdProvider.ConnectionId, command.UpdateStreamIdentifier);
         return VoidResult.Instance;
     }
 }

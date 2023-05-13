@@ -71,8 +71,8 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
                 thingId: thing.Id,
                 category: ThingUpdateCategory.General,
                 updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                title: "Thing updated!!!",
-                details: "Some details"
+                title: "Thing funded",
+                details: "Verifier selection lottery initiated"
             ));
 
             await _taskRepository.SaveChanges();

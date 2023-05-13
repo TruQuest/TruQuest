@@ -42,13 +42,11 @@ internal class NotifyWatchersCommandHandler : IRequestHandler<NotifyWatchersComm
         var watcherIds = await _watchListQueryable.GetWatchersFor(
             (WatchedItemType)command.ItemType, command.ItemId
         );
-        if (watcherIds.Any())
-        {
-            await _clientNotifier.NotifyUsersAboutItemUpdate(
-                watcherIds, command.UpdateTimestamp, (WatchedItemType)command.ItemType,
-                command.ItemId, command.ItemUpdateCategory, command.Title, command.Details
-            );
-        }
+
+        await _clientNotifier.NotifyUsersAboutItemUpdate(
+            watcherIds, command.UpdateTimestamp, (WatchedItemType)command.ItemType,
+            command.ItemId, command.ItemUpdateCategory, command.Title, command.Details
+        );
 
         return VoidResult.Instance;
     }

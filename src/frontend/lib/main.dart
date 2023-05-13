@@ -3,7 +3,6 @@ import 'package:flutter/gestures.dart';
 
 import 'injector.dart';
 import 'general/pages/home_page.dart';
-import 'widget_extensions.dart';
 
 void main() {
   setup();
@@ -22,7 +21,7 @@ class App extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: ScopeX(child: HomePage()),
+      home: HomePage(),
     );
   }
 }

@@ -17,15 +17,8 @@ class CreateNewSettlementProposalDraft extends SettlementActionAwaitable<
 
 class GetSettlementProposal extends SettlementAction {
   final String proposalId;
-  final bool subscribe;
 
-  GetSettlementProposal({required this.proposalId, this.subscribe = false});
-}
-
-class UnsubscribeFromProposal extends SettlementAction {
-  final String proposalId;
-
-  UnsubscribeFromProposal({required this.proposalId});
+  GetSettlementProposal({required this.proposalId});
 }
 
 class SubmitNewSettlementProposal

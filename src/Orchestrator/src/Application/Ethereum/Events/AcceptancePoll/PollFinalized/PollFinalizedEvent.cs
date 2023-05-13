@@ -2,10 +2,11 @@ using MediatR;
 
 using Domain.Aggregates;
 
-using Application.Common.Interfaces;
+using Application.Common.Attributes;
 
 namespace Application.Ethereum.Events.AcceptancePoll.PollFinalized;
 
+[ExecuteInTxn]
 public class PollFinalizedEvent : INotification
 {
     public required long BlockNumber { get; init; }
@@ -18,12 +19,15 @@ public class PollFinalizedEvent : INotification
 internal class PollFinalizedEventHandler : INotificationHandler<PollFinalizedEvent>
 {
     private readonly IThingRepository _thingRepository;
-    private readonly IClientNotifier _clientNotifier;
+    private readonly IThingUpdateRepository _thingUpdateRepository;
 
-    public PollFinalizedEventHandler(IThingRepository thingRepository, IClientNotifier clientNotifier)
+    public PollFinalizedEventHandler(
+        IThingRepository thingRepository,
+        IThingUpdateRepository thingUpdateRepository
+    )
     {
         _thingRepository = thingRepository;
-        _clientNotifier = clientNotifier;
+        _thingUpdateRepository = thingUpdateRepository;
     }
 
     public async Task Handle(PollFinalizedEvent @event, CancellationToken ct)
@@ -36,9 +40,17 @@ internal class PollFinalizedEventHandler : INotificationHandler<PollFinalizedEve
 
             thing.SetState(ThingState.AwaitingSettlement);
             thing.SetVoteAggIpfsCid(@event.VoteAggIpfsCid);
-            await _thingRepository.SaveChanges();
 
-            await _clientNotifier.NotifyThingStateChanged(thing.Id, thing.State);
+            await _thingUpdateRepository.AddOrUpdate(new ThingUpdate(
+                thingId: thing.Id,
+                category: ThingUpdateCategory.General,
+                updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                title: "Thing acceptance poll completed",
+                details: "Awaiting settlement"
+            ));
+
+            await _thingRepository.SaveChanges();
+            await _thingUpdateRepository.SaveChanges();
         }
     }
 }

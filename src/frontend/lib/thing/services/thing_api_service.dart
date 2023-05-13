@@ -11,9 +11,6 @@ import '../../general/errors/vote_error.dart';
 import '../models/im/cast_acceptance_poll_vote_command.dart';
 import '../models/im/decision_im.dart';
 import '../models/im/new_acceptance_poll_vote_im.dart';
-import '../models/im/unsubscribe_from_updates_command.dart';
-import '../models/rvm/thing_state_vm.dart';
-import '../models/im/subscribe_to_updates_command.dart';
 import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
 import '../models/rvm/get_thing_rvm.dart';
 import '../models/im/submit_new_thing_command.dart';
@@ -38,12 +35,6 @@ class ThingApiService {
 
   final Map<String, StreamController<int>> _thingIdToProgressChannel = {};
 
-  final StreamController<Tuple3<ThingEventType, String, Object?>>
-      _thingEventChannel =
-      StreamController<Tuple3<ThingEventType, String, Object?>>();
-  Stream<Tuple3<ThingEventType, String, Object?>> get thingEvent$ =>
-      _thingEventChannel.stream;
-
   ThingApiService(this._serverConnector) : _dio = _serverConnector.dio {
     _serverConnector.serverEvent$
         .where((event) => event.item1 == ServerEventType.thing)
@@ -58,14 +49,8 @@ class ThingApiService {
             _thingIdToProgressChannel[thingId]!.add(percent);
             if (percent == 100) {
               _thingIdToProgressChannel.remove(thingId)!.close();
-              _thingEventChannel.add(
-                Tuple3(ThingEventType.draftCreated, thingId, null),
-              );
             }
           }
-        } else if (thingEventType == ThingEventType.stateChanged) {
-          var state = data.item3 as ThingStateVm;
-          _thingEventChannel.add(Tuple3(thingEventType, thingId, state));
         }
       },
     );
@@ -195,25 +180,6 @@ class ThingApiService {
     }
   }
 
-  Future subscribeToThing(String thingId) async {
-    var hubConnection = _serverConnector.hubConnection;
-    if (hubConnection == null) {
-      print('Not connected to hub!');
-      return;
-    }
-
-    try {
-      await hubConnection.invoke(
-        'SubscribeToThingUpdates',
-        args: [
-          SubscribeToUpdatesCommand(thingId: thingId),
-        ],
-      );
-    } on Exception catch (ex) {
-      throw _wrapHubException(ex);
-    }
-  }
-
   Future<SubmitNewThingRvm> submitNewThing(String thingId) async {
     try {
       var response = await _dio.post(
@@ -240,25 +206,6 @@ class ThingApiService {
       );
     } on DioError catch (error) {
       throw _wrapError(error);
-    }
-  }
-
-  Future unsubscribeFromThing(String thingId) async {
-    var hubConnection = _serverConnector.hubConnection;
-    if (hubConnection == null) {
-      print('Not connected to hub!');
-      return;
-    }
-
-    try {
-      await hubConnection.invoke(
-        'UnsubscribeFromThingUpdates',
-        args: [
-          UnsubscribeFromUpdatesCommand(thingId: thingId),
-        ],
-      );
-    } on Exception catch (ex) {
-      throw _wrapHubException(ex);
     }
   }
 
