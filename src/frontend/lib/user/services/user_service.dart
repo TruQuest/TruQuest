@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../../general/services/local_storage.dart';
 import '../../general/services/server_connector.dart';
 import '../../general/errors/error.dart';
 import 'user_api_service.dart';
@@ -10,9 +11,7 @@ class UserService {
   final EthereumService _ethereumService;
   final UserApiService _userApiService;
   final ServerConnector _serverConnector;
-
-  final Map<String, String> _accountToJwt = {};
-  final Map<String, String> _accountToUsername = {};
+  final LocalStorage _localStorage;
 
   final StreamController<UserVm> _currentUserChangedEventChannel =
       StreamController<UserVm>();
@@ -23,6 +22,7 @@ class UserService {
     this._ethereumService,
     this._userApiService,
     this._serverConnector,
+    this._localStorage,
   ) {
     _ethereumService.connectedAccountChanged$.listen(
       (account) => _reloadUser(account),
@@ -31,17 +31,18 @@ class UserService {
 
   void _reloadUser(String? account) {
     final UserAccountState state;
+    List<String>? userData;
     String? username;
     if (account == null) {
       state = UserAccountState.guest;
       _serverConnector.connectToHub(null);
-    } else if (!_accountToJwt.containsKey(account)) {
+    } else if ((userData = _localStorage.getStrings(account)) == null) {
       state = UserAccountState.connectedNotLoggedIn;
       _serverConnector.connectToHub(null);
     } else {
       state = UserAccountState.connectedAndLoggedIn;
-      username = _accountToUsername[account];
-      _serverConnector.connectToHub(_accountToJwt[account]!);
+      username = userData!.last;
+      _serverConnector.connectToHub(userData.first);
     }
 
     _currentUserChangedEventChannel.add(UserVm(
@@ -58,8 +59,7 @@ class UserService {
   ) async {
     try {
       var result = await _userApiService.signUp(username, signature);
-      _accountToJwt[account] = result.token;
-      _accountToUsername[account] = username;
+      await _localStorage.setStrings(account, [result.token, username]);
       // connectedAccount here can actually be different from account
       _reloadUser(_ethereumService.connectedAccount);
     } on Error catch (e) {
@@ -90,8 +90,10 @@ class UserService {
       signature,
     );
 
-    _accountToJwt[account] = signInResult.token;
-    _accountToUsername[account] = signInResult.username;
+    await _localStorage.setStrings(
+      account,
+      [signInResult.token, signInResult.username],
+    );
     // connectedAccount here can actually be different from account
     _reloadUser(_ethereumService.connectedAccount);
   }

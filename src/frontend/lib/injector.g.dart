@@ -12,8 +12,8 @@ class _$Injector extends Injector {
     final KiwiContainer container = KiwiContainer();
     container
       ..registerSingleton((c) => UserBloc(c<UserService>()))
-      ..registerSingleton((c) => UserService(
-          c<EthereumService>(), c<UserApiService>(), c<ServerConnector>()))
+      ..registerSingleton((c) => UserService(c<EthereumService>(),
+          c<UserApiService>(), c<ServerConnector>(), c<LocalStorage>()))
       ..registerSingleton((c) => EthereumBloc(c<EthereumService>()))
       ..registerSingleton((c) => EthereumService())
       ..registerSingleton((c) => ServerConnector())

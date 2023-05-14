@@ -9,5 +9,10 @@ class LocalStorage {
 
   String? getString(String key) => _prefs.getString(key);
 
+  List<String>? getStrings(String key) => _prefs.getStringList(key);
+
   Future setString(String key, String value) => _prefs.setString(key, value);
+
+  Future setStrings(String key, List<String> value) =>
+      _prefs.setStringList(key, value);
 }
