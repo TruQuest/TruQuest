@@ -9,6 +9,7 @@ import '../models/rvm/notification_vm.dart';
 import '../models/rvm/watched_item_type_vm.dart';
 
 enum ServerEventType {
+  connected,
   notification,
   thing,
   settlement,
@@ -187,6 +188,8 @@ class ServerConnector {
     );
 
     await hubConnection.start(); // @@TODO: Handle error.
+
+    _serverEventChannel.add(Tuple2(ServerEventType.connected, true));
   }
 
   Future _disconnectFromHub() async {

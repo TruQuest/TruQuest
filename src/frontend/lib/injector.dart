@@ -1,5 +1,6 @@
 import 'package:kiwi/kiwi.dart';
 
+import 'general/services/local_storage.dart';
 import 'general/services/subscription_manager.dart';
 import 'general/services/notifications_cache.dart';
 import 'general/contracts/assessment_poll_contract.dart';
@@ -54,6 +55,7 @@ abstract class Injector {
   @Register.singleton(AssessmentPollContract)
   @Register.singleton(NotificationsCache)
   @Register.singleton(SubscriptionManager)
+  @Register.singleton(LocalStorage)
   void configure();
 }
 

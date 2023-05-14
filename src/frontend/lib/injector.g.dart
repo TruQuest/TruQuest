@@ -32,7 +32,7 @@ class _$Injector extends Injector {
       ..registerSingleton((c) => SubjectBloc(c<SubjectService>()))
       ..registerSingleton((c) => SubjectService(c<SubjectApiService>()))
       ..registerSingleton((c) => SubjectApiService(c<ServerConnector>()))
-      ..registerSingleton((c) => PageContext())
+      ..registerSingleton((c) => PageContext(c<LocalStorage>()))
       ..registerSingleton((c) => TruQuestContract(c<EthereumService>()))
       ..registerSingleton(
           (c) => ThingSubmissionVerifierLotteryContract(c<EthereumService>()))
@@ -51,6 +51,7 @@ class _$Injector extends Injector {
       ..registerSingleton(
           (c) => NotificationsCache(c<UserApiService>(), c<ServerConnector>()))
       ..registerSingleton(
-          (c) => SubscriptionManager(c<PageContext>(), c<ServerConnector>()));
+          (c) => SubscriptionManager(c<PageContext>(), c<ServerConnector>()))
+      ..registerSingleton((c) => LocalStorage());
   }
 }

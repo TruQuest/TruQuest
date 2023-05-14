@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../contexts/page_context.dart';
 import '../models/im/unsub_then_sub_to_updates_command.dart';
 import '../models/im/unsubscribe_from_updates_command.dart';
@@ -11,6 +13,7 @@ class SubscriptionManager {
   final PageContext _pageContext;
   final ServerConnector _serverConnector;
 
+  final Completer _currentRouteSet = Completer();
   String? _currentRoute;
 
   SubscriptionManager(this._pageContext, this._serverConnector);
@@ -23,6 +26,21 @@ class SubscriptionManager {
         _handleComplexRoute(route);
       }
     });
+
+    _serverConnector.serverEvent$
+        .where((event) => event.item1 == ServerEventType.connected)
+        .listen((_) => _resubToLastRouteIfNecessary());
+  }
+
+  void _resubToLastRouteIfNecessary() async {
+    await _currentRouteSet.future;
+    // @@NOTE: It's possible that ServerConnector connects to the hub and reaches here before
+    // SubscriptionManager handles the initial route, which, in case of a complex one, would
+    // lead to subscribing twice – in _handleComplexRoute and here. But it's fine, since on SignalR side
+    // adding to a group is idempotent.
+    if (!_isSimpleRoute(_currentRoute!)) {
+      await _subscribeToUpdates(_currentRoute!);
+    }
   }
 
   Error _wrapHubException(Exception ex) {
@@ -43,6 +61,9 @@ class SubscriptionManager {
       await _unsubscribeFromUpdates(_currentRoute!);
     }
     _currentRoute = route;
+    if (!_currentRouteSet.isCompleted) {
+      _currentRouteSet.complete();
+    }
   }
 
   void _handleComplexRoute(String route) async {
@@ -52,6 +73,9 @@ class SubscriptionManager {
       await _subscribeToUpdates(route);
     }
     _currentRoute = route;
+    if (!_currentRouteSet.isCompleted) {
+      _currentRouteSet.complete();
+    }
   }
 
   Future _subscribeToUpdates(String updateStreamIdentifier) async {
