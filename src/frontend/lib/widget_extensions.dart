@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:kiwi/kiwi.dart';
 
-T _resolveDependency<T>() => KiwiContainer().resolve<T>();
+T resolveDependency<T>() => KiwiContainer().resolve<T>();
 
 abstract class IDisposable {
   void dispose();
@@ -40,7 +40,7 @@ class ScopeX extends InheritedWidget {
   T _resolve<T>() {
     Type t = T;
     if (!_typeToInstance.containsKey(t)) {
-      _typeToInstance[t] = _resolveDependency<T>() as Object;
+      _typeToInstance[t] = resolveDependency<T>() as Object;
     }
     return _typeToInstance[t] as T;
   }
@@ -57,7 +57,7 @@ abstract class StatelessWidgetX extends StatelessWidget {
     return provider!._resolve<T>();
   }
 
-  T use<T>() => _resolveDependency<T>();
+  T use<T>() => resolveDependency<T>();
 
   T useScoped<T>() => _resolveScoped<T>();
 
@@ -76,7 +76,7 @@ abstract class StateX<TWidget extends StatefulWidget> extends State<TWidget> {
     return provider!._resolve<T>();
   }
 
-  T use<T>() => _resolveDependency<T>();
+  T use<T>() => resolveDependency<T>();
 
   T useScoped<T>() => _resolveScoped<T>();
 }

@@ -12,9 +12,9 @@ import 'thing_actions.dart';
 class ThingBloc extends Bloc<ThingAction> {
   final ThingService _thingService;
 
-  final StreamController<GetThingRvm> _thingChannel =
-      StreamController<GetThingRvm>.broadcast();
-  Stream<GetThingRvm> get thing$ => _thingChannel.stream;
+  final StreamController<GetThingResultVm> _thingChannel =
+      StreamController<GetThingResultVm>.broadcast();
+  Stream<GetThingResultVm> get thing$ => _thingChannel.stream;
 
   final StreamController<GetVerifierLotteryInfoSuccessVm>
       _verifierLotteryInfoChannel =
@@ -79,18 +79,24 @@ class ThingBloc extends Bloc<ThingAction> {
 
   void _getThing(GetThing action) async {
     var result = await _thingService.getThing(action.thingId);
-    if (result.thing.state == ThingStateVm.awaitingFunding) {
+    if (result.isLeft) {
+      _thingChannel.add(GetThingFailureVm(message: result.left.toString()));
+      return;
+    }
+
+    var getThingResult = result.right;
+    if (getThingResult.thing.state == ThingStateVm.awaitingFunding) {
       bool thingFunded =
           await _thingService.checkThingAlreadyFunded(action.thingId);
-      result = GetThingRvm(
-        thing: result.thing.copyWith(
+      getThingResult = GetThingRvm(
+        thing: getThingResult.thing.copyWith(
           fundedAwaitingConfirmation: thingFunded,
         ),
-        signature: result.signature,
+        signature: getThingResult.signature,
       );
     }
 
-    _thingChannel.add(result);
+    _thingChannel.add(GetThingSuccessVm(result: getThingResult));
   }
 
   void _submitNewThing(SubmitNewThing action) async {

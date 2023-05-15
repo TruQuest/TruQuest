@@ -127,6 +127,7 @@ class SettlementApiService {
     Uint8List? croppedImageBytes,
     List<String> evidence,
   ) async {
+    var accessToken = (await _serverConnector.latestConnection).item2;
     try {
       var input = NewSettlementProposalIm(
         thingId: thingId,
@@ -144,7 +145,7 @@ class SettlementApiService {
       var response = await _dio.post(
         '/proposals/draft',
         options: Options(
-          headers: {'Authorization': 'Bearer ${_serverConnector.accessToken}'},
+          headers: {'Authorization': 'Bearer $accessToken'},
         ),
         data: input.toFormData(),
       );
@@ -163,14 +164,13 @@ class SettlementApiService {
   Future<GetSettlementProposalRvm> getSettlementProposal(
     String proposalId,
   ) async {
+    var accessToken = (await _serverConnector.latestConnection).item2;
     try {
       var response = await _dio.get(
         '/proposals/$proposalId',
-        options: _serverConnector.accessToken != null
+        options: accessToken != null
             ? Options(
-                headers: {
-                  'Authorization': 'Bearer ${_serverConnector.accessToken}'
-                },
+                headers: {'Authorization': 'Bearer $accessToken'},
               )
             : null,
       );
@@ -184,11 +184,12 @@ class SettlementApiService {
   Future<SubmitNewSettlementProposalRvm> submitNewSettlementProposal(
     String proposalId,
   ) async {
+    var accessToken = (await _serverConnector.latestConnection).item2;
     try {
       var response = await _dio.post(
         '/proposals/submit',
         options: Options(
-          headers: {'Authorization': 'Bearer ${_serverConnector.accessToken}'},
+          headers: {'Authorization': 'Bearer $accessToken'},
         ),
         data: SubmitNewSettlementProposalCommand(
           proposalId: proposalId,
@@ -223,11 +224,12 @@ class SettlementApiService {
     String reason,
     String signature,
   ) async {
+    var accessToken = (await _serverConnector.latestConnection).item2;
     try {
       var response = await _dio.post(
         '/proposals/$proposalId/vote',
         options: Options(
-          headers: {'Authorization': 'Bearer ${_serverConnector.accessToken}'},
+          headers: {'Authorization': 'Bearer $accessToken'},
         ),
         data: CastAssessmentPollVoteCommand(
           input: NewAssessmentPollVoteIm(

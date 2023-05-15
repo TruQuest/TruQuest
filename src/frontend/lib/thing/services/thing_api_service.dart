@@ -129,6 +129,7 @@ class ThingApiService {
     List<String> evidence,
     List<int> tags,
   ) async {
+    var accessToken = (await _serverConnector.latestConnection).item2;
     try {
       var input = NewThingIm(
         subjectId: subjectId,
@@ -145,7 +146,7 @@ class ThingApiService {
       var response = await _dio.post(
         '/things/draft',
         options: Options(
-          headers: {'Authorization': 'Bearer ${_serverConnector.accessToken}'},
+          headers: {'Authorization': 'Bearer $accessToken'},
         ),
         data: input.toFormData(),
       );
@@ -162,14 +163,13 @@ class ThingApiService {
   }
 
   Future<GetThingRvm> getThing(String thingId) async {
+    var accessToken = (await _serverConnector.latestConnection).item2;
     try {
       var response = await _dio.get(
         '/things/$thingId',
-        options: _serverConnector.accessToken != null
+        options: accessToken != null
             ? Options(
-                headers: {
-                  'Authorization': 'Bearer ${_serverConnector.accessToken}'
-                },
+                headers: {'Authorization': 'Bearer $accessToken'},
               )
             : null,
       );
@@ -181,11 +181,12 @@ class ThingApiService {
   }
 
   Future<SubmitNewThingRvm> submitNewThing(String thingId) async {
+    var accessToken = (await _serverConnector.latestConnection).item2;
     try {
       var response = await _dio.post(
         '/things/submit',
         options: Options(
-          headers: {'Authorization': 'Bearer ${_serverConnector.accessToken}'},
+          headers: {'Authorization': 'Bearer $accessToken'},
         ),
         data: SubmitNewThingCommand(thingId: thingId).toJson(),
       );
@@ -216,11 +217,12 @@ class ThingApiService {
     String reason,
     String signature,
   ) async {
+    var accessToken = (await _serverConnector.latestConnection).item2;
     try {
       var response = await _dio.post(
         '/things/$thingId/vote',
         options: Options(
-          headers: {'Authorization': 'Bearer ${_serverConnector.accessToken}'},
+          headers: {'Authorization': 'Bearer $accessToken'},
         ),
         data: CastAcceptancePollVoteCommand(
           input: NewAcceptancePollVoteIm(
@@ -250,14 +252,13 @@ class ThingApiService {
   Future<GetSettlementProposalsListRvm> getSettlementProposalsList(
     String thingId,
   ) async {
+    var accessToken = (await _serverConnector.latestConnection).item2;
     try {
       var response = await _dio.get(
         '/things/$thingId/settlement-proposals',
-        options: _serverConnector.accessToken != null
+        options: accessToken != null
             ? Options(
-                headers: {
-                  'Authorization': 'Bearer ${_serverConnector.accessToken}'
-                },
+                headers: {'Authorization': 'Bearer $accessToken'},
               )
             : null,
       );
@@ -269,11 +270,12 @@ class ThingApiService {
   }
 
   Future watch(String thingId, bool markedAsWatched) async {
+    var accessToken = (await _serverConnector.latestConnection).item2;
     try {
       await _dio.post(
         '/things/watch',
         options: Options(
-          headers: {'Authorization': 'Bearer ${_serverConnector.accessToken}'},
+          headers: {'Authorization': 'Bearer $accessToken'},
         ),
         data: WatchCommand(
           thingId: thingId,

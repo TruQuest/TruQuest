@@ -114,11 +114,12 @@ class UserApiService {
   }
 
   Future markNotificationsAsRead(List<NotificationVm> notifications) async {
+    var accessToken = (await _serverConnector.latestConnection).item2;
     try {
       await _dio.post(
         '/user/watch-list',
         options: Options(
-          headers: {'Authorization': 'Bearer ${_serverConnector.accessToken}'},
+          headers: {'Authorization': 'Bearer $accessToken'},
         ),
         data: MarkNotificationsAsReadCommand(
           notifications: notifications

@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:rxdart/rxdart.dart';
+
 import '../../general/services/local_storage.dart';
 import '../../general/services/server_connector.dart';
 import '../../general/errors/error.dart';
@@ -13,8 +15,8 @@ class UserService {
   final ServerConnector _serverConnector;
   final LocalStorage _localStorage;
 
-  final StreamController<UserVm> _currentUserChangedEventChannel =
-      StreamController<UserVm>();
+  final BehaviorSubject<UserVm> _currentUserChangedEventChannel =
+      BehaviorSubject<UserVm>();
   Stream<UserVm> get currentUserChanged$ =>
       _currentUserChangedEventChannel.stream;
 
@@ -35,14 +37,14 @@ class UserService {
     String? username;
     if (account == null) {
       state = UserAccountState.guest;
-      _serverConnector.connectToHub(null);
+      _serverConnector.connectToHub(username, null);
     } else if ((userData = _localStorage.getStrings(account)) == null) {
       state = UserAccountState.connectedNotLoggedIn;
-      _serverConnector.connectToHub(null);
+      _serverConnector.connectToHub(username, null);
     } else {
       state = UserAccountState.connectedAndLoggedIn;
       username = userData!.last;
-      _serverConnector.connectToHub(userData.first);
+      _serverConnector.connectToHub(username, userData.first);
     }
 
     _currentUserChangedEventChannel.add(UserVm(

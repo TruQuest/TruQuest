@@ -1,8 +1,23 @@
+import '../models/rvm/get_thing_rvm.dart';
 import '../../general/models/rvm/verifier_lottery_participant_entry_vm.dart';
 
 abstract class ThingResultVm {}
 
 class CreateNewThingDraftFailureVm extends ThingResultVm {}
+
+abstract class GetThingResultVm extends ThingResultVm {}
+
+class GetThingSuccessVm extends GetThingResultVm {
+  final GetThingRvm result;
+
+  GetThingSuccessVm({required this.result});
+}
+
+class GetThingFailureVm extends GetThingResultVm {
+  final String message;
+
+  GetThingFailureVm({required this.message});
+}
 
 class SubmitNewThingSuccessVm extends ThingResultVm {}
 

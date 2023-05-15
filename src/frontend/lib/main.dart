@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 
+import 'general/services/local_storage.dart';
+import 'widget_extensions.dart';
 import 'injector.dart';
 import 'general/pages/home_page.dart';
 
-void main() {
+Future main() async {
   setup();
+  var localStorage = resolveDependency<LocalStorage>();
+  await localStorage.init();
   runApp(App());
 }
 

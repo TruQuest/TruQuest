@@ -72,6 +72,7 @@ class SubjectApiService {
     Uint8List croppedImageBytes,
     List<int> tags,
   ) async {
+    var accessToken = (await _serverConnector.latestConnection).item2;
     try {
       var input = NewSubjectIm(
         type: type,
@@ -87,7 +88,7 @@ class SubjectApiService {
       var response = await _dio.post(
         '/subjects/add',
         options: Options(
-          headers: {'Authorization': 'Bearer ${_serverConnector.accessToken}'},
+          headers: {'Authorization': 'Bearer $accessToken'},
         ),
         data: input.toFormData(),
       );
@@ -120,14 +121,13 @@ class SubjectApiService {
   }
 
   Future<GetThingsListRvm> getThingsList(String subjectId) async {
+    var accessToken = (await _serverConnector.latestConnection).item2;
     try {
       var response = await _dio.get(
         '/subjects/$subjectId/things',
-        options: _serverConnector.accessToken != null
+        options: accessToken != null
             ? Options(
-                headers: {
-                  'Authorization': 'Bearer ${_serverConnector.accessToken}'
-                },
+                headers: {'Authorization': 'Bearer $accessToken'},
               )
             : null,
       );

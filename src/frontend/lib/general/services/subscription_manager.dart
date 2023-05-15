@@ -27,9 +27,10 @@ class SubscriptionManager {
       }
     });
 
-    _serverConnector.serverEvent$
-        .where((event) => event.item1 == ServerEventType.connected)
-        .listen((_) => _resubToLastRouteIfNecessary());
+    _serverConnector.connectionTask$.listen((connectionTask) async {
+      await connectionTask;
+      _resubToLastRouteIfNecessary();
+    });
   }
 
   void _resubToLastRouteIfNecessary() async {
@@ -79,12 +80,7 @@ class SubscriptionManager {
   }
 
   Future _subscribeToUpdates(String updateStreamIdentifier) async {
-    var hubConnection = _serverConnector.hubConnection;
-    if (hubConnection == null) {
-      print('Not connected to hub!');
-      return;
-    }
-
+    var hubConnection = (await _serverConnector.latestConnection).item1;
     try {
       await hubConnection.invoke(
         'SubscribeToUpdates',
@@ -100,12 +96,7 @@ class SubscriptionManager {
   }
 
   Future _unsubscribeFromUpdates(String updateStreamIdentifier) async {
-    var hubConnection = _serverConnector.hubConnection;
-    if (hubConnection == null) {
-      print('Not connected to hub!');
-      return;
-    }
-
+    var hubConnection = (await _serverConnector.latestConnection).item1;
     try {
       await hubConnection.invoke(
         'UnsubscribeFromUpdates',
@@ -124,12 +115,7 @@ class SubscriptionManager {
     String updateStreamIdentifierToUnsub,
     String updateStreamIdentifierToSub,
   ) async {
-    var hubConnection = _serverConnector.hubConnection;
-    if (hubConnection == null) {
-      print('Not connected to hub!');
-      return;
-    }
-
+    var hubConnection = (await _serverConnector.latestConnection).item1;
     try {
       await hubConnection.invoke(
         'UnsubThenSubToUpdates',

@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:either_dart/either.dart';
 import 'package:tuple/tuple.dart';
 
 import '../../ethereum/errors/ethereum_error.dart';
+import '../errors/thing_error.dart';
 import '../models/rvm/get_settlement_proposals_list_rvm.dart';
 import '../models/rvm/get_verifiers_rvm.dart';
 import '../../general/extensions/datetime_extension.dart';
@@ -52,13 +54,15 @@ class ThingService {
     _progress$Channel.add(progress$);
   }
 
-  Future<GetThingRvm> getThing(String thingId) async {
-    // @@BUG: When refreshing a thing's page, if the thing in question is a draft,
-    // then we need to have an access token to be able to retrieve it, but there is
-    // no access token until all the user stuff gets reloaded.
-    var result = await _thingApiService.getThing(thingId);
-    print('ThingId: ${result.thing.id}');
-    return result;
+  Future<Either<ThingError, GetThingRvm>> getThing(String thingId) async {
+    try {
+      var result = await _thingApiService.getThing(thingId);
+      print('ThingId: ${result.thing.id}');
+      return Right(result);
+    } on ThingError catch (e) {
+      print(e);
+      return Left(e);
+    }
   }
 
   Future<bool> checkThingAlreadyFunded(String thingId) {

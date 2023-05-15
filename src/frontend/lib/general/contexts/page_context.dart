@@ -15,21 +15,13 @@ class PageContext {
   PageContext(this._localStorage);
 
   Future<PageController> init() async {
-    await _localStorage.init();
-
     int initialPage = 0;
     String initialRoute = '/subjects';
 
-    var currentRouteTs = _localStorage.getString('currentRoute');
-    if (currentRouteTs != null) {
-      var currentRouteTsSplit = currentRouteTs.split('::');
-      var route = currentRouteTsSplit.first;
-      var tsMs = int.parse(currentRouteTsSplit.last);
-      var ts = DateTime.fromMillisecondsSinceEpoch(tsMs);
-      if (DateTime.now().difference(ts).inMinutes < 10) {
-        initialPage = _getPageIndex(route);
-        initialRoute = route;
-      }
+    var currentRoute = _localStorage.getString('currentRoute');
+    if (currentRoute != null) {
+      initialPage = _getPageIndex(currentRoute);
+      initialRoute = currentRoute;
     }
 
     await _saveCurrentRoute(initialRoute);
@@ -66,12 +58,8 @@ class PageContext {
     return page;
   }
 
-  Future _saveCurrentRoute(String route) async {
-    await _localStorage.setString(
-      'currentRoute',
-      '$route::${DateTime.now().millisecondsSinceEpoch}',
-    );
-  }
+  Future _saveCurrentRoute(String route) =>
+      _localStorage.setString('currentRoute', route);
 
   void goto(String route) async {
     _routeChannel.add(route);

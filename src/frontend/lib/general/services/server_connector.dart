@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:logging/logging.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:signalr_netcore/signalr_client.dart';
 import 'package:tuple/tuple.dart';
 
@@ -9,7 +10,6 @@ import '../models/rvm/notification_vm.dart';
 import '../models/rvm/watched_item_type_vm.dart';
 
 enum ServerEventType {
-  connected,
   notification,
   thing,
   settlement,
@@ -31,14 +31,18 @@ enum SettlementEventType {
 class ServerConnector {
   late final Dio dio;
 
-  HubConnection? _hubConnection;
-  HubConnection? get hubConnection => _hubConnection;
+  final Completer _initialConnectionEstablished = Completer();
 
-  String? _accessToken;
-  String? get accessToken => _accessToken;
+  final BehaviorSubject<Future<Tuple2<HubConnection, String?>>>
+      _connectionTaskQueue =
+      BehaviorSubject<Future<Tuple2<HubConnection, String?>>>();
+  Stream<Future<Tuple2<HubConnection, String?>>> get connectionTask$ =>
+      _connectionTaskQueue.stream;
 
-  final StreamController<Future Function()> _hubConnectionTaskQueue =
-      StreamController<Future Function()>();
+  Future<Tuple2<HubConnection, String?>> get latestConnection async {
+    await _initialConnectionEstablished.future;
+    return _connectionTaskQueue.value;
+  }
 
   final StreamController<Tuple2<ServerEventType, Object>> _serverEventChannel =
       StreamController<Tuple2<ServerEventType, Object>>.broadcast();
@@ -56,35 +60,16 @@ class ServerConnector {
         baseUrl: 'http://localhost:5223',
       ),
     );
-
-    _monitorHubConnectionTasks();
   }
 
-  void _monitorHubConnectionTasks() async {
-    // @@??: debounce?
-    var iterator = StreamIterator(_hubConnectionTaskQueue.stream);
-    while (await iterator.moveNext()) {
-      var task = iterator.current;
-      await task();
-    }
-  }
-
-  Future _connectToHub(String? token) async {
-    _accessToken = token;
-    var hubConnection = _hubConnection;
-    if (hubConnection != null) {
-      try {
-        await hubConnection.stop();
-      } catch (e) {
-        print(e);
-      }
-      _hubConnection = null;
-    }
-
+  Future<Tuple2<HubConnection, String?>> _connectToHub(
+    String? username,
+    String? token,
+  ) async {
     var hubLogger = Logger('Hub');
     var transportLogger = Logger('Transport');
 
-    hubConnection = _hubConnection = HubConnectionBuilder()
+    var hubConnection = HubConnectionBuilder()
         .withUrl(
           'http://localhost:5223/hub',
           options: HttpConnectionOptions(
@@ -154,7 +139,8 @@ class ServerConnector {
             ServerEventType.notification,
             Tuple2<NotificationEventType, Object>(
               NotificationEventType.newOne,
-              Tuple6(
+              Tuple7(
+                username,
                 updateTimestamp,
                 itemType,
                 itemId,
@@ -180,7 +166,10 @@ class ServerConnector {
             ServerEventType.notification,
             Tuple2<NotificationEventType, Object>(
               NotificationEventType.initialRetrieve,
-              notifications,
+              Tuple2(
+                username!,
+                notifications,
+              ),
             ),
           ),
         );
@@ -189,23 +178,27 @@ class ServerConnector {
 
     await hubConnection.start(); // @@TODO: Handle error.
 
-    _serverEventChannel.add(Tuple2(ServerEventType.connected, true));
+    return Tuple2(hubConnection, token);
   }
 
-  Future _disconnectFromHub() async {
-    _accessToken = null;
-    if (_hubConnection != null) {
-      try {
-        await _hubConnection!.stop();
-      } catch (e) {
-        print(e);
+  void connectToHub(String? username, String? accessToken) async {
+    var prevConnectionTask = _connectionTaskQueue.valueOrNull;
+    _connectionTaskQueue.add(() async {
+      if (prevConnectionTask != null) {
+        var prevConnection = await prevConnectionTask;
+        try {
+          await prevConnection.item1.stop();
+        } catch (e) {
+          print(e);
+        }
       }
-      _hubConnection = null;
-    }
+
+      var connection = await _connectToHub(username, accessToken);
+      if (prevConnectionTask == null) {
+        _initialConnectionEstablished.complete();
+      }
+
+      return connection;
+    }());
   }
-
-  void disconnectFromHub() => _hubConnectionTaskQueue.add(_disconnectFromHub);
-
-  void connectToHub(String? accessToken) =>
-      _hubConnectionTaskQueue.add(() => _connectToHub(accessToken));
 }
