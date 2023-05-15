@@ -15,15 +15,17 @@ class NotificationsCache {
 
   final Map<String?, Set<NotificationVm>> _usernameToUnreadNotifications = {};
   Set<NotificationVm>? _unreadNotifications;
+  String? _username;
 
   final BehaviorSubject<int> _unreadNotificationsCountChannel =
       BehaviorSubject<int>();
   Stream<int> get unreadNotificationsCount$ =>
       _unreadNotificationsCountChannel.stream;
 
-  final BehaviorSubject<List<NotificationVm>> _unreadNotificationsChannel =
-      BehaviorSubject<List<NotificationVm>>();
-  Stream<List<NotificationVm>> get unreadNotifications$ =>
+  final BehaviorSubject<Tuple2<List<NotificationVm>, String?>>
+      _unreadNotificationsChannel =
+      BehaviorSubject<Tuple2<List<NotificationVm>, String?>>();
+  Stream<Tuple2<List<NotificationVm>, String?>> get unreadNotifications$ =>
       _unreadNotificationsChannel.stream;
 
   NotificationsCache(
@@ -67,15 +69,20 @@ class NotificationsCache {
         user.username,
         () => {},
       );
+      _username = user.username;
       _notify();
     });
   }
 
   void _notify() {
     _unreadNotificationsChannel.add(
-      List.unmodifiable(
-        List.from(_unreadNotifications ?? {})
-          ..sort((n1, n2) => n2.updateTimestamp.compareTo(n1.updateTimestamp)),
+      Tuple2(
+        List.unmodifiable(
+          List.from(_unreadNotifications ?? {})
+            ..sort(
+                (n1, n2) => n2.updateTimestamp.compareTo(n1.updateTimestamp)),
+        ),
+        _username,
       ),
     );
     _unreadNotificationsCountChannel.add(_unreadNotifications?.length ?? 0);
@@ -119,9 +126,15 @@ class NotificationsCache {
     _notify();
   }
 
-  Future remove(List<NotificationVm> notifications) async {
-    _unreadNotifications!.removeAll(notifications);
+  Future remove(List<NotificationVm> notifications, String? username) async {
+    var usersUnreadNotifications = _usernameToUnreadNotifications[username]!;
+    usersUnreadNotifications.removeAll(notifications);
     _notify();
-    await _userApiService.markNotificationsAsRead(notifications);
+
+    if (username != null) {
+      // @@NOTE: Updates from watched items could be mixed in with ephemeral notifications,
+      // but that's alright, since those would simply be ignored on the server.
+      await _userApiService.markNotificationsAsRead(notifications);
+    }
   }
 }

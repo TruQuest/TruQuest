@@ -4,6 +4,10 @@ abstract class NotificationAction {}
 
 class Dismiss extends NotificationAction {
   final List<NotificationVm> notifications;
+  final String? username;
 
-  Dismiss({required this.notifications});
+  Dismiss({
+    required this.notifications,
+    required this.username,
+  });
 }

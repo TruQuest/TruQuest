@@ -18,11 +18,12 @@ class NotificationTracker extends StatelessWidgetX {
     return StreamBuilder(
       stream: _notificationsCache.unreadNotifications$,
       builder: (context, snapshot) {
-        if (snapshot.data == null || snapshot.data!.isEmpty) {
+        if (snapshot.data == null || snapshot.data!.item1.isEmpty) {
           return Center(child: Text('Nothing here yet'));
         }
 
-        var notifications = snapshot.data!;
+        var notifications = snapshot.data!.item1;
+        var username = snapshot.data!.item2;
 
         return Column(
           children: [
@@ -41,7 +42,10 @@ class NotificationTracker extends StatelessWidgetX {
                         color: Colors.red,
                       ),
                       onPressed: () => _notificationBloc.dispatch(
-                        Dismiss(notifications: notifications),
+                        Dismiss(
+                          notifications: notifications,
+                          username: username,
+                        ),
                       ),
                     ),
                   ],
@@ -59,6 +63,11 @@ class NotificationTracker extends StatelessWidgetX {
                         ? Text(notification.details!)
                         : null,
                     onTap: () {
+                      _notificationBloc.dispatch(Dismiss(
+                        notifications: [notification],
+                        username: username,
+                      ));
+
                       _pageContext.goto(notification.itemRoute);
                       Navigator.of(context).pop();
                     },
@@ -68,7 +77,10 @@ class NotificationTracker extends StatelessWidgetX {
                         color: Colors.red,
                       ),
                       onPressed: () => _notificationBloc.dispatch(
-                        Dismiss(notifications: [notification]),
+                        Dismiss(
+                          notifications: [notification],
+                          username: username,
+                        ),
                       ),
                     ),
                   );

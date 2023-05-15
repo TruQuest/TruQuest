@@ -56,6 +56,6 @@ class NotificationBloc extends Bloc<NotificationAction> {
   }
 
   void _dismiss(Dismiss action) async {
-    await _notificationsCache.remove(action.notifications);
+    await _notificationsCache.remove(action.notifications, action.username);
   }
 }
