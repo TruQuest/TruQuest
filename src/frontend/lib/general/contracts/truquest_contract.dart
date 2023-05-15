@@ -160,11 +160,14 @@ class TruQuestContract {
         ),
       );
 
-      print('Fund txn sent! Awaiting confirmations...');
+      // print('Fund txn sent! Awaiting confirmations...');
 
-      await txnResponse.wait(2); // @@??: Do not await confirmations?
+      // await txnResponse.wait(2); // @@??: Do not await confirmations?
 
-      print('Fund txn confirmed!');
+      // print('Fund txn confirmed!');
+
+      await txnResponse.wait();
+      print('Fund txn mined!');
     } catch (e) {
       print(e);
     }
@@ -223,11 +226,13 @@ class TruQuestContract {
         ),
       );
 
-      print('Fund txn sent! Awaiting confirmations...');
+      // print('Fund txn sent! Awaiting confirmations...');
 
-      await txnResponse.wait(2); // @@??: Do not await confirmations?
+      // await txnResponse.wait(2); // @@??: Do not await confirmations?
 
-      print('Fund txn confirmed!');
+      // print('Fund txn confirmed!');
+      await txnResponse.wait();
+      print('Fund txn mined!');
     } catch (e) {
       print(e);
     }

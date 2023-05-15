@@ -49,6 +49,10 @@ internal class MessageTypeResolver : IMessageTypeResolver
             {
                 return typeof(ThingUpdateEvent);
             }
+            else if (table == "SettlementProposalUpdates")
+            {
+                return typeof(SettlementProposalUpdateEvent);
+            }
         }
 
         throw new InvalidOperationException();

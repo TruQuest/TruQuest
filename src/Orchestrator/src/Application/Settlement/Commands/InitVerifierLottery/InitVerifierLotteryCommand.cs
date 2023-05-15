@@ -6,9 +6,11 @@ using Domain.Aggregates;
 using Domain.Results;
 
 using Application.Common.Interfaces;
+using Application.Common.Attributes;
 
 namespace Application.Settlement.Commands.InitVerifierLottery;
 
+[ExecuteInTxn]
 public class InitVerifierLotteryCommand : IRequest<VoidResult>
 {
     public required Guid ThingId { get; init; }
@@ -19,23 +21,23 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
 {
     private readonly ISettlementProposalRepository _settlementProposalRepository;
     private readonly ITaskRepository _taskRepository;
+    private readonly ISettlementProposalUpdateRepository _settlementProposalUpdateRepository;
     private readonly IContractCaller _contractCaller;
     private readonly IContractStorageQueryable _contractStorageQueryable;
-    private readonly IClientNotifier _clientNotifier;
 
     public InitVerifierLotteryCommandHandler(
         ISettlementProposalRepository settlementProposalRepository,
         ITaskRepository taskRepository,
+        ISettlementProposalUpdateRepository settlementProposalUpdateRepository,
         IContractCaller contractCaller,
-        IContractStorageQueryable contractStorageQueryable,
-        IClientNotifier clientNotifier
+        IContractStorageQueryable contractStorageQueryable
     )
     {
         _settlementProposalRepository = settlementProposalRepository;
         _taskRepository = taskRepository;
+        _settlementProposalUpdateRepository = settlementProposalUpdateRepository;
         _contractCaller = contractCaller;
         _contractStorageQueryable = contractStorageQueryable;
-        _clientNotifier = clientNotifier;
     }
 
     public async Task<VoidResult> Handle(InitVerifierLotteryCommand command, CancellationToken ct)
@@ -68,10 +70,17 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
 
             proposal.SetState(SettlementProposalState.FundedAndVerifierLotteryInitiated);
 
+            await _settlementProposalUpdateRepository.AddOrUpdate(new SettlementProposalUpdate(
+                settlementProposalId: proposal.Id,
+                category: SettlementProposalUpdateCategory.General,
+                updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                title: "Proposal funded",
+                details: "Verifier selection lottery initiated"
+            ));
+
             await _taskRepository.SaveChanges();
             await _settlementProposalRepository.SaveChanges();
-
-            await _clientNotifier.NotifySettlementProposalStateChanged(proposal.Id, proposal.State);
+            await _settlementProposalUpdateRepository.SaveChanges();
         }
 
         return VoidResult.Instance;

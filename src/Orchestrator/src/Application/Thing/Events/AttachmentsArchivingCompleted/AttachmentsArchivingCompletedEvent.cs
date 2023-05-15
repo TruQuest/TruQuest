@@ -77,7 +77,9 @@ internal class AttachmentsArchivingCompletedEventHandler : INotificationHandler<
         await _thingUpdateRepository.AddOrUpdate(new ThingUpdate(
             thingId: thing.Id,
             category: ThingUpdateCategory.General,
-            updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            // @@NOTE: Using DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() could sometimes result in
+            // equal values for 'lastSeenUpdateTimestamp' and 'updateTimestamp'.
+            updateTimestamp: now + 10,
             title: "Draft created",
             details: "Click to open the newly created draft"
         ));

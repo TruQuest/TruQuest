@@ -5,6 +5,7 @@ import '../../ethereum/bloc/ethereum_bloc.dart';
 import '../../ethereum/bloc/ethereum_result_vm.dart';
 import '../../user/bloc/user_actions.dart';
 import 'notification_tracker.dart';
+import 'progress_bar.dart';
 import 'sign_up_dialog.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../../widget_extensions.dart';
@@ -19,10 +20,13 @@ class StatusPanel extends StatelessWidgetX {
 
   @override
   Widget buildX(BuildContext context) {
+    var width = MediaQuery.of(context).size.width;
     return LimitedBox(
-      maxWidth: 500,
+      maxWidth: width * 0.5,
       child: Row(
         children: [
+          Expanded(child: ProgressBar()),
+          SizedBox(width: 24),
           Expanded(
             child: StreamBuilder<SwitchEthereumChainSuccessVm>(
               stream: _ethereumBloc.selectedChain$,

@@ -27,22 +27,22 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
     private readonly ISettlementProposalRepository _settlementProposalRepository;
     private readonly ITaskRepository _taskRepository;
     private readonly IJoinedThingAssessmentVerifierLotteryEventRepository _joinedThingAssessmentVerifierLotteryEventRepository;
+    private readonly ISettlementProposalUpdateRepository _settlementProposalUpdateRepository;
     private readonly IContractStorageQueryable _contractStorageQueryable;
-    private readonly IClientNotifier _clientNotifier;
 
     public PrepareForAssessmentPollCommandHandler(
         ISettlementProposalRepository settlementProposalRepository,
         ITaskRepository taskRepository,
         IJoinedThingAssessmentVerifierLotteryEventRepository joinedThingAssessmentVerifierLotteryEventRepository,
-        IContractStorageQueryable contractStorageQueryable,
-        IClientNotifier clientNotifier
+        ISettlementProposalUpdateRepository settlementProposalUpdateRepository,
+        IContractStorageQueryable contractStorageQueryable
     )
     {
         _settlementProposalRepository = settlementProposalRepository;
         _taskRepository = taskRepository;
         _joinedThingAssessmentVerifierLotteryEventRepository = joinedThingAssessmentVerifierLotteryEventRepository;
+        _settlementProposalUpdateRepository = settlementProposalUpdateRepository;
         _contractStorageQueryable = contractStorageQueryable;
-        _clientNotifier = clientNotifier;
     }
 
     public async Task<VoidResult> Handle(PrepareForAssessmentPollCommand command, CancellationToken ct)
@@ -76,11 +76,18 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
             );
             _joinedThingAssessmentVerifierLotteryEventRepository.Create(joinedThingAssessmentVerifierLotteryEvent);
 
+            await _settlementProposalUpdateRepository.AddOrUpdate(new SettlementProposalUpdate(
+                settlementProposalId: proposal.Id,
+                category: SettlementProposalUpdateCategory.General,
+                updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                title: "Proposal verifier lottery completed",
+                details: "Assessment poll initiated"
+            ));
+
             await _settlementProposalRepository.SaveChanges();
             await _taskRepository.SaveChanges();
             await _joinedThingAssessmentVerifierLotteryEventRepository.SaveChanges();
-
-            await _clientNotifier.NotifySettlementProposalStateChanged(proposal.Id, proposal.State);
+            await _settlementProposalUpdateRepository.SaveChanges();
         }
 
         return VoidResult.Instance;

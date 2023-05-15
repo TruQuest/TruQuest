@@ -2,10 +2,11 @@ using MediatR;
 
 using Domain.Aggregates;
 
-using Application.Common.Interfaces;
+using Application.Common.Attributes;
 
 namespace Application.Ethereum.Events.AssessmentPoll.PollFinalized;
 
+[ExecuteInTxn]
 public class PollFinalizedEvent : INotification
 {
     public required long BlockNumber { get; init; }
@@ -20,17 +21,20 @@ internal class PollFinalizedEventHandler : INotificationHandler<PollFinalizedEve
 {
     private readonly IThingRepository _thingRepository;
     private readonly ISettlementProposalRepository _settlementProposalRepository;
-    private readonly IClientNotifier _clientNotifier;
+    private readonly ISettlementProposalUpdateRepository _settlementProposalUpdateRepository;
+    private readonly IThingUpdateRepository _thingUpdateRepository;
 
     public PollFinalizedEventHandler(
         IThingRepository thingRepository,
         ISettlementProposalRepository settlementProposalRepository,
-        IClientNotifier clientNotifier
+        ISettlementProposalUpdateRepository settlementProposalUpdateRepository,
+        IThingUpdateRepository thingUpdateRepository
     )
     {
         _thingRepository = thingRepository;
         _settlementProposalRepository = settlementProposalRepository;
-        _clientNotifier = clientNotifier;
+        _settlementProposalUpdateRepository = settlementProposalUpdateRepository;
+        _thingUpdateRepository = thingUpdateRepository;
     }
 
     public async Task Handle(PollFinalizedEvent @event, CancellationToken ct)
@@ -45,6 +49,15 @@ internal class PollFinalizedEventHandler : INotificationHandler<PollFinalizedEve
                 proposal.SetState(SettlementProposalState.Accepted);
                 thing.AcceptSettlementProposal(proposal.Id);
                 thing.SetState(ThingState.Settled);
+
+                await _thingUpdateRepository.AddOrUpdate(new ThingUpdate(
+                    thingId: thing.Id,
+                    category: ThingUpdateCategory.General,
+                    updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                    title: "Thing settled!",
+                    details: "A settlement proposal has been accepted"
+                ));
+                await _thingUpdateRepository.SaveChanges();
             }
             else if (decision == AssessmentDecision.SoftDeclined)
             {
@@ -57,14 +70,17 @@ internal class PollFinalizedEventHandler : INotificationHandler<PollFinalizedEve
 
             proposal.SetVoteAggIpfsCid(@event.VoteAggIpfsCid);
 
+            await _settlementProposalUpdateRepository.AddOrUpdate(new SettlementProposalUpdate(
+                settlementProposalId: proposal.Id,
+                category: SettlementProposalUpdateCategory.General,
+                updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                title: "Proposal assessment poll completed",
+                details: $"Decision: {decision}"
+            ));
+
             await _settlementProposalRepository.SaveChanges();
             await _thingRepository.SaveChanges();
-
-            await _clientNotifier.NotifySettlementProposalStateChanged(proposal.Id, proposal.State);
-            if (decision == AssessmentDecision.Accepted)
-            {
-                await _clientNotifier.NotifyThingStateChanged(thing.Id, thing.State);
-            }
+            await _settlementProposalUpdateRepository.SaveChanges();
         }
     }
 }

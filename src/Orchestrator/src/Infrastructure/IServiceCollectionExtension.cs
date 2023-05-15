@@ -170,6 +170,7 @@ public static class IServiceCollectionExtension
         services.AddScoped<IAssessmentPollVoteRepository, AssessmentPollVoteRepository>();
         services.AddScoped<IWatchedItemRepository, WatchedItemRepository>();
         services.AddScoped<IThingUpdateRepository, ThingUpdateRepository>();
+        services.AddScoped<ISettlementProposalUpdateRepository, SettlementProposalUpdateRepository>();
 
         services.AddSingleton<IBlockProgressRepository, BlockProgressRepository>();
         services.AddScoped<IActionableThingRelatedEventRepository, ActionableThingRelatedEventRepository>();

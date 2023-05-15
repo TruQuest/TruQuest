@@ -4,9 +4,11 @@ using Domain.Aggregates;
 
 using Application.Common.Interfaces;
 using Application.Settlement.Common.Models.IM;
+using Application.Common.Attributes;
 
 namespace Application.Settlement.Events.AttachmentsArchivingCompleted;
 
+[ExecuteInTxn]
 public class AttachmentsArchivingCompletedEvent : INotification
 {
     public required string SubmitterId { get; init; }
@@ -18,14 +20,20 @@ internal class AttachmentsArchivingCompletedEventHandler : INotificationHandler<
 {
     private readonly IClientNotifier _clientNotifier;
     private readonly ISettlementProposalRepository _settlementProposalRepository;
+    private readonly ISettlementProposalUpdateRepository _settlementProposalUpdateRepository;
+    private readonly IWatchedItemRepository _watchedItemRepository;
 
     public AttachmentsArchivingCompletedEventHandler(
         IClientNotifier clientNotifier,
-        ISettlementProposalRepository settlementProposalRepository
+        ISettlementProposalRepository settlementProposalRepository,
+        ISettlementProposalUpdateRepository settlementProposalUpdateRepository,
+        IWatchedItemRepository watchedItemRepository
     )
     {
         _clientNotifier = clientNotifier;
         _settlementProposalRepository = settlementProposalRepository;
+        _settlementProposalUpdateRepository = settlementProposalUpdateRepository;
+        _watchedItemRepository = watchedItemRepository;
     }
 
     public async Task Handle(AttachmentsArchivingCompletedEvent @event, CancellationToken ct)
@@ -55,6 +63,28 @@ internal class AttachmentsArchivingCompletedEventHandler : INotificationHandler<
 
         _settlementProposalRepository.Create(proposal);
 
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        foreach (var category in Enum.GetValues<SettlementProposalUpdateCategory>())
+        {
+            _watchedItemRepository.Add(new WatchedItem(
+                userId: @event.SubmitterId,
+                itemType: WatchedItemType.SettlementProposal,
+                itemId: proposal.Id,
+                itemUpdateCategory: (int)category,
+                lastSeenUpdateTimestamp: now
+            ));
+        }
+
+        await _settlementProposalUpdateRepository.AddOrUpdate(new SettlementProposalUpdate(
+            settlementProposalId: proposal.Id,
+            category: SettlementProposalUpdateCategory.General,
+            updateTimestamp: now + 10,
+            title: "Draft created",
+            details: "Click to open the newly created draft"
+        ));
+
         await _settlementProposalRepository.SaveChanges();
+        await _watchedItemRepository.SaveChanges();
+        await _settlementProposalUpdateRepository.SaveChanges();
     }
 }

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
-import 'package:easy_sidemenu/easy_sidemenu.dart';
-import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
 import '../../settlement/pages/settlement_proposal_page.dart';
 import '../../pong/game.dart';
@@ -9,7 +7,6 @@ import '../../subject/pages/subject_page.dart';
 import '../../thing/pages/thing_page.dart';
 import '../contexts/page_context.dart';
 import '../../subject/pages/subjects_page.dart';
-import '../bloc/notification_bloc.dart';
 import '../../widget_extensions.dart';
 import '../services/subscription_manager.dart';
 import '../widgets/status_panel.dart';
@@ -22,7 +19,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends StateX<HomePage> {
-  late final _notificationBloc = use<NotificationBloc>();
   late final _subscriptionManager = use<SubscriptionManager>();
   late final _pageContext = use<PageContext>();
 
@@ -45,80 +41,102 @@ class _HomePageState extends StateX<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('TruQuest'),
-        actions: [
-          StatusPanel(),
-        ],
+        actions: [StatusPanel()],
       ),
       body: _pageController == null
           ? Center(child: CircularProgressIndicator())
-          : Row(
+          : Column(
               children: [
-                SideMenu(
-                  controller: _pageController!,
-                  style: SideMenuStyle(
-                    displayMode: SideMenuDisplayMode.open,
-                  ),
-                  title: SizedBox(
-                    width: double.infinity,
-                    height: 200,
-                    child: Center(
-                      child: StreamBuilder<Stream<int>?>(
-                        stream: _notificationBloc.progress$$,
-                        builder: (context, snapshot) {
-                          if (snapshot.data == null) {
-                            return Text('Smth');
-                          }
-
-                          var progress$ = snapshot.data;
-                          return StreamBuilder<int>(
-                            stream: progress$,
-                            initialData: 10,
-                            builder: (context, snapshot) {
-                              var percent = snapshot.data!.toDouble();
-                              return SleekCircularSlider(
-                                initialValue: percent,
-                                appearance: CircularSliderAppearance(
-                                  size: 150,
-                                ),
-                              );
-                            },
-                          );
-                        },
+                Container(
+                  color: Colors.teal,
+                  child: Row(
+                    children: [
+                      LimitedBox(
+                        maxWidth: 150,
+                        child: ListTile(
+                          leading: Icon(
+                            Icons.group_sharp,
+                            color: Colors.white,
+                          ),
+                          title: Text(
+                            'Subjects',
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                          ),
+                          onTap: () => _pageContext.goto('/subjects'),
+                        ),
                       ),
-                    ),
+                      SizedBox(width: 12),
+                      LimitedBox(
+                        maxWidth: 150,
+                        child: ListTile(
+                          leading: Icon(
+                            Icons.subject,
+                            color: Colors.white,
+                          ),
+                          title: Text(
+                            'Things',
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                          ),
+                          onTap: () => _pageContext.goto('/things'),
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      LimitedBox(
+                        maxWidth: 150,
+                        child: ListTile(
+                          leading: Icon(
+                            Icons.question_mark,
+                            color: Colors.white,
+                          ),
+                          title: Text(
+                            'How To',
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                          ),
+                          onTap: () => _pageContext.goto('/how-to'),
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      LimitedBox(
+                        maxWidth: 150,
+                        child: ListTile(
+                          leading: Icon(
+                            Icons.play_circle_outline,
+                            color: Colors.white,
+                          ),
+                          title: Text(
+                            'Pong!',
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                          ),
+                          onTap: () => _pageContext.goto('/pong'),
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      LimitedBox(
+                        maxWidth: 150,
+                        child: ListTile(
+                          leading: Icon(
+                            Icons.manage_search_sharp,
+                            color: Colors.white,
+                          ),
+                          title: Text(
+                            'Go To',
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                          ),
+                          onTap: () => _pageContext.goto('/goto'),
+                        ),
+                      ),
+                    ],
                   ),
-                  items: [
-                    SideMenuItem(
-                      priority: 0,
-                      icon: Icon(Icons.person_pin),
-                      title: 'Subjects',
-                      onTap: () => _pageContext.goto('/subjects'),
-                    ),
-                    SideMenuItem(
-                      priority: 1,
-                      icon: Icon(Icons.note),
-                      title: 'Things',
-                      onTap: () => _pageContext.goto('/things'),
-                    ),
-                    SideMenuItem(
-                      priority: 2,
-                      icon: Icon(Icons.question_answer),
-                      title: 'How To',
-                      onTap: () => _pageContext.goto('/how-to'),
-                    ),
-                    SideMenuItem(
-                      priority: 3,
-                      icon: Icon(Icons.theater_comedy_outlined),
-                      title: 'Pong!',
-                      onTap: () => _pageContext.goto('/pong'),
-                    ),
-                    SideMenuItem(
-                      priority: 4,
-                      icon: Icon(Icons.route),
-                      title: 'Go To',
-                      onTap: () => _pageContext.goto('/goto'),
-                    ),
-                  ],
                 ),
                 Expanded(
                   child: PageView.builder(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:side_sheet/side_sheet.dart';
 
+import '../contexts/page_context.dart';
 import '../bloc/notification_actions.dart';
 import '../bloc/notification_bloc.dart';
 import '../services/notifications_cache.dart';
@@ -9,6 +10,7 @@ import '../../widget_extensions.dart';
 class NotificationTracker extends StatelessWidgetX {
   late final _notificationBloc = use<NotificationBloc>();
   late final _notificationsCache = use<NotificationsCache>();
+  late final _pageContext = use<PageContext>();
 
   NotificationTracker({super.key});
 
@@ -56,7 +58,10 @@ class NotificationTracker extends StatelessWidgetX {
                     subtitle: notification.details != null
                         ? Text(notification.details!)
                         : null,
-                    onTap: () {},
+                    onTap: () {
+                      _pageContext.goto(notification.itemRoute);
+                      Navigator.of(context).pop();
+                    },
                     trailing: IconButton(
                       icon: Icon(
                         Icons.delete,

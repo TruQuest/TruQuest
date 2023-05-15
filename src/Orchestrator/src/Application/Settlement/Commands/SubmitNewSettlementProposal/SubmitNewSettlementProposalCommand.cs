@@ -11,7 +11,7 @@ using Application.Common.Interfaces;
 
 namespace Application.Settlement.Commands.SubmitNewSettlementProposal;
 
-[RequireAuthorization]
+[RequireAuthorization, ExecuteInTxn]
 public class SubmitNewSettlementProposalCommand : IRequest<HandleResult<SubmitNewSettlementProposalResultVm>>
 {
     public required Guid ProposalId { get; init; }
@@ -24,18 +24,21 @@ internal class SubmitNewSettlementProposalCommandHandler :
     private readonly ICurrentPrincipal _currentPrincipal;
     private readonly ISigner _signer;
     private readonly ISettlementProposalRepository _settlementProposalRepository;
+    private readonly ISettlementProposalUpdateRepository _settlementProposalUpdateRepository;
 
     public SubmitNewSettlementProposalCommandHandler(
         ILogger<SubmitNewSettlementProposalCommandHandler> logger,
         ICurrentPrincipal currentPrincipal,
         ISigner signer,
-        ISettlementProposalRepository settlementProposalRepository
+        ISettlementProposalRepository settlementProposalRepository,
+        ISettlementProposalUpdateRepository settlementProposalUpdateRepository
     )
     {
         _logger = logger;
         _currentPrincipal = currentPrincipal;
         _signer = signer;
         _settlementProposalRepository = settlementProposalRepository;
+        _settlementProposalUpdateRepository = settlementProposalUpdateRepository;
     }
 
     public async Task<HandleResult<SubmitNewSettlementProposalResultVm>> Handle(
@@ -60,7 +63,17 @@ internal class SubmitNewSettlementProposalCommandHandler :
         }
 
         proposal.SetState(SettlementProposalState.AwaitingFunding);
+
+        await _settlementProposalUpdateRepository.AddOrUpdate(new SettlementProposalUpdate(
+            settlementProposalId: proposal.Id,
+            category: SettlementProposalUpdateCategory.General,
+            updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            title: "Proposal submitted",
+            details: "Click to refresh the page"
+        ));
+
         await _settlementProposalRepository.SaveChanges();
+        await _settlementProposalUpdateRepository.SaveChanges();
 
         return new()
         {

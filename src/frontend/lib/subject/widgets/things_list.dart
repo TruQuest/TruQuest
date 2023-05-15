@@ -112,7 +112,7 @@ class _ThingsListState extends StateX<ThingsList> {
                 return Stack(
                   children: [
                     Card(
-                      margin: EdgeInsets.zero,
+                      margin: const EdgeInsets.symmetric(vertical: 8),
                       color: Colors.blue[600],
                       elevation: 5,
                       shape: RoundedRectangleBorder(

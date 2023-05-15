@@ -8,6 +8,14 @@ class NotificationVm {
   final String title;
   final String? details;
 
+  String get itemRoute =>
+      (itemType == WatchedItemTypeVm.subject
+          ? '/subjects'
+          : itemType == WatchedItemTypeVm.thing
+              ? '/things'
+              : '/proposals') +
+      '/$itemId';
+
   NotificationVm({
     required this.updateTimestamp,
     required this.itemType,

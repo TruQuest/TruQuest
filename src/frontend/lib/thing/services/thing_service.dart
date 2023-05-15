@@ -53,6 +53,9 @@ class ThingService {
   }
 
   Future<GetThingRvm> getThing(String thingId) async {
+    // @@BUG: When refreshing a thing's page, if the thing in question is a draft,
+    // then we need to have an access token to be able to retrieve it, but there is
+    // no access token until all the user stuff gets reloaded.
     var result = await _thingApiService.getThing(thingId);
     print('ThingId: ${result.thing.id}');
     return result;
