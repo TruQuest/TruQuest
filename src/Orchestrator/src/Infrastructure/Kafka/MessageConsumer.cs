@@ -4,9 +4,9 @@ using System.Text.Json;
 
 using Microsoft.Extensions.Logging;
 
-using MediatR;
 using KafkaFlow;
 
+using Application;
 using Application.Common.Interfaces;
 using Application.Common.Messages.Responses;
 using ThingEvents = Application.Thing.Events;
@@ -18,7 +18,7 @@ internal class MessageConsumer : IMessageMiddleware
 {
     private readonly ILogger<MessageConsumer> _logger;
     private readonly IRequestDispatcher _requestDispatcher;
-    private readonly IPublisher _mediator;
+    private readonly PublisherWrapper _mediator;
 
     private readonly Assembly _responseMessagesAssembly;
     private readonly string _responseMessagesNamespace;
@@ -27,7 +27,7 @@ internal class MessageConsumer : IMessageMiddleware
     public MessageConsumer(
         ILogger<MessageConsumer> logger,
         IRequestDispatcher requestDispatcher,
-        IPublisher mediator
+        PublisherWrapper mediator
     )
     {
         _logger = logger;

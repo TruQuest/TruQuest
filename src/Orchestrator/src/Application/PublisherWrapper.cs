@@ -8,20 +8,20 @@ using Application.Common.Interfaces;
 
 namespace Application;
 
-public class NotificationPublisher : INotificationPublisher
+public class PublisherWrapper
 {
+    private readonly IPublisher _publisher;
     private readonly ISharedTxnScope _sharedTxnScope;
 
-    public NotificationPublisher(ISharedTxnScope sharedTxnScope)
+    public PublisherWrapper(IPublisher publisher, ISharedTxnScope sharedTxnScope)
     {
+        _publisher = publisher;
         _sharedTxnScope = sharedTxnScope;
     }
 
-    public async Task Publish(
-        IEnumerable<NotificationHandlerExecutor> handlerExecutors,
-        INotification @event,
-        CancellationToken ct
-    )
+    public async Task Publish<TNotification>(
+        TNotification @event, CancellationToken ct = default
+    ) where TNotification : INotification
     {
         var attr = @event.GetType().GetCustomAttribute<ExecuteInTxnAttribute>();
         if (attr != null)
@@ -34,19 +34,13 @@ public class NotificationPublisher : INotificationPublisher
                 TransactionScopeAsyncFlowOption.Enabled
             );
 
-            foreach (var handler in handlerExecutors)
-            {
-                await handler.HandlerCallback(@event, ct).ConfigureAwait(false);
-            }
+            await _publisher.Publish(@event);
 
             txnScope.Complete();
         }
         else
         {
-            foreach (var handler in handlerExecutors)
-            {
-                await handler.HandlerCallback(@event, ct).ConfigureAwait(false);
-            }
+            await _publisher.Publish(@event);
         }
     }
 }

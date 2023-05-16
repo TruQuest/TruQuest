@@ -1,5 +1,4 @@
-using MediatR;
-
+using Application;
 using Application.Common.Interfaces;
 
 namespace API.BackgroundServices;
@@ -23,7 +22,7 @@ public class ContractEventTracker : BackgroundService
         await foreach (var @event in _contractEventListener.GetNext(stoppingToken))
         {
             using var scope = _serviceProvider.CreateScope();
-            var mediator = scope.ServiceProvider.GetRequiredService<IPublisher>();
+            var mediator = scope.ServiceProvider.GetRequiredService<PublisherWrapper>();
             await mediator.Publish(@event);
         }
     }

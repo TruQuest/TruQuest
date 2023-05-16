@@ -14,10 +14,10 @@ public static class IServiceCollectionExtension
         {
             config.Lifetime = ServiceLifetime.Scoped;
             config.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
-            config.NotificationPublisherType = typeof(NotificationPublisher);
             config.AddOpenBehavior(typeof(AuthorizationBehavior<,>), ServiceLifetime.Scoped);
             config.AddOpenBehavior(typeof(TransactionBehavior<,>), ServiceLifetime.Scoped);
         });
+        services.AddScoped<PublisherWrapper>();
 
         return services;
     }

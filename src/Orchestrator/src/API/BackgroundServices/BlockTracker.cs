@@ -1,5 +1,4 @@
-using MediatR;
-
+using Application;
 using Application.Common.Interfaces;
 using Application.Ethereum.Events.BlockMined;
 
@@ -29,7 +28,7 @@ public class BlockTracker : BackgroundService
             _logger.LogInformation("Latest confirmed block: {BlockNumber}", blockNumber);
 
             using var scope = _serviceProvider.CreateScope();
-            var mediator = scope.ServiceProvider.GetRequiredService<IPublisher>();
+            var mediator = scope.ServiceProvider.GetRequiredService<PublisherWrapper>();
 
             await mediator.Publish(new BlockMinedEvent
             {
