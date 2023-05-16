@@ -58,6 +58,7 @@ class _EvidenceBlockState extends StateX<EvidenceBlock> {
                     decoration: InputDecoration(
                       hintText: 'Paste url here',
                     ),
+                    onSubmitted: (_) => Navigator.of(context).pop(true),
                   ),
                 ),
                 actions: [

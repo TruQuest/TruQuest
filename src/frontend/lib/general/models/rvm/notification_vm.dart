@@ -48,4 +48,6 @@ class NotificationVm {
   @override
   int get hashCode =>
       '$itemType:$itemId:$itemUpdateCategory:$updateTimestamp'.hashCode;
+
+  String get key => '$itemType:$itemId:$itemUpdateCategory';
 }

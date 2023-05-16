@@ -132,9 +132,27 @@ class NotificationsCache {
     _notify();
 
     if (username != null) {
+      var latestNotificationsPerItemAndCategory = <String, NotificationVm>{};
+      for (var notification in notifications) {
+        if (!latestNotificationsPerItemAndCategory.containsKey(
+          notification.key,
+        )) {
+          latestNotificationsPerItemAndCategory[notification.key] =
+              notification;
+        } else if (notification.updateTimestamp.isAfter(
+          latestNotificationsPerItemAndCategory[notification.key]!
+              .updateTimestamp,
+        )) {
+          latestNotificationsPerItemAndCategory[notification.key] =
+              notification;
+        }
+      }
+
       // @@NOTE: Updates from watched items could be mixed in with ephemeral notifications,
       // but that's alright, since those would simply be ignored on the server.
-      await _userApiService.markNotificationsAsRead(notifications);
+      await _userApiService.markNotificationsAsRead(
+        latestNotificationsPerItemAndCategory.values.toList(),
+      );
     }
   }
 }

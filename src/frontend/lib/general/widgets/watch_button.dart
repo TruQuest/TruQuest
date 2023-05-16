@@ -24,6 +24,12 @@ class _WatchButtonState extends State<WatchButton> {
   }
 
   @override
+  void didUpdateWidget(covariant WatchButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _markedAsWatched = widget.markedAsWatched;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return IconButton(
       icon: Icon(

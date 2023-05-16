@@ -33,6 +33,7 @@ class _LotteryState extends StateX<Lottery> {
     _thingBloc.dispatch(
       GetVerifierLotteryParticipants(thingId: widget.thing.id),
     );
+    _thingBloc.dispatch(GetVerifierLotteryInfo(thingId: widget.thing.id));
   }
 
   @override

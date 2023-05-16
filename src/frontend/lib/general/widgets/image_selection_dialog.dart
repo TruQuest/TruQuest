@@ -1,8 +1,8 @@
 import 'dart:js_util';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:crop_your_image/crop_your_image.dart';
+import 'package:flutter/services.dart';
 import 'package:tuple/tuple.dart';
 import 'package:image/image.dart';
 
@@ -20,6 +20,7 @@ class ImageSelectionDialog extends StatefulWidget {
 class _ImageSelectionDialogState extends State<ImageSelectionDialog> {
   final _textController = TextEditingController();
   final _cropController = CropController();
+  final _focusNode = FocusNode();
 
   Future<Tuple2<Uint8List, String>>? _getImageFuture;
   String? _imageExt;
@@ -28,6 +29,7 @@ class _ImageSelectionDialogState extends State<ImageSelectionDialog> {
   @override
   void dispose() {
     _textController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -76,6 +78,7 @@ class _ImageSelectionDialogState extends State<ImageSelectionDialog> {
                       setState(() {
                         // @@TODO: Investigate what happens with discarded futures.
                         _getImageFuture = _getImage(_textController.text);
+                        _focusNode.requestFocus();
                       });
                     }
                   },
@@ -111,13 +114,25 @@ class _ImageSelectionDialogState extends State<ImageSelectionDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          child: Text('Ok'),
-          onPressed: () {
-            if (_imageBytes != null) {
-              _cropController.crop();
+        KeyboardListener(
+          focusNode: _focusNode,
+          autofocus: false,
+          onKeyEvent: (event) {
+            if (event.logicalKey == LogicalKeyboardKey.enter &&
+                event is KeyUpEvent) {
+              if (_imageBytes != null) {
+                _cropController.crop();
+              }
             }
           },
+          child: TextButton(
+            child: Text('Ok'),
+            onPressed: () {
+              if (_imageBytes != null) {
+                _cropController.crop();
+              }
+            },
+          ),
         ),
       ],
     );
