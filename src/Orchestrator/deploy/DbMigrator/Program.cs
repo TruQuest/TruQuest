@@ -54,7 +54,12 @@ appDbContext.UserClaims.AddRange(userIds.Select(id => new IdentityUserClaim<stri
     ClaimValue = id.Substring(2, 20).ToLower()
 }));
 
-appDbContext.Tags.AddRange(new Tag("Politics"), new Tag("Sport"), new Tag("IT"));
+appDbContext.Tags.AddRange(
+    new Tag("Politics"), new Tag("Sport"), new Tag("IT"),
+    new Tag("Film"), new Tag("Music"), new Tag("Show business"),
+    new Tag("Writing"), new Tag("Space"), new Tag("Engineering"),
+    new Tag("Environment"), new Tag("Technology"), new Tag("Education")
+);
 appDbContext.SaveChanges();
 
 List<Dictionary<string, object>> details = new()

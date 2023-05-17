@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 
+import '../../general/contexts/page_context.dart';
 import '../../general/contexts/document_context.dart';
 import '../../general/widgets/document_composer.dart';
 import '../../general/widgets/evidence_block.dart';
@@ -23,6 +24,7 @@ class ThingsList extends StatefulWidget {
 }
 
 class _ThingsListState extends StateX<ThingsList> {
+  late final _pageContext = use<PageContext>();
   late final _subjectBloc = use<SubjectBloc>();
 
   @override
@@ -171,7 +173,9 @@ class _ThingsListState extends StateX<ThingsList> {
                                     color: Colors.white,
                                   ),
                                 ),
-                                onTap: () {},
+                                onTap: () => _pageContext.goto(
+                                  '/things/${thing.id}',
+                                ),
                               ),
                             ],
                           ),

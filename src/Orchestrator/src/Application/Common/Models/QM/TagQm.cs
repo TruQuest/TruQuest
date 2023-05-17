@@ -2,8 +2,8 @@ namespace Application.Common.Models.QM;
 
 public class TagQm
 {
-    public int Id { get; }
-    public string Name { get; }
+    public int Id { get; init; }
+    public string Name { get; init; }
 
     public override bool Equals(object? obj)
     {

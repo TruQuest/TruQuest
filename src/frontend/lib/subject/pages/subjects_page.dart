@@ -140,7 +140,9 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
                                     color: Colors.white,
                                   ),
                                 ),
-                                onTap: () {},
+                                onTap: () => _pageContext.goto(
+                                  '/subjects/${subject.id}',
+                                ),
                               ),
                             ],
                           ),

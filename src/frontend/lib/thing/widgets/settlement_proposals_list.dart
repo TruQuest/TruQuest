@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
 
+import '../../general/contexts/page_context.dart';
 import '../../settlement/bloc/settlement_bloc.dart';
 import '../../settlement/models/rvm/verdict_vm.dart';
 import '../../general/contexts/document_context.dart';
@@ -27,6 +28,7 @@ class SettlementProposalsList extends StatefulWidget {
 }
 
 class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
+  late final _pageContext = use<PageContext>();
   late final _thingBloc = use<ThingBloc>();
   late final _settlementBloc = use<SettlementBloc>();
 
@@ -236,7 +238,9 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
                                     color: Colors.white,
                                   ),
                                 ),
-                                onTap: () {},
+                                onTap: () => _pageContext.goto(
+                                  '/proposals/${proposal.id}',
+                                ),
                               ),
                             ],
                           ),

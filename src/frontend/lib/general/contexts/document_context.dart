@@ -5,6 +5,7 @@ import 'package:flutter_quill/flutter_quill.dart';
 
 import '../../settlement/models/im/verdict_im.dart';
 import '../../subject/models/im/subject_type_im.dart';
+import '../models/im/tag_im.dart';
 
 class DocumentContext {
   SubjectTypeIm? subjectType;
@@ -17,7 +18,7 @@ class DocumentContext {
   String? imageExt;
   Uint8List? imageBytes;
   Uint8List? croppedImageBytes;
-  final List<String> tags = [];
+  final List<TagIm> tags = [];
   final List<String> evidence = [];
 
   DocumentContext()

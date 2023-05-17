@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:multi_select_flutter/multi_select_flutter.dart';
 
+import '../bloc/general_bloc.dart';
+import '../bloc/general_actions.dart';
+import '../bloc/general_result_vm.dart';
 import '../contexts/document_context.dart';
 import '../../widget_extensions.dart';
+import '../models/im/tag_im.dart';
 
 class TagsBlock extends StatefulWidget {
   const TagsBlock({super.key});
@@ -11,91 +16,60 @@ class TagsBlock extends StatefulWidget {
 }
 
 class _TagsBlockState extends StateX<TagsBlock> {
+  late final _generalBloc = use<GeneralBloc>();
   late final _documentContext = useScoped<DocumentContext>();
+
+  late final Future<GetTagsSuccessVm> _tagsLoaded;
+
+  @override
+  void initState() {
+    super.initState();
+    var action = GetTags();
+    _generalBloc.dispatch(action);
+    _tagsLoaded = action.result;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        OutlinedButton(
-          style: OutlinedButton.styleFrom(
-            backgroundColor: Colors.purple[800],
-            foregroundColor: Colors.white,
-            elevation: 5,
+    return FutureBuilder(
+      future: _tagsLoaded,
+      builder: (context, snapshot) {
+        List<MultiSelectItem<int>>? items;
+        if (snapshot.data != null) {
+          items = snapshot.data!.tags
+              .map((t) => MultiSelectItem(t.id, t.name))
+              .toList();
+        }
+
+        return Container(
+          decoration: BoxDecoration(
+            border: Border.symmetric(
+              horizontal: BorderSide(
+                color: Colors.blue,
+                width: 2,
+              ),
+            ),
           ),
-          child: Row(
-            children: [
-              Spacer(),
-              Text('Tags'),
-              Expanded(
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Icon(Icons.add),
+          padding: const EdgeInsets.only(bottom: 4),
+          child: MultiSelectDialogField<int>(
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: Colors.transparent,
+                  width: 2,
                 ),
               ),
-            ],
+            ),
+            buttonText: Text('Tags'),
+            dialogWidth: 400,
+            items: items ?? [],
+            listType: MultiSelectListType.CHIP,
+            onConfirm: (tagIds) => _documentContext.tags.addAll(
+              tagIds.map((tagId) => TagIm(id: tagId)),
+            ),
           ),
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (_) => AlertDialog(
-                title: Text('asdasd'),
-                content: Center(
-                  child: TextButton(
-                    child: Text('Add'),
-                    onPressed: () {
-                      setState(() {
-                        _documentContext.tags.add('tag1');
-                      });
-                    },
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-        SizedBox(height: 6),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _documentContext.tags
-                .map(
-                  (tag) => OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.purple[800],
-                      side: BorderSide(color: Colors.purple[800]!),
-                      padding: const EdgeInsets.fromLTRB(4, 0, 8, 0),
-                      minimumSize: Size(0, 36),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.delete_outline,
-                          size: 18,
-                        ),
-                        SizedBox(width: 2),
-                        Flexible(
-                          child: Text(
-                            tag,
-                            overflow: TextOverflow.fade,
-                            softWrap: false,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ),
-                      ],
-                    ),
-                    onPressed: () {},
-                  ),
-                )
-                .toList(),
-          ),
-        ),
-      ],
+        );
+      },
     );
   }
 }

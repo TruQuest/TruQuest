@@ -182,6 +182,7 @@ public static class IServiceCollectionExtension
         services.AddScoped<IThingAssessmentVerifierLotterySpotClaimedEventRepository, ThingAssessmentVerifierLotterySpotClaimedEventRepository>();
         services.AddScoped<ICastedAssessmentPollVoteEventRepository, CastedAssessmentPollVoteEventRepository>();
 
+        services.AddScoped<ITagQueryable, TagQueryable>();
         services.AddScoped<ISubjectQueryable, SubjectQueryable>();
         services.AddScoped<IThingQueryable, ThingQueryable>();
         services.AddScoped<IThingAcceptancePollEventQueryable, ThingAcceptancePollEventQueryable>();

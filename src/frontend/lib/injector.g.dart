@@ -54,6 +54,9 @@ class _$Injector extends Injector {
       ..registerSingleton(
           (c) => SubscriptionManager(c<PageContext>(), c<ServerConnector>()))
       ..registerSingleton((c) => LocalStorage())
-      ..registerSingleton((c) => ToastMessenger());
+      ..registerSingleton((c) => ToastMessenger())
+      ..registerSingleton((c) => GeneralApiService(c<ServerConnector>()))
+      ..registerSingleton((c) => GeneralService(c<GeneralApiService>()))
+      ..registerSingleton((c) => GeneralBloc(c<GeneralService>()));
   }
 }

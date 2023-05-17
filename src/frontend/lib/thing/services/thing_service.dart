@@ -48,7 +48,7 @@ class ThingService {
       documentContext.imageBytes,
       documentContext.croppedImageBytes,
       documentContext.evidence,
-      [1, 2, 3],
+      documentContext.tags,
     );
 
     _progress$Channel.add(progress$);

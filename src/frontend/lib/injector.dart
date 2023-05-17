@@ -1,5 +1,8 @@
 import 'package:kiwi/kiwi.dart';
 
+import 'general/services/general_api_service.dart';
+import 'general/bloc/general_bloc.dart';
+import 'general/services/general_service.dart';
 import 'general/services/toast_messenger.dart';
 import 'general/services/local_storage.dart';
 import 'general/services/subscription_manager.dart';
@@ -58,6 +61,9 @@ abstract class Injector {
   @Register.singleton(SubscriptionManager)
   @Register.singleton(LocalStorage)
   @Register.singleton(ToastMessenger)
+  @Register.singleton(GeneralApiService)
+  @Register.singleton(GeneralService)
+  @Register.singleton(GeneralBloc)
   void configure();
 }
 
