@@ -69,11 +69,11 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
           ),
         ],
         child: DocumentView(
-          sideBlocks: [
+          rightSideBlocks: [
             VerdictViewBlock(),
             TimelineBlock(),
           ],
-          bottomBlock: EvidenceViewBlock(),
+          leftSideBlock: EvidenceViewBlock(),
         ),
       ),
     ];

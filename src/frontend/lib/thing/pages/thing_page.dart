@@ -87,7 +87,7 @@ class _ThingPageState extends StateX<ThingPage> {
           ),
         ],
         child: DocumentView(
-          sideBlocks: [
+          rightSideBlocks: [
             Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -119,7 +119,7 @@ class _ThingPageState extends StateX<ThingPage> {
             ),
             StatusStepperBlock(),
           ],
-          bottomBlock: EvidenceViewBlock(),
+          leftSideBlock: EvidenceViewBlock(),
         ),
       ),
     ];

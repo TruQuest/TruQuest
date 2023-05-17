@@ -110,7 +110,7 @@ class _SubjectPageState extends StateX<SubjectPage> {
           ),
         ],
         child: DocumentView(
-          sideBlocks: [
+          rightSideBlocks: [
             LatestThingsBlock(),
           ],
         ),

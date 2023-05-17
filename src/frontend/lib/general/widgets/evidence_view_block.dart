@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:fading_edge_scrollview/fading_edge_scrollview.dart';
+import 'package:stacked_card_carousel/stacked_card_carousel.dart';
 
+import '../contexts/document_view_context.dart';
+import '../../thing/models/rvm/evidence_vm.dart';
 import '../../widget_extensions.dart';
 
 class EvidenceViewBlock extends StatefulWidget {
@@ -11,91 +13,72 @@ class EvidenceViewBlock extends StatefulWidget {
 }
 
 class _EvidenceViewBlockState extends StateX<EvidenceViewBlock> {
-  final _scrollController = ScrollController();
+  late List<EvidenceVm> _evidence;
+
+  final _pageController = PageController(initialPage: 0);
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration(seconds: 1)).then(
+      (_) => _pageController.animateToPage(
+        _evidence.length - 1,
+        duration: Duration(seconds: 3),
+        curve: Curves.easeIn,
+      ),
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    var evidence = useScoped<DocumentViewContext>().thing!.evidence;
+    _evidence =
+        Iterable<EvidenceVm>.generate(3, (_) => evidence.first).toList();
+  }
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          color: Colors.blue[600],
-          width: double.infinity,
-          height: 30,
-          alignment: Alignment.centerLeft,
-          child: Text(
-            'Evidence',
-            style: TextStyle(color: Colors.white),
-          ),
-        ),
-        Expanded(
-          child: FadingEdgeScrollView.fromScrollView(
-            child: ListView(
-              controller: _scrollController,
-              scrollDirection: Axis.horizontal,
-              children: [
-                'https://cdn.pixabay.com/photo/2020/04/11/08/14/market-5029331_1280.jpg',
-                'https://cdn.pixabay.com/photo/2020/04/11/08/14/market-5029331_1280.jpg',
-                'https://cdn.pixabay.com/photo/2020/04/11/08/14/market-5029331_1280.jpg',
-                'https://cdn.pixabay.com/photo/2020/04/11/08/14/market-5029331_1280.jpg',
-                'https://cdn.pixabay.com/photo/2020/04/11/08/14/market-5029331_1280.jpg',
-                'https://cdn.pixabay.com/photo/2020/04/11/08/14/market-5029331_1280.jpg',
-                'https://cdn.pixabay.com/photo/2020/04/11/08/14/market-5029331_1280.jpg',
-                'https://cdn.pixabay.com/photo/2020/04/11/08/14/market-5029331_1280.jpg',
-                'https://cdn.pixabay.com/photo/2020/04/11/08/14/market-5029331_1280.jpg',
-              ]
-                  .map(
-                    (url) => Card(
-                      margin: const EdgeInsets.fromLTRB(6, 6, 6, 6),
-                      elevation: 5,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: Stack(
-                        children: [
-                          AspectRatio(
-                            aspectRatio: 16 / 9,
-                            child: Image.network(
-                              url,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            child: Container(
-                              color: Colors.black54,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 8,
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                url,
-                                overflow: TextOverflow.fade,
-                                softWrap: false,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+    return StackedCardCarousel(
+      pageController: _pageController,
+      spaceBetweenItems: 220,
+      items: _evidence
+          .map(
+            (e) => Card(
+              margin: const EdgeInsets.symmetric(horizontal: 12),
+              elevation: 5,
+              child: Column(
+                children: [
+                  Image.network(
+                    'http://localhost:8080/ipfs/' + e.previewImageIpfsCid,
+                    width: double.infinity,
+                  ),
+                  SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      e.originUrl,
+                      overflow: TextOverflow.fade,
+                      softWrap: false,
                     ),
-                  )
-                  .toList(),
+                  ),
+                  SizedBox(height: 12),
+                  OutlinedButton(
+                    onPressed: () {},
+                    child: Text('Open'),
+                  ),
+                  SizedBox(height: 12),
+                ],
+              ),
             ),
-          ),
-        ),
-      ],
+          )
+          .toList(),
     );
   }
 }

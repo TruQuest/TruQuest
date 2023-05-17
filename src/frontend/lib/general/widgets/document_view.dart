@@ -5,13 +5,13 @@ import '../contexts/document_view_context.dart';
 import '../../widget_extensions.dart';
 
 class DocumentView extends StatefulWidget {
-  final List<Widget> sideBlocks;
-  final Widget? bottomBlock;
+  final List<Widget> rightSideBlocks;
+  final Widget? leftSideBlock;
 
   const DocumentView({
     super.key,
-    required this.sideBlocks,
-    this.bottomBlock,
+    required this.rightSideBlocks,
+    this.leftSideBlock,
   });
 
   @override
@@ -47,40 +47,34 @@ class _DocumentViewState extends StateX<DocumentView> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (widget.leftSideBlock != null)
+            Expanded(flex: 17, child: widget.leftSideBlock!),
           Expanded(
-            flex: 3,
-            child: Column(
-              children: [
-                Expanded(
-                  flex: 4,
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: QuillEditor(
-                      key: PageStorageKey('quill'),
-                      controller: _controller,
-                      scrollController: _scrollController,
-                      scrollable: true,
-                      focusNode: _focusNode,
-                      autoFocus: false,
-                      readOnly: true,
-                      expands: true,
-                      showCursor: false,
-                      padding: const EdgeInsets.all(12),
-                    ),
-                  ),
-                ),
-                if (widget.bottomBlock != null)
-                  Expanded(child: widget.bottomBlock!),
-              ],
+            flex: 59,
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: QuillEditor(
+                key: PageStorageKey('quill'),
+                controller: _controller,
+                scrollController: _scrollController,
+                scrollable: true,
+                focusNode: _focusNode,
+                autoFocus: false,
+                readOnly: true,
+                expands: true,
+                showCursor: false,
+                padding: const EdgeInsets.all(12),
+              ),
             ),
           ),
           VerticalDivider(),
           Expanded(
+            flex: 24,
             child: SingleChildScrollView(
               key: PageStorageKey('side-blocks'),
               controller: _sideBlocksScrollController,
               child: Column(
-                children: widget.sideBlocks
+                children: widget.rightSideBlocks
                     .map(
                       (block) => Padding(
                         padding: const EdgeInsets.symmetric(
