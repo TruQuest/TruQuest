@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
+import '../bloc/notification_bloc.dart';
 import '../../settlement/pages/settlement_proposal_page.dart';
 import '../../pong/game.dart';
 import '../../subject/pages/subject_page.dart';
@@ -21,19 +23,33 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends StateX<HomePage> {
   late final _subscriptionManager = use<SubscriptionManager>();
   late final _pageContext = use<PageContext>();
+  late final _notificationBloc = use<NotificationBloc>();
 
   PageController? _pageController;
 
   PongGame? _game;
   BoxConstraints? _gameWidgetConstraints;
 
+  late final FToast _fToast;
+
   @override
   void initState() {
     super.initState();
+
     _subscriptionManager.init();
     _pageContext.init().then(
           (pageController) => setState(() => _pageController = pageController),
         );
+
+    _fToast = FToast();
+    _fToast.init(context);
+    _notificationBloc.toast$.listen(
+      (toast) => _fToast.showToast(
+        child: toast,
+        gravity: ToastGravity.BOTTOM_RIGHT,
+        toastDuration: Duration(seconds: 10),
+      ),
+    );
   }
 
   @override

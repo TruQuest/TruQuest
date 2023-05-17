@@ -45,12 +45,9 @@ class _PrepareDraftButtonState extends StateX<PrepareDraftButton> {
               });
 
               CreateNewThingDraftFailureVm? vm = await action.result;
-              if (vm != null) {
-                // ...
-                return;
+              if (vm == null) {
+                Navigator.of(this.context).pop();
               }
-
-              Navigator.of(this.context).pop();
             }
           : null,
     );

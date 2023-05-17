@@ -48,7 +48,7 @@ class _DocumentViewState extends StateX<DocumentView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            flex: 4,
+            flex: 3,
             child: Column(
               children: [
                 Expanded(

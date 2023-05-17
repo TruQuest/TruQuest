@@ -19,9 +19,9 @@ class GetThingFailureVm extends GetThingResultVm {
   GetThingFailureVm({required this.message});
 }
 
-class SubmitNewThingSuccessVm extends ThingResultVm {}
+class SubmitNewThingFailureVm extends ThingResultVm {}
 
-class FundThingSuccessVm extends ThingResultVm {}
+class FundThingFailureVm extends ThingResultVm {}
 
 class GetVerifierLotteryInfoSuccessVm extends ThingResultVm {
   final int? initBlock;

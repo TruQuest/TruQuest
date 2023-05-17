@@ -6,6 +6,7 @@ public enum ThingState
     AwaitingFunding,
     FundedAndVerifierLotteryInitiated,
     VerifiersSelectedAndPollInitiated,
+    Declined,
     AwaitingSettlement,
     Settled,
 }

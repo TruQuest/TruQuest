@@ -4,6 +4,7 @@ enum ThingStateVm {
   awaitingFunding,
   fundedAndVerifierLotteryInitiated,
   verifiersSelectedAndPollInitiated,
+  declined,
   awaitingSettlement,
   settled,
 }
@@ -19,6 +20,8 @@ extension ThingStateVmExtension on ThingStateVm {
         return 'Awaiting verifier lottery results';
       case ThingStateVm.verifiersSelectedAndPollInitiated:
         return 'Awaiting acceptance poll results';
+      case ThingStateVm.declined:
+        return 'Declined';
       case ThingStateVm.awaitingSettlement:
         return 'Awaiting settlement';
       case ThingStateVm.settled:

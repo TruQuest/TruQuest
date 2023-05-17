@@ -42,8 +42,11 @@ class _BlockCountdownState extends State<BlockCountdown> {
     super.didUpdateWidget(oldWidget);
     if (_currentValue == 360) {
       _currentValue = 0;
-      Future.delayed(Duration(seconds: 3))
-          .then((_) => setState(() => _currentValue = 360));
+      Future.delayed(Duration(seconds: 3)).then((_) {
+        if (mounted) {
+          setState(() => _currentValue = 360);
+        }
+      });
     }
   }
 

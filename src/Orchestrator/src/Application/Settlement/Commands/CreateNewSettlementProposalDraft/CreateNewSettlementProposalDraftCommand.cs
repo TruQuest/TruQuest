@@ -39,6 +39,7 @@ internal class CreateNewSettlementProposalDraftCommandHandler :
         CreateNewSettlementProposalDraftCommand command, CancellationToken ct
     )
     {
+        // @@TODO: Check that the thing is actually awaiting settlement.
         // @@TODO??: Check that there isn't an already funded proposal? Or allow new drafts event if there is one?
 
         var result = await _fileReceiver.ReceiveFilesAndFormValues(

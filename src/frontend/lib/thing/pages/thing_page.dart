@@ -3,13 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:tab_container/tab_container.dart';
 
+import '../widgets/status_stepper_block.dart';
 import '../bloc/thing_result_vm.dart';
 import '../../user/bloc/user_result_vm.dart';
 import '../../general/widgets/watch_button.dart';
 import '../../subject/widgets/avatar_with_reputation_gauge.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../widgets/settlement_proposals_list.dart';
-import '../widgets/timeline_block.dart';
 import '../../general/widgets/arc_banner_image.dart';
 import '../../general/widgets/poster.dart';
 import '../models/rvm/get_thing_rvm.dart';
@@ -117,7 +117,7 @@ class _ThingPageState extends StateX<ThingPage> {
                 ),
               ),
             ),
-            TimelineBlock(),
+            StatusStepperBlock(),
           ],
           bottomBlock: EvidenceViewBlock(),
         ),

@@ -1,5 +1,6 @@
 import 'package:kiwi/kiwi.dart';
 
+import 'general/services/toast_messenger.dart';
 import 'general/services/local_storage.dart';
 import 'general/services/subscription_manager.dart';
 import 'general/services/notifications_cache.dart';
@@ -56,6 +57,7 @@ abstract class Injector {
   @Register.singleton(NotificationsCache)
   @Register.singleton(SubscriptionManager)
   @Register.singleton(LocalStorage)
+  @Register.singleton(ToastMessenger)
   void configure();
 }
 

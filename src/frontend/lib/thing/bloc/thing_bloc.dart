@@ -1,5 +1,8 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
+
+import '../../general/services/toast_messenger.dart';
 import '../models/rvm/get_settlement_proposals_list_rvm.dart';
 import '../models/rvm/get_verifiers_rvm.dart';
 import '../models/rvm/thing_state_vm.dart';
@@ -10,6 +13,7 @@ import '../services/thing_service.dart';
 import 'thing_actions.dart';
 
 class ThingBloc extends Bloc<ThingAction> {
+  final ToastMessenger _toastMessenger;
   final ThingService _thingService;
 
   final StreamController<GetThingResultVm> _thingChannel =
@@ -38,10 +42,34 @@ class ThingBloc extends Bloc<ThingAction> {
   Stream<GetSettlementProposalsListRvm> get proposalsList$ =>
       _proposalsListChannel.stream;
 
-  ThingBloc(this._thingService) {
+  ThingBloc(this._toastMessenger, this._thingService) {
     actionChannel.stream.listen((action) {
+      List<String>? validationErrors;
+      if (action.mustValidate) {
+        validationErrors = action.validate();
+        if (validationErrors != null) {
+          _toastMessenger.add(
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: validationErrors
+                    .map(
+                      (error) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Text(error),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
+          );
+        }
+      }
+
       if (action is CreateNewThingDraft) {
-        _createNewThingDraft(action);
+        _createNewThingDraft(action, validationErrors);
       } else if (action is GetThing) {
         _getThing(action);
       } else if (action is SubmitNewThing) {
@@ -72,7 +100,15 @@ class ThingBloc extends Bloc<ThingAction> {
     });
   }
 
-  void _createNewThingDraft(CreateNewThingDraft action) async {
+  void _createNewThingDraft(
+    CreateNewThingDraft action,
+    List<String>? validationErrors,
+  ) async {
+    if (validationErrors != null) {
+      action.complete(CreateNewThingDraftFailureVm());
+      return;
+    }
+
     await _thingService.createNewThingDraft(action.documentContext);
     action.complete(null);
   }
@@ -101,12 +137,12 @@ class ThingBloc extends Bloc<ThingAction> {
 
   void _submitNewThing(SubmitNewThing action) async {
     await _thingService.submitNewThing(action.thing.id);
-    action.complete(SubmitNewThingSuccessVm());
+    action.complete(null);
   }
 
   void _fundThing(FundThing action) async {
     await _thingService.fundThing(action.thing.id, action.signature);
-    action.complete(FundThingSuccessVm());
+    action.complete(null);
   }
 
   void _refreshVerifierLotteryInfo(String thingId) async {

@@ -25,10 +25,11 @@ class _$Injector extends Injector {
           c<TruQuestContract>(),
           c<ThingSubmissionVerifierLotteryContract>(),
           c<AcceptancePollContract>()))
-      ..registerSingleton((c) => ThingBloc(c<ThingService>()))
+      ..registerSingleton(
+          (c) => ThingBloc(c<ToastMessenger>(), c<ThingService>()))
       ..registerFactory((c) => DocumentContext())
-      ..registerSingleton((c) => NotificationBloc(
-          c<NotificationsCache>(), c<ThingService>(), c<SettlementService>()))
+      ..registerSingleton((c) => NotificationBloc(c<NotificationsCache>(),
+          c<ToastMessenger>(), c<ThingService>(), c<SettlementService>()))
       ..registerSingleton((c) => SubjectBloc(c<SubjectService>()))
       ..registerSingleton((c) => SubjectService(c<SubjectApiService>()))
       ..registerSingleton((c) => SubjectApiService(c<ServerConnector>()))
@@ -52,6 +53,7 @@ class _$Injector extends Injector {
           c<UserService>(), c<UserApiService>(), c<ServerConnector>()))
       ..registerSingleton(
           (c) => SubscriptionManager(c<PageContext>(), c<ServerConnector>()))
-      ..registerSingleton((c) => LocalStorage());
+      ..registerSingleton((c) => LocalStorage())
+      ..registerSingleton((c) => ToastMessenger());
   }
 }
