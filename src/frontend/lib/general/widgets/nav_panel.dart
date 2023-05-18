@@ -130,7 +130,11 @@ class NavPanel extends StatelessWidgetX {
                 ),
               ),
               Spacer(),
-              UserStatusTracker(),
+              Container(
+                width: 150,
+                alignment: Alignment.centerRight,
+                child: UserStatusTracker(),
+              ),
             ],
           ),
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:side_sheet/side_sheet.dart';
 
 import '../contexts/page_context.dart';
@@ -20,7 +21,12 @@ class NotificationTracker extends StatelessWidgetX {
       stream: _notificationsCache.unreadNotifications$,
       builder: (context, snapshot) {
         if (snapshot.data == null || snapshot.data!.item1.isEmpty) {
-          return Center(child: Text('Nothing here yet'));
+          return Center(
+            child: Text(
+              'Nothing here yet',
+              style: TextStyle(color: Colors.white),
+            ),
+          );
         }
 
         var notifications = snapshot.data!.item1;
@@ -35,8 +41,16 @@ class NotificationTracker extends StatelessWidgetX {
                 padding: const EdgeInsets.all(6),
                 child: Row(
                   children: [
-                    Text('${notifications.length} notification(s)'),
-                    Spacer(),
+                    SizedBox(width: 40),
+                    Expanded(
+                      child: Text(
+                        '${notifications.length} notification(s)',
+                        style: GoogleFonts.philosopher(
+                          fontSize: 18,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                     IconButton(
                       icon: Icon(
                         Icons.delete_sweep,
@@ -58,11 +72,7 @@ class NotificationTracker extends StatelessWidgetX {
                 itemCount: notifications.length,
                 itemBuilder: (context, index) {
                   var notification = notifications[index];
-                  return ListTile(
-                    title: Text(notification.title),
-                    subtitle: notification.details != null
-                        ? Text(notification.details!)
-                        : null,
+                  return InkWell(
                     onTap: () {
                       _notificationBloc.dispatch(Dismiss(
                         notifications: [notification],
@@ -72,15 +82,49 @@ class NotificationTracker extends StatelessWidgetX {
                       _pageContext.goto(notification.itemRoute);
                       Navigator.of(context).pop();
                     },
-                    trailing: IconButton(
-                      icon: Icon(
-                        Icons.delete,
-                        color: Colors.red,
-                      ),
-                      onPressed: () => _notificationBloc.dispatch(
-                        Dismiss(
-                          notifications: [notification],
-                          username: username,
+                    child: Card(
+                      margin: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                      elevation: 5,
+                      shadowColor: Colors.white,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(10, 10, 2, 10),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    notification.title,
+                                    style: GoogleFonts.philosopher(
+                                      color: Colors.black,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  SizedBox(height: 6),
+                                  Text(
+                                    notification.details!,
+                                    style: GoogleFonts.raleway(
+                                      color: Colors.black87,
+                                    ),
+                                    maxLines: 2,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                Icons.delete,
+                                color: Colors.red,
+                              ),
+                              onPressed: () => _notificationBloc.dispatch(
+                                Dismiss(
+                                  notifications: [notification],
+                                  username: username,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -122,13 +166,14 @@ class NotificationTracker extends StatelessWidgetX {
               padding: const EdgeInsets.all(12),
               onPressed: () => SideSheet.left(
                 context: context,
+                sheetColor: Colors.black54,
                 width: MediaQuery.of(context).size.width * 0.2,
                 body: _buildNotificationPanel(),
               ),
             ),
             Positioned(
               top: 8,
-              left: 30,
+              left: 36,
               child: count > 0
                   ? Text(
                       count.toString(),

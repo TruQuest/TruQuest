@@ -129,7 +129,22 @@ class _LotteryState extends StateX<Lottery> {
                             Icons.numbers,
                             size: 14,
                           ),
-                        )
+                        ),
+                        Positioned(
+                          top: 0,
+                          bottom: 0,
+                          right: 0,
+                          child: Center(
+                            child: IconButton(
+                              icon: Icon(Icons.refresh),
+                              onPressed: () => _thingBloc.dispatch(
+                                GetVerifierLotteryParticipants(
+                                  thingId: widget.thing.id,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),

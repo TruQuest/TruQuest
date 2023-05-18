@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:stacked_card_carousel/stacked_card_carousel.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../contexts/document_view_context.dart';
 import '../../thing/models/rvm/evidence_vm.dart';
@@ -70,7 +71,11 @@ class _EvidenceViewBlockState extends StateX<EvidenceViewBlock> {
                   ),
                   SizedBox(height: 12),
                   OutlinedButton(
-                    onPressed: () {},
+                    onPressed: () async {
+                      await launchUrl(
+                        Uri.parse('http://localhost:8080/ipfs/' + e.ipfsCid),
+                      );
+                    },
                     child: Text('Open'),
                   ),
                   SizedBox(height: 12),
