@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
+import '../widgets/clipped_rect.dart';
+import '../widgets/nav_panel.dart';
 import '../bloc/notification_bloc.dart';
 import '../../settlement/pages/settlement_proposal_page.dart';
 import '../../pong/game.dart';
@@ -11,7 +13,6 @@ import '../contexts/page_context.dart';
 import '../../subject/pages/subjects_page.dart';
 import '../../widget_extensions.dart';
 import '../services/subscription_manager.dart';
-import '../widgets/status_panel.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -31,6 +32,30 @@ class _HomePageState extends StateX<HomePage> {
   BoxConstraints? _gameWidgetConstraints;
 
   late final FToast _fToast;
+
+  // @@NOTE: Despite doing this, switching pages still causes these widgets to be disposed.
+  late final List<Widget> _headers = [
+    SliverAppBar(
+      floating: true,
+      pinned: false,
+      snap: false,
+      backgroundColor: Colors.white,
+      leadingWidth: 150,
+      leading: ClippedRect(
+        height: 70,
+        color: Colors.black,
+        fromNarrowToWide: true,
+      ),
+      title: Image.asset(
+        'assets/images/logo1.png',
+        height: 60,
+      ),
+      toolbarHeight: 70,
+      centerTitle: true,
+      elevation: 0,
+    ),
+    NavPanel(),
+  ];
 
   @override
   void initState() {
@@ -55,133 +80,53 @@ class _HomePageState extends StateX<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('TruQuest'),
-        actions: [StatusPanel()],
-      ),
       body: _pageController == null
           ? Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Container(
-                  color: Colors.teal,
-                  child: Row(
-                    children: [
-                      LimitedBox(
-                        maxWidth: 150,
-                        child: ListTile(
-                          leading: Icon(
-                            Icons.group_sharp,
-                            color: Colors.white,
-                          ),
-                          title: Text(
-                            'Subjects',
-                            style: TextStyle(
-                              color: Colors.white,
-                            ),
-                          ),
-                          onTap: () => _pageContext.goto('/subjects'),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      LimitedBox(
-                        maxWidth: 150,
-                        child: ListTile(
-                          leading: Icon(
-                            Icons.subject,
-                            color: Colors.white,
-                          ),
-                          title: Text(
-                            'Things',
-                            style: TextStyle(
-                              color: Colors.white,
-                            ),
-                          ),
-                          onTap: () => _pageContext.goto('/things'),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      LimitedBox(
-                        maxWidth: 150,
-                        child: ListTile(
-                          leading: Icon(
-                            Icons.question_mark,
-                            color: Colors.white,
-                          ),
-                          title: Text(
-                            'How To',
-                            style: TextStyle(
-                              color: Colors.white,
-                            ),
-                          ),
-                          onTap: () => _pageContext.goto('/how-to'),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      LimitedBox(
-                        maxWidth: 150,
-                        child: ListTile(
-                          leading: Icon(
-                            Icons.play_circle_outline,
-                            color: Colors.white,
-                          ),
-                          title: Text(
-                            'Pong!',
-                            style: TextStyle(
-                              color: Colors.white,
-                            ),
-                          ),
-                          onTap: () => _pageContext.goto('/pong'),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      LimitedBox(
-                        maxWidth: 150,
-                        child: ListTile(
-                          leading: Icon(
-                            Icons.manage_search_sharp,
-                            color: Colors.white,
-                          ),
-                          title: Text(
-                            'Go To',
-                            style: TextStyle(
-                              color: Colors.white,
-                            ),
-                          ),
-                          onTap: () => _pageContext.goto('/goto'),
+          : PageView.builder(
+              controller: _pageController,
+              physics: NeverScrollableScrollPhysics(),
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return CustomScrollView(
+                    slivers: [
+                      ..._headers,
+                      SubjectsPage(),
+                    ],
+                  );
+                } else if (index == 1) {
+                  return CustomScrollView(
+                    slivers: [
+                      ..._headers,
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Center(
+                          child: Text('Things'),
                         ),
                       ),
                     ],
-                  ),
-                ),
-                Expanded(
-                  child: PageView.builder(
-                    controller: _pageController,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemBuilder: (context, index) {
-                      if (index == 0) {
-                        return SubjectsPage();
-                      } else if (index == 1) {
-                        return Center(
-                          child: Text('Things'),
-                        );
-                      } else if (index == 2) {
-                        return Center(
-                          child: Text('How To'),
-                        );
-                      } else if (index == 3) {
-                        return LayoutBuilder(
-                          builder: (context, constraints) {
-                            if (_game == null ||
-                                _gameWidgetConstraints != constraints) {
-                              _game = PongGame();
-                              _gameWidgetConstraints = constraints;
-                            }
-                            return GameWidget(game: _game!);
-                          },
-                        );
-                      } else if (index == 4) {
-                        return Center(
+                  );
+                } else if (index == 2) {
+                  return Center(
+                    child: Text('How To'),
+                  );
+                } else if (index == 3) {
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      if (_game == null ||
+                          _gameWidgetConstraints != constraints) {
+                        _game = PongGame();
+                        _gameWidgetConstraints = constraints;
+                      }
+                      return GameWidget(game: _game!);
+                    },
+                  );
+                } else if (index == 4) {
+                  return CustomScrollView(
+                    slivers: [
+                      ..._headers,
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Center(
                           child: TextButton(
                             child: Text('Go To'),
                             onPressed: () async {
@@ -214,27 +159,32 @@ class _HomePageState extends StateX<HomePage> {
                               }
                             },
                           ),
-                        );
-                      }
+                        ),
+                      ),
+                    ],
+                  );
+                }
 
-                      var route = _pageContext.currentRoute;
-                      var routeSplit = route.split('/');
-                      if (routeSplit[1] == 'subjects') {
-                        var subjectId = routeSplit.last;
-                        return SubjectPage(subjectId: subjectId);
-                      } else if (routeSplit[1] == 'things') {
-                        var thingId = routeSplit.last;
-                        return ThingPage(thingId: thingId);
-                      } else if (routeSplit[1] == 'proposals') {
-                        var proposalId = routeSplit.last;
-                        return SettlementProposalPage(proposalId: proposalId);
-                      }
+                var route = _pageContext.currentRoute;
+                var routeSplit = route.split('/');
+                if (routeSplit[1] == 'subjects') {
+                  var subjectId = routeSplit.last;
+                  return SubjectPage(subjectId: subjectId);
+                } else if (routeSplit[1] == 'things') {
+                  var thingId = routeSplit.last;
+                  return CustomScrollView(
+                    slivers: [
+                      ..._headers,
+                      ThingPage(thingId: thingId),
+                    ],
+                  );
+                } else if (routeSplit[1] == 'proposals') {
+                  var proposalId = routeSplit.last;
+                  return SettlementProposalPage(proposalId: proposalId);
+                }
 
-                      return Center(child: Text('Not Found'));
-                    },
-                  ),
-                ),
-              ],
+                return Center(child: Text('Not Found'));
+              },
             ),
     );
   }

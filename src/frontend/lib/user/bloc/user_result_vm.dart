@@ -9,3 +9,5 @@ class LoadCurrentUserSuccessVm extends UserResultVm {
 }
 
 class SignUpFailureVm extends UserResultVm {}
+
+class SignInFailureVm extends UserResultVm {}

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:sliver_tools/sliver_tools.dart';
 import 'package:tab_container/tab_container.dart';
 
 import '../widgets/status_stepper_block.dart';
@@ -240,24 +241,28 @@ class _ThingPageState extends StateX<ThingPage> {
       stream: _thingBloc.thing$,
       builder: (context, snapshot) {
         if (snapshot.data == null) {
-          return Center(child: CircularProgressIndicator());
+          return SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(child: CircularProgressIndicator()),
+          );
         }
 
         var vm = snapshot.data!;
         if (vm is GetThingFailureVm) {
-          return Center(child: Text(vm.message));
+          return SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(child: Text(vm.message)),
+          );
         }
 
         vm as GetThingSuccessVm;
 
-        return SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildHeader(vm.result.thing),
-              SizedBox(height: 30),
-              _buildBody(vm.result),
-            ],
-          ),
+        return MultiSliver(
+          children: [
+            SliverToBoxAdapter(child: _buildHeader(vm.result.thing)),
+            SliverToBoxAdapter(child: SizedBox(height: 30)),
+            SliverToBoxAdapter(child: _buildBody(vm.result)),
+          ],
         );
       },
     );

@@ -33,27 +33,33 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: StreamBuilder(
-        stream: _subjectBloc.subjects$,
-        builder: (context, snapshot) {
-          if (snapshot.data == null) {
-            return Center(
+    return StreamBuilder(
+      stream: _subjectBloc.subjects$,
+      builder: (context, snapshot) {
+        if (snapshot.data == null) {
+          return SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
               child: CircularProgressIndicator(),
-            );
-          }
+            ),
+          );
+        }
 
-          var subjects = snapshot.data!;
-          if (subjects.isEmpty) {
-            return Center(
+        var subjects = snapshot.data!;
+        if (subjects.isEmpty) {
+          return SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
               child: Text('Nothing here yet'),
-            );
-          }
+            ),
+          );
+        }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: subjects.length,
-            itemBuilder: (context, index) {
+        subjects = Iterable.generate(10, (_) => subjects.first).toList();
+
+        return SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
               var subject = subjects[index];
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
@@ -172,34 +178,10 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
                 ),
               );
             },
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: () async {
-          var jumpToRoute = await showDialog<String>(
-            context: context,
-            barrierDismissible: false,
-            builder: (_) => ScopeX(
-              child: DocumentComposer(
-                title: 'New subject',
-                nameFieldLabel: 'Name',
-                submitButton: SubmitButton(),
-                sideBlocks: [
-                  TypeSelectorBlock(),
-                  ImageBlockWithCrop(cropCircle: true),
-                  TagsBlock(),
-                ],
-              ),
-            ),
-          );
-
-          if (jumpToRoute != null) {
-            _pageContext.goto(jumpToRoute);
-          }
-        },
-      ),
+            childCount: subjects.length,
+          ),
+        );
+      },
     );
   }
 }

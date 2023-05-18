@@ -6,6 +6,7 @@ import '../bloc/notification_actions.dart';
 import '../bloc/notification_bloc.dart';
 import '../services/notifications_cache.dart';
 import '../../widget_extensions.dart';
+import 'clipped_rect.dart';
 
 class NotificationTracker extends StatelessWidgetX {
   late final _notificationBloc = use<NotificationBloc>();
@@ -100,7 +101,10 @@ class NotificationTracker extends StatelessWidgetX {
       builder: (context, snapshot) {
         var count = snapshot.data ?? 0;
         var icon = count == 0
-            ? Icon(Icons.notifications)
+            ? Icon(
+                Icons.notifications,
+                color: Colors.black,
+              )
             : Icon(
                 Icons.notifications_active,
                 color: Colors.red,
@@ -108,10 +112,15 @@ class NotificationTracker extends StatelessWidgetX {
 
         return Stack(
           children: [
+            ClippedRect(
+              height: 50,
+              color: Colors.white,
+              fromNarrowToWide: false,
+            ),
             IconButton(
               icon: icon,
               padding: const EdgeInsets.all(12),
-              onPressed: () => SideSheet.right(
+              onPressed: () => SideSheet.left(
                 context: context,
                 width: MediaQuery.of(context).size.width * 0.2,
                 body: _buildNotificationPanel(),
@@ -119,12 +128,12 @@ class NotificationTracker extends StatelessWidgetX {
             ),
             Positioned(
               top: 8,
-              right: 8,
+              left: 30,
               child: count > 0
                   ? Text(
                       count.toString(),
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Colors.black,
                       ),
                     )
                   : SizedBox.shrink(),

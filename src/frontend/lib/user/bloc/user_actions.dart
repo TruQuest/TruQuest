@@ -18,4 +18,4 @@ class SignUp extends UserActionAwaitable<SignUpFailureVm?> {
   });
 }
 
-class SignIn extends UserAction {}
+class SignIn extends UserActionAwaitable<SignInFailureVm?> {}

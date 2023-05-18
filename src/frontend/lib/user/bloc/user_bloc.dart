@@ -14,6 +14,8 @@ class UserBloc extends Bloc<UserAction> {
       BehaviorSubject<LoadCurrentUserSuccessVm>();
   Stream<LoadCurrentUserSuccessVm> get currentUser$ =>
       _currentUserChannel.stream;
+  LoadCurrentUserSuccessVm? get latestCurrentUser =>
+      _currentUserChannel.valueOrNull;
 
   UserBloc(this._userService) {
     actionChannel.stream.listen((action) {
@@ -40,5 +42,6 @@ class UserBloc extends Bloc<UserAction> {
 
   void _signIn(SignIn action) async {
     await _userService.signIn();
+    action.complete(null);
   }
 }
