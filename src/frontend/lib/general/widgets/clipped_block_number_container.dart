@@ -26,7 +26,7 @@ class ClippedBlockNumberContainer extends StatelessWidget {
             bottomLeft: Radius.circular(12),
           ),
         ),
-        alignment: Alignment(-0.25, 0),
+        alignment: Alignment(-0.2, 0),
         child: child,
       ),
     );

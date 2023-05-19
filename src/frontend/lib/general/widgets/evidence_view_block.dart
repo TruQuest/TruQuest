@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked_card_carousel/stacked_card_carousel.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -33,9 +34,7 @@ class _EvidenceViewBlockState extends StateX<EvidenceViewBlock> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    var evidence = useScoped<DocumentViewContext>().thing!.evidence;
-    _evidence =
-        Iterable<EvidenceVm>.generate(3, (_) => evidence.first).toList();
+    _evidence = useScoped<DocumentViewContext>().thing!.evidence;
   }
 
   @override
@@ -53,7 +52,9 @@ class _EvidenceViewBlockState extends StateX<EvidenceViewBlock> {
           .map(
             (e) => Card(
               margin: const EdgeInsets.symmetric(horizontal: 12),
-              elevation: 5,
+              elevation: 10,
+              clipBehavior: Clip.antiAlias,
+              shadowColor: Colors.white,
               child: Column(
                 children: [
                   Image.network(
@@ -67,18 +68,27 @@ class _EvidenceViewBlockState extends StateX<EvidenceViewBlock> {
                       e.originUrl,
                       overflow: TextOverflow.fade,
                       softWrap: false,
+                      style: GoogleFonts.raleway(),
                     ),
                   ),
-                  SizedBox(height: 12),
-                  OutlinedButton(
+                  SizedBox(height: 8),
+                  ElevatedButton.icon(
                     onPressed: () async {
                       await launchUrl(
                         Uri.parse('http://localhost:8080/ipfs/' + e.ipfsCid),
                       );
                     },
-                    child: Text('Open'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color.fromARGB(255, 183, 166, 190),
+                      foregroundColor: Colors.white,
+                    ),
+                    icon: Icon(
+                      Icons.launch,
+                      size: 18,
+                    ),
+                    label: Text('Open'),
                   ),
-                  SizedBox(height: 12),
+                  SizedBox(height: 8),
                 ],
               ),
             ),

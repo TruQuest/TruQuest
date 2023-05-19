@@ -51,7 +51,12 @@ class _DocumentViewState extends StateX<DocumentView> {
             Expanded(flex: 17, child: widget.leftSideBlock!),
           Expanded(
             flex: 59,
-            child: Padding(
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(0, 32, 0, 12),
+              decoration: BoxDecoration(
+                color: Color(0xffF8F9FA),
+                borderRadius: BorderRadius.circular(12),
+              ),
               padding: const EdgeInsets.all(4),
               child: QuillEditor(
                 key: PageStorageKey('quill'),
@@ -67,7 +72,6 @@ class _DocumentViewState extends StateX<DocumentView> {
               ),
             ),
           ),
-          VerticalDivider(),
           Expanded(
             flex: 24,
             child: SingleChildScrollView(

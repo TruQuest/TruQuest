@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
 enum AvatarSize {
@@ -32,15 +33,23 @@ class AvatarWithReputationGauge extends StatelessWidget {
             size: size == AvatarSize.big
                 ? 270
                 : size == AvatarSize.medium
-                    ? 165
+                    ? 230
                     : 145,
             animationEnabled: false,
             customColors: CustomSliderColors(
-              trackColor: color,
+              dotColor: Colors.transparent,
+              trackColor: color.withOpacity(0.7),
               progressBarColors: [
-                Color(0xff5465ff),
-                Color(0xff788bff),
-                Color(0xffb0c1ff),
+                // Color(0xff5465ff),
+                // Color(0xff788bff),
+                // Color(0xffb0c1ff),
+                // Color(0xFF3E54AC),
+                // Color(0xFF655DBB),
+                // Color(0xFFBFACE2),
+                Color(0xFFECF2FF),
+                Color(0xFFE15FED),
+                Color(0xFF9254C8),
+                Color(0xFF332FD0),
               ],
             ),
           ),
@@ -54,14 +63,16 @@ class AvatarWithReputationGauge extends StatelessWidget {
               child: Transform.translate(
                 offset: size == AvatarSize.big
                     ? Offset(40, 0)
-                    : Offset(
-                        reputation < 10 ? 40 : 20,
-                        20,
-                      ),
+                    : size == AvatarSize.medium
+                        ? Offset(40, 4)
+                        : Offset(
+                            reputation < 10 ? 40 : 20,
+                            20,
+                          ),
                 child: Text(
                   reputation.toString(),
-                  style: TextStyle(
-                    fontSize: 34,
+                  style: GoogleFonts.righteous(
+                    fontSize: size == AvatarSize.big ? 34 : 28,
                     color: color,
                   ),
                 ),
@@ -73,12 +84,12 @@ class AvatarWithReputationGauge extends StatelessWidget {
           width: size == AvatarSize.big
               ? 210
               : size == AvatarSize.medium
-                  ? 130
+                  ? 180
                   : 110,
           height: size == AvatarSize.big
               ? 210
               : size == AvatarSize.medium
-                  ? 130
+                  ? 180
                   : 110,
           decoration: BoxDecoration(
             border: Border.all(
@@ -89,7 +100,7 @@ class AvatarWithReputationGauge extends StatelessWidget {
               size == AvatarSize.big
                   ? 105
                   : size == AvatarSize.medium
-                      ? 65
+                      ? 90
                       : 55,
             ),
             color: Color(0xff4361ee),
@@ -99,12 +110,12 @@ class AvatarWithReputationGauge extends StatelessWidget {
           width: size == AvatarSize.big
               ? 200
               : size == AvatarSize.medium
-                  ? 120
+                  ? 170
                   : 100,
           height: size == AvatarSize.big
               ? 200
               : size == AvatarSize.medium
-                  ? 120
+                  ? 170
                   : 100,
           decoration: BoxDecoration(
             color: Colors.white,
@@ -112,7 +123,7 @@ class AvatarWithReputationGauge extends StatelessWidget {
               size == AvatarSize.big
                   ? 100
                   : size == AvatarSize.medium
-                      ? 60
+                      ? 85
                       : 50,
             ),
           ),

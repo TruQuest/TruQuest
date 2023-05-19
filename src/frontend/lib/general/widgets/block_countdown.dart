@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
 import '../../general/utils/utils.dart';
@@ -20,12 +21,12 @@ class _BlockCountdownState extends State<BlockCountdown> {
       shadowWidth: 60,
     ),
     customColors: CustomSliderColors(
-      dotColor: Colors.white.withOpacity(0.1),
+      dotColor: Colors.transparent,
       trackColor: Color(0xffF9EBE0).withOpacity(0.5),
       progressBarColors: [
-        Color(0xffA586EE).withOpacity(0.3),
-        Color(0xffF9D3D2).withOpacity(0.3),
-        Color(0xffBF79C2).withOpacity(0.3),
+        Color(0xffA586EE),
+        Color(0xffF9D3D2),
+        Color(0xffBF79C2),
       ],
       shadowColor: Color(0xff7F5ED9),
       shadowMaxOpacity: 0.05,
@@ -74,8 +75,9 @@ class _BlockCountdownState extends State<BlockCountdown> {
                 child: Text(
                   '${widget.blocksLeft}\nleft',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: GoogleFonts.righteous(
                     color: Colors.white,
+                    fontSize: 18,
                   ),
                 ),
               ),

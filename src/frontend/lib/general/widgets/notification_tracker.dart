@@ -178,7 +178,8 @@ class NotificationTracker extends StatelessWidgetX {
                   ? Text(
                       count.toString(),
                       style: TextStyle(
-                        color: Colors.black,
+                        color: Colors.red[800],
+                        fontSize: 12,
                       ),
                     )
                   : SizedBox.shrink(),

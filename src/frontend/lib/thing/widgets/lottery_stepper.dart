@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../bloc/thing_result_vm.dart';
 import '../bloc/thing_actions.dart';
@@ -58,57 +59,88 @@ class _LotteryStepperState extends StateX<LotteryStepper> {
 
   @override
   Widget build(BuildContext context) {
-    return Stepper(
-      currentStep: _currentStep,
-      controlsBuilder: (context, details) => SwipeButton(
-        text: 'Slide to ${details.currentStep == 0 ? 'commit' : 'join'}',
-        enabled: _checkButtonShouldBeEnabled(details.currentStep),
-        swiped: _checkButtonShouldBeSwiped(details.currentStep),
-        onCompletedSwipe: () async {
-          if (details.currentStep == 0) {
-            var action = PreJoinLottery(thingId: widget.thing.id);
+    return Theme(
+      data: ThemeData(
+        brightness: Brightness.dark,
+        colorScheme: Theme.of(context).colorScheme.copyWith(
+              brightness: Brightness.dark,
+              secondary: Color(0xffF8F9FA),
+            ),
+      ),
+      child: Stepper(
+        currentStep: _currentStep,
+        controlsBuilder: (context, details) => SwipeButton(
+          text: 'Slide to ${details.currentStep == 0 ? 'commit' : 'join'}',
+          enabled: _checkButtonShouldBeEnabled(details.currentStep),
+          swiped: _checkButtonShouldBeSwiped(details.currentStep),
+          onCompletedSwipe: () async {
+            if (details.currentStep == 0) {
+              var action = PreJoinLottery(thingId: widget.thing.id);
+              _thingBloc.dispatch(action);
+
+              var error = await action.result;
+              if (error == null) {
+                details.onStepContinue!();
+                return true;
+              }
+
+              return false;
+            }
+
+            var action = JoinLottery(thingId: widget.thing.id);
             _thingBloc.dispatch(action);
 
             var error = await action.result;
-            if (error == null) {
-              details.onStepContinue!();
-              return true;
-            }
-
-            return false;
-          }
-
-          var action = JoinLottery(thingId: widget.thing.id);
-          _thingBloc.dispatch(action);
-
-          var error = await action.result;
-          return error == null;
-        },
+            return error == null;
+          },
+        ),
+        onStepContinue: () => setState(() {
+          _currentStep++;
+        }),
+        onStepTapped: (value) => setState(() {
+          _currentStep = value;
+        }),
+        steps: [
+          Step(
+            title: Text(
+              'Commit to lottery',
+              style: GoogleFonts.philosopher(
+                color: Color(0xffF8F9FA),
+                fontSize: 16,
+              ),
+            ),
+            content: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                'Committing to lottery means staking some amount of Truthserum for the duration of the lottery',
+                style: GoogleFonts.raleway(
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            isActive: true,
+          ),
+          Step(
+            title: Text(
+              'Join lottery',
+              style: GoogleFonts.philosopher(
+                color: Color(0xffF8F9FA),
+                fontSize: 16,
+              ),
+            ),
+            content: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                'Joining lottery generates a one-time random number (nonce) which will be used in the lottery process to determine winners',
+                style: GoogleFonts.raleway(
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            isActive: true,
+          ),
+        ],
       ),
-      onStepContinue: () => setState(() {
-        _currentStep++;
-      }),
-      onStepTapped: (value) => setState(() {
-        _currentStep = value;
-      }),
-      steps: [
-        Step(
-          title: Text('Commit to lottery'),
-          content: Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Text(
-                'Committing to lottery means staking some amount of Truthserum for the duration of the lottery'),
-          ),
-        ),
-        Step(
-          title: Text('Join lottery'),
-          content: Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Text(
-                'Joining lottery generates a one-time random number (nonce) which will be used in the lottery process to determine winners'),
-          ),
-        ),
-      ],
     );
   }
 }

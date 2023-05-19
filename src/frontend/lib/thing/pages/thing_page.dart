@@ -1,9 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:sliver_tools/sliver_tools.dart';
-import 'package:tab_container/tab_container.dart';
 
+import '../../general/widgets/tab_container.dart';
 import '../widgets/status_stepper_block.dart';
 import '../bloc/thing_result_vm.dart';
 import '../../user/bloc/user_result_vm.dart';
@@ -40,6 +41,13 @@ class _ThingPageState extends StateX<ThingPage> {
 
   late final StreamSubscription<LoadCurrentUserSuccessVm> _currentUser$$;
 
+  final List<Color> _tabColors = [
+    Color(0xFF242423),
+    Color(0xFF413C69),
+    // Color(0xFF0F6292),
+    Color(0xFF32407B),
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -56,14 +64,28 @@ class _ThingPageState extends StateX<ThingPage> {
 
   List<Widget> _buildTabs(ThingVm thing) {
     var state = thing.state;
-    var items = [Icon(Icons.content_paste)];
+    var items = [
+      Icon(
+        Icons.content_paste,
+        color: Colors.white,
+      )
+    ];
 
     if (state.index >= ThingStateVm.fundedAndVerifierLotteryInitiated.index) {
-      items.add(Icon(Icons.people));
+      items.add(Icon(
+        Icons.people,
+        color: Colors.white,
+      ));
       if (state.index >= ThingStateVm.verifiersSelectedAndPollInitiated.index) {
-        items.add(Icon(Icons.poll_outlined));
+        items.add(Icon(
+          Icons.poll_outlined,
+          color: Colors.white,
+        ));
         if (state.index >= ThingStateVm.awaitingSettlement.index) {
-          items.add(Icon(Icons.handshake));
+          items.add(Icon(
+            Icons.handshake,
+            color: Colors.white,
+          ));
         }
       }
     }
@@ -94,25 +116,28 @@ class _ThingPageState extends StateX<ThingPage> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Column(
                   children: [
-                    Card(
-                      color: Colors.deepOrange[600],
-                      elevation: 5,
-                      child: Container(
-                        width: double.infinity,
-                        height: 30,
-                        alignment: Alignment.center,
-                        child: Text(
-                          thing.subjectName,
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 12),
+                    SizedBox(height: 10),
                     AvatarWithReputationGauge(
                       subjectId: thing.subjectId,
                       subjectAvatarIpfsCid: thing.subjectCroppedImageIpfsCid,
                       size: AvatarSize.medium,
-                      color: Colors.white70,
+                      color: Colors.white,
+                    ),
+                    SizedBox(height: 12),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(color: Colors.white),
+                        ),
+                      ),
+                      padding: const EdgeInsets.fromLTRB(4, 0, 4, 6),
+                      child: Text(
+                        thing.subjectName,
+                        style: GoogleFonts.philosopher(
+                          color: Colors.white,
+                          fontSize: 28,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -138,22 +163,22 @@ class _ThingPageState extends StateX<ThingPage> {
     return items;
   }
 
-  List<Widget> _buildTagChips(ThingVm thing, TextTheme textTheme) {
+  List<Widget> _buildTagChips(ThingVm thing) {
     return thing.tags
         .map((tag) => Padding(
               padding: const EdgeInsets.only(right: 8),
               child: Chip(
                 label: Text(tag.name),
-                labelStyle: textTheme.caption,
-                backgroundColor: Colors.black12,
+                labelStyle: GoogleFonts.righteous(
+                  color: Color(0xffF8F9FA),
+                ),
+                backgroundColor: Color(0xFF242423),
               ),
             ))
         .toList();
   }
 
   Widget _buildHeader(ThingVm thing) {
-    var textTheme = Theme.of(context).textTheme;
-
     return Stack(
       children: [
         Padding(
@@ -178,10 +203,10 @@ class _ThingPageState extends StateX<ThingPage> {
                   children: [
                     Text(
                       thing.title,
-                      style: textTheme.titleLarge,
+                      style: GoogleFonts.philosopher(fontSize: 31),
                     ),
                     SizedBox(height: 12),
-                    Row(children: _buildTagChips(thing, textTheme)),
+                    Row(children: _buildTagChips(thing)),
                   ],
                 ),
               ),
@@ -190,11 +215,34 @@ class _ThingPageState extends StateX<ThingPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('Submitted at'),
+                    Text(
+                      'Submitted on',
+                      style: GoogleFonts.raleway(),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      thing.submittedAtFormatted,
+                      style: GoogleFonts.raleway(
+                        fontSize: 16,
+                      ),
+                    ),
                     SizedBox(height: 8),
-                    Text(thing.submittedAtFormatted),
-                    SizedBox(height: 8),
-                    Text('by ${thing.submitterIdShort}'),
+                    RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'by ',
+                            style: GoogleFonts.raleway(),
+                          ),
+                          TextSpan(
+                            text: thing.submitterIdShort,
+                            style: GoogleFonts.raleway(
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
             ],
@@ -226,8 +274,9 @@ class _ThingPageState extends StateX<ThingPage> {
       child: TabContainer(
         controller: TabContainerController(length: tabs.length),
         tabEdge: TabEdge.top,
-        tabEnd: 0.3,
-        color: Colors.blue[200],
+        tabStart: 0.33,
+        tabEnd: 0.66,
+        colors: _tabColors.sublist(0, tabs.length),
         isStringTabs: false,
         tabs: tabs,
         children: _buildTabContents(vm),

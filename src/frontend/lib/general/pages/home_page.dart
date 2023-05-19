@@ -80,6 +80,7 @@ class _HomePageState extends StateX<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xffF8F9FA),
       body: _pageController == null
           ? Center(child: CircularProgressIndicator())
           : PageView.builder(

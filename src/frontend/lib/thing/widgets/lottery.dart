@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
 import '../../general/widgets/clipped_block_number_container.dart';
@@ -58,8 +59,24 @@ class _LotteryState extends StateX<Lottery> {
 
               return Column(
                 children: [
+                  Container(
+                    margin: const EdgeInsets.only(top: 18),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(color: Colors.white),
+                      ),
+                    ),
+                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
+                    child: Text(
+                      'Participants',
+                      style: GoogleFonts.philosopher(
+                        color: Colors.white,
+                        fontSize: 24,
+                      ),
+                    ),
+                  ),
                   Padding(
-                    padding: const EdgeInsets.only(top: 16),
+                    padding: const EdgeInsets.only(top: 22),
                     child: Stack(
                       children: [
                         Card(
@@ -69,6 +86,7 @@ class _LotteryState extends StateX<Lottery> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
+                          shadowColor: Colors.white30,
                           child: Padding(
                             padding: const EdgeInsets.only(
                               left: 150,
@@ -83,25 +101,25 @@ class _LotteryState extends StateX<Lottery> {
                                 children: [
                                   AutoSizeText(
                                     'User Id',
-                                    style: TextStyle(
+                                    style: GoogleFonts.philosopher(
                                       color: Colors.black,
                                       fontSize: 18,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  SizedBox(height: 8),
+                                  SizedBox(height: 6),
                                   Text(
                                     'Commitment',
-                                    style: TextStyle(
-                                      color: Colors.black54,
+                                    style: GoogleFonts.raleway(
+                                      color: Colors.black87,
                                     ),
                                   ),
-                                  SizedBox(height: 8),
+                                  SizedBox(height: 6),
                                   Text(
                                     'Nonce',
-                                    style: TextStyle(
-                                      color: Colors.black54,
+                                    style: GoogleFonts.raleway(
+                                      color: Colors.black87,
                                     ),
                                   ),
                                 ],
@@ -110,11 +128,11 @@ class _LotteryState extends StateX<Lottery> {
                           ),
                         ),
                         ClippedBlockNumberContainer(
-                          color: Colors.indigo[900]!,
+                          color: Color(0xFF4A47A3),
                           height: 80,
                           child: Text(
                             'Block',
-                            style: TextStyle(
+                            style: GoogleFonts.righteous(
                               color: Colors.white,
                               fontSize: 20,
                             ),
@@ -169,6 +187,7 @@ class _LotteryState extends StateX<Lottery> {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
+                                  shadowColor: Colors.white30,
                                   child: Padding(
                                     padding: const EdgeInsets.only(
                                       left: 150,
@@ -185,7 +204,7 @@ class _LotteryState extends StateX<Lottery> {
                                         children: [
                                           AutoSizeText(
                                             entry.userId,
-                                            style: TextStyle(
+                                            style: GoogleFonts.philosopher(
                                               color: Colors.black,
                                               fontSize: 18,
                                             ),
@@ -194,16 +213,19 @@ class _LotteryState extends StateX<Lottery> {
                                           ),
                                           SizedBox(height: 12),
                                           Text(
-                                            entry.dataHash,
-                                            style: TextStyle(
-                                              color: Colors.black54,
+                                            entry.dataHash.substring(0, 20) +
+                                                '...',
+                                            style: GoogleFonts.raleway(
+                                              color: Colors.black87,
                                             ),
                                           ),
                                           SizedBox(height: 12),
                                           Text(
                                             entry.nonce?.toString() ?? '*',
-                                            style: TextStyle(
-                                              color: Colors.black54,
+                                            style: GoogleFonts.raleway(
+                                              color: Colors.black87,
+                                              fontSize:
+                                                  entry.nonce != null ? 16 : 30,
                                             ),
                                           ),
                                         ],
@@ -216,7 +238,7 @@ class _LotteryState extends StateX<Lottery> {
                                   height: 120,
                                   child: Text(
                                     entry.joinedBlockNumber?.toString() ?? '*',
-                                    style: TextStyle(
+                                    style: GoogleFonts.righteous(
                                       color: Colors.white,
                                       fontSize: 26,
                                     ),
@@ -227,7 +249,10 @@ class _LotteryState extends StateX<Lottery> {
                                   size: 40,
                                   cornerRadius: 12,
                                   color: Colors.white,
-                                  child: Text((index + 1).toString()),
+                                  child: Text(
+                                    (index + 1).toString(),
+                                    style: GoogleFonts.righteous(),
+                                  ),
                                 )
                               ],
                             ),
@@ -275,7 +300,23 @@ class _LotteryState extends StateX<Lottery> {
                   return Center(
                     child: Column(
                       children: [
-                        SizedBox(height: 24),
+                        Container(
+                          margin: const EdgeInsets.only(top: 18),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(color: Colors.white),
+                            ),
+                          ),
+                          padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
+                          child: Text(
+                            'Lottery',
+                            style: GoogleFonts.philosopher(
+                              color: Colors.white,
+                              fontSize: 24,
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 12),
                         Stack(
                           alignment: Alignment.center,
                           children: [
@@ -285,6 +326,9 @@ class _LotteryState extends StateX<Lottery> {
                               initialValue: currentBlock,
                               appearance: CircularSliderAppearance(
                                 size: 300,
+                                customColors: CustomSliderColors(
+                                  dotColor: Colors.transparent,
+                                ),
                               ),
                               innerWidget: (_) => SizedBox.shrink(),
                             ),
@@ -292,8 +336,33 @@ class _LotteryState extends StateX<Lottery> {
                               BlockCountdown(
                                 blocksLeft: (endBlock - currentBlock).toInt(),
                               ),
+                            Positioned(
+                              bottom: 20,
+                              left: 0,
+                              right: 0,
+                              child: Row(
+                                children: [
+                                  Text(
+                                    startBlock.toStringAsFixed(0),
+                                    style: GoogleFonts.righteous(
+                                      color: Colors.white,
+                                      fontSize: 26,
+                                    ),
+                                  ),
+                                  Spacer(),
+                                  Text(
+                                    endBlock.toStringAsFixed(0),
+                                    style: GoogleFonts.righteous(
+                                      color: Colors.white,
+                                      fontSize: 26,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
+                        SizedBox(height: 12),
                         LotteryStepper(
                           thing: widget.thing,
                           info: info,

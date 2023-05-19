@@ -37,7 +37,7 @@ class CornerBanner extends StatelessWidget {
           ),
         ),
         alignment: position == Alignment.topLeft
-            ? Alignment(-0.65, -0.5)
+            ? Alignment(-0.5, -0.5)
             : Alignment(0.65, 0.5),
         child: child,
       ),
