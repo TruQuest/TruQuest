@@ -1,15 +1,14 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
-import '../../general/widgets/clipped_block_number_container.dart';
+import '../../general/widgets/lottery_participants_table.dart';
 import '../../general/widgets/block_countdown.dart';
+import '../../user/bloc/user_bloc.dart';
 import 'lottery_stepper.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';
-import '../../general/widgets/corner_banner.dart';
 import '../bloc/thing_actions.dart';
 import '../bloc/thing_bloc.dart';
 import '../models/rvm/thing_vm.dart';
@@ -27,10 +26,16 @@ class Lottery extends StatefulWidget {
 class _LotteryState extends StateX<Lottery> {
   late final _thingBloc = use<ThingBloc>();
   late final _ethereumBloc = use<EthereumBloc>();
+  late final _userBloc = use<UserBloc>();
+
+  String? _currentUserId;
 
   @override
   void initState() {
     super.initState();
+
+    _currentUserId = _userBloc.latestCurrentUser?.user.id;
+
     _thingBloc.dispatch(
       GetVerifierLotteryParticipants(thingId: widget.thing.id),
     );
@@ -40,6 +45,7 @@ class _LotteryState extends StateX<Lottery> {
   @override
   void didUpdateWidget(covariant Lottery oldWidget) {
     super.didUpdateWidget(oldWidget);
+    _currentUserId = _userBloc.latestCurrentUser?.user.id;
     _thingBloc.dispatch(GetVerifierLotteryInfo(thingId: widget.thing.id));
   }
 
@@ -56,212 +62,14 @@ class _LotteryState extends StateX<Lottery> {
               }
 
               var entries = snapshot.data!.entries;
-
-              return Column(
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(top: 18),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: Colors.white),
-                      ),
-                    ),
-                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
-                    child: Text(
-                      'Participants',
-                      style: GoogleFonts.philosopher(
-                        color: Colors.white,
-                        fontSize: 24,
-                      ),
-                    ),
+              return LotteryParticipantsTable(
+                entries: entries,
+                currentUserId: _currentUserId,
+                onRefresh: () => _thingBloc.dispatch(
+                  GetVerifierLotteryParticipants(
+                    thingId: widget.thing.id,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 22),
-                    child: Stack(
-                      children: [
-                        Card(
-                          margin: EdgeInsets.zero,
-                          color: Colors.white,
-                          elevation: 25,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          shadowColor: Colors.white30,
-                          child: Padding(
-                            padding: const EdgeInsets.only(
-                              left: 150,
-                              right: 16,
-                            ),
-                            child: SizedBox(
-                              width: 380,
-                              height: 80,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  AutoSizeText(
-                                    'User Id',
-                                    style: GoogleFonts.philosopher(
-                                      color: Colors.black,
-                                      fontSize: 18,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  SizedBox(height: 6),
-                                  Text(
-                                    'Commitment',
-                                    style: GoogleFonts.raleway(
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                  SizedBox(height: 6),
-                                  Text(
-                                    'Nonce',
-                                    style: GoogleFonts.raleway(
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        ClippedBlockNumberContainer(
-                          color: Color(0xFF4A47A3),
-                          height: 80,
-                          child: Text(
-                            'Block',
-                            style: GoogleFonts.righteous(
-                              color: Colors.white,
-                              fontSize: 20,
-                            ),
-                          ),
-                        ),
-                        CornerBanner(
-                          position: Alignment.topLeft,
-                          size: 40,
-                          cornerRadius: 12,
-                          color: Colors.white,
-                          child: Icon(
-                            Icons.numbers,
-                            size: 14,
-                          ),
-                        ),
-                        Positioned(
-                          top: 0,
-                          bottom: 0,
-                          right: 0,
-                          child: Center(
-                            child: IconButton(
-                              icon: Icon(Icons.refresh),
-                              onPressed: () => _thingBloc.dispatch(
-                                GetVerifierLotteryParticipants(
-                                  thingId: widget.thing.id,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      // @@??: ListView forces cross-axis stretch?
-                      itemCount: entries.length,
-                      itemBuilder: (context, index) {
-                        var entry = entries[index];
-                        return Center(
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                              top: index == 0 ? 16 : 8,
-                              bottom: 8,
-                            ),
-                            child: Stack(
-                              children: [
-                                Card(
-                                  margin: EdgeInsets.zero,
-                                  color: Colors.white,
-                                  elevation: 15,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  shadowColor: Colors.white30,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(
-                                      left: 150,
-                                      right: 16,
-                                    ),
-                                    child: SizedBox(
-                                      width: 350,
-                                      height: 120,
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          AutoSizeText(
-                                            entry.userId,
-                                            style: GoogleFonts.philosopher(
-                                              color: Colors.black,
-                                              fontSize: 18,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          SizedBox(height: 12),
-                                          Text(
-                                            entry.dataHash.substring(0, 20) +
-                                                '...',
-                                            style: GoogleFonts.raleway(
-                                              color: Colors.black87,
-                                            ),
-                                          ),
-                                          SizedBox(height: 12),
-                                          Text(
-                                            entry.nonce?.toString() ?? '*',
-                                            style: GoogleFonts.raleway(
-                                              color: Colors.black87,
-                                              fontSize:
-                                                  entry.nonce != null ? 16 : 30,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                ClippedBlockNumberContainer(
-                                  color: Colors.blueAccent,
-                                  height: 120,
-                                  child: Text(
-                                    entry.joinedBlockNumber?.toString() ?? '*',
-                                    style: GoogleFonts.righteous(
-                                      color: Colors.white,
-                                      fontSize: 26,
-                                    ),
-                                  ),
-                                ),
-                                CornerBanner(
-                                  position: Alignment.topLeft,
-                                  size: 40,
-                                  cornerRadius: 12,
-                                  color: Colors.white,
-                                  child: Text(
-                                    (index + 1).toString(),
-                                    style: GoogleFonts.righteous(),
-                                  ),
-                                )
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
+                ),
               );
             },
           ),

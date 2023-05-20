@@ -35,7 +35,7 @@ class _ProgressBarState extends StateX<ProgressBar> {
               child: StreamBuilder(
                 stream: progress$,
                 builder: (context, snapshot) => FAProgressBar(
-                  currentValue: (snapshot.data ?? 0).toDouble(),
+                  currentValue: (snapshot.data ?? 10).toDouble(),
                   maxValue: 100,
                   displayText: '%',
                 ),

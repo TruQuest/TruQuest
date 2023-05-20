@@ -33,4 +33,6 @@ public interface ISigner
         IEnumerable<CastedAssessmentPollVoteEvent> onChainVotes
     );
     string SignTimestamp(DateTimeOffset timestamp);
+
+    bool CheckIsOrchestrator(String address);
 }

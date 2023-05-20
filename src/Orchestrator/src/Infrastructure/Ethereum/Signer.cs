@@ -20,6 +20,7 @@ namespace Infrastructure.Ethereum;
 
 internal class Signer : ISigner
 {
+    private readonly AccountProvider _accountProvider;
     private readonly Eip712TypedDataSigner _eip712Signer;
     private readonly DomainWithSalt _domain;
     private readonly EthECKey _orchestratorPrivateKey;
@@ -31,6 +32,7 @@ internal class Signer : ISigner
         Eip712TypedDataSigner eip712Signer
     )
     {
+        _accountProvider = accountProvider;
         _eip712Signer = eip712Signer;
 
         var network = configuration["Ethereum:Network"]!;
@@ -286,4 +288,7 @@ internal class Signer : ISigner
 
         return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);
     }
+
+    public bool CheckIsOrchestrator(String address) =>
+        _accountProvider.LookupNameByAddress(address) == "Orchestrator";
 }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
+import '../../general/contexts/page_context.dart';
 import '../../general/widgets/tab_container.dart';
 import '../widgets/status_stepper_block.dart';
 import '../bloc/thing_result_vm.dart';
@@ -36,6 +37,7 @@ class ThingPage extends StatefulWidget {
 }
 
 class _ThingPageState extends StateX<ThingPage> {
+  late final _pageContext = use<PageContext>();
   late final _userBloc = use<UserBloc>();
   late final _thingBloc = use<ThingBloc>();
 
@@ -44,8 +46,8 @@ class _ThingPageState extends StateX<ThingPage> {
   final List<Color> _tabColors = [
     Color(0xFF242423),
     Color(0xFF413C69),
-    // Color(0xFF0F6292),
     Color(0xFF32407B),
+    Color(0xFF0F6292),
   ];
 
   @override
@@ -271,15 +273,42 @@ class _ThingPageState extends StateX<ThingPage> {
     return SizedBox(
       width: double.infinity,
       height: 800,
-      child: TabContainer(
-        controller: TabContainerController(length: tabs.length),
-        tabEdge: TabEdge.top,
-        tabStart: 0.33,
-        tabEnd: 0.66,
-        colors: _tabColors.sublist(0, tabs.length),
-        isStringTabs: false,
-        tabs: tabs,
-        children: _buildTabContents(vm),
+      child: Stack(
+        children: [
+          TabContainer(
+            controller: TabContainerController(length: tabs.length),
+            tabEdge: TabEdge.top,
+            tabStart: 0.33,
+            tabEnd: 0.66,
+            colors: _tabColors.sublist(0, tabs.length),
+            isStringTabs: false,
+            tabs: tabs,
+            children: _buildTabContents(vm),
+          ),
+          if (vm.thing.acceptedSettlementProposalId != null)
+            Positioned(
+              top: 34,
+              left: 24,
+              child: InkWell(
+                onTap: () => _pageContext.goto(
+                  '/proposals/${vm.thing.acceptedSettlementProposalId}',
+                ),
+                child: Card(
+                  margin: EdgeInsets.zero,
+                  color: Colors.redAccent,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    child: Text(
+                      'Settled',
+                      style: GoogleFonts.righteous(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

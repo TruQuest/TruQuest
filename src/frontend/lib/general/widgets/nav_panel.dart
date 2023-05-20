@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
+import 'progress_bar.dart';
 import '../contexts/page_context.dart';
 import 'notification_tracker.dart';
 import 'user_status_tracker.dart';
@@ -24,6 +25,10 @@ class NavPanel extends StatelessWidgetX {
           child: Row(
             children: [
               NotificationTracker(),
+              SizedBox(
+                width: 150,
+                child: ProgressBar(),
+              ),
               Spacer(),
               InkWell(
                 onTap: () => _pageContext.goto('/subjects'),
@@ -131,7 +136,7 @@ class NavPanel extends StatelessWidgetX {
               ),
               Spacer(),
               Container(
-                width: 150,
+                width: 300,
                 alignment: Alignment.centerRight,
                 child: UserStatusTracker(),
               ),

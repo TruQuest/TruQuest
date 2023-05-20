@@ -16,6 +16,7 @@ public class ThingQm
     public string SubjectName { get; }
     public string SubjectCroppedImageIpfsCid { get; }
     public long? SettledAt { get; }
+    public Guid? AcceptedSettlementProposalId { get; }
     public HashSet<EvidenceQm> Evidence { get; } = new();
     public HashSet<TagQm> Tags { get; } = new();
     public bool Watched { get; set; }
