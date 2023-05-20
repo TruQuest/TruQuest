@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 
 class ClippedAvatarContainer extends StatelessWidget {
   final Widget child;
+  final Color color;
   final bool fromNarrowToWide;
 
   const ClippedAvatarContainer({
     super.key,
     required this.child,
+    required this.color,
     required this.fromNarrowToWide,
   });
 
@@ -20,7 +22,7 @@ class ClippedAvatarContainer extends StatelessWidget {
         width: 240,
         height: 200,
         decoration: BoxDecoration(
-          color: Colors.blueAccent,
+          color: color,
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(12),
             bottomLeft: Radius.circular(12),

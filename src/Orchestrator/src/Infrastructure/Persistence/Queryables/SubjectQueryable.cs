@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 
 using Dapper;
 
+using Domain.Aggregates;
 using Application.Subject.Queries.GetSubject;
 using Application.Common.Interfaces;
 using Application.Common.Models.QM;
@@ -37,7 +38,7 @@ internal class SubjectQueryable : Queryable, ISubjectQueryable
                         truquest.""Subjects"" AS s
                             INNER JOIN
                         truquest.""Things"" AS t
-                            ON (s.""Id"" = t.""SubjectId"" AND t.""State"" = 5) -- Settled
+                            ON (s.""Id"" = t.""SubjectId"" AND t.""State"" = @ThingState)
                             INNER JOIN
                         truquest.""SettlementProposals"" AS p
                             ON t.""AcceptedSettlementProposalId"" = p.""Id""
@@ -59,7 +60,8 @@ internal class SubjectQueryable : Queryable, ISubjectQueryable
                     truquest.""Tags"" AS t
                         ON sat.""TagId"" = t.""Id""
             ",
-            joinedCollectionSelector: subject => subject.Tags
+            joinedCollectionSelector: subject => subject.Tags,
+            param: new { ThingState = (int)ThingState.Settled }
         );
 
         return subjects;

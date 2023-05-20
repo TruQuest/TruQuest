@@ -94,11 +94,11 @@ var detailsJson = JsonSerializer.Serialize(details);
 var submitterId = "0xbF2Ff171C3C4A63FBBD369ddb021c75934005e81".Substring(2).ToLower();
 
 var subject = new Subject(
-    name: "Max Venturi",
+    name: "Erik \"Magneto\" Lehnsherr",
     details: detailsJson,
     type: SubjectType.Person,
-    imageIpfsCid: "QmPt9L8S2vZzomJdwS37hXU6pi3brfd4cThq6e9euNLagz",
-    croppedImageIpfsCid: "Qmeg7v9n9L7bHYfwHrdRJPJBoGDXKdeKiEjfZWaW1SGNYg",
+    imageIpfsCid: "QmR1RQALYXRc5RTQCsRChRmDLsYpiwAULFHgYZQvKx26yB",
+    croppedImageIpfsCid: "Qme3Rfg9HWVnriG7CJesz5FQtTmDi3zEfSirsr796qGbB7",
     submitterId: submitterId
 );
 subject.AddTags(new[] { 1, 2, 3 });
