@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' hide Text;
+import 'package:google_fonts/google_fonts.dart';
 
 import '../contexts/document_context.dart';
 import '../../widget_extensions.dart';
@@ -49,7 +50,12 @@ class _DocumentComposerState extends StateX<DocumentComposer> {
         height: 30,
         child: Row(
           children: [
-            Text(widget.title),
+            Text(
+              widget.title,
+              style: GoogleFonts.righteous(
+                color: Colors.black87,
+              ),
+            ),
             Spacer(),
             IconButton(
               padding: EdgeInsets.zero,

@@ -170,7 +170,12 @@ class _HomePageState extends StateX<HomePage> {
                 var routeSplit = route.split('/');
                 if (routeSplit[1] == 'subjects') {
                   var subjectId = routeSplit.last;
-                  return SubjectPage(subjectId: subjectId);
+                  return CustomScrollView(
+                    slivers: [
+                      ..._headers,
+                      SubjectPage(subjectId: subjectId),
+                    ],
+                  );
                 } else if (routeSplit[1] == 'things') {
                   var thingId = routeSplit.last;
                   return CustomScrollView(

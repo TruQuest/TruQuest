@@ -11,7 +11,6 @@ import '../../thing/models/rvm/thing_vm.dart';
 class DocumentViewContext implements IDisposable {
   late final QuillController quillController;
 
-  final List<String>? tags;
   final SubjectVm? subject;
   final ThingVm? thing;
   final SettlementProposalVm? proposal;
@@ -20,7 +19,6 @@ class DocumentViewContext implements IDisposable {
   DocumentViewContext({
     required String nameOrTitle,
     required String details,
-    this.tags,
     this.subject,
     this.thing,
     this.proposal,

@@ -5,11 +5,13 @@ import '../contexts/document_view_context.dart';
 import '../../widget_extensions.dart';
 
 class DocumentView extends StatefulWidget {
+  final EdgeInsets mainBlockMargin;
   final List<Widget> rightSideBlocks;
   final Widget? leftSideBlock;
 
   const DocumentView({
     super.key,
+    this.mainBlockMargin = const EdgeInsets.fromLTRB(0, 32, 0, 12),
     required this.rightSideBlocks,
     this.leftSideBlock,
   });
@@ -50,9 +52,9 @@ class _DocumentViewState extends StateX<DocumentView> {
           if (widget.leftSideBlock != null)
             Expanded(flex: 17, child: widget.leftSideBlock!),
           Expanded(
-            flex: 59,
+            flex: widget.leftSideBlock != null ? 59 : 70,
             child: Container(
-              margin: const EdgeInsets.fromLTRB(0, 32, 0, 12),
+              margin: widget.mainBlockMargin,
               decoration: BoxDecoration(
                 color: Color(0xffF8F9FA),
                 borderRadius: BorderRadius.circular(12),

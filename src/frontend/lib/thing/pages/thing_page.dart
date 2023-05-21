@@ -106,7 +106,6 @@ class _ThingPageState extends StateX<ThingPage> {
           DocumentViewContext(
             nameOrTitle: thing.title,
             details: thing.details,
-            tags: thing.tags.map((t) => t.name).toList(),
             thing: thing,
             signature: vm.signature,
           ),
@@ -338,8 +337,12 @@ class _ThingPageState extends StateX<ThingPage> {
         return MultiSliver(
           children: [
             SliverToBoxAdapter(child: _buildHeader(vm.result.thing)),
-            SliverToBoxAdapter(child: SizedBox(height: 30)),
-            SliverToBoxAdapter(child: _buildBody(vm.result)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 30),
+                child: _buildBody(vm.result),
+              ),
+            ),
           ],
         );
       },

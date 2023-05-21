@@ -110,8 +110,8 @@ var thing = new Thing(
     id: Guid.NewGuid(),
     title: "Max promised to behave and not be a little bitch as is his habit in this world",
     details: detailsJson,
-    imageIpfsCid: "QmPt9L8S2vZzomJdwS37hXU6pi3brfd4cThq6e9euNLagz",
-    croppedImageIpfsCid: "QmeXBT3bk4TYrdGdXfRSG3raSnakvDeSQwS8cFXniFqcbt",
+    imageIpfsCid: "QmXQRH7TshkUd4MUHqMvnwsjcsNoWWV4DN2rYqu6GAaVwm",
+    croppedImageIpfsCid: "QmbEqDnJ3nWd61bg1AYNZ127eujC7jZTey7Y4fVmbPBdXs",
     submitterId: submitterId,
     subjectId: subject.Id!.Value
 );
@@ -127,6 +127,28 @@ thing.AddTags(new[] { 1, 2, 3 });
 thing.SetState(ThingState.AwaitingFunding);
 
 appDbContext.Things.Add(thing);
+
+var otherThing = new Thing(
+    id: Guid.NewGuid(),
+    title: "Max promised to be a good boy",
+    details: detailsJson,
+    imageIpfsCid: "QmXQRH7TshkUd4MUHqMvnwsjcsNoWWV4DN2rYqu6GAaVwm",
+    croppedImageIpfsCid: "QmbEqDnJ3nWd61bg1AYNZ127eujC7jZTey7Y4fVmbPBdXs",
+    submitterId: submitterId,
+    subjectId: subject.Id!.Value
+);
+otherThing.AddEvidence(new[]
+{
+    new Evidence(
+        originUrl: "https://google.com",
+        ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
+        previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
+    )
+});
+otherThing.AddTags(new[] { 1, 2, 3 });
+otherThing.SetState(ThingState.AwaitingFunding);
+
+appDbContext.Things.Add(otherThing);
 appDbContext.SaveChanges();
 
 var eventDbContext = scope.ServiceProvider.GetRequiredService<EventDbContext>();

@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:rounded_loading_button/rounded_loading_button.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
+import '../../general/contexts/document_context.dart';
 import '../widgets/clipped_avatar_container.dart';
 import '../widgets/avatar_with_reputation_gauge.dart';
 import '../../general/widgets/corner_banner.dart';
 import '../../general/contexts/page_context.dart';
 import '../bloc/subject_actions.dart';
 import '../bloc/subject_bloc.dart';
-import '../widgets/submit_button.dart';
 import '../widgets/type_selector_block.dart';
 import '../../general/widgets/document_composer.dart';
 import '../../general/widgets/image_block_with_crop.dart';
@@ -72,7 +73,7 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
                     children: [
                       Container(
                         color: Colors.black,
-                        width: 370,
+                        width: 385,
                         padding: const EdgeInsets.all(8),
                         child: DefaultTextStyle(
                           style: GoogleFonts.righteous(
@@ -92,6 +93,10 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
                                   ),
                                   TypewriterAnimatedText(
                                     'Blockchain never forgets',
+                                    speed: Duration(milliseconds: 70),
+                                  ),
+                                  TypewriterAnimatedText(
+                                    'if (promiseKept) reputation++;',
                                     speed: Duration(milliseconds: 70),
                                   ),
                                 ],
@@ -120,7 +125,67 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
                         ),
                         icon: Icon(Icons.add),
                         label: Text('Add'),
-                        onPressed: () {},
+                        onPressed: () async {
+                          var documentContext = DocumentContext();
+                          var btnController = RoundedLoadingButtonController();
+
+                          var subjectId = await showDialog<String>(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (context) => ScopeX(
+                              useInstances: [documentContext],
+                              child: DocumentComposer(
+                                title: 'New subject',
+                                nameFieldLabel: 'Name',
+                                submitButton: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  child: RoundedLoadingButton(
+                                    child: Text('Submit'),
+                                    controller: btnController,
+                                    onPressed: () async {
+                                      var action = AddNewSubject(
+                                        documentContext:
+                                            DocumentContext.fromEditable(
+                                          documentContext,
+                                        ),
+                                      );
+
+                                      var success = await action.result;
+                                      if (success == null) {
+                                        btnController.error();
+                                        await Future.delayed(
+                                          Duration(milliseconds: 1500),
+                                        );
+                                        btnController.reset();
+
+                                        return;
+                                      }
+
+                                      btnController.success();
+                                      await Future.delayed(
+                                        Duration(milliseconds: 1500),
+                                      );
+                                      Navigator.of(context).pop(
+                                        success.subjectId,
+                                      );
+                                    },
+                                  ),
+                                ),
+                                sideBlocks: [
+                                  TypeSelectorBlock(),
+                                  ImageBlockWithCrop(cropCircle: true),
+                                  TagsBlock(),
+                                ],
+                              ),
+                            ),
+                          );
+
+                          if (subjectId != null) {
+                            _pageContext.goto('/subjects/$subjectId');
+                          }
+                        },
                       ),
                     ],
                   ),
