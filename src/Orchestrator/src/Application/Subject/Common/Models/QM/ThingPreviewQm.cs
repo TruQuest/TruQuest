@@ -10,4 +10,14 @@ public class ThingPreviewQm
     public string? CroppedImageIpfsCid { get; }
     public long? DisplayedTimestamp { get; }
     public VerdictQm? Verdict { get; }
+    public HashSet<TagQm> Tags { get; } = new();
+
+    public override bool Equals(object? obj)
+    {
+        var other = obj as ThingPreviewQm;
+        if (other == null) return false;
+        return Id == other.Id;
+    }
+
+    public override int GetHashCode() => Id.GetHashCode();
 }

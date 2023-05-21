@@ -149,6 +149,29 @@ otherThing.AddTags(new[] { 1, 2, 3 });
 otherThing.SetState(ThingState.AwaitingFunding);
 
 appDbContext.Things.Add(otherThing);
+
+var yetAnotherThing = new Thing(
+    id: Guid.NewGuid(),
+    title: "Nd daspodd dasaAsdo adsapsd dsam dlkamsd dsaaasd asda",
+    details: detailsJson,
+    imageIpfsCid: "QmXQRH7TshkUd4MUHqMvnwsjcsNoWWV4DN2rYqu6GAaVwm",
+    croppedImageIpfsCid: "QmbEqDnJ3nWd61bg1AYNZ127eujC7jZTey7Y4fVmbPBdXs",
+    submitterId: submitterId,
+    subjectId: subject.Id!.Value
+);
+yetAnotherThing.AddEvidence(new[]
+{
+    new Evidence(
+        originUrl: "https://google.com",
+        ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
+        previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
+    )
+});
+yetAnotherThing.AddTags(new[] { 1, 2, 3 });
+yetAnotherThing.SetState(ThingState.AwaitingFunding);
+
+appDbContext.Things.Add(yetAnotherThing);
+
 appDbContext.SaveChanges();
 
 var eventDbContext = scope.ServiceProvider.GetRequiredService<EventDbContext>();

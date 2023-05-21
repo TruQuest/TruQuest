@@ -16,20 +16,28 @@ internal class ThingQueryable : Queryable, IThingQueryable
     public async Task<IEnumerable<ThingPreviewQm>> GetForSubject(Guid subjectId, string? userId)
     {
         var dbConn = await _getOpenConnection();
-        var things = await dbConn.QueryAsync<ThingPreviewQm>(
+        var things = await dbConn.QueryWithMany<ThingPreviewQm, TagQm>(
             @"
                 SELECT
                     t.""Id"", t.""State"", t.""Title"", t.""CroppedImageIpfsCid"",
                     COALESCE(t.""SettledAt"", t.""SubmittedAt"") AS ""DisplayedTimestamp"",
-                    p.""Verdict""
+                    p.""Verdict"",
+                    tag.*
                 FROM
                     truquest.""Things"" AS t
                         LEFT JOIN
                     truquest.""SettlementProposals"" AS p
                         ON t.""AcceptedSettlementProposalId"" = p.""Id""
+                        INNER JOIN
+                    truquest.""ThingAttachedTags"" AS tat
+                        ON (t.""Id"" = tat.""ThingId"")
+                        INNER JOIN
+                    truquest.""Tags"" AS tag
+                        ON (tat.""TagId"" = tag.""Id"")
                 WHERE t.""SubjectId"" = @SubjectId AND (t.""State"" > 0 OR t.""SubmitterId"" = @UserId);
                 -- @@TODO: Check that it works with UserId == null as intended
             ",
+            joinedCollectionSelector: thing => thing.Tags,
             param: new
             {
                 SubjectId = subjectId,

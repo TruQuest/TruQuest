@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../general/models/rvm/tag_vm.dart';
 import '../../../settlement/models/rvm/verdict_vm.dart';
 import '../../../thing/models/rvm/thing_state_vm.dart';
 
@@ -11,6 +12,7 @@ class ThingPreviewVm {
   final String? croppedImageIpfsCid;
   final DateTime? displayedTimestamp;
   final VerdictVm? verdict;
+  final List<TagVm> tags;
 
   IconData get stateIcon {
     switch (state) {
@@ -61,5 +63,8 @@ class ThingPreviewVm {
             ? DateTime.fromMillisecondsSinceEpoch(map['displayedTimestamp'])
             : null,
         verdict =
-            map['verdict'] != null ? VerdictVm.values[map['verdict']] : null;
+            map['verdict'] != null ? VerdictVm.values[map['verdict']] : null,
+        tags = List.unmodifiable(
+          (map['tags'] as List<dynamic>).map((submap) => TagVm.fromMap(submap)),
+        );
 }

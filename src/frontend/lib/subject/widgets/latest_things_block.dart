@@ -5,6 +5,7 @@ import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../general/contexts/page_context.dart';
 import '../../thing/models/rvm/thing_state_vm.dart';
 import '../../general/contexts/document_view_context.dart';
 import '../../widget_extensions.dart';
@@ -12,6 +13,7 @@ import '../models/rvm/thing_preview_vm.dart';
 import '../../settlement/models/rvm/verdict_vm.dart';
 
 class LatestThingsBlock extends StatelessWidgetX {
+  late final _pageContext = use<PageContext>();
   late final _documentViewContext = useScoped<DocumentViewContext>();
 
   late final List<ThingPreviewVm> _latestSettledThings =
@@ -20,68 +22,74 @@ class LatestThingsBlock extends StatelessWidgetX {
       _documentViewContext.subject!.latestUnsettledThings;
 
   Widget _buildThingPreviewCard(ThingPreviewVm? thing, String placeholderText) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 3,
-            blurRadius: 7,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.hardEdge,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AspectRatio(
-            aspectRatio: 0.95,
-            child: thing != null
-                ? Image.network(
-                    'http://localhost:8080/ipfs/' + thing.croppedImageIpfsCid!,
-                    fit: BoxFit.cover,
-                  )
-                : Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0xFFFF3868),
-                          Color(0xFFFFB49A),
-                        ],
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap:
+          thing != null ? () => _pageContext.goto('/things/${thing.id}') : null,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 3,
+              blurRadius: 7,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        clipBehavior: Clip.hardEdge,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AspectRatio(
+              aspectRatio: 0.95,
+              child: thing != null
+                  ? Image.network(
+                      'http://localhost:8080/ipfs/' +
+                          thing.croppedImageIpfsCid!,
+                      fit: BoxFit.cover,
+                    )
+                  : Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Color(0xFFFF3868),
+                            Color(0xFFFFB49A),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
-            child: Text(
-              thing?.title ?? placeholderText,
-              style: GoogleFonts.philosopher(
-                color: Colors.black,
-                fontSize: 20,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
-          ),
-          if (thing != null)
             Padding(
-              padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
               child: Text(
-                thing.verdict?.getString() ?? thing.state.getString(),
-                style: GoogleFonts.raleway(
-                  color: Colors.grey,
-                  fontSize: 16,
+                thing?.title ?? placeholderText,
+                style: GoogleFonts.philosopher(
+                  color: Colors.black,
+                  fontSize: 20,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (thing != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+                child: Text(
+                  thing.verdict?.getString() ?? thing.state.getString(),
+                  style: GoogleFonts.raleway(
+                    color: Colors.grey,
+                    fontSize: 16,
+                  ),
                 ),
               ),
-            ),
-          SizedBox(height: 8),
-        ],
+            SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
@@ -118,6 +126,8 @@ class LatestThingsBlock extends StatelessWidgetX {
           ),
         ),
         SizedBox(
+          // @@!!: This height value must be dynamically computed.
+          // 460 is simply hardcoded for my screen.
           height: 460,
           child: Row(
             children: [
