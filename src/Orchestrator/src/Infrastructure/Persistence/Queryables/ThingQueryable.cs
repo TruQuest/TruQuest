@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 
 using Dapper;
 
+using Domain.Aggregates;
 using Application.Thing.Queries.GetThing;
 using Application.Common.Models.QM;
 using Application.Common.Interfaces;
@@ -75,12 +76,13 @@ internal class ThingQueryable : Queryable, IThingQueryable
 
                 SELECT COUNT(*)
                 FROM truquest.""WatchList""
-                WHERE ""UserId"" = @UserId AND ""ItemType"" = 1 AND ""ItemId"" = @ThingId;
+                WHERE ""UserId"" = @UserId AND ""ItemType"" = @ItemType AND ""ItemId"" = @ThingId;
             ",
             param: new
             {
                 ThingId = id,
-                UserId = userId
+                UserId = userId,
+                ItemType = (int)WatchedItemType.Thing
             }
         );
 

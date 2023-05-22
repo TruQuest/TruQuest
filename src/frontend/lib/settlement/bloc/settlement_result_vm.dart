@@ -2,9 +2,9 @@ abstract class SettlementResultVm {}
 
 class CreateNewSettlementProposalDraftFailureVm extends SettlementResultVm {}
 
-class SubmitNewSettlementProposalSuccessVm extends SettlementResultVm {}
+class SubmitNewSettlementProposalFailureVm extends SettlementResultVm {}
 
-class FundSettlementProposalSuccessVm extends SettlementResultVm {}
+class FundSettlementProposalFailureVm extends SettlementResultVm {}
 
 class GetVerifierLotteryInfoSuccessVm extends SettlementResultVm {
   final int? initBlock;

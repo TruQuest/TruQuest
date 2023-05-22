@@ -95,7 +95,7 @@ class SettlementBloc extends Bloc<SettlementAction> {
 
   void _submitNewSettlementProposal(SubmitNewSettlementProposal action) async {
     await _settlementService.submitNewSettlementProposal(action.proposalId);
-    action.complete(SubmitNewSettlementProposalSuccessVm());
+    action.complete(null);
   }
 
   void _fundSettlementProposal(FundSettlementProposal action) async {
@@ -104,7 +104,7 @@ class SettlementBloc extends Bloc<SettlementAction> {
       action.proposalId,
       action.signature,
     );
-    action.complete(FundSettlementProposalSuccessVm());
+    action.complete(null);
   }
 
   void _refreshVerifierLotteryInfo(

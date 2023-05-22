@@ -1,10 +1,5 @@
-class SupportingEvidenceVm {
-  final String originUrl;
-  final String ipfsCid;
-  final String previewImageIpfsCid;
+import '../../../thing/models/rvm/evidence_vm.dart';
 
-  SupportingEvidenceVm.fromMap(Map<String, dynamic> map)
-      : originUrl = map['originUrl'],
-        ipfsCid = map['ipfsCid'],
-        previewImageIpfsCid = map['previewImageIpfsCid'];
+class SupportingEvidenceVm extends EvidenceVm {
+  SupportingEvidenceVm.fromMap(super.map) : super.fromMap();
 }

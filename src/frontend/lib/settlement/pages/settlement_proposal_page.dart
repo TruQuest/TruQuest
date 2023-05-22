@@ -1,14 +1,22 @@
-import 'package:flutter/material.dart';
-import 'package:tab_container/tab_container.dart';
+import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:sliver_tools/sliver_tools.dart';
+
+import '../widgets/thing_preview_block.dart';
+import '../widgets/status_stepper_block.dart';
 import '../../general/widgets/arc_banner_image.dart';
 import '../../general/widgets/poster.dart';
+import '../../general/widgets/tab_container.dart';
+import '../../general/widgets/watch_button.dart';
+import '../../user/bloc/user_bloc.dart';
+import '../../user/bloc/user_result_vm.dart';
 import '../models/rvm/get_settlement_proposal_rvm.dart';
 import '../models/rvm/settlement_proposal_vm.dart';
 import '../widgets/lottery.dart';
 import '../widgets/poll.dart';
 import '../widgets/verdict_view_block.dart';
-import '../widgets/timeline_block.dart';
 import '../models/rvm/settlement_proposal_state_vm.dart';
 import '../../general/contexts/document_view_context.dart';
 import '../../general/widgets/document_view.dart';
@@ -27,26 +35,58 @@ class SettlementProposalPage extends StatefulWidget {
 }
 
 class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
+  late final _userBloc = use<UserBloc>();
   late final _settlementBloc = use<SettlementBloc>();
+
+  late final StreamSubscription<LoadCurrentUserSuccessVm> _currentUser$$;
+
+  final List<Color> _tabColors = [
+    Color(0xFF242423),
+    Color(0xFF413C69),
+    Color(0xFF32407B),
+  ];
 
   @override
   void initState() {
     super.initState();
-    _settlementBloc.dispatch(
-      GetSettlementProposal(proposalId: widget.proposalId),
+    _currentUser$$ = _userBloc.currentUser$.listen(
+      (_) => _settlementBloc.dispatch(
+        GetSettlementProposal(proposalId: widget.proposalId),
+      ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _currentUser$$.cancel();
   }
 
   List<Widget> _buildTabs(SettlementProposalVm proposal) {
     var state = proposal.state;
-    var items = [Icon(Icons.content_paste)];
+    var items = [
+      Icon(
+        Icons.content_paste,
+        color: Colors.white,
+      )
+    ];
 
     if (state.index >=
         SettlementProposalStateVm.fundedAndVerifierLotteryInitiated.index) {
-      items.add(Icon(Icons.people));
+      items.add(
+        Icon(
+          Icons.people,
+          color: Colors.white,
+        ),
+      );
       if (state.index >=
           SettlementProposalStateVm.verifiersSelectedAndPollInitiated.index) {
-        items.add(Icon(Icons.poll_outlined));
+        items.add(
+          Icon(
+            Icons.poll_outlined,
+            color: Colors.white,
+          ),
+        );
       }
     }
 
@@ -65,13 +105,15 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
             nameOrTitle: proposal.title,
             details: proposal.details,
             proposal: proposal,
+            evidence: proposal.evidence,
             signature: vm.signature,
           ),
         ],
         child: DocumentView(
           rightSideBlocks: [
+            ThingPreviewBlock(),
             VerdictViewBlock(),
-            TimelineBlock(),
+            StatusStepperBlock(),
           ],
           leftSideBlock: EvidenceViewBlock(),
         ),
@@ -91,8 +133,6 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
   }
 
   Widget _buildHeader(SettlementProposalVm proposal) {
-    var textTheme = Theme.of(context).textTheme;
-
     return Stack(
       children: [
         Padding(
@@ -115,9 +155,12 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      proposal.title,
-                      style: textTheme.titleLarge,
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 32),
+                      child: Text(
+                        proposal.title,
+                        style: GoogleFonts.philosopher(fontSize: 31),
+                      ),
                     ),
                   ],
                 ),
@@ -128,14 +171,45 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('Submitted at'),
+                    Text(
+                      'Submitted on',
+                      style: GoogleFonts.raleway(),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      proposal.submittedAtFormatted,
+                      style: GoogleFonts.raleway(
+                        fontSize: 16,
+                      ),
+                    ),
                     SizedBox(height: 8),
-                    Text(proposal.submittedAtFormatted),
-                    SizedBox(height: 8),
-                    Text('by ${proposal.submitterIdShort}'),
+                    RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'by ',
+                            style: GoogleFonts.raleway(),
+                          ),
+                          TextSpan(
+                            text: proposal.submitterIdShort,
+                            style: GoogleFonts.raleway(
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
             ],
+          ),
+        ),
+        Positioned(
+          bottom: 130,
+          right: 20,
+          child: WatchButton(
+            markedAsWatched: proposal.watched,
+            onPressed: (markedAsWatched) {},
           ),
         ),
       ],
@@ -148,14 +222,40 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
     return SizedBox(
       width: double.infinity,
       height: 800,
-      child: TabContainer(
-        controller: TabContainerController(length: tabs.length),
-        tabEdge: TabEdge.top,
-        tabEnd: 0.3,
-        color: Colors.blue[200],
-        isStringTabs: false,
-        tabs: tabs,
-        children: _buildTabContents(vm),
+      child: Stack(
+        children: [
+          TabContainer(
+            controller: TabContainerController(length: tabs.length),
+            tabEdge: TabEdge.top,
+            tabStart: 0.33,
+            tabEnd: 0.66,
+            colors: _tabColors.sublist(0, tabs.length),
+            isStringTabs: false,
+            tabs: tabs,
+            children: _buildTabContents(vm),
+          ),
+          if (vm.proposal.state.index >=
+              SettlementProposalStateVm.softDeclined.index)
+            Positioned(
+              top: 34,
+              left: 24,
+              child: Card(
+                margin: EdgeInsets.zero,
+                color: Colors.redAccent,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: Text(
+                    vm.proposal.state == SettlementProposalStateVm.accepted
+                        ? 'Accepted'
+                        : 'Declined',
+                    style: GoogleFonts.righteous(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -166,19 +266,24 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
       stream: _settlementBloc.proposal$,
       builder: (context, snapshot) {
         if (snapshot.data == null) {
-          return Center(child: CircularProgressIndicator());
+          return SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(child: CircularProgressIndicator()),
+          );
         }
 
         var vm = snapshot.data!;
 
-        return SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildHeader(vm.proposal),
-              SizedBox(height: 30),
-              _buildBody(vm),
-            ],
-          ),
+        return MultiSliver(
+          children: [
+            SliverToBoxAdapter(child: _buildHeader(vm.proposal)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 30),
+                child: _buildBody(vm),
+              ),
+            ),
+          ],
         );
       },
     );

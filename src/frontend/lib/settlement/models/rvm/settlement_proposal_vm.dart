@@ -16,7 +16,11 @@ class SettlementProposalVm {
   final String? croppedImageIpfsCid;
   final String submitterId;
   final DateTime? assessmentPronouncedAt;
+  final String subjectName;
+  final String thingTitle;
+  final String? thingCroppedImageIpfsCid;
   final List<SupportingEvidenceVm> evidence;
+  final bool watched;
 
   final bool? canBeFunded;
 
@@ -44,10 +48,14 @@ class SettlementProposalVm {
         assessmentPronouncedAt = map['assessmentPronouncedAt'] != null
             ? DateTime.fromMillisecondsSinceEpoch(map['assessmentPronouncedAt'])
             : null,
+        subjectName = map['subjectName'],
+        thingTitle = map['thingTitle'],
+        thingCroppedImageIpfsCid = map['thingCroppedImageIpfsCid'],
         evidence = List.unmodifiable(
           (map['evidence'] as List<dynamic>)
               .map((submap) => SupportingEvidenceVm.fromMap(submap)),
         ),
+        watched = map['watched'],
         canBeFunded = null;
 
   SettlementProposalVm._({
@@ -62,7 +70,11 @@ class SettlementProposalVm {
     required this.croppedImageIpfsCid,
     required this.submitterId,
     required this.assessmentPronouncedAt,
+    required this.subjectName,
+    required this.thingTitle,
+    required this.thingCroppedImageIpfsCid,
     required this.evidence,
+    required this.watched,
     required this.canBeFunded,
   });
 
@@ -82,7 +94,11 @@ class SettlementProposalVm {
         croppedImageIpfsCid: croppedImageIpfsCid,
         submitterId: submitterId,
         assessmentPronouncedAt: assessmentPronouncedAt,
+        subjectName: subjectName,
+        thingTitle: thingTitle,
+        thingCroppedImageIpfsCid: thingCroppedImageIpfsCid,
         evidence: evidence,
+        watched: watched,
         canBeFunded: canBeFunded ?? this.canBeFunded,
       );
 }

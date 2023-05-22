@@ -22,14 +22,14 @@ class GetSettlementProposal extends SettlementAction {
 }
 
 class SubmitNewSettlementProposal
-    extends SettlementActionAwaitable<SubmitNewSettlementProposalSuccessVm?> {
+    extends SettlementActionAwaitable<SubmitNewSettlementProposalFailureVm?> {
   final String proposalId;
 
   SubmitNewSettlementProposal({required this.proposalId});
 }
 
 class FundSettlementProposal
-    extends SettlementActionAwaitable<FundSettlementProposalSuccessVm?> {
+    extends SettlementActionAwaitable<FundSettlementProposalFailureVm?> {
   final String thingId;
   final String proposalId;
   final String signature;

@@ -34,7 +34,7 @@ class _EvidenceViewBlockState extends StateX<EvidenceViewBlock> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _evidence = useScoped<DocumentViewContext>().thing!.evidence;
+    _evidence = useScoped<DocumentViewContext>().evidence!;
   }
 
   @override

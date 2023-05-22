@@ -42,31 +42,50 @@ internal class SettlementProposalQueryable : Queryable, ISettlementProposalQuery
         return proposals;
     }
 
-    public Task<SettlementProposalQm?> GetById(Guid id)
+    public async Task<SettlementProposalQm?> GetById(Guid id, string? userId)
     {
-        return _dbContext.SettlementProposals
-            .Where(p => p.Id == id)
-            .Select(p => new SettlementProposalQm
+        var dbConn = await _getOpenConnection();
+        using var multiQuery = await dbConn.QueryMultipleAsync(
+            @"
+                SELECT
+                    p.*,
+                    s.""Name"" AS ""SubjectName"",
+                    t.""Title"" AS ""ThingTitle"", t.""CroppedImageIpfsCid"" AS ""ThingCroppedImageIpfsCid"",
+                    e.*
+                FROM
+                    truquest.""SettlementProposals"" AS p
+                        INNER JOIN
+                    truquest.""Things"" AS t
+                        ON p.""ThingId"" = t.""Id""
+                        INNER JOIN
+                    truquest.""Subjects"" AS s
+                        ON t.""SubjectId"" = s.""Id""
+                        INNER JOIN
+                    truquest.""SupportingEvidence"" AS e
+                        ON p.""Id"" = e.""ProposalId""
+                WHERE p.""Id"" = @ProposalId;
+
+                SELECT COUNT(*)
+                FROM truquest.""WatchList""
+                WHERE ""UserId"" = @UserId AND ""ItemType"" = @ItemType AND ""ItemId"" = @ProposalId;
+            ",
+            param: new
             {
-                Id = p.Id,
-                ThingId = p.ThingId,
-                State = p.State,
-                SubmittedAt = p.SubmittedAt,
-                Title = p.Title,
-                Verdict = p.Verdict,
-                Details = p.Details,
-                ImageIpfsCid = p.ImageIpfsCid,
-                CroppedImageIpfsCid = p.CroppedImageIpfsCid,
-                SubmitterId = p.SubmitterId,
-                AssessmentPronouncedAt = p.AssessmentPronouncedAt,
-                Evidence = p.Evidence.Select(e => new SupportingEvidenceQm
-                {
-                    OriginUrl = e.OriginUrl,
-                    IpfsCid = e.IpfsCid,
-                    PreviewImageIpfsCid = e.PreviewImageIpfsCid
-                }).ToList(),
-            })
-            .SingleOrDefaultAsync();
+                ProposalId = id,
+                UserId = userId,
+                ItemType = (int)WatchedItemType.SettlementProposal
+            }
+        );
+
+        var proposal = multiQuery.SingleWithMany<SettlementProposalQm, SupportingEvidenceQm>(
+            joinedCollectionSelector: proposal => proposal.Evidence
+        );
+        if (proposal != null)
+        {
+            proposal.Watched = multiQuery.ReadSingleOrDefault<long>() != 0;
+        }
+
+        return proposal;
     }
 
     public async Task<IEnumerable<VerifierLotteryParticipantEntryQm>> GetVerifierLotteryParticipants(

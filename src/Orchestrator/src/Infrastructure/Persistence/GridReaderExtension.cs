@@ -4,6 +4,39 @@ namespace Infrastructure.Persistence;
 
 internal static class GridReaderExtension
 {
+    public static TRoot? SingleWithMany<TRoot, TJoined>(
+        this SqlMapper.GridReader reader,
+        Func<TRoot, ICollection<TJoined>> joinedCollectionSelector,
+        bool buffered = true,
+        string splitOn = "Id"
+    )
+    {
+        var roots = new HashSet<TRoot>();
+
+        reader.Read<TRoot, TJoined, TRoot>(
+            (root, joined) =>
+            {
+                TRoot? cachedRoot;
+                if (!roots.TryGetValue(root, out cachedRoot))
+                {
+                    roots.Add(root);
+                    cachedRoot = root;
+                }
+                // @@TODO: Check what dapper does if joined1 is NULL.
+                if (joined != null)
+                {
+                    ICollection<TJoined> joinedCollection = joinedCollectionSelector(cachedRoot);
+                    joinedCollection.Add(joined);
+                }
+
+                return cachedRoot;
+            },
+            splitOn, buffered
+        );
+
+        return roots.SingleOrDefault();
+    }
+
     public static TRoot? SingleWithMultipleMany<TRoot, TJoined1, TJoined2>(
         this SqlMapper.GridReader reader,
         Func<TRoot, ICollection<TJoined1>> joined1CollectionSelector,

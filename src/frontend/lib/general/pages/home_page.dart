@@ -186,7 +186,12 @@ class _HomePageState extends StateX<HomePage> {
                   );
                 } else if (routeSplit[1] == 'proposals') {
                   var proposalId = routeSplit.last;
-                  return SettlementProposalPage(proposalId: proposalId);
+                  return CustomScrollView(
+                    slivers: [
+                      ..._headers,
+                      SettlementProposalPage(proposalId: proposalId),
+                    ],
+                  );
                 }
 
                 return Center(child: Text('Not Found'));

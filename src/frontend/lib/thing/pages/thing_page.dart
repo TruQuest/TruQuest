@@ -107,6 +107,7 @@ class _ThingPageState extends StateX<ThingPage> {
             nameOrTitle: thing.title,
             details: thing.details,
             thing: thing,
+            evidence: thing.evidence,
             signature: vm.signature,
           ),
         ],

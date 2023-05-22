@@ -172,6 +172,28 @@ yetAnotherThing.SetState(ThingState.AwaitingFunding);
 
 appDbContext.Things.Add(yetAnotherThing);
 
+var proposal = new SettlementProposal(
+    id: Guid.NewGuid(),
+    thingId: thing.Id,
+    title: "Proposal title",
+    verdict: Verdict.NoEffortWhatsoever,
+    details: detailsJson,
+    imageIpfsCid: "QmR1RQALYXRc5RTQCsRChRmDLsYpiwAULFHgYZQvKx26yB",
+    croppedImageIpfsCid: "Qme3Rfg9HWVnriG7CJesz5FQtTmDi3zEfSirsr796qGbB7",
+    submitterId: submitterId
+);
+proposal.AddEvidence(new[]
+{
+    new SupportingEvidence(
+        originUrl: "https://google.com",
+        ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
+        previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
+    )
+});
+proposal.SetState(SettlementProposalState.AwaitingFunding);
+
+appDbContext.SettlementProposals.Add(proposal);
+
 appDbContext.SaveChanges();
 
 var eventDbContext = scope.ServiceProvider.GetRequiredService<EventDbContext>();

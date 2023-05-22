@@ -35,7 +35,7 @@ internal class GetSettlementProposalQueryHandler :
         GetSettlementProposalQuery query, CancellationToken ct
     )
     {
-        var proposal = await _settlementProposalQueryable.GetById(query.ProposalId);
+        var proposal = await _settlementProposalQueryable.GetById(query.ProposalId, _currentPrincipal.Id);
         if (proposal == null)
         {
             return new()

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 
+import '../../thing/models/rvm/evidence_vm.dart';
 import '../../settlement/models/rvm/settlement_proposal_vm.dart';
 import '../../subject/models/rvm/subject_vm.dart';
 import '../../widget_extensions.dart';
@@ -14,6 +15,7 @@ class DocumentViewContext implements IDisposable {
   final SubjectVm? subject;
   final ThingVm? thing;
   final SettlementProposalVm? proposal;
+  final List<EvidenceVm>? evidence;
   final String? signature;
 
   DocumentViewContext({
@@ -22,6 +24,7 @@ class DocumentViewContext implements IDisposable {
     this.subject,
     this.thing,
     this.proposal,
+    this.evidence,
     this.signature,
   }) {
     quillController = QuillController(

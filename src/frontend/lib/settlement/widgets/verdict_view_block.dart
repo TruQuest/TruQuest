@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:timelines/timelines.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../models/rvm/verdict_vm.dart';
 import '../../general/contexts/document_view_context.dart';
@@ -13,92 +14,47 @@ class VerdictViewBlock extends StatelessWidgetX {
 
   @override
   Widget buildX(BuildContext context) {
-    return Column(
-      children: [
-        Card(
-          color: Colors.teal[600],
-          elevation: 5,
-          child: Container(
-            width: double.infinity,
-            height: 30,
-            alignment: Alignment.center,
+    return DefaultTextStyle(
+      style: GoogleFonts.righteous(
+        fontSize: 24,
+        color: Colors.white,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+            color: Colors.black,
+            width: 150,
+            padding: const EdgeInsets.all(8),
             child: Text(
-              'Verdict',
-              style: TextStyle(color: Colors.white),
+              '> Verdict:',
+              style: TextStyle(fontSize: 20),
             ),
           ),
-        ),
-        SizedBox(height: 6),
-        SizedBox(
-          width: double.infinity,
-          height: 400,
-          child: FixedTimeline.tileBuilder(
-            theme: TimelineThemeData(
-              nodePosition: 1,
-            ),
-            builder: TimelineTileBuilder.connected(
-              itemCount: VerdictVm.values.length,
-              contentsAlign: ContentsAlign.basic,
-              connectionDirection: ConnectionDirection.before,
-              indicatorBuilder: (_, index) => DotIndicator(
-                color: _verdict.index == index
-                    ? Colors.green[700]
-                    : Colors.black54,
-              ),
-              oppositeContentsBuilder: (context, index) => Card(
-                color:
-                    _verdict.index == index ? Colors.green[700] : Colors.white,
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Text(
-                    VerdictVm.values[index].getString(),
-                    style: TextStyle(
-                      color: _verdict.index == index
-                          ? Colors.white
-                          : Colors.black87,
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            color: Colors.black,
+            width: double.infinity,
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              children: [
+                Text('> '),
+                AnimatedTextKit(
+                  repeatForever: true,
+                  pause: Duration(seconds: 2),
+                  animatedTexts: [
+                    TypewriterAnimatedText(
+                      _verdict.getString(),
+                      speed: Duration(milliseconds: 70),
                     ),
-                  ),
+                  ],
                 ),
-              ),
-              connectorBuilder: (context, index, type) {
-                if (index == 0) {
-                  return null;
-                }
-
-                if (_verdict.index == index) {
-                  return DecoratedLineConnector(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.black54,
-                          Colors.green[700]!,
-                        ],
-                      ),
-                    ),
-                  );
-                } else if (_verdict.index == index - 1) {
-                  return DecoratedLineConnector(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.green[700]!,
-                          Colors.black54,
-                        ],
-                      ),
-                    ),
-                  );
-                }
-
-                return SolidLineConnector(color: Colors.black54);
-              },
+              ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
