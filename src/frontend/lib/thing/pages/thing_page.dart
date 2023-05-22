@@ -2,10 +2,18 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:rounded_loading_button/rounded_loading_button.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
+import '../../general/contexts/document_context.dart';
 import '../../general/contexts/page_context.dart';
+import '../../general/widgets/document_composer.dart';
+import '../../general/widgets/evidence_block.dart';
+import '../../general/widgets/image_block_with_crop.dart';
 import '../../general/widgets/tab_container.dart';
+import '../../settlement/bloc/settlement_actions.dart';
+import '../../settlement/bloc/settlement_bloc.dart';
+import '../../settlement/widgets/verdict_selection_block.dart';
 import '../widgets/status_stepper_block.dart';
 import '../bloc/thing_result_vm.dart';
 import '../../user/bloc/user_result_vm.dart';
@@ -40,6 +48,7 @@ class _ThingPageState extends StateX<ThingPage> {
   late final _pageContext = use<PageContext>();
   late final _userBloc = use<UserBloc>();
   late final _thingBloc = use<ThingBloc>();
+  late final _settlementBloc = use<SettlementBloc>();
 
   late final StreamSubscription<LoadCurrentUserSuccessVm> _currentUser$$;
 
@@ -285,6 +294,81 @@ class _ThingPageState extends StateX<ThingPage> {
             tabs: tabs,
             children: _buildTabContents(vm),
           ),
+          if (vm.thing.state == ThingStateVm.awaitingSettlement)
+            Positioned(
+              top: 34,
+              left: 24,
+              child: InkWell(
+                onTap: () {
+                  var documentContext = DocumentContext();
+                  documentContext.thingId = widget.thingId;
+
+                  var btnController = RoundedLoadingButtonController();
+
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => ScopeX(
+                      useInstances: [documentContext],
+                      child: DocumentComposer(
+                        title: 'New settlement proposal',
+                        nameFieldLabel: 'Title',
+                        submitButton: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: RoundedLoadingButton(
+                            child: Text('Prepare draft'),
+                            controller: btnController,
+                            onPressed: () async {
+                              var action = CreateNewSettlementProposalDraft(
+                                documentContext: DocumentContext.fromEditable(
+                                  documentContext,
+                                ),
+                              );
+                              _settlementBloc.dispatch(action);
+
+                              var failure = await action.result;
+                              if (failure != null) {
+                                btnController.error();
+                                await Future.delayed(
+                                  Duration(milliseconds: 1500),
+                                );
+                                btnController.reset();
+
+                                return;
+                              }
+
+                              btnController.success();
+                              await Future.delayed(
+                                Duration(milliseconds: 1500),
+                              );
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ),
+                        sideBlocks: [
+                          VerdictSelectionBlock(),
+                          ImageBlockWithCrop(cropCircle: false),
+                          EvidenceBlock(),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+                child: Card(
+                  margin: EdgeInsets.zero,
+                  color: Colors.redAccent,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    child: Text(
+                      'Awaiting settlement',
+                      style: GoogleFonts.righteous(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           if (vm.thing.acceptedSettlementProposalId != null)
             Positioned(
               top: 34,

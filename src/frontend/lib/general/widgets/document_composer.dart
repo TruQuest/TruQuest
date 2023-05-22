@@ -52,8 +52,9 @@ class _DocumentComposerState extends StateX<DocumentComposer> {
           children: [
             Text(
               widget.title,
-              style: GoogleFonts.righteous(
+              style: GoogleFonts.philosopher(
                 color: Colors.black87,
+                fontSize: 24,
               ),
             ),
             Spacer(),
