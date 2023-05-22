@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../bloc/settlement_bloc.dart';
 import '../models/rvm/settlement_proposal_vm.dart';
@@ -42,70 +43,101 @@ class _PollStepperState extends StateX<PollStepper> {
 
   @override
   Widget build(BuildContext context) {
-    return Stepper(
-      currentStep: _currentStep,
-      controlsBuilder: (context, details) => SwipeButton(
-        text: 'Slide to vote',
-        enabled: _checkButtonShouldBeEnabled(),
-        swiped: false,
-        onCompletedSwipe: () async {
-          await showDialog(
-            context: context,
-            builder: (_) => VoteDialog<DecisionIm>(
-              decisions: [
-                DecisionIm.accept,
-                DecisionIm.softDecline,
-                DecisionIm.hardDecline,
-              ],
-              getDisplayString: (decision) => decision.getString(),
-              onVote: (decision, reason) async {
-                SettlementActionAwaitable<CastVoteResultVm> action =
-                    details.currentStep == 0
-                        ? CastVoteOffChain(
-                            thingId: widget.proposal.thingId,
-                            proposalId: widget.proposal.id,
-                            decision: decision,
-                            reason: reason,
-                          )
-                        : CastVoteOnChain(
-                            thingId: widget.proposal.thingId,
-                            proposalId: widget.proposal.id,
-                            decision: decision,
-                            reason: reason,
-                          );
-
-                _settlementBloc.dispatch(action);
-                await action.result;
-              },
+    return Theme(
+      data: ThemeData(
+        brightness: Brightness.dark,
+        colorScheme: Theme.of(context).colorScheme.copyWith(
+              brightness: Brightness.dark,
+              secondary: Color(0xffF8F9FA),
             ),
-          );
-
-          return false;
-        },
       ),
-      onStepTapped: (value) => setState(() {
-        _currentStep = value;
-      }),
-      steps: [
-        Step(
-          state: StepState.editing,
-          title: Text('Vote off-chain'),
-          content: Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Text(
-                'Voting off-chain means that there won\'t be a blockchain transaction. Instead, your signed vote will be stored in IPFS.'),
-          ),
+      child: Stepper(
+        currentStep: _currentStep,
+        controlsBuilder: (context, details) => SwipeButton(
+          text: 'Slide to vote',
+          enabled: _checkButtonShouldBeEnabled(),
+          swiped: false,
+          onCompletedSwipe: () async {
+            await showDialog(
+              context: context,
+              builder: (_) => VoteDialog<DecisionIm>(
+                decisions: [
+                  DecisionIm.accept,
+                  DecisionIm.softDecline,
+                  DecisionIm.hardDecline,
+                ],
+                getDisplayString: (decision) => decision.getString(),
+                onVote: (decision, reason) async {
+                  SettlementActionAwaitable<CastVoteResultVm> action =
+                      details.currentStep == 0
+                          ? CastVoteOffChain(
+                              thingId: widget.proposal.thingId,
+                              proposalId: widget.proposal.id,
+                              decision: decision,
+                              reason: reason,
+                            )
+                          : CastVoteOnChain(
+                              thingId: widget.proposal.thingId,
+                              proposalId: widget.proposal.id,
+                              decision: decision,
+                              reason: reason,
+                            );
+
+                  _settlementBloc.dispatch(action);
+                  await action.result;
+                },
+              ),
+            );
+
+            return false;
+          },
         ),
-        Step(
-          state: StepState.editing,
-          title: Text('Vote on-chain'),
-          content: Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Text(
-                'On-chain vote supersedes any off-chain votes, even later ones. So one on-chain vote could only be overwritten by another one.'),
+        onStepTapped: (value) => setState(() {
+          _currentStep = value;
+        }),
+        steps: [
+          Step(
+            state: StepState.editing,
+            title: Text(
+              'Vote off-chain',
+              style: GoogleFonts.philosopher(
+                color: Color(0xffF8F9FA),
+                fontSize: 16,
+              ),
+            ),
+            content: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                'Voting off-chain means that there won\'t be a blockchain transaction. Instead, your signed vote will be stored in IPFS.',
+                style: GoogleFonts.raleway(
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            isActive: true,
           ),
-        ),
-      ],
+          Step(
+            state: StepState.editing,
+            title: Text(
+              'Vote on-chain',
+              style: GoogleFonts.philosopher(
+                color: Color(0xffF8F9FA),
+                fontSize: 16,
+              ),
+            ),
+            content: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                'On-chain vote supersedes any off-chain votes, even later ones. So one on-chain vote could only be overwritten by another one.',
+                style: GoogleFonts.raleway(
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            isActive: true,
+          ),
+        ],
+      ),
     );
   }
 }

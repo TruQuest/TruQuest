@@ -48,7 +48,7 @@ class _EvidenceBlockState extends StateX<EvidenceBlock> {
             var ok = await showDialog<bool>(
               context: context,
               builder: (_) => AlertDialog(
-                title: Text('Add evidence link'),
+                title: Text('Add evidence'),
                 content: Container(
                   width: 400,
                   height: 60,
@@ -63,6 +63,10 @@ class _EvidenceBlockState extends StateX<EvidenceBlock> {
                 ),
                 actions: [
                   TextButton(
+                    style: TextButton.styleFrom(
+                      backgroundColor: Color(0xFF242423),
+                      foregroundColor: Colors.white,
+                    ),
                     child: Text('Ok'),
                     onPressed: () {
                       Navigator.of(context).pop(true);

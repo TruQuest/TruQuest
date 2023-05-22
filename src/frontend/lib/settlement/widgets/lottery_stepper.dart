@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../models/rvm/settlement_proposal_vm.dart';
 import '../../general/widgets/swipe_button.dart';
@@ -74,101 +75,143 @@ class _LotteryStepperState extends StateX<LotteryStepper> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Stepper(
-          controlsBuilder: (context, details) => SwipeButton(
-            text: 'Slide to claim',
-            enabled: _checkButtonShouldBeEnabled(-1),
-            swiped: _checkButtonShouldBeSwiped(-1),
-            onCompletedSwipe: () async {
-              var action = ClaimLotterySpot(
-                thingId: widget.proposal.thingId,
-                proposalId: widget.proposal.id,
-              );
-              _settlementBloc.dispatch(action);
-
-              var error = await action.result;
-              return error == null;
-            },
-          ),
-          steps: [
-            Step(
-              title: Text('Claim a spot'),
-              content: Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Text(
-                    'Thing verifiers can claim a spot instead of going through the lottery'),
-              ),
+    return Theme(
+      data: ThemeData(
+        brightness: Brightness.dark,
+        colorScheme: Theme.of(context).colorScheme.copyWith(
+              brightness: Brightness.dark,
+              secondary: Color(0xffF8F9FA),
             ),
-          ],
-        ),
-        SizedBox(height: 6),
-        Divider(
-          color: Colors.white70,
-          indent: 116,
-          endIndent: 80,
-        ),
-        SizedBox(height: 6),
-        Stepper(
-          currentStep: _currentStep,
-          controlsBuilder: (context, details) => SwipeButton(
-            text: 'Slide to ${details.currentStep == 0 ? 'commit' : 'join'}',
-            enabled: _checkButtonShouldBeEnabled(details.currentStep),
-            swiped: _checkButtonShouldBeSwiped(details.currentStep),
-            onCompletedSwipe: () async {
-              if (details.currentStep == 0) {
-                var action = PreJoinLottery(
+      ),
+      child: Column(
+        children: [
+          Stepper(
+            controlsBuilder: (context, details) => SwipeButton(
+              text: 'Slide to claim',
+              enabled: _checkButtonShouldBeEnabled(-1),
+              swiped: _checkButtonShouldBeSwiped(-1),
+              onCompletedSwipe: () async {
+                var action = ClaimLotterySpot(
                   thingId: widget.proposal.thingId,
                   proposalId: widget.proposal.id,
                 );
                 _settlementBloc.dispatch(action);
 
-                var error = await action.result;
-                if (error == null) {
-                  details.onStepContinue!();
-                  return true;
+                var failure = await action.result;
+                return failure == null;
+              },
+            ),
+            steps: [
+              Step(
+                title: Text(
+                  'Claim a spot',
+                  style: GoogleFonts.philosopher(
+                    color: Color(0xffF8F9FA),
+                    fontSize: 16,
+                  ),
+                ),
+                content: Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    'Thing verifiers can claim a spot instead of going through the lottery',
+                    style: GoogleFonts.raleway(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                isActive: true,
+              ),
+            ],
+          ),
+          SizedBox(height: 6),
+          Divider(
+            color: Colors.white70,
+            indent: 116,
+            endIndent: 80,
+          ),
+          SizedBox(height: 6),
+          Stepper(
+            currentStep: _currentStep,
+            controlsBuilder: (context, details) => SwipeButton(
+              text: 'Slide to ${details.currentStep == 0 ? 'commit' : 'join'}',
+              enabled: _checkButtonShouldBeEnabled(details.currentStep),
+              swiped: _checkButtonShouldBeSwiped(details.currentStep),
+              onCompletedSwipe: () async {
+                if (details.currentStep == 0) {
+                  var action = PreJoinLottery(
+                    thingId: widget.proposal.thingId,
+                    proposalId: widget.proposal.id,
+                  );
+                  _settlementBloc.dispatch(action);
+
+                  var failure = await action.result;
+                  if (failure == null) {
+                    details.onStepContinue!();
+                    return true;
+                  }
+
+                  return false;
                 }
 
-                return false;
-              }
+                var action = JoinLottery(
+                  thingId: widget.proposal.thingId,
+                  proposalId: widget.proposal.id,
+                );
+                _settlementBloc.dispatch(action);
 
-              var action = JoinLottery(
-                thingId: widget.proposal.thingId,
-                proposalId: widget.proposal.id,
-              );
-              _settlementBloc.dispatch(action);
-
-              var error = await action.result;
-              return error == null;
-            },
+                var failure = await action.result;
+                return failure == null;
+              },
+            ),
+            onStepContinue: () => setState(() {
+              _currentStep++;
+            }),
+            onStepTapped: (value) => setState(() {
+              _currentStep = value;
+            }),
+            steps: [
+              Step(
+                title: Text(
+                  'Commit to lottery',
+                  style: GoogleFonts.philosopher(
+                    color: Color(0xffF8F9FA),
+                    fontSize: 16,
+                  ),
+                ),
+                content: Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    'Committing to lottery means staking some amount of Truthserum for the duration of the lottery',
+                    style: GoogleFonts.raleway(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                isActive: true,
+              ),
+              Step(
+                title: Text(
+                  'Join lottery',
+                  style: GoogleFonts.philosopher(
+                    color: Color(0xffF8F9FA),
+                    fontSize: 16,
+                  ),
+                ),
+                content: Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    'Joining lottery generates a one-time random number (nonce) which will be used in the lottery process to determine winners',
+                    style: GoogleFonts.raleway(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                isActive: true,
+              ),
+            ],
           ),
-          onStepContinue: () => setState(() {
-            _currentStep++;
-          }),
-          onStepTapped: (value) => setState(() {
-            _currentStep = value;
-          }),
-          steps: [
-            Step(
-              title: Text('Commit to lottery'),
-              content: Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Text(
-                    'Committing to lottery means staking some amount of Truthserum for the duration of the lottery'),
-              ),
-            ),
-            Step(
-              title: Text('Join lottery'),
-              content: Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Text(
-                    'Joining lottery generates a one-time random number (nonce) which will be used in the lottery process to determine winners'),
-              ),
-            ),
-          ],
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

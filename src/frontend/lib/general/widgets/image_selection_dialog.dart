@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:crop_your_image/crop_your_image.dart';
 import 'package:flutter/services.dart';
 import 'package:tuple/tuple.dart';
-import 'package:image/image.dart';
+import 'package:image/image.dart' hide Color;
 
 import '../../js.dart';
 
@@ -63,8 +63,8 @@ class _ImageSelectionDialogState extends State<ImageSelectionDialog> {
     return AlertDialog(
       title: Text('Add image'),
       content: SizedBox(
-        width: 960,
-        height: 600,
+        width: 720,
+        height: 450,
         child: Column(
           children: [
             TextField(
@@ -110,6 +110,26 @@ class _ImageSelectionDialogState extends State<ImageSelectionDialog> {
                   },
                 ),
               ),
+            if (_getImageFuture == null)
+              Expanded(
+                child: Container(
+                  margin: const EdgeInsets.only(top: 16),
+                  width: double.infinity,
+                  height: double.infinity,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.grey[600]!,
+                      width: 6,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Icons.image,
+                    size: 60,
+                    color: Colors.grey[400],
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -126,6 +146,10 @@ class _ImageSelectionDialogState extends State<ImageSelectionDialog> {
             }
           },
           child: TextButton(
+            style: TextButton.styleFrom(
+              backgroundColor: Color(0xFF242423),
+              foregroundColor: Colors.white,
+            ),
             child: Text('Ok'),
             onPressed: () {
               if (_imageBytes != null) {
