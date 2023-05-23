@@ -90,7 +90,7 @@ internal class SubjectQueryable : Queryable, ISubjectQueryable
                         truquest.""Subjects"" AS s
                             INNER JOIN
                         truquest.""Things"" AS t
-                            ON (s.""Id"" = t.""SubjectId"" AND t.""State"" = 5) -- Settled
+                            ON (s.""Id"" = t.""SubjectId"" AND t.""State"" = @ThingState)
                             INNER JOIN
                         truquest.""SettlementProposals"" AS p
                             ON t.""AcceptedSettlementProposalId"" = p.""Id""
@@ -112,7 +112,11 @@ internal class SubjectQueryable : Queryable, ISubjectQueryable
                 WHERE s.""Id"" = @SubjectId
             ",
             joinedCollectionSelector: subject => subject.Tags,
-            param: new { SubjectId = id }
+            param: new
+            {
+                SubjectId = id,
+                ThingState = (int)ThingState.Settled
+            }
         );
 
         if (subject != null)

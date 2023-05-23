@@ -237,7 +237,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
           if (vm.proposal.state.index >=
               SettlementProposalStateVm.softDeclined.index)
             Positioned(
-              top: 34,
+              top: 30,
               left: 24,
               child: Card(
                 margin: EdgeInsets.zero,
@@ -250,6 +250,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
                         : 'Declined',
                     style: GoogleFonts.righteous(
                       color: Colors.white,
+                      fontSize: 20,
                     ),
                   ),
                 ),

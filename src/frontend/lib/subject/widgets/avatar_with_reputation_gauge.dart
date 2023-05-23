@@ -11,6 +11,7 @@ enum AvatarSize {
 class AvatarWithReputationGauge extends StatelessWidget {
   final String subjectId;
   final String subjectAvatarIpfsCid;
+  final double value;
   final AvatarSize size;
   final Color color;
 
@@ -18,6 +19,7 @@ class AvatarWithReputationGauge extends StatelessWidget {
     super.key,
     required this.subjectId,
     required this.subjectAvatarIpfsCid,
+    required this.value,
     required this.size,
     required this.color,
   });
@@ -53,9 +55,9 @@ class AvatarWithReputationGauge extends StatelessWidget {
               ],
             ),
           ),
-          min: 0,
+          min: -100,
           max: 100,
-          initialValue: 75,
+          initialValue: value,
           innerWidget: (value) {
             int reputation = value.floor();
             return Align(

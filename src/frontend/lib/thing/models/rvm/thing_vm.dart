@@ -20,6 +20,7 @@ class ThingVm {
   final String? acceptedSettlementProposalId;
   final List<EvidenceVm> evidence;
   final List<TagVm> tags;
+  final int? subjectAvgScore;
   final bool watched;
 
   final bool? fundedAwaitingConfirmation;
@@ -57,6 +58,7 @@ class ThingVm {
         tags = List.unmodifiable(
           (map['tags'] as List<dynamic>).map((submap) => TagVm.fromMap(submap)),
         ),
+        subjectAvgScore = map['subjectAvgScore'],
         watched = map['watched'],
         fundedAwaitingConfirmation = null;
 
@@ -76,6 +78,7 @@ class ThingVm {
     required this.acceptedSettlementProposalId,
     required this.evidence,
     required this.tags,
+    required this.subjectAvgScore,
     required this.watched,
     required this.fundedAwaitingConfirmation,
   });
@@ -97,6 +100,7 @@ class ThingVm {
       acceptedSettlementProposalId: acceptedSettlementProposalId,
       evidence: evidence,
       tags: tags,
+      subjectAvgScore: subjectAvgScore,
       watched: watched,
       fundedAwaitingConfirmation:
           fundedAwaitingConfirmation ?? this.fundedAwaitingConfirmation,

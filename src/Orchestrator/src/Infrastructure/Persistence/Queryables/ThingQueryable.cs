@@ -35,14 +35,15 @@ internal class ThingQueryable : Queryable, IThingQueryable
                         INNER JOIN
                     truquest.""Tags"" AS tag
                         ON (tat.""TagId"" = tag.""Id"")
-                WHERE t.""SubjectId"" = @SubjectId AND (t.""State"" > 0 OR t.""SubmitterId"" = @UserId);
+                WHERE t.""SubjectId"" = @SubjectId AND (t.""State"" > @ThingState OR t.""SubmitterId"" = @UserId);
                 -- @@TODO: Check that it works with UserId == null as intended
             ",
             joinedCollectionSelector: thing => thing.Tags,
             param: new
             {
                 SubjectId = subjectId,
-                UserId = userId
+                UserId = userId,
+                ThingState = (int)ThingState.Draft
             }
         );
 
@@ -93,6 +94,37 @@ internal class ThingQueryable : Queryable, IThingQueryable
         if (thing != null)
         {
             thing.Watched = multiQuery.ReadSingleOrDefault<long>() != 0;
+
+            var result = await dbConn.QuerySingleAsync(
+                @"
+                    SELECT
+                        AVG(
+                            CASE
+                                WHEN p.""Verdict"" = 0 THEN 100
+                                WHEN p.""Verdict"" = 1 THEN 75
+                                WHEN p.""Verdict"" = 2 THEN 40
+                                WHEN p.""Verdict"" = 3 THEN 0
+                                WHEN p.""Verdict"" = 4 THEN -40
+                                WHEN p.""Verdict"" = 5 THEN -100
+                            END
+                        )::INTEGER AS ""AvgScore""
+                    FROM
+                        truquest.""Subjects"" AS s
+                            INNER JOIN
+                        truquest.""Things"" AS t
+                            ON (s.""Id"" = t.""SubjectId"" AND t.""State"" = @ThingState)
+                            INNER JOIN
+                        truquest.""SettlementProposals"" AS p
+                            ON t.""AcceptedSettlementProposalId"" = p.""Id""
+                    WHERE s.""Id"" = @SubjectId
+                ",
+                param: new
+                {
+                    SubjectId = thing.SubjectId,
+                    ThingState = (int)ThingState.Settled
+                }
+            );
+            thing.SubjectAvgScore = result.AvgScore;
         }
 
         return thing;

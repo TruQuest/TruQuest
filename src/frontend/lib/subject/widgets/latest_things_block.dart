@@ -126,6 +126,44 @@ class LatestThingsBlock extends StatelessWidgetX {
           ),
         ),
         SizedBox(
+          height: 460,
+          child: Row(
+            children: [
+              RotatedBox(
+                quarterTurns: 3,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Text(
+                    'Settled',
+                    style: GoogleFonts.righteous(
+                      color: Colors.white,
+                      fontSize: 22,
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: CardSwiper(
+                  isDisabled: _latestSettledThings.isEmpty,
+                  cardBuilder: (context, index) {
+                    var thing = _latestSettledThings.isNotEmpty
+                        ? _latestSettledThings[index]
+                        : null;
+
+                    return _buildThingPreviewCard(
+                      thing,
+                      'No settled promises yet',
+                    );
+                  },
+                  cardsCount: max(_latestSettledThings.length, 1),
+                  numberOfCardsDisplayed: max(_latestSettledThings.length, 1),
+                  isVerticalSwipingEnabled: false,
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(
           // @@!!: This height value must be dynamically computed.
           // 460 is simply hardcoded for my screen.
           height: 460,
@@ -159,44 +197,6 @@ class LatestThingsBlock extends StatelessWidgetX {
                   },
                   cardsCount: max(_latestUnsettledThings.length, 1),
                   numberOfCardsDisplayed: max(_latestUnsettledThings.length, 1),
-                  isVerticalSwipingEnabled: false,
-                ),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(
-          height: 460,
-          child: Row(
-            children: [
-              RotatedBox(
-                quarterTurns: 3,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: Text(
-                    'Settled',
-                    style: GoogleFonts.righteous(
-                      color: Colors.white,
-                      fontSize: 22,
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: CardSwiper(
-                  isDisabled: _latestSettledThings.isEmpty,
-                  cardBuilder: (context, index) {
-                    var thing = _latestSettledThings.isNotEmpty
-                        ? _latestSettledThings[index]
-                        : null;
-
-                    return _buildThingPreviewCard(
-                      thing,
-                      'No settled promises yet',
-                    );
-                  },
-                  cardsCount: max(_latestSettledThings.length, 1),
-                  numberOfCardsDisplayed: max(_latestSettledThings.length, 1),
                   isVerticalSwipingEnabled: false,
                 ),
               ),

@@ -36,19 +36,25 @@ class VerdictViewBlock extends StatelessWidgetX {
             margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             color: Colors.black,
             width: double.infinity,
+            height: 50,
             padding: const EdgeInsets.all(8),
             child: Row(
               children: [
                 Text('> '),
-                AnimatedTextKit(
-                  repeatForever: true,
-                  pause: Duration(seconds: 2),
-                  animatedTexts: [
-                    TypewriterAnimatedText(
-                      _verdict.getString(),
-                      speed: Duration(milliseconds: 70),
+                Expanded(
+                  child: FittedBox(
+                    alignment: Alignment.centerLeft,
+                    child: AnimatedTextKit(
+                      repeatForever: true,
+                      pause: Duration(seconds: 2),
+                      animatedTexts: [
+                        TypewriterAnimatedText(
+                          _verdict.getString(),
+                          speed: Duration(milliseconds: 70),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),

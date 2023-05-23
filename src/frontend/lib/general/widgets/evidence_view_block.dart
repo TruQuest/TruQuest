@@ -25,8 +25,8 @@ class _EvidenceViewBlockState extends StateX<EvidenceViewBlock> {
     Future.delayed(Duration(seconds: 1)).then(
       (_) => _pageController.animateToPage(
         _evidence.length - 1,
-        duration: Duration(seconds: 3),
-        curve: Curves.easeIn,
+        duration: Duration(milliseconds: 1500),
+        curve: Curves.ease,
       ),
     );
   }

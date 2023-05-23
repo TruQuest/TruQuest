@@ -40,17 +40,17 @@ class ThingPreviewVm {
   Color get verdictColor {
     switch (verdict!) {
       case VerdictVm.delivered:
-        return Colors.green;
+        return Color(0xff10A19D);
       case VerdictVm.guessItCounts:
-        return Color.fromARGB(255, 136, 193, 93);
+        return Color(0xff088395);
       case VerdictVm.aintGoodEnough:
-        return Color.fromARGB(255, 238, 255, 83);
+        return Color(0xff8BACAA);
       case VerdictVm.motionNotAction:
-        return Color.fromARGB(255, 255, 209, 84);
+        return Color(0xffF99B7D);
       case VerdictVm.noEffortWhatsoever:
-        return Color.fromARGB(255, 255, 108, 108);
+        return Color(0xffE76161);
       case VerdictVm.asGoodAsMaliciousIntent:
-        return Color.fromARGB(255, 145, 0, 0);
+        return Color(0xffB04759);
     }
   }
 

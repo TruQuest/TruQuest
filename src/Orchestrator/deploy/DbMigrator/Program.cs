@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Identity;
 
@@ -62,137 +60,439 @@ appDbContext.Tags.AddRange(
 );
 appDbContext.SaveChanges();
 
-List<Dictionary<string, object>> details = new()
-{
-    new()
-    {
-        ["insert"] = "Hello World!"
-    },
-    new()
-    {
-        ["attributes"] = new Dictionary<string, object>()
-        {
-            ["header"] = 1
-        },
-        ["insert"] = "\n"
-    },
-    new()
-    {
-        ["insert"] = "Welcome to TruQuest!"
-    },
-    new()
-    {
-        ["attributes"] = new Dictionary<string, object>()
-        {
-            ["header"] = 2
-        },
-        ["insert"] = "\n"
-    }
-};
-var detailsJson = JsonSerializer.Serialize(details);
+var details = File.ReadAllText("dummy_details.json");
 
 var submitterId = "0xbF2Ff171C3C4A63FBBD369ddb021c75934005e81".Substring(2).ToLower();
 
-var subject = new Subject(
+var subject1 = new Subject(
     name: "Erik \"Magneto\" Lehnsherr",
-    details: detailsJson,
+    details: details,
     type: SubjectType.Person,
     imageIpfsCid: "QmR1RQALYXRc5RTQCsRChRmDLsYpiwAULFHgYZQvKx26yB",
     croppedImageIpfsCid: "Qme3Rfg9HWVnriG7CJesz5FQtTmDi3zEfSirsr796qGbB7",
     submitterId: submitterId
 );
-subject.AddTags(new[] { 1, 2, 3 });
+subject1.AddTags(new[] { 1, 2, 3 });
 
-appDbContext.Subjects.Add(subject);
-appDbContext.SaveChanges();
-
-var thing = new Thing(
-    id: Guid.NewGuid(),
-    title: "Max promised to behave and not be a little bitch as is his habit in this world",
-    details: detailsJson,
-    imageIpfsCid: "QmXQRH7TshkUd4MUHqMvnwsjcsNoWWV4DN2rYqu6GAaVwm",
-    croppedImageIpfsCid: "QmbEqDnJ3nWd61bg1AYNZ127eujC7jZTey7Y4fVmbPBdXs",
-    submitterId: submitterId,
-    subjectId: subject.Id!.Value
-);
-thing.AddEvidence(new[]
-{
-    new Evidence(
-        originUrl: "https://google.com",
-        ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
-        previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
-    )
-});
-thing.AddTags(new[] { 1, 2, 3 });
-thing.SetState(ThingState.AwaitingFunding);
-
-appDbContext.Things.Add(thing);
-
-var otherThing = new Thing(
-    id: Guid.NewGuid(),
-    title: "Max promised to be a good boy",
-    details: detailsJson,
-    imageIpfsCid: "QmXQRH7TshkUd4MUHqMvnwsjcsNoWWV4DN2rYqu6GAaVwm",
-    croppedImageIpfsCid: "QmbEqDnJ3nWd61bg1AYNZ127eujC7jZTey7Y4fVmbPBdXs",
-    submitterId: submitterId,
-    subjectId: subject.Id!.Value
-);
-otherThing.AddEvidence(new[]
-{
-    new Evidence(
-        originUrl: "https://google.com",
-        ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
-        previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
-    )
-});
-otherThing.AddTags(new[] { 1, 2, 3 });
-otherThing.SetState(ThingState.AwaitingFunding);
-
-appDbContext.Things.Add(otherThing);
-
-var yetAnotherThing = new Thing(
-    id: Guid.NewGuid(),
-    title: "Nd daspodd dasaAsdo adsapsd dsam dlkamsd dsaaasd asda",
-    details: detailsJson,
-    imageIpfsCid: "QmXQRH7TshkUd4MUHqMvnwsjcsNoWWV4DN2rYqu6GAaVwm",
-    croppedImageIpfsCid: "QmbEqDnJ3nWd61bg1AYNZ127eujC7jZTey7Y4fVmbPBdXs",
-    submitterId: submitterId,
-    subjectId: subject.Id!.Value
-);
-yetAnotherThing.AddEvidence(new[]
-{
-    new Evidence(
-        originUrl: "https://google.com",
-        ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
-        previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
-    )
-});
-yetAnotherThing.AddTags(new[] { 1, 2, 3 });
-yetAnotherThing.SetState(ThingState.AwaitingFunding);
-
-appDbContext.Things.Add(yetAnotherThing);
-
-var proposal = new SettlementProposal(
-    id: Guid.NewGuid(),
-    thingId: thing.Id,
-    title: "Proposal title",
-    verdict: Verdict.NoEffortWhatsoever,
-    details: detailsJson,
-    imageIpfsCid: "QmR1RQALYXRc5RTQCsRChRmDLsYpiwAULFHgYZQvKx26yB",
-    croppedImageIpfsCid: "Qme3Rfg9HWVnriG7CJesz5FQtTmDi3zEfSirsr796qGbB7",
+var subject2 = new Subject(
+    name: "Sergei Bobrovsky",
+    details: details,
+    type: SubjectType.Person,
+    imageIpfsCid: "QmQUv5YspkQNKmDvVVPLckd7q1M6uRAjr3k8bCqUNHAyXh",
+    croppedImageIpfsCid: "QmTKQdDceyrKFGNoChD3SwzPVQSbiKxB25xHRNN4BNaBs1",
     submitterId: submitterId
 );
-proposal.AddEvidence(new[]
+subject2.AddTags(new[] { 4, 5, 6, 8 });
+
+var subject3 = new Subject(
+    name: "Obi-Wan \"Ben\" Kenobi",
+    details: details,
+    type: SubjectType.Person,
+    imageIpfsCid: "QmUrfj3cjsxgM3yrUJeYYySzQjujv6WvnLAN7fTSU1vRZf",
+    croppedImageIpfsCid: "QmXwUWK4TJWQewY9mJr1rZZWSv4iwi8qUdyzroZ6xnuMXS",
+    submitterId: submitterId
+);
+subject3.AddTags(new[] { 8, 9 });
+
+var subject4 = new Subject(
+    name: "Kimi Raikkonen",
+    details: details,
+    type: SubjectType.Person,
+    imageIpfsCid: "QmeepXj5HL82S2LTiFkW12ADN8ejmzffr44PFCujhUPd1C",
+    croppedImageIpfsCid: "QmZmHtXnA8R7n8yAwm13tP6CHB2VmCbptNuS94Nn23E7CH",
+    submitterId: submitterId
+);
+subject4.AddTags(new[] { 5, 11, 10, 7, 1 });
+
+var subject5 = new Subject(
+    name: "Wrex",
+    details: details,
+    type: SubjectType.Person,
+    imageIpfsCid: "QmdyQYE7CmEH1x286g3FFtrtUT2mTdmLSZAQuPsVuyoscC",
+    croppedImageIpfsCid: "QmdRiVi4fbfZiU1FynewAaJmey6utvqc84CBHxSPVk9Hm5",
+    submitterId: submitterId
+);
+subject5.AddTags(new[] { 6, 7, 9 });
+
+var subject6 = new Subject(
+    name: "Dwight Eisenhower",
+    details: details,
+    type: SubjectType.Person,
+    imageIpfsCid: "QmUPsyycjkfDCge396ksanUTjqtFb9vDkoSodxAnrYTV84",
+    croppedImageIpfsCid: "Qmb1F4P1PdP7RrPsLaCksFEmJiNBkQwAdmVeYcMNhsFXow",
+    submitterId: submitterId
+);
+subject6.AddTags(new[] { 1 });
+
+var subject7 = new Subject(
+    name: "Scooby Doo",
+    details: details,
+    type: SubjectType.Person,
+    imageIpfsCid: "Qmceg6fo8MYJvfdGj949gsBT5bEa3YqhJbsfNdFnaT5yJ8",
+    croppedImageIpfsCid: "QmTbCPVq4NHM69zwSEizA31tw4ZpZpgfq6YTeoKHcuW5xW",
+    submitterId: submitterId
+);
+subject7.AddTags(new[] { 4, 5, 8, 12 });
+
+var subject8 = new Subject(
+    name: "Lightning McQueen",
+    details: details,
+    type: SubjectType.Person,
+    imageIpfsCid: "QmWtmJcjpTrAyfMU6nnEe8RH9mY8i53QKzzuMGSSNwq3u2",
+    croppedImageIpfsCid: "QmcKDq1N24vSd1Vu78h3xuzNaePkpLWB3YCXeV5nAXThky",
+    submitterId: submitterId
+);
+subject8.AddTags(new[] { 1, 2, 3 });
+
+var subject9 = new Subject(
+    name: "Waxillium \"Wax\" Ladrian",
+    details: details,
+    type: SubjectType.Person,
+    imageIpfsCid: "QmTkvLaCiyFJFGw25SgqAgbmEQ21PpaJuV5Chw8Bzjfb9A",
+    croppedImageIpfsCid: "QmdBVq8JRddJrrT4scU3tYUpkwDEAyUXKZDHErKgkszNxN",
+    submitterId: submitterId
+);
+subject9.AddTags(new[] { 6, 10 });
+
+appDbContext.Subjects.AddRange(new[] {
+    subject1, subject2, subject3,
+    subject4, subject5, subject6,
+    subject7, subject8, subject9
+});
+appDbContext.SaveChanges();
+
+var thing1 = new Thing(
+    id: Guid.NewGuid(),
+    title: "Promised to never switch sides",
+    details: details,
+    imageIpfsCid: "QmXQRH7TshkUd4MUHqMvnwsjcsNoWWV4DN2rYqu6GAaVwm",
+    croppedImageIpfsCid: "QmbEqDnJ3nWd61bg1AYNZ127eujC7jZTey7Y4fVmbPBdXs",
+    submitterId: submitterId,
+    subjectId: subject1.Id!.Value
+);
+thing1.AddEvidence(new[]
 {
+    new Evidence(
+        originUrl: "https://stackoverflow.com",
+        ipfsCid: "QmUJLNPMw9q1kQUrgvYYjBEBBJJjH6cVvg45NuR1588JMq",
+        previewImageIpfsCid: "Qmahq4Qdk4BqWTNhNFhRXTtpf6i6JNWDC83owyQkFrhzbt"
+    ),
+    new Evidence(
+        originUrl: "https://twitter.com",
+        ipfsCid: "QmWwZmCgixkQbAXrpJGBg6dKPEP49F7Yw8yUnT4xQLEvK6",
+        previewImageIpfsCid: "QmNx8iKKmccFDJLusR9aCJAq6qCKxPRrRRVvVTDhv9KfqS"
+    ),
+    new Evidence(
+        originUrl: "https://google.com",
+        ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
+        previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
+    ),
+});
+thing1.AddTags(new[] { 5, 9 });
+thing1.SetState(ThingState.AwaitingFunding);
+
+var thing2 = new Thing(
+    id: Guid.NewGuid(),
+    title: "Promised to always look cool",
+    details: details,
+    imageIpfsCid: "Qmf544CedHScDcJuCBiEkAF4UbQsL6pWfokjX3HTVGK2Yx",
+    croppedImageIpfsCid: "QmWEpVtTbck8KGmkDwSRzU2TCbUwztpgaKvTXU878mpm98",
+    submitterId: submitterId,
+    subjectId: subject1.Id!.Value
+);
+thing2.AddEvidence(new[]
+{
+    new Evidence(
+        originUrl: "https://stackoverflow.com",
+        ipfsCid: "QmUJLNPMw9q1kQUrgvYYjBEBBJJjH6cVvg45NuR1588JMq",
+        previewImageIpfsCid: "Qmahq4Qdk4BqWTNhNFhRXTtpf6i6JNWDC83owyQkFrhzbt"
+    ),
+    new Evidence(
+        originUrl: "https://twitter.com",
+        ipfsCid: "QmWwZmCgixkQbAXrpJGBg6dKPEP49F7Yw8yUnT4xQLEvK6",
+        previewImageIpfsCid: "QmNx8iKKmccFDJLusR9aCJAq6qCKxPRrRRVvVTDhv9KfqS"
+    ),
+    new Evidence(
+        originUrl: "https://google.com",
+        ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
+        previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
+    ),
+});
+thing2.AddTags(new[] { 7, 9, 3 });
+thing2.SetState(ThingState.AwaitingFunding);
+
+var thing3 = new Thing(
+    id: Guid.NewGuid(),
+    title: "Said he would lead the mutants into a better future",
+    details: details,
+    imageIpfsCid: "QmbCPKWZ4v4dTMaEcJPkUgHDcM7HHzwChBKvnzQqqDFW6d",
+    croppedImageIpfsCid: "QmZdDdE73rEcXQLK8akMj6pnYChDUVRNPhCyuxoKrG3iDF",
+    submitterId: submitterId,
+    subjectId: subject1.Id!.Value
+);
+thing3.AddEvidence(new[]
+{
+    new Evidence(
+        originUrl: "https://stackoverflow.com",
+        ipfsCid: "QmUJLNPMw9q1kQUrgvYYjBEBBJJjH6cVvg45NuR1588JMq",
+        previewImageIpfsCid: "Qmahq4Qdk4BqWTNhNFhRXTtpf6i6JNWDC83owyQkFrhzbt"
+    ),
+    new Evidence(
+        originUrl: "https://twitter.com",
+        ipfsCid: "QmWwZmCgixkQbAXrpJGBg6dKPEP49F7Yw8yUnT4xQLEvK6",
+        previewImageIpfsCid: "QmNx8iKKmccFDJLusR9aCJAq6qCKxPRrRRVvVTDhv9KfqS"
+    ),
+    new Evidence(
+        originUrl: "https://google.com",
+        ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
+        previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
+    ),
+});
+thing3.AddTags(new[] { 8 });
+thing3.SetState(ThingState.AwaitingFunding);
+
+var thing4 = new Thing(
+    id: Guid.NewGuid(),
+    title: "Vowed to never forget where he came from",
+    details: details,
+    imageIpfsCid: "QmcDKWcF3BBEmW6rX5zDRPpStetsbf79hCQaAtLcnL1PB7",
+    croppedImageIpfsCid: "QmcDKWcF3BBEmW6rX5zDRPpStetsbf79hCQaAtLcnL1PB7",
+    submitterId: submitterId,
+    subjectId: subject1.Id!.Value
+);
+thing4.AddEvidence(new[]
+{
+    new Evidence(
+        originUrl: "https://stackoverflow.com",
+        ipfsCid: "QmUJLNPMw9q1kQUrgvYYjBEBBJJjH6cVvg45NuR1588JMq",
+        previewImageIpfsCid: "Qmahq4Qdk4BqWTNhNFhRXTtpf6i6JNWDC83owyQkFrhzbt"
+    ),
+    new Evidence(
+        originUrl: "https://twitter.com",
+        ipfsCid: "QmWwZmCgixkQbAXrpJGBg6dKPEP49F7Yw8yUnT4xQLEvK6",
+        previewImageIpfsCid: "QmNx8iKKmccFDJLusR9aCJAq6qCKxPRrRRVvVTDhv9KfqS"
+    ),
+    new Evidence(
+        originUrl: "https://google.com",
+        ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
+        previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
+    ),
+});
+thing4.AddTags(new[] { 10, 9, 5, 2 });
+thing4.SetState(ThingState.AwaitingFunding);
+
+var thing5 = new Thing(
+    id: Guid.NewGuid(),
+    title: "Promised to value all life and not kill innocents",
+    details: details,
+    imageIpfsCid: "QmcSrkMgqtSdzMJEV6yGnpiQ4P3Puia2664DJKDNPBsJPi",
+    croppedImageIpfsCid: "QmcSrkMgqtSdzMJEV6yGnpiQ4P3Puia2664DJKDNPBsJPi",
+    submitterId: submitterId,
+    subjectId: subject1.Id!.Value
+);
+thing5.AddEvidence(new[]
+{
+    new Evidence(
+        originUrl: "https://stackoverflow.com",
+        ipfsCid: "QmUJLNPMw9q1kQUrgvYYjBEBBJJjH6cVvg45NuR1588JMq",
+        previewImageIpfsCid: "Qmahq4Qdk4BqWTNhNFhRXTtpf6i6JNWDC83owyQkFrhzbt"
+    ),
+    new Evidence(
+        originUrl: "https://twitter.com",
+        ipfsCid: "QmWwZmCgixkQbAXrpJGBg6dKPEP49F7Yw8yUnT4xQLEvK6",
+        previewImageIpfsCid: "QmNx8iKKmccFDJLusR9aCJAq6qCKxPRrRRVvVTDhv9KfqS"
+    ),
+    new Evidence(
+        originUrl: "https://google.com",
+        ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
+        previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
+    ),
+});
+thing5.AddTags(new[] { 3, 7 });
+thing5.SetState(ThingState.AwaitingFunding);
+
+appDbContext.Things.AddRange(new[] {
+    thing1, thing2, thing3,
+    thing4, thing5
+});
+
+appDbContext.SaveChanges();
+
+var proposal1 = new SettlementProposal(
+    id: Guid.NewGuid(),
+    thingId: thing1.Id,
+    title: "Erik switches sides all the time",
+    verdict: Verdict.AsGoodAsMaliciousIntent,
+    details: details,
+    imageIpfsCid: "QmNpfDNHjLWBwBAaQfQFkRED4oN7s6PW5oQ4ucdZJYKUPm",
+    croppedImageIpfsCid: "QmNpfDNHjLWBwBAaQfQFkRED4oN7s6PW5oQ4ucdZJYKUPm",
+    submitterId: submitterId
+);
+proposal1.AddEvidence(new[]
+{
+    new SupportingEvidence(
+        originUrl: "https://stackoverflow.com",
+        ipfsCid: "QmUJLNPMw9q1kQUrgvYYjBEBBJJjH6cVvg45NuR1588JMq",
+        previewImageIpfsCid: "Qmahq4Qdk4BqWTNhNFhRXTtpf6i6JNWDC83owyQkFrhzbt"
+    ),
+    new SupportingEvidence(
+        originUrl: "https://twitter.com",
+        ipfsCid: "QmWwZmCgixkQbAXrpJGBg6dKPEP49F7Yw8yUnT4xQLEvK6",
+        previewImageIpfsCid: "QmNx8iKKmccFDJLusR9aCJAq6qCKxPRrRRVvVTDhv9KfqS"
+    ),
     new SupportingEvidence(
         originUrl: "https://google.com",
         ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
         previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
-    )
+    ),
 });
-proposal.SetState(SettlementProposalState.AwaitingFunding);
+proposal1.SetState(SettlementProposalState.AwaitingFunding);
+proposal1.SetState(SettlementProposalState.Accepted);
 
-appDbContext.SettlementProposals.Add(proposal);
+var proposal2 = new SettlementProposal(
+    id: Guid.NewGuid(),
+    thingId: thing2.Id,
+    title: "Whatever",
+    verdict: Verdict.Delivered,
+    details: details,
+    imageIpfsCid: "QmWAY2H5df72d7wB8Ba9Nb8u5gA2hXgcJTwQRLTMr9zzwY",
+    croppedImageIpfsCid: "QmPEvoeyiwNEusbPpbWRDa7TFTsecvwUVrSYob5MabzZLk",
+    submitterId: submitterId
+);
+proposal2.AddEvidence(new[]
+{
+    new SupportingEvidence(
+        originUrl: "https://stackoverflow.com",
+        ipfsCid: "QmUJLNPMw9q1kQUrgvYYjBEBBJJjH6cVvg45NuR1588JMq",
+        previewImageIpfsCid: "Qmahq4Qdk4BqWTNhNFhRXTtpf6i6JNWDC83owyQkFrhzbt"
+    ),
+    new SupportingEvidence(
+        originUrl: "https://twitter.com",
+        ipfsCid: "QmWwZmCgixkQbAXrpJGBg6dKPEP49F7Yw8yUnT4xQLEvK6",
+        previewImageIpfsCid: "QmNx8iKKmccFDJLusR9aCJAq6qCKxPRrRRVvVTDhv9KfqS"
+    ),
+    new SupportingEvidence(
+        originUrl: "https://google.com",
+        ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
+        previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
+    ),
+});
+proposal2.SetState(SettlementProposalState.AwaitingFunding);
+proposal2.SetState(SettlementProposalState.Accepted);
+
+var proposal3 = new SettlementProposal(
+    id: Guid.NewGuid(),
+    thingId: thing3.Id,
+    title: "Whatever",
+    verdict: Verdict.MotionNotAction,
+    details: details,
+    imageIpfsCid: "QmWAY2H5df72d7wB8Ba9Nb8u5gA2hXgcJTwQRLTMr9zzwY",
+    croppedImageIpfsCid: "QmPEvoeyiwNEusbPpbWRDa7TFTsecvwUVrSYob5MabzZLk",
+    submitterId: submitterId
+);
+proposal3.AddEvidence(new[]
+{
+    new SupportingEvidence(
+        originUrl: "https://stackoverflow.com",
+        ipfsCid: "QmUJLNPMw9q1kQUrgvYYjBEBBJJjH6cVvg45NuR1588JMq",
+        previewImageIpfsCid: "Qmahq4Qdk4BqWTNhNFhRXTtpf6i6JNWDC83owyQkFrhzbt"
+    ),
+    new SupportingEvidence(
+        originUrl: "https://twitter.com",
+        ipfsCid: "QmWwZmCgixkQbAXrpJGBg6dKPEP49F7Yw8yUnT4xQLEvK6",
+        previewImageIpfsCid: "QmNx8iKKmccFDJLusR9aCJAq6qCKxPRrRRVvVTDhv9KfqS"
+    ),
+    new SupportingEvidence(
+        originUrl: "https://google.com",
+        ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
+        previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
+    ),
+});
+proposal3.SetState(SettlementProposalState.AwaitingFunding);
+proposal3.SetState(SettlementProposalState.Accepted);
+
+var proposal4 = new SettlementProposal(
+    id: Guid.NewGuid(),
+    thingId: thing4.Id,
+    title: "Whatever",
+    verdict: Verdict.Delivered,
+    details: details,
+    imageIpfsCid: "QmWAY2H5df72d7wB8Ba9Nb8u5gA2hXgcJTwQRLTMr9zzwY",
+    croppedImageIpfsCid: "QmPEvoeyiwNEusbPpbWRDa7TFTsecvwUVrSYob5MabzZLk",
+    submitterId: submitterId
+);
+proposal4.AddEvidence(new[]
+{
+    new SupportingEvidence(
+        originUrl: "https://stackoverflow.com",
+        ipfsCid: "QmUJLNPMw9q1kQUrgvYYjBEBBJJjH6cVvg45NuR1588JMq",
+        previewImageIpfsCid: "Qmahq4Qdk4BqWTNhNFhRXTtpf6i6JNWDC83owyQkFrhzbt"
+    ),
+    new SupportingEvidence(
+        originUrl: "https://twitter.com",
+        ipfsCid: "QmWwZmCgixkQbAXrpJGBg6dKPEP49F7Yw8yUnT4xQLEvK6",
+        previewImageIpfsCid: "QmNx8iKKmccFDJLusR9aCJAq6qCKxPRrRRVvVTDhv9KfqS"
+    ),
+    new SupportingEvidence(
+        originUrl: "https://google.com",
+        ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
+        previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
+    ),
+});
+proposal4.SetState(SettlementProposalState.AwaitingFunding);
+proposal4.SetState(SettlementProposalState.Accepted);
+
+var proposal5 = new SettlementProposal(
+    id: Guid.NewGuid(),
+    thingId: thing5.Id,
+    title: "Whatever",
+    verdict: Verdict.NoEffortWhatsoever,
+    details: details,
+    imageIpfsCid: "QmWAY2H5df72d7wB8Ba9Nb8u5gA2hXgcJTwQRLTMr9zzwY",
+    croppedImageIpfsCid: "QmPEvoeyiwNEusbPpbWRDa7TFTsecvwUVrSYob5MabzZLk",
+    submitterId: submitterId
+);
+proposal5.AddEvidence(new[]
+{
+    new SupportingEvidence(
+        originUrl: "https://stackoverflow.com",
+        ipfsCid: "QmUJLNPMw9q1kQUrgvYYjBEBBJJjH6cVvg45NuR1588JMq",
+        previewImageIpfsCid: "Qmahq4Qdk4BqWTNhNFhRXTtpf6i6JNWDC83owyQkFrhzbt"
+    ),
+    new SupportingEvidence(
+        originUrl: "https://twitter.com",
+        ipfsCid: "QmWwZmCgixkQbAXrpJGBg6dKPEP49F7Yw8yUnT4xQLEvK6",
+        previewImageIpfsCid: "QmNx8iKKmccFDJLusR9aCJAq6qCKxPRrRRVvVTDhv9KfqS"
+    ),
+    new SupportingEvidence(
+        originUrl: "https://google.com",
+        ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
+        previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
+    ),
+});
+proposal5.SetState(SettlementProposalState.AwaitingFunding);
+proposal5.SetState(SettlementProposalState.Accepted);
+
+appDbContext.SettlementProposals.AddRange(new[] {
+    proposal1, proposal2, proposal3,
+    proposal4, proposal5
+});
+appDbContext.SaveChanges();
+
+thing1.AcceptSettlementProposal(proposal1.Id);
+thing1.SetState(ThingState.Settled);
+
+thing2.AcceptSettlementProposal(proposal2.Id);
+thing2.SetState(ThingState.Settled);
+
+thing3.AcceptSettlementProposal(proposal3.Id);
+thing3.SetState(ThingState.Settled);
+
+thing4.AcceptSettlementProposal(proposal4.Id);
+thing4.SetState(ThingState.Settled);
+
+thing5.AcceptSettlementProposal(proposal5.Id);
+thing5.SetState(ThingState.Settled);
 
 appDbContext.SaveChanges();
 

@@ -19,6 +19,7 @@ public class ThingQm
     public Guid? AcceptedSettlementProposalId { get; }
     public HashSet<EvidenceQm> Evidence { get; } = new();
     public HashSet<TagQm> Tags { get; } = new();
+    public int? SubjectAvgScore { get; set; }
     public bool Watched { get; set; }
 
     public override bool Equals(object? obj)

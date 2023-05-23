@@ -56,6 +56,7 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
             ),
           ),
         ),
+        isActive: true,
       );
     }
 
@@ -76,6 +77,7 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
           ),
         ),
       ),
+      isActive: true,
     );
   }
 

@@ -58,6 +58,7 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
               ),
             ),
           ),
+          isActive: true,
         ),
         Step(
           title: Text(
@@ -79,6 +80,7 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
               ),
             ),
           ),
+          isActive: true,
         ),
       ];
     } else if (_thing.state == ThingStateVm.declined) {
@@ -100,6 +102,7 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
               ),
             ),
           ),
+          isActive: true,
         ),
       ];
     }

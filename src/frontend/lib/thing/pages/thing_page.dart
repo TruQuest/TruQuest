@@ -128,13 +128,19 @@ class _ThingPageState extends StateX<ThingPage> {
                 child: Column(
                   children: [
                     SizedBox(height: 10),
-                    AvatarWithReputationGauge(
-                      subjectId: thing.subjectId,
-                      subjectAvatarIpfsCid: thing.subjectCroppedImageIpfsCid,
-                      size: AvatarSize.medium,
-                      color: Colors.white,
+                    InkWell(
+                      onTap: () => _pageContext.goto(
+                        '/subjects/${thing.subjectId}',
+                      ),
+                      child: AvatarWithReputationGauge(
+                        subjectId: thing.subjectId,
+                        subjectAvatarIpfsCid: thing.subjectCroppedImageIpfsCid,
+                        value: thing.subjectAvgScore?.toDouble() ?? 0,
+                        size: AvatarSize.medium,
+                        color: Colors.white,
+                      ),
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: 20),
                     Container(
                       decoration: BoxDecoration(
                         border: Border(
@@ -296,7 +302,7 @@ class _ThingPageState extends StateX<ThingPage> {
           ),
           if (vm.thing.state == ThingStateVm.awaitingSettlement)
             Positioned(
-              top: 34,
+              top: 30,
               left: 24,
               child: InkWell(
                 onTap: () {
@@ -363,6 +369,7 @@ class _ThingPageState extends StateX<ThingPage> {
                       'Awaiting settlement',
                       style: GoogleFonts.righteous(
                         color: Colors.white,
+                        fontSize: 20,
                       ),
                     ),
                   ),
@@ -371,7 +378,7 @@ class _ThingPageState extends StateX<ThingPage> {
             ),
           if (vm.thing.acceptedSettlementProposalId != null)
             Positioned(
-              top: 34,
+              top: 30,
               left: 24,
               child: InkWell(
                 onTap: () => _pageContext.goto(
@@ -386,6 +393,7 @@ class _ThingPageState extends StateX<ThingPage> {
                       'Settled',
                       style: GoogleFonts.righteous(
                         color: Colors.white,
+                        fontSize: 20,
                       ),
                     ),
                   ),
