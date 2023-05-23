@@ -80,7 +80,7 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
                 settlementProposalId: proposal.Id,
                 category: SettlementProposalUpdateCategory.General,
                 updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                title: "Proposal verifier lottery completed",
+                title: "Verifier lottery completed",
                 details: "Assessment poll initiated"
             ));
 

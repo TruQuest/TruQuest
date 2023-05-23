@@ -113,7 +113,7 @@ class _LotteryStepperState extends StateX<LotteryStepper> {
                 content: Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Text(
-                    'Thing verifiers can claim a spot instead of going through the lottery',
+                    'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
                     style: GoogleFonts.raleway(
                       color: Colors.white,
                     ),
@@ -181,7 +181,7 @@ class _LotteryStepperState extends StateX<LotteryStepper> {
                 content: Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Text(
-                    'Committing to lottery means staking some amount of Truthserum for the duration of the lottery',
+                    'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
                     style: GoogleFonts.raleway(
                       color: Colors.white,
                     ),
@@ -200,7 +200,7 @@ class _LotteryStepperState extends StateX<LotteryStepper> {
                 content: Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Text(
-                    'Joining lottery generates a one-time random number (nonce) which will be used in the lottery process to determine winners',
+                    'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
                     style: GoogleFonts.raleway(
                       color: Colors.white,
                     ),

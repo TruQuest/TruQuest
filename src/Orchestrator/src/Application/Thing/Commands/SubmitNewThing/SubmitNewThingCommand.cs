@@ -67,7 +67,7 @@ internal class SubmitNewThingCommandHandler : IRequestHandler<SubmitNewThingComm
             thingId: thing.Id,
             category: ThingUpdateCategory.General,
             updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-            title: "Thing submitted",
+            title: "Promise submitted",
             details: "Click to refresh the page"
         ));
 

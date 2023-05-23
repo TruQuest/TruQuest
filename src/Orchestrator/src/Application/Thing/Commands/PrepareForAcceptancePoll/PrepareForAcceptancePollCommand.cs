@@ -76,7 +76,7 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
                 thingId: thing.Id,
                 category: ThingUpdateCategory.General,
                 updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                title: "Thing verifier lottery completed",
+                title: "Verifier lottery completed",
                 details: "Acceptance poll initiated"
             ));
 

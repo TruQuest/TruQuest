@@ -52,7 +52,7 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
           content: Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: Text(
-              'The promise has been accepted and now awaits settlement',
+              'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
               style: GoogleFonts.raleway(
                 color: Colors.white,
               ),
@@ -73,7 +73,7 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
             child: Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(
-                'The promise has been settled. Click to open the accepted settlement proposal',
+                'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
                 style: GoogleFonts.raleway(
                   color: Colors.white,
                 ),
@@ -96,7 +96,7 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
           content: Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: Text(
-              'The promise has been rejected',
+              'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
               style: GoogleFonts.raleway(
                 color: Colors.white,
               ),
@@ -185,7 +185,7 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
             content: Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(
-                'Draft can be edited until submitted',
+                'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
                 style: GoogleFonts.raleway(
                   color: Colors.white,
                 ),
@@ -204,7 +204,7 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
             content: Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(
-                'Once submitted, the promise will be visible to others',
+                'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
                 style: GoogleFonts.raleway(
                   color: Colors.white,
                 ),
@@ -223,7 +223,7 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
             content: Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(
-                'Funds are returned with either a reward or a penalty depending on if the promise gets accepted by the community or not',
+                'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
                 style: GoogleFonts.raleway(
                   color: Colors.white,
                 ),
@@ -242,7 +242,7 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
             content: Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(
-                'Once funded, a verifier selection lottery takes place to determine who would get an opportunity to evaluate the validity of the promise',
+                'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
                 style: GoogleFonts.raleway(
                   color: Colors.white,
                 ),
@@ -261,7 +261,7 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
             content: Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(
-                'Once verifiers are selected, they collectively vote to either accept the promise as valid or reject it',
+                'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
                 style: GoogleFonts.raleway(
                   color: Colors.white,
                 ),

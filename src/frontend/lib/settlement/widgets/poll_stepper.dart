@@ -108,7 +108,7 @@ class _PollStepperState extends StateX<PollStepper> {
             content: Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(
-                'Voting off-chain means that there won\'t be a blockchain transaction. Instead, your signed vote will be stored in IPFS.',
+                'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
                 style: GoogleFonts.raleway(
                   color: Colors.white,
                 ),
@@ -128,7 +128,7 @@ class _PollStepperState extends StateX<PollStepper> {
             content: Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(
-                'On-chain vote supersedes any off-chain votes, even later ones. So one on-chain vote could only be overwritten by another one.',
+                'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
                 style: GoogleFonts.raleway(
                   color: Colors.white,
                 ),

@@ -45,7 +45,7 @@ internal class PollFinalizedEventHandler : INotificationHandler<PollFinalizedEve
                 thingId: thing.Id,
                 category: ThingUpdateCategory.General,
                 updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                title: "Thing acceptance poll completed",
+                title: "Promise acceptance poll completed",
                 details: "Awaiting settlement"
             ));
 
