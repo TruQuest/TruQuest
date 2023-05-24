@@ -231,7 +231,8 @@ public static class IServiceCollectionExtension
                                                         typeof(ThingSettlementProposalVerifierSelectedEventHandler),
                                                         typeof(ThingSubmissionVerifierLotteryClosedWithSuccessEventHandler),
                                                         typeof(ThingVerifierSelectedEventHandler),
-                                                        typeof(ThingUpdateEventHandler)
+                                                        typeof(ThingUpdateEventHandler),
+                                                        typeof(SettlementProposalUpdateEventHandler)
                                                     })
                                             )
                                     )

@@ -117,78 +117,80 @@ class _LotteryState extends StateX<Lottery> {
                   }
 
                   return Center(
-                    child: Column(
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.only(top: 18),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(color: Colors.white),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.only(top: 18),
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(color: Colors.white),
+                              ),
+                            ),
+                            padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
+                            child: Text(
+                              'Lottery',
+                              style: GoogleFonts.philosopher(
+                                color: Colors.white,
+                                fontSize: 24,
+                              ),
                             ),
                           ),
-                          padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
-                          child: Text(
-                            'Lottery',
-                            style: GoogleFonts.philosopher(
-                              color: Colors.white,
-                              fontSize: 24,
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 12),
-                        Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            SleekCircularSlider(
-                              min: startBlock,
-                              max: endBlock,
-                              initialValue: currentBlock,
-                              appearance: CircularSliderAppearance(
-                                size: 300,
-                                customColors: CustomSliderColors(
-                                  dotColor: Colors.transparent,
+                          SizedBox(height: 12),
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              SleekCircularSlider(
+                                min: startBlock,
+                                max: endBlock,
+                                initialValue: currentBlock,
+                                appearance: CircularSliderAppearance(
+                                  size: 300,
+                                  customColors: CustomSliderColors(
+                                    dotColor: Colors.transparent,
+                                  ),
+                                ),
+                                innerWidget: (_) => SizedBox.shrink(),
+                              ),
+                              if (info.initBlock != null)
+                                BlockCountdown(
+                                  blocksLeft: (endBlock - currentBlock).toInt(),
+                                ),
+                              Positioned(
+                                bottom: 20,
+                                left: 0,
+                                right: 0,
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      startBlock.toStringAsFixed(0),
+                                      style: GoogleFonts.righteous(
+                                        color: Colors.white,
+                                        fontSize: 26,
+                                      ),
+                                    ),
+                                    Spacer(),
+                                    Text(
+                                      endBlock.toStringAsFixed(0),
+                                      style: GoogleFonts.righteous(
+                                        color: Colors.white,
+                                        fontSize: 26,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              innerWidget: (_) => SizedBox.shrink(),
-                            ),
-                            if (info.initBlock != null)
-                              BlockCountdown(
-                                blocksLeft: (endBlock - currentBlock).toInt(),
-                              ),
-                            Positioned(
-                              bottom: 20,
-                              left: 0,
-                              right: 0,
-                              child: Row(
-                                children: [
-                                  Text(
-                                    startBlock.toStringAsFixed(0),
-                                    style: GoogleFonts.righteous(
-                                      color: Colors.white,
-                                      fontSize: 26,
-                                    ),
-                                  ),
-                                  Spacer(),
-                                  Text(
-                                    endBlock.toStringAsFixed(0),
-                                    style: GoogleFonts.righteous(
-                                      color: Colors.white,
-                                      fontSize: 26,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 12),
-                        LotteryStepper(
-                          proposal: widget.proposal,
-                          info: info,
-                          currentBlock: currentBlock.toInt(),
-                          endBlock: endBlock.toInt(),
-                        ),
-                      ],
+                            ],
+                          ),
+                          SizedBox(height: 12),
+                          LotteryStepper(
+                            proposal: widget.proposal,
+                            info: info,
+                            currentBlock: currentBlock.toInt(),
+                            endBlock: endBlock.toInt(),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },

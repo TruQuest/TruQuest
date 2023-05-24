@@ -13,7 +13,10 @@ internal class ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccess
     public required Guid SettlementProposalId { get; init; }
     public required string Orchestrator { get; init; }
     public required decimal Nonce { get; init; }
-    public required List<string> ClaimantIds { get; init; }
+    // @@BUG: For some reason when claimants are empty debezium discards
+    // the key-value pair entirely, so if this property is set to 'required'
+    // json deserialization fails.
+    public List<string> ClaimantIds { get; init; } = new();
     public required List<string> WinnerIds { get; init; }
 }
 
