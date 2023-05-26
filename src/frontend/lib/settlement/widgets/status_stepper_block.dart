@@ -113,6 +113,7 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
           var step = details.currentStep;
           if (step <= 2) {
             return SwipeButton(
+              key: ValueKey(step),
               text:
                   'Swipe to ${step == 0 ? 'edit' : step == 1 ? 'submit' : 'fund'}',
               enabled: _checkShouldBeEnabled(step),

@@ -70,6 +70,8 @@ class _LotteryStepperState extends StateX<LotteryStepper> {
       child: Stepper(
         currentStep: _currentStep,
         controlsBuilder: (context, details) => SwipeButton(
+          // @@NOTE: Without the key flutter would just reuse the same state object.
+          key: ValueKey(details.currentStep),
           text: 'Slide to ${details.currentStep == 0 ? 'commit' : 'join'}',
           enabled: _checkButtonShouldBeEnabled(details.currentStep),
           swiped: _checkButtonShouldBeSwiped(details.currentStep),

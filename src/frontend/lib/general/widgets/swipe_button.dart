@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../user/bloc/user_bloc.dart';
+import '../../widget_extensions.dart';
+
 enum _SwipeButtonType {
   swipe,
   expand,
@@ -294,13 +297,17 @@ class SwipeButton extends StatefulWidget {
   State<SwipeButton> createState() => SwipeButtonState();
 }
 
-class SwipeButtonState extends State<SwipeButton> {
+class SwipeButtonState extends StateX<SwipeButton> {
+  late final _userBloc = use<UserBloc>();
+
+  String? _currentUserId;
   late bool _enabled;
   late bool _swiped;
 
   @override
   void initState() {
     super.initState();
+    _currentUserId = _userBloc.latestCurrentUser?.user.id;
     _enabled = widget.enabled;
     _swiped = widget.swiped;
   }
@@ -308,8 +315,14 @@ class SwipeButtonState extends State<SwipeButton> {
   @override
   void didUpdateWidget(covariant SwipeButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _enabled = widget.enabled;
-    _swiped = widget.swiped;
+
+    var currentUserId = _userBloc.latestCurrentUser?.user.id;
+    if (currentUserId != _currentUserId ||
+        !(!_enabled && _swiped && widget.enabled && !widget.swiped)) {
+      _currentUserId = currentUserId;
+      _enabled = widget.enabled;
+      _swiped = widget.swiped;
+    }
   }
 
   @override

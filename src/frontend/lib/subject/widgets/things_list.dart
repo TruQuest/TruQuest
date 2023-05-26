@@ -116,7 +116,7 @@ class _ThingsListState extends StateX<ThingsList> {
                             builder: (context) => ScopeX(
                               useInstances: [documentContext],
                               child: DocumentComposer(
-                                title: 'New thing',
+                                title: 'New promise',
                                 nameFieldLabel: 'Title',
                                 submitButton: Padding(
                                   padding: const EdgeInsets.symmetric(

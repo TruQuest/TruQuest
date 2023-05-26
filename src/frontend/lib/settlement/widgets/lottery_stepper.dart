@@ -133,6 +133,7 @@ class _LotteryStepperState extends StateX<LotteryStepper> {
           Stepper(
             currentStep: _currentStep,
             controlsBuilder: (context, details) => SwipeButton(
+              key: ValueKey(details.currentStep),
               text: 'Slide to ${details.currentStep == 0 ? 'commit' : 'join'}',
               enabled: _checkButtonShouldBeEnabled(details.currentStep),
               swiped: _checkButtonShouldBeSwiped(details.currentStep),

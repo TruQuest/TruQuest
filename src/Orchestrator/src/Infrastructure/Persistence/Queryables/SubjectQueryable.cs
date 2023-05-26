@@ -59,6 +59,7 @@ internal class SubjectQueryable : Queryable, ISubjectQueryable
                         INNER JOIN
                     truquest.""Tags"" AS t
                         ON sat.""TagId"" = t.""Id""
+                ORDER BY s.""SubmittedAt"" ASC
             ",
             joinedCollectionSelector: subject => subject.Tags,
             param: new { ThingState = (int)ThingState.Settled }
