@@ -374,10 +374,10 @@ class _TabContainerState extends AnimatedWidgetBaseState<TabContainer> {
   @override
   void didChangeDependencies() {
     _selectedTextStyle = widget.selectedTextStyle ??
-        Theme.of(context).textTheme.bodyText2 ??
+        Theme.of(context).textTheme.bodyMedium ??
         const TextStyle();
     _unselectedTextStyle = widget.unselectedTextStyle ??
-        Theme.of(context).textTheme.bodyText2 ??
+        Theme.of(context).textTheme.bodyMedium ??
         const TextStyle();
     _textDirection = widget.textDirection ?? Directionality.of(context);
     _tabExtent = max(widget.tabExtent, widget.radius * 2);

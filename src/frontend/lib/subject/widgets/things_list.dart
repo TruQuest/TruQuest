@@ -149,7 +149,9 @@ class _ThingsListState extends StateX<ThingsList> {
                                       await Future.delayed(
                                         Duration(milliseconds: 1500),
                                       );
-                                      Navigator.of(context).pop();
+                                      if (context.mounted) {
+                                        Navigator.of(context).pop();
+                                      }
                                     },
                                   ),
                                 ),

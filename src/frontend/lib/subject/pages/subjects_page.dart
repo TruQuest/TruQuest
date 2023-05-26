@@ -167,9 +167,11 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
                                       await Future.delayed(
                                         Duration(milliseconds: 1500),
                                       );
-                                      Navigator.of(context).pop(
-                                        success.subjectId,
-                                      );
+                                      if (context.mounted) {
+                                        Navigator.of(context).pop(
+                                          success.subjectId,
+                                        );
+                                      }
                                     },
                                   ),
                                 ),

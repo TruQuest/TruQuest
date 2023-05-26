@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../thing/bloc/thing_result_vm.dart';
 import '../../thing/bloc/thing_actions.dart';
 import '../contexts/document_context.dart';
 import '../../thing/bloc/thing_bloc.dart';
@@ -44,9 +43,11 @@ class _PrepareDraftButtonState extends StateX<PrepareDraftButton> {
                 _enabled = false;
               });
 
-              CreateNewThingDraftFailureVm? vm = await action.result;
-              if (vm == null) {
-                Navigator.of(this.context).pop();
+              var failure = await action.result;
+              if (failure == null) {
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
               }
             }
           : null,

@@ -12,6 +12,7 @@ import '../../widget_extensions.dart';
 import '../models/rvm/thing_preview_vm.dart';
 import '../../settlement/models/rvm/verdict_vm.dart';
 
+// ignore: must_be_immutable
 class LatestThingsBlock extends StatelessWidgetX {
   late final _pageContext = use<PageContext>();
   late final _documentViewContext = useScoped<DocumentViewContext>();
@@ -20,6 +21,8 @@ class LatestThingsBlock extends StatelessWidgetX {
       _documentViewContext.subject!.latestSettledThings;
   late final List<ThingPreviewVm> _latestUnsettledThings =
       _documentViewContext.subject!.latestUnsettledThings;
+
+  LatestThingsBlock({super.key});
 
   Widget _buildThingPreviewCard(ThingPreviewVm? thing, String placeholderText) {
     return InkWell(

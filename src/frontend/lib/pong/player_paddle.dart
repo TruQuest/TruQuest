@@ -23,8 +23,6 @@ class PlayerPaddle extends PositionComponent
 
   @override
   FutureOr<void>? onLoad() {
-    // TODO: implement onLoad
-
     final worldRect = gameRef.size.toRect();
 
     size = Vector2(10, 100);
@@ -76,7 +74,6 @@ class PlayerPaddle extends PositionComponent
 
   @override
   void update(double dt) {
-    // TODO: implement update
     super.update(dt);
     if (keyPressed == KeyEventEnum.down) {
       final updatedPosition = position.y + speed * dt;

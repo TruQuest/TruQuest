@@ -7,6 +7,7 @@ import '../../user/bloc/user_bloc.dart';
 import '../../user/models/vm/user_vm.dart';
 import '../../widget_extensions.dart';
 
+// ignore: must_be_immutable
 class UserStatusTracker extends StatelessWidgetX {
   late final _userBloc = use<UserBloc>();
   late final _ethereumBloc = use<EthereumBloc>();
@@ -25,22 +26,28 @@ class UserStatusTracker extends StatelessWidgetX {
 
         var user = snapshot.data!.user;
         if (user.state == UserAccountState.guest) {
-          return IconButton(
-            icon: Icon(
-              Icons.wifi_tethering,
-              color: Colors.white,
-            ),
-            onPressed: () => _ethereumBloc.dispatch(
-              ConnectEthereumAccount(),
+          return Tooltip(
+            message: 'Connect',
+            child: IconButton(
+              icon: Icon(
+                Icons.wifi_tethering,
+                color: Colors.white,
+              ),
+              onPressed: () => _ethereumBloc.dispatch(
+                ConnectEthereumAccount(),
+              ),
             ),
           );
         } else if (user.state == UserAccountState.connectedNotLoggedIn) {
-          return IconButton(
-            icon: Icon(
-              Icons.door_sliding,
-              color: Colors.white,
+          return Tooltip(
+            message: 'Sign-in with Ethereum',
+            child: IconButton(
+              icon: Icon(
+                Icons.door_sliding,
+                color: Colors.white,
+              ),
+              onPressed: () => _userBloc.dispatch(SignInWithEthereum()),
             ),
-            onPressed: () => _userBloc.dispatch(SignInWithEthereum()),
           );
         }
 

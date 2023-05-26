@@ -88,7 +88,9 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
 
                             btnController.success();
                             await Future.delayed(Duration(seconds: 2));
-                            Navigator.of(context).pop();
+                            if (context.mounted) {
+                              Navigator.of(context).pop();
+                            }
                           },
                         ),
                       ),
@@ -146,7 +148,9 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
 
                                 btnController.success();
                                 await Future.delayed(Duration(seconds: 2));
-                                Navigator.of(context).pop();
+                                if (context.mounted) {
+                                  Navigator.of(context).pop();
+                                }
                               },
                             ),
                           ),

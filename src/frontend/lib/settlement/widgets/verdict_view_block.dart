@@ -6,6 +6,7 @@ import '../models/rvm/verdict_vm.dart';
 import '../../general/contexts/document_view_context.dart';
 import '../../widget_extensions.dart';
 
+// ignore: must_be_immutable
 class VerdictViewBlock extends StatelessWidgetX {
   late final _documentViewContext = useScoped<DocumentViewContext>();
   late final VerdictVm _verdict = _documentViewContext.proposal!.verdict;

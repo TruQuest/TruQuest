@@ -147,7 +147,7 @@ class _SwipeButtonState extends State<_SwipeButton>
     final ThemeData theme = Theme.of(context);
 
     final trackColor = widget.enabled
-        ? widget.activeTrackColor ?? theme.backgroundColor
+        ? widget.activeTrackColor ?? theme.colorScheme.background
         : widget.inactiveTrackColor ?? theme.disabledColor;
 
     final borderRadius = widget.borderRadius ?? BorderRadius.circular(150);

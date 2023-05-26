@@ -8,6 +8,7 @@ import 'notification_tracker.dart';
 import 'user_status_tracker.dart';
 import '../../widget_extensions.dart';
 
+// ignore: must_be_immutable
 class NavPanel extends StatelessWidgetX {
   late final _pageContext = use<PageContext>();
 

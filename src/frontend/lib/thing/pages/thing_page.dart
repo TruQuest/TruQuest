@@ -347,7 +347,9 @@ class _ThingPageState extends StateX<ThingPage> {
                               await Future.delayed(
                                 Duration(milliseconds: 1500),
                               );
-                              Navigator.of(context).pop();
+                              if (context.mounted) {
+                                Navigator.of(context).pop();
+                              }
                             },
                           ),
                         ),

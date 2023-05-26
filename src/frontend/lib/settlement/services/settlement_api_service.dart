@@ -92,29 +92,6 @@ class SettlementApiService {
     }
   }
 
-  Error _wrapHubException(Exception ex) {
-    var errorMessage = ex.toString();
-    if (errorMessage.contains('[AuthorizationError]')) {
-      if (errorMessage.contains('Forbidden')) {
-        return ForbiddenError();
-        // } else if (errorMessage.contains('token expired at')) {
-        //   return AuthenticationTokenExpiredError();
-      } else {
-        return InvalidAuthenticationTokenError(
-          errorMessage.split('[AuthorizationError] ').last,
-        );
-      }
-    } else if (errorMessage.contains('[ValidationError]')) {
-      return ValidationError();
-    } else if (errorMessage.contains('[SettlementError]')) {
-      return SettlementError(errorMessage.split('[SettlementError] ').last);
-    }
-
-    print(ex);
-
-    return ServerError();
-  }
-
   Future<Stream<int>> createNewSettlementProposalDraft(
     String thingId,
     String title,

@@ -7,6 +7,7 @@ abstract class IDisposable {
   void dispose();
 }
 
+// ignore: must_be_immutable
 class ScopeX extends InheritedWidget {
   Map<Type, Object> _typeToInstance = {};
   final bool updatesShouldNotify;

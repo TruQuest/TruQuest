@@ -94,29 +94,6 @@ class ThingApiService {
     }
   }
 
-  Error _wrapHubException(Exception ex) {
-    var errorMessage = ex.toString();
-    if (errorMessage.contains('[AuthorizationError]')) {
-      if (errorMessage.contains('Forbidden')) {
-        return ForbiddenError();
-        // } else if (errorMessage.contains('token expired at')) {
-        //   return AuthenticationTokenExpiredError();
-      } else {
-        return InvalidAuthenticationTokenError(
-          errorMessage.split('[AuthorizationError] ').last,
-        );
-      }
-    } else if (errorMessage.contains('[ValidationError]')) {
-      return ValidationError();
-    } else if (errorMessage.contains('[ThingError]')) {
-      return ThingError(errorMessage.split('[ThingError] ').last);
-    }
-
-    print(ex);
-
-    return ServerError();
-  }
-
   Future<Stream<int>> createNewThingDraft(
     String subjectId,
     String title,

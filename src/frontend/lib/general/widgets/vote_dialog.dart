@@ -138,7 +138,9 @@ class _VoteDialogState<T> extends State<VoteDialog<T>> {
           onPressed: () async {
             if (_decision != null) {
               await widget.onVote(_decision!, _textController.text);
-              Navigator.of(this.context).pop();
+              if (context.mounted) {
+                Navigator.of(context).pop();
+              }
             }
           },
         ),

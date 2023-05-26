@@ -14,8 +14,6 @@ class AIPaddle extends PositionComponent
 
   @override
   FutureOr<void>? onLoad() {
-    // TODO: implement onLoad
-
     final worldRect = gameRef.size.toRect();
 
     size = Vector2(10, 100);
@@ -39,7 +37,6 @@ class AIPaddle extends PositionComponent
 
   @override
   void update(double dt) {
-    // TODO: implement update
     super.update(dt);
 
     final ball = gameRef.children.singleWhere((child) => child is Ball) as Ball;

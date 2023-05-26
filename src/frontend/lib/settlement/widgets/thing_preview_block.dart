@@ -8,6 +8,7 @@ import '../models/rvm/settlement_proposal_vm.dart';
 import '../../subject/widgets/clipped_image.dart';
 import '../../widget_extensions.dart';
 
+// ignore: must_be_immutable
 class ThingPreviewBlock extends StatelessWidgetX {
   late final _pageContext = use<PageContext>();
   late final _documentViewContext = useScoped<DocumentViewContext>();

@@ -9,6 +9,7 @@ import '../services/notifications_cache.dart';
 import '../../widget_extensions.dart';
 import 'clipped_rect.dart';
 
+// ignore: must_be_immutable
 class NotificationTracker extends StatelessWidgetX {
   late final _notificationBloc = use<NotificationBloc>();
   late final _notificationsCache = use<NotificationsCache>();
