@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:convert/convert.dart';
 import 'package:either_dart/either.dart';
 import 'package:flutter_web3/flutter_web3.dart';
 import 'package:tuple/tuple.dart';
@@ -152,119 +153,6 @@ class EthereumService {
     return null;
   }
 
-  Future<Either<EthereumError, Tuple2<String, String>>> signSignUpMessage(
-    String username,
-  ) async {
-    var metamask = ethereum;
-    if (metamask == null) {
-      return Left(EthereumError('Metamask not installed'));
-    }
-
-    var connectedAccount = _connectedAccount;
-    if (connectedAccount == null) {
-      return Left(EthereumError('No account connected'));
-    }
-
-    Map<String, dynamic> map = {
-      'types': {
-        'EIP712Domain': [
-          {'name': 'name', 'type': 'string'},
-          {'name': 'version', 'type': 'string'},
-          {'name': 'chainId', 'type': 'uint256'},
-          {'name': 'verifyingContract', 'type': 'address'},
-          {'name': 'salt', 'type': 'bytes32'},
-        ],
-        'SignUpTd': [
-          {'name': 'username', 'type': 'string'},
-        ],
-      },
-      'domain': {
-        'name': 'TruQuest',
-        'version': '0.0.1',
-        'chainId': validChainId,
-        'verifyingContract': '0x32D41E4e24F97ec7D52e3c43F8DbFe209CBd0e4c',
-        'salt':
-            '0xf2d857f4a3edcb9b78b4d503bfe733db1e3f6cdc2b7971ee739626c97e86a558',
-      },
-      'primaryType': 'SignUpTd',
-      'message': {
-        'username': username,
-      }
-    };
-
-    var data = jsonEncode(map);
-
-    try {
-      var signature = await metamask.request<String>(
-        'eth_signTypedData_v4',
-        [connectedAccount, data],
-      );
-
-      return Right(Tuple2(connectedAccount, signature));
-    } catch (e) {
-      print(e);
-      return Left(EthereumError(e.toString()));
-    }
-  }
-
-  Future<Either<EthereumError, Tuple2<String, String>>> signSignInMessage(
-    String timestamp,
-    String orchestratorSignature,
-  ) async {
-    var metamask = ethereum;
-    if (metamask == null) {
-      return Left(EthereumError('Metamask not installed'));
-    }
-
-    var connectedAccount = _connectedAccount;
-    if (connectedAccount == null) {
-      return Left(EthereumError('No account connected'));
-    }
-
-    Map<String, dynamic> map = {
-      'types': {
-        'EIP712Domain': [
-          {'name': 'name', 'type': 'string'},
-          {'name': 'version', 'type': 'string'},
-          {'name': 'chainId', 'type': 'uint256'},
-          {'name': 'verifyingContract', 'type': 'address'},
-          {'name': 'salt', 'type': 'bytes32'},
-        ],
-        'SignInTd': [
-          {'name': 'timestamp', 'type': 'string'},
-          {'name': 'orchestratorSignature', 'type': 'string'},
-        ],
-      },
-      'domain': {
-        'name': 'TruQuest',
-        'version': '0.0.1',
-        'chainId': validChainId,
-        'verifyingContract': '0x32D41E4e24F97ec7D52e3c43F8DbFe209CBd0e4c',
-        'salt':
-            '0xf2d857f4a3edcb9b78b4d503bfe733db1e3f6cdc2b7971ee739626c97e86a558',
-      },
-      'primaryType': 'SignInTd',
-      'message': {
-        'timestamp': timestamp,
-        'orchestratorSignature': orchestratorSignature,
-      }
-    };
-
-    var data = jsonEncode(map);
-
-    try {
-      var signature = await metamask.request<String>(
-        'eth_signTypedData_v4',
-        [connectedAccount, data],
-      );
-
-      return Right(Tuple2(connectedAccount, signature));
-    } catch (e) {
-      print(e);
-      return Left(EthereumError(e.toString()));
-    }
-  }
-
   Future<Either<EthereumError, String>> signThingAcceptancePollVote(
     String thingId,
     String castedAt,
@@ -391,6 +279,55 @@ class EthereumService {
       );
 
       return Right(signature);
+    } catch (e) {
+      print(e);
+      return Left(EthereumError(e.toString()));
+    }
+  }
+
+  Future<Either<EthereumError, Tuple2<String, String>>> signSiweMessage(
+    String account,
+    String nonce,
+  ) async {
+    var metamask = ethereum;
+    if (metamask == null) {
+      return Left(EthereumError('Metamask not installed'));
+    }
+
+    var connectedAccount = _connectedAccount;
+    if (connectedAccount == null) {
+      return Left(EthereumError('No account connected'));
+    }
+
+    if (connectedAccount != account) {
+      return Left(EthereumError("Requested nonce is for another account"));
+    }
+
+    var domain = 'truquest.io';
+    var statement =
+        'I accept the TruQuest Terms of Service: https://truquest.io/tos';
+    var uri = 'https://truquest.io/sign-in';
+    var version = 1;
+
+    var now = DateTime.now().toUtc().toIso8601String();
+    int indexOfDot = now.indexOf('.');
+    var nowWithoutMicroseconds = now.substring(0, indexOfDot + 4) + 'Z';
+    var message = '$domain wants you to sign in with your Ethereum account:\n'
+        '$account\n\n'
+        '$statement\n\n'
+        'URI: $uri\n'
+        'Version: $version\n'
+        'Chain ID: $_connectedChainId\n'
+        'Nonce: $nonce\n'
+        'Issued At: $nowWithoutMicroseconds';
+
+    try {
+      var signature = await metamask.request<String>(
+        'personal_sign',
+        [hex.encode(utf8.encode(message)), account],
+      );
+
+      return Right(Tuple2(message, signature));
     } catch (e) {
       print(e);
       return Left(EthereumError(e.toString()));

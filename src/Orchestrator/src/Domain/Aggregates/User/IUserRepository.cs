@@ -2,13 +2,13 @@ using System.Security.Claims;
 
 using Domain.Base;
 using Domain.Errors;
-using Domain.Results;
 
 namespace Domain.Aggregates;
 
 public interface IUserRepository : IRepository<User>
 {
+    Task<User?> FindById(string userId);
     Task<UserError?> Create(User user);
-    Task<UserError?> AddClaimsTo(User user, List<Claim> claims);
-    Task<Either<UserError, List<Claim>>> GetClaimsFor(string id);
+    Task<UserError?> AddClaimsTo(User user, IList<Claim> claims);
+    Task<IList<Claim>> GetClaimsFor(User user);
 }

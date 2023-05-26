@@ -15,14 +15,3 @@ class SwitchEthereumChainSuccessVm extends SwitchEthereumChainResultVm {
 class SwitchEthereumChainFailureVm extends SwitchEthereumChainResultVm {}
 
 class ConnectEthereumAccountFailureVm extends EthereumResultVm {}
-
-abstract class SignSignUpMessageResultVm extends EthereumResultVm {}
-
-class SignSignUpMessageSuccessVm extends SignSignUpMessageResultVm {
-  final String account;
-  final String signature;
-
-  SignSignUpMessageSuccessVm({required this.account, required this.signature});
-}
-
-class SignSignUpMessageFailureVm extends SignSignUpMessageResultVm {}

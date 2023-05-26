@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'auth_dialog.dart';
+import '../../user/bloc/user_actions.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';
 import '../../ethereum/bloc/ethereum_actions.dart';
 import '../../user/bloc/user_bloc.dart';
@@ -40,10 +40,7 @@ class UserStatusTracker extends StatelessWidgetX {
               Icons.door_sliding,
               color: Colors.white,
             ),
-            onPressed: () => showDialog(
-              context: context,
-              builder: (context) => AuthDialog(),
-            ),
+            onPressed: () => _userBloc.dispatch(SignInWithEthereum()),
           );
         }
 

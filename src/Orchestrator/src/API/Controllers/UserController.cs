@@ -3,10 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using MediatR;
 
 using Domain.Results;
-using Application.User.Commands.SignUp;
-using Application.User.Queries.GetSignInData;
-using Application.User.Commands.SignIn;
 using Application.User.Commands.MarkNotificationsAsRead;
+using Application.User.Queries.GetNonceForSiwe;
+using Application.User.Commands.SignInWithEthereum;
 
 namespace API.Controllers;
 
@@ -21,14 +20,12 @@ public class UserController : ControllerBase
         _mediator = mediator;
     }
 
-    [HttpPost("sign-up")]
-    public Task<HandleResult<SignUpResultVm>> SignUp(SignUpCommand command) => _mediator.Send(command);
+    [HttpGet("siwe/{address}")]
+    public Task<HandleResult<string>> GetNonceForSiwe([FromRoute] GetNonceForSiweQuery query) => _mediator.Send(query);
 
-    [HttpGet("sign-in")]
-    public Task<HandleResult<GetSignInDataResultVm>> SignIn() => _mediator.Send(new GetSignInDataQuery());
-
-    [HttpPost("sign-in")]
-    public Task<HandleResult<SignInResultVm>> SignIn(SignInCommand command) => _mediator.Send(command);
+    [HttpPost("siwe")]
+    public Task<HandleResult<SignInWithEthereumResultVm>> SignInWithEthereum(SignInWithEthereumCommand command)
+        => _mediator.Send(command);
 
     [HttpPost("watch-list")]
     public Task<VoidResult> MarkNotificationsAsRead(MarkNotificationsAsReadCommand command) => _mediator.Send(command);

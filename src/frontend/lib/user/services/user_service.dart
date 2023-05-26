@@ -4,7 +4,6 @@ import 'package:rxdart/rxdart.dart';
 
 import '../../general/services/local_storage.dart';
 import '../../general/services/server_connector.dart';
-import '../../general/errors/error.dart';
 import 'user_api_service.dart';
 import '../../ethereum/services/ethereum_service.dart';
 import '../models/vm/user_vm.dart';
@@ -54,49 +53,32 @@ class UserService {
     ));
   }
 
-  Future<Error?> signUp(
-    String account,
-    String username,
-    String signature,
-  ) async {
-    try {
-      var result = await _userApiService.signUp(username, signature);
-      await _localStorage.setStrings(account, [result.token, username]);
-      // connectedAccount here can actually be different from account
-      _reloadUser(_ethereumService.connectedAccount);
-    } on Error catch (e) {
-      print(e);
-      return e;
+  Future signInWithEthereum() async {
+    var account = _ethereumService.connectedAccount;
+    if (account == null) {
+      return;
     }
 
-    return null;
-  }
-
-  Future signIn() async {
-    var data = await _userApiService.getSignInData();
-    var result = await _ethereumService.signSignInMessage(
-      data.timestamp,
-      data.signature,
-    );
+    var nonce = await _userApiService.getNonceForSiwe(account);
+    var result = await _ethereumService.signSiweMessage(account, nonce);
     if (result.isLeft) {
       print(result.left);
       return;
     }
 
-    var account = result.right.item1;
+    var message = result.right.item1;
     var signature = result.right.item2;
 
-    var signInResult = await _userApiService.signIn(
-      data.timestamp,
-      data.signature,
+    var siweResult = await _userApiService.signInWithEthereum(
+      message,
       signature,
     );
 
     await _localStorage.setStrings(
       account,
-      [signInResult.token, signInResult.username],
+      [siweResult.token, siweResult.username],
     );
-    // connectedAccount here can actually be different from account
+
     _reloadUser(_ethereumService.connectedAccount);
   }
 }

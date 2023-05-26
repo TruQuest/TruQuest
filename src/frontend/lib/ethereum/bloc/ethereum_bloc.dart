@@ -26,8 +26,6 @@ class EthereumBloc extends Bloc<EthereumAction> {
         _switchEthereumChain(action);
       } else if (action is ConnectEthereumAccount) {
         _connectEthereumAccount(action);
-      } else if (action is SignSignUpMessage) {
-        _signSignUpMessage(action);
       }
     });
 
@@ -59,18 +57,5 @@ class EthereumBloc extends Bloc<EthereumAction> {
   void _connectEthereumAccount(ConnectEthereumAccount action) async {
     var error = await _ethereumService.connectAccount();
     action.complete(error != null ? ConnectEthereumAccountFailureVm() : null);
-  }
-
-  void _signSignUpMessage(SignSignUpMessage action) async {
-    var result = await _ethereumService.signSignUpMessage(action.username);
-    if (result.isLeft) {
-      action.complete(SignSignUpMessageFailureVm());
-      return;
-    }
-
-    action.complete(SignSignUpMessageSuccessVm(
-      account: result.right.item1,
-      signature: result.right.item2,
-    ));
   }
 }

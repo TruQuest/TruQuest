@@ -151,7 +151,7 @@ public class Sut : IAsyncLifetime
         appDbContext.Users.AddRange(userIds.Select(id => new User
         {
             Id = id.Substring(2).ToLower(),
-            UserName = id.Substring(2, 20).ToLower()
+            UserName = id
         }));
         await appDbContext.SaveChangesAsync();
 
@@ -159,7 +159,7 @@ public class Sut : IAsyncLifetime
         {
             UserId = id.Substring(2).ToLower(),
             ClaimType = "username",
-            ClaimValue = id.Substring(2, 20).ToLower()
+            ClaimValue = id
         }));
 
         appDbContext.Tags.AddRange(new("Politics"), new("Sport"), new("IT"));

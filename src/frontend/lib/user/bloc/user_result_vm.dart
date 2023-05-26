@@ -7,7 +7,3 @@ class LoadCurrentUserSuccessVm extends UserResultVm {
 
   LoadCurrentUserSuccessVm({required this.user});
 }
-
-class SignUpFailureVm extends UserResultVm {}
-
-class SignInFailureVm extends UserResultVm {}

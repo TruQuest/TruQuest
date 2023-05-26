@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using KafkaFlow;
 using KafkaFlow.TypedHandler;
+using Nethereum.Signer;
 using Nethereum.Signer.EIP712;
 using Nethereum.BlockchainProcessing.ProgressRepositories;
 
@@ -79,6 +80,7 @@ public static class IServiceCollectionExtension
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddSingleton<IAuthTokenProvider, AuthTokenProvider>();
         services.AddSingleton<Eip712TypedDataSigner>();
+        services.AddSingleton<EthereumMessageSigner>();
         services.AddSingleton<ISigner, Signer>();
 
         services
@@ -150,6 +152,7 @@ public static class IServiceCollectionExtension
         services.AddScoped<IAuthenticationContext, AuthenticationContext>();
         services.AddTransient<IAuthorizationService, AuthorizationService>();
         services.AddScoped<ICurrentPrincipal, CurrentPrincipal>();
+        services.AddSingleton<ITotpProvider, TotpProvider>();
 
         services.AddSingleton<IFileReceiver, FileReceiver>();
         services.AddSingleton<MultipartRequestHelper>();

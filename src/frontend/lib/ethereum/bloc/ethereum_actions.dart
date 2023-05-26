@@ -11,10 +11,3 @@ class SwitchEthereumChain
 
 class ConnectEthereumAccount
     extends EthereumActionAwaitable<ConnectEthereumAccountFailureVm?> {}
-
-class SignSignUpMessage
-    extends EthereumActionAwaitable<SignSignUpMessageResultVm> {
-  final String username;
-
-  SignSignUpMessage({required this.username});
-}

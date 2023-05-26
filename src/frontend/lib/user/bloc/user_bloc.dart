@@ -19,10 +19,8 @@ class UserBloc extends Bloc<UserAction> {
 
   UserBloc(this._userService) {
     actionChannel.stream.listen((action) {
-      if (action is SignUp) {
-        _signUp(action);
-      } else if (action is SignIn) {
-        _signIn(action);
+      if (action is SignInWithEthereum) {
+        _signInWithEthereum(action);
       }
     });
 
@@ -31,17 +29,7 @@ class UserBloc extends Bloc<UserAction> {
     });
   }
 
-  void _signUp(SignUp action) async {
-    var error = await _userService.signUp(
-      action.account,
-      action.username,
-      action.signature,
-    );
-    action.complete(error != null ? SignUpFailureVm() : null);
-  }
-
-  void _signIn(SignIn action) async {
-    await _userService.signIn();
-    action.complete(null);
+  void _signInWithEthereum(SignInWithEthereum action) async {
+    await _userService.signInWithEthereum();
   }
 }
