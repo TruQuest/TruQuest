@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:either_dart/either.dart';
-import 'package:tuple/tuple.dart';
 
 import '../../ethereum/errors/ethereum_error.dart';
 import '../errors/thing_error.dart';
@@ -78,7 +77,7 @@ class ThingService {
     await _truQuestContract.fundThing(thingId, signature);
   }
 
-  Future<Tuple5<int?, int, bool?, bool?, int>> getVerifierLotteryInfo(
+  Future<(int?, int, bool?, bool?, int)> getVerifierLotteryInfo(
     String thingId,
   ) async {
     int? initBlock = await _thingSubmissionVerifierLotteryContract
@@ -94,7 +93,7 @@ class ThingService {
         .checkAlreadyJoinedLottery(thingId);
     int latestBlockNumber = await _ethereumService.getLatestBlockNumber();
 
-    return Tuple5(
+    return (
       initBlock,
       durationBlocks,
       alreadyPreJoined,
@@ -124,7 +123,7 @@ class ThingService {
     return result;
   }
 
-  Future<Tuple4<int?, int, bool?, int>> getAcceptancePollInfo(
+  Future<(int?, int, bool?, int)> getAcceptancePollInfo(
     String thingId,
   ) async {
     int? initBlock = await _acceptancePollContract.getPollInitBlock(thingId);
@@ -136,7 +135,7 @@ class ThingService {
         .checkIsDesignatedVerifierForThing(thingId);
     int latestBlockNumber = await _ethereumService.getLatestBlockNumber();
 
-    return Tuple4(
+    return (
       initBlock,
       durationBlocks,
       isDesignatedVerifier,

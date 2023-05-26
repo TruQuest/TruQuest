@@ -117,12 +117,12 @@ class SettlementBloc extends Bloc<SettlementAction> {
     );
     _verifierLotteryInfoChannel.add(
       GetVerifierLotteryInfoSuccessVm(
-        initBlock: info.item1,
-        durationBlocks: info.item2,
-        alreadyClaimedASpot: info.item3,
-        alreadyPreJoined: info.item4,
-        alreadyJoined: info.item5,
-        latestBlockNumber: info.item6,
+        initBlock: info.$1,
+        durationBlocks: info.$2,
+        alreadyClaimedASpot: info.$3,
+        alreadyPreJoined: info.$4,
+        alreadyJoined: info.$5,
+        latestBlockNumber: info.$6,
       ),
     );
   }
@@ -183,10 +183,10 @@ class SettlementBloc extends Bloc<SettlementAction> {
     );
     action.complete(
       GetAssessmentPollInfoSuccessVm(
-        initBlock: info.item1,
-        durationBlocks: info.item2,
-        isDesignatedVerifier: info.item3,
-        latestBlockNumber: info.item4,
+        initBlock: info.$1,
+        durationBlocks: info.$2,
+        isDesignatedVerifier: info.$3,
+        latestBlockNumber: info.$4,
       ),
     );
   }

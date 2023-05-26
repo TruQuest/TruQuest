@@ -3,7 +3,6 @@ import 'dart:js_util';
 import 'package:flutter/material.dart';
 import 'package:crop_your_image/crop_your_image.dart';
 import 'package:flutter/services.dart';
-import 'package:tuple/tuple.dart';
 import 'package:image/image.dart' hide Color;
 
 import '../../js.dart';
@@ -22,7 +21,7 @@ class _ImageSelectionDialogState extends State<ImageSelectionDialog> {
   final _cropController = CropController();
   final _focusNode = FocusNode();
 
-  Future<Tuple2<Uint8List, String>>? _getImageFuture;
+  Future<(Uint8List, String)>? _getImageFuture;
   String? _imageExt;
   Uint8List? _imageBytes;
 
@@ -33,7 +32,7 @@ class _ImageSelectionDialogState extends State<ImageSelectionDialog> {
     super.dispose();
   }
 
-  Future<Tuple2<Uint8List, String>> _getImage(String url) async {
+  Future<(Uint8List, String)> _getImage(String url) async {
     var result = await promiseToFuture<ImageResult>(
       fetchAndResizeImage(url),
     );
@@ -55,7 +54,7 @@ class _ImageSelectionDialogState extends State<ImageSelectionDialog> {
       }
     }
 
-    return Tuple2(imageBytes, ext);
+    return (imageBytes, ext);
   }
 
   @override
@@ -94,14 +93,14 @@ class _ImageSelectionDialogState extends State<ImageSelectionDialog> {
                       return Center(child: CircularProgressIndicator());
                     }
 
-                    _imageBytes = snapshot.data!.item1;
-                    _imageExt = snapshot.data!.item2;
+                    _imageBytes = snapshot.data!.$1;
+                    _imageExt = snapshot.data!.$2;
                     return Crop(
                       controller: _cropController,
                       image: _imageBytes!,
                       onCropped: (croppedImageData) {
                         Navigator.of(context).pop(
-                          Tuple3(_imageExt!, _imageBytes!, croppedImageData),
+                          (_imageExt!, _imageBytes!, croppedImageData),
                         );
                       },
                       withCircleUi: widget.cropCircle,

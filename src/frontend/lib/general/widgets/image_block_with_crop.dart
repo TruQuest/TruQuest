@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:tuple/tuple.dart';
 
 import 'image_selection_dialog.dart';
 import '../contexts/document_context.dart';
@@ -42,7 +41,7 @@ class _ImageBlockWithCropState extends StateX<ImageBlockWithCrop> {
             ],
           ),
           onPressed: () async {
-            var result = await showDialog<Tuple3<String, Uint8List, Uint8List>>(
+            var result = await showDialog<(String, Uint8List, Uint8List)>(
               context: context,
               builder: (_) => ImageSelectionDialog(
                 cropCircle: widget.cropCircle,
@@ -50,9 +49,9 @@ class _ImageBlockWithCropState extends StateX<ImageBlockWithCrop> {
             );
             if (result != null) {
               setState(() {
-                _documentContext.imageExt = result.item1;
-                _documentContext.imageBytes = result.item2;
-                _documentContext.croppedImageBytes = result.item3;
+                _documentContext.imageExt = result.$1;
+                _documentContext.imageBytes = result.$2;
+                _documentContext.croppedImageBytes = result.$3;
               });
             }
           },

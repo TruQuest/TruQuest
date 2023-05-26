@@ -90,7 +90,7 @@ class UserApiService {
   }
 
   Future markNotificationsAsRead(List<NotificationVm> notifications) async {
-    var accessToken = (await _serverConnector.latestConnection).item2;
+    var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       await _dio.post(
         '/user/watch-list',

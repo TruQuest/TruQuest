@@ -149,11 +149,11 @@ class ThingBloc extends Bloc<ThingAction> {
     var info = await _thingService.getVerifierLotteryInfo(thingId);
     _verifierLotteryInfoChannel.add(
       GetVerifierLotteryInfoSuccessVm(
-        initBlock: info.item1,
-        durationBlocks: info.item2,
-        alreadyPreJoined: info.item3,
-        alreadyJoined: info.item4,
-        latestBlockNumber: info.item5,
+        initBlock: info.$1,
+        durationBlocks: info.$2,
+        alreadyPreJoined: info.$3,
+        alreadyJoined: info.$4,
+        latestBlockNumber: info.$5,
       ),
     );
   }
@@ -189,10 +189,10 @@ class ThingBloc extends Bloc<ThingAction> {
     var info = await _thingService.getAcceptancePollInfo(action.thingId);
     action.complete(
       GetAcceptancePollInfoSuccessVm(
-        initBlock: info.item1,
-        durationBlocks: info.item2,
-        isDesignatedVerifier: info.item3,
-        latestBlockNumber: info.item4,
+        initBlock: info.$1,
+        durationBlocks: info.$2,
+        isDesignatedVerifier: info.$3,
+        latestBlockNumber: info.$4,
       ),
     );
   }

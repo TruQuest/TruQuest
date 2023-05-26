@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:tuple/tuple.dart';
-
 import '../../ethereum/errors/ethereum_error.dart';
 import '../../general/extensions/datetime_extension.dart';
 import '../models/im/decision_im.dart';
@@ -86,7 +84,7 @@ class SettlementService {
     );
   }
 
-  Future<Tuple6<int?, int, bool?, bool?, bool?, int>> getVerifierLotteryInfo(
+  Future<(int?, int, bool?, bool?, bool?, int)> getVerifierLotteryInfo(
     String thingId,
     String proposalId,
   ) async {
@@ -117,7 +115,7 @@ class SettlementService {
     );
     int latestBlockNumber = await _ethereumService.getLatestBlockNumber();
 
-    return Tuple6(
+    return (
       initBlock,
       durationBlocks,
       alreadyClaimedASpot,
@@ -166,7 +164,7 @@ class SettlementService {
     return result;
   }
 
-  Future<Tuple4<int?, int, bool?, int>> getAssessmentPollInfo(
+  Future<(int?, int, bool?, int)> getAssessmentPollInfo(
     String thingId,
     String proposalId,
   ) async {
@@ -185,7 +183,7 @@ class SettlementService {
     );
     int latestBlockNumber = await _ethereumService.getLatestBlockNumber();
 
-    return Tuple4(
+    return (
       initBlock,
       durationBlocks,
       isDesignatedVerifier,

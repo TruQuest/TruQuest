@@ -72,7 +72,7 @@ class SubjectApiService {
     Uint8List croppedImageBytes,
     List<int> tags,
   ) async {
-    var accessToken = (await _serverConnector.latestConnection).item2;
+    var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var input = NewSubjectIm(
         type: type,
@@ -121,7 +121,7 @@ class SubjectApiService {
   }
 
   Future<GetThingsListRvm> getThingsList(String subjectId) async {
-    var accessToken = (await _serverConnector.latestConnection).item2;
+    var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.get(
         '/subjects/$subjectId/things',

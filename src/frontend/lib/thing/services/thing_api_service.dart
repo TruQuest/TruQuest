@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:tuple/tuple.dart';
 
 import '../../general/models/im/watch_command.dart';
 import '../models/rvm/get_settlement_proposals_list_rvm.dart';
@@ -37,14 +36,13 @@ class ThingApiService {
 
   ThingApiService(this._serverConnector) : _dio = _serverConnector.dio {
     _serverConnector.serverEvent$
-        .where((event) => event.item1 == ServerEventType.thing)
+        .where((event) => event.$1 == ServerEventType.thing)
         .listen(
       (event) {
-        var data = event.item2 as Tuple3<ThingEventType, String, Object>;
-        var thingEventType = data.item1;
-        var thingId = data.item2;
+        var (thingEventType, thingId, data) =
+            event.$2 as (ThingEventType, String, Object);
         if (thingEventType == ThingEventType.draftCreationProgress) {
-          var percent = data.item3 as int;
+          var percent = data as int;
           if (_thingIdToProgressChannel.containsKey(thingId)) {
             _thingIdToProgressChannel[thingId]!.add(percent);
             if (percent == 100) {
@@ -129,7 +127,7 @@ class ThingApiService {
     List<String> evidence,
     List<TagIm> tags,
   ) async {
-    var accessToken = (await _serverConnector.latestConnection).item2;
+    var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var input = NewThingIm(
         subjectId: subjectId,
@@ -163,7 +161,7 @@ class ThingApiService {
   }
 
   Future<GetThingRvm> getThing(String thingId) async {
-    var accessToken = (await _serverConnector.latestConnection).item2;
+    var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.get(
         '/things/$thingId',
@@ -181,7 +179,7 @@ class ThingApiService {
   }
 
   Future<SubmitNewThingRvm> submitNewThing(String thingId) async {
-    var accessToken = (await _serverConnector.latestConnection).item2;
+    var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.post(
         '/things/submit',
@@ -217,7 +215,7 @@ class ThingApiService {
     String reason,
     String signature,
   ) async {
-    var accessToken = (await _serverConnector.latestConnection).item2;
+    var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.post(
         '/things/$thingId/vote',
@@ -252,7 +250,7 @@ class ThingApiService {
   Future<GetSettlementProposalsListRvm> getSettlementProposalsList(
     String thingId,
   ) async {
-    var accessToken = (await _serverConnector.latestConnection).item2;
+    var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.get(
         '/things/$thingId/settlement-proposals',
@@ -270,7 +268,7 @@ class ThingApiService {
   }
 
   Future watch(String thingId, bool markedAsWatched) async {
-    var accessToken = (await _serverConnector.latestConnection).item2;
+    var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       await _dio.post(
         '/things/watch',

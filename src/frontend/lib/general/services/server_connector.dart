@@ -4,7 +4,6 @@ import 'package:dio/dio.dart';
 import 'package:logging/logging.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:signalr_netcore/signalr_client.dart';
-import 'package:tuple/tuple.dart';
 
 import '../models/rvm/notification_vm.dart';
 import '../models/rvm/watched_item_type_vm.dart';
@@ -33,20 +32,19 @@ class ServerConnector {
 
   final Completer _initialConnectionEstablished = Completer();
 
-  final BehaviorSubject<Future<Tuple2<HubConnection, String?>>>
-      _connectionTaskQueue =
-      BehaviorSubject<Future<Tuple2<HubConnection, String?>>>();
-  Stream<Future<Tuple2<HubConnection, String?>>> get connectionTask$ =>
+  final BehaviorSubject<Future<(HubConnection, String?)>> _connectionTaskQueue =
+      BehaviorSubject<Future<(HubConnection, String?)>>();
+  Stream<Future<(HubConnection, String?)>> get connectionTask$ =>
       _connectionTaskQueue.stream;
 
-  Future<Tuple2<HubConnection, String?>> get latestConnection async {
+  Future<(HubConnection, String?)> get latestConnection async {
     await _initialConnectionEstablished.future;
     return _connectionTaskQueue.value;
   }
 
-  final StreamController<Tuple2<ServerEventType, Object>> _serverEventChannel =
-      StreamController<Tuple2<ServerEventType, Object>>.broadcast();
-  Stream<Tuple2<ServerEventType, Object>> get serverEvent$ =>
+  final StreamController<(ServerEventType, Object)> _serverEventChannel =
+      StreamController<(ServerEventType, Object)>.broadcast();
+  Stream<(ServerEventType, Object)> get serverEvent$ =>
       _serverEventChannel.stream;
 
   ServerConnector() {
@@ -62,7 +60,7 @@ class ServerConnector {
     );
   }
 
-  Future<Tuple2<HubConnection, String?>> _connectToHub(
+  Future<(HubConnection, String?)> _connectToHub(
     String? username,
     String? token,
   ) async {
@@ -95,9 +93,9 @@ class ServerConnector {
       (List<Object?>? args) {
         var thingId = args!.first as String;
         _serverEventChannel.add(
-          Tuple2(
+          (
             ServerEventType.thing,
-            Tuple3(
+            (
               ThingEventType.draftCreationProgress,
               thingId,
               args.last!,
@@ -112,9 +110,9 @@ class ServerConnector {
       (List<Object?>? args) {
         var proposalId = args!.first as String;
         _serverEventChannel.add(
-          Tuple2(
+          (
             ServerEventType.settlement,
-            Tuple3(
+            (
               SettlementEventType.draftCreationProgress,
               proposalId,
               args.last!,
@@ -135,11 +133,11 @@ class ServerConnector {
         var details = args.last as String?;
 
         _serverEventChannel.add(
-          Tuple2(
+          (
             ServerEventType.notification,
-            Tuple2<NotificationEventType, Object>(
+            (
               NotificationEventType.newOne,
-              Tuple7(
+              (
                 username,
                 updateTimestamp,
                 itemType,
@@ -162,11 +160,11 @@ class ServerConnector {
             updates.map((map) => NotificationVm.fromMap(map)).toList();
 
         _serverEventChannel.add(
-          Tuple2(
+          (
             ServerEventType.notification,
-            Tuple2<NotificationEventType, Object>(
+            (
               NotificationEventType.initialRetrieve,
-              Tuple2(
+              (
                 username!,
                 notifications,
               ),
@@ -178,7 +176,7 @@ class ServerConnector {
 
     await hubConnection.start(); // @@TODO: Handle error.
 
-    return Tuple2(hubConnection, token);
+    return (hubConnection, token);
   }
 
   void connectToHub(String? username, String? accessToken) async {
@@ -187,7 +185,7 @@ class ServerConnector {
       if (prevConnectionTask != null) {
         var prevConnection = await prevConnectionTask;
         try {
-          await prevConnection.item1.stop();
+          await prevConnection.$1.stop();
         } catch (e) {
           print(e);
         }

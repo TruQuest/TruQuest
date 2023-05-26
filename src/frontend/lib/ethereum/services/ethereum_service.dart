@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:convert/convert.dart';
 import 'package:either_dart/either.dart';
 import 'package:flutter_web3/flutter_web3.dart';
-import 'package:tuple/tuple.dart';
 import 'package:universal_html/html.dart' as html;
 
 import '../../thing/models/im/decision_im.dart' as thing;
@@ -24,9 +23,9 @@ class EthereumService {
 
   late final provider = Web3Provider(ethereum!);
 
-  final StreamController<Tuple2<int, bool>> _connectedChainChangedEventChannel =
-      StreamController<Tuple2<int, bool>>();
-  Stream<Tuple2<int, bool>> get connectedChainChanged$ =>
+  final StreamController<(int, bool)> _connectedChainChangedEventChannel =
+      StreamController<(int, bool)>();
+  Stream<(int, bool)> get connectedChainChanged$ =>
       _connectedChainChangedEventChannel.stream;
 
   final StreamController<String?> _connectedAccountChangedEventChannel =
@@ -55,7 +54,7 @@ class EthereumService {
         if (_connectedChainId != chainId) {
           _connectedChainId = chainId;
           _connectedChainChangedEventChannel.add(
-            Tuple2(_connectedChainId!, true),
+            (_connectedChainId!, true),
           );
         }
       });
@@ -74,7 +73,7 @@ class EthereumService {
         print('Current chain: $chainId');
         _connectedChainId = chainId;
         _connectedChainChangedEventChannel.add(
-          Tuple2(_connectedChainId!, false),
+          (_connectedChainId!, false),
         );
       });
 
@@ -285,7 +284,7 @@ class EthereumService {
     }
   }
 
-  Future<Either<EthereumError, Tuple2<String, String>>> signSiweMessage(
+  Future<Either<EthereumError, (String, String)>> signSiweMessage(
     String account,
     String nonce,
   ) async {
@@ -327,7 +326,7 @@ class EthereumService {
         [hex.encode(utf8.encode(message)), account],
       );
 
-      return Right(Tuple2(message, signature));
+      return Right((message, signature));
     } catch (e) {
       print(e);
       return Left(EthereumError(e.toString()));

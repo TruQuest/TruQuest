@@ -66,8 +66,7 @@ class UserService {
       return;
     }
 
-    var message = result.right.item1;
-    var signature = result.right.item2;
+    var (message, signature) = result.right;
 
     var siweResult = await _userApiService.signInWithEthereum(
       message,

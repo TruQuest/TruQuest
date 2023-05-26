@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:tuple/tuple.dart';
 
 import '../models/im/cast_assessment_poll_vote_command.dart';
 import '../models/im/decision_im.dart';
@@ -35,14 +34,13 @@ class SettlementApiService {
 
   SettlementApiService(this._serverConnector) : _dio = _serverConnector.dio {
     _serverConnector.serverEvent$
-        .where((event) => event.item1 == ServerEventType.settlement)
+        .where((event) => event.$1 == ServerEventType.settlement)
         .listen(
       (event) {
-        var data = event.item2 as Tuple3<SettlementEventType, String, Object>;
-        var settlementEventType = data.item1;
-        var proposalId = data.item2;
+        var (settlementEventType, proposalId, data) =
+            event.$2 as (SettlementEventType, String, Object);
         if (settlementEventType == SettlementEventType.draftCreationProgress) {
-          var percent = data.item3 as int;
+          var percent = data as int;
           if (_proposalIdToProgressChannel.containsKey(proposalId)) {
             _proposalIdToProgressChannel[proposalId]!.add(percent);
             if (percent == 100) {
@@ -127,7 +125,7 @@ class SettlementApiService {
     Uint8List? croppedImageBytes,
     List<String> evidence,
   ) async {
-    var accessToken = (await _serverConnector.latestConnection).item2;
+    var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var input = NewSettlementProposalIm(
         thingId: thingId,
@@ -164,7 +162,7 @@ class SettlementApiService {
   Future<GetSettlementProposalRvm> getSettlementProposal(
     String proposalId,
   ) async {
-    var accessToken = (await _serverConnector.latestConnection).item2;
+    var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.get(
         '/proposals/$proposalId',
@@ -184,7 +182,7 @@ class SettlementApiService {
   Future<SubmitNewSettlementProposalRvm> submitNewSettlementProposal(
     String proposalId,
   ) async {
-    var accessToken = (await _serverConnector.latestConnection).item2;
+    var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.post(
         '/proposals/submit',
@@ -224,7 +222,7 @@ class SettlementApiService {
     String reason,
     String signature,
   ) async {
-    var accessToken = (await _serverConnector.latestConnection).item2;
+    var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.post(
         '/proposals/$proposalId/vote',

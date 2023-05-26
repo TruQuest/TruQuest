@@ -80,7 +80,7 @@ class SubscriptionManager {
   }
 
   Future _subscribeToUpdates(String updateStreamIdentifier) async {
-    var hubConnection = (await _serverConnector.latestConnection).item1;
+    var hubConnection = (await _serverConnector.latestConnection).$1;
     try {
       await hubConnection.invoke(
         'SubscribeToUpdates',
@@ -96,7 +96,7 @@ class SubscriptionManager {
   }
 
   Future _unsubscribeFromUpdates(String updateStreamIdentifier) async {
-    var hubConnection = (await _serverConnector.latestConnection).item1;
+    var hubConnection = (await _serverConnector.latestConnection).$1;
     try {
       await hubConnection.invoke(
         'UnsubscribeFromUpdates',
@@ -115,7 +115,7 @@ class SubscriptionManager {
     String updateStreamIdentifierToUnsub,
     String updateStreamIdentifierToSub,
   ) async {
-    var hubConnection = (await _serverConnector.latestConnection).item1;
+    var hubConnection = (await _serverConnector.latestConnection).$1;
     try {
       await hubConnection.invoke(
         'UnsubThenSubToUpdates',

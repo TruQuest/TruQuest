@@ -20,7 +20,7 @@ class NotificationTracker extends StatelessWidgetX {
     return StreamBuilder(
       stream: _notificationsCache.unreadNotifications$,
       builder: (context, snapshot) {
-        if (snapshot.data == null || snapshot.data!.item1.isEmpty) {
+        if (snapshot.data == null || snapshot.data!.$1.isEmpty) {
           return Center(
             child: Text(
               'Nothing here yet',
@@ -29,8 +29,7 @@ class NotificationTracker extends StatelessWidgetX {
           );
         }
 
-        var notifications = snapshot.data!.item1;
-        var username = snapshot.data!.item2;
+        var (notifications, username) = snapshot.data!;
 
         return Column(
           children: [

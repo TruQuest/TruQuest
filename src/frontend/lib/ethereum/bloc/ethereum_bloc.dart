@@ -30,8 +30,7 @@ class EthereumBloc extends Bloc<EthereumAction> {
     });
 
     _ethereumService.connectedChainChanged$.listen((event) {
-      int chainId = event.item1;
-      bool shouldReloadPage = event.item2;
+      var (chainId, shouldReloadPage) = event;
       if (shouldReloadPage) {
         SchedulerBinding.instance.addPostFrameCallback(
           (_) => html.window.location.reload(),

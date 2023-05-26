@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:rxdart/rxdart.dart';
-import 'package:tuple/tuple.dart';
 
 import '../../user/services/user_service.dart';
 import '../../user/services/user_api_service.dart';
@@ -22,10 +21,10 @@ class NotificationsCache {
   Stream<int> get unreadNotificationsCount$ =>
       _unreadNotificationsCountChannel.stream;
 
-  final BehaviorSubject<Tuple2<List<NotificationVm>, String?>>
+  final BehaviorSubject<(List<NotificationVm>, String?)>
       _unreadNotificationsChannel =
-      BehaviorSubject<Tuple2<List<NotificationVm>, String?>>();
-  Stream<Tuple2<List<NotificationVm>, String?>> get unreadNotifications$ =>
+      BehaviorSubject<(List<NotificationVm>, String?)>();
+  Stream<(List<NotificationVm>, String?)> get unreadNotifications$ =>
       _unreadNotificationsChannel.stream;
 
   NotificationsCache(
@@ -34,23 +33,31 @@ class NotificationsCache {
     ServerConnector serverConnector,
   ) {
     serverConnector.serverEvent$
-        .where((event) => event.item1 == ServerEventType.notification)
+        .where((event) => event.$1 == ServerEventType.notification)
         .listen((event) {
-      var notification = event.item2 as Tuple2<NotificationEventType, Object>;
-      if (notification.item1 == NotificationEventType.initialRetrieve) {
-        var payload =
-            notification.item2 as Tuple2<String, List<NotificationVm>>;
-        _onInitialRetrieve(payload.item1, payload.item2);
-      } else if (notification.item1 == NotificationEventType.newOne) {
-        var payload = notification.item2 as Tuple7<String?, int,
-            WatchedItemTypeVm, String, int, String, String?>;
-        var username = payload.item1;
-        var updateTimestamp = payload.item2;
-        var itemType = payload.item3;
-        var itemId = payload.item4;
-        var itemUpdateCategory = payload.item5;
-        var title = payload.item6;
-        var details = payload.item7;
+      var (notification, payload) = event.$2 as (NotificationEventType, Object);
+      if (notification == NotificationEventType.initialRetrieve) {
+        var (username, notifications) =
+            payload as (String, List<NotificationVm>);
+        _onInitialRetrieve(username, notifications);
+      } else if (notification == NotificationEventType.newOne) {
+        var (
+          username,
+          updateTimestamp,
+          itemType,
+          itemId,
+          itemUpdateCategory,
+          title,
+          details
+        ) = payload as (
+          String?,
+          int,
+          WatchedItemTypeVm,
+          String,
+          int,
+          String,
+          String?
+        );
 
         _onNewNotification(
           username,
@@ -76,7 +83,7 @@ class NotificationsCache {
 
   void _notify() {
     _unreadNotificationsChannel.add(
-      Tuple2(
+      (
         List.unmodifiable(
           List.from(_unreadNotifications ?? {})
             ..sort(
