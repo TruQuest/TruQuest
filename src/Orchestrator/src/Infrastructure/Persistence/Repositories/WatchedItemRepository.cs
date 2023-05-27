@@ -22,9 +22,9 @@ internal class WatchedItemRepository : Repository<WatchedItem>, IWatchedItemRepo
         _dbContext = dbContext;
     }
 
-    public void Add(WatchedItem watchedItem)
+    public void Add(params WatchedItem[] watchedItems)
     {
-        _dbContext.WatchList.Add(watchedItem);
+        _dbContext.WatchList.AddRange(watchedItems);
     }
 
     public void Remove(WatchedItem watchedItem)

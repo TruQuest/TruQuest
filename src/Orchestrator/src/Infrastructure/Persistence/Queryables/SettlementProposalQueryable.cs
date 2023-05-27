@@ -63,17 +63,20 @@ internal class SettlementProposalQueryable : Queryable, ISettlementProposalQuery
                         INNER JOIN
                     truquest.""SupportingEvidence"" AS e
                         ON p.""Id"" = e.""ProposalId""
-                WHERE p.""Id"" = @ProposalId;
+                WHERE p.""Id"" = @ItemId;
 
-                SELECT COUNT(*)
+                SELECT 1
                 FROM truquest.""WatchList""
-                WHERE ""UserId"" = @UserId AND ""ItemType"" = @ItemType AND ""ItemId"" = @ProposalId;
+                WHERE
+                    (""UserId"", ""ItemType"", ""ItemId"", ""ItemUpdateCategory"") =
+                    (@UserId, @ItemType, @ItemId, @ItemUpdateCategory);
             ",
             param: new
             {
-                ProposalId = id,
                 UserId = userId,
-                ItemType = (int)WatchedItemType.SettlementProposal
+                ItemType = (int)WatchedItemType.SettlementProposal,
+                ItemId = id,
+                ItemUpdateCategory = (int)SettlementProposalUpdateCategory.General
             }
         );
 
@@ -82,7 +85,7 @@ internal class SettlementProposalQueryable : Queryable, ISettlementProposalQuery
         );
         if (proposal != null)
         {
-            proposal.Watched = multiQuery.ReadSingleOrDefault<long>() != 0;
+            proposal.Watched = multiQuery.ReadSingleOrDefault<int?>() != null;
         }
 
         return proposal;

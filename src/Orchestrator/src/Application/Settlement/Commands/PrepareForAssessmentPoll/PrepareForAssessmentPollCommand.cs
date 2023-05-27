@@ -28,6 +28,7 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
     private readonly ITaskRepository _taskRepository;
     private readonly IJoinedThingAssessmentVerifierLotteryEventRepository _joinedThingAssessmentVerifierLotteryEventRepository;
     private readonly ISettlementProposalUpdateRepository _settlementProposalUpdateRepository;
+    private readonly IWatchedItemRepository _watchedItemRepository;
     private readonly IContractStorageQueryable _contractStorageQueryable;
 
     public PrepareForAssessmentPollCommandHandler(
@@ -35,6 +36,7 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
         ITaskRepository taskRepository,
         IJoinedThingAssessmentVerifierLotteryEventRepository joinedThingAssessmentVerifierLotteryEventRepository,
         ISettlementProposalUpdateRepository settlementProposalUpdateRepository,
+        IWatchedItemRepository watchedItemRepository,
         IContractStorageQueryable contractStorageQueryable
     )
     {
@@ -42,6 +44,7 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
         _taskRepository = taskRepository;
         _joinedThingAssessmentVerifierLotteryEventRepository = joinedThingAssessmentVerifierLotteryEventRepository;
         _settlementProposalUpdateRepository = settlementProposalUpdateRepository;
+        _watchedItemRepository = watchedItemRepository;
         _contractStorageQueryable = contractStorageQueryable;
     }
 
@@ -76,17 +79,41 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
             );
             _joinedThingAssessmentVerifierLotteryEventRepository.Create(joinedThingAssessmentVerifierLotteryEvent);
 
-            await _settlementProposalUpdateRepository.AddOrUpdate(new SettlementProposalUpdate(
-                settlementProposalId: proposal.Id,
-                category: SettlementProposalUpdateCategory.General,
-                updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                title: "Verifier lottery completed",
-                details: "Assessment poll initiated"
-            ));
+            var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+            _watchedItemRepository.Add(
+                command.WinnerIds
+                    .Select(userId => new WatchedItem(
+                        userId: userId,
+                        itemType: WatchedItemType.SettlementProposal,
+                        itemId: proposal.Id,
+                        itemUpdateCategory: (int)SettlementProposalUpdateCategory.Special,
+                        lastSeenUpdateTimestamp: now
+                    ))
+                    .ToArray()
+            );
+
+            await _settlementProposalUpdateRepository.AddOrUpdate(
+                new SettlementProposalUpdate(
+                    settlementProposalId: proposal.Id,
+                    category: SettlementProposalUpdateCategory.General,
+                    updateTimestamp: now + 10,
+                    title: "Verifier lottery completed",
+                    details: "Assessment poll initiated"
+                ),
+                new SettlementProposalUpdate(
+                    settlementProposalId: proposal.Id,
+                    category: SettlementProposalUpdateCategory.Special,
+                    updateTimestamp: now + 10,
+                    title: "You've been selected as a verifier!",
+                    details: null
+                )
+            );
 
             await _settlementProposalRepository.SaveChanges();
             await _taskRepository.SaveChanges();
             await _joinedThingAssessmentVerifierLotteryEventRepository.SaveChanges();
+            await _watchedItemRepository.SaveChanges();
             await _settlementProposalUpdateRepository.SaveChanges();
         }
 

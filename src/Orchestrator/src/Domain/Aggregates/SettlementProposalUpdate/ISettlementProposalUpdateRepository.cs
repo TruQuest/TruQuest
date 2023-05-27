@@ -4,5 +4,5 @@ namespace Domain.Aggregates;
 
 public interface ISettlementProposalUpdateRepository : IRepository<SettlementProposalUpdate>
 {
-    Task AddOrUpdate(SettlementProposalUpdate updateEvent);
+    Task AddOrUpdate(params SettlementProposalUpdate[] updateEvents);
 }

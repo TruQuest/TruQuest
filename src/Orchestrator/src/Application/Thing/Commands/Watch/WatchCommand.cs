@@ -35,28 +35,22 @@ internal class WatchCommandHandler : IRequestHandler<WatchCommand, VoidResult>
 
         if (command.MarkedAsWatched)
         {
-            foreach (var category in Enum.GetValues<ThingUpdateCategory>())
-            {
-                _watchedItemRepository.Add(new WatchedItem(
-                    userId: _currentPrincipal.Id!,
-                    itemType: WatchedItemType.Thing,
-                    itemId: command.ThingId,
-                    itemUpdateCategory: (int)category,
-                    lastSeenUpdateTimestamp: now
-                ));
-            }
+            _watchedItemRepository.Add(new WatchedItem(
+                userId: _currentPrincipal.Id!,
+                itemType: WatchedItemType.Thing,
+                itemId: command.ThingId,
+                itemUpdateCategory: (int)ThingUpdateCategory.General,
+                lastSeenUpdateTimestamp: now
+            ));
         }
         else
         {
-            foreach (var category in Enum.GetValues<ThingUpdateCategory>())
-            {
-                _watchedItemRepository.Remove(new WatchedItem(
-                    userId: _currentPrincipal.Id!,
-                    itemType: WatchedItemType.Thing,
-                    itemId: command.ThingId,
-                    itemUpdateCategory: (int)category
-                ));
-            }
+            _watchedItemRepository.Remove(new WatchedItem(
+                userId: _currentPrincipal.Id!,
+                itemType: WatchedItemType.Thing,
+                itemId: command.ThingId,
+                itemUpdateCategory: (int)ThingUpdateCategory.General
+            ));
         }
 
         await _watchedItemRepository.SaveChanges();

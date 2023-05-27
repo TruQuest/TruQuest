@@ -26,6 +26,7 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
     private readonly ITaskRepository _taskRepository;
     private readonly IJoinedThingSubmissionVerifierLotteryEventRepository _joinedThingSubmissionVerifierLotteryEventRepository;
     private readonly IThingUpdateRepository _thingUpdateRepository;
+    private readonly IWatchedItemRepository _watchedItemRepository;
     private readonly IContractStorageQueryable _contractStorageQueryable;
 
     public PrepareForAcceptancePollCommandHandler(
@@ -33,6 +34,7 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
         ITaskRepository taskRepository,
         IJoinedThingSubmissionVerifierLotteryEventRepository joinedThingSubmissionVerifierLotteryEventRepository,
         IThingUpdateRepository thingUpdateRepository,
+        IWatchedItemRepository watchedItemRepository,
         IContractStorageQueryable contractStorageQueryable
     )
     {
@@ -40,6 +42,7 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
         _taskRepository = taskRepository;
         _joinedThingSubmissionVerifierLotteryEventRepository = joinedThingSubmissionVerifierLotteryEventRepository;
         _thingUpdateRepository = thingUpdateRepository;
+        _watchedItemRepository = watchedItemRepository;
         _contractStorageQueryable = contractStorageQueryable;
     }
 
@@ -72,17 +75,41 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
             );
             _joinedThingSubmissionVerifierLotteryEventRepository.Create(joinedThingSubmissionVerifierLotteryEvent);
 
-            await _thingUpdateRepository.AddOrUpdate(new ThingUpdate(
-                thingId: thing.Id,
-                category: ThingUpdateCategory.General,
-                updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                title: "Verifier lottery completed",
-                details: "Acceptance poll initiated"
-            ));
+            var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+            _watchedItemRepository.Add(
+                command.WinnerIds
+                    .Select(userId => new WatchedItem(
+                        userId: userId,
+                        itemType: WatchedItemType.Thing,
+                        itemId: thing.Id,
+                        itemUpdateCategory: (int)ThingUpdateCategory.Special,
+                        lastSeenUpdateTimestamp: now
+                    ))
+                    .ToArray()
+            );
+
+            await _thingUpdateRepository.AddOrUpdate(
+                new ThingUpdate(
+                    thingId: thing.Id,
+                    category: ThingUpdateCategory.General,
+                    updateTimestamp: now + 10,
+                    title: "Verifier lottery completed",
+                    details: "Acceptance poll initiated"
+                ),
+                new ThingUpdate(
+                    thingId: thing.Id,
+                    category: ThingUpdateCategory.Special,
+                    updateTimestamp: now + 10,
+                    title: "You've been selected as a verifier!",
+                    details: null
+                )
+            );
 
             await _thingRepository.SaveChanges();
             await _taskRepository.SaveChanges();
             await _joinedThingSubmissionVerifierLotteryEventRepository.SaveChanges();
+            await _watchedItemRepository.SaveChanges();
             await _thingUpdateRepository.SaveChanges();
         }
 

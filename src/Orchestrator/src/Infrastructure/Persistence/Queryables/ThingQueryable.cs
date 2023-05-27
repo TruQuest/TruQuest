@@ -73,17 +73,20 @@ internal class ThingQueryable : Queryable, IThingQueryable
                         INNER JOIN
                     truquest.""Tags"" AS tag
                         ON tat.""TagId"" = tag.""Id""
-                WHERE t.""Id"" = @ThingId;
+                WHERE t.""Id"" = @ItemId;
 
-                SELECT COUNT(*)
+                SELECT 1
                 FROM truquest.""WatchList""
-                WHERE ""UserId"" = @UserId AND ""ItemType"" = @ItemType AND ""ItemId"" = @ThingId;
+                WHERE
+                    (""UserId"", ""ItemType"", ""ItemId"", ""ItemUpdateCategory"") =
+                    (@UserId, @ItemType, @ItemId, @ItemUpdateCategory);
             ",
             param: new
             {
-                ThingId = id,
                 UserId = userId,
-                ItemType = (int)WatchedItemType.Thing
+                ItemType = (int)WatchedItemType.Thing,
+                ItemId = id,
+                ItemUpdateCategory = (int)ThingUpdateCategory.General
             }
         );
 
@@ -93,7 +96,7 @@ internal class ThingQueryable : Queryable, IThingQueryable
         );
         if (thing != null)
         {
-            thing.Watched = multiQuery.ReadSingleOrDefault<long>() != 0;
+            thing.Watched = multiQuery.ReadSingleOrDefault<int?>() != null;
 
             var result = await dbConn.QuerySingleAsync(
                 @"

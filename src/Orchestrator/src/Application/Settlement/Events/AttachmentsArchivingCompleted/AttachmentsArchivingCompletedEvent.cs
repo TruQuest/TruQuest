@@ -64,16 +64,13 @@ internal class AttachmentsArchivingCompletedEventHandler : INotificationHandler<
         _settlementProposalRepository.Create(proposal);
 
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        foreach (var category in Enum.GetValues<SettlementProposalUpdateCategory>())
-        {
-            _watchedItemRepository.Add(new WatchedItem(
-                userId: @event.SubmitterId,
-                itemType: WatchedItemType.SettlementProposal,
-                itemId: proposal.Id,
-                itemUpdateCategory: (int)category,
-                lastSeenUpdateTimestamp: now
-            ));
-        }
+        _watchedItemRepository.Add(new WatchedItem(
+            userId: @event.SubmitterId,
+            itemType: WatchedItemType.SettlementProposal,
+            itemId: proposal.Id,
+            itemUpdateCategory: (int)SettlementProposalUpdateCategory.General,
+            lastSeenUpdateTimestamp: now
+        ));
 
         await _settlementProposalUpdateRepository.AddOrUpdate(new SettlementProposalUpdate(
             settlementProposalId: proposal.Id,

@@ -4,5 +4,5 @@ namespace Domain.Aggregates;
 
 public interface IThingUpdateRepository : IRepository<ThingUpdate>
 {
-    Task AddOrUpdate(ThingUpdate updateEvent);
+    Task AddOrUpdate(params ThingUpdate[] updateEvents);
 }

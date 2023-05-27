@@ -63,16 +63,13 @@ internal class AttachmentsArchivingCompletedEventHandler : INotificationHandler<
         _thingRepository.Create(thing);
 
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        foreach (var category in Enum.GetValues<ThingUpdateCategory>())
-        {
-            _watchedItemRepository.Add(new WatchedItem(
-                userId: @event.SubmitterId,
-                itemType: WatchedItemType.Thing,
-                itemId: thing.Id,
-                itemUpdateCategory: (int)category,
-                lastSeenUpdateTimestamp: now
-            ));
-        }
+        _watchedItemRepository.Add(new WatchedItem(
+            userId: @event.SubmitterId,
+            itemType: WatchedItemType.Thing,
+            itemId: thing.Id,
+            itemUpdateCategory: (int)ThingUpdateCategory.General,
+            lastSeenUpdateTimestamp: now
+        ));
 
         await _thingUpdateRepository.AddOrUpdate(new ThingUpdate(
             thingId: thing.Id,

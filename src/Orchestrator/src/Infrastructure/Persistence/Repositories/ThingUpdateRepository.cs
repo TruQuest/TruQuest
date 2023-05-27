@@ -15,14 +15,15 @@ internal class ThingUpdateRepository : Repository<ThingUpdate>, IThingUpdateRepo
         ISharedTxnScope sharedTxnScope
     ) : base(configuration, sharedTxnScope) { }
 
-    public async Task AddOrUpdate(ThingUpdate updateEvent)
+    public async Task AddOrUpdate(params ThingUpdate[] updateEvents)
     {
         using var cmd = await CreateCommand(
             @"
                 INSERT INTO truquest.""ThingUpdates"" (
                     ""ThingId"", ""Category"", ""UpdateTimestamp"", ""Title"", ""Details""
                 )
-                VALUES (@ThingId, @Category, @UpdateTimestamp, @Title, @Details)
+                SELECT *
+                FROM UNNEST(@ThingIds, @Categories, @UpdateTimestamps, @Titles, @Details)
                 ON CONFLICT ON CONSTRAINT ""PK_ThingUpdates"" DO UPDATE
                 SET
                     ""UpdateTimestamp"" = EXCLUDED.""UpdateTimestamp"",
@@ -31,25 +32,25 @@ internal class ThingUpdateRepository : Repository<ThingUpdate>, IThingUpdateRepo
             "
         );
         cmd.Parameters.AddRange(new NpgsqlParameter[] {
-            new NpgsqlParameter<Guid>(nameof(updateEvent.ThingId), NpgsqlDbType.Uuid)
+            new NpgsqlParameter<Guid[]>("ThingIds", NpgsqlDbType.Uuid | NpgsqlDbType.Array)
             {
-                TypedValue = updateEvent.ThingId
+                TypedValue = updateEvents.Select(e => e.ThingId).ToArray()
             },
-            new NpgsqlParameter<int>(nameof(updateEvent.Category), NpgsqlDbType.Integer)
+            new NpgsqlParameter<int[]>("Categories", NpgsqlDbType.Integer | NpgsqlDbType.Array)
             {
-                TypedValue = (int)updateEvent.Category
+                TypedValue = updateEvents.Select(e => (int)e.Category).ToArray()
             },
-            new NpgsqlParameter<long>(nameof(updateEvent.UpdateTimestamp), NpgsqlDbType.Bigint)
+            new NpgsqlParameter<long[]>("UpdateTimestamps", NpgsqlDbType.Bigint | NpgsqlDbType.Array)
             {
-                TypedValue = updateEvent.UpdateTimestamp
+                TypedValue = updateEvents.Select(e => e.UpdateTimestamp).ToArray()
             },
-            new NpgsqlParameter<string>(nameof(updateEvent.Title), NpgsqlDbType.Text)
+            new NpgsqlParameter<string[]>("Titles", NpgsqlDbType.Text | NpgsqlDbType.Array)
             {
-                TypedValue = updateEvent.Title
+                TypedValue = updateEvents.Select(e => e.Title).ToArray()
             },
-            new NpgsqlParameter<string?>(nameof(updateEvent.Details), NpgsqlDbType.Text)
+            new NpgsqlParameter<string?[]>("Details", NpgsqlDbType.Text | NpgsqlDbType.Array)
             {
-                TypedValue = updateEvent.Details
+                TypedValue = updateEvents.Select(e => e.Details).ToArray()
             }
         });
 

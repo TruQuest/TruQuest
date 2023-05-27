@@ -4,7 +4,7 @@ namespace Domain.Aggregates;
 
 public interface IWatchedItemRepository : IRepository<WatchedItem>
 {
-    void Add(WatchedItem watchedItem);
+    void Add(params WatchedItem[] watchedItems);
     void Remove(WatchedItem watchedItem);
     Task UpdateLastSeenTimestamp(IEnumerable<WatchedItem> watchedItems);
 }

@@ -17,15 +17,32 @@ internal class WatchListQueryable : Queryable, IWatchListQueryable
         _dbContext = dbContext;
     }
 
-    public async Task<IEnumerable<string>> GetWatchersFor(WatchedItemType itemType, Guid itemId)
+    public async Task<IEnumerable<string>> GetGeneralWatchersFor(WatchedItemType itemType, Guid itemId)
     {
-        // @@TODO: Use db distinct instead of client-side.
-        var watchers = (
-            await _dbContext.WatchList
-                .Where(w => w.ItemType == itemType && w.ItemId == itemId)
-                .Select(w => w.UserId)
-                .ToListAsync()
-        ).Distinct();
+        var watchers = await _dbContext.WatchList
+            .Where(w =>
+                w.ItemType == itemType &&
+                w.ItemId == itemId &&
+                w.ItemUpdateCategory - w.ItemUpdateCategory / 100 * 100 == 0 // General category
+            )
+            .Select(w => w.UserId)
+            .ToListAsync();
+
+        return watchers;
+    }
+
+    public async Task<IEnumerable<string>> GetWatchersFor(
+        WatchedItemType itemType, Guid itemId, int itemUpdateCategory
+    )
+    {
+        var watchers = await _dbContext.WatchList
+            .Where(w =>
+                w.ItemType == itemType &&
+                w.ItemId == itemId &&
+                w.ItemUpdateCategory == itemUpdateCategory
+            )
+            .Select(w => w.UserId)
+            .ToListAsync();
 
         return watchers;
     }
@@ -48,7 +65,7 @@ internal class WatchListQueryable : Queryable, IWatchListQueryable
                         INNER JOIN
                     truquest.""SubjectUpdates"" AS s
                         ON (
-                            u.""ItemType"" = 0 AND
+                            u.""ItemType"" = @SubjectType AND
                             u.""ItemId"" = s.""SubjectId"" AND
                             u.""ItemUpdateCategory"" = s.""Category"" AND
                             u.""LastSeenUpdateTimestamp"" < s.""UpdateTimestamp""
@@ -64,7 +81,7 @@ internal class WatchListQueryable : Queryable, IWatchListQueryable
                         INNER JOIN
                     truquest.""ThingUpdates"" AS t
                         ON (
-                            u.""ItemType"" = 1 AND
+                            u.""ItemType"" = @ThingType AND
                             u.""ItemId"" = t.""ThingId"" AND
                             u.""ItemUpdateCategory"" = t.""Category"" AND
                             u.""LastSeenUpdateTimestamp"" < t.""UpdateTimestamp""
@@ -80,7 +97,7 @@ internal class WatchListQueryable : Queryable, IWatchListQueryable
                         INNER JOIN
                     truquest.""SettlementProposalUpdates"" AS p
                         ON (
-                            u.""ItemType"" = 2 AND
+                            u.""ItemType"" = @ProposalType AND
                             u.""ItemId"" = p.""SettlementProposalId"" AND
                             u.""ItemUpdateCategory"" = p.""Category"" AND
                             u.""LastSeenUpdateTimestamp"" < p.""UpdateTimestamp""
@@ -88,7 +105,13 @@ internal class WatchListQueryable : Queryable, IWatchListQueryable
                 ORDER BY ""UpdateTimestamp"" DESC
                 LIMIT 30 -- @@TODO: Config.
             ",
-            param: new { UserId = userId }
+            param: new
+            {
+                UserId = userId,
+                SubjectType = (int)WatchedItemType.Subject,
+                ThingType = (int)WatchedItemType.Thing,
+                ProposalType = (int)WatchedItemType.SettlementProposal
+            }
         );
 
         return updates;

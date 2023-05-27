@@ -14,13 +14,13 @@
         "key.converter.schemas.enable": "false",
         "value.converter": "org.apache.kafka.connect.json.JsonConverter",
         "value.converter.schemas.enable": "false",
-        "table.include.list": "truquest_events.ActionableThingRelatedEvents,truquest.ThingVerifiers,truquest.SettlementProposalVerifiers,truquest.SubjectUpdates,truquest.ThingUpdates,truquest.SettlementProposalUpdates",
-        "predicates": "IsActionableThingRelatedEventsTable,IsVerifiersOrUpdatesTable",
-        "transforms": "outbox,flatten,verifiersOrUpdates",
+        "table.include.list": "truquest_events.ActionableThingRelatedEvents,truquest.SubjectUpdates,truquest.ThingUpdates,truquest.SettlementProposalUpdates",
+        "predicates": "IsActionableThingRelatedEventsTable,IsUpdatesTable",
+        "transforms": "outbox,flatten,updates",
         "predicates.IsActionableThingRelatedEventsTable.type": "org.apache.kafka.connect.transforms.predicates.TopicNameMatches",
         "predicates.IsActionableThingRelatedEventsTable.pattern": ".*ActionableThingRelatedEvents.*",
-        "predicates.IsVerifiersOrUpdatesTable.type": "org.apache.kafka.connect.transforms.predicates.TopicNameMatches",
-        "predicates.IsVerifiersOrUpdatesTable.pattern": ".*(Subject|Thing|SettlementProposal)(Verifiers|Updates).*",
+        "predicates.IsUpdatesTable.type": "org.apache.kafka.connect.transforms.predicates.TopicNameMatches",
+        "predicates.IsUpdatesTable.pattern": ".*(Subject|Thing|SettlementProposal)Updates.*",
         "transforms.outbox.type": "io.debezium.transforms.outbox.EventRouter",
         "transforms.outbox.predicate": "IsActionableThingRelatedEventsTable",
         "transforms.outbox.table.field.event.id": "Id",
@@ -31,10 +31,10 @@
         "transforms.outbox.route.by.field": "ThingId",
         "transforms.outbox.route.topic.replacement": "thing.events",
         "transforms.flatten.type": "io.debezium.transforms.ExtractNewRecordState",
-        "transforms.flatten.predicate": "IsVerifiersOrUpdatesTable",
+        "transforms.flatten.predicate": "IsUpdatesTable",
         "transforms.flatten.add.headers": "table",
-        "transforms.verifiersOrUpdates.type": "org.apache.kafka.connect.transforms.RegexRouter",
-        "transforms.verifiersOrUpdates.regex": ".*(Subject|Thing|SettlementProposal)(Verifiers|Updates).*",
-        "transforms.verifiersOrUpdates.replacement": "$2"
+        "transforms.updates.type": "org.apache.kafka.connect.transforms.RegexRouter",
+        "transforms.updates.regex": ".*(Subject|Thing|SettlementProposal)Updates.*",
+        "transforms.updates.replacement": "updates"
     }
 }

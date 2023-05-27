@@ -56,4 +56,14 @@ internal class ClientNotifier : IClientNotifier
             updateTimestamp, (int)itemType, itemId.ToString(), itemUpdateCategory, title, details
         );
     }
+
+    public async Task NotifyUsersAboutSpecialItemUpdate(
+        IEnumerable<string> userIds, long updateTimestamp, WatchedItemType itemType,
+        Guid itemId, int itemUpdateCategory, string title, string? details
+    )
+    {
+        await _hubContext.Clients.Users(userIds).NotifyAboutItemUpdate(
+            updateTimestamp, (int)itemType, itemId.ToString(), itemUpdateCategory, title, details
+        );
+    }
 }

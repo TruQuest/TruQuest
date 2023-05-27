@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:side_sheet/side_sheet.dart';
 
@@ -94,16 +95,18 @@ class NotificationTracker extends StatelessWidgetX {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
+                                  AutoSizeText(
                                     notification.title,
                                     style: GoogleFonts.philosopher(
                                       color: Colors.black,
                                       fontSize: 16,
                                     ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                   SizedBox(height: 6),
                                   Text(
-                                    notification.details!,
+                                    notification.details ?? '',
                                     style: GoogleFonts.raleway(
                                       color: Colors.black87,
                                     ),

@@ -12,4 +12,8 @@ public interface IClientNotifier
         IEnumerable<string> userIds, long updateTimestamp, WatchedItemType itemType,
         Guid itemId, int itemUpdateCategory, string title, string? details
     );
+    Task NotifyUsersAboutSpecialItemUpdate(
+        IEnumerable<string> userIds, long updateTimestamp, WatchedItemType itemType,
+        Guid itemId, int itemUpdateCategory, string title, string? details
+    );
 }
