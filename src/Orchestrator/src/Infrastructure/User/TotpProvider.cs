@@ -23,7 +23,6 @@ internal class TotpProvider : ITotpProvider
         _logger = logger;
         var totpSalt = configuration["TotpSalt"]!;
         _totpSaltBytes = Encoding.UTF8.GetBytes(totpSalt);
-        _logger.LogDebug("***** TotpSalt length: {TotpSaltLength}", _totpSaltBytes.Length);
     }
 
     Totp _getTotpGenerator(string address)

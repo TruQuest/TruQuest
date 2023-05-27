@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text.RegularExpressions;
 
 using MediatR;
+using FluentValidation;
 
 using Domain.Aggregates;
 using Domain.Errors;
@@ -18,6 +19,15 @@ public class SignInWithEthereumCommand : IRequest<HandleResult<SignInWithEthereu
 {
     public required string Message { get; init; }
     public required string Signature { get; init; }
+}
+
+internal class Validator : AbstractValidator<SignInWithEthereumCommand>
+{
+    public Validator()
+    {
+        RuleFor(c => c.Message).NotEmpty();
+        RuleFor(c => c.Signature).NotEmpty();
+    }
 }
 
 internal class SignInWithEthereumCommandHandler :
