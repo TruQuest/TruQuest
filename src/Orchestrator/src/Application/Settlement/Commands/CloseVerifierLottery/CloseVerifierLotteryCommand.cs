@@ -49,7 +49,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
         var proposalId = command.SettlementProposalId.ToByteArray();
 
         var nonce = (decimal)await _contractCaller.ComputeNonceForThingAssessmentVerifierLottery(
-            thingId, proposalId, command.Data
+            thingId, proposalId, "Orchestrator", command.Data
         );
         int numVerifiers = await _contractStorageQueryable.GetThingAssessmentNumVerifiers();
 

@@ -7,7 +7,7 @@ using Npgsql;
 
 namespace Infrastructure.Persistence.Queryables;
 
-internal abstract class Queryable : IDisposable
+public abstract class Queryable : IDisposable
 {
     private readonly string? _dbConnectionString;
     private NpgsqlConnection? _dbConnection;

@@ -38,7 +38,9 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
     public async Task<VoidResult> Handle(CloseVerifierLotteryCommand command, CancellationToken ct)
     {
         var thingId = command.ThingId.ToByteArray();
-        var nonce = (decimal)await _contractCaller.ComputeNonceForThingSubmissionVerifierLottery(thingId, command.Data);
+        var nonce = (decimal)await _contractCaller.ComputeNonceForThingSubmissionVerifierLottery(
+            thingId, "Orchestrator", command.Data
+        );
         int numVerifiers = await _contractStorageQueryable.GetThingSubmissionNumVerifiers();
 
         var winnerEvents = await _thingAcceptancePollEventQueryable.FindJoinedEventsWithClosestNonces(

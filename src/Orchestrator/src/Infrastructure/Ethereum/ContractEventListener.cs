@@ -222,7 +222,9 @@ internal class ContractEventListener : IContractEventListener
                     TxnIndex = (int)thingAcceptancePollFinalizedEvent.Log.TransactionIndex.Value,
                     ThingId = thingAcceptancePollFinalizedEvent.Event.ThingId,
                     Decision = thingAcceptancePollFinalizedEvent.Event.Decision,
-                    VoteAggIpfsCid = thingAcceptancePollFinalizedEvent.Event.VoteAggIpfsCid
+                    VoteAggIpfsCid = thingAcceptancePollFinalizedEvent.Event.VoteAggIpfsCid,
+                    RewardedVerifiers = thingAcceptancePollFinalizedEvent.Event.RewardedVerifiers,
+                    SlashedVerifiers = thingAcceptancePollFinalizedEvent.Event.SlashedVerifiers
                 };
             }
             else if (@event is EventLog<ThingSettlementProposalFundedEvent> thingSettlementProposalFundedEvent)

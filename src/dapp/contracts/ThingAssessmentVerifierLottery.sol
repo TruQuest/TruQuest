@@ -426,11 +426,12 @@ contract ThingAssessmentVerifierLottery {
 
     function computeNonce(
         bytes32 _thingProposalId,
+        address _user,
         bytes32 _data
     ) public view returns (uint256) {
         Commitment memory commitment = s_thingProposalIdToLotteryCommitments[
             _thingProposalId
-        ][msg.sender];
+        ][_user];
         return
             uint256(
                 keccak256(

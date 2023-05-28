@@ -1,7 +1,8 @@
+using System.Numerics;
 using System.Text.Json;
+using System.Diagnostics;
 using System.Security.Cryptography;
 
-using Xunit.Abstractions;
 using FluentAssertions;
 using ContractStorageExplorer;
 using ContractStorageExplorer.SolTypes;
@@ -23,7 +24,6 @@ namespace Tests.FunctionalTests;
 [Collection(nameof(TruQuestTestCollection))]
 public class E2ETests : IAsyncLifetime
 {
-    private readonly ITestOutputHelper _output;
     private readonly Sut _sut;
 
     private Contract _truQuestContract;
@@ -61,9 +61,8 @@ public class E2ETests : IAsyncLifetime
         }
     };
 
-    public E2ETests(ITestOutputHelper output, Sut sut)
+    public E2ETests(Sut sut)
     {
-        _output = output;
         _sut = sut;
         _dummyQuillContentJson = JsonSerializer.Serialize(_dummyQuillContent);
     }
@@ -413,9 +412,25 @@ public class E2ETests : IAsyncLifetime
             ThingId = thingId
         });
 
+        var thingSubmissionStake = (long)(
+            await _truQuestContract
+                .WalkStorage()
+                .Field("s_thingSubmissionStake")
+                .GetValue<SolUint256>()
+        ).Value;
+
+        Debug.WriteLine($"************ Thing submission stake: {thingSubmissionStake} ************");
+
+        var submitterInitialBalance = await _sut.ContractCaller.GetAvailableFunds("Submitter");
+
+        Debug.WriteLine($"************ Submitter initial balance: {submitterInitialBalance} ************");
+
         var thingIdBytes = thingId.ToByteArray();
 
         await _sut.ContractCaller.FundThing(thingIdBytes, thingSubmitResult.Data!.Signature);
+
+        var submitterBalance = await _sut.ContractCaller.GetAvailableFunds("Submitter");
+        submitterBalance.Should().Be(submitterInitialBalance - thingSubmissionStake);
 
         var submitter = await _truQuestContract
             .WalkStorage()
@@ -428,18 +443,35 @@ public class E2ETests : IAsyncLifetime
 
         await Task.Delay(TimeSpan.FromSeconds(25)); // @@TODO: Wait for LotteryInitiated event instead.
 
+        var verifierStake = (long)(
+            await _truQuestContract
+                .WalkStorage()
+                .Field("s_verifierStake")
+                .GetValue<SolUint256>()
+        ).Value;
+
+        Debug.WriteLine($"************ Verifier stake: {verifierStake} ************");
+
+        var verifierNonces = new List<(string AccountName, long Nonce)>();
+
         for (int i = 1; i <= 10; ++i)
         {
             var verifierAccountName = $"Verifier{i}";
             var verifier = _sut.AccountProvider.GetAccount(verifierAccountName);
 
             var data = RandomNumberGenerator.GetBytes(32);
-            var dataHash = await _sut.ExecWithService<IContractCaller, byte[]>(async contractCaller =>
-            {
-                return await contractCaller.ComputeHashForThingSubmissionVerifierLottery(data);
-            });
+            var dataHash = await _sut.ExecWithService<IContractCaller, byte[]>(contractCaller =>
+                contractCaller.ComputeHashForThingSubmissionVerifierLottery(data)
+            );
+
+            var verifierInitialBalance = await _sut.ContractCaller.GetAvailableFunds(verifierAccountName);
 
             await _sut.ContractCaller.PreJoinThingSubmissionVerifierLotteryAs(verifierAccountName, thingIdBytes, dataHash);
+
+            var verifierBalance = await _sut.ContractCaller.GetAvailableFunds(verifierAccountName);
+
+            verifierBalance.Should().Be(verifierInitialBalance - verifierStake);
+
             await _sut.ContractCaller.JoinThingSubmissionVerifierLotteryAs(verifierAccountName, thingIdBytes, data);
 
             var committedDataHash = await _thingSubmissionVerifierLotteryContract
@@ -467,7 +499,22 @@ public class E2ETests : IAsyncLifetime
                 .GetValue<SolBool>();
 
             revealed.Value.Should().BeTrue();
+
+            var nonce = (long)await _sut.ExecWithService<IContractCaller, BigInteger>(contractCaller =>
+                contractCaller.ComputeNonceForThingSubmissionVerifierLottery(thingIdBytes, verifierAccountName, data)
+            );
+
+            verifierNonces.Add((verifierAccountName, nonce));
         }
+
+        var orchestratorCommitment = await _sut.DbQueryable.GetOrchestratorCommitmentForThing(thingId);
+        var orchestratorNonce = (long)await _sut.ExecWithService<IContractCaller, BigInteger>(contractCaller =>
+            contractCaller.ComputeNonceForThingSubmissionVerifierLottery(
+                thingIdBytes, "Orchestrator", orchestratorCommitment
+            )
+        );
+
+        Debug.WriteLine($"*************** Orchestrator nonce: {orchestratorNonce} ***************");
 
         await Task.Delay(TimeSpan.FromSeconds(15)); // giving time for (Pre-)Joined events to be handled.
 
@@ -484,8 +531,6 @@ public class E2ETests : IAsyncLifetime
         // giving time to add verifiers, change the thing's state, and create an acceptance poll closing task
         await Task.Delay(TimeSpan.FromSeconds(30));
 
-        // @@TODO: Check that winners are who they should be.
-
         int requiredVerifierCount = await _sut.ExecWithService<IContractStorageQueryable, int>(
             contractStorageQueryable => contractStorageQueryable.GetThingSubmissionNumVerifiers()
         );
@@ -499,6 +544,14 @@ public class E2ETests : IAsyncLifetime
             .Length();
 
         verifierCount.Should().Be(requiredVerifierCount);
+
+        // @@TODO: ThenBy BlockNumber ASC and TxnIndex ASC
+        verifierNonces = verifierNonces
+            .OrderBy(v => Math.Abs(orchestratorNonce - v.Nonce))
+            .Take(requiredVerifierCount)
+            .ToList();
+
+        // @@TODO: Check that losers get unstaked and winners don't.
 
         var thingSubmissionVerifierAccountNames = new List<string>();
 
@@ -514,6 +567,8 @@ public class E2ETests : IAsyncLifetime
                 .GetValue<SolAddress>();
 
             var verifierAccountName = _sut.AccountProvider.LookupNameByAddress(verifier.Value);
+
+            verifierNonces.SingleOrDefault(v => v.AccountName == verifierAccountName).Should().NotBeNull();
 
             thingSubmissionVerifierAccountNames.Add(verifierAccountName);
 

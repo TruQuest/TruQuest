@@ -21,7 +21,7 @@ public class SolUint64 : SolValueType<ulong>, ISolNumber
             if (valueBytes.Length < sizeBytes)
             {
                 var value = Value;
-                if (value >= 0)
+                if (value >= 0) // @@??: What am I doing here? It's always >= 0!
                 {
                     valueBytes = Enumerable.Repeat<byte>(0, sizeBytes - valueBytes.Length).Concat(valueBytes).ToArray();
                 }

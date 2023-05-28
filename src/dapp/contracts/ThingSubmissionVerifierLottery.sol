@@ -4,9 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import "./TruQuest.sol";
 import "./AcceptancePoll.sol";
 
-error ThingSubmissionVerifierLottery__NotOrchestrator();
-error ThingSubmissionVerifierLottery__NotTruQuest();
-error ThingSubmissionVerifierLottery__NotAcceptancePoll();
+error ThingSubmissionVerifierLottery__Unauthorized();
 error ThingSubmissionVerifierLottery__AlreadyCommittedToLottery(
     bytes16 thingId
 );
@@ -110,21 +108,21 @@ contract ThingSubmissionVerifierLottery {
 
     modifier onlyOrchestrator() {
         if (msg.sender != s_orchestrator) {
-            revert ThingSubmissionVerifierLottery__NotOrchestrator();
+            revert ThingSubmissionVerifierLottery__Unauthorized();
         }
         _;
     }
 
     modifier onlyTruQuest() {
         if (msg.sender != address(i_truQuest)) {
-            revert ThingSubmissionVerifierLottery__NotTruQuest();
+            revert ThingSubmissionVerifierLottery__Unauthorized();
         }
         _;
     }
 
     modifier onlyAcceptancePoll() {
         if (msg.sender != address(s_acceptancePoll)) {
-            revert ThingSubmissionVerifierLottery__NotAcceptancePoll();
+            revert ThingSubmissionVerifierLottery__Unauthorized();
         }
         _;
     }
@@ -332,10 +330,11 @@ contract ThingSubmissionVerifierLottery {
 
     function computeNonce(
         bytes16 _thingId,
+        address _user,
         bytes32 _data
     ) public view returns (uint256) {
         Commitment memory commitment = s_thingIdToLotteryCommitments[_thingId][
-            msg.sender
+            _user
         ];
         return
             uint256(

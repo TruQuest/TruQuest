@@ -217,7 +217,7 @@ public static class IServiceCollectionExtension
                                 consumer
                                     .Topics(configuration.GetSection("Kafka:EventConsumer:Topics").Get<List<string>>())
                                     .WithGroupId(configuration["Kafka:EventConsumer:GroupId"])
-                                    .WithAutoOffsetReset(AutoOffsetReset.Earliest)
+                                    .WithAutoOffsetReset(AutoOffsetReset.Latest)
                                     .WithBufferSize(1)
                                     .WithWorkersCount(4)
                                     .AddMiddlewares(middlewares =>
@@ -242,7 +242,7 @@ public static class IServiceCollectionExtension
                                 consumer
                                     .Topics(configuration.GetSection("Kafka:ResponseConsumer:Topics").Get<List<string>>())
                                     .WithGroupId(configuration["Kafka:ResponseConsumer:GroupId"])
-                                    .WithAutoOffsetReset(AutoOffsetReset.Earliest)
+                                    .WithAutoOffsetReset(AutoOffsetReset.Latest)
                                     .WithBufferSize(1)
                                     .WithWorkersCount(1)
                                     .AddMiddlewares(middlewares =>

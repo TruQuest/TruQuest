@@ -24,6 +24,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
     private readonly IBlockchainQueryable _blockchainQueryable;
     private readonly IAcceptancePollVoteRepository _voteRepository;
     private readonly ICastedAcceptancePollVoteEventRepository _castedAcceptancePollVoteEventRepository;
+    private readonly IContractStorageQueryable _contractStorageQueryable;
     private readonly IThingRepository _thingRepository;
     private readonly ISigner _signer;
     private readonly IFileStorage _fileStorage;
@@ -34,6 +35,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
         IBlockchainQueryable blockchainQueryable,
         IAcceptancePollVoteRepository voteRepository,
         ICastedAcceptancePollVoteEventRepository castedAcceptancePollVoteEventRepository,
+        IContractStorageQueryable contractStorageQueryable,
         IThingRepository thingRepository,
         ISigner signer,
         IFileStorage fileStorage,
@@ -44,6 +46,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
         _blockchainQueryable = blockchainQueryable;
         _voteRepository = voteRepository;
         _castedAcceptancePollVoteEventRepository = castedAcceptancePollVoteEventRepository;
+        _contractStorageQueryable = contractStorageQueryable;
         _thingRepository = thingRepository;
         _signer = signer;
         _fileStorage = fileStorage;
@@ -117,27 +120,74 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
 
         // @@TODO!!: Calculate poll results!
 
-        var votedVerifiers = accountedVotes
-            .Select(v => v.VoterId)
-            .ToList();
+        var numVerifiers = await _contractStorageQueryable.GetThingSubmissionNumVerifiers();
+        var minimumVotingVolume = 50f / 100;
 
-        // @@TODO: Use queryable instead of repo.
-        var verifiers = (await _thingRepository.GetAllVerifiersFor(command.ThingId))
-            .Select(v => v.VerifierId)
-            .ToList();
-
-        var verifiersToSlash = verifiers.Except(votedVerifiers);
-        foreach (var verifier in verifiersToSlash)
+        if (accountedVotes.Count < Math.Ceiling(numVerifiers * minimumVotingVolume))
         {
-            _logger.LogInformation("No vote from verifier {UserId}. Slashing...", verifier);
+            _logger.LogInformation("Thing {ThingId} Lottery: Insufficient voting volume", command.ThingId);
+
+            var verifiers = await _contractCaller.GetVerifiersForThing(command.ThingId.ToByteArray());
+            _logger.LogInformation("Thing {ThingId} Poll: {NumVerifiers} verifiers", command.ThingId, verifiers.Count());
+
+            var verifiersToSlashIndices = verifiers
+                .Select((verifier, i) => (VerifierId: verifier.Substring(2).ToLower(), Index: i))
+                .Where(vi => accountedVotes.SingleOrDefault(v => v.VoterId == vi.VerifierId) == null)
+                .Select(vi => (ulong)vi.Index)
+                .ToList();
+
+            _logger.LogInformation(
+                "Thing {ThingId} Poll: {NumVerifiers} not voted. Slashing...",
+                command.ThingId, verifiersToSlashIndices.Count
+            );
+
+            await _contractCaller.FinalizeAcceptancePollForThingAsUnsettledDueToInsufficientVotingVolume(
+                command.ThingId.ToByteArray(), result.Data!, verifiersToSlashIndices
+            );
+
+            return VoidResult.Instance;
         }
 
-        await _contractCaller.FinalizeAcceptancePollForThingAsAccepted(
-            thingId: command.ThingId.ToByteArray(),
-            voteAggIpfsCid: result.Data!,
-            verifiersToReward: votedVerifiers.Select(v => "0x" + v).ToList(),
-            verifiersToSlash: verifiersToSlash.Select(v => "0x" + v).ToList()
-        );
+        throw new NotImplementedException();
+
+        /*
+            - If not enough votes, put the thing in Stasis:
+                - The submitter and all verifiers get their funds back.
+                - But the verifiers that didn't vote get slashed.
+                - No one is rewarded.
+                - The submitter can revive the thing by moving it from Stasis to Awaiting Funding again.
+                - Wipe the thing from the contracts like it never existed?
+                - Allow the submitter to edit the thing when in Stasis before funding it again?
+            - If majority threshold not reached, put the thing in Stasis:
+                - The submitter and all verifiers get their funds back.
+                - But the verifiers that didn't vote get slashed.
+                - No one is rewarded.
+                - The submitter can revive the thing by moving it from Stasis to Awaiting Funding again.
+                - Wipe the thing from the contracts like it never existed?
+                - Allow the submitter to edit the thing when in Stasis before funding it again?
+        */
+
+        // var votedVerifiers = accountedVotes
+        //     .Select(v => v.VoterId)
+        //     .ToList();
+
+        // // @@TODO: Use queryable instead of repo.
+        // var verifiers = (await _thingRepository.GetAllVerifiersFor(command.ThingId))
+        //     .Select(v => v.VerifierId)
+        //     .ToList();
+
+        // var verifiersToSlash = verifiers.Except(votedVerifiers);
+        // foreach (var verifier in verifiersToSlash)
+        // {
+        //     _logger.LogInformation("No vote from verifier {UserId}. Slashing...", verifier);
+        // }
+
+        // await _contractCaller.FinalizeAcceptancePollForThingAsAccepted(
+        //     thingId: command.ThingId.ToByteArray(),
+        //     voteAggIpfsCid: result.Data!,
+        //     verifiersToReward: votedVerifiers.Select(v => "0x" + v).ToList(),
+        //     verifiersToSlash: verifiersToSlash.Select(v => "0x" + v).ToList()
+        // );
 
         return VoidResult.Instance;
     }

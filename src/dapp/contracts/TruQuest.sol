@@ -12,11 +12,7 @@ import "./AssessmentPoll.sol";
 
 error TruQuest__ThingAlreadyFunded(bytes16 thingId);
 error TruQuest__NotEnoughFunds(uint256 requiredAmount, uint256 availableAmount);
-error TruQuest__NotOrchestrator();
-error TruQuest__NotVerifierLottery();
-error TruQuest__NotPoll();
-error TruQuest__NotAcceptancePoll();
-error TruQuest__NotAssessmentPoll();
+error TruQuest__Unauthorized();
 error TruQuest__InvalidSignature();
 error TruQuest__ThingAlreadyHasSettlementProposalUnderAssessment(
     bytes16 thingId
@@ -97,7 +93,7 @@ contract TruQuest {
 
     modifier onlyOrchestrator() {
         if (msg.sender != s_orchestrator) {
-            revert TruQuest__NotOrchestrator();
+            revert TruQuest__Unauthorized();
         }
         _;
     }
@@ -107,7 +103,7 @@ contract TruQuest {
             msg.sender != address(s_thingSubmissionVerifierLottery) &&
             msg.sender != address(s_thingAssessmentVerifierLottery)
         ) {
-            revert TruQuest__NotVerifierLottery();
+            revert TruQuest__Unauthorized();
         }
         _;
     }
@@ -117,21 +113,33 @@ contract TruQuest {
             msg.sender != address(s_acceptancePoll) &&
             msg.sender != address(s_assessmentPoll)
         ) {
-            revert TruQuest__NotPoll();
+            revert TruQuest__Unauthorized();
         }
         _;
     }
 
     modifier onlyAcceptancePoll() {
         if (msg.sender != address(s_acceptancePoll)) {
-            revert TruQuest__NotAcceptancePoll();
+            revert TruQuest__Unauthorized();
         }
         _;
     }
 
     modifier onlyAssessmentPoll() {
         if (msg.sender != address(s_assessmentPoll)) {
-            revert TruQuest__NotAssessmentPoll();
+            revert TruQuest__Unauthorized();
+        }
+        _;
+    }
+
+    modifier onlyLotteryOrPoll() {
+        if (
+            !(msg.sender == address(s_thingSubmissionVerifierLottery) ||
+                msg.sender == address(s_thingAssessmentVerifierLottery) ||
+                msg.sender == address(s_acceptancePoll) ||
+                msg.sender == address(s_assessmentPoll))
+        ) {
+            revert TruQuest__Unauthorized();
         }
         _;
     }
@@ -242,7 +250,7 @@ contract TruQuest {
         s_stakedBalanceOf[_user] += s_verifierStake;
     }
 
-    function unstakeAsVerifier(address _user) external onlyVerifierLottery {
+    function unstakeAsVerifier(address _user) external onlyLotteryOrPoll {
         s_stakedBalanceOf[_user] -= s_verifierStake;
     }
 
@@ -418,6 +426,10 @@ contract TruQuest {
             msg.sender,
             s_thingSettlementProposalStake
         );
+    }
+
+    function cleanUpThing(bytes16 _thingId) external onlyAcceptancePoll {
+        delete s_thingSubmitter[_thingId];
     }
 
     // only...?

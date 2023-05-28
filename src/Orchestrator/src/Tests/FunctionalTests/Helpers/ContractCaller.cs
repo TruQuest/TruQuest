@@ -1,3 +1,5 @@
+using System.Numerics;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -56,6 +58,20 @@ public class ContractCaller
         _assessmentPollAddress = configuration[$"Ethereum:Contracts:{network}:AssessmentPoll:Address"]!;
 
         _orchestrator = accountProvider.GetAccount("Orchestrator");
+    }
+
+    public async Task<long> GetAvailableFunds(string accountName)
+    {
+        var account = _accountProvider.GetAccount(accountName);
+        var funds = await _web3.Eth
+            .GetContractQueryHandler<GetAvailableFundsMessage>()
+            .QueryAsync<BigInteger>(_truQuestAddress, new()
+            {
+                User = account.Address
+            }
+        );
+
+        return (long)funds;
     }
 
     public async Task FundThing(byte[] thingId, string signature)

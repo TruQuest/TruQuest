@@ -45,6 +45,7 @@ public class Sut : IAsyncLifetime
     public Signer Signer { get; private set; }
     public BlockchainManipulator BlockchainManipulator { get; private set; }
     public ContractCaller ContractCaller { get; private set; }
+    public DbQueryable DbQueryable { get; private set; }
 
     public async Task InitializeAsync()
     {
@@ -88,6 +89,7 @@ public class Sut : IAsyncLifetime
         Signer = new Signer(_app.Configuration, AccountProvider);
         BlockchainManipulator = new BlockchainManipulator(_app.Configuration);
         ContractCaller = new ContractCaller(_app.Logger, _app.Configuration, AccountProvider, BlockchainManipulator);
+        DbQueryable = new DbQueryable(_app.Configuration);
     }
 
     public Task DisposeAsync() => Task.CompletedTask;

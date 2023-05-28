@@ -20,6 +20,7 @@ public class BlockchainManipulator
         for (int i = 0; i < numBlocks; ++i)
         {
             await _web3.Client.SendRequestAsync(new RpcRequest(Guid.NewGuid().ToString(), "evm_mine"));
+            await Task.Delay(50);
         }
     }
 }

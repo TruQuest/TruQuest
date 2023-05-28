@@ -327,6 +327,51 @@ contract AcceptancePoll {
         );
     }
 
+    function getVerifiers(
+        bytes16 _thingId
+    ) public view returns (address[] memory) {
+        return s_thingVerifiers[_thingId];
+    }
+
+    function finalizePoll__Unsettled(
+        bytes16 _thingId,
+        string calldata _voteAggIpfsCid,
+        Decision _decision,
+        uint64[] calldata _verifiersToSlashIndices
+    ) public onlyOrchestrator onlyWhenPollOrSubPollInProgress(_thingId) {
+        address submitter = i_truQuest.s_thingSubmitter(_thingId);
+        i_truQuest.unstakeThingSubmitter(submitter);
+
+        uint64 j = 0;
+        address[] memory verifiers = s_thingVerifiers[_thingId];
+        address[] memory slashedVerifiers = new address[](
+            _verifiersToSlashIndices.length
+        );
+        for (uint8 i = 0; i < _verifiersToSlashIndices.length; ++i) {
+            uint64 nextVerifierToSlashIndex = _verifiersToSlashIndices[i];
+            slashedVerifiers[i] = verifiers[nextVerifierToSlashIndex];
+            for (; j < nextVerifierToSlashIndex; ++j) {
+                i_truQuest.unstakeAsVerifier(verifiers[j]);
+            }
+            i_truQuest.unstakeAndSlashVerifier(verifiers[j++]);
+        }
+
+        delete s_thingIdToPollInitBlock[_thingId];
+        delete s_thingVerifiers[_thingId];
+        delete s_thingPollStage[_thingId];
+
+        i_truQuest.cleanUpThing(_thingId);
+
+        emit PollFinalized(
+            _thingId,
+            _decision,
+            _voteAggIpfsCid,
+            submitter,
+            new address[](0),
+            slashedVerifiers
+        );
+    }
+
     function finalizePoll__Accepted(
         bytes16 _thingId,
         string calldata _voteAggIpfsCid,

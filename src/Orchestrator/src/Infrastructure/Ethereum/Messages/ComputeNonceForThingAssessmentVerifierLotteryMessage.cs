@@ -8,6 +8,8 @@ public class ComputeNonceForThingAssessmentVerifierLotteryMessage : FunctionMess
 {
     [Parameter("bytes32", "_thingProposalId", 1)]
     public byte[] ThingProposalId { get; init; }
-    [Parameter("bytes32", "_data", 2)]
+    [Parameter("address", "_user", 2)]
+    public string User { get; init; }
+    [Parameter("bytes32", "_data", 3)]
     public byte[] Data { get; init; }
 }

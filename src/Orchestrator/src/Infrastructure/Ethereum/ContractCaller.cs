@@ -63,7 +63,9 @@ internal class ContractCaller : IContractCaller
         return (long)txnReceipt.BlockNumber.Value;
     }
 
-    public Task<BigInteger> ComputeNonceForThingSubmissionVerifierLottery(byte[] thingId, byte[] data)
+    public Task<BigInteger> ComputeNonceForThingSubmissionVerifierLottery(
+        byte[] thingId, string accountName, byte[] data
+    )
     {
         return _web3.Eth
             .GetContractQueryHandler<ComputeNonceForThingSubmissionVerifierLotteryMessage>()
@@ -72,6 +74,7 @@ internal class ContractCaller : IContractCaller
                 new()
                 {
                     ThingId = thingId,
+                    User = _accountProvider.GetAccount(accountName).Address,
                     Data = data
                 }
             );
@@ -96,6 +99,26 @@ internal class ContractCaller : IContractCaller
         _logger.LogInformation("=============== CloseThingSubmissionVerifierLotteryWithSuccess: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
+    public async Task FinalizeAcceptancePollForThingAsUnsettledDueToInsufficientVotingVolume(
+        byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
+    )
+    {
+        var txnReceipt = await _web3.Eth
+            .GetContractTransactionHandler<FinalizeAcceptancePollForThingAsUnsettledMessage>()
+            .SendRequestAndWaitForReceiptAsync(
+                _acceptancePollAddress,
+                new()
+                {
+                    ThingId = thingId,
+                    VoteAggIpfsCid = voteAggIpfsCid,
+                    Decision = Decision.UnsettledDueToInsufficientVotingVolume,
+                    VerifiersToSlashIndices = verifiersToSlashIndices
+                }
+            );
+
+        _logger.LogInformation("=============== FinalizeAcceptancePollForThingAsUnsettled: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+    }
+
     public async Task FinalizeAcceptancePollForThingAsAccepted(
         byte[] thingId, string voteAggIpfsCid,
         List<string> verifiersToReward, List<string> verifiersToSlash
@@ -117,6 +140,18 @@ internal class ContractCaller : IContractCaller
         _logger.LogInformation("=============== FinalizeAcceptancePollForThingAsAccepted: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
+    public async Task<IEnumerable<string>> GetVerifiersForThing(byte[] thingId)
+    {
+        var verifiers = await _web3.Eth
+            .GetContractQueryHandler<GetVerifiersForThingMessage>()
+            .QueryAsync<List<string>>(_acceptancePollAddress, new()
+            {
+                ThingId = thingId
+            });
+
+        return verifiers;
+    }
+
     public async Task<long> InitThingAssessmentVerifierLottery(byte[] thingId, byte[] proposalId, byte[] dataHash)
     {
         var txnReceipt = await _web3.Eth
@@ -136,7 +171,7 @@ internal class ContractCaller : IContractCaller
     }
 
     public Task<BigInteger> ComputeNonceForThingAssessmentVerifierLottery(
-        byte[] thingId, byte[] proposalId, byte[] data
+        byte[] thingId, byte[] proposalId, string accountName, byte[] data
     )
     {
         return _web3.Eth
@@ -146,6 +181,7 @@ internal class ContractCaller : IContractCaller
                 new()
                 {
                     ThingProposalId = thingId.Concat(proposalId).ToArray(),
+                    User = _accountProvider.GetAccount(accountName).Address,
                     Data = data
                 }
             );
