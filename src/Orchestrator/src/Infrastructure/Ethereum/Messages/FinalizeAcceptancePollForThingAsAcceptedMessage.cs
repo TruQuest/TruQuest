@@ -10,8 +10,6 @@ public class FinalizeAcceptancePollForThingAsAcceptedMessage : FunctionMessage
     public byte[] ThingId { get; init; }
     [Parameter("string", "_voteAggIpfsCid", 2)]
     public string VoteAggIpfsCid { get; init; }
-    [Parameter("address[]", "_verifiersToReward", 3)]
-    public List<string> VerifiersToReward { get; init; }
-    [Parameter("address[]", "_verifiersToSlash", 4)]
-    public List<string> VerifiersToSlash { get; init; }
+    [Parameter("uint64[]", "_verifiersToSlashIndices", 3)]
+    public List<ulong> VerifiersToSlashIndices { get; init; }
 }

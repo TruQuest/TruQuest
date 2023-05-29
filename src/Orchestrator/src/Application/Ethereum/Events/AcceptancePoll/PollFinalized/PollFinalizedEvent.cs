@@ -47,15 +47,14 @@ internal class PollFinalizedEventHandler : INotificationHandler<PollFinalizedEve
         {
             var decision = (SubmissionEvaluationDecision)@event.Decision;
             _logger.LogInformation("Thing {ThingId} Acceptance Poll Decision: {Decision}", thing.Id, decision);
+            _logger.LogInformation("Rewarded verifiers: {Verifiers}", @event.RewardedVerifiers);
+            _logger.LogInformation("Penalized verifiers: {Verifiers}", @event.SlashedVerifiers);
 
             if (decision is
                 SubmissionEvaluationDecision.UnsettledDueToInsufficientVotingVolume or
                 SubmissionEvaluationDecision.UnsettledDueToMajorityThresholdNotReached
             )
             {
-                _logger.LogInformation("Rewarded verifiers: {Verifiers}", @event.RewardedVerifiers);
-                _logger.LogInformation("Penalized verifiers: {Verifiers}", @event.SlashedVerifiers);
-
                 thing.SetState(ThingState.ConsensusNotReached);
                 thing.SetVoteAggIpfsCid(@event.VoteAggIpfsCid);
 
@@ -101,6 +100,7 @@ internal class PollFinalizedEventHandler : INotificationHandler<PollFinalizedEve
 
                 await _thingRepository.SaveChanges();
                 await _thingUpdateRepository.SaveChanges();
+
                 return;
             }
 

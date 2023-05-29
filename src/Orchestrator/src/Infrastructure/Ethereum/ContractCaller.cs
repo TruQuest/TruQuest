@@ -140,8 +140,7 @@ internal class ContractCaller : IContractCaller
     }
 
     public async Task FinalizeAcceptancePollForThingAsAccepted(
-        byte[] thingId, string voteAggIpfsCid,
-        List<string> verifiersToReward, List<string> verifiersToSlash
+        byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
         var txnReceipt = await _web3.Eth
@@ -152,8 +151,7 @@ internal class ContractCaller : IContractCaller
                 {
                     ThingId = thingId,
                     VoteAggIpfsCid = voteAggIpfsCid,
-                    VerifiersToReward = verifiersToReward,
-                    VerifiersToSlash = verifiersToSlash
+                    VerifiersToSlashIndices = verifiersToSlashIndices
                 }
             );
 

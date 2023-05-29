@@ -288,6 +288,9 @@ contract ThingSubmissionVerifierLottery {
             }
             ++j;
         }
+        for (; j < participants.length; ++j) {
+            i_truQuest.unstakeAsVerifier(participants[j]);
+        }
 
         s_participants[_thingId] = new address[](0); // unnecessary?
         delete s_participants[_thingId];
