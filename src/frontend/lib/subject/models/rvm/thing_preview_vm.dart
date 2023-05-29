@@ -24,6 +24,8 @@ class ThingPreviewVm {
         return Icons.people;
       case ThingStateVm.verifiersSelectedAndPollInitiated:
         return Icons.poll_outlined;
+      case ThingStateVm.consensusNotReached:
+        return Icons.drag_handle;
       case ThingStateVm.declined:
         return Icons.remove_done;
       case ThingStateVm.awaitingSettlement:

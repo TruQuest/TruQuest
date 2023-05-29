@@ -32,6 +32,41 @@ internal class WatchedItemRepository : Repository<WatchedItem>, IWatchedItemRepo
         _dbContext.WatchList.Remove(watchedItem);
     }
 
+    public async Task DuplicateGeneralItemsFrom(WatchedItemType itemType, Guid sourceItemId, Guid destItemId)
+    {
+        var itemTypeParam = new NpgsqlParameter<int>("ItemType", NpgsqlDbType.Integer)
+        {
+            TypedValue = (int)itemType
+        };
+        var sourceItemIdParam = new NpgsqlParameter<Guid>("SourceItemId", NpgsqlDbType.Uuid)
+        {
+            TypedValue = sourceItemId
+        };
+        var destItemIdParam = new NpgsqlParameter<Guid>("DestItemId", NpgsqlDbType.Uuid)
+        {
+            TypedValue = destItemId
+        };
+        var timestampParam = new NpgsqlParameter<long>("Timestamp", NpgsqlDbType.Bigint)
+        {
+            TypedValue = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+        };
+
+        await _dbContext.Database.ExecuteSqlRawAsync(
+            @"
+                INSERT INTO truquest.""WatchList"" (
+                    ""UserId"", ""ItemType"", ""ItemId"", ""ItemUpdateCategory"", ""LastSeenUpdateTimestamp""
+                )
+                    SELECT ""UserId"", ""ItemType"", @DestItemId, ""ItemUpdateCategory"", @Timestamp
+                    FROM truquest.""WatchList""
+                    WHERE
+                        ""ItemType"" = @ItemType AND
+                        ""ItemId"" = @SourceItemId AND
+                        ""ItemUpdateCategory"" - ""ItemUpdateCategory"" / 100 * 100 = 0;
+            ",
+            itemTypeParam, sourceItemIdParam, destItemIdParam, timestampParam
+        );
+    }
+
     public async Task UpdateLastSeenTimestamp(IEnumerable<WatchedItem> watchedItems)
     {
         var itemTypesParam = new NpgsqlParameter<int[]>("ItemTypes", NpgsqlDbType.Integer | NpgsqlDbType.Array)

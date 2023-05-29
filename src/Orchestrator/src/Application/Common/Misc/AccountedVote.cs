@@ -2,8 +2,15 @@ namespace Application.Common.Misc;
 
 internal class AccountedVote
 {
+    internal enum Decision
+    {
+        SoftDecline,
+        HardDecline,
+        Accept
+    }
+
     public required string VoterId { get; init; }
-    public required int Decision { get; init; }
+    public required Decision VoteDecision { get; init; }
 
     public override bool Equals(object? obj)
     {

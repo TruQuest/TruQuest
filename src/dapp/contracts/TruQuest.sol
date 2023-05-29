@@ -171,10 +171,17 @@ contract TruQuest {
         uint256 _verifierPenalty,
         uint16 _verifierLotteryDurationBlocks,
         uint16 _pollDurationBlocks,
-        uint256 _thingSettlementProposalStake // uint256 _thingSettlementProposalAcceptedReward, // uint256 _thingSettlementProposalRejectedPenalty
+        uint256 _thingSettlementProposalStake
     ) {
+        // uint256 _thingSettlementProposalAcceptedReward,
+        // uint256 _thingSettlementProposalRejectedPenalty,
+        // uint8 _votingVolumeThresholdPercent,
+        // uint8 _majorityThresholdPercent
         uint256 _thingSettlementProposalAcceptedReward = 7;
         uint256 _thingSettlementProposalRejectedPenalty = 3;
+        uint8 _votingVolumeThresholdPercent = 50;
+        uint8 _majorityThresholdPercent = 51;
+
         i_truthserum = Truthserum(_truthserumAddress);
         s_thingSubmissionVerifierLottery = new ThingSubmissionVerifierLottery(
             address(this),
@@ -183,7 +190,9 @@ contract TruQuest {
         );
         s_acceptancePoll = new AcceptancePoll(
             address(this),
-            _pollDurationBlocks
+            _pollDurationBlocks,
+            _votingVolumeThresholdPercent,
+            _majorityThresholdPercent
         );
         s_thingAssessmentVerifierLottery = new ThingAssessmentVerifierLottery(
             address(this),
@@ -426,10 +435,6 @@ contract TruQuest {
             msg.sender,
             s_thingSettlementProposalStake
         );
-    }
-
-    function cleanUpThing(bytes16 _thingId) external onlyAcceptancePoll {
-        delete s_thingSubmitter[_thingId];
     }
 
     // only...?

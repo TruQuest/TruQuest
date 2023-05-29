@@ -8,4 +8,5 @@ public interface IThingRepository : IRepository<Thing>
     Task<Thing> FindById(Guid id);
     Task<bool> CheckIsDesignatedVerifierFor(Guid thingId, string userId);
     Task<IReadOnlyList<ThingVerifier>> GetAllVerifiersFor(Guid thingId);
+    Task<Guid> DeepCopyFromWith(Guid sourceThingId, ThingState state);
 }

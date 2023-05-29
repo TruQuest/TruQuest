@@ -21,6 +21,7 @@ public class ThingQm
     public HashSet<TagQm> Tags { get; } = new();
     public int? SubjectAvgScore { get; set; }
     public bool Watched { get; set; }
+    public Guid? RelatedThingId { get; }
 
     public override bool Equals(object? obj)
     {

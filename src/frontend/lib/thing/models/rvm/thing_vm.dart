@@ -22,6 +22,7 @@ class ThingVm {
   final List<TagVm> tags;
   final int? subjectAvgScore;
   final bool watched;
+  final String? relatedThingId;
 
   final bool? fundedAwaitingConfirmation;
 
@@ -60,6 +61,7 @@ class ThingVm {
         ),
         subjectAvgScore = map['subjectAvgScore'],
         watched = map['watched'],
+        relatedThingId = map['relatedThingId'],
         fundedAwaitingConfirmation = null;
 
   ThingVm._({
@@ -80,6 +82,7 @@ class ThingVm {
     required this.tags,
     required this.subjectAvgScore,
     required this.watched,
+    required this.relatedThingId,
     required this.fundedAwaitingConfirmation,
   });
 
@@ -102,6 +105,7 @@ class ThingVm {
       tags: tags,
       subjectAvgScore: subjectAvgScore,
       watched: watched,
+      relatedThingId: relatedThingId,
       fundedAwaitingConfirmation:
           fundedAwaitingConfirmation ?? this.fundedAwaitingConfirmation,
     );

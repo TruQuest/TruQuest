@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 using Microsoft.Extensions.Logging;
 
 using MediatR;
@@ -106,7 +108,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
             accountedVotes.Add(new()
             {
                 VoterId = onChainVote.UserId,
-                Decision = (int)onChainVote.Decision
+                VoteDecision = (AccountedVote.Decision)onChainVote.Decision
             });
         }
         foreach (var offChainVote in offChainVotes.OrderByDescending(v => v.CastedAtMs))
@@ -114,35 +116,63 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
             accountedVotes.Add(new()
             {
                 VoterId = offChainVote.VoterId,
-                Decision = (int)offChainVote.Decision
+                VoteDecision = (AccountedVote.Decision)offChainVote.Decision
             });
         }
 
-        // @@TODO!!: Calculate poll results!
+        var verifiers = await _contractCaller.GetVerifiersForThing(command.ThingId.ToByteArray());
+        _logger.LogDebug("Thing {ThingId} Poll: {NumVerifiers} verifiers", command.ThingId, verifiers.Count());
+
+        var notVotedVerifierIndices = verifiers
+            .Select((verifier, i) => (VerifierId: verifier.Substring(2).ToLower(), Index: i))
+            .Where(vi => accountedVotes.SingleOrDefault(v => v.VoterId == vi.VerifierId) == null)
+            .Select(vi => (ulong)vi.Index)
+            .ToList();
+
+        _logger.LogDebug(
+            "Thing {ThingId} Poll: {NumVerifiers} not voted. Slashing...",
+            command.ThingId, notVotedVerifierIndices.Count
+        );
 
         var numVerifiers = await _contractStorageQueryable.GetThingSubmissionNumVerifiers();
-        var minimumVotingVolume = 50f / 100;
+        int votingVolumeThresholdPercent = await _contractStorageQueryable.GetThingAcceptancePollVotingVolumeThreshold();
 
-        if (accountedVotes.Count < Math.Ceiling(numVerifiers * minimumVotingVolume))
+        var requiredVoterCount = Math.Ceiling(votingVolumeThresholdPercent / 100f * numVerifiers);
+        _logger.LogDebug("Required voter count: {VoterCount}", requiredVoterCount);
+
+        if (accountedVotes.Count < requiredVoterCount)
         {
-            _logger.LogInformation("Thing {ThingId} Lottery: Insufficient voting volume", command.ThingId);
-
-            var verifiers = await _contractCaller.GetVerifiersForThing(command.ThingId.ToByteArray());
-            _logger.LogInformation("Thing {ThingId} Poll: {NumVerifiers} verifiers", command.ThingId, verifiers.Count());
-
-            var verifiersToSlashIndices = verifiers
-                .Select((verifier, i) => (VerifierId: verifier.Substring(2).ToLower(), Index: i))
-                .Where(vi => accountedVotes.SingleOrDefault(v => v.VoterId == vi.VerifierId) == null)
-                .Select(vi => (ulong)vi.Index)
-                .ToList();
-
             _logger.LogInformation(
-                "Thing {ThingId} Poll: {NumVerifiers} not voted. Slashing...",
-                command.ThingId, verifiersToSlashIndices.Count
+                "Thing {ThingId} Lottery: Insufficient voting volume. " +
+                "Required at least {RequiredVoterCount} voters out of {NumVerifiers} to vote; Got {ActualVoterCount}",
+                command.ThingId, requiredVoterCount, numVerifiers, accountedVotes.Count
+            );
+            await _contractCaller.FinalizeAcceptancePollForThingAsUnsettledDueToInsufficientVotingVolume(
+                command.ThingId.ToByteArray(), result.Data!, notVotedVerifierIndices
             );
 
-            await _contractCaller.FinalizeAcceptancePollForThingAsUnsettledDueToInsufficientVotingVolume(
-                command.ThingId.ToByteArray(), result.Data!, verifiersToSlashIndices
+            return VoidResult.Instance;
+        }
+
+        Debug.Assert(accountedVotes.Count > 0);
+
+        int majorityThresholdPercent = await _contractStorageQueryable.GetThingAcceptancePollMajorityThreshold();
+        var acceptedDecisionRequiredVoteCount = Math.Ceiling(majorityThresholdPercent / 100f * accountedVotes.Count);
+        _logger.LogDebug("Accepted decision required vote count: {VoteCount}", acceptedDecisionRequiredVoteCount);
+
+        var votesGroupedByDecision = accountedVotes.GroupBy(v => v.VoteDecision);
+        Debug.Assert(accountedVotes.Count == votesGroupedByDecision.Aggregate(0, (count, group) => count + group.Count()));
+        var dominantDecision = votesGroupedByDecision.MaxBy(group => group.Count())!;
+
+        if (dominantDecision.Count() < acceptedDecisionRequiredVoteCount)
+        {
+            _logger.LogInformation(
+                "Thing {ThingId} Lottery: Majority threshold not reached. " +
+                "Required at least {RequiredVoteCount} votes out of {TotalVoteCount}; Got {ActualVoteCount}",
+                command.ThingId, acceptedDecisionRequiredVoteCount, accountedVotes.Count, dominantDecision.Count()
+            );
+            await _contractCaller.FinalizeAcceptancePollForThingAsUnsettledDueToMajorityThresholdNotReached(
+                command.ThingId.ToByteArray(), result.Data!, notVotedVerifierIndices
             );
 
             return VoidResult.Instance;

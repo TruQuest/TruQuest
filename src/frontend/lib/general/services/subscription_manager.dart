@@ -67,6 +67,7 @@ class SubscriptionManager {
     }
   }
 
+  // @@TODO: If going to the same route, do nothing.
   void _handleComplexRoute(String route) async {
     if (_currentRoute != null && !_isSimpleRoute(_currentRoute!)) {
       await _unsubThenSubToUpdates(_currentRoute!, route);

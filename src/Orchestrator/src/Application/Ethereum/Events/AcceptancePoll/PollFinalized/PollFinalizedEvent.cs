@@ -25,16 +25,19 @@ internal class PollFinalizedEventHandler : INotificationHandler<PollFinalizedEve
     private readonly ILogger<PollFinalizedEventHandler> _logger;
     private readonly IThingRepository _thingRepository;
     private readonly IThingUpdateRepository _thingUpdateRepository;
+    private readonly IWatchedItemRepository _watchedItemRepository;
 
     public PollFinalizedEventHandler(
         ILogger<PollFinalizedEventHandler> logger,
         IThingRepository thingRepository,
-        IThingUpdateRepository thingUpdateRepository
+        IThingUpdateRepository thingUpdateRepository,
+        IWatchedItemRepository watchedItemRepository
     )
     {
         _logger = logger;
         _thingRepository = thingRepository;
         _thingUpdateRepository = thingUpdateRepository;
+        _watchedItemRepository = watchedItemRepository;
     }
 
     public async Task Handle(PollFinalizedEvent @event, CancellationToken ct)
@@ -52,6 +55,35 @@ internal class PollFinalizedEventHandler : INotificationHandler<PollFinalizedEve
             {
                 _logger.LogInformation("Rewarded verifiers: {Verifiers}", @event.RewardedVerifiers);
                 _logger.LogInformation("Penalized verifiers: {Verifiers}", @event.SlashedVerifiers);
+
+                thing.SetState(ThingState.ConsensusNotReached);
+                thing.SetVoteAggIpfsCid(@event.VoteAggIpfsCid);
+
+                await _thingUpdateRepository.AddOrUpdate(new ThingUpdate(
+                    thingId: thing.Id,
+                    category: ThingUpdateCategory.General,
+                    updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                    title: "Promise acceptance poll",
+                    details: "Consensus not reached"
+                ));
+
+                var thingCopyId = await _thingRepository.DeepCopyFromWith(
+                    sourceThingId: thing.Id,
+                    state: ThingState.AwaitingFunding
+                );
+
+                thing.SetRelatedThing(thingCopyId);
+
+                await _watchedItemRepository.DuplicateGeneralItemsFrom(
+                    WatchedItemType.Thing,
+                    sourceItemId: thing.Id,
+                    destItemId: thingCopyId
+                );
+
+                await _thingRepository.SaveChanges();
+                await _thingUpdateRepository.SaveChanges();
+                await _watchedItemRepository.SaveChanges();
+
                 return;
             }
             else if (decision is SubmissionEvaluationDecision.Accepted)

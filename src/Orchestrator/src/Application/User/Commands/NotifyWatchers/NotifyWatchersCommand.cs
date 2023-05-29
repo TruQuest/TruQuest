@@ -39,12 +39,12 @@ internal class NotifyWatchersCommandHandler : IRequestHandler<NotifyWatchersComm
 
     public async Task<VoidResult> Handle(NotifyWatchersCommand command, CancellationToken ct)
     {
+        var watcherIds = await _watchListQueryable.GetWatchersFor(
+            (WatchedItemType)command.ItemType, command.ItemId, command.ItemUpdateCategory
+        );
+
         if (command.ItemUpdateCategory % 100 == 0) // General update
         {
-            var watcherIds = await _watchListQueryable.GetGeneralWatchersFor(
-                (WatchedItemType)command.ItemType, command.ItemId
-            );
-
             await _clientNotifier.NotifyUsersAboutItemUpdate(
                 watcherIds, command.UpdateTimestamp, (WatchedItemType)command.ItemType,
                 command.ItemId, command.ItemUpdateCategory, command.Title, command.Details
@@ -52,10 +52,6 @@ internal class NotifyWatchersCommandHandler : IRequestHandler<NotifyWatchersComm
         }
         else
         {
-            var watcherIds = await _watchListQueryable.GetWatchersFor(
-                (WatchedItemType)command.ItemType, command.ItemId, command.ItemUpdateCategory
-            );
-
             await _clientNotifier.NotifyUsersAboutSpecialItemUpdate(
                 watcherIds, command.UpdateTimestamp, (WatchedItemType)command.ItemType,
                 command.ItemId, command.ItemUpdateCategory, command.Title, command.Details

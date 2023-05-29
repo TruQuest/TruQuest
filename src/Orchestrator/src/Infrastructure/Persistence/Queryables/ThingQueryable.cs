@@ -35,7 +35,10 @@ internal class ThingQueryable : Queryable, IThingQueryable
                         INNER JOIN
                     truquest.""Tags"" AS tag
                         ON (tat.""TagId"" = tag.""Id"")
-                WHERE t.""SubjectId"" = @SubjectId AND (t.""State"" > @ThingState OR t.""SubmitterId"" = @UserId);
+                WHERE
+                    t.""SubjectId"" = @SubjectId AND
+                    t.""State"" != @ConsensusNotReachedState AND
+                    (t.""State"" > @ThingState OR t.""SubmitterId"" = @UserId);
                 -- @@TODO: Check that it works with UserId == null as intended
             ",
             joinedCollectionSelector: thing => thing.Tags,
@@ -43,6 +46,7 @@ internal class ThingQueryable : Queryable, IThingQueryable
             {
                 SubjectId = subjectId,
                 UserId = userId,
+                ConsensusNotReachedState = (int)ThingState.ConsensusNotReached,
                 ThingState = (int)ThingState.Draft
             }
         );

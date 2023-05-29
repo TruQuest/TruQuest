@@ -17,20 +17,6 @@ internal class WatchListQueryable : Queryable, IWatchListQueryable
         _dbContext = dbContext;
     }
 
-    public async Task<IEnumerable<string>> GetGeneralWatchersFor(WatchedItemType itemType, Guid itemId)
-    {
-        var watchers = await _dbContext.WatchList
-            .Where(w =>
-                w.ItemType == itemType &&
-                w.ItemId == itemId &&
-                w.ItemUpdateCategory - w.ItemUpdateCategory / 100 * 100 == 0 // General category
-            )
-            .Select(w => w.UserId)
-            .ToListAsync();
-
-        return watchers;
-    }
-
     public async Task<IEnumerable<string>> GetWatchersFor(
         WatchedItemType itemType, Guid itemId, int itemUpdateCategory
     )

@@ -90,6 +90,26 @@ internal class ContractStorageQueryable : IContractStorageQueryable
         return value.Value;
     }
 
+    public async Task<int> GetThingAcceptancePollVotingVolumeThreshold()
+    {
+        var value = await _acceptancePollContract
+            .WalkStorage()
+            .Field("s_votingVolumeThresholdPercent")
+            .GetValue<SolUint8>();
+
+        return value.Value;
+    }
+
+    public async Task<int> GetThingAcceptancePollMajorityThreshold()
+    {
+        var value = await _acceptancePollContract
+            .WalkStorage()
+            .Field("s_majorityThresholdPercent")
+            .GetValue<SolUint8>();
+
+        return value.Value;
+    }
+
     public async Task<int> GetThingAssessmentVerifierLotteryDurationBlocks()
     {
         var value = await _thingAssessmentVerifierLotteryContract

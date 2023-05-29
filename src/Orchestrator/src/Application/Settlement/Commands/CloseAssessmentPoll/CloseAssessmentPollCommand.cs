@@ -111,7 +111,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
             accountedVotes.Add(new()
             {
                 VoterId = onChainVote.UserId,
-                Decision = (int)onChainVote.Decision
+                VoteDecision = (AccountedVote.Decision)onChainVote.Decision
             });
         }
         foreach (var offChainVote in offChainVotes.OrderByDescending(v => v.CastedAtMs))
@@ -119,7 +119,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
             accountedVotes.Add(new()
             {
                 VoterId = offChainVote.VoterId,
-                Decision = (int)offChainVote.Decision
+                VoteDecision = (AccountedVote.Decision)offChainVote.Decision
             });
         }
 

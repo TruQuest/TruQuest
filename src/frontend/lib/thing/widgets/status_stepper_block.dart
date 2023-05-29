@@ -30,10 +30,15 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
     super.didChangeDependencies();
     _documentViewContext = useScoped<DocumentViewContext>();
     _thing = _documentViewContext.thing!;
-    if (_thing.state.index <= ThingStateVm.declined.index) {
+    if (_thing.state.index <=
+        ThingStateVm.verifiersSelectedAndPollInitiated.index) {
       _currentStep = _thing.state.index + 1;
+    } else if (_thing.state == ThingStateVm.consensusNotReached ||
+        _thing.state == ThingStateVm.declined ||
+        _thing.state == ThingStateVm.awaitingSettlement) {
+      _currentStep = ThingStateVm.verifiersSelectedAndPollInitiated.index + 2;
     } else {
-      _currentStep = _thing.state.index;
+      _currentStep = ThingStateVm.verifiersSelectedAndPollInitiated.index + 3;
     }
   }
 
@@ -88,6 +93,28 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
         Step(
           title: Text(
             'Declined',
+            style: GoogleFonts.philosopher(
+              color: Color(0xffF8F9FA),
+              fontSize: 16,
+            ),
+          ),
+          content: Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
+              style: GoogleFonts.raleway(
+                color: Colors.white,
+              ),
+            ),
+          ),
+          isActive: true,
+        ),
+      ];
+    } else if (_thing.state == ThingStateVm.consensusNotReached) {
+      return [
+        Step(
+          title: Text(
+            'Consensus not reached',
             style: GoogleFonts.philosopher(
               color: Color(0xffF8F9FA),
               fontSize: 16,

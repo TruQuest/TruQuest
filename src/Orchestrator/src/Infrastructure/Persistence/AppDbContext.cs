@@ -85,6 +85,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.Property(t => t.VoteAggIpfsCid).IsRequired(false);
             builder.Property(t => t.AcceptedSettlementProposalId).IsRequired(false);
             builder.Property(t => t.SettledAt).IsRequired(false);
+            builder.Property(t => t.RelatedThingId).IsRequired(false); // @@??: Foreign key?
 
             builder
                 .HasOne<UserDm>()

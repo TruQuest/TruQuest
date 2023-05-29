@@ -300,6 +300,33 @@ class _ThingPageState extends StateX<ThingPage> {
             tabs: tabs,
             children: _buildTabContents(vm),
           ),
+          if (vm.thing.state == ThingStateVm.consensusNotReached)
+            Positioned(
+              top: 30,
+              left: 24,
+              child: Tooltip(
+                message: 'Consensus not reached',
+                child: InkWell(
+                  onTap: () => _pageContext.goto(
+                    '/things/${vm.thing.relatedThingId!}',
+                  ),
+                  child: Card(
+                    margin: EdgeInsets.zero,
+                    color: Colors.redAccent,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                      child: Text(
+                        'Archived',
+                        style: GoogleFonts.righteous(
+                          color: Colors.white,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           if (vm.thing.state == ThingStateVm.awaitingSettlement)
             Positioned(
               top: 30,

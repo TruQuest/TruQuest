@@ -6,6 +6,8 @@ public interface IContractStorageQueryable
     Task<int> GetAcceptancePollDurationBlocks();
     Task<int> GetThingSubmissionNumVerifiers();
     Task<string> GetThingSubmissionVerifierLotteryParticipantAt(byte[] thingId, int index);
+    Task<int> GetThingAcceptancePollVotingVolumeThreshold();
+    Task<int> GetThingAcceptancePollMajorityThreshold();
     Task<int> GetThingAssessmentVerifierLotteryDurationBlocks();
     Task<int> GetThingAssessmentNumVerifiers();
     Task<string> GetThingAssessmentVerifierLotterySpotClaimantAt(byte[] thingId, byte[] proposalId, int index);

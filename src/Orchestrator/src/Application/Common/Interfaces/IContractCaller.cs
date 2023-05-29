@@ -11,6 +11,9 @@ public interface IContractCaller
     Task FinalizeAcceptancePollForThingAsUnsettledDueToInsufficientVotingVolume(
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     );
+    Task FinalizeAcceptancePollForThingAsUnsettledDueToMajorityThresholdNotReached(
+        byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
+    );
     Task FinalizeAcceptancePollForThingAsAccepted(
         byte[] thingId, string voteAggIpfsCid,
         List<string> verifiersToReward, List<string> verifiersToSlash

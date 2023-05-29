@@ -23,6 +23,8 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
       25 /* _thingSettlementProposalStake */,
       // 7 /* _thingSettlementProposalAcceptedReward */,
       // 3 /* _thingSettlementProposalRejectedPenalty */,
+      // 50 /* _votingVolumeThresholdPercent */,
+      // 51 /* _majorityThresholdPercent */
     ],
     log: true,
     waitConfirmations: 1,

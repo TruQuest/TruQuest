@@ -119,6 +119,26 @@ internal class ContractCaller : IContractCaller
         _logger.LogInformation("=============== FinalizeAcceptancePollForThingAsUnsettled: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
+    public async Task FinalizeAcceptancePollForThingAsUnsettledDueToMajorityThresholdNotReached(
+        byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
+    )
+    {
+        var txnReceipt = await _web3.Eth
+            .GetContractTransactionHandler<FinalizeAcceptancePollForThingAsUnsettledMessage>()
+            .SendRequestAndWaitForReceiptAsync(
+                _acceptancePollAddress,
+                new()
+                {
+                    ThingId = thingId,
+                    VoteAggIpfsCid = voteAggIpfsCid,
+                    Decision = Decision.UnsettledDueToMajorityThresholdNotReached,
+                    VerifiersToSlashIndices = verifiersToSlashIndices
+                }
+            );
+
+        _logger.LogInformation("=============== FinalizeAcceptancePollForThingAsUnsettled: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+    }
+
     public async Task FinalizeAcceptancePollForThingAsAccepted(
         byte[] thingId, string voteAggIpfsCid,
         List<string> verifiersToReward, List<string> verifiersToSlash

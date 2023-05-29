@@ -17,6 +17,8 @@ public class Thing : Entity, IAggregateRoot
     public Guid? AcceptedSettlementProposalId { get; private set; }
     public long? SettledAt { get; private set; }
 
+    // @@??: Do we need smth like SubmissionEvaluatedAt ?
+
     private List<Evidence> _evidence = new();
     public IReadOnlyList<Evidence> Evidence => _evidence;
 
@@ -25,6 +27,8 @@ public class Thing : Entity, IAggregateRoot
 
     private List<ThingVerifier> _verifiers = new();
     public IReadOnlyList<ThingVerifier> Verifiers => _verifiers;
+
+    public Guid? RelatedThingId { get; private set; }
 
     public Thing(
         Guid id, string title, string details, string? imageIpfsCid,
@@ -77,5 +81,10 @@ public class Thing : Entity, IAggregateRoot
     public void AcceptSettlementProposal(Guid settlementProposalId)
     {
         AcceptedSettlementProposalId = settlementProposalId;
+    }
+
+    public void SetRelatedThing(Guid thingId)
+    {
+        RelatedThingId = thingId;
     }
 }
