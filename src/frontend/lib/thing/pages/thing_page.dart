@@ -300,12 +300,15 @@ class _ThingPageState extends StateX<ThingPage> {
             tabs: tabs,
             children: _buildTabContents(vm),
           ),
-          if (vm.thing.state == ThingStateVm.consensusNotReached)
+          if (vm.thing.state == ThingStateVm.consensusNotReached ||
+              vm.thing.state == ThingStateVm.verifierLotteryFailed)
             Positioned(
               top: 30,
               left: 24,
               child: Tooltip(
-                message: 'Consensus not reached',
+                message: vm.thing.state == ThingStateVm.consensusNotReached
+                    ? 'Consensus not reached'
+                    : 'Not enough lottery participants',
                 child: InkWell(
                   onTap: () => _pageContext.goto(
                     '/things/${vm.thing.relatedThingId!}',

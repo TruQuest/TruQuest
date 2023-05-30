@@ -22,6 +22,8 @@ class ThingPreviewVm {
         return Icons.attach_money;
       case ThingStateVm.fundedAndVerifierLotteryInitiated:
         return Icons.people;
+      case ThingStateVm.verifierLotteryFailed:
+        return Icons.emoji_people;
       case ThingStateVm.verifiersSelectedAndPollInitiated:
         return Icons.poll_outlined;
       case ThingStateVm.consensusNotReached:

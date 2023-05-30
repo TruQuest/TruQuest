@@ -87,6 +87,7 @@ internal class ContractEventListener : IContractEventListener
                 new EventLogProcessorHandler<ThingSubmissionVerifierLottery.PreJoinedLotteryEvent>(WriteToChannel),
                 new EventLogProcessorHandler<ThingSubmissionVerifierLottery.JoinedLotteryEvent>(WriteToChannel),
                 new EventLogProcessorHandler<ThingSubmissionVerifierLottery.LotteryClosedWithSuccessEvent>(WriteToChannel),
+                new EventLogProcessorHandler<ThingSubmissionVerifierLottery.LotteryClosedInFailureEvent>(WriteToChannel),
                 new EventLogProcessorHandler<AcceptancePoll.CastedVoteEvent>(WriteToChannel),
                 new EventLogProcessorHandler<AcceptancePoll.CastedVoteWithReasonEvent>(WriteToChannel),
                 new EventLogProcessorHandler<AcceptancePoll.PollFinalizedEvent>(WriteToChannel),
@@ -189,6 +190,17 @@ internal class ContractEventListener : IContractEventListener
                     WinnerIds = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.WinnerIds
                         .Select(id => id.Substring(2).ToLower())
                         .ToList()
+                };
+            }
+            else if (@event is EventLog<ThingSubmissionVerifierLottery.LotteryClosedInFailureEvent> thingSubmissionVerifierLotteryClosedInFailureEvent)
+            {
+                yield return new AppEvents.ThingSubmissionVerifierLottery.LotteryClosedInFailure.LotteryClosedInFailureEvent
+                {
+                    BlockNumber = (long)thingSubmissionVerifierLotteryClosedInFailureEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)thingSubmissionVerifierLotteryClosedInFailureEvent.Log.TransactionIndex.Value,
+                    ThingId = thingSubmissionVerifierLotteryClosedInFailureEvent.Event.ThingId,
+                    RequiredNumVerifiers = thingSubmissionVerifierLotteryClosedInFailureEvent.Event.RequiredNumVerifiers,
+                    JoinedNumVerifiers = thingSubmissionVerifierLotteryClosedInFailureEvent.Event.JoinedNumVerifiers
                 };
             }
             else if (@event is EventLog<AcceptancePoll.CastedVoteEvent> castedAcceptancePollVoteEvent)

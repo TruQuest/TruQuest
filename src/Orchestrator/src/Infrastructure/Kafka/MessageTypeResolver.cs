@@ -22,6 +22,8 @@ internal class MessageTypeResolver : IMessageTypeResolver
             {
                 case ThingEventType.Funded:
                     return typeof(ThingFundedEvent);
+                case ThingEventType.SubmissionVerifierLotteryClosedInFailure:
+                    return typeof(ThingSubmissionVerifierLotteryClosedInFailureEvent);
                 case ThingEventType.SubmissionVerifierLotteryClosedWithSuccess:
                     return typeof(ThingSubmissionVerifierLotteryClosedWithSuccessEvent);
                 case ThingEventType.SettlementProposalFunded:

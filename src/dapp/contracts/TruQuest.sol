@@ -263,7 +263,7 @@ contract TruQuest {
         s_stakedBalanceOf[_user] -= s_verifierStake;
     }
 
-    function unstakeThingSubmitter(address _user) external onlyAcceptancePoll {
+    function unstakeThingSubmitter(address _user) external onlyLotteryOrPoll {
         _unstake(_user, s_thingSubmissionStake);
     }
 

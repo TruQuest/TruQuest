@@ -528,7 +528,8 @@ public class E2ETests : IAsyncLifetime
         await Task.Delay(TimeSpan.FromSeconds(15)); // giving time to close verifier lottery
 
         await _sut.BlockchainManipulator.Mine(1);
-        // giving time to add verifiers, change the thing's state, and create an acceptance poll closing task
+        // giving time to add verifiers, change the thing's state, and create an acceptance poll closing task;
+        // or to archive the thing
         await Task.Delay(TimeSpan.FromSeconds(30));
 
         int requiredVerifierCount = await _sut.ExecWithService<IContractStorageQueryable, int>(

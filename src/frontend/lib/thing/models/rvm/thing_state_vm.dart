@@ -3,6 +3,7 @@ enum ThingStateVm {
   draft,
   awaitingFunding,
   fundedAndVerifierLotteryInitiated,
+  verifierLotteryFailed,
   verifiersSelectedAndPollInitiated,
   consensusNotReached,
   declined,
@@ -19,6 +20,8 @@ extension ThingStateVmExtension on ThingStateVm {
         return 'Awaiting funding';
       case ThingStateVm.fundedAndVerifierLotteryInitiated:
         return 'Awaiting verifier lottery results';
+      case ThingStateVm.verifierLotteryFailed:
+        return 'Verifier lottery failed';
       case ThingStateVm.verifiersSelectedAndPollInitiated:
         return 'Awaiting acceptance poll results';
       case ThingStateVm.consensusNotReached:

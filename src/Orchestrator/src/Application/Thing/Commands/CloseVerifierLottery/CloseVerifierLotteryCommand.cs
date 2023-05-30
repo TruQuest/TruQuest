@@ -78,9 +78,13 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
         else
         {
             _logger.LogInformation(
-                "Thing {ThingId} submission verifier selection lottery: Not enough participants",
-                command.ThingId
+                "Thing {ThingId} Verifier Selection Lottery: Not enough participants.\n" +
+                "Required: {RequiredNumVerifiers}.\n" +
+                "Joined: {JoinedNumVerifiers}.",
+                command.ThingId, numVerifiers, winnerEvents.Count
             );
+
+            await _contractCaller.CloseThingSubmissionVerifierLotteryInFailure(thingId, winnerEvents.Count);
         }
 
         return VoidResult.Instance;

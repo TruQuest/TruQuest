@@ -65,7 +65,11 @@ contract ThingSubmissionVerifierLottery {
         address[] winners
     );
 
-    event LotteryClosedInFailure(bytes16 indexed thingId);
+    event LotteryClosedInFailure(
+        bytes16 indexed thingId,
+        uint8 requiredNumVerifiers,
+        uint8 joinedNumVerifiers
+    );
 
     modifier onlyOrchestrator() {
         if (msg.sender != s_orchestrator) {
@@ -304,13 +308,23 @@ contract ThingSubmissionVerifierLottery {
         emit LotteryClosedWithSuccess(_thingId, s_orchestrator, nonce, winners);
     }
 
-    // when not enough participants
-    // @@??: add reason string/enum param ?
     function closeLotteryInFailure(
-        bytes16 _thingId
+        bytes16 _thingId,
+        uint8 _joinedNumVerifiers
     ) public onlyOrchestrator onlyWhenActive(_thingId) {
-        // checks?
+        // @@??: Pass and check data?
+        uint64 commitmentBlock = uint64(
+            s_thingIdToLotteryCommitments[_thingId][msg.sender].block
+        );
+        if (uint64(block.number) == commitmentBlock) {
+            revert ThingSubmissionVerifierLottery__InitAndCloseInTheSameBlock(
+                _thingId
+            );
+        }
         s_thingIdToLotteryCommitments[_thingId][msg.sender].block = -1;
+
+        address submitter = i_truQuest.s_thingSubmitter(_thingId);
+        i_truQuest.unstakeThingSubmitter(submitter);
 
         address[] memory participants = s_participants[_thingId];
         for (uint64 i = 0; i < participants.length; ++i) {
@@ -320,6 +334,10 @@ contract ThingSubmissionVerifierLottery {
         s_participants[_thingId] = new address[](0); // unnecessary?
         delete s_participants[_thingId];
 
-        emit LotteryClosedInFailure(_thingId);
+        emit LotteryClosedInFailure(
+            _thingId,
+            s_numVerifiers,
+            _joinedNumVerifiers
+        );
     }
 }

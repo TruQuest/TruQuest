@@ -5,6 +5,7 @@ public enum ThingStateQm
     Draft,
     AwaitingFunding,
     FundedAndVerifierLotteryInitiated,
+    VerifierLotteryFailed,
     VerifiersSelectedAndPollInitiated,
     ConsensusNotReached,
     Declined,

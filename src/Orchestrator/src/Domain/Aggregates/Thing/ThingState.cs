@@ -5,6 +5,7 @@ public enum ThingState
     Draft,
     AwaitingFunding,
     FundedAndVerifierLotteryInitiated,
+    VerifierLotteryFailed,
     VerifiersSelectedAndPollInitiated,
     ConsensusNotReached,
     Declined,

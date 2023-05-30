@@ -37,8 +37,9 @@ internal class ThingQueryable : Queryable, IThingQueryable
                         ON (tat.""TagId"" = tag.""Id"")
                 WHERE
                     t.""SubjectId"" = @SubjectId AND
+                    t.""State"" != @LotteryFailedState AND
                     t.""State"" != @ConsensusNotReachedState AND
-                    (t.""State"" > @ThingState OR t.""SubmitterId"" = @UserId);
+                    (t.""State"" > @DraftState OR t.""SubmitterId"" = @UserId);
                 -- @@TODO: Check that it works with UserId == null as intended
             ",
             joinedCollectionSelector: thing => thing.Tags,
@@ -46,8 +47,9 @@ internal class ThingQueryable : Queryable, IThingQueryable
             {
                 SubjectId = subjectId,
                 UserId = userId,
+                LotteryFailedState = (int)ThingState.VerifierLotteryFailed,
                 ConsensusNotReachedState = (int)ThingState.ConsensusNotReached,
-                ThingState = (int)ThingState.Draft
+                DraftState = (int)ThingState.Draft
             }
         );
 

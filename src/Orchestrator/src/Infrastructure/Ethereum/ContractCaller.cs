@@ -99,6 +99,22 @@ internal class ContractCaller : IContractCaller
         _logger.LogInformation("=============== CloseThingSubmissionVerifierLotteryWithSuccess: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
+    public async Task CloseThingSubmissionVerifierLotteryInFailure(byte[] thingId, int joinedNumVerifiers)
+    {
+        var txnReceipt = await _web3.Eth
+            .GetContractTransactionHandler<CloseThingSubmissionVerifierLotteryInFailureMessage>()
+            .SendRequestAndWaitForReceiptAsync(
+                _thingSubmissionVerifierLotteryAddress,
+                new()
+                {
+                    ThingId = thingId,
+                    JoinedNumVerifiers = joinedNumVerifiers
+                }
+            );
+
+        _logger.LogInformation("=============== CloseThingSubmissionVerifierLotteryInFailure: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+    }
+
     public async Task FinalizeAcceptancePollForThingAsUnsettledDueToInsufficientVotingVolume(
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )

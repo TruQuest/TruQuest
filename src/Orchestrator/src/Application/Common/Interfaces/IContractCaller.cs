@@ -8,6 +8,7 @@ public interface IContractCaller
     Task<long> InitThingSubmissionVerifierLottery(byte[] thingId, byte[] dataHash);
     Task<BigInteger> ComputeNonceForThingSubmissionVerifierLottery(byte[] thingId, string accountName, byte[] data);
     Task CloseThingSubmissionVerifierLotteryWithSuccess(byte[] thingId, byte[] data, List<ulong> winnerIndices);
+    Task CloseThingSubmissionVerifierLotteryInFailure(byte[] thingId, int joinedNumVerifiers);
     Task FinalizeAcceptancePollForThingAsUnsettledDueToInsufficientVotingVolume(
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     );

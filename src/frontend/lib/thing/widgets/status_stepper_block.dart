@@ -31,21 +31,76 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
     _documentViewContext = useScoped<DocumentViewContext>();
     _thing = _documentViewContext.thing!;
     if (_thing.state.index <=
-        ThingStateVm.verifiersSelectedAndPollInitiated.index) {
+        ThingStateVm.fundedAndVerifierLotteryInitiated.index) {
       _currentStep = _thing.state.index + 1;
+    } else if (_thing.state == ThingStateVm.verifierLotteryFailed ||
+        _thing.state == ThingStateVm.verifiersSelectedAndPollInitiated) {
+      _currentStep = ThingStateVm.fundedAndVerifierLotteryInitiated.index + 2;
     } else if (_thing.state == ThingStateVm.consensusNotReached ||
         _thing.state == ThingStateVm.declined ||
         _thing.state == ThingStateVm.awaitingSettlement) {
-      _currentStep = ThingStateVm.verifiersSelectedAndPollInitiated.index + 2;
+      _currentStep = ThingStateVm.fundedAndVerifierLotteryInitiated.index + 3;
     } else {
-      _currentStep = ThingStateVm.verifiersSelectedAndPollInitiated.index + 3;
+      _currentStep = ThingStateVm.fundedAndVerifierLotteryInitiated.index + 4;
     }
   }
 
   List<Step> _buildFinalSteps() {
-    if (_thing.state == ThingStateVm.awaitingSettlement ||
+    if (_thing.state.index <=
+        ThingStateVm.fundedAndVerifierLotteryInitiated.index) {
+      return [];
+    } else if (_thing.state == ThingStateVm.verifierLotteryFailed) {
+      return [
+        Step(
+          title: Text(
+            'Lottery failed',
+            style: GoogleFonts.philosopher(
+              color: Color(0xffF8F9FA),
+              fontSize: 16,
+            ),
+          ),
+          content: Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
+              style: GoogleFonts.raleway(
+                color: Colors.white,
+              ),
+            ),
+          ),
+          isActive: true,
+        ),
+      ];
+    }
+
+    var steps = [
+      Step(
+        title: Text(
+          'Poll in progress',
+          style: GoogleFonts.philosopher(
+            color: Color(0xffF8F9FA),
+            fontSize: 16,
+          ),
+        ),
+        content: Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Text(
+            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
+            style: GoogleFonts.raleway(
+              color: Colors.white,
+            ),
+          ),
+        ),
+        isActive: true,
+      ),
+    ];
+
+    if (_thing.state == ThingStateVm.verifiersSelectedAndPollInitiated) {
+      return steps;
+    } else if (_thing.state == ThingStateVm.awaitingSettlement ||
         _thing.state == ThingStateVm.settled) {
       return [
+        ...steps,
         Step(
           title: Text(
             'Awaiting settlement',
@@ -90,6 +145,7 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
       ];
     } else if (_thing.state == ThingStateVm.declined) {
       return [
+        ...steps,
         Step(
           title: Text(
             'Declined',
@@ -110,31 +166,30 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
           isActive: true,
         ),
       ];
-    } else if (_thing.state == ThingStateVm.consensusNotReached) {
-      return [
-        Step(
-          title: Text(
-            'Consensus not reached',
-            style: GoogleFonts.philosopher(
-              color: Color(0xffF8F9FA),
-              fontSize: 16,
-            ),
-          ),
-          content: Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Text(
-              'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
-              style: GoogleFonts.raleway(
-                color: Colors.white,
-              ),
-            ),
-          ),
-          isActive: true,
-        ),
-      ];
     }
 
-    return [];
+    return [
+      ...steps,
+      Step(
+        title: Text(
+          'Consensus not reached',
+          style: GoogleFonts.philosopher(
+            color: Color(0xffF8F9FA),
+            fontSize: 16,
+          ),
+        ),
+        content: Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Text(
+            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
+            style: GoogleFonts.raleway(
+              color: Colors.white,
+            ),
+          ),
+        ),
+        isActive: true,
+      ),
+    ];
   }
 
   bool _checkShouldBeEnabled(int step) =>
@@ -262,25 +317,6 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
           Step(
             title: Text(
               'Lottery in progress',
-              style: GoogleFonts.philosopher(
-                color: Color(0xffF8F9FA),
-                fontSize: 16,
-              ),
-            ),
-            content: Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Text(
-                'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
-                style: GoogleFonts.raleway(
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            isActive: true,
-          ),
-          Step(
-            title: Text(
-              'Poll in progress',
               style: GoogleFonts.philosopher(
                 color: Color(0xffF8F9FA),
                 fontSize: 16,
