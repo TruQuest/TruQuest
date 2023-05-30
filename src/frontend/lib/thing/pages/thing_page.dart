@@ -405,6 +405,25 @@ class _ThingPageState extends StateX<ThingPage> {
                 ),
               ),
             ),
+          if (vm.thing.state == ThingStateVm.declined)
+            Positioned(
+              top: 30,
+              left: 24,
+              child: Card(
+                margin: EdgeInsets.zero,
+                color: Colors.redAccent,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: Text(
+                    'Declined',
+                    style: GoogleFonts.righteous(
+                      color: Colors.white,
+                      fontSize: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           if (vm.thing.acceptedSettlementProposalId != null)
             Positioned(
               top: 30,

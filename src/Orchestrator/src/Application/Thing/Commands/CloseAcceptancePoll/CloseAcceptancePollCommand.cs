@@ -121,23 +121,24 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
         }
 
         var verifiers = await _contractCaller.GetVerifiersForThing(command.ThingId.ToByteArray());
+        var verifiersIndexed = verifiers
+            .Select((verifier, i) => (VerifierId: verifier.Substring(2).ToLower(), Index: i))
+            .ToList();
         _logger.LogDebug("Thing {ThingId} Poll: {NumVerifiers} verifiers", command.ThingId, verifiers.Count());
 
-        var notVotedVerifierIndices = verifiers
-            .Select((verifier, i) => (VerifierId: verifier.Substring(2).ToLower(), Index: i))
+        var notVotedVerifierIndices = verifiersIndexed
             .Where(vi => accountedVotes.SingleOrDefault(v => v.VoterId == vi.VerifierId) == null)
             .Select(vi => (ulong)vi.Index)
             .ToList();
 
         _logger.LogDebug(
-            "Thing {ThingId} Poll: {NumVerifiers} not voted. Slashing...",
+            "Thing {ThingId} Poll: {NumVerifiers} not voted",
             command.ThingId, notVotedVerifierIndices.Count
         );
 
-        var numVerifiers = await _contractStorageQueryable.GetThingSubmissionNumVerifiers();
         int votingVolumeThresholdPercent = await _contractStorageQueryable.GetThingAcceptancePollVotingVolumeThreshold();
 
-        var requiredVoterCount = Math.Ceiling(votingVolumeThresholdPercent / 100f * numVerifiers);
+        var requiredVoterCount = Math.Ceiling(votingVolumeThresholdPercent / 100f * verifiers.Count());
         _logger.LogDebug("Required voter count: {VoterCount}", requiredVoterCount);
 
         if (accountedVotes.Count < requiredVoterCount)
@@ -145,7 +146,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
             _logger.LogInformation(
                 "Thing {ThingId} Lottery: Insufficient voting volume. " +
                 "Required at least {RequiredVoterCount} voters out of {NumVerifiers} to vote; Got {ActualVoterCount}",
-                command.ThingId, requiredVoterCount, numVerifiers, accountedVotes.Count
+                command.ThingId, requiredVoterCount, verifiers.Count(), accountedVotes.Count
             );
             await _contractCaller.FinalizeAcceptancePollForThingAsUnsettledDueToInsufficientVotingVolume(
                 command.ThingId.ToByteArray(), result.Data!, notVotedVerifierIndices
@@ -194,14 +195,17 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
         Debug.Assert(verifiersThatVotedAgainstTheMajority.Count() + acceptedDecision.Count() == accountedVotes.Count);
 
         _logger.LogInformation(
-            "Thing {ThingId} Lottery: {Decision}. " +
-            "Accepted decision: {NumVoters} voters. Other decisions: {NumOtherVoters} voters",
+            "Thing {ThingId} Lottery Decision: {Decision}.\n" +
+            "Accept: {NumAcceptedVotes} votes.\n" +
+            "Soft Decline: {NumSoftDeclinedVotes} votes.\n" +
+            "Hard Decline: {NumHardDeclinedVotes} votes.",
             command.ThingId, acceptedDecision.Key,
-            acceptedDecision.Count(), verifiersThatVotedAgainstTheMajority.Count
+            votesGroupedByDecision.SingleOrDefault(v => v.Key == AccountedVote.Decision.Accept)?.Count() ?? 0,
+            votesGroupedByDecision.SingleOrDefault(v => v.Key == AccountedVote.Decision.SoftDecline)?.Count() ?? 0,
+            votesGroupedByDecision.SingleOrDefault(v => v.Key == AccountedVote.Decision.HardDecline)?.Count() ?? 0
         );
 
-        var indicesOfVerifiersThatVotedAgainstTheMajority = verifiers
-            .Select((verifier, i) => (VerifierId: verifier.Substring(2).ToLower(), Index: i))
+        var indicesOfVerifiersThatVotedAgainstTheMajority = verifiersIndexed
             .Where(vi =>
                 verifiersThatVotedAgainstTheMajority.SingleOrDefault(verifierId => verifierId == vi.VerifierId) != null
             )
@@ -221,10 +225,24 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
                 voteAggIpfsCid: result.Data!,
                 verifiersToSlashIndices: verifiersToSlashIndices
             );
-
-            return VoidResult.Instance;
+        }
+        else if (acceptedDecision.Key == AccountedVote.Decision.SoftDecline)
+        {
+            await _contractCaller.FinalizeAcceptancePollForThingAsSoftDeclined(
+                thingId: command.ThingId.ToByteArray(),
+                voteAggIpfsCid: result.Data!,
+                verifiersToSlashIndices: verifiersToSlashIndices
+            );
+        }
+        else
+        {
+            await _contractCaller.FinalizeAcceptancePollForThingAsHardDeclined(
+                thingId: command.ThingId.ToByteArray(),
+                voteAggIpfsCid: result.Data!,
+                verifiersToSlashIndices: verifiersToSlashIndices
+            );
         }
 
-        throw new NotImplementedException();
+        return VoidResult.Instance;
     }
 }

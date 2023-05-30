@@ -17,6 +17,12 @@ public interface IContractCaller
     Task FinalizeAcceptancePollForThingAsAccepted(
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     );
+    Task FinalizeAcceptancePollForThingAsSoftDeclined(
+        byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
+    );
+    Task FinalizeAcceptancePollForThingAsHardDeclined(
+        byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
+    );
     Task<IEnumerable<string>> GetVerifiersForThing(byte[] thingId);
     Task<long> InitThingAssessmentVerifierLottery(byte[] thingId, byte[] proposalId, byte[] dataHash);
     Task<BigInteger> ComputeNonceForThingAssessmentVerifierLottery(byte[] thingId, byte[] proposalId, string accountName, byte[] data);

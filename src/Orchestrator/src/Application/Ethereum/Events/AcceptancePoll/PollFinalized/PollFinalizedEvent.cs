@@ -82,8 +82,6 @@ internal class PollFinalizedEventHandler : INotificationHandler<PollFinalizedEve
                 await _thingRepository.SaveChanges();
                 await _thingUpdateRepository.SaveChanges();
                 await _watchedItemRepository.SaveChanges();
-
-                return;
             }
             else if (decision is SubmissionEvaluationDecision.Accepted)
             {
@@ -100,11 +98,26 @@ internal class PollFinalizedEventHandler : INotificationHandler<PollFinalizedEve
 
                 await _thingRepository.SaveChanges();
                 await _thingUpdateRepository.SaveChanges();
-
-                return;
             }
+            else if (decision is
+                SubmissionEvaluationDecision.SoftDeclined or
+                SubmissionEvaluationDecision.HardDeclined
+            )
+            {
+                thing.SetState(ThingState.Declined);
+                thing.SetVoteAggIpfsCid(@event.VoteAggIpfsCid);
 
-            throw new NotImplementedException();
+                await _thingUpdateRepository.AddOrUpdate(new ThingUpdate(
+                    thingId: thing.Id,
+                    category: ThingUpdateCategory.General,
+                    updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                    title: "Promise acceptance poll completed",
+                    details: "Submission declined"
+                ));
+
+                await _thingRepository.SaveChanges();
+                await _thingUpdateRepository.SaveChanges();
+            }
         }
     }
 }

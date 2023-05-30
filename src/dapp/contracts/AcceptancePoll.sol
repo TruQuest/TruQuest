@@ -278,19 +278,32 @@ contract AcceptancePoll {
     function finalizePoll__Declined__Soft(
         bytes16 _thingId,
         string calldata _voteAggIpfsCid,
-        address[] calldata _verifiersToReward,
-        address[] calldata _verifiersToSlash
+        uint64[] calldata _verifiersToSlashIndices
     ) public onlyOrchestrator onlyWhenInProgress(_thingId) {
         s_thingPollStage[_thingId] = Stage.Finalized;
         address submitter = i_truQuest.s_thingSubmitter(_thingId);
         i_truQuest.unstakeThingSubmitter(submitter);
 
-        for (uint8 i = 0; i < _verifiersToReward.length; ++i) {
-            i_truQuest.unstakeAndRewardVerifier(_verifiersToReward[i]);
+        uint64 j = 0;
+        address[] memory verifiers = s_thingVerifiers[_thingId];
+        address[] memory rewardedVerifiers = new address[](
+            verifiers.length - _verifiersToSlashIndices.length
+        );
+        address[] memory slashedVerifiers = new address[](
+            _verifiersToSlashIndices.length
+        );
+        for (uint8 i = 0; i < _verifiersToSlashIndices.length; ++i) {
+            uint64 nextVerifierToSlashIndex = _verifiersToSlashIndices[i];
+            slashedVerifiers[i] = verifiers[nextVerifierToSlashIndex];
+            for (; j < nextVerifierToSlashIndex; ++j) {
+                rewardedVerifiers[j - i] = verifiers[j];
+                i_truQuest.unstakeAndRewardVerifier(verifiers[j]);
+            }
+            i_truQuest.unstakeAndSlashVerifier(verifiers[j++]);
         }
-
-        for (uint8 i = 0; i < _verifiersToSlash.length; ++i) {
-            i_truQuest.unstakeAndSlashVerifier(_verifiersToSlash[i]);
+        for (; j < verifiers.length; ++j) {
+            rewardedVerifiers[j - slashedVerifiers.length] = verifiers[j];
+            i_truQuest.unstakeAndRewardVerifier(verifiers[j]);
         }
 
         emit PollFinalized(
@@ -298,27 +311,40 @@ contract AcceptancePoll {
             Decision.Declined__Soft,
             _voteAggIpfsCid,
             submitter,
-            _verifiersToReward,
-            _verifiersToSlash
+            rewardedVerifiers,
+            slashedVerifiers
         );
     }
 
     function finalizePoll__Declined__Hard(
         bytes16 _thingId,
         string calldata _voteAggIpfsCid,
-        address[] calldata _verifiersToReward,
-        address[] calldata _verifiersToSlash
+        uint64[] calldata _verifiersToSlashIndices
     ) public onlyOrchestrator onlyWhenInProgress(_thingId) {
         s_thingPollStage[_thingId] = Stage.Finalized;
         address submitter = i_truQuest.s_thingSubmitter(_thingId);
         i_truQuest.unstakeAndSlashThingSubmitter(submitter);
 
-        for (uint8 i = 0; i < _verifiersToReward.length; ++i) {
-            i_truQuest.unstakeAndRewardVerifier(_verifiersToReward[i]);
+        uint64 j = 0;
+        address[] memory verifiers = s_thingVerifiers[_thingId];
+        address[] memory rewardedVerifiers = new address[](
+            verifiers.length - _verifiersToSlashIndices.length
+        );
+        address[] memory slashedVerifiers = new address[](
+            _verifiersToSlashIndices.length
+        );
+        for (uint8 i = 0; i < _verifiersToSlashIndices.length; ++i) {
+            uint64 nextVerifierToSlashIndex = _verifiersToSlashIndices[i];
+            slashedVerifiers[i] = verifiers[nextVerifierToSlashIndex];
+            for (; j < nextVerifierToSlashIndex; ++j) {
+                rewardedVerifiers[j - i] = verifiers[j];
+                i_truQuest.unstakeAndRewardVerifier(verifiers[j]);
+            }
+            i_truQuest.unstakeAndSlashVerifier(verifiers[j++]);
         }
-
-        for (uint8 i = 0; i < _verifiersToSlash.length; ++i) {
-            i_truQuest.unstakeAndSlashVerifier(_verifiersToSlash[i]);
+        for (; j < verifiers.length; ++j) {
+            rewardedVerifiers[j - slashedVerifiers.length] = verifiers[j];
+            i_truQuest.unstakeAndRewardVerifier(verifiers[j]);
         }
 
         emit PollFinalized(
@@ -326,8 +352,8 @@ contract AcceptancePoll {
             Decision.Declined__Hard,
             _voteAggIpfsCid,
             submitter,
-            _verifiersToReward,
-            _verifiersToSlash
+            rewardedVerifiers,
+            slashedVerifiers
         );
     }
 }

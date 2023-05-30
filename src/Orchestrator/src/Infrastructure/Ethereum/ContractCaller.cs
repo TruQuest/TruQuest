@@ -158,6 +158,44 @@ internal class ContractCaller : IContractCaller
         _logger.LogInformation("=============== FinalizeAcceptancePollForThingAsAccepted: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
+    public async Task FinalizeAcceptancePollForThingAsSoftDeclined(
+        byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
+    )
+    {
+        var txnReceipt = await _web3.Eth
+            .GetContractTransactionHandler<FinalizeAcceptancePollForThingAsSoftDeclinedMessage>()
+            .SendRequestAndWaitForReceiptAsync(
+                _acceptancePollAddress,
+                new()
+                {
+                    ThingId = thingId,
+                    VoteAggIpfsCid = voteAggIpfsCid,
+                    VerifiersToSlashIndices = verifiersToSlashIndices
+                }
+            );
+
+        _logger.LogInformation("=============== FinalizeAcceptancePollForThingAsSoftDeclined: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+    }
+
+    public async Task FinalizeAcceptancePollForThingAsHardDeclined(
+        byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
+    )
+    {
+        var txnReceipt = await _web3.Eth
+            .GetContractTransactionHandler<FinalizeAcceptancePollForThingAsHardDeclinedMessage>()
+            .SendRequestAndWaitForReceiptAsync(
+                _acceptancePollAddress,
+                new()
+                {
+                    ThingId = thingId,
+                    VoteAggIpfsCid = voteAggIpfsCid,
+                    VerifiersToSlashIndices = verifiersToSlashIndices
+                }
+            );
+
+        _logger.LogInformation("=============== FinalizeAcceptancePollForThingAsHardDeclined: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+    }
+
     public async Task<IEnumerable<string>> GetVerifiersForThing(byte[] thingId)
     {
         var verifiers = await _web3.Eth
