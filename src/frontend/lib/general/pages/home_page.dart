@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
+import '../widgets/deposit_funds_button.dart';
 import '../widgets/clipped_rect.dart';
 import '../widgets/nav_panel.dart';
 import '../bloc/notification_bloc.dart';
@@ -53,6 +54,7 @@ class _HomePageState extends StateX<HomePage> {
       toolbarHeight: 70,
       centerTitle: true,
       elevation: 0,
+      actions: [DepositFundsButton()],
     ),
     NavPanel(),
   ];

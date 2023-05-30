@@ -1,12 +1,26 @@
 import 'package:convert/convert.dart';
 import 'package:flutter_web3/ethers.dart';
 
+import '../../ethereum/errors/ethereum_error.dart';
 import '../../ethereum/services/ethereum_service.dart';
 import '../extensions/uuid_extension.dart';
 
 class TruQuestContract {
-  static const String _address = '0x32D41E4e24F97ec7D52e3c43F8DbFe209CBd0e4c';
+  static const String address = '0x32D41E4e24F97ec7D52e3c43F8DbFe209CBd0e4c';
   static const String _abi = '''[
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "_amount",
+              "type": "uint256"
+            }
+          ],
+          "name": "deposit",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
         {
           "inputs": [
             {
@@ -112,7 +126,7 @@ class TruQuestContract {
 
   TruQuestContract(this._ethereumService) {
     if (_ethereumService.available) {
-      _contract = Contract(_address, _abi, _ethereumService.provider);
+      _contract = Contract(address, _abi, _ethereumService.provider);
     }
   }
 
@@ -235,6 +249,37 @@ class TruQuestContract {
       print('Fund txn mined!');
     } catch (e) {
       print(e);
+    }
+  }
+
+  Future<EthereumError?> depositFunds(int amount) async {
+    var contract = _contract;
+    if (contract == null) {
+      return EthereumError('Metamask not installed');
+    }
+    if (_ethereumService.connectedAccount == null) {
+      return EthereumError('No account connected');
+    }
+
+    var signer = _ethereumService.provider.getSigner();
+    contract = contract.connect(signer);
+
+    try {
+      var txnResponse = await contract.send(
+        'deposit',
+        [BigInt.from(amount)],
+        TransactionOverride(
+          gasLimit: BigInt.from(150000),
+        ),
+      );
+
+      await txnResponse.wait();
+      print('Deposit funds txn mined!');
+
+      return null;
+    } catch (e) {
+      print(e);
+      return EthereumError(e.toString());
     }
   }
 }

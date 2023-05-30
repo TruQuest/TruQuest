@@ -212,7 +212,7 @@ public static class WebApplicationBuilderExtension
                 new()
                 {
                     To = accountProvider.GetAccount(user).Address,
-                    Amount = 500
+                    Amount = 1000
                 }
             );
 

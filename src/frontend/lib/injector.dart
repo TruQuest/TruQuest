@@ -1,5 +1,6 @@
 import 'package:kiwi/kiwi.dart';
 
+import 'general/contracts/truthserum_contract.dart';
 import 'general/services/general_api_service.dart';
 import 'general/bloc/general_bloc.dart';
 import 'general/services/general_service.dart';
@@ -49,6 +50,7 @@ abstract class Injector {
   @Register.singleton(SubjectService)
   @Register.singleton(SubjectApiService)
   @Register.singleton(PageContext)
+  @Register.singleton(TruthserumContract)
   @Register.singleton(TruQuestContract)
   @Register.singleton(ThingSubmissionVerifierLotteryContract)
   @Register.singleton(AcceptancePollContract)

@@ -11,3 +11,16 @@ class SwitchEthereumChain
 
 class ConnectEthereumAccount
     extends EthereumActionAwaitable<ConnectEthereumAccountFailureVm?> {}
+
+class ApproveFundsUsage
+    extends EthereumActionAwaitable<ApproveFundsUsageFailureVm?> {
+  final int amount;
+
+  ApproveFundsUsage({required this.amount});
+}
+
+class DepositFunds extends EthereumAction {
+  final int amount;
+
+  DepositFunds({required this.amount});
+}

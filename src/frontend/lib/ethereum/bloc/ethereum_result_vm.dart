@@ -15,3 +15,5 @@ class SwitchEthereumChainSuccessVm extends SwitchEthereumChainResultVm {
 class SwitchEthereumChainFailureVm extends SwitchEthereumChainResultVm {}
 
 class ConnectEthereumAccountFailureVm extends EthereumResultVm {}
+
+class ApproveFundsUsageFailureVm extends EthereumResultVm {}
