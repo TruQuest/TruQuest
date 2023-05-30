@@ -21,3 +21,9 @@ internal class AccountedVote
 
     public override int GetHashCode() => VoterId.GetHashCode();
 }
+
+internal static class DecisionExtension
+{
+    public static int GetScore(this AccountedVote.Decision decision) =>
+        decision == AccountedVote.Decision.Accept ? 1 : 0;
+}

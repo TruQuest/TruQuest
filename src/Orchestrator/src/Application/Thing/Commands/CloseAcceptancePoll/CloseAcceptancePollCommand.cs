@@ -184,15 +184,12 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
         // any other decisions could have only received fewer number of votes.
 
         // @@??: Should the not voted verifiers actually be slashed more than those who voted against the majority?
-        // Should the soft declined verifiers be slashed less than Accepted ones when the accepted decision is hard decline?
-        // And similarly for the other way around?
-        var verifiersThatVotedAgainstTheMajority = votesGroupedByDecision
-            .Where(v => v.Key != acceptedDecision.Key)
+
+        var verifiersThatDisagreedWithAcceptedDecisionDirection = votesGroupedByDecision
+            .Where(v => v.Key.GetScore() != acceptedDecision.Key.GetScore())
             .SelectMany(v => v)
             .Select(v => v.VoterId)
             .ToList();
-
-        Debug.Assert(verifiersThatVotedAgainstTheMajority.Count() + acceptedDecision.Count() == accountedVotes.Count);
 
         _logger.LogInformation(
             "Thing {ThingId} Lottery Decision: {Decision}.\n" +
@@ -205,18 +202,21 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
             votesGroupedByDecision.SingleOrDefault(v => v.Key == AccountedVote.Decision.HardDecline)?.Count() ?? 0
         );
 
-        var indicesOfVerifiersThatVotedAgainstTheMajority = verifiersIndexed
-            .Where(vi =>
-                verifiersThatVotedAgainstTheMajority.SingleOrDefault(verifierId => verifierId == vi.VerifierId) != null
+        var indicesOfVerifiersThatDisagreedWithAcceptedDecisionDirection = verifiersIndexed
+            .Where(vi => verifiersThatDisagreedWithAcceptedDecisionDirection
+                .SingleOrDefault(verifierId => verifierId == vi.VerifierId) != null
             )
             .Select(vi => (ulong)vi.Index);
 
         var verifiersToSlashIndices = notVotedVerifierIndices
-            .Concat(indicesOfVerifiersThatVotedAgainstTheMajority)
+            .Concat(indicesOfVerifiersThatDisagreedWithAcceptedDecisionDirection)
             .Order()
             .ToList();
 
-        Debug.Assert(verifiersToSlashIndices.Count + acceptedDecision.Count() == verifiers.Count());
+        _logger.LogInformation(
+            "Thing {ThingId} Lottery: Slashing {VerifierCount} verifiers...",
+            command.ThingId, verifiersToSlashIndices.Count
+        );
 
         if (acceptedDecision.Key == AccountedVote.Decision.Accept)
         {
@@ -226,6 +226,8 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
                 verifiersToSlashIndices: verifiersToSlashIndices
             );
         }
+        // @@??: Would it make sense to reward only those that soft declined specifically, instead
+        // of rewarding all who just generally declined?
         else if (acceptedDecision.Key == AccountedVote.Decision.SoftDecline)
         {
             await _contractCaller.FinalizeAcceptancePollForThingAsSoftDeclined(
