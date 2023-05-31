@@ -26,10 +26,14 @@ internal class MessageTypeResolver : IMessageTypeResolver
                     return typeof(ThingSubmissionVerifierLotteryClosedInFailureEvent);
                 case ThingEventType.SubmissionVerifierLotteryClosedWithSuccess:
                     return typeof(ThingSubmissionVerifierLotteryClosedWithSuccessEvent);
+                case ThingEventType.AcceptancePollFinalized:
+                    return typeof(ThingAcceptancePollFinalizedEvent);
                 case ThingEventType.SettlementProposalFunded:
                     return typeof(ThingSettlementProposalFundedEvent);
                 case ThingEventType.SettlementProposalAssessmentVerifierLotteryClosedWithSuccess:
                     return typeof(ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent);
+                case ThingEventType.SettlementProposalAssessmentPollFinalized:
+                    return typeof(ThingSettlementProposalAssessmentPollFinalizedEvent);
             }
         }
         else if (context.ConsumerContext.Topic == "updates")

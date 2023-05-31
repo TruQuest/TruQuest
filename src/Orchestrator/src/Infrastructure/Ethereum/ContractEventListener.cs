@@ -350,7 +350,13 @@ internal class ContractEventListener : IContractEventListener
                     ThingId = assessmentPollFinalizedEvent.Event.ThingId,
                     SettlementProposalId = assessmentPollFinalizedEvent.Event.SettlementProposalId,
                     Decision = assessmentPollFinalizedEvent.Event.Decision,
-                    VoteAggIpfsCid = assessmentPollFinalizedEvent.Event.VoteAggIpfsCid
+                    VoteAggIpfsCid = assessmentPollFinalizedEvent.Event.VoteAggIpfsCid,
+                    RewardedVerifiers = assessmentPollFinalizedEvent.Event.RewardedVerifiers
+                        .Select(id => id.Substring(2).ToLower())
+                        .ToList(),
+                    SlashedVerifiers = assessmentPollFinalizedEvent.Event.SlashedVerifiers
+                        .Select(id => id.Substring(2).ToLower())
+                        .ToList()
                 };
             }
 

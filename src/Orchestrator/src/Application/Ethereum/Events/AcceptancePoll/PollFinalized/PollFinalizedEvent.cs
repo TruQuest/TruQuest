@@ -1,14 +1,9 @@
-using Microsoft.Extensions.Logging;
-
 using MediatR;
 
-using Domain.Aggregates;
-
-using Application.Common.Attributes;
+using Domain.Aggregates.Events;
 
 namespace Application.Ethereum.Events.AcceptancePoll.PollFinalized;
 
-[ExecuteInTxn]
 public class PollFinalizedEvent : INotification
 {
     public required long BlockNumber { get; init; }
@@ -22,102 +17,30 @@ public class PollFinalizedEvent : INotification
 
 internal class PollFinalizedEventHandler : INotificationHandler<PollFinalizedEvent>
 {
-    private readonly ILogger<PollFinalizedEventHandler> _logger;
-    private readonly IThingRepository _thingRepository;
-    private readonly IThingUpdateRepository _thingUpdateRepository;
-    private readonly IWatchedItemRepository _watchedItemRepository;
+    private readonly IActionableThingRelatedEventRepository _actionableThingRelatedEventRepository;
 
-    public PollFinalizedEventHandler(
-        ILogger<PollFinalizedEventHandler> logger,
-        IThingRepository thingRepository,
-        IThingUpdateRepository thingUpdateRepository,
-        IWatchedItemRepository watchedItemRepository
-    )
+    public PollFinalizedEventHandler(IActionableThingRelatedEventRepository actionableThingRelatedEventRepository)
     {
-        _logger = logger;
-        _thingRepository = thingRepository;
-        _thingUpdateRepository = thingUpdateRepository;
-        _watchedItemRepository = watchedItemRepository;
+        _actionableThingRelatedEventRepository = actionableThingRelatedEventRepository;
     }
 
     public async Task Handle(PollFinalizedEvent @event, CancellationToken ct)
     {
-        var thing = await _thingRepository.FindById(new Guid(@event.ThingId));
-        if (thing.State == ThingState.VerifiersSelectedAndPollInitiated)
+        var pollFinalizedEvent = new ActionableThingRelatedEvent(
+            blockNumber: @event.BlockNumber,
+            txnIndex: @event.TxnIndex,
+            thingId: new Guid(@event.ThingId),
+            type: ThingEventType.AcceptancePollFinalized
+        );
+        pollFinalizedEvent.SetPayload(new()
         {
-            var decision = (SubmissionEvaluationDecision)@event.Decision;
-            _logger.LogInformation("Thing {ThingId} Acceptance Poll Decision: {Decision}", thing.Id, decision);
-            _logger.LogInformation("Rewarded verifiers: {Verifiers}", @event.RewardedVerifiers);
-            _logger.LogInformation("Penalized verifiers: {Verifiers}", @event.SlashedVerifiers);
+            ["decision"] = @event.Decision,
+            ["voteAggIpfsCid"] = @event.VoteAggIpfsCid,
+            ["rewardedVerifiers"] = @event.RewardedVerifiers,
+            ["slashedVerifiers"] = @event.SlashedVerifiers,
+        });
+        _actionableThingRelatedEventRepository.Create(pollFinalizedEvent);
 
-            if (decision is
-                SubmissionEvaluationDecision.UnsettledDueToInsufficientVotingVolume or
-                SubmissionEvaluationDecision.UnsettledDueToMajorityThresholdNotReached
-            )
-            {
-                thing.SetState(ThingState.ConsensusNotReached);
-                thing.SetVoteAggIpfsCid(@event.VoteAggIpfsCid);
-
-                await _thingUpdateRepository.AddOrUpdate(new ThingUpdate(
-                    thingId: thing.Id,
-                    category: ThingUpdateCategory.General,
-                    updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                    title: "Promise acceptance poll",
-                    details: "Consensus not reached"
-                ));
-
-                var thingCopyId = await _thingRepository.DeepCopyFromWith(
-                    sourceThingId: thing.Id,
-                    state: ThingState.AwaitingFunding
-                );
-
-                thing.SetRelatedThing(thingCopyId);
-
-                await _watchedItemRepository.DuplicateGeneralItemsFrom(
-                    WatchedItemType.Thing,
-                    sourceItemId: thing.Id,
-                    destItemId: thingCopyId
-                );
-
-                await _thingRepository.SaveChanges();
-                await _thingUpdateRepository.SaveChanges();
-                await _watchedItemRepository.SaveChanges();
-            }
-            else if (decision is SubmissionEvaluationDecision.Accepted)
-            {
-                thing.SetState(ThingState.AwaitingSettlement);
-                thing.SetVoteAggIpfsCid(@event.VoteAggIpfsCid);
-
-                await _thingUpdateRepository.AddOrUpdate(new ThingUpdate(
-                    thingId: thing.Id,
-                    category: ThingUpdateCategory.General,
-                    updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                    title: "Promise acceptance poll completed",
-                    details: "Awaiting settlement"
-                ));
-
-                await _thingRepository.SaveChanges();
-                await _thingUpdateRepository.SaveChanges();
-            }
-            else if (decision is
-                SubmissionEvaluationDecision.SoftDeclined or
-                SubmissionEvaluationDecision.HardDeclined
-            )
-            {
-                thing.SetState(ThingState.Declined);
-                thing.SetVoteAggIpfsCid(@event.VoteAggIpfsCid);
-
-                await _thingUpdateRepository.AddOrUpdate(new ThingUpdate(
-                    thingId: thing.Id,
-                    category: ThingUpdateCategory.General,
-                    updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                    title: "Promise acceptance poll completed",
-                    details: "Submission declined"
-                ));
-
-                await _thingRepository.SaveChanges();
-                await _thingUpdateRepository.SaveChanges();
-            }
-        }
+        await _actionableThingRelatedEventRepository.SaveChanges();
     }
 }

@@ -229,10 +229,12 @@ public static class IServiceCollectionExtension
                                                     .AddHandlers(new[]
                                                     {
                                                         typeof(ThingFundedEventHandler),
-                                                        typeof(ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccessEventHandler),
-                                                        typeof(ThingSettlementProposalFundedEventHandler),
                                                         typeof(ThingSubmissionVerifierLotteryClosedInFailureEventHandler),
                                                         typeof(ThingSubmissionVerifierLotteryClosedWithSuccessEventHandler),
+                                                        typeof(ThingAcceptancePollFinalizedEventHandler),
+                                                        typeof(ThingSettlementProposalFundedEventHandler),
+                                                        typeof(ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccessEventHandler),
+                                                        typeof(ThingSettlementProposalAssessmentPollFinalizedEventHandler),
                                                         typeof(ThingUpdateEventHandler),
                                                         typeof(SettlementProposalUpdateEventHandler)
                                                     })
