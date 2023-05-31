@@ -1,8 +1,8 @@
 namespace Application.Common.Misc;
 
-internal class AccountedVote
+public class AccountedVote
 {
-    internal enum Decision
+    public enum Decision
     {
         SoftDecline,
         HardDecline,
@@ -22,7 +22,7 @@ internal class AccountedVote
     public override int GetHashCode() => VoterId.GetHashCode();
 }
 
-internal static class DecisionExtension
+public static class DecisionExtension
 {
     public static int GetScore(this AccountedVote.Decision decision) =>
         decision == AccountedVote.Decision.Accept ? 1 : 0;

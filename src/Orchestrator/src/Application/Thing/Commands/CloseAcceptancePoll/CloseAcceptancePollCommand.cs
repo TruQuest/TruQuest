@@ -60,19 +60,20 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
         long upperLimitTs = await _blockchainQueryable.GetBlockTimestamp(command.LatestIncludedBlockNumber);
 
         // @@TODO: Use queryable instead of repo.
-        var offChainVotes = await _voteRepository.GetForThingCastedAt(
-            command.ThingId,
-            noLaterThanTs: upperLimitTs
-        );
+        var offChainVotes = await _voteRepository.GetFor(command.ThingId);
 
         // @@TODO: Use queryable instead of repo.
         var castedVoteEvents = await _castedAcceptancePollVoteEventRepository.GetAllFor(command.ThingId);
 
-        var orchestratorSig = _signer.SignAcceptancePollVoteAgg(command.ThingId, offChainVotes, castedVoteEvents);
+        var orchestratorSig = _signer.SignAcceptancePollVoteAgg(
+            command.ThingId, (ulong)command.LatestIncludedBlockNumber,
+            offChainVotes, castedVoteEvents
+        );
 
         var result = await _fileStorage.UploadJson(new
         {
             command.ThingId,
+            EndBlock = command.LatestIncludedBlockNumber,
             OffChainVotes = offChainVotes
                 .Select(v => new
                 {
@@ -111,7 +112,11 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
                 VoteDecision = (AccountedVote.Decision)onChainVote.Decision
             });
         }
-        foreach (var offChainVote in offChainVotes.OrderByDescending(v => v.CastedAtMs))
+        foreach (var offChainVote in
+            offChainVotes
+                .Where(v => v.CastedAtMs <= upperLimitTs)
+                .OrderByDescending(v => v.CastedAtMs)
+        )
         {
             accountedVotes.Add(new()
             {

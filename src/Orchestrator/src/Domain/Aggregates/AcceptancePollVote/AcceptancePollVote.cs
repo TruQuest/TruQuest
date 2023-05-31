@@ -50,4 +50,19 @@ public static class AcceptancePollVoteDecisionExtension
 
         throw new InvalidOperationException();
     }
+
+    public static AcceptancePollVote.VoteDecision FromString(string decision)
+    {
+        switch (decision)
+        {
+            case "Soft decline":
+                return AcceptancePollVote.VoteDecision.SoftDecline;
+            case "Hard decline":
+                return AcceptancePollVote.VoteDecision.HardDecline;
+            case "Accept":
+                return AcceptancePollVote.VoteDecision.Accept;
+        }
+
+        throw new InvalidOperationException();
+    }
 }

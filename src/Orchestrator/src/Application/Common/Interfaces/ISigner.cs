@@ -18,6 +18,7 @@ public interface ISigner
     string SignNewAssessmentPollVote(NewAssessmentPollVoteIm input, string voterId, string voterSignature);
     string SignAcceptancePollVoteAgg(
         Guid thingId,
+        ulong endBlock,
         IEnumerable<AcceptancePollVote> offChainVotes,
         IEnumerable<CastedAcceptancePollVoteEvent> onChainVotes
     );

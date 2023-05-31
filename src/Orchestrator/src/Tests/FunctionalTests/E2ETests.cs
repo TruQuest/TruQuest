@@ -7,6 +7,7 @@ using FluentAssertions;
 using ContractStorageExplorer;
 using ContractStorageExplorer.SolTypes;
 
+using Domain.Aggregates;
 using Application.Common.Interfaces;
 using Application.Subject.Commands.AddNewSubject;
 using Application.Thing.Commands.CreateNewThingDraft;
@@ -15,6 +16,10 @@ using Application.Thing.Commands.CastAcceptancePollVote;
 using Application.Settlement.Common.Models.IM;
 using Application.Settlement.Commands.CreateNewSettlementProposalDraft;
 using Application.Settlement.Commands.SubmitNewSettlementProposal;
+using Application.Thing.Queries.GetThing;
+using Application.Common.Misc;
+using Application.Common.Models.QM;
+using Infrastructure.Ethereum.TypedData;
 using API.BackgroundServices;
 
 using Tests.FunctionalTests.Helpers.Messages;
@@ -361,6 +366,164 @@ public class E2ETests : IAsyncLifetime
         await Task.Delay(TimeSpan.FromSeconds(20)); // giving time to init thing assessment verifier lottery
     }
 
+    private async Task<HashSet<AccountedVote>> _getVotes(ThingQm thing)
+    {
+        var ipfsGatewayHost = _sut.GetConfigurationValue<string>("IPFS:GatewayHost");
+        using var client = new HttpClient();
+        client.BaseAddress = new Uri(ipfsGatewayHost);
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"/ipfs/{thing.VoteAggIpfsCid!}");
+        using var response = await client.SendAsync(request);
+        var voteAgg = (await JsonSerializer.DeserializeAsync<SignedAcceptancePollVoteAggTd>(
+            await response.Content.ReadAsStreamAsync(),
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+        ))!;
+
+        var upperLimitTs = await _sut.ExecWithService<IBlockchainQueryable, long>(blockchainQueryable =>
+            blockchainQueryable.GetBlockTimestamp((long)voteAgg.EndBlock)
+        );
+
+        var offChainVotes = await Task.WhenAll(voteAgg.OffChainVotes.Select(async v =>
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"/ipfs/{v.IpfsCid}");
+            using var response = await client.SendAsync(request);
+            var vote = await JsonSerializer.DeserializeAsync<SignedNewAcceptancePollVoteTd>(
+                await response.Content.ReadAsStreamAsync(),
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            );
+
+            return (
+                VoterId: vote!.VoterId,
+                CastedAt: DateTimeOffset
+                    .ParseExact(vote.Vote.CastedAt, "yyyy-MM-dd HH:mm:sszzz", null)
+                    .ToUniversalTime()
+                    .ToUnixTimeMilliseconds(),
+                Decision: DecisionImExtension.FromString(vote.Vote.Decision)
+            );
+        }));
+
+        var onChainVotes = voteAgg.OnChainVotes.Select(v => (
+            VoterId: v.UserId,
+            BlockNumber: v.BlockNumber,
+            TxnIndex: v.TxnIndex,
+            Decision: AcceptancePollVoteDecisionExtension.FromString(v.Decision)
+        ));
+
+        var accountedVotes = new HashSet<AccountedVote>();
+        foreach (var onChainVote in
+            onChainVotes
+                .OrderByDescending(e => e.BlockNumber)
+                    .ThenByDescending(e => e.TxnIndex)
+        )
+        {
+            accountedVotes.Add(new()
+            {
+                VoterId = onChainVote.VoterId,
+                VoteDecision = (AccountedVote.Decision)onChainVote.Decision
+            });
+        }
+        foreach (var offChainVote in
+            offChainVotes
+                .Where(v => v.CastedAt <= upperLimitTs)
+                .OrderByDescending(v => v.CastedAt)
+        )
+        {
+            accountedVotes.Add(new()
+            {
+                VoterId = offChainVote.VoterId,
+                VoteDecision = (AccountedVote.Decision)offChainVote.Decision
+            });
+        }
+
+        return accountedVotes;
+    }
+
+    private async Task<(
+        SubmissionEvaluationDecision Decision,
+        IEnumerable<string> RewardedVerifiers,
+        IEnumerable<string> PenalizedVerifiers
+    )> _calculatePollResult(byte[] thingIdBytes, HashSet<AccountedVote> accountedVotes)
+    {
+        var verifiers = (await _sut.ExecWithService<IContractCaller, IEnumerable<String>>(
+            contractCaller => contractCaller.GetVerifiersForThing(thingIdBytes)
+        ))
+        .Select(v => v.Substring(2).ToLower())
+        .ToList();
+
+        var notVotedVerifiers = verifiers
+            .Where(verifierId => accountedVotes.SingleOrDefault(v => v.VoterId == verifierId) == null)
+            .ToList();
+
+        var votingVolumeThresholdPercent = await _sut.ExecWithService<IContractStorageQueryable, int>(
+            contractStorageQueryable => contractStorageQueryable.GetThingAcceptancePollVotingVolumeThreshold()
+        );
+
+        var requiredVoterCount = Math.Ceiling(votingVolumeThresholdPercent / 100f * verifiers.Count);
+
+        if (accountedVotes.Count < requiredVoterCount)
+        {
+            return (
+                Decision: SubmissionEvaluationDecision.UnsettledDueToInsufficientVotingVolume,
+                RewardedVerifiers: new string[] { },
+                PenalizedVerifiers: notVotedVerifiers
+            );
+        }
+
+        var majorityThresholdPercent = await _sut.ExecWithService<IContractStorageQueryable, int>(
+            contractStorageQueryable => contractStorageQueryable.GetThingAcceptancePollMajorityThreshold()
+        );
+        var acceptedDecisionRequiredVoteCount = Math.Ceiling(majorityThresholdPercent / 100f * accountedVotes.Count);
+
+        var votesGroupedByDecision = accountedVotes.GroupBy(v => v.VoteDecision);
+        var acceptedDecision = votesGroupedByDecision.MaxBy(group => group.Count())!;
+
+        if (acceptedDecision.Count() < acceptedDecisionRequiredVoteCount)
+        {
+            return (
+                Decision: SubmissionEvaluationDecision.UnsettledDueToMajorityThresholdNotReached,
+                RewardedVerifiers: new string[] { },
+                PenalizedVerifiers: notVotedVerifiers
+            );
+        }
+
+        var verifiersThatDisagreedWithAcceptedDecisionDirection = votesGroupedByDecision
+            .Where(v => v.Key.GetScore() != acceptedDecision.Key.GetScore())
+            .SelectMany(v => v)
+            .Select(v => v.VoterId);
+
+        var verifiersToSlash = notVotedVerifiers
+            .Concat(verifiersThatDisagreedWithAcceptedDecisionDirection)
+            .ToList();
+
+        var verifiersToReward = votesGroupedByDecision
+            .Where(v => v.Key.GetScore() == acceptedDecision.Key.GetScore())
+            .SelectMany(v => v)
+            .Select(v => v.VoterId);
+
+        if (acceptedDecision.Key == AccountedVote.Decision.Accept)
+        {
+            return (
+                Decision: SubmissionEvaluationDecision.Accepted,
+                RewardedVerifiers: verifiersToReward,
+                PenalizedVerifiers: verifiersToSlash
+            );
+        }
+        else if (acceptedDecision.Key == AccountedVote.Decision.SoftDecline)
+        {
+            return (
+                Decision: SubmissionEvaluationDecision.SoftDeclined,
+                RewardedVerifiers: verifiersToReward,
+                PenalizedVerifiers: verifiersToSlash
+            );
+        }
+
+        return (
+            Decision: SubmissionEvaluationDecision.HardDeclined,
+            RewardedVerifiers: verifiersToReward,
+            PenalizedVerifiers: verifiersToSlash
+        );
+    }
+
     [Fact]
     public async Task ShouldDoStuff()
     {
@@ -452,7 +615,7 @@ public class E2ETests : IAsyncLifetime
 
         Debug.WriteLine($"************ Verifier stake: {verifierStake} ************");
 
-        var verifierNonces = new List<(string AccountName, long Nonce)>();
+        var verifiersLotteryData = new List<(string AccountName, long InitialBalance, long Nonce)>();
 
         for (int i = 1; i <= 10; ++i)
         {
@@ -504,7 +667,7 @@ public class E2ETests : IAsyncLifetime
                 contractCaller.ComputeNonceForThingSubmissionVerifierLottery(thingIdBytes, verifierAccountName, data)
             );
 
-            verifierNonces.Add((verifierAccountName, nonce));
+            verifiersLotteryData.Add((verifierAccountName, verifierInitialBalance, nonce));
         }
 
         var orchestratorCommitment = await _sut.DbQueryable.GetOrchestratorCommitmentForThing(thingId);
@@ -547,12 +710,10 @@ public class E2ETests : IAsyncLifetime
         verifierCount.Should().Be(requiredVerifierCount);
 
         // @@TODO: ThenBy BlockNumber ASC and TxnIndex ASC
-        verifierNonces = verifierNonces
+        var winnersLotteryData = verifiersLotteryData
             .OrderBy(v => Math.Abs(orchestratorNonce - v.Nonce))
             .Take(requiredVerifierCount)
             .ToList();
-
-        // @@TODO: Check that losers get unstaked and winners don't.
 
         var thingSubmissionVerifierAccountNames = new List<string>();
 
@@ -569,7 +730,11 @@ public class E2ETests : IAsyncLifetime
 
             var verifierAccountName = _sut.AccountProvider.LookupNameByAddress(verifier.Value);
 
-            verifierNonces.SingleOrDefault(v => v.AccountName == verifierAccountName).Should().NotBeNull();
+            var winnerData = winnersLotteryData.SingleOrDefault(v => v.AccountName == verifierAccountName);
+            winnerData.Should().NotBeNull();
+
+            var verifierBalance = await _sut.ContractCaller.GetAvailableFunds(verifierAccountName);
+            verifierBalance.Should().Be(winnerData.InitialBalance - verifierStake);
 
             thingSubmissionVerifierAccountNames.Add(verifierAccountName);
 
@@ -590,6 +755,16 @@ public class E2ETests : IAsyncLifetime
             });
         }
 
+        var losersLotteryData = verifiersLotteryData
+            .OrderBy(v => Math.Abs(orchestratorNonce - v.Nonce))
+            .TakeLast(verifiersLotteryData.Count - requiredVerifierCount);
+
+        foreach (var loserData in losersLotteryData)
+        {
+            var verifierBalance = await _sut.ContractCaller.GetAvailableFunds(loserData.AccountName);
+            verifierBalance.Should().Be(loserData.InitialBalance);
+        }
+
         var pollDurationBlocks = await _acceptancePollContract
             .WalkStorage()
             .Field("s_durationBlocks")
@@ -602,6 +777,92 @@ public class E2ETests : IAsyncLifetime
         await _sut.BlockchainManipulator.Mine(1);
 
         await Task.Delay(TimeSpan.FromSeconds(15)); // giving time to update the thing's state and ipfs cid
+
+        var thingSubmissionAcceptedReward = (long)(
+            await _truQuestContract
+                .WalkStorage()
+                .Field("s_thingSubmissionAcceptedReward")
+                .GetValue<SolUint256>()
+        ).Value;
+        Debug.WriteLine($"*************** Thing submission accepted reward: {thingSubmissionAcceptedReward} ***************");
+
+        var thingSubmissionRejectedPenalty = (long)(
+            await _truQuestContract
+                .WalkStorage()
+                .Field("s_thingSubmissionRejectedPenalty")
+                .GetValue<SolUint256>()
+        ).Value;
+        Debug.WriteLine(
+            $"*************** Thing submission rejected penalty: {thingSubmissionRejectedPenalty} ***************"
+        );
+
+        var verifierReward = (long)(
+            await _truQuestContract
+                .WalkStorage()
+                .Field("s_verifierReward")
+                .GetValue<SolUint256>()
+        ).Value;
+        Debug.WriteLine($"*************** Verifier reward: {verifierReward} ***************");
+
+        var verifierPenalty = (long)(
+            await _truQuestContract
+                .WalkStorage()
+                .Field("s_verifierPenalty")
+                .GetValue<SolUint256>()
+        ).Value;
+        Debug.WriteLine($"*************** Verifier penalty: {verifierPenalty} ***************");
+
+        var thingResult = await _sut.SendRequest(new GetThingQuery { ThingId = thingId });
+        var thing = thingResult.Data!.Thing;
+
+        thing.VoteAggIpfsCid.Should().NotBeNull();
+
+        var accountedVotes = await _getVotes(thing);
+        var pollResult = await _calculatePollResult(thingIdBytes, accountedVotes);
+
+        submitterBalance = await _sut.ContractCaller.GetAvailableFunds("Submitter");
+
+        if (pollResult.Decision is
+            SubmissionEvaluationDecision.UnsettledDueToInsufficientVotingVolume or
+            SubmissionEvaluationDecision.UnsettledDueToMajorityThresholdNotReached
+        )
+        {
+            thing.State.Should().Be(ThingStateQm.ConsensusNotReached);
+            submitterBalance.Should().Be(submitterInitialBalance);
+        }
+        else if (pollResult.Decision is SubmissionEvaluationDecision.Accepted)
+        {
+            thing.State.Should().Be(ThingStateQm.AwaitingSettlement);
+            submitterBalance.Should().Be(submitterInitialBalance + thingSubmissionAcceptedReward);
+        }
+        else if (pollResult.Decision is SubmissionEvaluationDecision.SoftDeclined)
+        {
+            thing.State.Should().Be(ThingStateQm.Declined);
+            submitterBalance.Should().Be(submitterInitialBalance);
+        }
+        else
+        {
+            thing.State.Should().Be(ThingStateQm.Declined);
+            submitterBalance.Should().Be(submitterInitialBalance - thingSubmissionRejectedPenalty);
+        }
+
+        (pollResult.RewardedVerifiers.Count() + pollResult.PenalizedVerifiers.Count()).Should().Be(verifierCount);
+
+        foreach (var verifier in pollResult.RewardedVerifiers)
+        {
+            var verifierAccountName = _sut.AccountProvider.LookupNameByAddress(verifier);
+            var initialBalance = winnersLotteryData.Single(w => w.AccountName == verifierAccountName).InitialBalance;
+            var verifierBalance = await _sut.ContractCaller.GetAvailableFunds(verifierAccountName);
+            verifierBalance.Should().Be(initialBalance + verifierReward);
+        }
+
+        foreach (var verifier in pollResult.PenalizedVerifiers)
+        {
+            var verifierAccountName = _sut.AccountProvider.LookupNameByAddress(verifier);
+            var initialBalance = winnersLotteryData.Single(w => w.AccountName == verifierAccountName).InitialBalance;
+            var verifierBalance = await _sut.ContractCaller.GetAvailableFunds(verifierAccountName);
+            verifierBalance.Should().Be(initialBalance - verifierPenalty);
+        }
 
         var pollStage = await _acceptancePollContract
             .WalkStorage()

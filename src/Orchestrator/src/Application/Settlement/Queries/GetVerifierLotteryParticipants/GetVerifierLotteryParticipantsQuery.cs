@@ -36,7 +36,7 @@ internal class GetVerifierLotteryParticipantsQueryHandler :
         var firstEntry = entries.First();
         if (_signer.CheckIsOrchestrator(firstEntry.UserId) && firstEntry.Nonce != null)
         {
-            // means the lottery is completed
+            // means the lottery is completed successfully
             firstEntry.IsOrchestrator = true;
             var verifiers = await _settlementProposalQueryable.GetVerifiers(query.ProposalId);
             if (verifiers.Any())
@@ -53,7 +53,7 @@ internal class GetVerifierLotteryParticipantsQueryHandler :
         }
         else
         {
-            // means the lottery is still in progress
+            // means the lottery is still in progress or has failed
             foreach (var entry in entries.Where(e => e.Nonce == null))
             {
                 if (_signer.CheckIsOrchestrator(entry.UserId))

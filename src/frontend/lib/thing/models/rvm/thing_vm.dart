@@ -17,6 +17,7 @@ class ThingVm {
   final String subjectName;
   final String subjectCroppedImageIpfsCid;
   final DateTime? settledAt;
+  final String? voteAggIpfsCid;
   final String? acceptedSettlementProposalId;
   final List<EvidenceVm> evidence;
   final List<TagVm> tags;
@@ -51,6 +52,7 @@ class ThingVm {
         settledAt = map['settledAt'] != null
             ? DateTime.fromMillisecondsSinceEpoch(map['settledAt'])
             : null,
+        voteAggIpfsCid = map['voteAggIpfsCid'],
         acceptedSettlementProposalId = map['acceptedSettlementProposalId'],
         evidence = List.unmodifiable(
           (map['evidence'] as List<dynamic>)
@@ -77,6 +79,7 @@ class ThingVm {
     required this.subjectName,
     required this.subjectCroppedImageIpfsCid,
     required this.settledAt,
+    required this.voteAggIpfsCid,
     required this.acceptedSettlementProposalId,
     required this.evidence,
     required this.tags,
@@ -100,6 +103,7 @@ class ThingVm {
       subjectName: subjectName,
       subjectCroppedImageIpfsCid: subjectCroppedImageIpfsCid,
       settledAt: settledAt,
+      voteAggIpfsCid: voteAggIpfsCid,
       acceptedSettlementProposalId: acceptedSettlementProposalId,
       evidence: evidence,
       tags: tags,

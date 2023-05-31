@@ -24,9 +24,9 @@ internal class AcceptancePollVoteRepository : Repository<AcceptancePollVote>, IA
         _dbContext.AcceptancePollVotes.Add(vote);
     }
 
-    public Task<List<AcceptancePollVote>> GetForThingCastedAt(Guid thingId, long noLaterThanTs) =>
+    public Task<List<AcceptancePollVote>> GetFor(Guid thingId) =>
         _dbContext.AcceptancePollVotes
             .AsNoTracking()
-            .Where(v => v.ThingId == thingId && v.CastedAtMs <= noLaterThanTs)
+            .Where(v => v.ThingId == thingId)
             .ToListAsync();
 }

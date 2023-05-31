@@ -161,6 +161,7 @@ internal class Signer : ISigner
 
     public string SignAcceptancePollVoteAgg(
         Guid thingId,
+        ulong endBlock,
         IEnumerable<AcceptancePollVote> offChainVotes,
         IEnumerable<CastedAcceptancePollVoteEvent> onChainVotes
     )
@@ -168,6 +169,7 @@ internal class Signer : ISigner
         var td = new SignedAcceptancePollVoteAggTd
         {
             ThingId = thingId.ToString(),
+            EndBlock = endBlock,
             OffChainVotes = offChainVotes
                 .Select(v => new OffChainAcceptancePollVoteTd
                 {

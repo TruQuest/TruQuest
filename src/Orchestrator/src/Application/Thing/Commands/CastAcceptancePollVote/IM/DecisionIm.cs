@@ -23,4 +23,19 @@ public static class DecisionImExtension
 
         throw new InvalidOperationException();
     }
+
+    public static DecisionIm FromString(string decision)
+    {
+        switch (decision)
+        {
+            case "Soft decline":
+                return DecisionIm.SoftDecline;
+            case "Hard decline":
+                return DecisionIm.HardDecline;
+            case "Accept":
+                return DecisionIm.Accept;
+        }
+
+        throw new InvalidOperationException();
+    }
 }

@@ -7,16 +7,24 @@
 #r "c:/chekh/projects/truquest/src/Orchestrator/lib/ContractStorageExplorer/src/bin/debug/net7.0/ContractStorageExplorer.dll"
 
 using Internal;
+using System.Net.Http;
 
-using Nethereum.Web3;
-using Nethereum.Hex.HexTypes;
+var client = new HttpClient();
+client.BaseAddress = new Uri("http://localhost:8080");
+var request = new HttpRequestMessage(HttpMethod.Get, "/ipfs/QmYTECKfqKm9RnBT8wsJbvCNxNEwS9sJ7cpC7EjQVtNAdc");
+var response = await client.SendAsync(request);
 
-var web3 = new Web3("http://localhost:7545");
-var block = await web3.Eth.Blocks.GetBlockWithTransactionsHashesByNumber.SendRequestAsync(
-    new HexBigInteger(296)
-);
+Console.WriteLine(await response.Content.ReadAsStringAsync());
 
-Console.WriteLine(block.Timestamp.Value.ToString());
+// using Nethereum.Web3;
+// using Nethereum.Hex.HexTypes;
+
+// var web3 = new Web3("http://localhost:7545");
+// var block = await web3.Eth.Blocks.GetBlockWithTransactionsHashesByNumber.SendRequestAsync(
+//     new HexBigInteger(296)
+// );
+
+// Console.WriteLine(block.Timestamp.Value.ToString());
 
 // using ContractStorageExplorer;
 // using ContractStorageExplorer.SolTypes;

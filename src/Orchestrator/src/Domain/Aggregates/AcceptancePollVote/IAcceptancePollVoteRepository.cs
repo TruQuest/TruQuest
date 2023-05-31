@@ -5,5 +5,5 @@ namespace Domain.Aggregates;
 public interface IAcceptancePollVoteRepository : IRepository<AcceptancePollVote>
 {
     void Create(AcceptancePollVote vote);
-    Task<List<AcceptancePollVote>> GetForThingCastedAt(Guid thingId, long noLaterThanTs);
+    Task<List<AcceptancePollVote>> GetFor(Guid thingId);
 }
