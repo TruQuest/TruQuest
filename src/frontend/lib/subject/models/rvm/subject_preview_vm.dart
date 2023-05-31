@@ -11,8 +11,8 @@ class SubjectPreviewVm {
   final SubjectTypeVm type;
   final String croppedImageIpfsCid;
   final String submitterId;
-  final int? settledThingsCount;
-  final int? avgScore;
+  final int settledThingsCount;
+  final int avgScore;
   final List<TagVm> tags;
 
   String get submittedAtFormatted => DateFormat.yMEd().format(submittedAt);

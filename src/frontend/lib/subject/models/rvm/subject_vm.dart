@@ -13,8 +13,8 @@ class SubjectVm {
   final String imageIpfsCid;
   final String croppedImageIpfsCid;
   final String submitterId;
-  final int? settledThingsCount;
-  final int? avgScore;
+  final int settledThingsCount;
+  final int avgScore;
   final List<ThingPreviewVm> latestSettledThings;
   final List<ThingPreviewVm> latestUnsettledThings;
   final List<TagVm> tags;

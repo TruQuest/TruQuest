@@ -1,6 +1,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 
+using Npgsql;
+using NpgsqlTypes;
+
 using Domain.Aggregates;
 using Application.Common.Interfaces;
 
@@ -32,5 +35,28 @@ internal class SubjectRepository : Repository<Subject>, ISubjectRepository
             .SingleOrDefaultAsync(s => s.Id == subjectId);
 
         return subject;
+    }
+
+    public async Task ContributeToRatingWithAnotherSettledThing(Guid subjectId, Verdict verdict)
+    {
+        var idParam = new NpgsqlParameter<Guid>("Id", NpgsqlDbType.Uuid)
+        {
+            TypedValue = subjectId
+        };
+        var scoreParam = new NpgsqlParameter<int>("Score", NpgsqlDbType.Integer)
+        {
+            TypedValue = verdict.GetScore()
+        };
+
+        await _dbContext.Database.ExecuteSqlRawAsync(
+            @"
+                UPDATE truquest.""Subjects""
+                SET
+                    ""SettledThingsCount"" = ""SettledThingsCount"" + 1,
+                    ""AvgScore"" = (""AvgScore"" * ""SettledThingsCount"" + @Score) / (""SettledThingsCount"" + 1)
+                WHERE ""Id"" = @Id
+            ",
+            idParam, scoreParam
+        );
     }
 }

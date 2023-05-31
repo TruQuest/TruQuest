@@ -16,12 +16,12 @@ class ThingVm {
   final String subjectId;
   final String subjectName;
   final String subjectCroppedImageIpfsCid;
+  final int subjectAvgScore;
   final DateTime? settledAt;
   final String? voteAggIpfsCid;
   final String? acceptedSettlementProposalId;
   final List<EvidenceVm> evidence;
   final List<TagVm> tags;
-  final int? subjectAvgScore;
   final bool watched;
   final String? relatedThingId;
 
@@ -49,6 +49,7 @@ class ThingVm {
         subjectId = map['subjectId'],
         subjectName = map['subjectName'],
         subjectCroppedImageIpfsCid = map['subjectCroppedImageIpfsCid'],
+        subjectAvgScore = map['subjectAvgScore'],
         settledAt = map['settledAt'] != null
             ? DateTime.fromMillisecondsSinceEpoch(map['settledAt'])
             : null,
@@ -61,7 +62,6 @@ class ThingVm {
         tags = List.unmodifiable(
           (map['tags'] as List<dynamic>).map((submap) => TagVm.fromMap(submap)),
         ),
-        subjectAvgScore = map['subjectAvgScore'],
         watched = map['watched'],
         relatedThingId = map['relatedThingId'],
         fundedAwaitingConfirmation = null;
@@ -78,12 +78,12 @@ class ThingVm {
     required this.subjectId,
     required this.subjectName,
     required this.subjectCroppedImageIpfsCid,
+    required this.subjectAvgScore,
     required this.settledAt,
     required this.voteAggIpfsCid,
     required this.acceptedSettlementProposalId,
     required this.evidence,
     required this.tags,
-    required this.subjectAvgScore,
     required this.watched,
     required this.relatedThingId,
     required this.fundedAwaitingConfirmation,
@@ -102,12 +102,12 @@ class ThingVm {
       subjectId: subjectId,
       subjectName: subjectName,
       subjectCroppedImageIpfsCid: subjectCroppedImageIpfsCid,
+      subjectAvgScore: subjectAvgScore,
       settledAt: settledAt,
       voteAggIpfsCid: voteAggIpfsCid,
       acceptedSettlementProposalId: acceptedSettlementProposalId,
       evidence: evidence,
       tags: tags,
-      subjectAvgScore: subjectAvgScore,
       watched: watched,
       relatedThingId: relatedThingId,
       fundedAwaitingConfirmation:

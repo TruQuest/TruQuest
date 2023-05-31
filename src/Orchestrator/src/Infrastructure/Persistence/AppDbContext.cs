@@ -38,6 +38,8 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.Property(s => s.Type).HasConversion<int>().IsRequired();
             builder.Property(s => s.ImageIpfsCid).IsRequired();
             builder.Property(s => s.CroppedImageIpfsCid).IsRequired();
+            builder.Property(s => s.SettledThingsCount).IsRequired();
+            builder.Property(s => s.AvgScore).IsRequired();
 
             builder
                 .HasOne<UserDm>()

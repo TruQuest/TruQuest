@@ -20,39 +20,12 @@ internal class SubjectQueryable : Queryable, ISubjectQueryable
         var dbConn = await _getOpenConnection();
         var subjects = await dbConn.QueryWithMany<SubjectPreviewQm, TagQm>(
             @"
-                WITH ""SubjectAvgScore"" AS (
-                    SELECT
-                        s.""Id"",
-                        COUNT(*)::INTEGER AS ""SettledThingsCount"",
-                        AVG(
-                            CASE
-                                WHEN p.""Verdict"" = 0 THEN 100
-                                WHEN p.""Verdict"" = 1 THEN 75
-                                WHEN p.""Verdict"" = 2 THEN 40
-                                WHEN p.""Verdict"" = 3 THEN 0
-                                WHEN p.""Verdict"" = 4 THEN -40
-                                WHEN p.""Verdict"" = 5 THEN -100
-                            END
-                        )::INTEGER AS ""AvgScore""
-                    FROM
-                        truquest.""Subjects"" AS s
-                            INNER JOIN
-                        truquest.""Things"" AS t
-                            ON (s.""Id"" = t.""SubjectId"" AND t.""State"" = @ThingState)
-                            INNER JOIN
-                        truquest.""SettlementProposals"" AS p
-                            ON t.""AcceptedSettlementProposalId"" = p.""Id""
-                    GROUP BY s.""Id""
-                )
                 SELECT
                     s.""Id"", s.""SubmittedAt"", s.""Name"", s.""Type"", s.""CroppedImageIpfsCid"", s.""SubmitterId"",
-                    sas.""SettledThingsCount"", sas.""AvgScore"",
+                    s.""SettledThingsCount"", s.""AvgScore""::INTEGER,
                     t.*
                 FROM
                     truquest.""Subjects"" AS s
-                        LEFT JOIN
-                    ""SubjectAvgScore"" AS sas
-                        ON s.""Id"" = sas.""Id""
                         INNER JOIN
                     truquest.""SubjectAttachedTags"" AS sat
                         ON s.""Id"" = sat.""SubjectId""
@@ -61,8 +34,7 @@ internal class SubjectQueryable : Queryable, ISubjectQueryable
                         ON sat.""TagId"" = t.""Id""
                 ORDER BY s.""SubmittedAt"" ASC
             ",
-            joinedCollectionSelector: subject => subject.Tags,
-            param: new { ThingState = (int)ThingState.Settled }
+            joinedCollectionSelector: subject => subject.Tags
         );
 
         return subjects;
@@ -73,37 +45,9 @@ internal class SubjectQueryable : Queryable, ISubjectQueryable
         var dbConn = await _getOpenConnection();
         var subject = await dbConn.SingleWithMany<SubjectQm, TagQm>(
             @"
-                WITH ""SubjectAvgScore"" AS (
-                    SELECT
-                        s.""Id"",
-                        COUNT(*)::INTEGER AS ""SettledThingsCount"",
-                        AVG(
-                            CASE
-                                WHEN p.""Verdict"" = 0 THEN 100
-                                WHEN p.""Verdict"" = 1 THEN 75
-                                WHEN p.""Verdict"" = 2 THEN 40
-                                WHEN p.""Verdict"" = 3 THEN 0
-                                WHEN p.""Verdict"" = 4 THEN -40
-                                WHEN p.""Verdict"" = 5 THEN -100
-                            END
-                        )::INTEGER AS ""AvgScore""
-                    FROM
-                        truquest.""Subjects"" AS s
-                            INNER JOIN
-                        truquest.""Things"" AS t
-                            ON (s.""Id"" = t.""SubjectId"" AND t.""State"" = @ThingState)
-                            INNER JOIN
-                        truquest.""SettlementProposals"" AS p
-                            ON t.""AcceptedSettlementProposalId"" = p.""Id""
-                    WHERE s.""Id"" = @SubjectId
-                    GROUP BY s.""Id""
-                )
-                SELECT s.*, sas.""SettledThingsCount"", sas.""AvgScore"", t.*
+                SELECT s.*, t.*
                 FROM
                     truquest.""Subjects"" AS s
-                        LEFT JOIN
-                    ""SubjectAvgScore"" AS sas
-                        ON s.""Id"" = sas.""Id""
                         INNER JOIN
                     truquest.""SubjectAttachedTags"" AS sat
                         ON s.""Id"" = sat.""SubjectId""
@@ -113,11 +57,7 @@ internal class SubjectQueryable : Queryable, ISubjectQueryable
                 WHERE s.""Id"" = @SubjectId
             ",
             joinedCollectionSelector: subject => subject.Tags,
-            param: new
-            {
-                SubjectId = id,
-                ThingState = (int)ThingState.Settled
-            }
+            param: new { SubjectId = id }
         );
 
         if (subject != null)

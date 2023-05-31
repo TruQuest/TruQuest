@@ -11,8 +11,8 @@ public class SubjectPreviewQm
     public SubjectTypeQm Type { get; }
     public string CroppedImageIpfsCid { get; }
     public string SubmitterId { get; }
-    public int? SettledThingsCount { get; }
-    public int? AvgScore { get; }
+    public int SettledThingsCount { get; }
+    public int AvgScore { get; }
 
     public HashSet<TagQm> Tags { get; } = new();
 

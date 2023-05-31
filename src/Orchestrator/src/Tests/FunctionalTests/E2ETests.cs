@@ -871,7 +871,7 @@ public class E2ETests : IAsyncLifetime
             .Key(new SolBytes16(thingIdBytes))
             .GetValue<SolUint8>();
 
-        pollStage.Value.Should().Be(4);
+        pollStage.Value.Should().Be(2);
 
         var proposerAddress = _sut.AccountProvider.GetAccount("Proposer").Address.Substring(2).ToLower();
 

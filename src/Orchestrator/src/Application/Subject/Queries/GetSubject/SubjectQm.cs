@@ -13,8 +13,8 @@ public class SubjectQm
     public string ImageIpfsCid { get; }
     public string CroppedImageIpfsCid { get; }
     public string SubmitterId { get; }
-    public int? SettledThingsCount { get; }
-    public int? AvgScore { get; }
+    public int SettledThingsCount { get; }
+    public int AvgScore { get; }
 
     public List<TagQm> Tags { get; } = new();
 

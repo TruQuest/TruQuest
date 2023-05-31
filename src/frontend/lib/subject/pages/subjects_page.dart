@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:auto_size_text/auto_size_text.dart';
@@ -260,10 +258,8 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
                                                   ),
                                                 ),
                                                 TextSpan(
-                                                  text: (subject
-                                                              .settledThingsCount ??
-                                                          Random().nextInt(12) +
-                                                              1)
+                                                  text: subject
+                                                      .settledThingsCount
                                                       .toString(),
                                                   style: GoogleFonts.righteous(
                                                     color: blackOnWhite
@@ -338,8 +334,7 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
                             child: AvatarWithReputationGauge(
                               subjectId: subject.id,
                               subjectAvatarIpfsCid: subject.croppedImageIpfsCid,
-                              value: subject.avgScore?.toDouble() ??
-                                  Random().nextInt(101).toDouble(),
+                              value: subject.avgScore.toDouble(),
                               size: AvatarSize.small,
                               color: blackOnWhite
                                   ? Color(0xffF8F9FA)

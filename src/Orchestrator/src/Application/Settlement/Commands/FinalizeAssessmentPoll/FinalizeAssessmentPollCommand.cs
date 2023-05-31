@@ -20,18 +20,21 @@ public class FinalizeAssessmentPollCommand : IRequest<VoidResult>
 
 internal class FinalizeAssessmentPollCommandHandler : IRequestHandler<FinalizeAssessmentPollCommand, VoidResult>
 {
+    private readonly ISubjectRepository _subjectRepository;
     private readonly IThingRepository _thingRepository;
     private readonly ISettlementProposalRepository _settlementProposalRepository;
     private readonly ISettlementProposalUpdateRepository _settlementProposalUpdateRepository;
     private readonly IThingUpdateRepository _thingUpdateRepository;
 
     public FinalizeAssessmentPollCommandHandler(
+        ISubjectRepository subjectRepository,
         IThingRepository thingRepository,
         ISettlementProposalRepository settlementProposalRepository,
         ISettlementProposalUpdateRepository settlementProposalUpdateRepository,
         IThingUpdateRepository thingUpdateRepository
     )
     {
+        _subjectRepository = subjectRepository;
         _thingRepository = thingRepository;
         _settlementProposalRepository = settlementProposalRepository;
         _settlementProposalUpdateRepository = settlementProposalUpdateRepository;
@@ -44,7 +47,7 @@ internal class FinalizeAssessmentPollCommandHandler : IRequestHandler<FinalizeAs
         var proposal = await _settlementProposalRepository.FindById(command.SettlementProposalId);
         if (proposal.State == SettlementProposalState.VerifiersSelectedAndPollInitiated)
         {
-            var decision = (AssessmentDecision)command.Decision;
+            var decision = command.Decision;
             if (decision == AssessmentDecision.Accepted)
             {
                 proposal.SetState(SettlementProposalState.Accepted);
@@ -59,6 +62,9 @@ internal class FinalizeAssessmentPollCommandHandler : IRequestHandler<FinalizeAs
                     details: "A settlement proposal has been accepted"
                 ));
                 await _thingUpdateRepository.SaveChanges();
+
+                await _subjectRepository.ContributeToRatingWithAnotherSettledThing(thing.SubjectId, proposal.Verdict);
+                await _subjectRepository.SaveChanges();
             }
             else if (decision == AssessmentDecision.SoftDeclined)
             {

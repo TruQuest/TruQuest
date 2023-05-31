@@ -12,6 +12,8 @@ public class Subject : Entity, IAggregateRoot
     public string ImageIpfsCid { get; }
     public string CroppedImageIpfsCid { get; }
     public string SubmitterId { get; }
+    public int SettledThingsCount { get; private set; }
+    public float AvgScore { get; private set; }
 
     private List<SubjectAttachedTag> _tags = new();
     public IReadOnlyList<SubjectAttachedTag> Tags => _tags;
@@ -28,6 +30,8 @@ public class Subject : Entity, IAggregateRoot
         ImageIpfsCid = imageIpfsCid;
         CroppedImageIpfsCid = croppedImageIpfsCid;
         SubmitterId = submitterId;
+        SettledThingsCount = 0;
+        AvgScore = 0;
     }
 
     public void AddTags(IEnumerable<int> tagIds)

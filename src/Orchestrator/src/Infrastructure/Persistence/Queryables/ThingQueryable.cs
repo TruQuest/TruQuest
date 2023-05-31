@@ -64,6 +64,7 @@ internal class ThingQueryable : Queryable, IThingQueryable
                 SELECT
                     t.*,
                     s.""Name"" AS ""SubjectName"", s.""CroppedImageIpfsCid"" AS ""SubjectCroppedImageIpfsCid"",
+                    s.""AvgScore""::INTEGER AS ""SubjectAvgScore"",
                     e.*, tag.*
                 FROM
                     truquest.""Things"" AS t
@@ -103,37 +104,6 @@ internal class ThingQueryable : Queryable, IThingQueryable
         if (thing != null)
         {
             thing.Watched = multiQuery.ReadSingleOrDefault<int?>() != null;
-
-            var result = await dbConn.QuerySingleAsync(
-                @"
-                    SELECT
-                        AVG(
-                            CASE
-                                WHEN p.""Verdict"" = 0 THEN 100
-                                WHEN p.""Verdict"" = 1 THEN 75
-                                WHEN p.""Verdict"" = 2 THEN 40
-                                WHEN p.""Verdict"" = 3 THEN 0
-                                WHEN p.""Verdict"" = 4 THEN -40
-                                WHEN p.""Verdict"" = 5 THEN -100
-                            END
-                        )::INTEGER AS ""AvgScore""
-                    FROM
-                        truquest.""Subjects"" AS s
-                            INNER JOIN
-                        truquest.""Things"" AS t
-                            ON (s.""Id"" = t.""SubjectId"" AND t.""State"" = @ThingState)
-                            INNER JOIN
-                        truquest.""SettlementProposals"" AS p
-                            ON t.""AcceptedSettlementProposalId"" = p.""Id""
-                    WHERE s.""Id"" = @SubjectId
-                ",
-                param: new
-                {
-                    SubjectId = thing.SubjectId,
-                    ThingState = (int)ThingState.Settled
-                }
-            );
-            thing.SubjectAvgScore = result.AvgScore;
         }
 
         return thing;

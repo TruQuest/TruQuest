@@ -15,12 +15,12 @@ public class ThingQm
     public Guid SubjectId { get; }
     public string SubjectName { get; }
     public string SubjectCroppedImageIpfsCid { get; }
+    public int SubjectAvgScore { get; }
     public long? SettledAt { get; }
     public string? VoteAggIpfsCid { get; }
     public Guid? AcceptedSettlementProposalId { get; }
     public HashSet<EvidenceQm> Evidence { get; } = new();
     public HashSet<TagQm> Tags { get; } = new();
-    public int? SubjectAvgScore { get; set; }
     public bool Watched { get; set; }
     public Guid? RelatedThingId { get; }
 
