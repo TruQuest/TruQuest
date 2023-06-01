@@ -4,7 +4,7 @@ using Application.Common.Models.QM;
 
 namespace Application.Common.Interfaces;
 
-public interface IThingAssessmentPollEventQueryable
+public interface ISettlementProposalAssessmentVerifierLotteryEventQueryable
 {
     Task<List<ThingAssessmentVerifierLotterySpotClaimedEvent>> FindAllSpotClaimedEventsFor(
         Guid thingId, Guid settlementProposalId

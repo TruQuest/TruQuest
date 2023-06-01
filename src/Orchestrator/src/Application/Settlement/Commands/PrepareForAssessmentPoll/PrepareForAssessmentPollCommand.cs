@@ -83,6 +83,7 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
 
             _watchedItemRepository.Add(
                 command.WinnerIds
+                    .Concat(command.ClaimantIds)
                     .Select(userId => new WatchedItem(
                         userId: userId,
                         itemType: WatchedItemType.SettlementProposal,

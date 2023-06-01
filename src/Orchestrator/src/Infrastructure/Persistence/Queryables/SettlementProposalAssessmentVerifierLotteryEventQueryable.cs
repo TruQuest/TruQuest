@@ -8,11 +8,12 @@ using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Queryables;
 
-internal class ThingAssessmentPollEventQueryable : Queryable, IThingAssessmentPollEventQueryable
+internal class SettlementProposalAssessmentVerifierLotteryEventQueryable :
+    Queryable, ISettlementProposalAssessmentVerifierLotteryEventQueryable
 {
     private readonly EventDbContext _dbContext;
 
-    public ThingAssessmentPollEventQueryable(EventDbContext dbContext) : base(dbContext)
+    public SettlementProposalAssessmentVerifierLotteryEventQueryable(EventDbContext dbContext) : base(dbContext)
     {
         _dbContext = dbContext;
     }

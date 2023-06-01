@@ -24,10 +24,9 @@ internal class AssessmentPollVoteRepository : Repository<AssessmentPollVote>, IA
         _dbContext.AssessmentPollVotes.Add(vote);
     }
 
-    public Task<List<AssessmentPollVote>> GetForThingSettlementProposalCastedAt(
-        Guid settlementProposalId, long noLaterThanTs
-    ) => _dbContext.AssessmentPollVotes
-        .AsNoTracking()
-        .Where(v => v.SettlementProposalId == settlementProposalId && v.CastedAtMs <= noLaterThanTs)
-        .ToListAsync();
+    public Task<List<AssessmentPollVote>> GetFor(Guid settlementProposalId) =>
+        _dbContext.AssessmentPollVotes
+            .AsNoTracking()
+            .Where(v => v.SettlementProposalId == settlementProposalId)
+            .ToListAsync();
 }

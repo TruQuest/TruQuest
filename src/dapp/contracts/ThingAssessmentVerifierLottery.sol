@@ -4,46 +4,21 @@ pragma solidity >=0.8.0 <0.9.0;
 import "./TruQuest.sol";
 import "./AssessmentPoll.sol";
 
-error ThingAssessmentVerifierLottery__NotOrchestrator();
-error ThingAssessmentVerifierLottery__NotTruQuest();
-error ThingAssessmentVerifierLottery__NotAssessmentPoll();
-error ThingAssessmentVerifierLottery__AlreadyCommittedToLottery(
-    bytes32 thingProposalId
-);
-error ThingAssessmentVerifierLottery__LotteryNotActive(bytes32 thingProposalId);
-error ThingAssessmentVerifierLottery__LotteryExpired(bytes32 thingProposalId);
+error ThingAssessmentVerifierLottery__Unauthorized();
+error ThingAssessmentVerifierLottery__AlreadyCommitted(bytes32 thingProposalId);
+error ThingAssessmentVerifierLottery__NotActive(bytes32 thingProposalId);
+error ThingAssessmentVerifierLottery__Expired(bytes32 thingProposalId);
 error ThingAssessmentVerifierLottery__NotEnoughFunds();
-error ThingAssessmentVerifierLottery__NotCommittedToLottery(
+error ThingAssessmentVerifierLottery__NotCommitted(bytes32 thingProposalId);
+error ThingAssessmentVerifierLottery__AlreadyJoined(bytes32 thingProposalId);
+error ThingAssessmentVerifierLottery__InvalidReveal(bytes32 thingProposalId);
+error ThingAssessmentVerifierLottery__PreJoinAndJoinInTheSameBlock(
     bytes32 thingProposalId
 );
-error ThingAssessmentVerifierLottery__AlreadyJoinedLottery(
+error ThingAssessmentVerifierLottery__InvalidNumberOfWinners();
+error ThingAssessmentVerifierLottery__InitAndCloseInTheSameBlock(
     bytes32 thingProposalId
 );
-error ThingAssessmentVerifierLottery__InvalidLotteryReveal(
-    bytes32 thingProposalId
-);
-error ThingAssessmentVerifierLottery__PreJoinAndJoinLotteryInTheSameBlock(
-    bytes32 thingProposalId
-);
-error ThingAssessmentVerifierLottery__InvalidNumberOfLotteryWinners();
-error ThingAssessmentVerifierLottery__InitAndCloseLotteryInTheSameBlock(
-    bytes32 thingProposalId
-);
-
-// error ThingAssessmentVerifierLottery__SubLotteryNotActive(bytes16 thingId);
-// error ThingAssessmentVerifierLottery__SubLotteryExpired(bytes16 thingId);
-// error ThingAssessmentVerifierLottery__AlreadyCommittedToSubLottery(
-//     bytes16 thingId
-// );
-// error ThingAssessmentVerifierLottery__NotCommittedToSubLottery(bytes16 thingId);
-// error ThingAssessmentVerifierLottery__AlreadyJoinedSubLottery(bytes16 thingId);
-// error ThingAssessmentVerifierLottery__InvalidSubLotteryReveal(bytes16 thingId);
-// error ThingAssessmentVerifierLottery__PreJoinAndJoinSubLotteryInTheSameBlock(
-//     bytes16 thingId
-// );
-// error ThingAssessmentVerifierLottery__InitAndCloseSubLotteryInTheSameBlock(
-//     bytes16 thingId
-// );
 
 contract ThingAssessmentVerifierLottery {
     struct Commitment {
@@ -65,8 +40,6 @@ contract ThingAssessmentVerifierLottery {
         private s_thingProposalIdToLotteryCommitments;
     mapping(bytes32 => address[]) private s_participants;
     mapping(bytes32 => address[]) private s_claimants;
-    // mapping(bytes16 => mapping(address => Commitment))
-    //     private s_thingIdToSubLotteryCommitments;
 
     event LotteryInitiated(
         bytes16 indexed thingId,
@@ -106,49 +79,28 @@ contract ThingAssessmentVerifierLottery {
 
     event LotteryClosedInFailure(
         bytes16 indexed thingId,
-        bytes16 indexed settlementProposalId
+        bytes16 indexed settlementProposalId,
+        uint8 requiredNumVerifiers,
+        uint8 joinedNumVerifiers
     );
-
-    // event SubLotteryInitiated(
-    //     bytes16 indexed thingId,
-    //     bytes32 dataHash
-    // );
-
-    // event PreJoinedSubLottery(
-    //     bytes16 indexed thingId,
-    //     address indexed user,
-    //     bytes32 dataHash
-    // );
-
-    // event JoinedSubLottery(
-    //     bytes16 indexed thingId,
-    //     address indexed user,
-    //     uint256 nonce
-    // );
-
-    // event SubLotteryClosedWithSuccess(
-    //     bytes16 indexed thingId,
-    //     uint256 nonce,
-    //     address[] winners
-    // );
 
     modifier onlyOrchestrator() {
         if (msg.sender != s_orchestrator) {
-            revert ThingAssessmentVerifierLottery__NotOrchestrator();
+            revert ThingAssessmentVerifierLottery__Unauthorized();
         }
         _;
     }
 
     modifier onlyTruQuest() {
         if (msg.sender != address(i_truQuest)) {
-            revert ThingAssessmentVerifierLottery__NotTruQuest();
+            revert ThingAssessmentVerifierLottery__Unauthorized();
         }
         _;
     }
 
     modifier onlyAssessmentPoll() {
         if (msg.sender != address(s_assessmentPoll)) {
-            revert ThingAssessmentVerifierLottery__NotAssessmentPoll();
+            revert ThingAssessmentVerifierLottery__Unauthorized();
         }
         _;
     }
@@ -165,14 +117,14 @@ contract ThingAssessmentVerifierLottery {
             s_thingProposalIdToLotteryCommitments[_thingProposalId][msg.sender]
                 .block != 0
         ) {
-            revert ThingAssessmentVerifierLottery__AlreadyCommittedToLottery(
+            revert ThingAssessmentVerifierLottery__AlreadyCommitted(
                 _thingProposalId
             );
         }
         _;
     }
 
-    modifier onlyWhenLotteryActiveAndNotExpired(
+    modifier onlyWhenActiveAndNotExpired(
         bytes32 _thingProposalId,
         uint8 _margin
     ) {
@@ -180,75 +132,26 @@ contract ThingAssessmentVerifierLottery {
             _thingProposalId
         ][s_orchestrator].block;
         if (lotteryInitBlock < 1) {
-            revert ThingAssessmentVerifierLottery__LotteryNotActive(
-                _thingProposalId
-            );
+            revert ThingAssessmentVerifierLottery__NotActive(_thingProposalId);
         }
         if (
             block.number + _margin > uint64(lotteryInitBlock) + s_durationBlocks
         ) {
-            revert ThingAssessmentVerifierLottery__LotteryExpired(
-                _thingProposalId
-            );
+            revert ThingAssessmentVerifierLottery__Expired(_thingProposalId);
         }
         _;
     }
 
-    modifier onlyWhenLotteryActive(bytes32 _thingProposalId) {
+    modifier onlyWhenActive(bytes32 _thingProposalId) {
         if (
             s_thingProposalIdToLotteryCommitments[_thingProposalId][
                 s_orchestrator
             ].block < 1
         ) {
-            revert ThingAssessmentVerifierLottery__LotteryNotActive(
-                _thingProposalId
-            );
+            revert ThingAssessmentVerifierLottery__NotActive(_thingProposalId);
         }
         _;
     }
-
-    // modifier onlyOncePerSubLottery(bytes16 _thingId) {
-    //     if (s_thingIdToSubLotteryCommitments[_thingId][msg.sender].block != 0) {
-    //         revert ThingAssessmentVerifierLottery__AlreadyCommittedToSubLottery(
-    //             _thingId
-    //         );
-    //     }
-    //     _;
-    // }
-
-    // modifier onlyWhenSubLotteryActiveAndNotExpired(
-    //     bytes16 _thingId,
-    //     uint8 _margin
-    // ) {
-    //     int64 subLotteryInitBlock = s_thingIdToSubLotteryCommitments[_thingId][
-    //         address(s_assessmentPoll)
-    //     ].block;
-    //     if (subLotteryInitBlock < 1) {
-    //         revert ThingAssessmentVerifierLottery__SubLotteryNotActive(
-    //             _thingId
-    //         );
-    //     }
-    //     if (
-    //         block.number + _margin >
-    //         uint64(subLotteryInitBlock) + s_durationBlocks
-    //     ) {
-    //         revert ThingAssessmentVerifierLottery__SubLotteryExpired(_thingId);
-    //     }
-    //     _;
-    // }
-
-    // modifier onlyWhenSubLotteryActive(bytes16 _thingId) {
-    //     if (
-    //         s_thingIdToSubLotteryCommitments[_thingId][
-    //             address(s_assessmentPoll)
-    //         ].block < 1
-    //     ) {
-    //         revert ThingAssessmentVerifierLottery__SubLotteryNotActive(
-    //             _thingId
-    //         );
-    //     }
-    //     _;
-    // }
 
     constructor(
         address _truQuestAddress,
@@ -346,10 +249,13 @@ contract ThingAssessmentVerifierLottery {
         bytes32 _thingProposalId
     )
         public
-        onlyWhenLotteryActiveAndNotExpired(_thingProposalId, 0)
+        onlyWhenActiveAndNotExpired(_thingProposalId, 0)
         whenHasEnoughFundsToStakeAsVerifier
         onlyOncePerLottery(_thingProposalId)
     {
+        // @@??: Should I check here that msg.sender is one of the thing's verifiers or
+        // just make a client-side check and then filter out invalid claims on the backend?
+        // Logically, it makes sense to check, but it would mean higher txn cost for users.
         i_truQuest.stakeAsVerifier(msg.sender);
         s_thingProposalIdToLotteryCommitments[_thingProposalId][
             msg.sender
@@ -366,7 +272,7 @@ contract ThingAssessmentVerifierLottery {
         bytes32 _dataHash
     )
         public
-        onlyWhenLotteryActiveAndNotExpired(_thingProposalId, 1)
+        onlyWhenActiveAndNotExpired(_thingProposalId, 1)
         whenHasEnoughFundsToStakeAsVerifier
         onlyOncePerLottery(_thingProposalId)
     {
@@ -384,18 +290,18 @@ contract ThingAssessmentVerifierLottery {
     function joinLottery(
         bytes32 _thingProposalId,
         bytes32 _data
-    ) public onlyWhenLotteryActiveAndNotExpired(_thingProposalId, 0) {
+    ) public onlyWhenActiveAndNotExpired(_thingProposalId, 0) {
         Commitment memory commitment = s_thingProposalIdToLotteryCommitments[
             _thingProposalId
         ][msg.sender];
 
         if (commitment.block == 0) {
-            revert ThingAssessmentVerifierLottery__NotCommittedToLottery(
+            revert ThingAssessmentVerifierLottery__NotCommitted(
                 _thingProposalId
             );
         }
         if (commitment.revealed) {
-            revert ThingAssessmentVerifierLottery__AlreadyJoinedLottery(
+            revert ThingAssessmentVerifierLottery__AlreadyJoined(
                 _thingProposalId
             );
         }
@@ -403,14 +309,14 @@ contract ThingAssessmentVerifierLottery {
             .revealed = true;
 
         if (computeHash(_data) != commitment.dataHash) {
-            revert ThingAssessmentVerifierLottery__InvalidLotteryReveal(
+            revert ThingAssessmentVerifierLottery__InvalidReveal(
                 _thingProposalId
             );
         }
 
         uint64 commitmentBlock = uint64(commitment.block);
         if (uint64(block.number) == commitmentBlock) {
-            revert ThingAssessmentVerifierLottery__PreJoinAndJoinLotteryInTheSameBlock(
+            revert ThingAssessmentVerifierLottery__PreJoinAndJoinInTheSameBlock(
                 _thingProposalId
             );
         }
@@ -455,6 +361,9 @@ contract ThingAssessmentVerifierLottery {
             }
             ++j;
         }
+        for (; j < claimants.length; ++j) {
+            i_truQuest.unstakeAsVerifier(claimants[j]);
+        }
 
         s_claimants[_thingProposalId] = new address[](0); // unnecessary?
         delete s_claimants[_thingProposalId];
@@ -476,6 +385,9 @@ contract ThingAssessmentVerifierLottery {
                 i_truQuest.unstakeAsVerifier(participants[j]);
             }
             ++j;
+        }
+        for (; j < participants.length; ++j) {
+            i_truQuest.unstakeAsVerifier(participants[j]);
         }
 
         s_participants[_thingProposalId] = new address[](0); // unnecessary?
@@ -503,12 +415,12 @@ contract ThingAssessmentVerifierLottery {
         bytes32 _data,
         uint64[] calldata _winnerClaimantIndices,
         uint64[] calldata _winnerIndices // sorted asc indices of users in prejoin array
-    ) public onlyOrchestrator onlyWhenLotteryActive(_thingProposalId) {
+    ) public onlyOrchestrator onlyWhenActive(_thingProposalId) {
         if (
             _winnerClaimantIndices.length + _winnerIndices.length !=
             s_numVerifiers
         ) {
-            revert ThingAssessmentVerifierLottery__InvalidNumberOfLotteryWinners();
+            revert ThingAssessmentVerifierLottery__InvalidNumberOfWinners();
         }
 
         Commitment memory commitment = s_thingProposalIdToLotteryCommitments[
@@ -516,14 +428,14 @@ contract ThingAssessmentVerifierLottery {
         ][msg.sender];
 
         if (computeHash(_data) != commitment.dataHash) {
-            revert ThingAssessmentVerifierLottery__InvalidLotteryReveal(
+            revert ThingAssessmentVerifierLottery__InvalidReveal(
                 _thingProposalId
             );
         }
 
         uint64 commitmentBlock = uint64(commitment.block);
         if (uint64(block.number) == commitmentBlock) {
-            revert ThingAssessmentVerifierLottery__InitAndCloseLotteryInTheSameBlock(
+            revert ThingAssessmentVerifierLottery__InitAndCloseInTheSameBlock(
                 _thingProposalId
             );
         }
@@ -561,162 +473,48 @@ contract ThingAssessmentVerifierLottery {
         );
     }
 
-    // when not enough participants
-    // @@??: add reason string/enum param ?
     function closeLotteryInFailure(
-        bytes32 _thingProposalId
-    ) public onlyOrchestrator onlyWhenLotteryActive(_thingProposalId) {
-        // checks?
+        bytes32 _thingProposalId,
+        uint8 _joinedNumVerifiers
+    ) public onlyOrchestrator onlyWhenActive(_thingProposalId) {
+        uint64 commitmentBlock = uint64(
+            s_thingProposalIdToLotteryCommitments[_thingProposalId][msg.sender]
+                .block
+        );
+        if (uint64(block.number) == commitmentBlock) {
+            revert ThingAssessmentVerifierLottery__InitAndCloseInTheSameBlock(
+                _thingProposalId
+            );
+        }
         s_thingProposalIdToLotteryCommitments[_thingProposalId][msg.sender]
             .block = -1;
 
-        // @@TODO: unstake submitter with slashing?
+        (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
+
+        address submitter = i_truQuest.getSettlementProposalSubmitter(thingId);
+        i_truQuest.unstakeProposalSubmitter(submitter);
+
+        address[] memory claimants = s_claimants[_thingProposalId];
+        for (uint64 i = 0; i < claimants.length; ++i) {
+            i_truQuest.unstakeAsVerifier(claimants[i]);
+        }
 
         address[] memory participants = s_participants[_thingProposalId];
         for (uint64 i = 0; i < participants.length; ++i) {
             i_truQuest.unstakeAsVerifier(participants[i]);
         }
 
+        s_claimants[_thingProposalId] = new address[](0); // unnecessary?
+        delete s_claimants[_thingProposalId];
+
         s_participants[_thingProposalId] = new address[](0); // unnecessary?
         delete s_participants[_thingProposalId];
 
-        (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
-
-        emit LotteryClosedInFailure(thingId, proposalId);
+        emit LotteryClosedInFailure(
+            thingId,
+            proposalId,
+            s_numVerifiers,
+            _joinedNumVerifiers
+        );
     }
-
-    // function initSubLottery(
-    //     bytes16 _thingId,
-    //     bytes32 _dataHash
-    // ) external onlyAcceptancePoll onlyOncePerSubLottery(_thingId) {
-    //     s_thingIdToSubLotteryCommitments[_thingId][msg.sender] = Commitment(
-    //         _dataHash,
-    //         int64(uint64(block.number)),
-    //         false
-    //     );
-
-    //     emit SubLotteryInitiated(_thingId, _dataHash);
-    // }
-
-    // function preJoinSubLottery(
-    //     bytes16 _thingId,
-    //     bytes32 _dataHash
-    // )
-    //     public
-    //     onlyWhenSubLotteryActiveAndNotExpired(_thingId, 1)
-    //     whenHasAtLeast(s_verifierStake)
-    //     onlyOncePerSubLottery(_thingId)
-    // {
-    //     i_truQuest.stake(msg.sender, s_verifierStake);
-    //     s_thingIdToSubLotteryCommitments[_thingId][msg.sender] = Commitment(
-    //         _dataHash,
-    //         int64(uint64(block.number)),
-    //         false
-    //     );
-    //     s_participants[_thingId].push(msg.sender);
-
-    //     emit PreJoinedSubLottery(_thingId, msg.sender, _dataHash);
-    // }
-
-    // function joinSubLottery(
-    //     bytes16 _thingId,
-    //     bytes32 _data
-    // ) public onlyWhenSubLotteryActiveAndNotExpired(_thingId, 0) {
-    //     Commitment memory commitment = s_thingIdToSubLotteryCommitments[
-    //         _thingId
-    //     ][msg.sender];
-
-    //     if (commitment.block == 0) {
-    //         revert ThingAssessmentVerifierLottery__NotCommittedToSubLottery(
-    //             _thingId
-    //         );
-    //     }
-    //     if (commitment.revealed) {
-    //         revert ThingAssessmentVerifierLottery__AlreadyJoinedSubLottery(
-    //             _thingId
-    //         );
-    //     }
-    //     s_thingIdToSubLotteryCommitments[_thingId][msg.sender].revealed = true;
-
-    //     if (computeHash(_data) != commitment.dataHash) {
-    //         revert ThingAssessmentVerifierLottery__InvalidSubLotteryReveal(
-    //             _thingId
-    //         );
-    //     }
-
-    //     uint64 commitmentBlock = uint64(commitment.block);
-    //     if (uint64(block.number) == commitmentBlock) {
-    //         revert ThingAssessmentVerifierLottery__PreJoinAndJoinSubLotteryInTheSameBlock(
-    //             _thingId
-    //         );
-    //     }
-
-    //     bytes32 blockHash = blockhash(commitmentBlock);
-    //     uint256 nonce = uint256(keccak256(abi.encodePacked(blockHash, _data))) %
-    //         MAX_NONCE;
-
-    //     emit JoinedSubLottery(_thingId, msg.sender, nonce);
-    // }
-
-    // function closeSubLotteryWithSuccess(
-    //     bytes16 _thingId,
-    //     bytes32 _data,
-    //     uint64[] calldata _winnerIndices // sorted asc indices of users in prejoin array
-    // ) public onlyOrchestrator onlyWhenSubLotteryActive(_thingId) {
-    //     uint8 numSubstituteVerifiers = s_numVerifiers -
-    //         uint8(s_assessmentPoll.getVerifierCount(_thingId));
-    //     if (_winnerIndices.length != numSubstituteVerifiers) {
-    //         revert ThingAssessmentVerifierLottery__InvalidNumberOfLotteryWinners(
-    //             numSubstituteVerifiers,
-    //             _winnerIndices.length
-    //         );
-    //     }
-
-    //     Commitment memory commitment = s_thingIdToSubLotteryCommitments[
-    //         _thingId
-    //     ][address(s_assessmentPoll)];
-
-    //     if (computeHash(_data) != commitment.dataHash) {
-    //         revert ThingAssessmentVerifierLottery__InvalidSubLotteryReveal(
-    //             _thingId
-    //         );
-    //     }
-
-    //     uint64 commitmentBlock = uint64(commitment.block);
-    //     if (uint64(block.number) == commitmentBlock) {
-    //         revert ThingAssessmentVerifierLottery__InitAndCloseSubLotteryInTheSameBlock(
-    //             _thingId
-    //         );
-    //     }
-
-    //     s_thingIdToSubLotteryCommitments[_thingId][address(s_assessmentPoll)]
-    //         .block = -1;
-
-    //     uint64 j = 0;
-    //     address[] memory participants = s_participants[_thingId];
-    //     address[] memory winners = new address[](_winnerIndices.length);
-    //     for (uint8 i = 0; i < _winnerIndices.length; ++i) {
-    //         uint64 nextWinnerIndex = _winnerIndices[i];
-    //         winners[i] = participants[nextWinnerIndex];
-    //         for (; j < nextWinnerIndex; ++j) {
-    //             i_truQuest.unstake(participants[j], s_verifierStake);
-    //         }
-    //         ++j;
-    //     }
-
-    //     s_participants[_thingId] = new address[](0); // unnecessary?
-    //     delete s_participants[_thingId];
-
-    //     s_assessmentPoll.initSubPoll(_thingId, winners);
-
-    //     bytes32 blockHash = blockhash(commitmentBlock);
-    //     uint256 nonce = uint256(keccak256(abi.encodePacked(blockHash, _data))) %
-    //         MAX_NONCE;
-
-    //     emit SubLotteryClosedWithSuccess(
-    //         _thingId,
-    //         nonce,
-    //         winners
-    //     );
-    // }
 }

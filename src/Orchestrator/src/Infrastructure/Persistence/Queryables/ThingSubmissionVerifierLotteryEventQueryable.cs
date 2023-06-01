@@ -8,11 +8,11 @@ using Application.Common.Models.QM;
 
 namespace Infrastructure.Persistence.Queryables;
 
-internal class ThingAcceptancePollEventQueryable : Queryable, IThingAcceptancePollEventQueryable
+internal class ThingSubmissionVerifierLotteryEventQueryable : Queryable, IThingSubmissionVerifierLotteryEventQueryable
 {
     private readonly EventDbContext _dbContext;
 
-    public ThingAcceptancePollEventQueryable(EventDbContext dbContext) : base(dbContext)
+    public ThingSubmissionVerifierLotteryEventQueryable(EventDbContext dbContext) : base(dbContext)
     {
         _dbContext = dbContext;
     }

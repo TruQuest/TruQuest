@@ -24,7 +24,7 @@ public interface ISigner
     );
     string SignSettlementProposal(Guid thingId, Guid proposalId);
     string SignAssessmentPollVoteAgg(
-        Guid thingId, Guid proposalId,
+        Guid thingId, Guid proposalId, ulong endBlock,
         IEnumerable<AssessmentPollVote> offChainVotes,
         IEnumerable<CastedAssessmentPollVoteEvent> onChainVotes
     );

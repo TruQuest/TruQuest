@@ -188,8 +188,8 @@ public static class IServiceCollectionExtension
         services.AddScoped<ITagQueryable, TagQueryable>();
         services.AddScoped<ISubjectQueryable, SubjectQueryable>();
         services.AddScoped<IThingQueryable, ThingQueryable>();
-        services.AddScoped<IThingAcceptancePollEventQueryable, ThingAcceptancePollEventQueryable>();
-        services.AddScoped<IThingAssessmentPollEventQueryable, ThingAssessmentPollEventQueryable>();
+        services.AddScoped<IThingSubmissionVerifierLotteryEventQueryable, ThingSubmissionVerifierLotteryEventQueryable>();
+        services.AddScoped<ISettlementProposalAssessmentVerifierLotteryEventQueryable, SettlementProposalAssessmentVerifierLotteryEventQueryable>();
         services.AddScoped<IThingAcceptancePollVoteQueryable, ThingAcceptancePollVoteQueryable>();
         services.AddScoped<IThingAssessmentPollVoteQueryable, ThingAssessmentPollVoteQueryable>();
         services.AddScoped<ISettlementProposalQueryable, SettlementProposalQueryable>();

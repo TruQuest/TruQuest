@@ -27,7 +27,6 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
     private readonly IAcceptancePollVoteRepository _voteRepository;
     private readonly ICastedAcceptancePollVoteEventRepository _castedAcceptancePollVoteEventRepository;
     private readonly IContractStorageQueryable _contractStorageQueryable;
-    private readonly IThingRepository _thingRepository;
     private readonly ISigner _signer;
     private readonly IFileStorage _fileStorage;
     private readonly IContractCaller _contractCaller;
@@ -38,7 +37,6 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
         IAcceptancePollVoteRepository voteRepository,
         ICastedAcceptancePollVoteEventRepository castedAcceptancePollVoteEventRepository,
         IContractStorageQueryable contractStorageQueryable,
-        IThingRepository thingRepository,
         ISigner signer,
         IFileStorage fileStorage,
         IContractCaller contractCaller
@@ -49,7 +47,6 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
         _voteRepository = voteRepository;
         _castedAcceptancePollVoteEventRepository = castedAcceptancePollVoteEventRepository;
         _contractStorageQueryable = contractStorageQueryable;
-        _thingRepository = thingRepository;
         _signer = signer;
         _fileStorage = fileStorage;
         _contractCaller = contractCaller;

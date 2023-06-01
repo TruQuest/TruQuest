@@ -211,7 +211,7 @@ internal class Signer : ISigner
     }
 
     public string SignAssessmentPollVoteAgg(
-        Guid thingId, Guid proposalId,
+        Guid thingId, Guid proposalId, ulong endBlock,
         IEnumerable<AssessmentPollVote> offChainVotes,
         IEnumerable<CastedAssessmentPollVoteEvent> onChainVotes
     )
@@ -220,6 +220,7 @@ internal class Signer : ISigner
         {
             ThingId = thingId.ToString(),
             SettlementProposalId = proposalId.ToString(),
+            EndBlock = endBlock,
             OffChainVotes = offChainVotes
                 .Select(v => new OffChainAssessmentPollVoteTd
                 {

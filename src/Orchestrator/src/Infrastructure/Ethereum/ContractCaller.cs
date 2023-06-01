@@ -289,24 +289,128 @@ internal class ContractCaller : IContractCaller
         _logger.LogInformation("=============== CloseThingAssessmentVerifierLotteryWithSuccess: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
-    public async Task FinalizeAssessmentPollForSettlementProposalAsAccepted(
-        byte[] thingId, byte[] settlementProposalId, string voteAggIpfsCid,
-        List<string> verifiersToReward, List<string> verifiersToSlash
+    public async Task CloseThingAssessmentVerifierLotteryInFailure(byte[] thingId, byte[] proposalId, int joinedNumVerifiers)
+    {
+        var txnReceipt = await _web3.Eth
+            .GetContractTransactionHandler<CloseThingAssessmentVerifierLotteryInFailureMessage>()
+            .SendRequestAndWaitForReceiptAsync(
+                _thingAssessmentVerifierLotteryAddress,
+                new()
+                {
+                    ThingProposalId = thingId.Concat(proposalId).ToArray(),
+                    JoinedNumVerifiers = joinedNumVerifiers
+                }
+            );
+
+        _logger.LogInformation("=============== CloseThingAssessmentVerifierLotteryInFailure: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+    }
+
+    public async Task<IEnumerable<string>> GetVerifiersForProposal(byte[] thingId, byte[] proposalId)
+    {
+        var verifiers = await _web3.Eth
+            .GetContractQueryHandler<GetVerifiersForProposalMessage>()
+            .QueryAsync<List<string>>(_assessmentPollAddress, new()
+            {
+                ThingProposalId = thingId.Concat(proposalId).ToArray()
+            });
+
+        return verifiers;
+    }
+
+    public async Task FinalizeAssessmentPollForProposalAsUnsettledDueToInsufficientVotingVolume(
+        byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
         var txnReceipt = await _web3.Eth
-            .GetContractTransactionHandler<FinalizeAssessmentPollForSettlementProposalAsAcceptedMessage>()
+            .GetContractTransactionHandler<FinalizeAssessmentPollForProposalAsUnsettledMessage>()
             .SendRequestAndWaitForReceiptAsync(
                 _assessmentPollAddress,
                 new()
                 {
-                    ThingProposalId = thingId.Concat(settlementProposalId).ToArray(),
+                    ThingProposalId = thingId.Concat(proposalId).ToArray(),
                     VoteAggIpfsCid = voteAggIpfsCid,
-                    VerifiersToReward = verifiersToReward,
-                    VerifiersToSlash = verifiersToSlash
+                    Decision = Decision.UnsettledDueToInsufficientVotingVolume,
+                    VerifiersToSlashIndices = verifiersToSlashIndices
                 }
             );
 
-        _logger.LogInformation("=============== FinalizeAssessmentPollForSettlementProposalAsAccepted: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        _logger.LogInformation("=============== FinalizeAssessmentPollForProposalAsUnsettled: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+    }
+
+    public async Task FinalizeAssessmentPollForProposalAsUnsettledDueToMajorityThresholdNotReached(
+        byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
+    )
+    {
+        var txnReceipt = await _web3.Eth
+            .GetContractTransactionHandler<FinalizeAssessmentPollForProposalAsUnsettledMessage>()
+            .SendRequestAndWaitForReceiptAsync(
+                _assessmentPollAddress,
+                new()
+                {
+                    ThingProposalId = thingId.Concat(proposalId).ToArray(),
+                    VoteAggIpfsCid = voteAggIpfsCid,
+                    Decision = Decision.UnsettledDueToMajorityThresholdNotReached,
+                    VerifiersToSlashIndices = verifiersToSlashIndices
+                }
+            );
+
+        _logger.LogInformation("=============== FinalizeAssessmentPollForProposalAsUnsettled: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+    }
+
+    public async Task FinalizeAssessmentPollForProposalAsAccepted(
+        byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
+    )
+    {
+        var txnReceipt = await _web3.Eth
+            .GetContractTransactionHandler<FinalizeAssessmentPollForProposalAsAcceptedMessage>()
+            .SendRequestAndWaitForReceiptAsync(
+                _assessmentPollAddress,
+                new()
+                {
+                    ThingProposalId = thingId.Concat(proposalId).ToArray(),
+                    VoteAggIpfsCid = voteAggIpfsCid,
+                    VerifiersToSlashIndices = verifiersToSlashIndices
+                }
+            );
+
+        _logger.LogInformation("=============== FinalizeAssessmentPollForProposalAsAccepted: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+    }
+
+    public async Task FinalizeAssessmentPollForProposalAsSoftDeclined(
+        byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
+    )
+    {
+        var txnReceipt = await _web3.Eth
+            .GetContractTransactionHandler<FinalizeAssessmentPollForProposalAsSoftDeclinedMessage>()
+            .SendRequestAndWaitForReceiptAsync(
+                _assessmentPollAddress,
+                new()
+                {
+                    ThingProposalId = thingId.Concat(proposalId).ToArray(),
+                    VoteAggIpfsCid = voteAggIpfsCid,
+                    VerifiersToSlashIndices = verifiersToSlashIndices
+                }
+            );
+
+        _logger.LogInformation("=============== FinalizeAssessmentPollForProposalAsSoftDeclined: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+    }
+
+    public async Task FinalizeAssessmentPollForProposalAsHardDeclined(
+        byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
+    )
+    {
+        var txnReceipt = await _web3.Eth
+            .GetContractTransactionHandler<FinalizeAssessmentPollForProposalAsHardDeclinedMessage>()
+            .SendRequestAndWaitForReceiptAsync(
+                _assessmentPollAddress,
+                new()
+                {
+                    ThingProposalId = thingId.Concat(proposalId).ToArray(),
+                    VoteAggIpfsCid = voteAggIpfsCid,
+                    VerifiersToSlashIndices = verifiersToSlashIndices
+                }
+            );
+
+        _logger.LogInformation("=============== FinalizeAssessmentPollForProposalAsHardDeclined: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 }

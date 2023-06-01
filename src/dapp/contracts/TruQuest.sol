@@ -201,7 +201,9 @@ contract TruQuest {
         );
         s_assessmentPoll = new AssessmentPoll(
             address(this),
-            _pollDurationBlocks
+            _pollDurationBlocks,
+            _votingVolumeThresholdPercent,
+            _majorityThresholdPercent
         );
         s_thingSubmissionVerifierLottery.connectToAcceptancePoll(
             address(s_acceptancePoll)
@@ -263,13 +265,15 @@ contract TruQuest {
         s_stakedBalanceOf[_user] -= s_verifierStake;
     }
 
+    // @@TODO!!: Make more restrictive!
     function unstakeThingSubmitter(address _user) external onlyLotteryOrPoll {
         _unstake(_user, s_thingSubmissionStake);
     }
 
+    // @@TODO!!: Make more restrictive!
     function unstakeProposalSubmitter(
         address _user
-    ) external onlyAssessmentPoll {
+    ) external onlyLotteryOrPoll {
         _unstake(_user, s_thingSettlementProposalStake);
     }
 

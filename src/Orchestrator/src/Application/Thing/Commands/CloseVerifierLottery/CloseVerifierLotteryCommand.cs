@@ -19,19 +19,19 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 {
     private readonly ILogger<CloseVerifierLotteryCommandHandler> _logger;
     private readonly IContractCaller _contractCaller;
-    private readonly IThingAcceptancePollEventQueryable _thingAcceptancePollEventQueryable;
+    private readonly IThingSubmissionVerifierLotteryEventQueryable _verifierLotteryEventQueryable;
     private readonly IContractStorageQueryable _contractStorageQueryable;
 
     public CloseVerifierLotteryCommandHandler(
         ILogger<CloseVerifierLotteryCommandHandler> logger,
         IContractCaller contractCaller,
-        IThingAcceptancePollEventQueryable thingAcceptancePollEventQueryable,
+        IThingSubmissionVerifierLotteryEventQueryable verifierLotteryEventQueryable,
         IContractStorageQueryable contractStorageQueryable
     )
     {
         _logger = logger;
         _contractCaller = contractCaller;
-        _thingAcceptancePollEventQueryable = thingAcceptancePollEventQueryable;
+        _verifierLotteryEventQueryable = verifierLotteryEventQueryable;
         _contractStorageQueryable = contractStorageQueryable;
     }
 
@@ -43,7 +43,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
         );
         int numVerifiers = await _contractStorageQueryable.GetThingSubmissionNumVerifiers();
 
-        var winnerEvents = await _thingAcceptancePollEventQueryable.FindJoinedEventsWithClosestNonces(
+        var winnerEvents = await _verifierLotteryEventQueryable.FindJoinedEventsWithClosestNonces(
             thingId: command.ThingId,
             latestBlockNumber: command.LatestIncludedBlockNumber,
             nonce: nonce,
@@ -52,7 +52,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 
         if (winnerEvents.Count == numVerifiers)
         {
-            var lotteryWinners = await _thingAcceptancePollEventQueryable.GetLotteryWinnerIndicesAccordingToPreJoinedEvents(
+            var lotteryWinners = await _verifierLotteryEventQueryable.GetLotteryWinnerIndicesAccordingToPreJoinedEvents(
                 command.ThingId,
                 winnerEvents.Select(e => e.UserId)
             );

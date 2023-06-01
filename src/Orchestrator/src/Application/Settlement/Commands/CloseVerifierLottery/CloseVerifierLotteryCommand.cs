@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 using Microsoft.Extensions.Logging;
 
 using MediatR;
@@ -22,24 +24,24 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
     private readonly ILogger<CloseVerifierLotteryCommandHandler> _logger;
     private readonly IContractCaller _contractCaller;
     private readonly IThingRepository _thingRepository;
-    private readonly IThingAcceptancePollEventQueryable _thingAcceptancePollEventQueryable;
-    private readonly IThingAssessmentPollEventQueryable _thingAssessmentPollEventQueryable;
+    private readonly IThingSubmissionVerifierLotteryEventQueryable _thingVerifierLotteryEventQueryable;
+    private readonly ISettlementProposalAssessmentVerifierLotteryEventQueryable _proposalVerifierLotteryEventQueryable;
     private readonly IContractStorageQueryable _contractStorageQueryable;
 
     public CloseVerifierLotteryCommandHandler(
         ILogger<CloseVerifierLotteryCommandHandler> logger,
         IContractCaller contractCaller,
         IThingRepository thingRepository,
-        IThingAcceptancePollEventQueryable thingAcceptancePollEventQueryable,
-        IThingAssessmentPollEventQueryable thingAssessmentPollEventQueryable,
+        IThingSubmissionVerifierLotteryEventQueryable thingVerifierLotteryEventQueryable,
+        ISettlementProposalAssessmentVerifierLotteryEventQueryable proposalVerifierLotteryEventQueryable,
         IContractStorageQueryable contractStorageQueryable
     )
     {
         _logger = logger;
         _contractCaller = contractCaller;
         _thingRepository = thingRepository;
-        _thingAcceptancePollEventQueryable = thingAcceptancePollEventQueryable;
-        _thingAssessmentPollEventQueryable = thingAssessmentPollEventQueryable;
+        _thingVerifierLotteryEventQueryable = thingVerifierLotteryEventQueryable;
+        _proposalVerifierLotteryEventQueryable = proposalVerifierLotteryEventQueryable;
         _contractStorageQueryable = contractStorageQueryable;
     }
 
@@ -56,7 +58,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
         // @@TODO: Use queryable instead of repo.
         var thingSubmissionVerifiers = await _thingRepository.GetAllVerifiersFor(command.ThingId);
 
-        var spotClaimedEvents = await _thingAssessmentPollEventQueryable.FindAllSpotClaimedEventsFor(
+        var spotClaimedEvents = await _proposalVerifierLotteryEventQueryable.FindAllSpotClaimedEventsFor(
             command.ThingId, command.SettlementProposalId
         );
 
@@ -79,7 +81,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
             }
         }
 
-        var joinedThingSubmissionVerifierLotteryEvents = await _thingAcceptancePollEventQueryable.GetJoinedEventsFor(
+        var joinedThingSubmissionVerifierLotteryEvents = await _thingVerifierLotteryEventQueryable.GetJoinedEventsFor(
             thingId: command.ThingId,
             userIds: validSpotClaimedEvents.Select(e => e.Event.UserId).ToList()
         );
@@ -98,7 +100,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
             .OrderBy(e => Math.Abs(nonce - e.Nonce))
                 .ThenBy(e => e.Index)
             .Select(e => (ulong)e.Index)
-            .Take(thingSubmissionVerifiers.Count / 2)
+            .Take(numVerifiers / 2)
             .Order()
             .ToList();
 
@@ -110,7 +112,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 
         int availableSpots = numVerifiers - winnerClaimantIndices.Count;
 
-        var winnerEvents = await _thingAssessmentPollEventQueryable.FindJoinedEventsWithClosestNonces(
+        var winnerEvents = await _proposalVerifierLotteryEventQueryable.FindJoinedEventsWithClosestNonces(
             thingId: command.ThingId,
             settlementProposalId: command.SettlementProposalId,
             latestBlockNumber: command.LatestIncludedBlockNumber,
@@ -120,7 +122,9 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 
         if (winnerEvents.Count == availableSpots)
         {
-            var lotteryWinners = await _thingAssessmentPollEventQueryable
+            Debug.Assert(winnerClaimantIndices.Count + winnerEvents.Count == numVerifiers);
+
+            var lotteryWinners = await _proposalVerifierLotteryEventQueryable
                 .GetLotteryWinnerIndicesAccordingToPreJoinedEvents(
                     command.ThingId,
                     command.SettlementProposalId,
@@ -151,8 +155,14 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
         else
         {
             _logger.LogInformation(
-                "Proposal {ProposalId} assessment verifier selection lottery: Not enough participants",
-                command.SettlementProposalId
+                "Proposal {ProposalId} Verifier Selection Lottery: Not enough participants.\n" +
+                "Required: {RequiredNumVerifiers}.\n" +
+                "Joined: {JoinedNumVerifiers}.",
+                command.SettlementProposalId, numVerifiers, winnerClaimantIndices.Count + winnerEvents.Count
+            );
+
+            await _contractCaller.CloseThingAssessmentVerifierLotteryInFailure(
+                thingId, proposalId, winnerClaimantIndices.Count + winnerEvents.Count
             );
         }
 

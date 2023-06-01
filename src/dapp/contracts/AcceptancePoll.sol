@@ -234,23 +234,22 @@ contract AcceptancePoll {
         );
     }
 
-    function finalizePoll__Accepted(
+    function _rewardAndSlashVerifiers(
         bytes16 _thingId,
-        string calldata _voteAggIpfsCid,
         uint64[] calldata _verifiersToSlashIndices
-    ) public onlyOrchestrator onlyWhenInProgress(_thingId) {
-        s_thingPollStage[_thingId] = Stage.Finalized;
-        address submitter = i_truQuest.s_thingSubmitter(_thingId);
-        i_truQuest.unstakeAndRewardThingSubmitter(submitter);
-
+    )
+        private
+        returns (
+            address[] memory rewardedVerifiers,
+            address[] memory slashedVerifiers
+        )
+    {
         uint64 j = 0;
         address[] memory verifiers = s_thingVerifiers[_thingId];
-        address[] memory rewardedVerifiers = new address[](
+        rewardedVerifiers = new address[](
             verifiers.length - _verifiersToSlashIndices.length
         );
-        address[] memory slashedVerifiers = new address[](
-            _verifiersToSlashIndices.length
-        );
+        slashedVerifiers = new address[](_verifiersToSlashIndices.length);
         for (uint8 i = 0; i < _verifiersToSlashIndices.length; ++i) {
             uint64 nextVerifierToSlashIndex = _verifiersToSlashIndices[i];
             slashedVerifiers[i] = verifiers[nextVerifierToSlashIndex];
@@ -264,6 +263,21 @@ contract AcceptancePoll {
             rewardedVerifiers[j - slashedVerifiers.length] = verifiers[j];
             i_truQuest.unstakeAndRewardVerifier(verifiers[j]);
         }
+    }
+
+    function finalizePoll__Accepted(
+        bytes16 _thingId,
+        string calldata _voteAggIpfsCid,
+        uint64[] calldata _verifiersToSlashIndices
+    ) public onlyOrchestrator onlyWhenInProgress(_thingId) {
+        s_thingPollStage[_thingId] = Stage.Finalized;
+        address submitter = i_truQuest.s_thingSubmitter(_thingId);
+        i_truQuest.unstakeAndRewardThingSubmitter(submitter);
+
+        (
+            address[] memory rewardedVerifiers,
+            address[] memory slashedVerifiers
+        ) = _rewardAndSlashVerifiers(_thingId, _verifiersToSlashIndices);
 
         emit PollFinalized(
             _thingId,
@@ -284,27 +298,10 @@ contract AcceptancePoll {
         address submitter = i_truQuest.s_thingSubmitter(_thingId);
         i_truQuest.unstakeThingSubmitter(submitter);
 
-        uint64 j = 0;
-        address[] memory verifiers = s_thingVerifiers[_thingId];
-        address[] memory rewardedVerifiers = new address[](
-            verifiers.length - _verifiersToSlashIndices.length
-        );
-        address[] memory slashedVerifiers = new address[](
-            _verifiersToSlashIndices.length
-        );
-        for (uint8 i = 0; i < _verifiersToSlashIndices.length; ++i) {
-            uint64 nextVerifierToSlashIndex = _verifiersToSlashIndices[i];
-            slashedVerifiers[i] = verifiers[nextVerifierToSlashIndex];
-            for (; j < nextVerifierToSlashIndex; ++j) {
-                rewardedVerifiers[j - i] = verifiers[j];
-                i_truQuest.unstakeAndRewardVerifier(verifiers[j]);
-            }
-            i_truQuest.unstakeAndSlashVerifier(verifiers[j++]);
-        }
-        for (; j < verifiers.length; ++j) {
-            rewardedVerifiers[j - slashedVerifiers.length] = verifiers[j];
-            i_truQuest.unstakeAndRewardVerifier(verifiers[j]);
-        }
+        (
+            address[] memory rewardedVerifiers,
+            address[] memory slashedVerifiers
+        ) = _rewardAndSlashVerifiers(_thingId, _verifiersToSlashIndices);
 
         emit PollFinalized(
             _thingId,
@@ -325,27 +322,10 @@ contract AcceptancePoll {
         address submitter = i_truQuest.s_thingSubmitter(_thingId);
         i_truQuest.unstakeAndSlashThingSubmitter(submitter);
 
-        uint64 j = 0;
-        address[] memory verifiers = s_thingVerifiers[_thingId];
-        address[] memory rewardedVerifiers = new address[](
-            verifiers.length - _verifiersToSlashIndices.length
-        );
-        address[] memory slashedVerifiers = new address[](
-            _verifiersToSlashIndices.length
-        );
-        for (uint8 i = 0; i < _verifiersToSlashIndices.length; ++i) {
-            uint64 nextVerifierToSlashIndex = _verifiersToSlashIndices[i];
-            slashedVerifiers[i] = verifiers[nextVerifierToSlashIndex];
-            for (; j < nextVerifierToSlashIndex; ++j) {
-                rewardedVerifiers[j - i] = verifiers[j];
-                i_truQuest.unstakeAndRewardVerifier(verifiers[j]);
-            }
-            i_truQuest.unstakeAndSlashVerifier(verifiers[j++]);
-        }
-        for (; j < verifiers.length; ++j) {
-            rewardedVerifiers[j - slashedVerifiers.length] = verifiers[j];
-            i_truQuest.unstakeAndRewardVerifier(verifiers[j]);
-        }
+        (
+            address[] memory rewardedVerifiers,
+            address[] memory slashedVerifiers
+        ) = _rewardAndSlashVerifiers(_thingId, _verifiersToSlashIndices);
 
         emit PollFinalized(
             _thingId,

@@ -171,7 +171,7 @@ contract ThingSubmissionVerifierLottery {
         return s_thingIdToLotteryCommitments[_thingId][_user].revealed;
     }
 
-    // onlyFunded
+    // @@TODO: Check that the thing is funded.
     function initLottery(
         bytes16 _thingId,
         bytes32 _dataHash

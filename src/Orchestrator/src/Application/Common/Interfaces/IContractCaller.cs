@@ -31,8 +31,21 @@ public interface IContractCaller
     Task CloseThingAssessmentVerifierLotteryWithSuccess(
         byte[] thingId, byte[] proposalId, byte[] data, List<ulong> winnerClaimantIndices, List<ulong> winnerIndices
     );
-    Task FinalizeAssessmentPollForSettlementProposalAsAccepted(
-        byte[] thingId, byte[] settlementProposalId, string voteAggIpfsCid,
-        List<string> verifiersToReward, List<string> verifiersToSlash
+    Task CloseThingAssessmentVerifierLotteryInFailure(byte[] thingId, byte[] proposalId, int joinedNumVerifiers);
+    Task<IEnumerable<string>> GetVerifiersForProposal(byte[] thingId, byte[] proposalId);
+    Task FinalizeAssessmentPollForProposalAsUnsettledDueToInsufficientVotingVolume(
+        byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
+    );
+    Task FinalizeAssessmentPollForProposalAsUnsettledDueToMajorityThresholdNotReached(
+        byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
+    );
+    Task FinalizeAssessmentPollForProposalAsAccepted(
+        byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
+    );
+    Task FinalizeAssessmentPollForProposalAsSoftDeclined(
+        byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
+    );
+    Task FinalizeAssessmentPollForProposalAsHardDeclined(
+        byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     );
 }

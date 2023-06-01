@@ -315,7 +315,7 @@ public class E2ETests : IAsyncLifetime
             .Key(new SolBytes16(thingIdBytes))
             .GetValue<SolUint8>();
 
-        pollStage.Value.Should().Be(4);
+        pollStage.Value.Should().Be(2);
 
         var proposerAddress = _sut.AccountProvider.GetAccount("Proposer").Address.Substring(2).ToLower();
 
@@ -963,10 +963,9 @@ public class E2ETests : IAsyncLifetime
             else
             {
                 var data = RandomNumberGenerator.GetBytes(32);
-                var dataHash = await _sut.ExecWithService<IContractCaller, byte[]>(async contractCaller =>
-                {
-                    return await contractCaller.ComputeHashForThingAssessmentVerifierLottery(data);
-                });
+                var dataHash = await _sut.ExecWithService<IContractCaller, byte[]>(
+                    contractCaller => contractCaller.ComputeHashForThingAssessmentVerifierLottery(data)
+                );
 
                 await _sut.ContractCaller.PreJoinThingAssessmentVerifierLotteryAs(
                     verifierAccountName, thingProposalIdBytes, dataHash
@@ -1033,8 +1032,6 @@ public class E2ETests : IAsyncLifetime
 
         block.Value.Should().Be(-1);
 
-        // @@TODO: Check that winners are who they should be.
-
         requiredVerifierCount = await _sut.ExecWithService<IContractStorageQueryable, int>(
             contractStorageQueryable => contractStorageQueryable.GetThingAssessmentNumVerifiers()
         );
@@ -1090,7 +1087,7 @@ public class E2ETests : IAsyncLifetime
             .Key(new SolBytes32(thingProposalIdBytes))
             .GetValue<SolUint8>();
 
-        pollStage.Value.Should().Be(4);
+        pollStage.Value.Should().Be(2);
 
         // await Dodo();
     }

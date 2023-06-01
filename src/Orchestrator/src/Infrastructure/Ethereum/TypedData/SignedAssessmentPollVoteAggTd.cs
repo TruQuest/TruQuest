@@ -9,8 +9,10 @@ public class SignedAssessmentPollVoteAggTd
     public string ThingId { get; init; }
     [Parameter("string", "settlementProposalId", 2)]
     public string SettlementProposalId { get; init; }
-    [Parameter("tuple[]", "offChainVotes", 3, "OffChainAssessmentPollVoteTd[]")]
+    [Parameter("uint64", "endBlock", 3)]
+    public ulong EndBlock { get; init; }
+    [Parameter("tuple[]", "offChainVotes", 4, "OffChainAssessmentPollVoteTd[]")]
     public List<OffChainAssessmentPollVoteTd> OffChainVotes { get; init; }
-    [Parameter("tuple[]", "onChainVotes", 4, "OnChainAssessmentPollVoteTd[]")]
+    [Parameter("tuple[]", "onChainVotes", 5, "OnChainAssessmentPollVoteTd[]")]
     public List<OnChainAssessmentPollVoteTd> OnChainVotes { get; init; }
 }

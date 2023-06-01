@@ -4,7 +4,7 @@ using Application.Common.Models.QM;
 
 namespace Application.Common.Interfaces;
 
-public interface IThingAcceptancePollEventQueryable
+public interface IThingSubmissionVerifierLotteryEventQueryable
 {
     Task<List<JoinedThingSubmissionVerifierLotteryEvent>> FindJoinedEventsWithClosestNonces(
         Guid thingId, long latestBlockNumber, decimal nonce, int count

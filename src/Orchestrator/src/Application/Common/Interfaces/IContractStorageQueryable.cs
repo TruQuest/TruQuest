@@ -10,6 +10,8 @@ public interface IContractStorageQueryable
     Task<int> GetThingAcceptancePollMajorityThreshold();
     Task<int> GetThingAssessmentVerifierLotteryDurationBlocks();
     Task<int> GetThingAssessmentNumVerifiers();
+    Task<int> GetThingAssessmentPollVotingVolumeThreshold();
+    Task<int> GetThingAssessmentPollMajorityThreshold();
     Task<string> GetThingAssessmentVerifierLotterySpotClaimantAt(byte[] thingId, byte[] proposalId, int index);
     Task<string> GetThingAssessmentVerifierLotteryParticipantAt(byte[] thingId, byte[] proposalId, int index);
     Task<int> GetAssessmentPollDurationBlocks();

@@ -42,8 +42,12 @@ class SettlementProposalPreviewVm {
         return Icons.attach_money;
       case SettlementProposalStateVm.fundedAndVerifierLotteryInitiated:
         return Icons.people;
+      case SettlementProposalStateVm.verifierLotteryFailed:
+        return Icons.emoji_people;
       case SettlementProposalStateVm.verifiersSelectedAndPollInitiated:
         return Icons.poll_outlined;
+      case SettlementProposalStateVm.consensusNotReached:
+        return Icons.drag_handle;
       case SettlementProposalStateVm.softDeclined:
         return Icons.thumbs_up_down;
       case SettlementProposalStateVm.hardDeclined:

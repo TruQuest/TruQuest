@@ -4,14 +4,12 @@ using Nethereum.Contracts;
 namespace Infrastructure.Ethereum.Messages;
 
 [Function("finalizePoll__Accepted")]
-public class FinalizeAssessmentPollForSettlementProposalAsAcceptedMessage : FunctionMessage
+public class FinalizeAssessmentPollForProposalAsAcceptedMessage : FunctionMessage
 {
     [Parameter("bytes32", "_thingProposalId", 1)]
     public byte[] ThingProposalId { get; init; }
     [Parameter("string", "_voteAggIpfsCid", 2)]
     public string VoteAggIpfsCid { get; init; }
-    [Parameter("address[]", "_verifiersToReward", 3)]
-    public List<string> VerifiersToReward { get; init; }
-    [Parameter("address[]", "_verifiersToSlash", 4)]
-    public List<string> VerifiersToSlash { get; init; }
+    [Parameter("uint64[]", "_verifiersToSlashIndices", 3)]
+    public List<ulong> VerifiersToSlashIndices { get; init; }
 }

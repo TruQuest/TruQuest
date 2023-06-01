@@ -30,18 +30,53 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
     _documentViewContext = useScoped<DocumentViewContext>();
     _proposal = _documentViewContext.proposal!;
     if (_proposal.state.index <=
-        SettlementProposalStateVm.verifiersSelectedAndPollInitiated.index) {
+        SettlementProposalStateVm.fundedAndVerifierLotteryInitiated.index) {
       _currentStep = _proposal.state.index + 1;
+    } else if (_proposal.state ==
+            SettlementProposalStateVm.verifierLotteryFailed ||
+        _proposal.state ==
+            SettlementProposalStateVm.verifiersSelectedAndPollInitiated) {
+      _currentStep =
+          SettlementProposalStateVm.fundedAndVerifierLotteryInitiated.index + 2;
     } else {
-      _currentStep = 5;
+      _currentStep =
+          SettlementProposalStateVm.fundedAndVerifierLotteryInitiated.index + 3;
     }
   }
 
-  Step _buildFinalStep() {
-    if (_proposal.state == SettlementProposalStateVm.accepted) {
-      return Step(
+  List<Step> _buildFinalSteps() {
+    if (_proposal.state.index <=
+        SettlementProposalStateVm.fundedAndVerifierLotteryInitiated.index) {
+      return [];
+    } else if (_proposal.state ==
+        SettlementProposalStateVm.verifierLotteryFailed) {
+      return [
+        Step(
+          title: Text(
+            'Lottery failed',
+            style: GoogleFonts.philosopher(
+              color: Color(0xffF8F9FA),
+              fontSize: 16,
+            ),
+          ),
+          content: Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
+              style: GoogleFonts.raleway(
+                color: Colors.white,
+              ),
+            ),
+          ),
+          isActive: true,
+        ),
+      ];
+    }
+
+    var steps = [
+      Step(
         title: Text(
-          'Accepted',
+          'Poll in progress',
           style: GoogleFonts.philosopher(
             color: Color(0xffF8F9FA),
             fontSize: 16,
@@ -57,28 +92,83 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
           ),
         ),
         isActive: true,
-      );
+      ),
+    ];
+
+    if (_proposal.state ==
+        SettlementProposalStateVm.verifiersSelectedAndPollInitiated) {
+      return steps;
+    } else if (_proposal.state == SettlementProposalStateVm.accepted) {
+      return [
+        ...steps,
+        Step(
+          title: Text(
+            'Accepted',
+            style: GoogleFonts.philosopher(
+              color: Color(0xffF8F9FA),
+              fontSize: 16,
+            ),
+          ),
+          content: Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
+              style: GoogleFonts.raleway(
+                color: Colors.white,
+              ),
+            ),
+          ),
+          isActive: true,
+        ),
+      ];
+    } else if (_proposal.state == SettlementProposalStateVm.softDeclined ||
+        _proposal.state == SettlementProposalStateVm.hardDeclined) {
+      return [
+        ...steps,
+        Step(
+          title: Text(
+            'Declined',
+            style: GoogleFonts.philosopher(
+              color: Color(0xffF8F9FA),
+              fontSize: 16,
+            ),
+          ),
+          content: Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
+              style: GoogleFonts.raleway(
+                color: Colors.white,
+              ),
+            ),
+          ),
+          isActive: true,
+        ),
+      ];
     }
 
-    return Step(
-      title: Text(
-        'Declined',
-        style: GoogleFonts.philosopher(
-          color: Color(0xffF8F9FA),
-          fontSize: 16,
-        ),
-      ),
-      content: Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Text(
-          'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
-          style: GoogleFonts.raleway(
-            color: Colors.white,
+    return [
+      ...steps,
+      Step(
+        title: Text(
+          'Consensus not reached',
+          style: GoogleFonts.philosopher(
+            color: Color(0xffF8F9FA),
+            fontSize: 16,
           ),
         ),
+        content: Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Text(
+            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
+            style: GoogleFonts.raleway(
+              color: Colors.white,
+            ),
+          ),
+        ),
+        isActive: true,
       ),
-      isActive: true,
-    );
+    ];
   }
 
   bool _checkShouldBeEnabled(int step) =>
@@ -229,28 +319,7 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
             ),
             isActive: true,
           ),
-          Step(
-            title: Text(
-              'Poll in progress',
-              style: GoogleFonts.philosopher(
-                color: Color(0xffF8F9FA),
-                fontSize: 16,
-              ),
-            ),
-            content: Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Text(
-                'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
-                style: GoogleFonts.raleway(
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            isActive: true,
-          ),
-          if (_proposal.state.index >=
-              SettlementProposalStateVm.softDeclined.index)
-            _buildFinalStep(),
+          ..._buildFinalSteps(),
         ],
       ),
     );
