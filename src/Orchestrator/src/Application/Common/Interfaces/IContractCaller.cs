@@ -5,7 +5,7 @@ namespace Application.Common.Interfaces;
 public interface IContractCaller
 {
     Task<byte[]> ComputeHashForThingSubmissionVerifierLottery(byte[] data);
-    Task<long> InitThingSubmissionVerifierLottery(byte[] thingId, byte[] dataHash);
+    Task<long> InitThingSubmissionVerifierLottery(byte[] thingId, byte[] dataHash, byte[] userXorDataHash);
     Task<BigInteger> ComputeNonceForThingSubmissionVerifierLottery(byte[] thingId, string accountName, byte[] data);
     Task CloseThingSubmissionVerifierLotteryWithSuccess(byte[] thingId, byte[] data, List<ulong> winnerIndices);
     Task CloseThingSubmissionVerifierLotteryInFailure(byte[] thingId, int joinedNumVerifiers);

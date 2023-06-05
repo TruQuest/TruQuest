@@ -199,7 +199,15 @@ public static class IServiceCollectionExtension
 
         services.AddSingleton<AccountProvider>();
         services.AddSingleton<IContractCaller, ContractCaller>();
-        services.AddSingleton<IBlockListener, BlockListener>();
+        var network = configuration["Ethereum:Network"]!;
+        if (network == "Ganache")
+        {
+            services.AddSingleton<IBlockListener, BlockListener>();
+        }
+        else if (network == "OptimismLocal")
+        {
+            services.AddSingleton<IBlockListener, OptimismL1BlockListener>();
+        }
         services.AddSingleton<IBlockchainQueryable, BlockchainQueryable>();
         services.AddSingleton<IContractStorageQueryable, ContractStorageQueryable>();
 

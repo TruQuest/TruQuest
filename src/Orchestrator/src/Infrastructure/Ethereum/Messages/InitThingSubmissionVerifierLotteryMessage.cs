@@ -10,4 +10,6 @@ public class InitThingSubmissionVerifierLotteryMessage : FunctionMessage
     public byte[] ThingId { get; init; }
     [Parameter("bytes32", "_dataHash", 2)]
     public byte[] DataHash { get; init; }
+    [Parameter("bytes32", "_userXorDataHash", 3)]
+    public byte[] UserXorDataHash { get; init; }
 }

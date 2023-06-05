@@ -37,7 +37,8 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
                     {
                         LatestIncludedBlockNumber = task.ScheduledBlockNumber,
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),
-                        Data = Convert.FromBase64String(((JsonElement)task.Payload["data"]).GetString()!)
+                        Data = Convert.FromBase64String(((JsonElement)task.Payload["data"]).GetString()!),
+                        UserXorData = Convert.FromBase64String(((JsonElement)task.Payload["userXorData"]).GetString()!)
                     });
                     break;
                 case TaskType.CloseThingAcceptancePoll:

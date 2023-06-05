@@ -7,16 +7,34 @@
 #r "c:/chekh/projects/truquest/src/Orchestrator/lib/ContractStorageExplorer/src/bin/debug/net7.0/ContractStorageExplorer.dll"
 
 using Internal;
-using System.Net.Http;
+// using System.Net.Http;
 
-var client = new HttpClient();
-client.BaseAddress = new Uri("http://localhost:8080");
-var request = new HttpRequestMessage(HttpMethod.Get, "/ipfs/QmYTECKfqKm9RnBT8wsJbvCNxNEwS9sJ7cpC7EjQVtNAdc");
-var response = await client.SendAsync(request);
+// var client = new HttpClient();
+// client.BaseAddress = new Uri("http://localhost:8080");
+// var request = new HttpRequestMessage(HttpMethod.Get, "/ipfs/QmYTECKfqKm9RnBT8wsJbvCNxNEwS9sJ7cpC7EjQVtNAdc");
+// var response = await client.SendAsync(request);
 
-Console.WriteLine(await response.Content.ReadAsStringAsync());
+// Console.WriteLine(await response.Content.ReadAsStringAsync());
 
-// using Nethereum.Web3;
+
+
+using Nethereum.Web3;
+using Nethereum.ABI.FunctionEncoding.Attributes;
+using Nethereum.Contracts;
+
+[Function("number", "uint64")]
+class GetBlockNumberMessage : FunctionMessage { }
+
+var web3 = new Web3("http://localhost:9545");
+var block = await web3.Eth
+    .GetContractQueryHandler<GetBlockNumberMessage>()
+    .QueryAsync<ulong>(
+        "0x4200000000000000000000000000000000000015",
+        new GetBlockNumberMessage()
+    );
+
+Console.WriteLine(block.ToString());
+
 // using Nethereum.Hex.HexTypes;
 
 // var web3 = new Web3("http://localhost:7545");

@@ -46,7 +46,7 @@ internal class ContractCaller : IContractCaller
         );
     }
 
-    public async Task<long> InitThingSubmissionVerifierLottery(byte[] thingId, byte[] dataHash)
+    public async Task<long> InitThingSubmissionVerifierLottery(byte[] thingId, byte[] dataHash, byte[] userXorDataHash)
     {
         var txnDispatcher = _web3.Eth.GetContractTransactionHandler<InitThingSubmissionVerifierLotteryMessage>();
         var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
@@ -54,13 +54,31 @@ internal class ContractCaller : IContractCaller
             new()
             {
                 ThingId = thingId,
-                DataHash = dataHash
+                DataHash = dataHash,
+                UserXorDataHash = userXorDataHash
             }
         );
 
         _logger.LogInformation("=============== InitThingSubmissionVerifierLottery: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
 
-        return (long)txnReceipt.BlockNumber.Value;
+        // @@NOTE: Doing it this way instead of returning block number from the receipt, because
+        // even when we are on L2, lottery init block is /L1/ block number.
+        return await _getThingSubmissionVerifierLotteryInitBlock(thingId);
+    }
+
+    private async Task<long> _getThingSubmissionVerifierLotteryInitBlock(byte[] thingId)
+    {
+        var block = await _web3.Eth
+            .GetContractQueryHandler<GetThingSubmissionVerifierLotteryInitBlockMessage>()
+            .QueryAsync<BigInteger>(
+                _thingSubmissionVerifierLotteryAddress,
+                new()
+                {
+                    ThingId = thingId
+                }
+            );
+
+        return (long)block;
     }
 
     public Task<BigInteger> ComputeNonceForThingSubmissionVerifierLottery(

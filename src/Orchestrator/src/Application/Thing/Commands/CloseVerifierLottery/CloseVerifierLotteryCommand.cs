@@ -13,6 +13,7 @@ internal class CloseVerifierLotteryCommand : IRequest<VoidResult>
     public required long LatestIncludedBlockNumber { get; init; }
     public required Guid ThingId { get; init; }
     public required byte[] Data { get; init; }
+    public required byte[] UserXorData { get; init; }
 }
 
 internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifierLotteryCommand, VoidResult>

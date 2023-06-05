@@ -187,7 +187,7 @@ public class E2ETests : IAsyncLifetime
 
         submitter.Value.ToLower().Should().Be(submitterAddress);
 
-        await Task.Delay(TimeSpan.FromSeconds(25)); // @@TODO: Wait for LotteryInitiated event instead.
+        await Task.Delay(TimeSpan.FromSeconds(25)); // @@TODO: Wait for LotteryInitialized event instead.
 
         for (int i = 1; i <= 10; ++i)
         {
@@ -604,7 +604,7 @@ public class E2ETests : IAsyncLifetime
 
         submitter.Value.ToLower().Should().Be(submitterAddress);
 
-        await Task.Delay(TimeSpan.FromSeconds(25)); // @@TODO: Wait for LotteryInitiated event instead.
+        await Task.Delay(TimeSpan.FromSeconds(25)); // @@TODO: Wait for LotteryInitialized event instead.
 
         var verifierStake = (long)(
             await _truQuestContract

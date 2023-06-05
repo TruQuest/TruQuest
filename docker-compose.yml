@@ -79,13 +79,13 @@ services:
       - zookeeper
       - kafka-1
 
-  ganache:
-    image: trufflesuite/ganache
-    ports:
-      - '7545:8545'
-    command: '--chain.chainId 51234 --logging.verbose --wallet.totalAccounts 20 --wallet.mnemonic "atom traffic guard castle father vendor modify sauce rebuild true mixture van"'
-    networks:
-      - truquest
+  # ganache:
+  #   image: trufflesuite/ganache
+  #   ports:
+  #     - '7545:8545'
+  #   command: '--chain.chainId 51234 --logging.verbose --wallet.totalAccounts 20 --wallet.mnemonic "atom traffic guard castle father vendor modify sauce rebuild true mixture van"'
+  #   networks:
+  #     - truquest
 
   file-archive:
     image: file-archive:latest

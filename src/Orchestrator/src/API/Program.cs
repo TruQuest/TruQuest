@@ -137,7 +137,12 @@ public static class WebApplicationBuilderExtension
         };
         process.Start();
 
-        app.Logger.LogInformation(await process.StandardOutput.ReadToEndAsync());
+        string? line;
+        while ((line = await process.StandardOutput.ReadLineAsync()) != null)
+        {
+            app.Logger.LogInformation(line);
+        }
+
         await process.WaitForExitAsync();
 
         return app;
@@ -203,7 +208,10 @@ public static class WebApplicationBuilderExtension
             }
         );
 
-        await web3Orchestrator.Client.SendRequestAsync(new RpcRequest(Guid.NewGuid().ToString(), "evm_mine"));
+        if (network == "Ganache")
+        {
+            await web3Orchestrator.Client.SendRequestAsync(new RpcRequest(Guid.NewGuid().ToString(), "evm_mine"));
+        }
 
         foreach (var user in users)
         {
@@ -216,7 +224,10 @@ public static class WebApplicationBuilderExtension
                 }
             );
 
-            await web3Orchestrator.Client.SendRequestAsync(new RpcRequest(Guid.NewGuid().ToString(), "evm_mine"));
+            if (network == "Ganache")
+            {
+                await web3Orchestrator.Client.SendRequestAsync(new RpcRequest(Guid.NewGuid().ToString(), "evm_mine"));
+            }
 
             var account = accountProvider.GetAccount(user);
             var web3 = new Web3(account, rpcUrl);
@@ -231,7 +242,10 @@ public static class WebApplicationBuilderExtension
                 }
             );
 
-            await web3.Client.SendRequestAsync(new RpcRequest(Guid.NewGuid().ToString(), "evm_mine"));
+            if (network == "Ganache")
+            {
+                await web3.Client.SendRequestAsync(new RpcRequest(Guid.NewGuid().ToString(), "evm_mine"));
+            }
 
             var depositTxnDispatcher = web3.Eth.GetContractTransactionHandler<DepositMessage>();
             var depositTxnReceipt = await depositTxnDispatcher.SendRequestAndWaitForReceiptAsync(
@@ -242,7 +256,10 @@ public static class WebApplicationBuilderExtension
                 }
             );
 
-            await web3.Client.SendRequestAsync(new RpcRequest(Guid.NewGuid().ToString(), "evm_mine"));
+            if (network == "Ganache")
+            {
+                await web3.Client.SendRequestAsync(new RpcRequest(Guid.NewGuid().ToString(), "evm_mine"));
+            }
         }
 
         return app;
