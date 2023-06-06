@@ -11,7 +11,10 @@ namespace Infrastructure.Kafka.Messages;
 internal class ThingSubmissionVerifierLotteryClosedWithSuccessEvent
 {
     public required string Orchestrator { get; init; }
-    public required decimal Nonce { get; init; }
+    public required string Data { get; init; }
+    public required string UserXorData { get; init; }
+    public required string HashOfL1EndBlock { get; init; }
+    public required long Nonce { get; init; }
     public required List<string> WinnerIds { get; init; }
 }
 

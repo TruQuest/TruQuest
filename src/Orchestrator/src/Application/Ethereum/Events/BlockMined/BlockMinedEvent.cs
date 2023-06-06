@@ -6,6 +6,7 @@ using Domain.Aggregates;
 
 using Application.Thing.Commands.CloseAcceptancePoll;
 using Application.Settlement.Commands.CloseAssessmentPoll;
+using Application.Common.Misc;
 
 namespace Application.Ethereum.Events.BlockMined;
 
@@ -27,7 +28,7 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
 
     public async Task Handle(BlockMinedEvent @event, CancellationToken ct)
     {
-        var tasks = await _taskRepository.FindAllWithScheduledBlockNumber(leBlockNumber: @event.BlockNumber - 1);
+        var tasks = await _taskRepository.FindAllWithScheduledBlockNumber(leBlockNumber: @event.BlockNumber);
         foreach (var task in tasks)
         {
             switch (task.Type)
@@ -35,17 +36,17 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
                 case TaskType.CloseThingSubmissionVerifierLottery:
                     await _mediator.Send(new Thing.Commands.CloseVerifierLottery.CloseVerifierLotteryCommand
                     {
-                        LatestIncludedBlockNumber = task.ScheduledBlockNumber,
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),
-                        Data = Convert.FromBase64String(((JsonElement)task.Payload["data"]).GetString()!),
-                        UserXorData = Convert.FromBase64String(((JsonElement)task.Payload["userXorData"]).GetString()!)
+                        Data = ((JsonElement)task.Payload["data"]).GetString()!.HexToByteArray(),
+                        UserXorData = ((JsonElement)task.Payload["userXorData"]).GetString()!.HexToByteArray(),
+                        EndBlock = task.ScheduledBlockNumber - 1
                     });
                     break;
                 case TaskType.CloseThingAcceptancePoll:
                     await _mediator.Send(new CloseAcceptancePollCommand
                     {
-                        LatestIncludedBlockNumber = task.ScheduledBlockNumber,
-                        ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!)
+                        ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),
+                        EndBlock = task.ScheduledBlockNumber - 1
                     });
                     break;
                 case TaskType.CloseThingAssessmentVerifierLottery:

@@ -80,7 +80,7 @@ internal class ContractStorageQueryable : IContractStorageQueryable
     {
         var value = await _thingSubmissionVerifierLotteryContract
             .WalkStorage()
-            .Field("s_participants")
+            .Field("s_thingIdToParticipants")
             .AsMapping()
             .Key(new SolBytes16(thingId))
             .AsArrayOf<SolAddress>()

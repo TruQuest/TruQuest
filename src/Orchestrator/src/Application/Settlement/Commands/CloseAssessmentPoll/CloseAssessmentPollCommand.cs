@@ -23,7 +23,7 @@ internal class CloseAssessmentPollCommand : IRequest<VoidResult>
 internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessmentPollCommand, VoidResult>
 {
     private readonly ILogger<CloseAssessmentPollCommandHandler> _logger;
-    private readonly IBlockchainQueryable _blockchainQueryable;
+    private readonly IL1BlockchainQueryable _blockchainQueryable;
     private readonly IAssessmentPollVoteRepository _voteRepository;
     private readonly ICastedAssessmentPollVoteEventRepository _castedAssessmentPollVoteEventRepository;
     private readonly ISigner _signer;
@@ -33,7 +33,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
 
     public CloseAssessmentPollCommandHandler(
         ILogger<CloseAssessmentPollCommandHandler> logger,
-        IBlockchainQueryable blockchainQueryable,
+        IL1BlockchainQueryable blockchainQueryable,
         IAssessmentPollVoteRepository voteRepository,
         ICastedAssessmentPollVoteEventRepository castedAssessmentPollVoteEventRepository,
         ISigner signer,

@@ -1,9 +1,9 @@
-using System.Numerics;
-
 using MediatR;
 
 using Domain.Aggregates.Events;
 using JoinedThingSubmissionVerifierLotteryEventDm = Domain.Aggregates.Events.JoinedThingSubmissionVerifierLotteryEvent;
+
+using Application.Common.Misc;
 
 namespace Application.Ethereum.Events.ThingSubmissionVerifierLottery.JoinedLottery;
 
@@ -13,7 +13,7 @@ public class JoinedLotteryEvent : INotification
     public required int TxnIndex { get; init; }
     public required byte[] ThingId { get; init; }
     public required string UserId { get; init; }
-    public required BigInteger Nonce { get; init; }
+    public required byte[] UserData { get; init; }
 }
 
 internal class JoinedLotteryEventHandler : INotificationHandler<JoinedLotteryEvent>
@@ -34,7 +34,7 @@ internal class JoinedLotteryEventHandler : INotificationHandler<JoinedLotteryEve
             txnIndex: @event.TxnIndex,
             thingId: new Guid(@event.ThingId),
             userId: @event.UserId,
-            nonce: (decimal)@event.Nonce
+            userData: @event.UserData.ToHex(prefix: true)
         );
         _joinedThingSubmissionVerifierLotteryEventRepository.Create(joinedThingSubmissionVerifierLotteryEvent);
 

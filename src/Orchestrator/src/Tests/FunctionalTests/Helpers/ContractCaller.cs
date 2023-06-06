@@ -129,7 +129,7 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task JoinThingSubmissionVerifierLotteryAs(string accountName, byte[] thingId, byte[] data)
+    public async Task JoinThingSubmissionVerifierLotteryAs(string accountName, byte[] thingId, byte[] userData)
     {
         var account = _accountProvider.GetAccount(accountName);
         var web3 = new Web3(account, _rpcUrl);
@@ -140,7 +140,7 @@ public class ContractCaller
             new()
             {
                 ThingId = thingId,
-                Data = data
+                UserData = userData
             }
         );
 

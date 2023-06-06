@@ -8,6 +8,6 @@ public class JoinThingSubmissionVerifierLotteryMessage : FunctionMessage
 {
     [Parameter("bytes16", "_thingId", 1)]
     public byte[] ThingId { get; init; }
-    [Parameter("bytes32", "_data", 2)]
-    public byte[] Data { get; init; }
+    [Parameter("bytes32", "_userData", 2)]
+    public byte[] UserData { get; init; }
 }

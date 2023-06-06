@@ -81,6 +81,17 @@ internal class ContractCaller : IContractCaller
         return (long)block;
     }
 
+    public Task<bool> CheckThingSubmissionVerifierLotteryExpired(byte[] thingId) => _web3.Eth
+        .GetContractQueryHandler<CheckThingSubmissionVerifierLotteryExpiredMessage>()
+        .QueryAsync<bool>(
+            _thingSubmissionVerifierLotteryAddress,
+            new() { ThingId = thingId }
+        );
+
+    public Task<BigInteger> GetThingSubmissionVerifierLotteryMaxNonce() => _web3.Eth
+        .GetContractQueryHandler<GetMaxNonceMessage>()
+        .QueryAsync<BigInteger>(_thingSubmissionVerifierLotteryAddress, new());
+
     public Task<BigInteger> ComputeNonceForThingSubmissionVerifierLottery(
         byte[] thingId, string accountName, byte[] data
     )
@@ -99,7 +110,7 @@ internal class ContractCaller : IContractCaller
     }
 
     public async Task CloseThingSubmissionVerifierLotteryWithSuccess(
-        byte[] thingId, byte[] data, List<ulong> winnerIndices
+        byte[] thingId, byte[] data, byte[] userXorData, byte[] hashOfL1EndBlock, List<ulong> winnerIndices
     )
     {
         var txnReceipt = await _web3.Eth
@@ -110,6 +121,8 @@ internal class ContractCaller : IContractCaller
                 {
                     ThingId = thingId,
                     Data = data,
+                    UserXorData = userXorData,
+                    HashOfL1EndBlock = hashOfL1EndBlock,
                     WinnerIndices = winnerIndices
                 }
             );
@@ -131,6 +144,18 @@ internal class ContractCaller : IContractCaller
             );
 
         _logger.LogInformation("=============== CloseThingSubmissionVerifierLotteryInFailure: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+    }
+
+    public async Task<long> GetThingAcceptancePollInitBlock(byte[] thingId)
+    {
+        var block = await _web3.Eth
+            .GetContractQueryHandler<GetThingAcceptancePollInitBlockMessage>()
+            .QueryAsync<BigInteger>(
+                _acceptancePollAddress,
+                new() { ThingId = thingId }
+            );
+
+        return (long)block;
     }
 
     public async Task FinalizeAcceptancePollForThingAsUnsettledDueToInsufficientVotingVolume(

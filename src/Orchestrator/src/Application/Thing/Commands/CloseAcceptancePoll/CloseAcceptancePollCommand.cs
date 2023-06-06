@@ -16,14 +16,14 @@ namespace Application.Thing.Commands.CloseAcceptancePoll;
 
 internal class CloseAcceptancePollCommand : IRequest<VoidResult>
 {
-    public required long LatestIncludedBlockNumber { get; init; }
     public required Guid ThingId { get; init; }
+    public required long EndBlock { get; init; }
 }
 
 internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptancePollCommand, VoidResult>
 {
     private readonly ILogger<CloseAcceptancePollCommandHandler> _logger;
-    private readonly IBlockchainQueryable _blockchainQueryable;
+    private readonly IL1BlockchainQueryable _l1BlockchainQueryable;
     private readonly IAcceptancePollVoteRepository _voteRepository;
     private readonly ICastedAcceptancePollVoteEventRepository _castedAcceptancePollVoteEventRepository;
     private readonly IContractStorageQueryable _contractStorageQueryable;
@@ -33,7 +33,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
 
     public CloseAcceptancePollCommandHandler(
         ILogger<CloseAcceptancePollCommandHandler> logger,
-        IBlockchainQueryable blockchainQueryable,
+        IL1BlockchainQueryable l1BlockchainQueryable,
         IAcceptancePollVoteRepository voteRepository,
         ICastedAcceptancePollVoteEventRepository castedAcceptancePollVoteEventRepository,
         IContractStorageQueryable contractStorageQueryable,
@@ -43,7 +43,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
     )
     {
         _logger = logger;
-        _blockchainQueryable = blockchainQueryable;
+        _l1BlockchainQueryable = l1BlockchainQueryable;
         _voteRepository = voteRepository;
         _castedAcceptancePollVoteEventRepository = castedAcceptancePollVoteEventRepository;
         _contractStorageQueryable = contractStorageQueryable;
@@ -54,7 +54,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
 
     public async Task<VoidResult> Handle(CloseAcceptancePollCommand command, CancellationToken ct)
     {
-        long upperLimitTs = await _blockchainQueryable.GetBlockTimestamp(command.LatestIncludedBlockNumber);
+        long upperLimitTs = await _l1BlockchainQueryable.GetBlockTimestamp(command.EndBlock);
 
         // @@TODO: Use queryable instead of repo.
         var offChainVotes = await _voteRepository.GetFor(command.ThingId);
@@ -63,14 +63,14 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
         var castedVoteEvents = await _castedAcceptancePollVoteEventRepository.GetAllFor(command.ThingId);
 
         var orchestratorSig = _signer.SignAcceptancePollVoteAgg(
-            command.ThingId, (ulong)command.LatestIncludedBlockNumber,
+            command.ThingId, (ulong)command.EndBlock,
             offChainVotes, castedVoteEvents
         );
 
         var result = await _fileStorage.UploadJson(new
         {
             command.ThingId,
-            EndBlock = command.LatestIncludedBlockNumber,
+            EndBlock = command.EndBlock,
             OffChainVotes = offChainVotes
                 .Select(v => new
                 {

@@ -6,17 +6,14 @@ using MediatR;
 using Application.Thing.Events.AttachmentsArchivingCompleted;
 using Application.Ethereum.Events.ThingSubmissionVerifierLottery.JoinedLottery;
 using Application.Ethereum.Events.ThingSubmissionVerifierLottery.LotteryInitialized;
+using Application.Ethereum.Events.ThingSubmissionVerifierLottery.LotteryClosedWithSuccess;
+using Application.Ethereum.Events.AcceptancePoll.PollFinalized;
 
 namespace Tests.FunctionalTests.Helpers;
 
-public class ThingSubmissionVerifierLotteryInitializedEventArgs : EventArgs
+public class ThingSubmissionVerifierLotteryClosedWithSuccessEventArgs : EventArgs
 {
-    public required LotteryInitializedEvent Event { get; init; }
-}
-
-public class JoinedThingSubmissionVerifierLotteryEventArgs : EventArgs
-{
-    public required JoinedLotteryEvent Event { get; init; }
+    public required LotteryClosedWithSuccessEvent Event { get; init; }
 }
 
 public class EventBroadcaster
@@ -25,8 +22,10 @@ public class EventBroadcaster
     private readonly CancellationTokenSource _cts;
 
     public event EventHandler? ThingDraftCreated;
-    public event EventHandler<ThingSubmissionVerifierLotteryInitializedEventArgs>? ThingSubmissionVerifierLotteryInitialized;
-    public event EventHandler<JoinedThingSubmissionVerifierLotteryEventArgs>? JoinedThingSubmissionVerifierLottery;
+    public event EventHandler? ThingSubmissionVerifierLotteryInitialized;
+    public event EventHandler? JoinedThingSubmissionVerifierLottery;
+    public event EventHandler<ThingSubmissionVerifierLotteryClosedWithSuccessEventArgs>? ThingSubmissionVerifierLotteryClosedWithSuccess;
+    public event EventHandler? ThingAcceptancePollFinalized;
 
     public EventBroadcaster(ChannelReader<INotification> stream)
     {
@@ -46,13 +45,21 @@ public class EventBroadcaster
                 {
                     OnThingDraftCreated();
                 }
-                else if (@event is LotteryInitializedEvent initEvent)
+                else if (@event is LotteryInitializedEvent)
                 {
-                    OnThingSubmissionVerifierLotteryInitialized(initEvent);
+                    OnThingSubmissionVerifierLotteryInitialized();
                 }
-                else if (@event is JoinedLotteryEvent joinedEvent)
+                else if (@event is JoinedLotteryEvent)
                 {
-                    OnJoinedThingSubmissionVerifierLottery(joinedEvent);
+                    OnJoinedThingSubmissionVerifierLottery();
+                }
+                else if (@event is LotteryClosedWithSuccessEvent lotteryClosedWithSuccessEvent)
+                {
+                    OnThingSubmissionVerifierLotteryClosedWithSuccess(lotteryClosedWithSuccessEvent);
+                }
+                else if (@event is PollFinalizedEvent)
+                {
+                    OnThingAcceptancePollFinalized();
                 }
             }
             catch (OperationCanceledException)
@@ -66,15 +73,18 @@ public class EventBroadcaster
 
     protected virtual void OnThingDraftCreated() => ThingDraftCreated?.Invoke(this, EventArgs.Empty);
 
-    protected virtual void OnThingSubmissionVerifierLotteryInitialized(LotteryInitializedEvent @event) =>
-        ThingSubmissionVerifierLotteryInitialized?.Invoke(
+    protected virtual void OnThingSubmissionVerifierLotteryInitialized() =>
+        ThingSubmissionVerifierLotteryInitialized?.Invoke(this, EventArgs.Empty);
+
+    protected virtual void OnJoinedThingSubmissionVerifierLottery() =>
+        JoinedThingSubmissionVerifierLottery?.Invoke(this, EventArgs.Empty);
+
+    protected virtual void OnThingSubmissionVerifierLotteryClosedWithSuccess(LotteryClosedWithSuccessEvent @event) =>
+        ThingSubmissionVerifierLotteryClosedWithSuccess?.Invoke(
             this,
-            new ThingSubmissionVerifierLotteryInitializedEventArgs { Event = @event }
+            new ThingSubmissionVerifierLotteryClosedWithSuccessEventArgs { Event = @event }
         );
 
-    protected virtual void OnJoinedThingSubmissionVerifierLottery(JoinedLotteryEvent @event) =>
-        JoinedThingSubmissionVerifierLottery?.Invoke(
-            this,
-            new JoinedThingSubmissionVerifierLotteryEventArgs { Event = @event }
-        );
+    protected virtual void OnThingAcceptancePollFinalized() =>
+        ThingAcceptancePollFinalized?.Invoke(this, EventArgs.Empty);
 }

@@ -55,6 +55,9 @@ contract ThingSubmissionVerifierLottery {
     event LotteryClosedWithSuccess(
         bytes16 indexed thingId,
         address orchestrator,
+        bytes32 data,
+        bytes32 userXorData,
+        bytes32 hashOfL1EndBlock,
         uint256 nonce,
         address[] winners
     );
@@ -163,13 +166,6 @@ contract ThingSubmissionVerifierLottery {
         return block.number;
     }
 
-    function _getL1BlockHash(
-        uint256 blockNumber
-    ) private view returns (bytes32) {
-        // @@NOTE: Only last 256 blocks.
-        return blockhash(blockNumber);
-    }
-
     function computeHash(bytes32 _data) public view returns (bytes32) {
         return keccak256(abi.encodePacked(address(this), _data));
     }
@@ -230,10 +226,22 @@ contract ThingSubmissionVerifierLottery {
         emit JoinedLottery(_thingId, msg.sender, _userData);
     }
 
+    function checkExpired(bytes16 _thingId) public view returns (bool) {
+        return
+            _getL1BlockNumber() >
+            uint256(s_thingIdToOrchestratorCommitment[_thingId].block) +
+                s_durationBlocks;
+    }
+
+    function getMaxNonce() public pure returns (uint256) {
+        return MAX_NONCE;
+    }
+
     function closeLotteryWithSuccess(
         bytes16 _thingId,
         bytes32 _data,
         bytes32 _userXorData,
+        bytes32 _hashOfL1EndBlock,
         uint64[] calldata _winnerIndices // sorted asc indices of users in participants array
     ) public onlyOrchestrator whenActive(_thingId) whenExpired(_thingId) {
         if (_winnerIndices.length != s_numVerifiers) {
@@ -275,12 +283,18 @@ contract ThingSubmissionVerifierLottery {
 
         s_acceptancePoll.initPoll(_thingId, winners);
 
-        uint256 nonce = (uint256(_data) ^
-            uint256(
-                _getL1BlockHash(uint256(commitment.block) + s_durationBlocks)
-            )) % MAX_NONCE;
+        uint256 nonce = (uint256(_data) ^ uint256(_hashOfL1EndBlock)) %
+            MAX_NONCE;
 
-        emit LotteryClosedWithSuccess(_thingId, s_orchestrator, nonce, winners);
+        emit LotteryClosedWithSuccess(
+            _thingId,
+            s_orchestrator,
+            _data,
+            _userXorData,
+            _hashOfL1EndBlock,
+            nonce,
+            winners
+        );
     }
 
     function closeLotteryInFailure(

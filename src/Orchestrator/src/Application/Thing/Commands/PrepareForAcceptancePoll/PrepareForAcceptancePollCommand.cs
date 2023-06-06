@@ -16,7 +16,7 @@ public class PrepareForAcceptancePollCommand : IRequest<VoidResult>
     public required int AcceptancePollInitTxnIndex { get; init; }
     public required Guid ThingId { get; init; }
     public required string Orchestrator { get; init; }
-    public required decimal Nonce { get; init; }
+    public required long Nonce { get; init; }
     public required List<string> WinnerIds { get; init; }
 }
 
@@ -27,6 +27,7 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
     private readonly IJoinedThingSubmissionVerifierLotteryEventRepository _joinedThingSubmissionVerifierLotteryEventRepository;
     private readonly IThingUpdateRepository _thingUpdateRepository;
     private readonly IWatchedItemRepository _watchedItemRepository;
+    private readonly IContractCaller _contractCaller;
     private readonly IContractStorageQueryable _contractStorageQueryable;
 
     public PrepareForAcceptancePollCommandHandler(
@@ -35,6 +36,7 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
         IJoinedThingSubmissionVerifierLotteryEventRepository joinedThingSubmissionVerifierLotteryEventRepository,
         IThingUpdateRepository thingUpdateRepository,
         IWatchedItemRepository watchedItemRepository,
+        IContractCaller contractCaller,
         IContractStorageQueryable contractStorageQueryable
     )
     {
@@ -43,6 +45,7 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
         _joinedThingSubmissionVerifierLotteryEventRepository = joinedThingSubmissionVerifierLotteryEventRepository;
         _thingUpdateRepository = thingUpdateRepository;
         _watchedItemRepository = watchedItemRepository;
+        _contractCaller = contractCaller;
         _contractStorageQueryable = contractStorageQueryable;
     }
 
@@ -54,11 +57,12 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
             thing.SetState(ThingState.VerifiersSelectedAndPollInitiated);
             thing.AddVerifiers(command.WinnerIds);
 
+            var pollInitBlock = await _contractCaller.GetThingAcceptancePollInitBlock(thing.Id.ToByteArray());
             int pollDurationBlocks = await _contractStorageQueryable.GetAcceptancePollDurationBlocks();
 
             var task = new DeferredTask(
                 type: TaskType.CloseThingAcceptancePoll,
-                scheduledBlockNumber: command.AcceptancePollInitBlockNumber + pollDurationBlocks
+                scheduledBlockNumber: pollInitBlock + pollDurationBlocks + 1
             );
             task.SetPayload(new()
             {

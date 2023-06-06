@@ -164,7 +164,7 @@ internal class ContractEventListener : IContractEventListener
                     TxnIndex = (int)joinedThingSubmissionVerifierLotteryEvent.Log.TransactionIndex.Value,
                     ThingId = joinedThingSubmissionVerifierLotteryEvent.Event.ThingId,
                     UserId = joinedThingSubmissionVerifierLotteryEvent.Event.UserId.Substring(2).ToLower(),
-                    Nonce = joinedThingSubmissionVerifierLotteryEvent.Event.Nonce
+                    UserData = joinedThingSubmissionVerifierLotteryEvent.Event.UserData
                 };
             }
             else if (@event is EventLog<ThingSubmissionVerifierLottery.LotteryClosedWithSuccessEvent> thingSubmissionVerifierLotteryClosedWithSuccessEvent)
@@ -175,7 +175,10 @@ internal class ContractEventListener : IContractEventListener
                     TxnIndex = (int)thingSubmissionVerifierLotteryClosedWithSuccessEvent.Log.TransactionIndex.Value,
                     ThingId = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.ThingId,
                     Orchestrator = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.Orchestrator.Substring(2).ToLower(),
-                    Nonce = (decimal)thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.Nonce,
+                    Data = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.Data,
+                    UserXorData = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.UserXorData,
+                    HashOfL1EndBlock = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.HashOfL1EndBlock,
+                    Nonce = (long)thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.Nonce,
                     WinnerIds = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.WinnerIds
                         .Select(id => id.Substring(2).ToLower())
                         .ToList()

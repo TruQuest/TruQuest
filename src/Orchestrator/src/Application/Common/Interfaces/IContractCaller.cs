@@ -6,9 +6,14 @@ public interface IContractCaller
 {
     Task<byte[]> ComputeHashForThingSubmissionVerifierLottery(byte[] data);
     Task<long> InitThingSubmissionVerifierLottery(byte[] thingId, byte[] dataHash, byte[] userXorDataHash);
+    Task<bool> CheckThingSubmissionVerifierLotteryExpired(byte[] thingId);
+    Task<BigInteger> GetThingSubmissionVerifierLotteryMaxNonce();
     Task<BigInteger> ComputeNonceForThingSubmissionVerifierLottery(byte[] thingId, string accountName, byte[] data);
-    Task CloseThingSubmissionVerifierLotteryWithSuccess(byte[] thingId, byte[] data, List<ulong> winnerIndices);
+    Task CloseThingSubmissionVerifierLotteryWithSuccess(
+        byte[] thingId, byte[] data, byte[] userXorData, byte[] hashOfL1EndBlock, List<ulong> winnerIndices
+    );
     Task CloseThingSubmissionVerifierLotteryInFailure(byte[] thingId, int joinedNumVerifiers);
+    Task<long> GetThingAcceptancePollInitBlock(byte[] thingId);
     Task FinalizeAcceptancePollForThingAsUnsettledDueToInsufficientVotingVolume(
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     );

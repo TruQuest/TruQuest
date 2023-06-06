@@ -3,11 +3,13 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import "./TruQuest.sol";
 import "./ThingSubmissionVerifierLottery.sol";
+import "./L1Block.sol";
 
 error AcceptancePoll__Unauthorized();
 error AcceptancePoll__Expired(bytes16 thingId);
 error AcceptancePoll__NotDesignatedVerifier(bytes16 thingId);
 error AcceptancePoll__NotInProgress(bytes16 thingId);
+error AcceptancePoll__StillInProgress(bytes16 thingId);
 
 contract AcceptancePoll {
     enum Vote {
@@ -34,11 +36,14 @@ contract AcceptancePoll {
     ThingSubmissionVerifierLottery private s_verifierLottery;
     address private s_orchestrator;
 
+    L1Block private constant L1BLOCK =
+        L1Block(0x4200000000000000000000000000000000000015);
+
     uint16 private s_durationBlocks;
     uint8 private s_votingVolumeThresholdPercent;
     uint8 private s_majorityThresholdPercent;
 
-    mapping(bytes16 => uint64) private s_thingIdToPollInitBlock;
+    mapping(bytes16 => uint256) private s_thingIdToPollInitBlock;
     mapping(bytes16 => address[]) private s_thingVerifiers;
     mapping(bytes16 => Stage) private s_thingPollStage;
 
@@ -81,9 +86,10 @@ contract AcceptancePoll {
         _;
     }
 
-    modifier onlyWhileNotExpired(bytes16 _thingId) {
+    modifier whenNotExpired(bytes16 _thingId) {
         if (
-            block.number > s_thingIdToPollInitBlock[_thingId] + s_durationBlocks
+            _getL1BlockNumber() >
+            s_thingIdToPollInitBlock[_thingId] + s_durationBlocks
         ) {
             revert AcceptancePoll__Expired(_thingId);
         }
@@ -107,9 +113,19 @@ contract AcceptancePoll {
         _;
     }
 
-    modifier onlyWhenInProgress(bytes16 _thingId) {
+    modifier whenInProgress(bytes16 _thingId) {
         if (s_thingPollStage[_thingId] != Stage.InProgress) {
             revert AcceptancePoll__NotInProgress(_thingId);
+        }
+        _;
+    }
+
+    modifier whenExpired(bytes16 _thingId) {
+        if (
+            _getL1BlockNumber() <=
+            s_thingIdToPollInitBlock[_thingId] + s_durationBlocks
+        ) {
+            revert AcceptancePoll__StillInProgress(_thingId);
         }
         _;
     }
@@ -135,11 +151,18 @@ contract AcceptancePoll {
         );
     }
 
+    function _getL1BlockNumber() private view returns (uint256) {
+        if (block.chainid == 901) {
+            return L1BLOCK.number();
+        }
+        return block.number;
+    }
+
     function getPollDurationBlocks() public view returns (uint16) {
         return s_durationBlocks;
     }
 
-    function getPollInitBlock(bytes16 _thingId) public view returns (uint64) {
+    function getPollInitBlock(bytes16 _thingId) public view returns (uint256) {
         return s_thingIdToPollInitBlock[_thingId];
     }
 
@@ -147,7 +170,7 @@ contract AcceptancePoll {
         bytes16 _thingId,
         address[] memory _verifiers
     ) external onlyThingSubmissionVerifierLottery {
-        s_thingIdToPollInitBlock[_thingId] = uint64(block.number);
+        s_thingIdToPollInitBlock[_thingId] = _getL1BlockNumber();
         s_thingVerifiers[_thingId] = _verifiers;
         s_thingPollStage[_thingId] = Stage.InProgress;
     }
@@ -171,8 +194,8 @@ contract AcceptancePoll {
         Vote _vote
     )
         public
-        onlyWhenInProgress(_thingId)
-        onlyWhileNotExpired(_thingId)
+        whenInProgress(_thingId)
+        whenNotExpired(_thingId)
         onlyDesignatedVerifiers(_thingId)
     {
         emit CastedVote(_thingId, msg.sender, _vote);
@@ -184,8 +207,8 @@ contract AcceptancePoll {
         string calldata _reason
     )
         public
-        onlyWhenInProgress(_thingId)
-        onlyWhileNotExpired(_thingId)
+        whenInProgress(_thingId)
+        whenNotExpired(_thingId)
         onlyDesignatedVerifiers(_thingId)
     {
         emit CastedVoteWithReason(_thingId, msg.sender, _vote, _reason);
@@ -202,7 +225,7 @@ contract AcceptancePoll {
         string calldata _voteAggIpfsCid,
         Decision _decision,
         uint64[] calldata _verifiersToSlashIndices
-    ) public onlyOrchestrator onlyWhenInProgress(_thingId) {
+    ) public onlyOrchestrator whenInProgress(_thingId) whenExpired(_thingId) {
         s_thingPollStage[_thingId] = Stage.Finalized;
         address submitter = i_truQuest.s_thingSubmitter(_thingId);
         i_truQuest.unstakeThingSubmitter(submitter);
@@ -269,7 +292,7 @@ contract AcceptancePoll {
         bytes16 _thingId,
         string calldata _voteAggIpfsCid,
         uint64[] calldata _verifiersToSlashIndices
-    ) public onlyOrchestrator onlyWhenInProgress(_thingId) {
+    ) public onlyOrchestrator whenInProgress(_thingId) whenExpired(_thingId) {
         s_thingPollStage[_thingId] = Stage.Finalized;
         address submitter = i_truQuest.s_thingSubmitter(_thingId);
         i_truQuest.unstakeAndRewardThingSubmitter(submitter);
@@ -293,7 +316,7 @@ contract AcceptancePoll {
         bytes16 _thingId,
         string calldata _voteAggIpfsCid,
         uint64[] calldata _verifiersToSlashIndices
-    ) public onlyOrchestrator onlyWhenInProgress(_thingId) {
+    ) public onlyOrchestrator whenInProgress(_thingId) whenExpired(_thingId) {
         s_thingPollStage[_thingId] = Stage.Finalized;
         address submitter = i_truQuest.s_thingSubmitter(_thingId);
         i_truQuest.unstakeThingSubmitter(submitter);
@@ -317,7 +340,7 @@ contract AcceptancePoll {
         bytes16 _thingId,
         string calldata _voteAggIpfsCid,
         uint64[] calldata _verifiersToSlashIndices
-    ) public onlyOrchestrator onlyWhenInProgress(_thingId) {
+    ) public onlyOrchestrator whenInProgress(_thingId) whenExpired(_thingId) {
         s_thingPollStage[_thingId] = Stage.Finalized;
         address submitter = i_truQuest.s_thingSubmitter(_thingId);
         i_truQuest.unstakeAndSlashThingSubmitter(submitter);
