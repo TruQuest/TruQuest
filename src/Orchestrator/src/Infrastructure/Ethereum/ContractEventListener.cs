@@ -83,7 +83,7 @@ internal class ContractEventListener : IContractEventListener
             var eventHandlers = new ProcessorHandler<FilterLog>[]
             {
                 new EventLogProcessorHandler<ThingFundedEvent>(WriteToChannel),
-                // new EventLogProcessorHandler<ThingSubmissionVerifierLottery.LotteryInitializedEvent>(WriteToChannel),
+                new EventLogProcessorHandler<ThingSubmissionVerifierLottery.LotteryInitializedEvent>(WriteToChannel),
                 new EventLogProcessorHandler<ThingSubmissionVerifierLottery.PreJoinedLotteryEvent>(WriteToChannel),
                 new EventLogProcessorHandler<ThingSubmissionVerifierLottery.JoinedLotteryEvent>(WriteToChannel),
                 new EventLogProcessorHandler<ThingSubmissionVerifierLottery.LotteryClosedWithSuccessEvent>(WriteToChannel),
@@ -147,24 +147,13 @@ internal class ContractEventListener : IContractEventListener
             }
             else if (@event is EventLog<ThingSubmissionVerifierLottery.LotteryInitializedEvent> thingSubmissionVerifierLotteryInitializedEvent)
             {
-                yield return new AppEvents.ThingSubmissionVerifierLottery.PreJoinedLottery.PreJoinedLotteryEvent
+                yield return new AppEvents.ThingSubmissionVerifierLottery.LotteryInitialized.LotteryInitializedEvent
                 {
                     BlockNumber = (long)thingSubmissionVerifierLotteryInitializedEvent.Log.BlockNumber.Value,
                     TxnIndex = (int)thingSubmissionVerifierLotteryInitializedEvent.Log.TransactionIndex.Value,
                     ThingId = thingSubmissionVerifierLotteryInitializedEvent.Event.ThingId,
-                    UserId = thingSubmissionVerifierLotteryInitializedEvent.Event.Orchestrator.Substring(2).ToLower(),
-                    DataHash = thingSubmissionVerifierLotteryInitializedEvent.Event.DataHash
-                };
-            }
-            else if (@event is EventLog<ThingSubmissionVerifierLottery.PreJoinedLotteryEvent> preJoinedThingSubmissionVerifierLotteryEvent)
-            {
-                yield return new AppEvents.ThingSubmissionVerifierLottery.PreJoinedLottery.PreJoinedLotteryEvent
-                {
-                    BlockNumber = (long)preJoinedThingSubmissionVerifierLotteryEvent.Log.BlockNumber.Value,
-                    TxnIndex = (int)preJoinedThingSubmissionVerifierLotteryEvent.Log.TransactionIndex.Value,
-                    ThingId = preJoinedThingSubmissionVerifierLotteryEvent.Event.ThingId,
-                    UserId = preJoinedThingSubmissionVerifierLotteryEvent.Event.UserId.Substring(2).ToLower(),
-                    DataHash = preJoinedThingSubmissionVerifierLotteryEvent.Event.DataHash
+                    DataHash = thingSubmissionVerifierLotteryInitializedEvent.Event.DataHash,
+                    UserXorDataHash = thingSubmissionVerifierLotteryInitializedEvent.Event.UserXorDataHash
                 };
             }
             else if (@event is EventLog<ThingSubmissionVerifierLottery.JoinedLotteryEvent> joinedThingSubmissionVerifierLotteryEvent)

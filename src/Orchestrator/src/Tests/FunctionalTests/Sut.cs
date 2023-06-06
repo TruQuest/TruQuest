@@ -41,6 +41,7 @@ public class Sut : IAsyncLifetime
 
     private ClaimsPrincipal? _user;
 
+    public ContractEventSink ContractEventSink { get; private set; }
     public AccountProvider AccountProvider { get; private set; }
     public Signer Signer { get; private set; }
     public BlockchainManipulator BlockchainManipulator { get; private set; }
@@ -54,6 +55,8 @@ public class Sut : IAsyncLifetime
         var appBuilder = API.Program.CreateWebApplicationBuilder(new string[] { });
         appBuilder.Configuration.AddJsonFile("appsettings.Testing.json", optional: false);
         appBuilder.ConfigureServices();
+        ContractEventSink = new ContractEventSink();
+        appBuilder.Services.AddSingleton<IAdditionalContractEventSink>(ContractEventSink);
 
         using (var scope = appBuilder.Services.BuildServiceProvider().CreateScope())
         {
@@ -183,6 +186,8 @@ public class Sut : IAsyncLifetime
         await _respawner.ResetAsync(appDbContext.Database.GetDbConnection());
 
         _user = null;
+
+        ContractEventSink.Reset();
     }
 
     public T GetConfigurationValue<T>(string key) => _app.Configuration.GetValue<T>(key)!;

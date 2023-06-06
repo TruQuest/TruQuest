@@ -8,7 +8,6 @@ namespace Infrastructure.Persistence;
 public class EventDbContext : DbContext
 {
     public DbSet<ActionableThingRelatedEvent> ActionableThingRelatedEvents { get; set; }
-    public DbSet<PreJoinedThingSubmissionVerifierLotteryEvent> PreJoinedThingSubmissionVerifierLotteryEvents { get; set; }
     public DbSet<JoinedThingSubmissionVerifierLotteryEvent> JoinedThingSubmissionVerifierLotteryEvents { get; set; }
     public DbSet<CastedAcceptancePollVoteEvent> CastedAcceptancePollVoteEvents { get; set; }
 
@@ -40,17 +39,6 @@ public class EventDbContext : DbContext
                 .IsRequired();
         });
 
-        modelBuilder.Entity<PreJoinedThingSubmissionVerifierLotteryEvent>(builder =>
-        {
-            builder.HasKey(e => e.Id);
-            builder.Property(e => e.Id).UseIdentityAlwaysColumn();
-            builder.Property(e => e.BlockNumber).IsRequired();
-            builder.Property(e => e.TxnIndex).IsRequired();
-            builder.Property(e => e.ThingId).IsRequired();
-            builder.Property(e => e.UserId).IsRequired();
-            builder.Property(e => e.DataHash).IsRequired();
-        });
-
         modelBuilder.Entity<JoinedThingSubmissionVerifierLotteryEvent>(builder =>
         {
             builder.HasKey(e => e.Id);
@@ -59,7 +47,8 @@ public class EventDbContext : DbContext
             builder.Property(e => e.TxnIndex).IsRequired();
             builder.Property(e => e.ThingId).IsRequired();
             builder.Property(e => e.UserId).IsRequired();
-            builder.Property(e => e.Nonce).IsRequired();
+            builder.Property(e => e.UserData).IsRequired(false);
+            builder.Property(e => e.Nonce).IsRequired(false);
         });
 
         modelBuilder.Entity<CastedAcceptancePollVoteEvent>(builder =>

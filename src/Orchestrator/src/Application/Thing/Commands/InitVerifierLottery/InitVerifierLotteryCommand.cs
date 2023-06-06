@@ -9,6 +9,7 @@ using Domain.Results;
 
 using Application.Common.Interfaces;
 using Application.Common.Attributes;
+using Application.Common.Misc;
 
 namespace Application.Thing.Commands.InitVerifierLottery;
 
@@ -64,13 +65,13 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
 
             var task = new DeferredTask(
                 type: TaskType.CloseThingSubmissionVerifierLottery,
-                scheduledBlockNumber: lotteryInitBlockNumber + lotteryDurationBlocks
+                scheduledBlockNumber: lotteryInitBlockNumber + lotteryDurationBlocks + 1
             );
             task.SetPayload(new()
             {
                 ["thingId"] = thing.Id!,
-                ["data"] = Convert.ToBase64String(data),
-                ["userXorData"] = Convert.ToBase64String(userXorData)
+                ["data"] = data.ToHex(prefix: true),
+                ["userXorData"] = userXorData.ToHex(prefix: true)
             });
 
             _taskRepository.Create(task);

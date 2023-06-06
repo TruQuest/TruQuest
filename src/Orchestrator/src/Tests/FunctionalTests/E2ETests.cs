@@ -18,10 +18,12 @@ using Application.Settlement.Commands.CreateNewSettlementProposalDraft;
 using Application.Settlement.Commands.SubmitNewSettlementProposal;
 using Application.Thing.Queries.GetThing;
 using Application.Common.Misc;
+using Application.Ethereum.Events.ThingSubmissionVerifierLottery.LotteryInitialized;
 using Application.Common.Models.QM;
 using Infrastructure.Ethereum.TypedData;
 using API.BackgroundServices;
 
+using Tests.FunctionalTests.Helpers;
 using Tests.FunctionalTests.Helpers.Messages;
 
 namespace Tests.FunctionalTests;
@@ -30,6 +32,7 @@ namespace Tests.FunctionalTests;
 public class E2ETests : IAsyncLifetime
 {
     private readonly Sut _sut;
+    private EventBroadcaster _eventBroadcaster;
 
     private Contract _truQuestContract;
     private Contract _thingSubmissionVerifierLotteryContract;
@@ -75,6 +78,9 @@ public class E2ETests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await _sut.ResetState();
+
+        _eventBroadcaster = new EventBroadcaster(_sut.ContractEventSink.Stream);
+        _eventBroadcaster.Start();
 
         await _sut.StartKafkaBus();
         await _sut.StartHostedService<BlockTracker>();
@@ -122,6 +128,7 @@ public class E2ETests : IAsyncLifetime
     {
         await _sut.StopHostedService<ContractEventTracker>();
         await _sut.StopHostedService<BlockTracker>();
+        _eventBroadcaster.Stop();
     }
 
     private async Task Dodo()
@@ -550,6 +557,12 @@ public class E2ETests : IAsyncLifetime
             subjectId = subjectResult.Data;
         }
 
+        var draftCreatedTcs = new TaskCompletionSource();
+        _eventBroadcaster.ThingDraftCreated += (_, _) =>
+        {
+            draftCreatedTcs.SetResult();
+        };
+
         Guid thingId;
         using (var request = _sut.PrepareHttpRequestForFileUpload(
             fileNames: new[] { "full-image.jpg", "cropped-image-rect.png" },
@@ -568,7 +581,7 @@ public class E2ETests : IAsyncLifetime
             thingId = thingDraftResult.Data;
         }
 
-        await Task.Delay(TimeSpan.FromSeconds(20)); // giving time to archive attachments
+        await draftCreatedTcs.Task;
 
         var thingSubmitResult = await _sut.SendRequest(new SubmitNewThingCommand
         {
@@ -590,6 +603,12 @@ public class E2ETests : IAsyncLifetime
 
         var thingIdBytes = thingId.ToByteArray();
 
+        var lotteryInitializedTcs = new TaskCompletionSource<LotteryInitializedEvent>();
+        _eventBroadcaster.ThingSubmissionVerifierLotteryInitialized += (_, @event) =>
+        {
+            lotteryInitializedTcs.SetResult(@event.Event);
+        };
+
         await _sut.ContractCaller.FundThing(thingIdBytes, thingSubmitResult.Data!.Signature);
 
         var submitterBalance = await _sut.ContractCaller.GetAvailableFunds("Submitter");
@@ -604,7 +623,7 @@ public class E2ETests : IAsyncLifetime
 
         submitter.Value.ToLower().Should().Be(submitterAddress);
 
-        await Task.Delay(TimeSpan.FromSeconds(25)); // @@TODO: Wait for LotteryInitialized event instead.
+        await lotteryInitializedTcs.Task;
 
         var verifierStake = (long)(
             await _truQuestContract

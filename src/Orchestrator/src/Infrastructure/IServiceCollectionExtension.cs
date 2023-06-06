@@ -177,7 +177,6 @@ public static class IServiceCollectionExtension
 
         services.AddSingleton<IBlockProgressRepository, BlockProgressRepository>();
         services.AddScoped<IActionableThingRelatedEventRepository, ActionableThingRelatedEventRepository>();
-        services.AddScoped<IPreJoinedThingSubmissionVerifierLotteryEventRepository, PreJoinedThingSubmissionVerifierLotteryEventRepository>();
         services.AddScoped<IJoinedThingSubmissionVerifierLotteryEventRepository, JoinedThingSubmissionVerifierLotteryEventRepository>();
         services.AddScoped<ICastedAcceptancePollVoteEventRepository, CastedAcceptancePollVoteEventRepository>();
         services.AddScoped<IPreJoinedThingAssessmentVerifierLotteryEventRepository, PreJoinedThingAssessmentVerifierLotteryEventRepository>();
@@ -208,7 +207,7 @@ public static class IServiceCollectionExtension
         {
             services.AddSingleton<IBlockListener, OptimismL1BlockListener>();
         }
-        services.AddSingleton<IBlockchainQueryable, BlockchainQueryable>();
+        services.AddSingleton<IL1BlockchainQueryable, L1BlockchainQueryable>();
         services.AddSingleton<IContractStorageQueryable, ContractStorageQueryable>();
 
         services.AddSingleton<IRequestDispatcher, RequestDispatcher>();

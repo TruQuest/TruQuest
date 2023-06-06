@@ -55,21 +55,26 @@ internal class MessageConsumer : IMessageMiddleware
         {
             if (message is ArchiveThingAttachmentsProgress thingProgress)
             {
-                await _mediator.Publish(new ThingEvents.AttachmentsArchivingProgress.AttachmentsArchivingProgressEvent
-                {
-                    SubmitterId = thingProgress.SubmitterId,
-                    ThingId = thingProgress.ThingId,
-                    Percent = thingProgress.Percent
-                });
+                await _mediator.Publish(
+                    new ThingEvents.AttachmentsArchivingProgress.AttachmentsArchivingProgressEvent
+                    {
+                        SubmitterId = thingProgress.SubmitterId,
+                        ThingId = thingProgress.ThingId,
+                        Percent = thingProgress.Percent
+                    },
+                    addToAdditionalSinks: false
+                );
             }
             else if (message is ArchiveThingAttachmentsSuccessResult thingSuccessResult)
             {
-                await _mediator.Publish(new ThingEvents.AttachmentsArchivingCompleted.AttachmentsArchivingCompletedEvent
-                {
-                    SubmitterId = thingSuccessResult.SubmitterId,
-                    ThingId = thingSuccessResult.ThingId,
-                    Input = thingSuccessResult.Input
-                });
+                await _mediator.Publish(
+                    new ThingEvents.AttachmentsArchivingCompleted.AttachmentsArchivingCompletedEvent
+                    {
+                        SubmitterId = thingSuccessResult.SubmitterId,
+                        ThingId = thingSuccessResult.ThingId,
+                        Input = thingSuccessResult.Input
+                    }
+                );
             }
             else if (message is ArchiveSettlementProposalAttachmentsProgress proposalProgress)
             {
