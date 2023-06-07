@@ -6,6 +6,7 @@ public interface IContractCaller
 {
     Task<byte[]> ComputeHashForThingSubmissionVerifierLottery(byte[] data);
     Task<long> InitThingSubmissionVerifierLottery(byte[] thingId, byte[] dataHash, byte[] userXorDataHash);
+    Task<long> GetThingSubmissionVerifierLotteryInitBlock(byte[] thingId);
     Task<bool> CheckThingSubmissionVerifierLotteryExpired(byte[] thingId);
     Task<BigInteger> GetThingSubmissionVerifierLotteryMaxNonce();
     Task<BigInteger> ComputeNonceForThingSubmissionVerifierLottery(byte[] thingId, string accountName, byte[] data);

@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 using MediatR;
 
 using Domain.Results;
@@ -16,6 +18,9 @@ public class PrepareForAcceptancePollCommand : IRequest<VoidResult>
     public required int AcceptancePollInitTxnIndex { get; init; }
     public required Guid ThingId { get; init; }
     public required string Orchestrator { get; init; }
+    public required string Data { get; init; }
+    public required string UserXorData { get; init; }
+    public required string HashOfL1EndBlock { get; init; }
     public required long Nonce { get; init; }
     public required List<string> WinnerIds { get; init; }
 }
@@ -57,6 +62,9 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
             thing.SetState(ThingState.VerifiersSelectedAndPollInitiated);
             thing.AddVerifiers(command.WinnerIds);
 
+            var lotteryInitBlock = await _contractCaller.GetThingSubmissionVerifierLotteryInitBlock(thing.Id.ToByteArray());
+            Debug.Assert(lotteryInitBlock < 0);
+
             var pollInitBlock = await _contractCaller.GetThingAcceptancePollInitBlock(thing.Id.ToByteArray());
             int pollDurationBlocks = await _contractStorageQueryable.GetAcceptancePollDurationBlocks();
 
@@ -75,6 +83,7 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
                 txnIndex: command.AcceptancePollInitTxnIndex,
                 thingId: command.ThingId,
                 userId: command.Orchestrator,
+                l1BlockNumber: -lotteryInitBlock,
                 nonce: command.Nonce
             );
             _joinedThingSubmissionVerifierLotteryEventRepository.Create(joinedThingSubmissionVerifierLotteryEvent);

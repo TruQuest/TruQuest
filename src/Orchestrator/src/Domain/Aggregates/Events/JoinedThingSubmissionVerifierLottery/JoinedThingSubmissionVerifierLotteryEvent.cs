@@ -9,18 +9,20 @@ public class JoinedThingSubmissionVerifierLotteryEvent : Entity, IAggregateRoot
     public int TxnIndex { get; }
     public Guid ThingId { get; }
     public string UserId { get; }
+    public long L1BlockNumber { get; }
     public string? UserData { get; }
     public long? Nonce { get; private set; }
 
     public JoinedThingSubmissionVerifierLotteryEvent(
         long blockNumber, int txnIndex, Guid thingId,
-        string userId, string? userData = null, long? nonce = null
+        string userId, long l1BlockNumber, string? userData = null, long? nonce = null
     )
     {
         BlockNumber = blockNumber;
         TxnIndex = txnIndex;
         ThingId = thingId;
         UserId = userId;
+        L1BlockNumber = l1BlockNumber;
         UserData = userData;
         Nonce = nonce;
     }

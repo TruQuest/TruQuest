@@ -1,7 +1,6 @@
 using MediatR;
 
 using Domain.Aggregates.Events;
-using JoinedThingSubmissionVerifierLotteryEventDm = Domain.Aggregates.Events.JoinedThingSubmissionVerifierLotteryEvent;
 
 using Application.Common.Misc;
 
@@ -14,6 +13,7 @@ public class JoinedLotteryEvent : INotification
     public required byte[] ThingId { get; init; }
     public required string UserId { get; init; }
     public required byte[] UserData { get; init; }
+    public required long L1BlockNumber { get; init; }
 }
 
 internal class JoinedLotteryEventHandler : INotificationHandler<JoinedLotteryEvent>
@@ -29,11 +29,12 @@ internal class JoinedLotteryEventHandler : INotificationHandler<JoinedLotteryEve
 
     public async Task Handle(JoinedLotteryEvent @event, CancellationToken ct)
     {
-        var joinedThingSubmissionVerifierLotteryEvent = new JoinedThingSubmissionVerifierLotteryEventDm(
+        var joinedThingSubmissionVerifierLotteryEvent = new JoinedThingSubmissionVerifierLotteryEvent(
             blockNumber: @event.BlockNumber,
             txnIndex: @event.TxnIndex,
             thingId: new Guid(@event.ThingId),
             userId: @event.UserId,
+            l1BlockNumber: @event.L1BlockNumber,
             userData: @event.UserData.ToHex(prefix: true)
         );
         _joinedThingSubmissionVerifierLotteryEventRepository.Create(joinedThingSubmissionVerifierLotteryEvent);

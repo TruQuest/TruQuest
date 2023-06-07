@@ -29,31 +29,16 @@ class LotteryStepper extends StatefulWidget {
 class _LotteryStepperState extends StateX<LotteryStepper> {
   late final _thingBloc = use<ThingBloc>();
 
-  int _currentStep = 0;
-
-  bool _checkButtonShouldBeEnabled(int stepIndex) {
+  bool _checkButtonShouldBeEnabled() {
     var info = widget.info;
-    if (stepIndex == 0) {
-      return info.initBlock != null &&
-          info.alreadyPreJoined != null &&
-          !info.alreadyPreJoined! &&
-          widget.currentBlock < widget.endBlock - 1;
-    }
-
     return info.initBlock != null &&
-        info.alreadyPreJoined != null &&
         info.alreadyJoined != null &&
-        info.alreadyPreJoined! &&
         !info.alreadyJoined! &&
         widget.currentBlock < widget.endBlock;
   }
 
-  bool _checkButtonShouldBeSwiped(int stepIndex) {
+  bool _checkButtonShouldBeSwiped() {
     var info = widget.info;
-    if (stepIndex == 0) {
-      return info.alreadyPreJoined != null && info.alreadyPreJoined!;
-    }
-
     return info.alreadyJoined != null && info.alreadyJoined!;
   }
 
@@ -68,60 +53,22 @@ class _LotteryStepperState extends StateX<LotteryStepper> {
             ),
       ),
       child: Stepper(
-        currentStep: _currentStep,
+        currentStep: 0,
         controlsBuilder: (context, details) => SwipeButton(
-          // @@NOTE: Without the key flutter would just reuse the same state object.
-          key: ValueKey(details.currentStep),
-          text: 'Slide to ${details.currentStep == 0 ? 'commit' : 'join'}',
-          enabled: _checkButtonShouldBeEnabled(details.currentStep),
-          swiped: _checkButtonShouldBeSwiped(details.currentStep),
+          // @@NOTE: Without the key flutter would just reuse the same state object for all steps.
+          // key: ValueKey(details.currentStep),
+          text: 'Slide to join',
+          enabled: _checkButtonShouldBeEnabled(),
+          swiped: _checkButtonShouldBeSwiped(),
           onCompletedSwipe: () async {
-            if (details.currentStep == 0) {
-              var action = PreJoinLottery(thingId: widget.thing.id);
-              _thingBloc.dispatch(action);
-
-              var error = await action.result;
-              if (error == null) {
-                details.onStepContinue!();
-                return true;
-              }
-
-              return false;
-            }
-
             var action = JoinLottery(thingId: widget.thing.id);
             _thingBloc.dispatch(action);
 
-            var error = await action.result;
-            return error == null;
+            var failure = await action.result;
+            return failure == null;
           },
         ),
-        onStepContinue: () => setState(() {
-          _currentStep++;
-        }),
-        onStepTapped: (value) => setState(() {
-          _currentStep = value;
-        }),
         steps: [
-          Step(
-            title: Text(
-              'Commit to lottery',
-              style: GoogleFonts.philosopher(
-                color: Color(0xffF8F9FA),
-                fontSize: 16,
-              ),
-            ),
-            content: Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Text(
-                'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
-                style: GoogleFonts.raleway(
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            isActive: true,
-          ),
           Step(
             title: Text(
               'Join lottery',

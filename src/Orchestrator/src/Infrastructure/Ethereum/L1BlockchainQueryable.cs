@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 
 using Nethereum.Hex.HexTypes;
 using Nethereum.Web3;
@@ -11,15 +10,10 @@ namespace Infrastructure.Ethereum;
 
 internal class L1BlockchainQueryable : IL1BlockchainQueryable
 {
-    private readonly ILogger<L1BlockchainQueryable> _logger;
     private readonly Web3 _web3;
 
-    public L1BlockchainQueryable(
-        ILogger<L1BlockchainQueryable> logger,
-        IConfiguration configuration
-    )
+    public L1BlockchainQueryable(IConfiguration configuration)
     {
-        _logger = logger;
         var network = configuration["Ethereum:Network"]!;
         if (network == "Ganache")
         {
@@ -36,8 +30,6 @@ internal class L1BlockchainQueryable : IL1BlockchainQueryable
         var block = await _web3.Eth.Blocks.GetBlockWithTransactionsHashesByNumber.SendRequestAsync(
             new HexBigInteger(blockNumber)
         );
-        _logger.LogInformation("{BlockNum} Block's hash is {BlockHash}", blockNumber, block.BlockHash);
-
         return block.BlockHash.HexToByteArray();
     }
 

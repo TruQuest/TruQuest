@@ -52,6 +52,7 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
         {
             var data = RandomNumberGenerator.GetBytes(32);
             var userXorData = RandomNumberGenerator.GetBytes(32);
+            // @@TODO!!: Compute on the server!
             var dataHash = await _contractCaller.ComputeHashForThingSubmissionVerifierLottery(data);
             var userXorDataHash = await _contractCaller.ComputeHashForThingSubmissionVerifierLottery(userXorData);
 

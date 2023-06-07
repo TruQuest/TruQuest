@@ -47,6 +47,7 @@ public class EventDbContext : DbContext
             builder.Property(e => e.TxnIndex).IsRequired();
             builder.Property(e => e.ThingId).IsRequired();
             builder.Property(e => e.UserId).IsRequired();
+            builder.Property(e => e.L1BlockNumber).IsRequired(true);
             builder.Property(e => e.UserData).IsRequired(false);
             builder.Property(e => e.Nonce).IsRequired(false);
         });

@@ -42,6 +42,9 @@ internal class ThingSubmissionVerifierLotteryClosedWithSuccessEventHandler :
             ),
             ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
             Orchestrator = message.Orchestrator,
+            Data = message.Data,
+            UserXorData = message.UserXorData,
+            HashOfL1EndBlock = message.HashOfL1EndBlock,
             Nonce = message.Nonce,
             WinnerIds = message.WinnerIds
         });

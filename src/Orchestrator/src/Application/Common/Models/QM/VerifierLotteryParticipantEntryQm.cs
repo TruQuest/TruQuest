@@ -4,10 +4,10 @@ namespace Application.Common.Models.QM;
 
 public class VerifierLotteryParticipantEntryQm
 {
-    public long? JoinedBlockNumber { get; }
+    public long JoinedBlockNumber { get; }
     public string UserId { get; }
-    public string DataHash { get; }
-    public decimal? Nonce { get; }
+    public string? UserData { get; }
+    public long? Nonce { get; }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public bool? IsOrchestrator { get; set; }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

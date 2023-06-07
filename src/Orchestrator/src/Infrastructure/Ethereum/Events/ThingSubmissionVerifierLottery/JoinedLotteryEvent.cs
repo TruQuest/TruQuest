@@ -1,3 +1,5 @@
+using System.Numerics;
+
 using Nethereum.ABI.FunctionEncoding.Attributes;
 
 namespace Infrastructure.Ethereum.Events.ThingSubmissionVerifierLottery;
@@ -11,4 +13,6 @@ public class JoinedLotteryEvent : IEventDTO
     public string UserId { get; set; }
     [Parameter("bytes32", "userData", 3, false)]
     public byte[] UserData { get; set; }
+    [Parameter("uint256", "l1BlockNumber", 4, false)]
+    public BigInteger L1BlockNumber { get; set; }
 }

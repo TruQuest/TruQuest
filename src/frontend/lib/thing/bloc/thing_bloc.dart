@@ -78,8 +78,6 @@ class ThingBloc extends Bloc<ThingAction> {
         _fundThing(action);
       } else if (action is GetVerifierLotteryInfo) {
         _getVerifierLotteryInfo(action);
-      } else if (action is PreJoinLottery) {
-        _preJoinLottery(action);
       } else if (action is JoinLottery) {
         _joinLottery(action);
       } else if (action is GetVerifierLotteryParticipants) {
@@ -151,20 +149,13 @@ class ThingBloc extends Bloc<ThingAction> {
       GetVerifierLotteryInfoSuccessVm(
         initBlock: info.$1,
         durationBlocks: info.$2,
-        alreadyPreJoined: info.$3,
-        alreadyJoined: info.$4,
-        latestBlockNumber: info.$5,
+        alreadyJoined: info.$3,
+        latestL1BlockNumber: info.$4,
       ),
     );
   }
 
   void _getVerifierLotteryInfo(GetVerifierLotteryInfo action) {
-    _refreshVerifierLotteryInfo(action.thingId);
-  }
-
-  void _preJoinLottery(PreJoinLottery action) async {
-    var error = await _thingService.preJoinLottery(action.thingId);
-    action.complete(error != null ? PreJoinLotteryFailureVm() : null);
     _refreshVerifierLotteryInfo(action.thingId);
   }
 

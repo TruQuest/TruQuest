@@ -49,7 +49,8 @@ contract ThingSubmissionVerifierLottery {
     event JoinedLottery(
         bytes16 indexed thingId,
         address indexed user,
-        bytes32 userData
+        bytes32 userData,
+        uint256 l1BlockNumber
     );
 
     event LotteryClosedWithSuccess(
@@ -170,6 +171,18 @@ contract ThingSubmissionVerifierLottery {
         return keccak256(abi.encodePacked(address(this), _data));
     }
 
+    function getOrchestratorCommitmentDataHash(
+        bytes16 _thingId
+    ) public view returns (bytes32) {
+        return s_thingIdToOrchestratorCommitment[_thingId].dataHash;
+    }
+
+    function getOrchestratorCommitmentUserXorDataHash(
+        bytes16 _thingId
+    ) public view returns (bytes32) {
+        return s_thingIdToOrchestratorCommitment[_thingId].userXorDataHash;
+    }
+
     function getLotteryDurationBlocks() public view returns (uint16) {
         return s_durationBlocks;
     }
@@ -218,12 +231,13 @@ contract ThingSubmissionVerifierLottery {
     {
         // @@??: Should check that _userData != bytes32(0)?
         i_truQuest.stakeAsVerifier(msg.sender);
+        uint256 l1BlockNumber = _getL1BlockNumber();
         s_thingIdToParticipantJoinedBlockNo[_thingId][
             msg.sender
-        ] = _getL1BlockNumber();
+        ] = l1BlockNumber;
         s_thingIdToParticipants[_thingId].push(msg.sender);
 
-        emit JoinedLottery(_thingId, msg.sender, _userData);
+        emit JoinedLottery(_thingId, msg.sender, _userData, l1BlockNumber);
     }
 
     function checkExpired(bytes16 _thingId) public view returns (bool) {
@@ -261,7 +275,7 @@ contract ThingSubmissionVerifierLottery {
             revert ThingSubmissionVerifierLottery__InvalidReveal(_thingId);
         }
 
-        s_thingIdToOrchestratorCommitment[_thingId].block = -1;
+        s_thingIdToOrchestratorCommitment[_thingId].block = -commitment.block;
 
         uint64 j = 0;
         address[] memory participants = s_thingIdToParticipants[_thingId];
@@ -302,7 +316,8 @@ contract ThingSubmissionVerifierLottery {
         uint8 _joinedNumVerifiers
     ) public onlyOrchestrator whenActive(_thingId) whenExpired(_thingId) {
         // @@??: Pass and check data?
-        s_thingIdToOrchestratorCommitment[_thingId].block = -1;
+        s_thingIdToOrchestratorCommitment[_thingId]
+            .block = -s_thingIdToOrchestratorCommitment[_thingId].block;
 
         address submitter = i_truQuest.s_thingSubmitter(_thingId);
         i_truQuest.unstakeThingSubmitter(submitter);

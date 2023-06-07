@@ -26,15 +26,13 @@ class FundThingFailureVm extends ThingResultVm {}
 class GetVerifierLotteryInfoSuccessVm extends ThingResultVm {
   final int? initBlock;
   final int durationBlocks;
-  final int latestBlockNumber;
-  final bool? alreadyPreJoined;
+  final int latestL1BlockNumber;
   final bool? alreadyJoined;
 
   GetVerifierLotteryInfoSuccessVm({
     required this.initBlock,
     required this.durationBlocks,
-    required this.latestBlockNumber,
-    required this.alreadyPreJoined,
+    required this.latestL1BlockNumber,
     required this.alreadyJoined,
   });
 }
@@ -58,8 +56,6 @@ class GetAcceptancePollInfoSuccessVm extends ThingResultVm {
     required this.latestBlockNumber,
   });
 }
-
-class PreJoinLotteryFailureVm extends ThingResultVm {}
 
 class JoinLotteryFailureVm extends ThingResultVm {}
 

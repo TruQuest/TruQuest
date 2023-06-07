@@ -13,7 +13,7 @@ import '../errors/ethereum_error.dart';
 
 class EthereumService {
   final bool available;
-  final int validChainId = 51234;
+  final int validChainId = 901;
 
   int? _connectedChainId;
   int? get connectedChainId => _connectedChainId;
@@ -22,6 +22,7 @@ class EthereumService {
   String? get connectedAccount => _connectedAccount;
 
   late final provider = Web3Provider(ethereum!);
+  late final l1Provider = JsonRpcProvider('http://localhost:8545');
 
   final StreamController<(int, bool)> _connectedChainChangedEventChannel =
       StreamController<(int, bool)>();
@@ -33,8 +34,9 @@ class EthereumService {
   Stream<String?> get connectedAccountChanged$ =>
       _connectedAccountChangedEventChannel.stream;
 
-  final StreamController<int> _blockMinedEventChannel = StreamController<int>();
-  Stream<int> get blockMined$ => _blockMinedEventChannel.stream;
+  final StreamController<int> _l1BlockMinedEventChannel =
+      StreamController<int>();
+  Stream<int> get l1BlockMined$ => _l1BlockMinedEventChannel.stream;
 
   EthereumService() : available = ethereum != null {
     var metamask = ethereum;
@@ -84,19 +86,19 @@ class EthereumService {
         _connectedAccountChangedEventChannel.add(_connectedAccount);
       });
 
-      provider.onBlock((blockNumber) {
-        print('Latest block: $blockNumber');
-        _blockMinedEventChannel.add(blockNumber);
+      l1Provider.onBlock((blockNumber) {
+        print('Latest L1 block: $blockNumber');
+        _l1BlockMinedEventChannel.add(blockNumber);
       });
     }
   }
 
-  Future<int> getLatestBlockNumber() async {
+  Future<int> getLatestL1BlockNumber() async {
     if (!available) {
       return 0;
     }
 
-    return await provider.getBlockNumber();
+    return await l1Provider.getBlockNumber();
   }
 
   Future<EthereumError?> switchEthereumChain() async {
@@ -113,13 +115,13 @@ class EthereumService {
       try {
         await metamask.walletAddChain(
           chainId: validChainId,
-          chainName: 'Ganache',
+          chainName: 'Optimism Local',
           nativeCurrency: CurrencyParams(
             name: 'Ether',
             symbol: 'ETH',
             decimals: 18,
           ),
-          rpcUrls: ['http://localhost:7545/'],
+          rpcUrls: ['http://localhost:9545/'],
         );
       } catch (e) {
         print(e);

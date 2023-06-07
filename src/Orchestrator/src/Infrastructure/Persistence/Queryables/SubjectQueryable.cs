@@ -2,7 +2,6 @@ using Microsoft.Extensions.Configuration;
 
 using Dapper;
 
-using Domain.Aggregates;
 using Application.Subject.Queries.GetSubject;
 using Application.Common.Interfaces;
 using Application.Common.Models.QM;

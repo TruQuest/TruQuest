@@ -93,7 +93,7 @@ class _PollState extends StateX<Poll> {
               var info = snapshot.data!;
 
               return StreamBuilder(
-                stream: _ethereumBloc.latestBlockNumber$,
+                stream: _ethereumBloc.latestL1BlockNumber$,
                 builder: (context, snapshot) {
                   if (snapshot.data == null) {
                     return Center(child: CircularProgressIndicator());

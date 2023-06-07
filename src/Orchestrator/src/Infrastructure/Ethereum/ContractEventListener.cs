@@ -164,7 +164,8 @@ internal class ContractEventListener : IContractEventListener
                     TxnIndex = (int)joinedThingSubmissionVerifierLotteryEvent.Log.TransactionIndex.Value,
                     ThingId = joinedThingSubmissionVerifierLotteryEvent.Event.ThingId,
                     UserId = joinedThingSubmissionVerifierLotteryEvent.Event.UserId.Substring(2).ToLower(),
-                    UserData = joinedThingSubmissionVerifierLotteryEvent.Event.UserData
+                    UserData = joinedThingSubmissionVerifierLotteryEvent.Event.UserData,
+                    L1BlockNumber = (long)joinedThingSubmissionVerifierLotteryEvent.Event.L1BlockNumber
                 };
             }
             else if (@event is EventLog<ThingSubmissionVerifierLottery.LotteryClosedWithSuccessEvent> thingSubmissionVerifierLotteryClosedWithSuccessEvent)

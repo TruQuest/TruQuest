@@ -113,7 +113,7 @@ class SettlementService {
       thingId,
       proposalId,
     );
-    int latestBlockNumber = await _ethereumService.getLatestBlockNumber();
+    int latestBlockNumber = await _ethereumService.getLatestL1BlockNumber();
 
     return (
       initBlock,
@@ -181,7 +181,7 @@ class SettlementService {
       thingId,
       proposalId,
     );
-    int latestBlockNumber = await _ethereumService.getLatestBlockNumber();
+    int latestBlockNumber = await _ethereumService.getLatestL1BlockNumber();
 
     return (
       initBlock,

@@ -114,14 +114,10 @@ internal class ThingQueryable : Queryable, IThingQueryable
         var dbConn = await _getOpenConnection();
         var entries = await dbConn.QueryAsync<VerifierLotteryParticipantEntryQm>(
             @"
-                SELECT je.""BlockNumber"" AS ""JoinedBlockNumber"", ""UserId"", pje.""DataHash"", je.""Nonce""
-                FROM
-                    truquest_events.""PreJoinedThingSubmissionVerifierLotteryEvents"" AS pje
-                        LEFT JOIN
-                    truquest_events.""JoinedThingSubmissionVerifierLotteryEvents"" AS je
-                        USING (""ThingId"", ""UserId"")
+                SELECT ""L1BlockNumber"" AS ""JoinedBlockNumber"", ""UserId"", ""UserData"", ""Nonce""
+                FROM truquest_events.""JoinedThingSubmissionVerifierLotteryEvents""
                 WHERE ""ThingId"" = @ThingId
-                ORDER BY je.""BlockNumber"" DESC NULLS LAST, je.""TxnIndex"" DESC
+                ORDER BY ""BlockNumber"" DESC, ""TxnIndex"" DESC
             ",
             param: new { ThingId = thingId }
         );

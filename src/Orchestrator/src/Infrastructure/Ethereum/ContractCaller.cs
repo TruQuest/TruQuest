@@ -63,10 +63,10 @@ internal class ContractCaller : IContractCaller
 
         // @@NOTE: Doing it this way instead of returning block number from the receipt, because
         // even when we are on L2, lottery init block is /L1/ block number.
-        return await _getThingSubmissionVerifierLotteryInitBlock(thingId);
+        return await GetThingSubmissionVerifierLotteryInitBlock(thingId);
     }
 
-    private async Task<long> _getThingSubmissionVerifierLotteryInitBlock(byte[] thingId)
+    public async Task<long> GetThingSubmissionVerifierLotteryInitBlock(byte[] thingId)
     {
         var block = await _web3.Eth
             .GetContractQueryHandler<GetThingSubmissionVerifierLotteryInitBlockMessage>()

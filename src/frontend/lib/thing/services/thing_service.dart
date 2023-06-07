@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:either_dart/either.dart';
 
+import '../../general/models/rvm/verifier_lottery_participant_entry_vm.dart';
 import '../../ethereum/errors/ethereum_error.dart';
 import '../errors/thing_error.dart';
 import '../models/rvm/get_settlement_proposals_list_rvm.dart';
@@ -77,7 +78,7 @@ class ThingService {
     await _truQuestContract.fundThing(thingId, signature);
   }
 
-  Future<(int?, int, bool?, bool?, int)> getVerifierLotteryInfo(
+  Future<(int?, int, bool?, int)> getVerifierLotteryInfo(
     String thingId,
   ) async {
     int? initBlock = await _thingSubmissionVerifierLotteryContract
@@ -87,26 +88,16 @@ class ThingService {
     }
     int durationBlocks = await _thingSubmissionVerifierLotteryContract
         .getLotteryDurationBlocks();
-    bool? alreadyPreJoined = await _thingSubmissionVerifierLotteryContract
-        .checkAlreadyPreJoinedLottery(thingId);
     bool? alreadyJoined = await _thingSubmissionVerifierLotteryContract
         .checkAlreadyJoinedLottery(thingId);
-    int latestBlockNumber = await _ethereumService.getLatestBlockNumber();
+    int latestL1BlockNumber = await _ethereumService.getLatestL1BlockNumber();
 
     return (
       initBlock,
       durationBlocks,
-      alreadyPreJoined,
       alreadyJoined,
-      latestBlockNumber,
+      latestL1BlockNumber,
     );
-  }
-
-  Future<EthereumError?> preJoinLottery(String thingId) async {
-    var error = await _thingSubmissionVerifierLotteryContract.preJoinLottery(
-      thingId,
-    );
-    return error;
   }
 
   Future<EthereumError?> joinLottery(String thingId) async {
@@ -120,6 +111,49 @@ class ThingService {
     String thingId,
   ) async {
     var result = await _thingApiService.getVerifierLotteryParticipants(thingId);
+
+    var nullString = '0x${List.generate(64, (_) => '0').join()}';
+    // @@TODO: Query all at once.
+    var lotteryInitBlock = await _thingSubmissionVerifierLotteryContract
+        .getLotteryInitBlock(thingId);
+    var dataHash = await _thingSubmissionVerifierLotteryContract
+            .getOrchestratorCommitmentDataHash(thingId) ??
+        nullString;
+    var userXorDataHash = await _thingSubmissionVerifierLotteryContract
+            .getOrchestratorCommitmentUserXorDataHash(thingId) ??
+        nullString;
+
+    var entries = result.entries;
+    if (entries.isEmpty || !entries.first.isOrchestrator) {
+      if (lotteryInitBlock != 0) {
+        result = GetVerifierLotteryParticipantsRvm(
+          thingId: thingId,
+          entries: List.unmodifiable([
+            VerifierLotteryParticipantEntryVm.orchestratorNoNonce(
+              lotteryInitBlock.abs(),
+              dataHash,
+              userXorDataHash,
+            ),
+            ...entries,
+          ]),
+        );
+      }
+    } else {
+      result = GetVerifierLotteryParticipantsRvm(
+        thingId: thingId,
+        entries: List.unmodifiable(
+          [
+            entries.first.copyWith(
+              'Orchestrator',
+              dataHash,
+              userXorDataHash,
+            ),
+            ...entries.skip(1)
+          ],
+        ),
+      );
+    }
+
     return result;
   }
 
@@ -133,7 +167,7 @@ class ThingService {
     int durationBlocks = await _acceptancePollContract.getPollDurationBlocks();
     bool? isDesignatedVerifier = await _acceptancePollContract
         .checkIsDesignatedVerifierForThing(thingId);
-    int latestBlockNumber = await _ethereumService.getLatestBlockNumber();
+    int latestBlockNumber = await _ethereumService.getLatestL1BlockNumber();
 
     return (
       initBlock,

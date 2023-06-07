@@ -168,7 +168,7 @@ class LotteryParticipantsTable extends StatelessWidget {
                                       ),
                                       SizedBox(height: 12),
                                       Text(
-                                        entry.dataHash.substring(0, 20) + '...',
+                                        entry.userData!.substring(0, 20),
                                         style: GoogleFonts.raleway(
                                           color: Colors.black87,
                                         ),
@@ -220,7 +220,7 @@ class LotteryParticipantsTable extends StatelessWidget {
                                   : Colors.blueAccent,
                           height: 120,
                           child: Text(
-                            entry.joinedBlockNumber?.toString() ?? '*',
+                            entry.joinedBlockNumber.toString(),
                             style: GoogleFonts.righteous(
                               color: entry.isOrchestrator
                                   ? Color(0xAA242423)

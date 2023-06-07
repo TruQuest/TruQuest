@@ -34,6 +34,7 @@ class _BlockCountdownState extends State<BlockCountdown> {
     startAngle: 180,
     angleRange: 360,
     size: 220,
+    animDurationMultiplier: 0.3,
   );
 
   double _currentValue = 360;
@@ -41,9 +42,11 @@ class _BlockCountdownState extends State<BlockCountdown> {
   @override
   void didUpdateWidget(covariant BlockCountdown oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.blocksLeft == oldWidget.blocksLeft) return;
+
     if (_currentValue == 360) {
       _currentValue = 0;
-      Future.delayed(Duration(seconds: 3)).then((_) {
+      Future.delayed(Duration(seconds: 1)).then((_) {
         if (mounted) {
           setState(() => _currentValue = 360);
         }
