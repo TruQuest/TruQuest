@@ -28,6 +28,7 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
 
     public async Task Handle(BlockMinedEvent @event, CancellationToken ct)
     {
+        // @@??: Transaction should encapsulate task as well?
         var tasks = await _taskRepository.FindAllWithScheduledBlockNumber(leBlockNumber: @event.BlockNumber);
         foreach (var task in tasks)
         {
@@ -52,18 +53,19 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
                 case TaskType.CloseThingAssessmentVerifierLottery:
                     await _mediator.Send(new Settlement.Commands.CloseVerifierLottery.CloseVerifierLotteryCommand
                     {
-                        LatestIncludedBlockNumber = task.ScheduledBlockNumber,
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),
                         SettlementProposalId = Guid.Parse(((JsonElement)task.Payload["settlementProposalId"]).GetString()!),
-                        Data = Convert.FromBase64String(((JsonElement)task.Payload["data"]).GetString()!)
+                        Data = ((JsonElement)task.Payload["data"]).GetString()!.HexToByteArray(),
+                        UserXorData = ((JsonElement)task.Payload["userXorData"]).GetString()!.HexToByteArray(),
+                        EndBlock = task.ScheduledBlockNumber - 1
                     });
                     break;
                 case TaskType.CloseThingSettlementProposalAssessmentPoll:
                     await _mediator.Send(new CloseAssessmentPollCommand
                     {
-                        LatestIncludedBlockNumber = task.ScheduledBlockNumber,
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),
                         SettlementProposalId = Guid.Parse(((JsonElement)task.Payload["settlementProposalId"]).GetString()!),
+                        EndBlock = task.ScheduledBlockNumber - 1
                     });
                     break;
             }

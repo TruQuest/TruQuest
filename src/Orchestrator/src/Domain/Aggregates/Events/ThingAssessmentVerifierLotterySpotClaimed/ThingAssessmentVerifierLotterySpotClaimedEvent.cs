@@ -10,10 +10,11 @@ public class ThingAssessmentVerifierLotterySpotClaimedEvent : Entity, IAggregate
     public Guid ThingId { get; }
     public Guid SettlementProposalId { get; }
     public string UserId { get; }
+    public long L1BlockNumber { get; }
 
     public ThingAssessmentVerifierLotterySpotClaimedEvent(
         long blockNumber, int txnIndex, Guid thingId,
-        Guid settlementProposalId, string userId
+        Guid settlementProposalId, string userId, long l1BlockNumber
     )
     {
         BlockNumber = blockNumber;
@@ -21,5 +22,6 @@ public class ThingAssessmentVerifierLotterySpotClaimedEvent : Entity, IAggregate
         ThingId = thingId;
         SettlementProposalId = settlementProposalId;
         UserId = userId;
+        L1BlockNumber = l1BlockNumber;
     }
 }

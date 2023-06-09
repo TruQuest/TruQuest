@@ -2,8 +2,8 @@ using Nethereum.ABI.FunctionEncoding.Attributes;
 
 namespace Infrastructure.Ethereum.Events.ThingAssessmentVerifierLottery;
 
-[Event("LotteryInitiated")]
-public class LotteryInitiatedEvent : IEventDTO
+[Event("LotteryInitialized")]
+public class LotteryInitializedEvent : IEventDTO
 {
     [Parameter("bytes16", "thingId", 1, true)]
     public byte[] ThingId { get; set; }
@@ -13,4 +13,6 @@ public class LotteryInitiatedEvent : IEventDTO
     public string Orchestrator { get; set; }
     [Parameter("bytes32", "dataHash", 4, false)]
     public byte[] DataHash { get; set; }
+    [Parameter("bytes32", "userXorDataHash", 5, false)]
+    public byte[] UserXorDataHash { get; set; }
 }

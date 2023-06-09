@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 using MediatR;
 
 using Domain.Aggregates;
@@ -17,7 +19,10 @@ public class PrepareForAssessmentPollCommand : IRequest<VoidResult>
     public required Guid ThingId { get; init; }
     public required Guid SettlementProposalId { get; init; }
     public required string Orchestrator { get; init; }
-    public required decimal Nonce { get; init; }
+    public required string Data { get; init; }
+    public required string UserXorData { get; init; }
+    public required string HashOfL1EndBlock { get; init; }
+    public required long Nonce { get; init; }
     public required List<string> ClaimantIds { get; init; }
     public required List<string> WinnerIds { get; init; }
 }
@@ -30,6 +35,7 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
     private readonly ISettlementProposalUpdateRepository _settlementProposalUpdateRepository;
     private readonly IWatchedItemRepository _watchedItemRepository;
     private readonly IContractStorageQueryable _contractStorageQueryable;
+    private readonly IContractCaller _contractCaller;
 
     public PrepareForAssessmentPollCommandHandler(
         ISettlementProposalRepository settlementProposalRepository,
@@ -37,7 +43,8 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
         IJoinedThingAssessmentVerifierLotteryEventRepository joinedThingAssessmentVerifierLotteryEventRepository,
         ISettlementProposalUpdateRepository settlementProposalUpdateRepository,
         IWatchedItemRepository watchedItemRepository,
-        IContractStorageQueryable contractStorageQueryable
+        IContractStorageQueryable contractStorageQueryable,
+        IContractCaller contractCaller
     )
     {
         _settlementProposalRepository = settlementProposalRepository;
@@ -46,6 +53,7 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
         _settlementProposalUpdateRepository = settlementProposalUpdateRepository;
         _watchedItemRepository = watchedItemRepository;
         _contractStorageQueryable = contractStorageQueryable;
+        _contractCaller = contractCaller;
     }
 
     public async Task<VoidResult> Handle(PrepareForAssessmentPollCommand command, CancellationToken ct)
@@ -56,11 +64,19 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
             proposal.SetState(SettlementProposalState.VerifiersSelectedAndPollInitiated);
             proposal.AddVerifiers(command.ClaimantIds.Concat(command.WinnerIds));
 
-            int pollDurationBlocks = await _contractStorageQueryable.GetAssessmentPollDurationBlocks();
+            var lotteryInitBlock = await _contractCaller.GetThingAssessmentVerifierLotteryInitBlock(
+                proposal.ThingId.ToByteArray(), proposal.Id.ToByteArray()
+            );
+            Debug.Assert(lotteryInitBlock < 0);
+
+            var pollInitBlock = await _contractCaller.GetThingAssessmentPollInitBlock(
+                proposal.ThingId.ToByteArray(), proposal.Id.ToByteArray()
+            );
+            int pollDurationBlocks = await _contractStorageQueryable.GetThingAssessmentPollDurationBlocks();
 
             var task = new DeferredTask(
                 type: TaskType.CloseThingSettlementProposalAssessmentPoll,
-                scheduledBlockNumber: command.AssessmentPollInitBlockNumber + pollDurationBlocks
+                scheduledBlockNumber: pollInitBlock + pollDurationBlocks + 1
             );
             task.SetPayload(new()
             {
@@ -75,6 +91,7 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
                 thingId: command.ThingId,
                 settlementProposalId: command.SettlementProposalId,
                 userId: command.Orchestrator,
+                l1BlockNumber: -lotteryInitBlock,
                 nonce: command.Nonce
             );
             _joinedThingAssessmentVerifierLotteryEventRepository.Create(joinedThingAssessmentVerifierLotteryEvent);

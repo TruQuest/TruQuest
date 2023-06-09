@@ -92,23 +92,6 @@ internal class ContractCaller : IContractCaller
         .GetContractQueryHandler<GetMaxNonceMessage>()
         .QueryAsync<BigInteger>(_thingSubmissionVerifierLotteryAddress, new());
 
-    public Task<BigInteger> ComputeNonceForThingSubmissionVerifierLottery(
-        byte[] thingId, string accountName, byte[] data
-    )
-    {
-        return _web3.Eth
-            .GetContractQueryHandler<ComputeNonceForThingSubmissionVerifierLotteryMessage>()
-            .QueryAsync<BigInteger>(
-                _thingSubmissionVerifierLotteryAddress,
-                new()
-                {
-                    ThingId = thingId,
-                    User = _accountProvider.GetAccount(accountName).Address,
-                    Data = data
-                }
-            );
-    }
-
     public async Task CloseThingSubmissionVerifierLotteryWithSuccess(
         byte[] thingId, byte[] data, byte[] userXorData, byte[] hashOfL1EndBlock, List<ulong> winnerIndices
     )
@@ -267,7 +250,9 @@ internal class ContractCaller : IContractCaller
         return verifiers;
     }
 
-    public async Task<long> InitThingAssessmentVerifierLottery(byte[] thingId, byte[] proposalId, byte[] dataHash)
+    public async Task<long> InitThingAssessmentVerifierLottery(
+        byte[] thingId, byte[] proposalId, byte[] dataHash, byte[] userXorDataHash
+    )
     {
         var txnReceipt = await _web3.Eth
             .GetContractTransactionHandler<InitThingAssessmentVerifierLotteryMessage>()
@@ -276,30 +261,29 @@ internal class ContractCaller : IContractCaller
                 new()
                 {
                     ThingProposalId = thingId.Concat(proposalId).ToArray(),
-                    DataHash = dataHash
+                    DataHash = dataHash,
+                    UserXorDataHash = userXorDataHash
                 }
             );
 
         _logger.LogInformation("=============== InitThingAssessmentVerifierLottery: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
 
-        return (long)txnReceipt.BlockNumber.Value;
+        return await GetThingAssessmentVerifierLotteryInitBlock(thingId, proposalId);
     }
 
-    public Task<BigInteger> ComputeNonceForThingAssessmentVerifierLottery(
-        byte[] thingId, byte[] proposalId, string accountName, byte[] data
-    )
+    public async Task<long> GetThingAssessmentVerifierLotteryInitBlock(byte[] thingId, byte[] proposalId)
     {
-        return _web3.Eth
-            .GetContractQueryHandler<ComputeNonceForThingAssessmentVerifierLotteryMessage>()
+        var block = await _web3.Eth
+            .GetContractQueryHandler<GetThingAssessmentVerifierLotteryInitBlockMessage>()
             .QueryAsync<BigInteger>(
                 _thingAssessmentVerifierLotteryAddress,
                 new()
                 {
-                    ThingProposalId = thingId.Concat(proposalId).ToArray(),
-                    User = _accountProvider.GetAccount(accountName).Address,
-                    Data = data
+                    ThingProposalId = thingId.Concat(proposalId).ToArray()
                 }
             );
+
+        return (long)block;
     }
 
     public Task<byte[]> ComputeHashForThingAssessmentVerifierLottery(byte[] data)
@@ -312,8 +296,22 @@ internal class ContractCaller : IContractCaller
             );
     }
 
+    public Task<bool> CheckThingAssessmentVerifierLotteryExpired(
+        byte[] thingId, byte[] proposalId
+    ) => _web3.Eth
+        .GetContractQueryHandler<CheckThingAssessmentVerifierLotteryExpiredMessage>()
+        .QueryAsync<bool>(
+            _thingAssessmentVerifierLotteryAddress,
+            new() { ThingProposalId = thingId.Concat(proposalId).ToArray() }
+        );
+
+    public Task<BigInteger> GetThingAssessmentVerifierLotteryMaxNonce() => _web3.Eth
+        .GetContractQueryHandler<GetMaxNonceMessage>()
+        .QueryAsync<BigInteger>(_thingAssessmentVerifierLotteryAddress, new());
+
     public async Task CloseThingAssessmentVerifierLotteryWithSuccess(
-        byte[] thingId, byte[] proposalId, byte[] data, List<ulong> winnerClaimantIndices, List<ulong> winnerIndices
+        byte[] thingId, byte[] proposalId, byte[] data, byte[] userXorData,
+        byte[] hashOfL1EndBlock, List<ulong> winnerClaimantIndices, List<ulong> winnerIndices
     )
     {
         var txnReceipt = await _web3.Eth
@@ -324,6 +322,8 @@ internal class ContractCaller : IContractCaller
                 {
                     ThingProposalId = thingId.Concat(proposalId).ToArray(),
                     Data = data,
+                    UserXorData = userXorData,
+                    HashOfL1EndBlock = hashOfL1EndBlock,
                     WinnerClaimantIndices = winnerClaimantIndices,
                     WinnerIndices = winnerIndices
                 }
@@ -358,6 +358,18 @@ internal class ContractCaller : IContractCaller
             });
 
         return verifiers;
+    }
+
+    public async Task<long> GetThingAssessmentPollInitBlock(byte[] thingId, byte[] proposalId)
+    {
+        var block = await _web3.Eth
+            .GetContractQueryHandler<GetThingAssessmentPollInitBlockMessage>()
+            .QueryAsync<BigInteger>(
+                _assessmentPollAddress,
+                new() { ThingProposalId = thingId.Concat(proposalId).ToArray() }
+            );
+
+        return (long)block;
     }
 
     public async Task FinalizeAssessmentPollForProposalAsUnsettledDueToInsufficientVotingVolume(

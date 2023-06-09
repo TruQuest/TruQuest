@@ -179,7 +179,6 @@ public static class IServiceCollectionExtension
         services.AddScoped<IActionableThingRelatedEventRepository, ActionableThingRelatedEventRepository>();
         services.AddScoped<IJoinedThingSubmissionVerifierLotteryEventRepository, JoinedThingSubmissionVerifierLotteryEventRepository>();
         services.AddScoped<ICastedAcceptancePollVoteEventRepository, CastedAcceptancePollVoteEventRepository>();
-        services.AddScoped<IPreJoinedThingAssessmentVerifierLotteryEventRepository, PreJoinedThingAssessmentVerifierLotteryEventRepository>();
         services.AddScoped<IJoinedThingAssessmentVerifierLotteryEventRepository, JoinedThingAssessmentVerifierLotteryEventRepository>();
         services.AddScoped<IThingAssessmentVerifierLotterySpotClaimedEventRepository, ThingAssessmentVerifierLotterySpotClaimedEventRepository>();
         services.AddScoped<ICastedAssessmentPollVoteEventRepository, CastedAssessmentPollVoteEventRepository>();

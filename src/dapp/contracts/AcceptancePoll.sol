@@ -359,4 +359,28 @@ contract AcceptancePoll {
             slashedVerifiers
         );
     }
+
+    function getUserIndexAmongThingVerifiers(
+        bytes16 _thingId,
+        address _user
+    ) public view returns (int256) {
+        int256 index = -1;
+        address[] memory verifiers = s_thingVerifiers[_thingId];
+        for (uint256 i = 0; i < verifiers.length; ++i) {
+            if (verifiers[i] == _user) {
+                index = int256(i);
+                break;
+            }
+        }
+
+        return index;
+    }
+
+    function checkUserIsThingsVerifierAtIndex(
+        bytes16 _thingId,
+        address _user,
+        uint16 _index
+    ) external view returns (bool) {
+        return s_thingVerifiers[_thingId][_index] == _user;
+    }
 }

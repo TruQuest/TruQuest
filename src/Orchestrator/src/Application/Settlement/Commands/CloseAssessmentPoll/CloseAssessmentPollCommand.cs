@@ -15,9 +15,9 @@ namespace Application.Settlement.Commands.CloseAssessmentPoll;
 
 internal class CloseAssessmentPollCommand : IRequest<VoidResult>
 {
-    public required long LatestIncludedBlockNumber { get; init; }
     public required Guid ThingId { get; init; }
     public required Guid SettlementProposalId { get; init; }
+    public required long EndBlock { get; init; }
 }
 
 internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessmentPollCommand, VoidResult>
@@ -54,7 +54,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
 
     public async Task<VoidResult> Handle(CloseAssessmentPollCommand command, CancellationToken ct)
     {
-        long upperLimitTs = await _blockchainQueryable.GetBlockTimestamp(command.LatestIncludedBlockNumber);
+        long upperLimitTs = await _blockchainQueryable.GetBlockTimestamp(command.EndBlock);
 
         // @@TODO: Use queryable instead of repo.
         var offChainVotes = await _voteRepository.GetFor(command.SettlementProposalId);
@@ -66,14 +66,14 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
 
         var orchestratorSig = _signer.SignAssessmentPollVoteAgg(
             command.ThingId, command.SettlementProposalId,
-            (ulong)command.LatestIncludedBlockNumber, offChainVotes, castedVoteEvents
+            (ulong)command.EndBlock, offChainVotes, castedVoteEvents
         );
 
         var result = await _fileStorage.UploadJson(new
         {
             command.ThingId,
             command.SettlementProposalId,
-            EndBlock = command.LatestIncludedBlockNumber,
+            command.EndBlock,
             OffChainVotes = offChainVotes
                 .Select(v => new
                 {

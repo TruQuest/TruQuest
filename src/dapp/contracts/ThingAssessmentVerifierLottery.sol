@@ -2,76 +2,82 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import "./TruQuest.sol";
+import "./AcceptancePoll.sol";
 import "./AssessmentPoll.sol";
+import "./L1Block.sol";
 
 error ThingAssessmentVerifierLottery__Unauthorized();
-error ThingAssessmentVerifierLottery__AlreadyCommitted(bytes32 thingProposalId);
 error ThingAssessmentVerifierLottery__NotActive(bytes32 thingProposalId);
 error ThingAssessmentVerifierLottery__Expired(bytes32 thingProposalId);
 error ThingAssessmentVerifierLottery__NotEnoughFunds();
-error ThingAssessmentVerifierLottery__NotCommitted(bytes32 thingProposalId);
+error ThingAssessmentVerifierLottery__AlreadyInitialized(
+    bytes32 thingProposalId
+);
+error ThingAssessmentVerifierLottery__InvalidClaim(bytes32 thingProposalId);
 error ThingAssessmentVerifierLottery__AlreadyJoined(bytes32 thingProposalId);
+error ThingAssessmentVerifierLottery__StillInProgress(bytes32 thingProposalId);
+error ThingAssessmentVerifierLottery__InvalidNumberOfWinners(
+    bytes32 thingProposalId
+);
 error ThingAssessmentVerifierLottery__InvalidReveal(bytes32 thingProposalId);
-error ThingAssessmentVerifierLottery__PreJoinAndJoinInTheSameBlock(
-    bytes32 thingProposalId
-);
-error ThingAssessmentVerifierLottery__InvalidNumberOfWinners();
-error ThingAssessmentVerifierLottery__InitAndCloseInTheSameBlock(
-    bytes32 thingProposalId
-);
 
 contract ThingAssessmentVerifierLottery {
     struct Commitment {
         bytes32 dataHash;
-        int64 block;
-        bool revealed;
+        bytes32 userXorDataHash;
+        int256 block;
     }
 
-    uint256 public constant MAX_NONCE = 1000000;
+    uint256 public constant MAX_NONCE = 10_000_000;
+
+    L1Block private constant L1BLOCK =
+        L1Block(0x4200000000000000000000000000000000000015);
 
     TruQuest private immutable i_truQuest;
+    AcceptancePoll private s_acceptancePoll;
     AssessmentPoll private s_assessmentPoll;
     address private s_orchestrator;
 
     uint8 private s_numVerifiers;
     uint16 private s_durationBlocks;
 
-    mapping(bytes32 => mapping(address => Commitment))
-        private s_thingProposalIdToLotteryCommitments;
-    mapping(bytes32 => address[]) private s_participants;
-    mapping(bytes32 => address[]) private s_claimants;
+    mapping(bytes32 => Commitment)
+        private s_thingProposalIdToOrchestratorCommitment;
+    mapping(bytes32 => mapping(address => uint256))
+        private s_thingProposalIdToParticipantJoinedBlockNo;
+    mapping(bytes32 => address[]) private s_thingProposalIdToParticipants;
+    mapping(bytes32 => address[]) private s_thingProposalIdToClaimants;
 
-    event LotteryInitiated(
+    event LotteryInitialized(
         bytes16 indexed thingId,
         bytes16 indexed settlementProposalId,
         address orchestrator,
-        bytes32 dataHash
+        bytes32 dataHash,
+        bytes32 userXorDataHash
     );
 
-    event LotterySpotClaimed(
-        bytes16 indexed thingId,
-        bytes16 indexed settlementProposalId,
-        address indexed user
-    );
-
-    event PreJoinedLottery(
+    event ClaimedLotterySpot(
         bytes16 indexed thingId,
         bytes16 indexed settlementProposalId,
         address indexed user,
-        bytes32 dataHash
+        uint256 l1BlockNumber
     );
 
     event JoinedLottery(
         bytes16 indexed thingId,
         bytes16 indexed settlementProposalId,
         address indexed user,
-        uint256 nonce
+        bytes32 userData,
+        uint256 l1BlockNumber
     );
 
     event LotteryClosedWithSuccess(
         bytes16 indexed thingId,
         bytes16 indexed settlementProposalId,
         address orchestrator,
+        bytes32 data,
+        bytes32 userXorData,
+        bytes32 hashOfL1EndBlock,
         uint256 nonce,
         address[] claimants,
         address[] winners
@@ -112,43 +118,68 @@ contract ThingAssessmentVerifierLottery {
         _;
     }
 
-    modifier onlyOncePerLottery(bytes32 _thingProposalId) {
+    modifier onlyUninitialized(bytes32 _thingProposalId) {
         if (
-            s_thingProposalIdToLotteryCommitments[_thingProposalId][msg.sender]
-                .block != 0
+            s_thingProposalIdToOrchestratorCommitment[_thingProposalId].block !=
+            0
         ) {
-            revert ThingAssessmentVerifierLottery__AlreadyCommitted(
+            revert ThingAssessmentVerifierLottery__AlreadyInitialized(
                 _thingProposalId
             );
         }
         _;
     }
 
-    modifier onlyWhenActiveAndNotExpired(
-        bytes32 _thingProposalId,
-        uint8 _margin
-    ) {
-        int64 lotteryInitBlock = s_thingProposalIdToLotteryCommitments[
+    modifier whenNotAlreadyJoined(bytes32 _thingProposalId) {
+        if (
+            s_thingProposalIdToParticipantJoinedBlockNo[_thingProposalId][
+                msg.sender
+            ] > 0
+        ) {
+            revert ThingAssessmentVerifierLottery__AlreadyJoined(
+                _thingProposalId
+            );
+        }
+        _;
+    }
+
+    modifier whenActiveAndNotExpired(bytes32 _thingProposalId) {
+        int256 lotteryInitBlock = s_thingProposalIdToOrchestratorCommitment[
             _thingProposalId
-        ][s_orchestrator].block;
+        ].block;
         if (lotteryInitBlock < 1) {
             revert ThingAssessmentVerifierLottery__NotActive(_thingProposalId);
         }
         if (
-            block.number + _margin > uint64(lotteryInitBlock) + s_durationBlocks
+            _getL1BlockNumber() > uint256(lotteryInitBlock) + s_durationBlocks
         ) {
             revert ThingAssessmentVerifierLottery__Expired(_thingProposalId);
         }
         _;
     }
 
-    modifier onlyWhenActive(bytes32 _thingProposalId) {
+    modifier whenActive(bytes32 _thingProposalId) {
         if (
-            s_thingProposalIdToLotteryCommitments[_thingProposalId][
-                s_orchestrator
-            ].block < 1
+            s_thingProposalIdToOrchestratorCommitment[_thingProposalId].block <
+            1
         ) {
             revert ThingAssessmentVerifierLottery__NotActive(_thingProposalId);
+        }
+        _;
+    }
+
+    modifier whenExpired(bytes32 _thingProposalId) {
+        if (
+            _getL1BlockNumber() <=
+            uint256(
+                s_thingProposalIdToOrchestratorCommitment[_thingProposalId]
+                    .block
+            ) +
+                s_durationBlocks
+        ) {
+            revert ThingAssessmentVerifierLottery__StillInProgress(
+                _thingProposalId
+            );
         }
         _;
     }
@@ -164,14 +195,43 @@ contract ThingAssessmentVerifierLottery {
         s_durationBlocks = _durationBlocks;
     }
 
+    function connectToAcceptancePoll(
+        address _acceptancePollAddress
+    ) external onlyTruQuest {
+        s_acceptancePoll = AcceptancePoll(_acceptancePollAddress);
+    }
+
     function connectToAssessmentPoll(
         address _assessmentPollAddress
     ) external onlyTruQuest {
         s_assessmentPoll = AssessmentPoll(_assessmentPollAddress);
     }
 
+    function _getL1BlockNumber() private view returns (uint256) {
+        if (block.chainid == 901) {
+            return L1BLOCK.number();
+        }
+        return block.number;
+    }
+
     function computeHash(bytes32 _data) public view returns (bytes32) {
         return keccak256(abi.encodePacked(address(this), _data));
+    }
+
+    function getOrchestratorCommitmentDataHash(
+        bytes32 _thingProposalId
+    ) public view returns (bytes32) {
+        return
+            s_thingProposalIdToOrchestratorCommitment[_thingProposalId]
+                .dataHash;
+    }
+
+    function getOrchestratorCommitmentUserXorDataHash(
+        bytes32 _thingProposalId
+    ) public view returns (bytes32) {
+        return
+            s_thingProposalIdToOrchestratorCommitment[_thingProposalId]
+                .userXorDataHash;
     }
 
     function getLotteryDurationBlocks() public view returns (uint16) {
@@ -180,32 +240,9 @@ contract ThingAssessmentVerifierLottery {
 
     function getLotteryInitBlock(
         bytes32 _thingProposalId
-    ) public view returns (int64) {
+    ) public view returns (int256) {
         return
-            s_thingProposalIdToLotteryCommitments[_thingProposalId][
-                s_orchestrator
-            ].block;
-    }
-
-    function checkAlreadyClaimedALotterySpot(
-        bytes32 _thingProposalId,
-        address _user
-    ) public view returns (bool) {
-        return
-            s_thingProposalIdToLotteryCommitments[_thingProposalId][_user]
-                .revealed &&
-            s_thingProposalIdToLotteryCommitments[_thingProposalId][_user]
-                .dataHash ==
-            bytes32(0);
-    }
-
-    function checkAlreadyPreJoinedLottery(
-        bytes32 _thingProposalId,
-        address _user
-    ) public view returns (bool) {
-        return
-            s_thingProposalIdToLotteryCommitments[_thingProposalId][_user]
-                .block != 0;
+            s_thingProposalIdToOrchestratorCommitment[_thingProposalId].block;
     }
 
     function checkAlreadyJoinedLottery(
@@ -213,8 +250,9 @@ contract ThingAssessmentVerifierLottery {
         address _user
     ) public view returns (bool) {
         return
-            s_thingProposalIdToLotteryCommitments[_thingProposalId][_user]
-                .revealed;
+            s_thingProposalIdToParticipantJoinedBlockNo[_thingProposalId][
+                _user
+            ] > 0;
     }
 
     function _splitIds(
@@ -226,11 +264,16 @@ contract ThingAssessmentVerifierLottery {
 
     function initLottery(
         bytes32 _thingProposalId,
-        bytes32 _dataHash
-    ) public onlyOrchestrator onlyOncePerLottery(_thingProposalId) {
-        s_thingProposalIdToLotteryCommitments[_thingProposalId][
-            msg.sender
-        ] = Commitment(_dataHash, int64(uint64(block.number)), false);
+        bytes32 _dataHash,
+        bytes32 _userXorDataHash
+    ) public onlyOrchestrator onlyUninitialized(_thingProposalId) {
+        s_thingProposalIdToOrchestratorCommitment[
+            _thingProposalId
+        ] = Commitment(
+            _dataHash,
+            _userXorDataHash,
+            int256(_getL1BlockNumber())
+        );
 
         (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
 
@@ -242,108 +285,86 @@ contract ThingAssessmentVerifierLottery {
         //     // ...
         // }
 
-        emit LotteryInitiated(thingId, proposalId, s_orchestrator, _dataHash);
+        emit LotteryInitialized(
+            thingId,
+            proposalId,
+            s_orchestrator,
+            _dataHash,
+            _userXorDataHash
+        );
     }
 
     function claimLotterySpot(
-        bytes32 _thingProposalId
-    )
-        public
-        onlyWhenActiveAndNotExpired(_thingProposalId, 0)
-        whenHasEnoughFundsToStakeAsVerifier
-        onlyOncePerLottery(_thingProposalId)
-    {
-        // @@??: Should I check here that msg.sender is one of the thing's verifiers or
-        // just make a client-side check and then filter out invalid claims on the backend?
-        // Logically, it makes sense to check, but it would mean higher txn cost for users.
-        i_truQuest.stakeAsVerifier(msg.sender);
-        s_thingProposalIdToLotteryCommitments[_thingProposalId][
-            msg.sender
-        ] = Commitment(bytes32(0), int64(uint64(block.number)), true);
-        s_claimants[_thingProposalId].push(msg.sender);
-
-        (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
-
-        emit LotterySpotClaimed(thingId, proposalId, msg.sender);
-    }
-
-    function preJoinLottery(
         bytes32 _thingProposalId,
-        bytes32 _dataHash
+        uint16 _thingVerifiersArrayIndex
     )
         public
-        onlyWhenActiveAndNotExpired(_thingProposalId, 1)
         whenHasEnoughFundsToStakeAsVerifier
-        onlyOncePerLottery(_thingProposalId)
+        whenActiveAndNotExpired(_thingProposalId)
+        whenNotAlreadyJoined(_thingProposalId)
     {
-        i_truQuest.stakeAsVerifier(msg.sender);
-        s_thingProposalIdToLotteryCommitments[_thingProposalId][
-            msg.sender
-        ] = Commitment(_dataHash, int64(uint64(block.number)), false);
-        s_participants[_thingProposalId].push(msg.sender);
-
         (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
+        if (
+            !s_acceptancePoll.checkUserIsThingsVerifierAtIndex(
+                thingId,
+                msg.sender,
+                _thingVerifiersArrayIndex
+            )
+        ) {
+            revert ThingAssessmentVerifierLottery__InvalidClaim(
+                _thingProposalId
+            );
+        }
 
-        emit PreJoinedLottery(thingId, proposalId, msg.sender, _dataHash);
+        i_truQuest.stakeAsVerifier(msg.sender);
+        uint256 l1BlockNumber = _getL1BlockNumber();
+        s_thingProposalIdToParticipantJoinedBlockNo[_thingProposalId][
+            msg.sender
+        ] = l1BlockNumber;
+        s_thingProposalIdToClaimants[_thingProposalId].push(msg.sender);
+
+        emit ClaimedLotterySpot(thingId, proposalId, msg.sender, l1BlockNumber);
     }
 
     function joinLottery(
         bytes32 _thingProposalId,
-        bytes32 _data
-    ) public onlyWhenActiveAndNotExpired(_thingProposalId, 0) {
-        Commitment memory commitment = s_thingProposalIdToLotteryCommitments[
-            _thingProposalId
-        ][msg.sender];
-
-        if (commitment.block == 0) {
-            revert ThingAssessmentVerifierLottery__NotCommitted(
-                _thingProposalId
-            );
-        }
-        if (commitment.revealed) {
-            revert ThingAssessmentVerifierLottery__AlreadyJoined(
-                _thingProposalId
-            );
-        }
-        s_thingProposalIdToLotteryCommitments[_thingProposalId][msg.sender]
-            .revealed = true;
-
-        if (computeHash(_data) != commitment.dataHash) {
-            revert ThingAssessmentVerifierLottery__InvalidReveal(
-                _thingProposalId
-            );
-        }
-
-        uint64 commitmentBlock = uint64(commitment.block);
-        if (uint64(block.number) == commitmentBlock) {
-            revert ThingAssessmentVerifierLottery__PreJoinAndJoinInTheSameBlock(
-                _thingProposalId
-            );
-        }
-
-        bytes32 blockHash = blockhash(commitmentBlock);
-        uint256 nonce = uint256(keccak256(abi.encodePacked(blockHash, _data))) %
-            MAX_NONCE;
+        bytes32 _userData
+    )
+        public
+        whenHasEnoughFundsToStakeAsVerifier
+        whenActiveAndNotExpired(_thingProposalId)
+        whenNotAlreadyJoined(_thingProposalId)
+    {
+        i_truQuest.stakeAsVerifier(msg.sender);
+        uint256 l1BlockNumber = _getL1BlockNumber();
+        s_thingProposalIdToParticipantJoinedBlockNo[_thingProposalId][
+            msg.sender
+        ] = l1BlockNumber;
+        s_thingProposalIdToParticipants[_thingProposalId].push(msg.sender);
 
         (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
 
-        emit JoinedLottery(thingId, proposalId, msg.sender, nonce);
+        emit JoinedLottery(
+            thingId,
+            proposalId,
+            msg.sender,
+            _userData,
+            l1BlockNumber
+        );
     }
 
-    function computeNonce(
-        bytes32 _thingProposalId,
-        address _user,
-        bytes32 _data
-    ) public view returns (uint256) {
-        Commitment memory commitment = s_thingProposalIdToLotteryCommitments[
-            _thingProposalId
-        ][_user];
+    function checkExpired(bytes32 _thingProposalId) public view returns (bool) {
         return
+            _getL1BlockNumber() >
             uint256(
-                keccak256(
-                    abi.encodePacked(blockhash(uint64(commitment.block)), _data)
-                )
-            ) % MAX_NONCE;
+                s_thingProposalIdToOrchestratorCommitment[_thingProposalId]
+                    .block
+            ) +
+                s_durationBlocks;
+    }
+
+    function getMaxNonce() public pure returns (uint256) {
+        return MAX_NONCE;
     }
 
     function _getWinnerClaimants(
@@ -351,7 +372,9 @@ contract ThingAssessmentVerifierLottery {
         uint64[] calldata _winnerClaimantIndices
     ) private returns (address[] memory) {
         uint64 j = 0;
-        address[] memory claimants = s_claimants[_thingProposalId];
+        address[] memory claimants = s_thingProposalIdToClaimants[
+            _thingProposalId
+        ];
         address[] memory winners = new address[](_winnerClaimantIndices.length);
         for (uint i = 0; i < _winnerClaimantIndices.length; ++i) {
             uint64 nextWinnerIndex = _winnerClaimantIndices[i];
@@ -365,8 +388,8 @@ contract ThingAssessmentVerifierLottery {
             i_truQuest.unstakeAsVerifier(claimants[j]);
         }
 
-        s_claimants[_thingProposalId] = new address[](0); // unnecessary?
-        delete s_claimants[_thingProposalId];
+        s_thingProposalIdToClaimants[_thingProposalId] = new address[](0); // unnecessary?
+        delete s_thingProposalIdToClaimants[_thingProposalId];
 
         return winners;
     }
@@ -376,7 +399,9 @@ contract ThingAssessmentVerifierLottery {
         uint64[] calldata _winnerIndices
     ) private returns (address[] memory) {
         uint64 j = 0;
-        address[] memory participants = s_participants[_thingProposalId];
+        address[] memory participants = s_thingProposalIdToParticipants[
+            _thingProposalId
+        ];
         address[] memory winners = new address[](_winnerIndices.length);
         for (uint i = 0; i < _winnerIndices.length; ++i) {
             uint64 nextWinnerIndex = _winnerIndices[i];
@@ -390,8 +415,8 @@ contract ThingAssessmentVerifierLottery {
             i_truQuest.unstakeAsVerifier(participants[j]);
         }
 
-        s_participants[_thingProposalId] = new address[](0); // unnecessary?
-        delete s_participants[_thingProposalId];
+        s_thingProposalIdToParticipants[_thingProposalId] = new address[](0); // unnecessary?
+        delete s_thingProposalIdToParticipants[_thingProposalId];
 
         return winners;
     }
@@ -413,36 +438,63 @@ contract ThingAssessmentVerifierLottery {
     function closeLotteryWithSuccess(
         bytes32 _thingProposalId,
         bytes32 _data,
+        bytes32 _userXorData,
+        bytes32 _hashOfL1EndBlock,
         uint64[] calldata _winnerClaimantIndices,
-        uint64[] calldata _winnerIndices // sorted asc indices of users in prejoin array
-    ) public onlyOrchestrator onlyWhenActive(_thingProposalId) {
+        uint64[] calldata _winnerIndices
+    )
+        public
+        onlyOrchestrator
+        whenActive(_thingProposalId)
+        whenExpired(_thingProposalId)
+    {
         if (
             _winnerClaimantIndices.length + _winnerIndices.length !=
             s_numVerifiers
         ) {
-            revert ThingAssessmentVerifierLottery__InvalidNumberOfWinners();
+            revert ThingAssessmentVerifierLottery__InvalidNumberOfWinners(
+                _thingProposalId
+            );
         }
 
-        Commitment memory commitment = s_thingProposalIdToLotteryCommitments[
-            _thingProposalId
-        ][msg.sender];
+        Commitment
+            memory commitment = s_thingProposalIdToOrchestratorCommitment[
+                _thingProposalId
+            ];
 
         if (computeHash(_data) != commitment.dataHash) {
             revert ThingAssessmentVerifierLottery__InvalidReveal(
                 _thingProposalId
             );
         }
-
-        uint64 commitmentBlock = uint64(commitment.block);
-        if (uint64(block.number) == commitmentBlock) {
-            revert ThingAssessmentVerifierLottery__InitAndCloseInTheSameBlock(
+        if (computeHash(_userXorData) != commitment.userXorDataHash) {
+            revert ThingAssessmentVerifierLottery__InvalidReveal(
                 _thingProposalId
             );
         }
 
-        s_thingProposalIdToLotteryCommitments[_thingProposalId][msg.sender]
-            .block = -1;
+        s_thingProposalIdToOrchestratorCommitment[_thingProposalId]
+            .block = -commitment.block;
 
+        // @@NOTE: Have to split the function into 2 to avoid "Stack too deep" error.
+        _finishClosingLotteryWithSuccess(
+            _thingProposalId,
+            _data,
+            _userXorData,
+            _hashOfL1EndBlock,
+            _winnerClaimantIndices,
+            _winnerIndices
+        );
+    }
+
+    function _finishClosingLotteryWithSuccess(
+        bytes32 _thingProposalId,
+        bytes32 _data,
+        bytes32 _userXorData,
+        bytes32 _hashOfL1EndBlock,
+        uint64[] calldata _winnerClaimantIndices,
+        uint64[] calldata _winnerIndices
+    ) private {
         address[] memory claimants = _getWinnerClaimants(
             _thingProposalId,
             _winnerClaimantIndices
@@ -453,13 +505,13 @@ contract ThingAssessmentVerifierLottery {
             _winnerIndices
         );
 
-        address[] memory verifiers = _concatWinners(claimants, winners);
+        s_assessmentPoll.initPoll(
+            _thingProposalId,
+            _concatWinners(claimants, winners)
+        );
 
-        s_assessmentPoll.initPoll(_thingProposalId, verifiers);
-
-        uint256 nonce = uint256(
-            keccak256(abi.encodePacked(blockhash(commitmentBlock), _data))
-        ) % MAX_NONCE;
+        uint256 nonce = (uint256(_data) ^ uint256(_hashOfL1EndBlock)) %
+            MAX_NONCE;
 
         (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
 
@@ -467,6 +519,9 @@ contract ThingAssessmentVerifierLottery {
             thingId,
             proposalId,
             s_orchestrator,
+            _data,
+            _userXorData,
+            _hashOfL1EndBlock,
             nonce,
             claimants,
             winners
@@ -476,39 +531,41 @@ contract ThingAssessmentVerifierLottery {
     function closeLotteryInFailure(
         bytes32 _thingProposalId,
         uint8 _joinedNumVerifiers
-    ) public onlyOrchestrator onlyWhenActive(_thingProposalId) {
-        uint64 commitmentBlock = uint64(
-            s_thingProposalIdToLotteryCommitments[_thingProposalId][msg.sender]
-                .block
-        );
-        if (uint64(block.number) == commitmentBlock) {
-            revert ThingAssessmentVerifierLottery__InitAndCloseInTheSameBlock(
-                _thingProposalId
-            );
-        }
-        s_thingProposalIdToLotteryCommitments[_thingProposalId][msg.sender]
-            .block = -1;
+    )
+        public
+        onlyOrchestrator
+        whenActive(_thingProposalId)
+        whenExpired(_thingProposalId)
+    {
+        s_thingProposalIdToOrchestratorCommitment[_thingProposalId]
+            .block = -s_thingProposalIdToOrchestratorCommitment[
+            _thingProposalId
+        ].block;
 
         (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
 
         address submitter = i_truQuest.getSettlementProposalSubmitter(thingId);
         i_truQuest.unstakeProposalSubmitter(submitter);
 
-        address[] memory claimants = s_claimants[_thingProposalId];
+        address[] memory claimants = s_thingProposalIdToClaimants[
+            _thingProposalId
+        ];
         for (uint64 i = 0; i < claimants.length; ++i) {
             i_truQuest.unstakeAsVerifier(claimants[i]);
         }
 
-        address[] memory participants = s_participants[_thingProposalId];
+        address[] memory participants = s_thingProposalIdToParticipants[
+            _thingProposalId
+        ];
         for (uint64 i = 0; i < participants.length; ++i) {
             i_truQuest.unstakeAsVerifier(participants[i]);
         }
 
-        s_claimants[_thingProposalId] = new address[](0); // unnecessary?
-        delete s_claimants[_thingProposalId];
+        s_thingProposalIdToClaimants[_thingProposalId] = new address[](0); // unnecessary?
+        delete s_thingProposalIdToClaimants[_thingProposalId];
 
-        s_participants[_thingProposalId] = new address[](0); // unnecessary?
-        delete s_participants[_thingProposalId];
+        s_thingProposalIdToParticipants[_thingProposalId] = new address[](0); // unnecessary?
+        delete s_thingProposalIdToParticipants[_thingProposalId];
 
         emit LotteryClosedInFailure(
             thingId,

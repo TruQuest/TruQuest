@@ -27,6 +27,9 @@ public class BlockTracker : BackgroundService
         {
             _logger.LogInformation("Latest confirmed L1 block: {BlockNumber}", blockNumber);
 
+            // @@TODO!!: Check that BlockProcessedEvent.BlockNumber's epoch > blockNumber.
+            // If not wait til it is.
+
             using var scope = _serviceProvider.CreateScope();
             var mediator = scope.ServiceProvider.GetRequiredService<PublisherWrapper>();
 

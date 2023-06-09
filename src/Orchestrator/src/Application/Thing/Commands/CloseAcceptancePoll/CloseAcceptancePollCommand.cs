@@ -70,7 +70,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
         var result = await _fileStorage.UploadJson(new
         {
             command.ThingId,
-            EndBlock = command.EndBlock,
+            command.EndBlock,
             OffChainVotes = offChainVotes
                 .Select(v => new
                 {

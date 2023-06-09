@@ -9,11 +9,11 @@ public interface IContractCaller
     Task<long> GetThingSubmissionVerifierLotteryInitBlock(byte[] thingId);
     Task<bool> CheckThingSubmissionVerifierLotteryExpired(byte[] thingId);
     Task<BigInteger> GetThingSubmissionVerifierLotteryMaxNonce();
-    Task<BigInteger> ComputeNonceForThingSubmissionVerifierLottery(byte[] thingId, string accountName, byte[] data);
     Task CloseThingSubmissionVerifierLotteryWithSuccess(
         byte[] thingId, byte[] data, byte[] userXorData, byte[] hashOfL1EndBlock, List<ulong> winnerIndices
     );
     Task CloseThingSubmissionVerifierLotteryInFailure(byte[] thingId, int joinedNumVerifiers);
+
     Task<long> GetThingAcceptancePollInitBlock(byte[] thingId);
     Task FinalizeAcceptancePollForThingAsUnsettledDueToInsufficientVotingVolume(
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
@@ -31,14 +31,19 @@ public interface IContractCaller
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     );
     Task<IEnumerable<string>> GetVerifiersForThing(byte[] thingId);
-    Task<long> InitThingAssessmentVerifierLottery(byte[] thingId, byte[] proposalId, byte[] dataHash);
-    Task<BigInteger> ComputeNonceForThingAssessmentVerifierLottery(byte[] thingId, byte[] proposalId, string accountName, byte[] data);
+
     Task<byte[]> ComputeHashForThingAssessmentVerifierLottery(byte[] data);
+    Task<long> InitThingAssessmentVerifierLottery(byte[] thingId, byte[] proposalId, byte[] dataHash, byte[] userXorDataHash);
+    Task<long> GetThingAssessmentVerifierLotteryInitBlock(byte[] thingId, byte[] proposalId);
+    Task<bool> CheckThingAssessmentVerifierLotteryExpired(byte[] thingId, byte[] proposalId);
+    Task<BigInteger> GetThingAssessmentVerifierLotteryMaxNonce();
     Task CloseThingAssessmentVerifierLotteryWithSuccess(
-        byte[] thingId, byte[] proposalId, byte[] data, List<ulong> winnerClaimantIndices, List<ulong> winnerIndices
+        byte[] thingId, byte[] proposalId, byte[] data, byte[] userXorData,
+        byte[] hashOfL1EndBlock, List<ulong> winnerClaimantIndices, List<ulong> winnerIndices
     );
     Task CloseThingAssessmentVerifierLotteryInFailure(byte[] thingId, byte[] proposalId, int joinedNumVerifiers);
-    Task<IEnumerable<string>> GetVerifiersForProposal(byte[] thingId, byte[] proposalId);
+
+    Task<long> GetThingAssessmentPollInitBlock(byte[] thingId, byte[] proposalId);
     Task FinalizeAssessmentPollForProposalAsUnsettledDueToInsufficientVotingVolume(
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     );
@@ -54,4 +59,5 @@ public interface IContractCaller
     Task FinalizeAssessmentPollForProposalAsHardDeclined(
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     );
+    Task<IEnumerable<string>> GetVerifiersForProposal(byte[] thingId, byte[] proposalId);
 }

@@ -10,11 +10,14 @@ public class JoinedThingAssessmentVerifierLotteryEvent : Entity, IAggregateRoot
     public Guid ThingId { get; }
     public Guid SettlementProposalId { get; }
     public string UserId { get; }
-    public decimal Nonce { get; }
+    public long L1BlockNumber { get; }
+    public string? UserData { get; }
+    public long? Nonce { get; private set; }
 
     public JoinedThingAssessmentVerifierLotteryEvent(
         long blockNumber, int txnIndex, Guid thingId,
-        Guid settlementProposalId, string userId, decimal nonce
+        Guid settlementProposalId, string userId, long l1BlockNumber,
+        string? userData = null, long? nonce = null
     )
     {
         BlockNumber = blockNumber;
@@ -22,6 +25,13 @@ public class JoinedThingAssessmentVerifierLotteryEvent : Entity, IAggregateRoot
         ThingId = thingId;
         SettlementProposalId = settlementProposalId;
         UserId = userId;
+        L1BlockNumber = l1BlockNumber;
+        UserData = userData;
+        Nonce = nonce;
+    }
+
+    public void SetNonce(long nonce)
+    {
         Nonce = nonce;
     }
 }

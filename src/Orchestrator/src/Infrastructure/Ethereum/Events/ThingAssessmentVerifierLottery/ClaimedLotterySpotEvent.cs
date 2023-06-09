@@ -1,9 +1,11 @@
+using System.Numerics;
+
 using Nethereum.ABI.FunctionEncoding.Attributes;
 
 namespace Infrastructure.Ethereum.Events.ThingAssessmentVerifierLottery;
 
-[Event("PreJoinedLottery")]
-public class PreJoinedLotteryEvent : IEventDTO
+[Event("ClaimedLotterySpot")]
+public class ClaimedLotterySpotEvent : IEventDTO
 {
     [Parameter("bytes16", "thingId", 1, true)]
     public byte[] ThingId { get; set; }
@@ -11,6 +13,6 @@ public class PreJoinedLotteryEvent : IEventDTO
     public byte[] SettlementProposalId { get; set; }
     [Parameter("address", "user", 3, true)]
     public string UserId { get; set; }
-    [Parameter("bytes32", "dataHash", 4, false)]
-    public byte[] DataHash { get; set; }
+    [Parameter("uint256", "l1BlockNumber", 4, false)]
+    public BigInteger L1BlockNumber { get; set; }
 }

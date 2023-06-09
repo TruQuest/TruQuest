@@ -1,9 +1,8 @@
-using System.Numerics;
-
 using MediatR;
 
 using Domain.Aggregates.Events;
-using JoinedThingAssessmentVerifierLotteryEventDm = Domain.Aggregates.Events.JoinedThingAssessmentVerifierLotteryEvent;
+
+using Application.Common.Misc;
 
 namespace Application.Ethereum.Events.ThingAssessmentVerifierLottery.JoinedLottery;
 
@@ -14,7 +13,8 @@ public class JoinedLotteryEvent : INotification
     public required byte[] ThingId { get; init; }
     public required byte[] SettlementProposalId { get; init; }
     public required string UserId { get; init; }
-    public required BigInteger Nonce { get; init; }
+    public required byte[] UserData { get; init; }
+    public required long L1BlockNumber { get; init; }
 }
 
 internal class JoinedLotteryEventHandler : INotificationHandler<JoinedLotteryEvent>
@@ -28,13 +28,14 @@ internal class JoinedLotteryEventHandler : INotificationHandler<JoinedLotteryEve
 
     public async Task Handle(JoinedLotteryEvent @event, CancellationToken ct)
     {
-        var joinedThingAssessmentVerifierLotteryEvent = new JoinedThingAssessmentVerifierLotteryEventDm(
+        var joinedThingAssessmentVerifierLotteryEvent = new JoinedThingAssessmentVerifierLotteryEvent(
             blockNumber: @event.BlockNumber,
             txnIndex: @event.TxnIndex,
             thingId: new Guid(@event.ThingId),
             settlementProposalId: new Guid(@event.SettlementProposalId),
             userId: @event.UserId,
-            nonce: (decimal)@event.Nonce
+            l1BlockNumber: @event.L1BlockNumber,
+            userData: @event.UserData.ToHex(prefix: true)
         );
         _joinedThingAssessmentVerifierLotteryEventRepository.Create(joinedThingAssessmentVerifierLotteryEvent);
 

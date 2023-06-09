@@ -211,6 +211,9 @@ contract TruQuest {
         s_acceptancePoll.connectToThingSubmissionVerifierLottery(
             address(s_thingSubmissionVerifierLottery)
         );
+        s_thingAssessmentVerifierLottery.connectToAcceptancePoll(
+            address(s_acceptancePoll)
+        );
         s_thingAssessmentVerifierLottery.connectToAssessmentPoll(
             address(s_assessmentPoll)
         );

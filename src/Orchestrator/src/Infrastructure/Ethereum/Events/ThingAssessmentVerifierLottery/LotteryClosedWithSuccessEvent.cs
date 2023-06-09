@@ -13,10 +13,16 @@ public class LotteryClosedWithSuccessEvent : IEventDTO
     public byte[] SettlementProposalId { get; set; }
     [Parameter("address", "orchestrator", 3, false)]
     public string Orchestrator { get; set; }
-    [Parameter("uint256", "nonce", 4, false)]
+    [Parameter("bytes32", "data", 4, false)]
+    public byte[] Data { get; set; }
+    [Parameter("bytes32", "userXorData", 5, false)]
+    public byte[] UserXorData { get; set; }
+    [Parameter("bytes32", "hashOfL1EndBlock", 6, false)]
+    public byte[] HashOfL1EndBlock { get; set; }
+    [Parameter("uint256", "nonce", 7, false)]
     public BigInteger Nonce { get; set; }
-    [Parameter("address[]", "claimants", 5, false)]
+    [Parameter("address[]", "claimants", 8, false)]
     public List<string> ClaimantIds { get; set; }
-    [Parameter("address[]", "winners", 6, false)]
+    [Parameter("address[]", "winners", 9, false)]
     public List<string> WinnerIds { get; set; }
 }

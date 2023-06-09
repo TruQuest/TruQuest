@@ -51,8 +51,6 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
         Debug.Assert(expired);
 
         var endBlockHash = await _l1BlockchainQueryable.GetBlockHash(command.EndBlock);
-        Debug.Assert(endBlockHash.Length == 32);
-
         BigInteger maxNonce = await _contractCaller.GetThingSubmissionVerifierLotteryMaxNonce();
 
         var nonce = (long)(

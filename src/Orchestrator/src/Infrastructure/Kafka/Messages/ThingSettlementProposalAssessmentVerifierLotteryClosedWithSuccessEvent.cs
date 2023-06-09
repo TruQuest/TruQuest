@@ -12,7 +12,10 @@ internal class ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccess
 {
     public required Guid SettlementProposalId { get; init; }
     public required string Orchestrator { get; init; }
-    public required decimal Nonce { get; init; }
+    public required string Data { get; init; }
+    public required string UserXorData { get; init; }
+    public required string HashOfL1EndBlock { get; init; }
+    public required long Nonce { get; init; }
     // @@BUG: For some reason when claimants are empty debezium discards
     // the key-value pair entirely, so if this property is set to 'required'
     // json deserialization fails.
@@ -46,6 +49,9 @@ internal class ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccess
         ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
         SettlementProposalId = message.SettlementProposalId,
         Orchestrator = message.Orchestrator,
+        Data = message.Data,
+        UserXorData = message.UserXorData,
+        HashOfL1EndBlock = message.HashOfL1EndBlock,
         Nonce = message.Nonce,
         ClaimantIds = message.ClaimantIds,
         WinnerIds = message.WinnerIds

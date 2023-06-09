@@ -11,7 +11,6 @@ public class EventDbContext : DbContext
     public DbSet<JoinedThingSubmissionVerifierLotteryEvent> JoinedThingSubmissionVerifierLotteryEvents { get; set; }
     public DbSet<CastedAcceptancePollVoteEvent> CastedAcceptancePollVoteEvents { get; set; }
 
-    public DbSet<PreJoinedThingAssessmentVerifierLotteryEvent> PreJoinedThingAssessmentVerifierLotteryEvents { get; set; }
     public DbSet<JoinedThingAssessmentVerifierLotteryEvent> JoinedThingAssessmentVerifierLotteryEvents { get; set; }
     public DbSet<ThingAssessmentVerifierLotterySpotClaimedEvent> ThingAssessmentVerifierLotterySpotClaimedEvents { get; set; }
     public DbSet<CastedAssessmentPollVoteEvent> CastedAssessmentPollVoteEvents { get; set; }
@@ -64,18 +63,6 @@ public class EventDbContext : DbContext
             builder.Property(e => e.Reason).IsRequired(false);
         });
 
-        modelBuilder.Entity<PreJoinedThingAssessmentVerifierLotteryEvent>(builder =>
-        {
-            builder.HasKey(e => e.Id);
-            builder.Property(e => e.Id).UseIdentityAlwaysColumn();
-            builder.Property(e => e.BlockNumber).IsRequired();
-            builder.Property(e => e.TxnIndex).IsRequired();
-            builder.Property(e => e.ThingId).IsRequired();
-            builder.Property(e => e.SettlementProposalId).IsRequired();
-            builder.Property(e => e.UserId).IsRequired();
-            builder.Property(e => e.DataHash).IsRequired();
-        });
-
         modelBuilder.Entity<JoinedThingAssessmentVerifierLotteryEvent>(builder =>
         {
             builder.HasKey(e => e.Id);
@@ -85,7 +72,9 @@ public class EventDbContext : DbContext
             builder.Property(e => e.ThingId).IsRequired();
             builder.Property(e => e.SettlementProposalId).IsRequired();
             builder.Property(e => e.UserId).IsRequired();
-            builder.Property(e => e.Nonce).IsRequired();
+            builder.Property(e => e.L1BlockNumber).IsRequired();
+            builder.Property(e => e.UserData).IsRequired(false);
+            builder.Property(e => e.Nonce).IsRequired(false);
         });
 
         modelBuilder.Entity<ThingAssessmentVerifierLotterySpotClaimedEvent>(builder =>
@@ -97,6 +86,7 @@ public class EventDbContext : DbContext
             builder.Property(e => e.ThingId).IsRequired();
             builder.Property(e => e.SettlementProposalId).IsRequired();
             builder.Property(e => e.UserId).IsRequired();
+            builder.Property(e => e.L1BlockNumber).IsRequired();
         });
 
         modelBuilder.Entity<CastedAssessmentPollVoteEvent>(builder =>

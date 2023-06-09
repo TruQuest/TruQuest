@@ -56,7 +56,7 @@ internal class ContractStorageQueryable : IContractStorageQueryable
         return value.Value;
     }
 
-    public async Task<int> GetAcceptancePollDurationBlocks()
+    public async Task<int> GetThingAcceptancePollDurationBlocks()
     {
         var value = await _acceptancePollContract
             .WalkStorage()
@@ -156,7 +156,7 @@ internal class ContractStorageQueryable : IContractStorageQueryable
     {
         var value = await _thingAssessmentVerifierLotteryContract
             .WalkStorage()
-            .Field("s_claimants")
+            .Field("s_thingProposalIdToClaimants")
             .AsMapping()
             .Key(new SolBytes32(thingId.Concat(proposalId).ToArray()))
             .AsArrayOf<SolAddress>()
@@ -172,7 +172,7 @@ internal class ContractStorageQueryable : IContractStorageQueryable
     {
         var value = await _thingAssessmentVerifierLotteryContract
             .WalkStorage()
-            .Field("s_participants")
+            .Field("s_thingProposalIdToParticipants")
             .AsMapping()
             .Key(new SolBytes32(thingId.Concat(proposalId).ToArray()))
             .AsArrayOf<SolAddress>()
@@ -182,7 +182,7 @@ internal class ContractStorageQueryable : IContractStorageQueryable
         return value.Value;
     }
 
-    public async Task<int> GetAssessmentPollDurationBlocks()
+    public async Task<int> GetThingAssessmentPollDurationBlocks()
     {
         var value = await _assessmentPollContract
             .WalkStorage()

@@ -66,7 +66,7 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
             Debug.Assert(lotteryInitBlock < 0);
 
             var pollInitBlock = await _contractCaller.GetThingAcceptancePollInitBlock(thing.Id.ToByteArray());
-            int pollDurationBlocks = await _contractStorageQueryable.GetAcceptancePollDurationBlocks();
+            int pollDurationBlocks = await _contractStorageQueryable.GetThingAcceptancePollDurationBlocks();
 
             var task = new DeferredTask(
                 type: TaskType.CloseThingAcceptancePoll,

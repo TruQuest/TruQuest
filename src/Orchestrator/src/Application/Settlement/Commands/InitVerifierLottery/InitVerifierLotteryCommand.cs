@@ -7,6 +7,7 @@ using Domain.Results;
 
 using Application.Common.Interfaces;
 using Application.Common.Attributes;
+using Application.Common.Misc;
 
 namespace Application.Settlement.Commands.InitVerifierLottery;
 
@@ -46,24 +47,28 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
         if (proposal.State == SettlementProposalState.AwaitingFunding)
         {
             var data = RandomNumberGenerator.GetBytes(32);
+            var userXorData = RandomNumberGenerator.GetBytes(32);
+            // @@TODO!!: Compute on the server!
             var dataHash = await _contractCaller.ComputeHashForThingAssessmentVerifierLottery(data);
+            var userXorDataHash = await _contractCaller.ComputeHashForThingAssessmentVerifierLottery(userXorData);
 
             long lotteryInitBlockNumber = await _contractCaller.InitThingAssessmentVerifierLottery(
-                command.ThingId.ToByteArray(), command.SettlementProposalId.ToByteArray(), dataHash
+                command.ThingId.ToByteArray(), command.SettlementProposalId.ToByteArray(),
+                dataHash, userXorDataHash
             );
 
-            int lotteryDurationBlocks = await _contractStorageQueryable
-                .GetThingAssessmentVerifierLotteryDurationBlocks();
+            int lotteryDurationBlocks = await _contractStorageQueryable.GetThingAssessmentVerifierLotteryDurationBlocks();
 
             var task = new DeferredTask(
                 type: TaskType.CloseThingAssessmentVerifierLottery,
-                scheduledBlockNumber: lotteryInitBlockNumber + lotteryDurationBlocks
+                scheduledBlockNumber: lotteryInitBlockNumber + lotteryDurationBlocks + 1
             );
             task.SetPayload(new()
             {
                 ["thingId"] = command.ThingId,
                 ["settlementProposalId"] = proposal.Id,
-                ["data"] = Convert.ToBase64String(data)
+                ["data"] = data.ToHex(prefix: true),
+                ["userXorData"] = userXorData.ToHex(prefix: true)
             });
 
             _taskRepository.Create(task);

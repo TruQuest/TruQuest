@@ -3,11 +3,13 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import "./TruQuest.sol";
 import "./ThingAssessmentVerifierLottery.sol";
+import "./L1Block.sol";
 
 error AssessmentPoll__Unauthorized();
 error AssessmentPoll__Expired(bytes32 thingProposalId);
 error AssessmentPoll__NotDesignatedVerifier(bytes32 thingProposalId);
 error AssessmentPoll__NotInProgress(bytes32 thingProposalId);
+error AssessmentPoll__StillInProgress(bytes32 thingProposalId);
 
 contract AssessmentPoll {
     enum Vote {
@@ -34,11 +36,14 @@ contract AssessmentPoll {
     ThingAssessmentVerifierLottery private s_verifierLottery;
     address private s_orchestrator;
 
+    L1Block private constant L1BLOCK =
+        L1Block(0x4200000000000000000000000000000000000015);
+
     uint16 private s_durationBlocks;
     uint8 private s_votingVolumeThresholdPercent;
     uint8 private s_majorityThresholdPercent;
 
-    mapping(bytes32 => uint64) private s_proposalIdToPollInitBlock;
+    mapping(bytes32 => uint256) private s_proposalIdToPollInitBlock;
     mapping(bytes32 => address[]) private s_proposalVerifiers;
     mapping(bytes32 => Stage) private s_proposalPollStage;
 
@@ -88,9 +93,9 @@ contract AssessmentPoll {
         _;
     }
 
-    modifier onlyWhileNotExpired(bytes32 _thingProposalId) {
+    modifier whenNotExpired(bytes32 _thingProposalId) {
         if (
-            block.number >
+            _getL1BlockNumber() >
             s_proposalIdToPollInitBlock[_thingProposalId] + s_durationBlocks
         ) {
             revert AssessmentPoll__Expired(_thingProposalId);
@@ -116,9 +121,19 @@ contract AssessmentPoll {
         _;
     }
 
-    modifier onlyWhenInProgress(bytes32 _thingProposalId) {
+    modifier whenInProgress(bytes32 _thingProposalId) {
         if (s_proposalPollStage[_thingProposalId] != Stage.InProgress) {
             revert AssessmentPoll__NotInProgress(_thingProposalId);
+        }
+        _;
+    }
+
+    modifier whenExpired(bytes32 _thingProposalId) {
+        if (
+            _getL1BlockNumber() <=
+            s_proposalIdToPollInitBlock[_thingProposalId] + s_durationBlocks
+        ) {
+            revert AssessmentPoll__StillInProgress(_thingProposalId);
         }
         _;
     }
@@ -153,13 +168,20 @@ contract AssessmentPoll {
         );
     }
 
+    function _getL1BlockNumber() private view returns (uint256) {
+        if (block.chainid == 901) {
+            return L1BLOCK.number();
+        }
+        return block.number;
+    }
+
     function getPollDurationBlocks() public view returns (uint16) {
         return s_durationBlocks;
     }
 
     function getPollInitBlock(
         bytes32 _thingProposalId
-    ) public view returns (uint64) {
+    ) public view returns (uint256) {
         return s_proposalIdToPollInitBlock[_thingProposalId];
     }
 
@@ -167,7 +189,7 @@ contract AssessmentPoll {
         bytes32 _thingProposalId,
         address[] memory _verifiers
     ) external onlyThingAssessmentVerifierLottery {
-        s_proposalIdToPollInitBlock[_thingProposalId] = uint64(block.number);
+        s_proposalIdToPollInitBlock[_thingProposalId] = _getL1BlockNumber();
         s_proposalVerifiers[_thingProposalId] = _verifiers;
         s_proposalPollStage[_thingProposalId] = Stage.InProgress;
     }
@@ -192,8 +214,8 @@ contract AssessmentPoll {
         Vote _vote
     )
         public
-        onlyWhenInProgress(_thingProposalId)
-        onlyWhileNotExpired(_thingProposalId)
+        whenInProgress(_thingProposalId)
+        whenNotExpired(_thingProposalId)
         onlyDesignatedVerifiers(_thingProposalId)
     {
         (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
@@ -206,8 +228,8 @@ contract AssessmentPoll {
         string calldata _reason
     )
         public
-        onlyWhenInProgress(_thingProposalId)
-        onlyWhileNotExpired(_thingProposalId)
+        whenInProgress(_thingProposalId)
+        whenNotExpired(_thingProposalId)
         onlyDesignatedVerifiers(_thingProposalId)
     {
         (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
@@ -226,23 +248,13 @@ contract AssessmentPoll {
         return s_proposalVerifiers[_thingProposalId];
     }
 
-    function finalizePoll__Unsettled(
+    function _unstakeOrUnstakeAndSlashVerifiers(
         bytes32 _thingProposalId,
-        string calldata _voteAggIpfsCid,
-        Decision _decision,
         uint64[] calldata _verifiersToSlashIndices
-    ) public onlyOrchestrator onlyWhenInProgress(_thingProposalId) {
-        (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
-
-        s_proposalPollStage[_thingProposalId] = Stage.Finalized;
-        address submitter = i_truQuest.getSettlementProposalSubmitter(thingId);
-        i_truQuest.unstakeProposalSubmitter(submitter);
-
+    ) private returns (address[] memory slashedVerifiers) {
         uint64 j = 0;
         address[] memory verifiers = s_proposalVerifiers[_thingProposalId];
-        address[] memory slashedVerifiers = new address[](
-            _verifiersToSlashIndices.length
-        );
+        slashedVerifiers = new address[](_verifiersToSlashIndices.length);
         for (uint8 i = 0; i < _verifiersToSlashIndices.length; ++i) {
             uint64 nextVerifierToSlashIndex = _verifiersToSlashIndices[i];
             slashedVerifiers[i] = verifiers[nextVerifierToSlashIndex];
@@ -254,6 +266,29 @@ contract AssessmentPoll {
         for (; j < verifiers.length; ++j) {
             i_truQuest.unstakeAsVerifier(verifiers[j]);
         }
+    }
+
+    function finalizePoll__Unsettled(
+        bytes32 _thingProposalId,
+        string calldata _voteAggIpfsCid,
+        Decision _decision,
+        uint64[] calldata _verifiersToSlashIndices
+    )
+        public
+        onlyOrchestrator
+        whenInProgress(_thingProposalId)
+        whenExpired(_thingProposalId)
+    {
+        (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
+
+        s_proposalPollStage[_thingProposalId] = Stage.Finalized;
+        address submitter = i_truQuest.getSettlementProposalSubmitter(thingId);
+        i_truQuest.unstakeProposalSubmitter(submitter);
+
+        address[] memory slashedVerifiers = _unstakeOrUnstakeAndSlashVerifiers(
+            _thingProposalId,
+            _verifiersToSlashIndices
+        );
 
         emit PollFinalized(
             thingId,
@@ -266,7 +301,7 @@ contract AssessmentPoll {
         );
     }
 
-    function _rewardAndSlashVerifiers(
+    function _rewardOrSlashVerifiers(
         bytes32 _thingProposalId,
         uint64[] calldata _verifiersToSlashIndices
     )
@@ -301,7 +336,12 @@ contract AssessmentPoll {
         bytes32 _thingProposalId,
         string calldata _voteAggIpfsCid,
         uint64[] calldata _verifiersToSlashIndices
-    ) public onlyOrchestrator onlyWhenInProgress(_thingProposalId) {
+    )
+        public
+        onlyOrchestrator
+        whenInProgress(_thingProposalId)
+        whenExpired(_thingProposalId)
+    {
         (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
 
         s_proposalPollStage[_thingProposalId] = Stage.Finalized;
@@ -311,10 +351,7 @@ contract AssessmentPoll {
         (
             address[] memory rewardedVerifiers,
             address[] memory slashedVerifiers
-        ) = _rewardAndSlashVerifiers(
-                _thingProposalId,
-                _verifiersToSlashIndices
-            );
+        ) = _rewardOrSlashVerifiers(_thingProposalId, _verifiersToSlashIndices);
 
         emit PollFinalized(
             thingId,
@@ -331,7 +368,12 @@ contract AssessmentPoll {
         bytes32 _thingProposalId,
         string calldata _voteAggIpfsCid,
         uint64[] calldata _verifiersToSlashIndices
-    ) public onlyOrchestrator onlyWhenInProgress(_thingProposalId) {
+    )
+        public
+        onlyOrchestrator
+        whenInProgress(_thingProposalId)
+        whenExpired(_thingProposalId)
+    {
         (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
 
         s_proposalPollStage[_thingProposalId] = Stage.Finalized;
@@ -341,10 +383,7 @@ contract AssessmentPoll {
         (
             address[] memory rewardedVerifiers,
             address[] memory slashedVerifiers
-        ) = _rewardAndSlashVerifiers(
-                _thingProposalId,
-                _verifiersToSlashIndices
-            );
+        ) = _rewardOrSlashVerifiers(_thingProposalId, _verifiersToSlashIndices);
 
         emit PollFinalized(
             thingId,
@@ -361,7 +400,12 @@ contract AssessmentPoll {
         bytes32 _thingProposalId,
         string calldata _voteAggIpfsCid,
         uint64[] calldata _verifiersToSlashIndices
-    ) public onlyOrchestrator onlyWhenInProgress(_thingProposalId) {
+    )
+        public
+        onlyOrchestrator
+        whenInProgress(_thingProposalId)
+        whenExpired(_thingProposalId)
+    {
         (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
 
         s_proposalPollStage[_thingProposalId] = Stage.Finalized;
@@ -371,10 +415,7 @@ contract AssessmentPoll {
         (
             address[] memory rewardedVerifiers,
             address[] memory slashedVerifiers
-        ) = _rewardAndSlashVerifiers(
-                _thingProposalId,
-                _verifiersToSlashIndices
-            );
+        ) = _rewardOrSlashVerifiers(_thingProposalId, _verifiersToSlashIndices);
 
         emit PollFinalized(
             thingId,

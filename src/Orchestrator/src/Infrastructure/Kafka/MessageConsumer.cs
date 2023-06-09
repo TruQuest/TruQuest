@@ -78,21 +78,26 @@ internal class MessageConsumer : IMessageMiddleware
             }
             else if (message is ArchiveSettlementProposalAttachmentsProgress proposalProgress)
             {
-                await _mediator.Publish(new SettlementEvents.AttachmentsArchivingProgress.AttachmentsArchivingProgressEvent
-                {
-                    SubmitterId = proposalProgress.SubmitterId,
-                    ProposalId = proposalProgress.ProposalId,
-                    Percent = proposalProgress.Percent
-                });
+                await _mediator.Publish(
+                    new SettlementEvents.AttachmentsArchivingProgress.AttachmentsArchivingProgressEvent
+                    {
+                        SubmitterId = proposalProgress.SubmitterId,
+                        ProposalId = proposalProgress.ProposalId,
+                        Percent = proposalProgress.Percent
+                    },
+                    addToAdditionalSinks: false
+                );
             }
             else if (message is ArchiveSettlementProposalAttachmentsSuccessResult proposalSuccessResult)
             {
-                await _mediator.Publish(new SettlementEvents.AttachmentsArchivingCompleted.AttachmentsArchivingCompletedEvent
-                {
-                    SubmitterId = proposalSuccessResult.SubmitterId,
-                    ProposalId = proposalSuccessResult.ProposalId,
-                    Input = proposalSuccessResult.Input
-                });
+                await _mediator.Publish(
+                    new SettlementEvents.AttachmentsArchivingCompleted.AttachmentsArchivingCompletedEvent
+                    {
+                        SubmitterId = proposalSuccessResult.SubmitterId,
+                        ProposalId = proposalSuccessResult.ProposalId,
+                        Input = proposalSuccessResult.Input
+                    }
+                );
             }
         }
         else

@@ -105,30 +105,6 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task PreJoinThingSubmissionVerifierLotteryAs(string accountName, byte[] thingId, byte[] dataHash)
-    {
-        var account = _accountProvider.GetAccount(accountName);
-        var web3 = new Web3(account, _rpcUrl);
-
-        var txnDispatcher = web3.Eth.GetContractTransactionHandler<PreJoinThingSubmissionVerifierLotteryMessage>();
-        var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
-            _thingSubmissionVerifierLotteryAddress,
-            new()
-            {
-                ThingId = thingId,
-                DataHash = dataHash
-            }
-        );
-
-        _logger.LogInformation(
-            "PreJoinThing gas used: {CumulativeGas} {Gas}",
-            txnReceipt.CumulativeGasUsed.Value,
-            txnReceipt.GasUsed.Value
-        ); // 153762 first time, then 136662
-
-        await _blockchainManipulator.Mine(1);
-    }
-
     public async Task JoinThingSubmissionVerifierLotteryAs(string accountName, byte[] thingId, byte[] userData)
     {
         var account = _accountProvider.GetAccount(accountName);
@@ -189,7 +165,26 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task ClaimThingAssessmentVerifierLotterySpotAs(string accountName, byte[] thingProposalId)
+    public async Task<int> GetUserIndexAmongThingVerifiers(byte[] thingId, string accountName)
+    {
+        var account = _accountProvider.GetAccount(accountName);
+        var index = await _web3.Eth
+            .GetContractQueryHandler<GetUserIndexAmongThingVerifiersMessage>()
+            .QueryAsync<BigInteger>(
+                _acceptancePollAddress,
+                new()
+                {
+                    ThingId = thingId,
+                    User = account.Address
+                }
+            );
+
+        return (int)index;
+    }
+
+    public async Task ClaimThingAssessmentVerifierLotterySpotAs(
+        string accountName, byte[] thingProposalId, ushort thingVerifiersArrayIndex
+    )
     {
         var account = _accountProvider.GetAccount(accountName);
         var web3 = new Web3(account, _rpcUrl);
@@ -201,7 +196,8 @@ public class ContractCaller
                 _thingAssessmentVerifierLotteryAddress,
                 new()
                 {
-                    ThingProposalId = thingProposalId
+                    ThingProposalId = thingProposalId,
+                    ThingVerifiersArrayIndex = thingVerifiersArrayIndex
                 }
             );
 
@@ -234,33 +230,7 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task PreJoinThingAssessmentVerifierLotteryAs(
-        string accountName, byte[] thingProposalId, byte[] dataHash
-    )
-    {
-        var account = _accountProvider.GetAccount(accountName);
-        var web3 = new Web3(account, _rpcUrl);
-
-        var txnDispatcher = web3.Eth.GetContractTransactionHandler<PreJoinThingAssessmentVerifierLotteryMessage>();
-        var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
-            _thingAssessmentVerifierLotteryAddress,
-            new()
-            {
-                ThingProposalId = thingProposalId,
-                DataHash = dataHash
-            }
-        );
-
-        _logger.LogInformation(
-            "PreJoinPro gas used: {CumulativeGas} {Gas}",
-            txnReceipt.CumulativeGasUsed.Value,
-            txnReceipt.GasUsed.Value
-        ); // 156558 first time, then 139458 x3, and 122358 last
-
-        await _blockchainManipulator.Mine(1);
-    }
-
-    public async Task JoinThingAssessmentVerifierLotteryAs(string accountName, byte[] thingProposalId, byte[] data)
+    public async Task JoinThingAssessmentVerifierLotteryAs(string accountName, byte[] thingProposalId, byte[] userData)
     {
         var account = _accountProvider.GetAccount(accountName);
         var web3 = new Web3(account, _rpcUrl);
@@ -271,7 +241,7 @@ public class ContractCaller
             new()
             {
                 ThingProposalId = thingProposalId,
-                Data = data
+                UserData = userData
             }
         );
 

@@ -13,6 +13,8 @@ public class JoinedLotteryEvent : IEventDTO
     public byte[] SettlementProposalId { get; set; }
     [Parameter("address", "user", 3, true)]
     public string UserId { get; set; }
-    [Parameter("uint256", "nonce", 4, false)]
-    public BigInteger Nonce { get; set; }
+    [Parameter("bytes32", "userData", 4, false)]
+    public byte[] UserData { get; set; }
+    [Parameter("uint256", "l1BlockNumber", 5, false)]
+    public BigInteger L1BlockNumber { get; set; }
 }
