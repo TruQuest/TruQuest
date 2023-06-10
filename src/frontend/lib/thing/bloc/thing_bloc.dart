@@ -183,7 +183,7 @@ class ThingBloc extends Bloc<ThingAction> {
         initBlock: info.$1,
         durationBlocks: info.$2,
         isDesignatedVerifier: info.$3,
-        latestBlockNumber: info.$4,
+        latestL1BlockNumber: info.$4,
       ),
     );
   }

@@ -98,14 +98,10 @@ internal class SettlementProposalQueryable : Queryable, ISettlementProposalQuery
         var dbConn = await _getOpenConnection();
         var entries = await dbConn.QueryAsync<VerifierLotteryParticipantEntryQm>(
             @"
-                SELECT je.""BlockNumber"" AS ""JoinedBlockNumber"", ""UserId"", pje.""DataHash"", je.""Nonce""
-                FROM
-                    truquest_events.""PreJoinedThingAssessmentVerifierLotteryEvents"" AS pje
-                        LEFT JOIN
-                    truquest_events.""JoinedThingAssessmentVerifierLotteryEvents"" AS je
-                        USING (""ThingId"", ""SettlementProposalId"", ""UserId"")
+                SELECT ""L1BlockNumber"" AS ""JoinedBlockNumber"", ""UserId"", ""UserData"", ""Nonce""
+                FROM truquest_events.""JoinedThingAssessmentVerifierLotteryEvents""
                 WHERE ""SettlementProposalId"" = @SettlementProposalId
-                ORDER BY je.""BlockNumber"" DESC NULLS LAST, je.""TxnIndex"" DESC
+                ORDER BY ""BlockNumber"" DESC, ""TxnIndex"" DESC
             ",
             param: new
             {

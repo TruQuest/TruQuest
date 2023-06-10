@@ -4,6 +4,11 @@ class GetVerifierLotteryParticipantsRvm {
   final String proposalId;
   final List<VerifierLotteryParticipantEntryVm> entries;
 
+  GetVerifierLotteryParticipantsRvm({
+    required this.proposalId,
+    required this.entries,
+  });
+
   GetVerifierLotteryParticipantsRvm.fromMap(Map<String, dynamic> map)
       : proposalId = map['proposalId'],
         entries = List.unmodifiable(

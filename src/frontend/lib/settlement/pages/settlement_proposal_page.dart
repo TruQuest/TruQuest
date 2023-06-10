@@ -209,7 +209,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
           right: 20,
           child: WatchButton(
             markedAsWatched: proposal.watched,
-            onPressed: (markedAsWatched) {},
+            onPressed: (markedAsWatched) {}, // @@TODO
           ),
         ),
       ],
@@ -235,7 +235,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
             children: _buildTabContents(vm),
           ),
           if (vm.proposal.state.index >=
-              SettlementProposalStateVm.softDeclined.index)
+              SettlementProposalStateVm.declined.index)
             Positioned(
               top: 30,
               left: 24,
@@ -272,6 +272,8 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
             child: Center(child: CircularProgressIndicator()),
           );
         }
+
+        // @@TODO: Handle failure.
 
         var vm = snapshot.data!;
 

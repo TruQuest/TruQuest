@@ -68,11 +68,11 @@ internal class FinalizeAssessmentPollCommandHandler : IRequestHandler<FinalizeAs
             }
             else if (decision == AssessmentDecision.SoftDeclined)
             {
-                proposal.SetState(SettlementProposalState.SoftDeclined);
+                proposal.SetState(SettlementProposalState.Declined);
             }
             else if (decision == AssessmentDecision.HardDeclined)
             {
-                proposal.SetState(SettlementProposalState.HardDeclined);
+                proposal.SetState(SettlementProposalState.Declined);
             }
 
             proposal.SetVoteAggIpfsCid(command.VoteAggIpfsCid);

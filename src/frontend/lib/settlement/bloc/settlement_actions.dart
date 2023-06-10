@@ -55,21 +55,12 @@ class ClaimLotterySpot
     extends SettlementActionAwaitable<ClaimLotterySpotFailureVm?> {
   final String thingId;
   final String proposalId;
+  final int userIndexInThingVerifiersArray;
 
   ClaimLotterySpot({
     required this.thingId,
     required this.proposalId,
-  });
-}
-
-class PreJoinLottery
-    extends SettlementActionAwaitable<PreJoinLotteryFailureVm?> {
-  final String thingId;
-  final String proposalId;
-
-  PreJoinLottery({
-    required this.thingId,
-    required this.proposalId,
+    required this.userIndexInThingVerifiersArray,
   });
 }
 
@@ -84,9 +75,13 @@ class JoinLottery extends SettlementActionAwaitable<JoinLotteryFailureVm?> {
 }
 
 class GetVerifierLotteryParticipants extends SettlementAction {
+  final String thingId;
   final String proposalId;
 
-  GetVerifierLotteryParticipants({required this.proposalId});
+  GetVerifierLotteryParticipants({
+    required this.thingId,
+    required this.proposalId,
+  });
 }
 
 class GetAssessmentPollInfo

@@ -8,7 +8,7 @@ import "./L1Block.sol";
 error AssessmentPoll__Unauthorized();
 error AssessmentPoll__Expired(bytes32 thingProposalId);
 error AssessmentPoll__NotDesignatedVerifier(bytes32 thingProposalId);
-error AssessmentPoll__NotInProgress(bytes32 thingProposalId);
+error AssessmentPoll__NotActive(bytes32 thingProposalId);
 error AssessmentPoll__StillInProgress(bytes32 thingProposalId);
 
 contract AssessmentPoll {
@@ -26,12 +26,6 @@ contract AssessmentPoll {
         Accepted
     }
 
-    enum Stage {
-        None,
-        InProgress,
-        Finalized
-    }
-
     TruQuest private immutable i_truQuest;
     ThingAssessmentVerifierLottery private s_verifierLottery;
     address private s_orchestrator;
@@ -43,9 +37,8 @@ contract AssessmentPoll {
     uint8 private s_votingVolumeThresholdPercent;
     uint8 private s_majorityThresholdPercent;
 
-    mapping(bytes32 => uint256) private s_proposalIdToPollInitBlock;
+    mapping(bytes32 => int256) private s_proposalIdToPollInitBlock;
     mapping(bytes32 => address[]) private s_proposalVerifiers;
-    mapping(bytes32 => Stage) private s_proposalPollStage;
 
     event CastedVote(
         bytes16 indexed thingId,
@@ -93,11 +86,12 @@ contract AssessmentPoll {
         _;
     }
 
-    modifier whenNotExpired(bytes32 _thingProposalId) {
-        if (
-            _getL1BlockNumber() >
-            s_proposalIdToPollInitBlock[_thingProposalId] + s_durationBlocks
-        ) {
+    modifier whenActiveAndNotExpired(bytes32 _thingProposalId) {
+        int256 pollInitBlock = s_proposalIdToPollInitBlock[_thingProposalId];
+        if (pollInitBlock < 1) {
+            revert AssessmentPoll__NotActive(_thingProposalId);
+        }
+        if (_getL1BlockNumber() > uint256(pollInitBlock) + s_durationBlocks) {
             revert AssessmentPoll__Expired(_thingProposalId);
         }
         _;
@@ -121,9 +115,9 @@ contract AssessmentPoll {
         _;
     }
 
-    modifier whenInProgress(bytes32 _thingProposalId) {
-        if (s_proposalPollStage[_thingProposalId] != Stage.InProgress) {
-            revert AssessmentPoll__NotInProgress(_thingProposalId);
+    modifier whenActive(bytes32 _thingProposalId) {
+        if (s_proposalIdToPollInitBlock[_thingProposalId] < 1) {
+            revert AssessmentPoll__NotActive(_thingProposalId);
         }
         _;
     }
@@ -131,7 +125,8 @@ contract AssessmentPoll {
     modifier whenExpired(bytes32 _thingProposalId) {
         if (
             _getL1BlockNumber() <=
-            s_proposalIdToPollInitBlock[_thingProposalId] + s_durationBlocks
+            uint256(s_proposalIdToPollInitBlock[_thingProposalId]) +
+                s_durationBlocks
         ) {
             revert AssessmentPoll__StillInProgress(_thingProposalId);
         }
@@ -181,7 +176,7 @@ contract AssessmentPoll {
 
     function getPollInitBlock(
         bytes32 _thingProposalId
-    ) public view returns (uint256) {
+    ) public view returns (int256) {
         return s_proposalIdToPollInitBlock[_thingProposalId];
     }
 
@@ -189,9 +184,10 @@ contract AssessmentPoll {
         bytes32 _thingProposalId,
         address[] memory _verifiers
     ) external onlyThingAssessmentVerifierLottery {
-        s_proposalIdToPollInitBlock[_thingProposalId] = _getL1BlockNumber();
+        s_proposalIdToPollInitBlock[_thingProposalId] = int256(
+            _getL1BlockNumber()
+        );
         s_proposalVerifiers[_thingProposalId] = _verifiers;
-        s_proposalPollStage[_thingProposalId] = Stage.InProgress;
     }
 
     function checkIsDesignatedVerifierForProposal(
@@ -214,8 +210,7 @@ contract AssessmentPoll {
         Vote _vote
     )
         public
-        whenInProgress(_thingProposalId)
-        whenNotExpired(_thingProposalId)
+        whenActiveAndNotExpired(_thingProposalId)
         onlyDesignatedVerifiers(_thingProposalId)
     {
         (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
@@ -228,8 +223,7 @@ contract AssessmentPoll {
         string calldata _reason
     )
         public
-        whenInProgress(_thingProposalId)
-        whenNotExpired(_thingProposalId)
+        whenActiveAndNotExpired(_thingProposalId)
         onlyDesignatedVerifiers(_thingProposalId)
     {
         (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
@@ -276,12 +270,14 @@ contract AssessmentPoll {
     )
         public
         onlyOrchestrator
-        whenInProgress(_thingProposalId)
+        whenActive(_thingProposalId)
         whenExpired(_thingProposalId)
     {
         (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
 
-        s_proposalPollStage[_thingProposalId] = Stage.Finalized;
+        s_proposalIdToPollInitBlock[
+            _thingProposalId
+        ] = -s_proposalIdToPollInitBlock[_thingProposalId];
         address submitter = i_truQuest.getSettlementProposalSubmitter(thingId);
         i_truQuest.unstakeProposalSubmitter(submitter);
 
@@ -339,12 +335,14 @@ contract AssessmentPoll {
     )
         public
         onlyOrchestrator
-        whenInProgress(_thingProposalId)
+        whenActive(_thingProposalId)
         whenExpired(_thingProposalId)
     {
         (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
 
-        s_proposalPollStage[_thingProposalId] = Stage.Finalized;
+        s_proposalIdToPollInitBlock[
+            _thingProposalId
+        ] = -s_proposalIdToPollInitBlock[_thingProposalId];
         address submitter = i_truQuest.getSettlementProposalSubmitter(thingId);
         i_truQuest.unstakeAndRewardProposalSubmitter(submitter);
 
@@ -371,12 +369,14 @@ contract AssessmentPoll {
     )
         public
         onlyOrchestrator
-        whenInProgress(_thingProposalId)
+        whenActive(_thingProposalId)
         whenExpired(_thingProposalId)
     {
         (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
 
-        s_proposalPollStage[_thingProposalId] = Stage.Finalized;
+        s_proposalIdToPollInitBlock[
+            _thingProposalId
+        ] = -s_proposalIdToPollInitBlock[_thingProposalId];
         address submitter = i_truQuest.getSettlementProposalSubmitter(thingId);
         i_truQuest.unstakeProposalSubmitter(submitter);
 
@@ -403,12 +403,14 @@ contract AssessmentPoll {
     )
         public
         onlyOrchestrator
-        whenInProgress(_thingProposalId)
+        whenActive(_thingProposalId)
         whenExpired(_thingProposalId)
     {
         (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
 
-        s_proposalPollStage[_thingProposalId] = Stage.Finalized;
+        s_proposalIdToPollInitBlock[
+            _thingProposalId
+        ] = -s_proposalIdToPollInitBlock[_thingProposalId];
         address submitter = i_truQuest.getSettlementProposalSubmitter(thingId);
         i_truQuest.unstakeAndSlashProposalSubmitter(submitter);
 

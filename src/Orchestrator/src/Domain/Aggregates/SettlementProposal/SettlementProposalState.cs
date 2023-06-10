@@ -8,7 +8,6 @@ public enum SettlementProposalState
     VerifierLotteryFailed,
     VerifiersSelectedAndPollInitiated,
     ConsensusNotReached,
-    SoftDeclined,
-    HardDeclined,
+    Declined,
     Accepted,
 }

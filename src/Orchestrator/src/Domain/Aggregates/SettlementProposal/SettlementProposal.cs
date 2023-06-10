@@ -52,8 +52,8 @@ public class SettlementProposal : Entity, IAggregateRoot
             SubmittedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         }
         else if (State is
-            SettlementProposalState.SoftDeclined or
-            SettlementProposalState.HardDeclined or
+            SettlementProposalState.ConsensusNotReached or
+            SettlementProposalState.Declined or
             SettlementProposalState.Accepted
         )
         {

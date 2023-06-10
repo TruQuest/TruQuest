@@ -29,48 +29,23 @@ class LotteryStepper extends StatefulWidget {
 class _LotteryStepperState extends StateX<LotteryStepper> {
   late final _settlementBloc = use<SettlementBloc>();
 
-  int _currentStep = 0;
-
-  bool _checkButtonShouldBeEnabled(int stepIndex) {
+  bool _checkButtonShouldBeEnabled(int step) {
     var info = widget.info;
-    if (stepIndex == -1) {
-      // @@TODO: Is the thing's verifier.
-      return info.initBlock != null &&
-          info.alreadyPreJoined != null &&
-          info.alreadyClaimedASpot != null &&
-          !info.alreadyPreJoined! &&
-          !info.alreadyClaimedASpot! &&
-          widget.currentBlock < widget.endBlock;
-    } else if (stepIndex == 0) {
-      return info.initBlock != null &&
-          info.alreadyPreJoined != null &&
-          !info.alreadyPreJoined! &&
-          widget.currentBlock < widget.endBlock - 1;
-    }
-
     return info.initBlock != null &&
-        info.alreadyPreJoined != null &&
         info.alreadyJoined != null &&
-        info.alreadyPreJoined! &&
         !info.alreadyJoined! &&
-        widget.currentBlock < widget.endBlock;
+        info.alreadyClaimedASpot != null &&
+        !info.alreadyClaimedASpot! &&
+        widget.currentBlock < widget.endBlock &&
+        (step == 0 || info.userIndexInThingVerifiersArray >= 0);
   }
 
-  bool _checkButtonShouldBeSwiped(int stepIndex) {
+  bool _checkButtonShouldBeSwiped(int step) {
     var info = widget.info;
-    if (stepIndex == -1) {
-      return info.alreadyClaimedASpot != null && info.alreadyClaimedASpot!;
-    } else if (stepIndex == 0) {
-      return info.alreadyPreJoined != null &&
-          info.alreadyClaimedASpot != null &&
-          info.alreadyPreJoined! &&
-          !info.alreadyClaimedASpot!;
-    }
-
-    return info.alreadyJoined != null &&
-        info.alreadyClaimedASpot != null &&
-        info.alreadyJoined! &&
-        !info.alreadyClaimedASpot!;
+    return step == -1 &&
+            info.alreadyClaimedASpot != null &&
+            info.alreadyClaimedASpot! ||
+        info.alreadyJoined != null && info.alreadyJoined!;
   }
 
   @override
@@ -94,6 +69,8 @@ class _LotteryStepperState extends StateX<LotteryStepper> {
                 var action = ClaimLotterySpot(
                   thingId: widget.proposal.thingId,
                   proposalId: widget.proposal.id,
+                  userIndexInThingVerifiersArray:
+                      widget.info.userIndexInThingVerifiersArray,
                 );
                 _settlementBloc.dispatch(action);
 
@@ -131,29 +108,11 @@ class _LotteryStepperState extends StateX<LotteryStepper> {
           ),
           SizedBox(height: 6),
           Stepper(
-            currentStep: _currentStep,
             controlsBuilder: (context, details) => SwipeButton(
-              key: ValueKey(details.currentStep),
-              text: 'Slide to ${details.currentStep == 0 ? 'commit' : 'join'}',
-              enabled: _checkButtonShouldBeEnabled(details.currentStep),
-              swiped: _checkButtonShouldBeSwiped(details.currentStep),
+              text: 'Slide to join',
+              enabled: _checkButtonShouldBeEnabled(0),
+              swiped: _checkButtonShouldBeSwiped(0),
               onCompletedSwipe: () async {
-                if (details.currentStep == 0) {
-                  var action = PreJoinLottery(
-                    thingId: widget.proposal.thingId,
-                    proposalId: widget.proposal.id,
-                  );
-                  _settlementBloc.dispatch(action);
-
-                  var failure = await action.result;
-                  if (failure == null) {
-                    details.onStepContinue!();
-                    return true;
-                  }
-
-                  return false;
-                }
-
                 var action = JoinLottery(
                   thingId: widget.proposal.thingId,
                   proposalId: widget.proposal.id,
@@ -164,32 +123,7 @@ class _LotteryStepperState extends StateX<LotteryStepper> {
                 return failure == null;
               },
             ),
-            onStepContinue: () => setState(() {
-              _currentStep++;
-            }),
-            onStepTapped: (value) => setState(() {
-              _currentStep = value;
-            }),
             steps: [
-              Step(
-                title: Text(
-                  'Commit to lottery',
-                  style: GoogleFonts.philosopher(
-                    color: Color(0xffF8F9FA),
-                    fontSize: 16,
-                  ),
-                ),
-                content: Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(
-                    'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
-                    style: GoogleFonts.raleway(
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                isActive: true,
-              ),
               Step(
                 title: Text(
                   'Join lottery',

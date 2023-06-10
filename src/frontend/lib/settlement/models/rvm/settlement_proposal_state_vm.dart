@@ -5,8 +5,7 @@ enum SettlementProposalStateVm {
   verifierLotteryFailed,
   verifiersSelectedAndPollInitiated,
   consensusNotReached,
-  softDeclined,
-  hardDeclined,
+  declined,
   accepted,
 }
 
@@ -25,10 +24,8 @@ extension SettlementProposalStateVmExtension on SettlementProposalStateVm {
         return 'Awaiting assessment poll results';
       case SettlementProposalStateVm.consensusNotReached:
         return 'Consensus not reached';
-      case SettlementProposalStateVm.softDeclined:
-        return 'Soft declined';
-      case SettlementProposalStateVm.hardDeclined:
-        return 'Hard declined';
+      case SettlementProposalStateVm.declined:
+        return 'Declined';
       case SettlementProposalStateVm.accepted:
         return 'Accepted';
     }

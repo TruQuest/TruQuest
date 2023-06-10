@@ -3,7 +3,7 @@ using Nethereum.Contracts;
 
 namespace Infrastructure.Ethereum.Messages;
 
-[Function("getPollInitBlock", "uint256")]
+[Function("getPollInitBlock", "int256")]
 public class GetThingAssessmentPollInitBlockMessage : FunctionMessage
 {
     [Parameter("bytes32", "_thingProposalId", 1)]

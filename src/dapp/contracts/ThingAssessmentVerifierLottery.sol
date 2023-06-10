@@ -245,14 +245,52 @@ contract ThingAssessmentVerifierLottery {
             s_thingProposalIdToOrchestratorCommitment[_thingProposalId].block;
     }
 
+    function checkAlreadyClaimedLotterySpot(
+        bytes32 _thingProposalId,
+        address _user
+    ) public view returns (bool) {
+        if (
+            s_thingProposalIdToParticipantJoinedBlockNo[_thingProposalId][
+                _user
+            ] == 0
+        ) {
+            return false;
+        }
+
+        address[] memory claimants = s_thingProposalIdToClaimants[
+            _thingProposalId
+        ];
+        for (uint256 i = 0; i < claimants.length; ++i) {
+            if (claimants[i] == _user) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     function checkAlreadyJoinedLottery(
         bytes32 _thingProposalId,
         address _user
     ) public view returns (bool) {
-        return
+        if (
             s_thingProposalIdToParticipantJoinedBlockNo[_thingProposalId][
                 _user
-            ] > 0;
+            ] == 0
+        ) {
+            return false;
+        }
+
+        address[] memory participants = s_thingProposalIdToParticipants[
+            _thingProposalId
+        ];
+        for (uint256 i = 0; i < participants.length; ++i) {
+            if (participants[i] == _user) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     function _splitIds(

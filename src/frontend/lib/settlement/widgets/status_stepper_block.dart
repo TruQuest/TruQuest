@@ -121,8 +121,7 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
           isActive: true,
         ),
       ];
-    } else if (_proposal.state == SettlementProposalStateVm.softDeclined ||
-        _proposal.state == SettlementProposalStateVm.hardDeclined) {
+    } else if (_proposal.state == SettlementProposalStateVm.declined) {
       return [
         ...steps,
         Step(

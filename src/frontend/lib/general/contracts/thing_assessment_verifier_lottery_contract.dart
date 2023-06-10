@@ -34,9 +34,9 @@ class ThingAssessmentVerifierLotteryContract {
       "name": "getLotteryInitBlock",
       "outputs": [
         {
-          "internalType": "int64",
+          "internalType": "int256",
           "name": "",
-          "type": "int64"
+          "type": "int256"
         }
       ],
       "stateMutability": "view",
@@ -48,19 +48,33 @@ class ThingAssessmentVerifierLotteryContract {
           "internalType": "bytes32",
           "name": "_thingProposalId",
           "type": "bytes32"
-        },
-        {
-          "internalType": "address",
-          "name": "_user",
-          "type": "address"
         }
       ],
-      "name": "checkAlreadyClaimedALotterySpot",
+      "name": "getOrchestratorCommitmentDataHash",
       "outputs": [
         {
-          "internalType": "bool",
+          "internalType": "bytes32",
           "name": "",
-          "type": "bool"
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_thingProposalId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getOrchestratorCommitmentUserXorDataHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
         }
       ],
       "stateMutability": "view",
@@ -79,7 +93,7 @@ class ThingAssessmentVerifierLotteryContract {
           "type": "address"
         }
       ],
-      "name": "checkAlreadyPreJoinedLottery",
+      "name": "checkAlreadyClaimedLotterySpot",
       "outputs": [
         {
           "internalType": "bool",
@@ -118,27 +132,13 @@ class ThingAssessmentVerifierLotteryContract {
       "inputs": [
         {
           "internalType": "bytes32",
-          "name": "_data",
-          "type": "bytes32"
-        }
-      ],
-      "name": "computeHash",
-      "outputs": [
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
           "name": "_thingProposalId",
           "type": "bytes32"
+        },
+        {
+          "internalType": "uint16",
+          "name": "_thingVerifiersArrayIndex",
+          "type": "uint16"
         }
       ],
       "name": "claimLotterySpot",
@@ -155,25 +155,7 @@ class ThingAssessmentVerifierLotteryContract {
         },
         {
           "internalType": "bytes32",
-          "name": "_dataHash",
-          "type": "bytes32"
-        }
-      ],
-      "name": "preJoinLottery",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "_thingProposalId",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "_data",
+          "name": "_userData",
           "type": "bytes32"
         }
       ],
@@ -189,8 +171,6 @@ class ThingAssessmentVerifierLotteryContract {
   final _random = Random.secure();
 
   late final Contract? _contract;
-
-  final Map<String, String> _commitmentIdToData = {};
 
   ThingAssessmentVerifierLotteryContract(this._ethereumService) {
     if (_ethereumService.available) {
@@ -225,7 +205,7 @@ class ThingAssessmentVerifierLotteryContract {
     return initBlock.toInt();
   }
 
-  Future<bool?> checkAlreadyClaimedALotterySpot(
+  Future<String?> getOrchestratorCommitmentDataHash(
     String thingId,
     String proposalId,
   ) async {
@@ -233,24 +213,37 @@ class ThingAssessmentVerifierLotteryContract {
     if (contract == null) {
       return null;
     }
-    if (_ethereumService.connectedAccount == null) {
-      return null;
-    }
 
     var thingIdHex = thingId.toSolInputFormat(prefix: false);
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    return await contract.call<bool>(
-      'checkAlreadyClaimedALotterySpot',
-      [
-        thingProposalIdHex,
-        _ethereumService.connectedAccount,
-      ],
+    return await contract.call<String>(
+      'getOrchestratorCommitmentDataHash',
+      [thingProposalIdHex],
     );
   }
 
-  Future<bool?> checkAlreadyPreJoinedLottery(
+  Future<String?> getOrchestratorCommitmentUserXorDataHash(
+    String thingId,
+    String proposalId,
+  ) async {
+    var contract = _contract;
+    if (contract == null) {
+      return null;
+    }
+
+    var thingIdHex = thingId.toSolInputFormat(prefix: false);
+    var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
+    var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
+
+    return await contract.call<String>(
+      'getOrchestratorCommitmentUserXorDataHash',
+      [thingProposalIdHex],
+    );
+  }
+
+  Future<bool?> checkAlreadyClaimedLotterySpot(
     String thingId,
     String proposalId,
   ) async {
@@ -267,7 +260,7 @@ class ThingAssessmentVerifierLotteryContract {
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
     return await contract.call<bool>(
-      'checkAlreadyPreJoinedLottery',
+      'checkAlreadyClaimedLotterySpot',
       [
         thingProposalIdHex,
         _ethereumService.connectedAccount,
@@ -303,6 +296,7 @@ class ThingAssessmentVerifierLotteryContract {
   Future<EthereumError?> claimLotterySpot(
     String thingId,
     String proposalId,
+    int userIndexInThingVerifiersArray,
   ) async {
     var contract = _contract;
     if (contract == null) {
@@ -322,73 +316,14 @@ class ThingAssessmentVerifierLotteryContract {
     try {
       var txnResponse = await contract.send(
         'claimLotterySpot',
-        [thingProposalIdHex],
+        [thingProposalIdHex, userIndexInThingVerifiersArray],
         TransactionOverride(
           gasLimit: BigInt.from(250000),
         ),
       );
-
-      // print('Claimed lottery spot! Awaiting confirmations...');
-
-      // await txnResponse.wait(2);
-
-      // print('Claim txn confirmed!');
 
       await txnResponse.wait();
       print('Claim txn mined!');
-
-      return null;
-    } catch (e) {
-      print(e);
-      return EthereumError(e.toString());
-    }
-  }
-
-  Future<EthereumError?> preJoinLottery(
-    String thingId,
-    String proposalId,
-  ) async {
-    var contract = _contract;
-    if (contract == null) {
-      return EthereumError('Metamask not installed');
-    }
-    if (_ethereumService.connectedAccount == null) {
-      return EthereumError('No account connected');
-    }
-
-    var signer = _ethereumService.provider.getSigner();
-    var address = await signer.getAddress();
-    contract = contract.connect(signer);
-
-    var data = List<int>.generate(32, (_) => _random.nextInt(256));
-    var dataHex = '0x' + hex.encode(data);
-    print('dataHex: $dataHex');
-    var dataHashHex = await contract.call<String>('computeHash', [dataHex]);
-    print('dataHashHex: $dataHashHex');
-
-    var thingIdHex = thingId.toSolInputFormat(prefix: false);
-    var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
-    var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
-
-    try {
-      var txnResponse = await contract.send(
-        'preJoinLottery',
-        [thingProposalIdHex, dataHashHex],
-        TransactionOverride(
-          gasLimit: BigInt.from(250000),
-        ),
-      );
-
-      // print('PreJoined lottery! Awaiting confirmations...');
-
-      // await txnResponse.wait(2);
-
-      // print('PreJoin txn confirmed!');
-
-      await txnResponse.wait();
-      print('PreJoin txn mined!');
-
-      _commitmentIdToData['$thingId|$proposalId|$address'] = dataHex;
 
       return null;
     } catch (e) {
@@ -407,37 +342,26 @@ class ThingAssessmentVerifierLotteryContract {
     }
 
     var signer = _ethereumService.provider.getSigner();
-    var address = await signer.getAddress();
     contract = contract.connect(signer);
-
-    if (!_commitmentIdToData.containsKey('$thingId|$proposalId|$address')) {
-      return EthereumError('Not committed to the lottery');
-    }
 
     var thingIdHex = thingId.toSolInputFormat(prefix: false);
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
-    var dataHex = _commitmentIdToData['$thingId|$proposalId|$address'];
+
+    var userData = List<int>.generate(32, (_) => _random.nextInt(256));
+    var userDataHex = '0x' + hex.encode(userData);
 
     try {
       var txnResponse = await contract.send(
         'joinLottery',
-        [thingProposalIdHex, dataHex],
+        [thingProposalIdHex, userDataHex],
         TransactionOverride(
           gasLimit: BigInt.from(250000),
         ),
       );
 
-      // print('Joined lottery! Awaiting confirmations...');
-
-      // await txnResponse.wait(2);
-
-      // print('Join txn confirmed!');
-
       await txnResponse.wait();
       print('Join txn mined!');
-
-      _commitmentIdToData.remove('$thingId|$proposalId|$address');
 
       return null;
     } catch (e) {

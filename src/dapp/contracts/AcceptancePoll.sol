@@ -8,7 +8,7 @@ import "./L1Block.sol";
 error AcceptancePoll__Unauthorized();
 error AcceptancePoll__Expired(bytes16 thingId);
 error AcceptancePoll__NotDesignatedVerifier(bytes16 thingId);
-error AcceptancePoll__NotInProgress(bytes16 thingId);
+error AcceptancePoll__NotActive(bytes16 thingId);
 error AcceptancePoll__StillInProgress(bytes16 thingId);
 
 contract AcceptancePoll {
@@ -26,12 +26,6 @@ contract AcceptancePoll {
         Accepted
     }
 
-    enum Stage {
-        None,
-        InProgress,
-        Finalized
-    }
-
     TruQuest private immutable i_truQuest;
     ThingSubmissionVerifierLottery private s_verifierLottery;
     address private s_orchestrator;
@@ -43,9 +37,8 @@ contract AcceptancePoll {
     uint8 private s_votingVolumeThresholdPercent;
     uint8 private s_majorityThresholdPercent;
 
-    mapping(bytes16 => uint256) private s_thingIdToPollInitBlock;
+    mapping(bytes16 => int256) private s_thingIdToPollInitBlock;
     mapping(bytes16 => address[]) private s_thingVerifiers;
-    mapping(bytes16 => Stage) private s_thingPollStage;
 
     event CastedVote(bytes16 indexed thingId, address indexed user, Vote vote);
 
@@ -86,11 +79,12 @@ contract AcceptancePoll {
         _;
     }
 
-    modifier whenNotExpired(bytes16 _thingId) {
-        if (
-            _getL1BlockNumber() >
-            s_thingIdToPollInitBlock[_thingId] + s_durationBlocks
-        ) {
+    modifier whenActiveAndNotExpired(bytes16 _thingId) {
+        int256 pollInitBlock = s_thingIdToPollInitBlock[_thingId];
+        if (pollInitBlock < 1) {
+            revert AcceptancePoll__NotActive(_thingId);
+        }
+        if (_getL1BlockNumber() > uint256(pollInitBlock) + s_durationBlocks) {
             revert AcceptancePoll__Expired(_thingId);
         }
         _;
@@ -113,9 +107,9 @@ contract AcceptancePoll {
         _;
     }
 
-    modifier whenInProgress(bytes16 _thingId) {
-        if (s_thingPollStage[_thingId] != Stage.InProgress) {
-            revert AcceptancePoll__NotInProgress(_thingId);
+    modifier whenActive(bytes16 _thingId) {
+        if (s_thingIdToPollInitBlock[_thingId] < 1) {
+            revert AcceptancePoll__NotActive(_thingId);
         }
         _;
     }
@@ -123,7 +117,7 @@ contract AcceptancePoll {
     modifier whenExpired(bytes16 _thingId) {
         if (
             _getL1BlockNumber() <=
-            s_thingIdToPollInitBlock[_thingId] + s_durationBlocks
+            uint256(s_thingIdToPollInitBlock[_thingId]) + s_durationBlocks
         ) {
             revert AcceptancePoll__StillInProgress(_thingId);
         }
@@ -162,7 +156,7 @@ contract AcceptancePoll {
         return s_durationBlocks;
     }
 
-    function getPollInitBlock(bytes16 _thingId) public view returns (uint256) {
+    function getPollInitBlock(bytes16 _thingId) public view returns (int256) {
         return s_thingIdToPollInitBlock[_thingId];
     }
 
@@ -170,32 +164,18 @@ contract AcceptancePoll {
         bytes16 _thingId,
         address[] memory _verifiers
     ) external onlyThingSubmissionVerifierLottery {
-        s_thingIdToPollInitBlock[_thingId] = _getL1BlockNumber();
+        s_thingIdToPollInitBlock[_thingId] = int256(_getL1BlockNumber());
         s_thingVerifiers[_thingId] = _verifiers;
-        s_thingPollStage[_thingId] = Stage.InProgress;
     }
 
-    function checkIsDesignatedVerifierForThing(
-        bytes16 _thingId,
-        address _user
-    ) public view returns (bool) {
-        uint256 designatedVerifiersCount = s_thingVerifiers[_thingId].length;
-        for (uint8 i = 0; i < designatedVerifiersCount; ++i) {
-            if (_user == s_thingVerifiers[_thingId][i]) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
+    // @@TODO: Provide index in verifiers array.
+    // @@TODO: Event must contain l1 block number.
     function castVote(
         bytes16 _thingId,
         Vote _vote
     )
         public
-        whenInProgress(_thingId)
-        whenNotExpired(_thingId)
+        whenActiveAndNotExpired(_thingId)
         onlyDesignatedVerifiers(_thingId)
     {
         emit CastedVote(_thingId, msg.sender, _vote);
@@ -207,8 +187,7 @@ contract AcceptancePoll {
         string calldata _reason
     )
         public
-        whenInProgress(_thingId)
-        whenNotExpired(_thingId)
+        whenActiveAndNotExpired(_thingId)
         onlyDesignatedVerifiers(_thingId)
     {
         emit CastedVoteWithReason(_thingId, msg.sender, _vote, _reason);
@@ -225,8 +204,10 @@ contract AcceptancePoll {
         string calldata _voteAggIpfsCid,
         Decision _decision,
         uint64[] calldata _verifiersToSlashIndices
-    ) public onlyOrchestrator whenInProgress(_thingId) whenExpired(_thingId) {
-        s_thingPollStage[_thingId] = Stage.Finalized;
+    ) public onlyOrchestrator whenActive(_thingId) whenExpired(_thingId) {
+        s_thingIdToPollInitBlock[_thingId] = -s_thingIdToPollInitBlock[
+            _thingId
+        ];
         address submitter = i_truQuest.s_thingSubmitter(_thingId);
         i_truQuest.unstakeThingSubmitter(submitter);
 
@@ -257,7 +238,7 @@ contract AcceptancePoll {
         );
     }
 
-    function _rewardAndSlashVerifiers(
+    function _rewardOrSlashVerifiers(
         bytes16 _thingId,
         uint64[] calldata _verifiersToSlashIndices
     )
@@ -292,15 +273,17 @@ contract AcceptancePoll {
         bytes16 _thingId,
         string calldata _voteAggIpfsCid,
         uint64[] calldata _verifiersToSlashIndices
-    ) public onlyOrchestrator whenInProgress(_thingId) whenExpired(_thingId) {
-        s_thingPollStage[_thingId] = Stage.Finalized;
+    ) public onlyOrchestrator whenActive(_thingId) whenExpired(_thingId) {
+        s_thingIdToPollInitBlock[_thingId] = -s_thingIdToPollInitBlock[
+            _thingId
+        ];
         address submitter = i_truQuest.s_thingSubmitter(_thingId);
         i_truQuest.unstakeAndRewardThingSubmitter(submitter);
 
         (
             address[] memory rewardedVerifiers,
             address[] memory slashedVerifiers
-        ) = _rewardAndSlashVerifiers(_thingId, _verifiersToSlashIndices);
+        ) = _rewardOrSlashVerifiers(_thingId, _verifiersToSlashIndices);
 
         emit PollFinalized(
             _thingId,
@@ -316,15 +299,17 @@ contract AcceptancePoll {
         bytes16 _thingId,
         string calldata _voteAggIpfsCid,
         uint64[] calldata _verifiersToSlashIndices
-    ) public onlyOrchestrator whenInProgress(_thingId) whenExpired(_thingId) {
-        s_thingPollStage[_thingId] = Stage.Finalized;
+    ) public onlyOrchestrator whenActive(_thingId) whenExpired(_thingId) {
+        s_thingIdToPollInitBlock[_thingId] = -s_thingIdToPollInitBlock[
+            _thingId
+        ];
         address submitter = i_truQuest.s_thingSubmitter(_thingId);
         i_truQuest.unstakeThingSubmitter(submitter);
 
         (
             address[] memory rewardedVerifiers,
             address[] memory slashedVerifiers
-        ) = _rewardAndSlashVerifiers(_thingId, _verifiersToSlashIndices);
+        ) = _rewardOrSlashVerifiers(_thingId, _verifiersToSlashIndices);
 
         emit PollFinalized(
             _thingId,
@@ -340,15 +325,17 @@ contract AcceptancePoll {
         bytes16 _thingId,
         string calldata _voteAggIpfsCid,
         uint64[] calldata _verifiersToSlashIndices
-    ) public onlyOrchestrator whenInProgress(_thingId) whenExpired(_thingId) {
-        s_thingPollStage[_thingId] = Stage.Finalized;
+    ) public onlyOrchestrator whenActive(_thingId) whenExpired(_thingId) {
+        s_thingIdToPollInitBlock[_thingId] = -s_thingIdToPollInitBlock[
+            _thingId
+        ];
         address submitter = i_truQuest.s_thingSubmitter(_thingId);
         i_truQuest.unstakeAndSlashThingSubmitter(submitter);
 
         (
             address[] memory rewardedVerifiers,
             address[] memory slashedVerifiers
-        ) = _rewardAndSlashVerifiers(_thingId, _verifiersToSlashIndices);
+        ) = _rewardOrSlashVerifiers(_thingId, _verifiersToSlashIndices);
 
         emit PollFinalized(
             _thingId,

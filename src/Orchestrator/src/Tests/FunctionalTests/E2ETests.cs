@@ -648,15 +648,6 @@ public class E2ETests : IAsyncLifetime
             verifierBalance.Should().Be(initialBalance - verifierPenalty);
         }
 
-        var pollStage = await _acceptancePollContract
-            .WalkStorage()
-            .Field("s_thingPollStage")
-            .AsMapping()
-            .Key(new SolBytes16(thingIdBytes))
-            .GetValue<SolUint8>();
-
-        pollStage.Value.Should().Be(2);
-
         draftCreatedTcs = new TaskCompletionSource();
         _eventBroadcaster.ProposalDraftCreated += delegate
         {
@@ -842,14 +833,5 @@ public class E2ETests : IAsyncLifetime
         await _sut.BlockchainManipulator.Mine(1);
 
         await Task.Delay(TimeSpan.FromSeconds(10)); // giving time to update the proposal and thing's states and the like
-
-        pollStage = await _assessmentPollContract
-            .WalkStorage()
-            .Field("s_proposalPollStage")
-            .AsMapping()
-            .Key(new SolBytes32(thingProposalIdBytes))
-            .GetValue<SolUint8>();
-
-        pollStage.Value.Should().Be(2);
     }
 }

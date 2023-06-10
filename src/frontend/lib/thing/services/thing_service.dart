@@ -157,7 +157,7 @@ class ThingService {
     return result;
   }
 
-  Future<(int?, int, bool?, int)> getAcceptancePollInfo(
+  Future<(int?, int, bool, int)> getAcceptancePollInfo(
     String thingId,
   ) async {
     int? initBlock = await _acceptancePollContract.getPollInitBlock(thingId);
@@ -165,8 +165,9 @@ class ThingService {
       initBlock = null;
     }
     int durationBlocks = await _acceptancePollContract.getPollDurationBlocks();
-    bool? isDesignatedVerifier = await _acceptancePollContract
-        .checkIsDesignatedVerifierForThing(thingId);
+    bool isDesignatedVerifier = (await _acceptancePollContract
+            .getUserIndexAmongThingVerifiers(thingId)) >=
+        0;
     int latestBlockNumber = await _ethereumService.getLatestL1BlockNumber();
 
     return (

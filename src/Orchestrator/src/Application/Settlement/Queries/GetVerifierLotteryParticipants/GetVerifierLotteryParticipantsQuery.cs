@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 using MediatR;
 
 using Domain.Results;
@@ -30,37 +32,22 @@ internal class GetVerifierLotteryParticipantsQueryHandler :
         GetVerifierLotteryParticipantsQuery query, CancellationToken ct
     )
     {
-        var entries = await _settlementProposalQueryable.GetVerifierLotteryParticipants(
-            query.ProposalId
-        );
-        var firstEntry = entries.First();
-        if (_signer.CheckIsOrchestrator(firstEntry.UserId) && firstEntry.Nonce != null)
+        // @@TODO: Get all participants and claimants.
+        var entries = await _settlementProposalQueryable.GetVerifierLotteryParticipants(query.ProposalId);
+        var firstEntry = entries.FirstOrDefault();
+        if (firstEntry != null && _signer.CheckIsOrchestrator(firstEntry.UserId))
         {
-            // means the lottery is completed successfully
+            // means the lottery was closed with success
+            Debug.Assert(firstEntry.Nonce != null);
             firstEntry.IsOrchestrator = true;
+
             var verifiers = await _settlementProposalQueryable.GetVerifiers(query.ProposalId);
-            if (verifiers.Any())
+            Debug.Assert(verifiers.Any());
+            foreach (var verifier in verifiers)
             {
-                // means it was completed with success
-                foreach (var entry in entries)
-                {
-                    if (verifiers.Any(v => v.VerifierId == entry.UserId))
-                    {
-                        entry.IsWinner = true;
-                    }
-                }
-            }
-        }
-        else
-        {
-            // means the lottery is still in progress or has failed
-            foreach (var entry in entries.Where(e => e.Nonce == null))
-            {
-                if (_signer.CheckIsOrchestrator(entry.UserId))
-                {
-                    entry.IsOrchestrator = true;
-                    break;
-                }
+                // @@BUG: If verifier is a claimant there wouldn't be a joined event.
+                var entry = entries.Single(e => e.UserId == verifier.VerifierId);
+                entry.IsWinner = true;
             }
         }
 

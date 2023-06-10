@@ -31,33 +31,9 @@ class AcceptancePollContract {
       "name": "getPollInitBlock",
       "outputs": [
         {
-          "internalType": "uint256",
+          "internalType": "int256",
           "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes16",
-          "name": "_thingId",
-          "type": "bytes16"
-        },
-        {
-          "internalType": "address",
-          "name": "_user",
-          "type": "address"
-        }
-      ],
-      "name": "checkIsDesignatedVerifierForThing",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
+          "type": "int256"
         }
       ],
       "stateMutability": "view",
@@ -103,6 +79,30 @@ class AcceptancePollContract {
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes16",
+          "name": "_thingId",
+          "type": "bytes16"
+        },
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getUserIndexAmongThingVerifiers",
+      "outputs": [
+        {
+          "internalType": "int256",
+          "name": "",
+          "type": "int256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
     }
   ]''';
 
@@ -135,26 +135,6 @@ class AcceptancePollContract {
 
     return (await contract.call<BigInt>('getPollInitBlock', [thingIdHex]))
         .toInt();
-  }
-
-  Future<bool?> checkIsDesignatedVerifierForThing(String thingId) async {
-    var contract = _contract;
-    if (contract == null) {
-      return null;
-    }
-    if (_ethereumService.connectedAccount == null) {
-      return null;
-    }
-
-    var thingIdHex = thingId.toSolInputFormat();
-
-    return await contract.call<bool>(
-      'checkIsDesignatedVerifierForThing',
-      [
-        thingIdHex,
-        _ethereumService.connectedAccount,
-      ],
-    );
   }
 
   Future castVote(String thingId, DecisionIm decision, String reason) async {
@@ -197,5 +177,26 @@ class AcceptancePollContract {
     } catch (e) {
       print(e);
     }
+  }
+
+  Future<int> getUserIndexAmongThingVerifiers(String thingId) async {
+    var contract = _contract;
+    if (contract == null) {
+      return -1;
+    }
+    if (_ethereumService.connectedAccount == null) {
+      return -1;
+    }
+
+    var thingIdHex = thingId.toSolInputFormat();
+
+    return (await contract.call<BigInt>(
+      'getUserIndexAmongThingVerifiers',
+      [
+        thingIdHex,
+        _ethereumService.connectedAccount,
+      ],
+    ))
+        .toInt();
   }
 }

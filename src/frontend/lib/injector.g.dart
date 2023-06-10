@@ -45,6 +45,7 @@ class _$Injector extends Injector {
           c<TruQuestContract>(),
           c<SettlementApiService>(),
           c<EthereumService>(),
+          c<AcceptancePollContract>(),
           c<ThingAssessmentVerifierLotteryContract>(),
           c<AssessmentPollContract>()))
       ..registerSingleton((c) => SettlementApiService(c<ServerConnector>()))

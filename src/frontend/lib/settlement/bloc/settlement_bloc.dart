@@ -46,8 +46,6 @@ class SettlementBloc extends Bloc<SettlementAction> {
         _getVerifierLotteryInfo(action);
       } else if (action is ClaimLotterySpot) {
         _claimLotterySpot(action);
-      } else if (action is PreJoinLottery) {
-        _preJoinLottery(action);
       } else if (action is JoinLottery) {
         _joinLottery(action);
       } else if (action is GetVerifierLotteryParticipants) {
@@ -119,10 +117,10 @@ class SettlementBloc extends Bloc<SettlementAction> {
       GetVerifierLotteryInfoSuccessVm(
         initBlock: info.$1,
         durationBlocks: info.$2,
-        alreadyClaimedASpot: info.$3,
-        alreadyPreJoined: info.$4,
+        userIndexInThingVerifiersArray: info.$3,
+        alreadyClaimedASpot: info.$4,
         alreadyJoined: info.$5,
-        latestBlockNumber: info.$6,
+        latestL1BlockNumber: info.$6,
       ),
     );
   }
@@ -135,20 +133,9 @@ class SettlementBloc extends Bloc<SettlementAction> {
     var error = await _settlementService.claimLotterySpot(
       action.thingId,
       action.proposalId,
+      action.userIndexInThingVerifiersArray,
     );
     action.complete(error != null ? ClaimLotterySpotFailureVm() : null);
-    _refreshVerifierLotteryInfo(
-      action.thingId,
-      action.proposalId,
-    );
-  }
-
-  void _preJoinLottery(PreJoinLottery action) async {
-    var error = await _settlementService.preJoinLottery(
-      action.thingId,
-      action.proposalId,
-    );
-    action.complete(error != null ? PreJoinLotteryFailureVm() : null);
     _refreshVerifierLotteryInfo(
       action.thingId,
       action.proposalId,
@@ -171,6 +158,7 @@ class SettlementBloc extends Bloc<SettlementAction> {
     GetVerifierLotteryParticipants action,
   ) async {
     var result = await _settlementService.getVerifierLotteryParticipants(
+      action.thingId,
       action.proposalId,
     );
     _verifierLotteryParticipantsChannel.add(result);
@@ -186,7 +174,7 @@ class SettlementBloc extends Bloc<SettlementAction> {
         initBlock: info.$1,
         durationBlocks: info.$2,
         isDesignatedVerifier: info.$3,
-        latestBlockNumber: info.$4,
+        latestL1BlockNumber: info.$4,
       ),
     );
   }

@@ -48,9 +48,7 @@ class SettlementProposalPreviewVm {
         return Icons.poll_outlined;
       case SettlementProposalStateVm.consensusNotReached:
         return Icons.drag_handle;
-      case SettlementProposalStateVm.softDeclined:
-        return Icons.thumbs_up_down;
-      case SettlementProposalStateVm.hardDeclined:
+      case SettlementProposalStateVm.declined:
         return Icons.thumb_down;
       case SettlementProposalStateVm.accepted:
         return Icons.thumb_up;

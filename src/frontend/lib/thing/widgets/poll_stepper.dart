@@ -36,9 +36,8 @@ class _PollStepperState extends StateX<PollStepper> {
   bool _checkButtonShouldBeEnabled() {
     var info = widget.info;
     return info.initBlock != null &&
-        info.isDesignatedVerifier != null &&
         widget.currentBlock < widget.endBlock &&
-        info.isDesignatedVerifier!;
+        info.isDesignatedVerifier;
   }
 
   @override

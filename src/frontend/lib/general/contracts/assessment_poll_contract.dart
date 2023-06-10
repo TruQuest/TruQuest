@@ -96,9 +96,9 @@ class AssessmentPollContract {
       "name": "getPollInitBlock",
       "outputs": [
         {
-          "internalType": "uint64",
+          "internalType": "int256",
           "name": "",
-          "type": "uint64"
+          "type": "int256"
         }
       ],
       "stateMutability": "view",
@@ -209,12 +209,6 @@ class AssessmentPollContract {
           ],
         );
       }
-
-      // print('Vote casted! Awaiting confirmation...');
-
-      // await txnResponse.wait(2);
-
-      // print('Cast vote txn confirmed!');
 
       await txnResponse.wait();
       print('Cast vote txn mined!');

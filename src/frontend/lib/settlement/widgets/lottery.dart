@@ -37,7 +37,10 @@ class _LotteryState extends StateX<Lottery> {
     _currentUserId = _userBloc.latestCurrentUser?.user.id;
 
     _settlementBloc.dispatch(
-      GetVerifierLotteryParticipants(proposalId: widget.proposal.id),
+      GetVerifierLotteryParticipants(
+        thingId: widget.proposal.thingId,
+        proposalId: widget.proposal.id,
+      ),
     );
     _settlementBloc.dispatch(
       GetVerifierLotteryInfo(
@@ -78,6 +81,7 @@ class _LotteryState extends StateX<Lottery> {
                 currentUserId: _currentUserId,
                 onRefresh: () => _settlementBloc.dispatch(
                   GetVerifierLotteryParticipants(
+                    thingId: widget.proposal.thingId,
                     proposalId: widget.proposal.id,
                   ),
                 ),
@@ -97,23 +101,14 @@ class _LotteryState extends StateX<Lottery> {
 
               return StreamBuilder(
                 stream: _ethereumBloc.latestL1BlockNumber$,
+                initialData: info.latestL1BlockNumber,
                 builder: (context, snapshot) {
-                  if (snapshot.data == null) {
-                    return Center(child: CircularProgressIndicator());
-                  }
-
                   var latestBlockNumber = snapshot.data!.toDouble();
-                  var startBlock = info.initBlock?.toDouble() ?? 0;
+                  var startBlock = info.initBlock?.abs().toDouble() ?? 0;
                   var endBlock = startBlock + info.durationBlocks;
                   var currentBlock = 0.0;
                   if (info.initBlock != null) {
-                    currentBlock = min(
-                      max(
-                        latestBlockNumber,
-                        info.latestBlockNumber,
-                      ),
-                      endBlock,
-                    ).toDouble();
+                    currentBlock = min(latestBlockNumber, endBlock).toDouble();
                   }
 
                   return Center(

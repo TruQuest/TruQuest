@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import '../../general/contracts/acceptance_poll_contract.dart';
 import '../../ethereum/errors/ethereum_error.dart';
 import '../../general/extensions/datetime_extension.dart';
+import '../../general/models/rvm/verifier_lottery_participant_entry_vm.dart';
 import '../models/im/decision_im.dart';
 import '../../general/contracts/assessment_poll_contract.dart';
 import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
@@ -17,6 +19,7 @@ class SettlementService {
   final TruQuestContract _truQuestContract;
   final SettlementApiService _settlementApiService;
   final EthereumService _ethereumService;
+  final AcceptancePollContract _acceptancePollContract;
   final ThingAssessmentVerifierLotteryContract
       _thingAssessmentVerifierLotteryContract;
   final AssessmentPollContract _assessmentPollContract;
@@ -29,6 +32,7 @@ class SettlementService {
     this._truQuestContract,
     this._settlementApiService,
     this._ethereumService,
+    this._acceptancePollContract,
     this._thingAssessmentVerifierLotteryContract,
     this._assessmentPollContract,
   );
@@ -84,7 +88,7 @@ class SettlementService {
     );
   }
 
-  Future<(int?, int, bool?, bool?, bool?, int)> getVerifierLotteryInfo(
+  Future<(int?, int, int, bool?, bool?, int)> getVerifierLotteryInfo(
     String thingId,
     String proposalId,
   ) async {
@@ -98,28 +102,32 @@ class SettlementService {
     }
     int durationBlocks = await _thingAssessmentVerifierLotteryContract
         .getLotteryDurationBlocks();
+
+    // @@??: Should get here the currently connected account and then pass
+    // it as an argument to the methods?
+
+    int thingVerifiersArrayIndex =
+        await _acceptancePollContract.getUserIndexAmongThingVerifiers(thingId);
+
     bool? alreadyClaimedASpot = await _thingAssessmentVerifierLotteryContract
-        .checkAlreadyClaimedALotterySpot(
+        .checkAlreadyClaimedLotterySpot(
       thingId,
       proposalId,
     );
-    bool? alreadyPreJoined = await _thingAssessmentVerifierLotteryContract
-        .checkAlreadyPreJoinedLottery(
-      thingId,
-      proposalId,
-    );
+
     bool? alreadyJoined =
         await _thingAssessmentVerifierLotteryContract.checkAlreadyJoinedLottery(
       thingId,
       proposalId,
     );
+
     int latestBlockNumber = await _ethereumService.getLatestL1BlockNumber();
 
     return (
       initBlock,
       durationBlocks,
+      thingVerifiersArrayIndex,
       alreadyClaimedASpot,
-      alreadyPreJoined,
       alreadyJoined,
       latestBlockNumber,
     );
@@ -128,21 +136,12 @@ class SettlementService {
   Future<EthereumError?> claimLotterySpot(
     String thingId,
     String proposalId,
+    int userIndexInThingVerifiersArray,
   ) async {
     var error = await _thingAssessmentVerifierLotteryContract.claimLotterySpot(
       thingId,
       proposalId,
-    );
-    return error;
-  }
-
-  Future<EthereumError?> preJoinLottery(
-    String thingId,
-    String proposalId,
-  ) async {
-    var error = await _thingAssessmentVerifierLotteryContract.preJoinLottery(
-      thingId,
-      proposalId,
+      userIndexInThingVerifiersArray,
     );
     return error;
   }
@@ -156,11 +155,55 @@ class SettlementService {
   }
 
   Future<GetVerifierLotteryParticipantsRvm> getVerifierLotteryParticipants(
+    String thingId,
     String proposalId,
   ) async {
     var result = await _settlementApiService.getVerifierLotteryParticipants(
       proposalId,
     );
+
+    var nullString = '0x${List.generate(64, (_) => '0').join()}';
+    // @@TODO: Query all at once.
+    var lotteryInitBlock = await _thingAssessmentVerifierLotteryContract
+        .getLotteryInitBlock(thingId, proposalId);
+    var dataHash = await _thingAssessmentVerifierLotteryContract
+            .getOrchestratorCommitmentDataHash(thingId, proposalId) ??
+        nullString;
+    var userXorDataHash = await _thingAssessmentVerifierLotteryContract
+            .getOrchestratorCommitmentUserXorDataHash(thingId, proposalId) ??
+        nullString;
+
+    var entries = result.entries;
+    if (entries.isEmpty || !entries.first.isOrchestrator) {
+      if (lotteryInitBlock != 0) {
+        result = GetVerifierLotteryParticipantsRvm(
+          proposalId: proposalId,
+          entries: List.unmodifiable([
+            VerifierLotteryParticipantEntryVm.orchestratorNoNonce(
+              lotteryInitBlock.abs(),
+              dataHash,
+              userXorDataHash,
+            ),
+            ...entries,
+          ]),
+        );
+      }
+    } else {
+      result = GetVerifierLotteryParticipantsRvm(
+        proposalId: proposalId,
+        entries: List.unmodifiable(
+          [
+            entries.first.copyWith(
+              'Orchestrator',
+              dataHash,
+              userXorDataHash,
+            ),
+            ...entries.skip(1)
+          ],
+        ),
+      );
+    }
+
     return result;
   }
 
