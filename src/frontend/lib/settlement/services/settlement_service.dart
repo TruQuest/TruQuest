@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../../user/services/user_service.dart';
 import '../../general/contracts/acceptance_poll_contract.dart';
 import '../../ethereum/errors/ethereum_error.dart';
 import '../../general/extensions/datetime_extension.dart';
@@ -16,6 +17,7 @@ import '../models/rvm/get_verifiers_rvm.dart';
 import 'settlement_api_service.dart';
 
 class SettlementService {
+  final UserService _userService;
   final TruQuestContract _truQuestContract;
   final SettlementApiService _settlementApiService;
   final EthereumService _ethereumService;
@@ -29,6 +31,7 @@ class SettlementService {
   Stream<Stream<int>> get progress$$ => _progress$Channel.stream;
 
   SettlementService(
+    this._userService,
     this._truQuestContract,
     this._settlementApiService,
     this._ethereumService,
@@ -88,10 +91,11 @@ class SettlementService {
     );
   }
 
-  Future<(int?, int, int, bool?, bool?, int)> getVerifierLotteryInfo(
+  Future<(String?, int?, int, int, bool?, bool?, int)> getVerifierLotteryInfo(
     String thingId,
     String proposalId,
   ) async {
+    var currentUserId = _userService.latestCurrentUser?.id;
     int? initBlock =
         await _thingAssessmentVerifierLotteryContract.getLotteryInitBlock(
       thingId,
@@ -124,6 +128,7 @@ class SettlementService {
     int latestBlockNumber = await _ethereumService.getLatestL1BlockNumber();
 
     return (
+      currentUserId,
       initBlock,
       durationBlocks,
       thingVerifiersArrayIndex,
@@ -207,10 +212,11 @@ class SettlementService {
     return result;
   }
 
-  Future<(int?, int, bool?, int)> getAssessmentPollInfo(
+  Future<(String?, int?, int, bool?, int)> getAssessmentPollInfo(
     String thingId,
     String proposalId,
   ) async {
+    var currentUserId = _userService.latestCurrentUser?.id;
     int? initBlock = await _assessmentPollContract.getPollInitBlock(
       thingId,
       proposalId,
@@ -227,6 +233,7 @@ class SettlementService {
     int latestBlockNumber = await _ethereumService.getLatestL1BlockNumber();
 
     return (
+      currentUserId,
       initBlock,
       durationBlocks,
       isDesignatedVerifier,

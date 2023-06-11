@@ -7,6 +7,7 @@ class SubmitNewSettlementProposalFailureVm extends SettlementResultVm {}
 class FundSettlementProposalFailureVm extends SettlementResultVm {}
 
 class GetVerifierLotteryInfoSuccessVm extends SettlementResultVm {
+  final String? userId;
   final int? initBlock;
   final int durationBlocks;
   final int userIndexInThingVerifiersArray;
@@ -15,6 +16,7 @@ class GetVerifierLotteryInfoSuccessVm extends SettlementResultVm {
   final bool? alreadyJoined;
 
   GetVerifierLotteryInfoSuccessVm({
+    required this.userId,
     required this.initBlock,
     required this.durationBlocks,
     required this.userIndexInThingVerifiersArray,
@@ -25,12 +27,14 @@ class GetVerifierLotteryInfoSuccessVm extends SettlementResultVm {
 }
 
 class GetAssessmentPollInfoSuccessVm extends SettlementResultVm {
+  final String? userId;
   final int? initBlock;
   final int durationBlocks;
   final bool? isDesignatedVerifier;
   final int latestL1BlockNumber;
 
   GetAssessmentPollInfoSuccessVm({
+    required this.userId,
     required this.initBlock,
     required this.durationBlocks,
     required this.isDesignatedVerifier,

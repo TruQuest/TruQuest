@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../user/bloc/user_bloc.dart';
 import '../../widget_extensions.dart';
 
 enum _SwipeButtonType {
@@ -75,12 +74,13 @@ class _SwipeButtonState extends State<_SwipeButton>
   late AnimationController swipeAnimationController;
   late AnimationController expandAnimationController;
 
-  bool swiped = true;
+  late bool swiped;
 
   @override
   void initState() {
-    _initAnimationControllers();
     super.initState();
+    _initAnimationControllers();
+    swiped = widget.swiped;
   }
 
   void _initAnimationControllers() {
@@ -108,10 +108,11 @@ class _SwipeButtonState extends State<_SwipeButton>
       _initAnimationControllers();
     }
 
-    if (widget.swiped != oldWidget.swiped) {
-      if (widget.swiped && expandAnimationController.value != 1) {
+    swiped = widget.swiped;
+    if (swiped != oldWidget.swiped) {
+      if (swiped && expandAnimationController.value != 1) {
         expandAnimationController.animateTo(1);
-      } else if (!widget.swiped && expandAnimationController.value != 0) {
+      } else if (!swiped && expandAnimationController.value != 0) {
         expandAnimationController.animateTo(0);
       }
     }
@@ -298,31 +299,14 @@ class SwipeButton extends StatefulWidget {
 }
 
 class SwipeButtonState extends StateX<SwipeButton> {
-  late final _userBloc = use<UserBloc>();
-
-  String? _currentUserId;
   late bool _enabled;
   late bool _swiped;
 
   @override
   void initState() {
     super.initState();
-    _currentUserId = _userBloc.latestCurrentUser?.user.id;
     _enabled = widget.enabled;
     _swiped = widget.swiped;
-  }
-
-  @override
-  void didUpdateWidget(covariant SwipeButton oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    var currentUserId = _userBloc.latestCurrentUser?.user.id;
-    if (currentUserId != _currentUserId ||
-        !(!_enabled && _swiped && widget.enabled && !widget.swiped)) {
-      _currentUserId = currentUserId;
-      _enabled = widget.enabled;
-      _swiped = widget.swiped;
-    }
   }
 
   @override

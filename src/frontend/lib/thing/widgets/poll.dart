@@ -76,6 +76,8 @@ class _PollState extends StateX<Poll> {
           ),
         ),
         Expanded(
+          // @@??: Should switch to StreamBuilder to avoid snapshot.data becoming null momentarily
+          // when switching accounts?
           child: FutureBuilder(
             future: _getInfoAction.result,
             builder: (context, snapshot) {

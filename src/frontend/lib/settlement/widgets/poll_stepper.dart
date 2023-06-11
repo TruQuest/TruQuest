@@ -54,7 +54,7 @@ class _PollStepperState extends StateX<PollStepper> {
       child: Stepper(
         currentStep: _currentStep,
         controlsBuilder: (context, details) => SwipeButton(
-          key: ValueKey(details.currentStep),
+          key: ValueKey('${widget.info.userId} ${details.currentStep}'),
           text: 'Slide to vote',
           enabled: _checkButtonShouldBeEnabled(),
           swiped: false,

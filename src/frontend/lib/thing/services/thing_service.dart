@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:either_dart/either.dart';
 
+import '../../user/services/user_service.dart';
 import '../../general/models/rvm/verifier_lottery_participant_entry_vm.dart';
 import '../../ethereum/errors/ethereum_error.dart';
 import '../errors/thing_error.dart';
@@ -21,6 +22,7 @@ import 'thing_api_service.dart';
 
 class ThingService {
   final ThingApiService _thingApiService;
+  final UserService _userService;
   final EthereumService _ethereumService;
   final TruQuestContract _truQuestContract;
   final ThingSubmissionVerifierLotteryContract
@@ -33,6 +35,7 @@ class ThingService {
 
   ThingService(
     this._thingApiService,
+    this._userService,
     this._ethereumService,
     this._truQuestContract,
     this._thingSubmissionVerifierLotteryContract,
@@ -78,9 +81,10 @@ class ThingService {
     await _truQuestContract.fundThing(thingId, signature);
   }
 
-  Future<(int?, int, bool?, int)> getVerifierLotteryInfo(
+  Future<(String?, int?, int, bool?, int)> getVerifierLotteryInfo(
     String thingId,
   ) async {
+    var currentUserId = _userService.latestCurrentUser?.id;
     int? initBlock = await _thingSubmissionVerifierLotteryContract
         .getLotteryInitBlock(thingId);
     if (initBlock == 0) {
@@ -93,6 +97,7 @@ class ThingService {
     int latestL1BlockNumber = await _ethereumService.getLatestL1BlockNumber();
 
     return (
+      currentUserId,
       initBlock,
       durationBlocks,
       alreadyJoined,
@@ -157,9 +162,10 @@ class ThingService {
     return result;
   }
 
-  Future<(int?, int, bool, int)> getAcceptancePollInfo(
+  Future<(String?, int?, int, bool, int)> getAcceptancePollInfo(
     String thingId,
   ) async {
+    var currentUserId = _userService.latestCurrentUser?.id;
     int? initBlock = await _acceptancePollContract.getPollInitBlock(thingId);
     if (initBlock == 0) {
       initBlock = null;
@@ -171,6 +177,7 @@ class ThingService {
     int latestBlockNumber = await _ethereumService.getLatestL1BlockNumber();
 
     return (
+      currentUserId,
       initBlock,
       durationBlocks,
       isDesignatedVerifier,

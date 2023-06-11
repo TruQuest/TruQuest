@@ -53,7 +53,8 @@ class _PollStepperState extends StateX<PollStepper> {
       child: Stepper(
         currentStep: _currentStep,
         controlsBuilder: (context, details) => SwipeButton(
-          key: ValueKey(details.currentStep),
+          // @@NOTE: Without the key flutter would just reuse the same state object for all steps.
+          key: ValueKey('${widget.info.userId} ${details.currentStep}'),
           text: 'Slide to vote',
           enabled: _checkButtonShouldBeEnabled(),
           swiped: false,

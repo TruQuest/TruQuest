@@ -62,6 +62,7 @@ class _LotteryStepperState extends StateX<LotteryStepper> {
         children: [
           Stepper(
             controlsBuilder: (context, details) => SwipeButton(
+              key: ValueKey(widget.info.userId),
               text: 'Slide to claim',
               enabled: _checkButtonShouldBeEnabled(-1),
               swiped: _checkButtonShouldBeSwiped(-1),
@@ -109,6 +110,7 @@ class _LotteryStepperState extends StateX<LotteryStepper> {
           SizedBox(height: 6),
           Stepper(
             controlsBuilder: (context, details) => SwipeButton(
+              key: ValueKey(widget.info.userId),
               text: 'Slide to join',
               enabled: _checkButtonShouldBeEnabled(0),
               swiped: _checkButtonShouldBeSwiped(0),

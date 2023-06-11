@@ -53,10 +53,8 @@ class _LotteryStepperState extends StateX<LotteryStepper> {
             ),
       ),
       child: Stepper(
-        // @@BUG: Switching accounts doesn't reset the button!
         controlsBuilder: (context, details) => SwipeButton(
-          // @@NOTE: Without the key flutter would just reuse the same state object for all steps.
-          // key: ValueKey(details.currentStep),
+          key: ValueKey(widget.info.userId),
           text: 'Slide to join',
           enabled: _checkButtonShouldBeEnabled(),
           swiped: _checkButtonShouldBeSwiped(),

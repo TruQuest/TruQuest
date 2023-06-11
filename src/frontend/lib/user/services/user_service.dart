@@ -18,6 +18,7 @@ class UserService {
       BehaviorSubject<UserVm>();
   Stream<UserVm> get currentUserChanged$ =>
       _currentUserChangedEventChannel.stream;
+  UserVm? get latestCurrentUser => _currentUserChangedEventChannel.valueOrNull;
 
   UserService(
     this._ethereumService,

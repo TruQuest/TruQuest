@@ -24,12 +24,14 @@ class SubmitNewThingFailureVm extends ThingResultVm {}
 class FundThingFailureVm extends ThingResultVm {}
 
 class GetVerifierLotteryInfoSuccessVm extends ThingResultVm {
+  final String? userId;
   final int? initBlock;
   final int durationBlocks;
   final int latestL1BlockNumber;
   final bool? alreadyJoined;
 
   GetVerifierLotteryInfoSuccessVm({
+    required this.userId,
     required this.initBlock,
     required this.durationBlocks,
     required this.latestL1BlockNumber,
@@ -44,12 +46,14 @@ class GetVerifierLotteryParticipantsSuccessVm extends ThingResultVm {
 }
 
 class GetAcceptancePollInfoSuccessVm extends ThingResultVm {
+  final String? userId;
   final int? initBlock;
   final int durationBlocks;
   final bool isDesignatedVerifier;
   final int latestL1BlockNumber;
 
   GetAcceptancePollInfoSuccessVm({
+    required this.userId,
     required this.initBlock,
     required this.durationBlocks,
     required this.isDesignatedVerifier,
