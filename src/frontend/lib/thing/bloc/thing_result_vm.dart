@@ -49,14 +49,14 @@ class GetAcceptancePollInfoSuccessVm extends ThingResultVm {
   final String? userId;
   final int? initBlock;
   final int durationBlocks;
-  final bool isDesignatedVerifier;
+  final int userIndexInThingVerifiersArray;
   final int latestL1BlockNumber;
 
   GetAcceptancePollInfoSuccessVm({
     required this.userId,
     required this.initBlock,
     required this.durationBlocks,
-    required this.isDesignatedVerifier,
+    required this.userIndexInThingVerifiersArray,
     required this.latestL1BlockNumber,
   });
 }

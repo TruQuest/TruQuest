@@ -74,14 +74,15 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
             OffChainVotes = offChainVotes
                 .Select(v => new
                 {
-                    IpfsCid = v.IpfsCid
+                    v.IpfsCid
                 }),
             OnChainVotes = castedVoteEvents
                 .Select(v => new
                 {
-                    BlockNumber = v.BlockNumber,
-                    TxnIndex = v.TxnIndex,
-                    UserId = v.UserId, // @@TODO: EIP-55 encode
+                    v.BlockNumber,
+                    v.TxnIndex,
+                    v.L1BlockNumber,
+                    v.UserId, // @@TODO: EIP-55 encode
                     Decision = v.Decision.GetString(),
                     Reason = v.Reason ?? string.Empty
                 }),

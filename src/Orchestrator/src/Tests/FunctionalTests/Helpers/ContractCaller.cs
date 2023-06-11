@@ -254,7 +254,9 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task CastAssessmentPollVoteAs(string accountName, byte[] thingProposalId, Vote vote)
+    public async Task CastAssessmentPollVoteAs(
+        string accountName, byte[] thingProposalId, ushort proposalVerifiersArrayIndex, Vote vote
+    )
     {
         var account = _accountProvider.GetAccount(accountName);
         var web3 = new Web3(account, _rpcUrl);
@@ -265,6 +267,7 @@ public class ContractCaller
             new()
             {
                 ThingProposalId = thingProposalId,
+                ProposalVerifiersArrayIndex = proposalVerifiersArrayIndex,
                 Vote = vote
             }
         );

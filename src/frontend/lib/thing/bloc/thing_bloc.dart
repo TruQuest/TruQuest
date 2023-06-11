@@ -184,7 +184,7 @@ class ThingBloc extends Bloc<ThingAction> {
         userId: info.$1,
         initBlock: info.$2,
         durationBlocks: info.$3,
-        isDesignatedVerifier: info.$4,
+        userIndexInThingVerifiersArray: info.$4,
         latestL1BlockNumber: info.$5,
       ),
     );
@@ -202,6 +202,7 @@ class ThingBloc extends Bloc<ThingAction> {
   void _castVoteOnChain(CastVoteOnChain action) async {
     await _thingService.castVoteOnChain(
       action.thingId,
+      action.userIndexInThingVerifiersArray,
       action.decision,
       action.reason,
     );

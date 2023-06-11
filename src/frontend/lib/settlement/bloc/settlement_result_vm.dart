@@ -30,14 +30,14 @@ class GetAssessmentPollInfoSuccessVm extends SettlementResultVm {
   final String? userId;
   final int? initBlock;
   final int durationBlocks;
-  final bool? isDesignatedVerifier;
+  final int userIndexInProposalVerifiersArray;
   final int latestL1BlockNumber;
 
   GetAssessmentPollInfoSuccessVm({
     required this.userId,
     required this.initBlock,
     required this.durationBlocks,
-    required this.isDesignatedVerifier,
+    required this.userIndexInProposalVerifiersArray,
     required this.latestL1BlockNumber,
   });
 }

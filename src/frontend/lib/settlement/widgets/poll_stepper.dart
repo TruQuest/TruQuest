@@ -36,9 +36,8 @@ class _PollStepperState extends StateX<PollStepper> {
   bool _checkButtonShouldBeEnabled() {
     var info = widget.info;
     return info.initBlock != null &&
-        info.isDesignatedVerifier != null &&
         widget.currentBlock < widget.endBlock &&
-        info.isDesignatedVerifier!;
+        info.userIndexInProposalVerifiersArray >= 0;
   }
 
   @override
@@ -80,6 +79,8 @@ class _PollStepperState extends StateX<PollStepper> {
                           : CastVoteOnChain(
                               thingId: widget.proposal.thingId,
                               proposalId: widget.proposal.id,
+                              userIndexInProposalVerifiersArray:
+                                  widget.info.userIndexInProposalVerifiersArray,
                               decision: decision,
                               reason: reason,
                             );

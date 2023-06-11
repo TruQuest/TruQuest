@@ -8,6 +8,8 @@ public class CastAssessmentPollVoteMessage : FunctionMessage
 {
     [Parameter("bytes32", "_thingProposalId", 1)]
     public byte[] ThingProposalId { get; init; }
-    [Parameter("uint8", "_vote", 2)]
+    [Parameter("uint16", "_proposalVerifiersArrayIndex", 2)]
+    public ushort ProposalVerifiersArrayIndex { get; init; }
+    [Parameter("uint8", "_vote", 3)]
     public Vote Vote { get; init; }
 }

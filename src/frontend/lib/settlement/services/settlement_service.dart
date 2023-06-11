@@ -212,7 +212,7 @@ class SettlementService {
     return result;
   }
 
-  Future<(String?, int?, int, bool?, int)> getAssessmentPollInfo(
+  Future<(String?, int?, int, int, int)> getAssessmentPollInfo(
     String thingId,
     String proposalId,
   ) async {
@@ -225,8 +225,8 @@ class SettlementService {
       initBlock = null;
     }
     int durationBlocks = await _assessmentPollContract.getPollDurationBlocks();
-    bool? isDesignatedVerifier =
-        await _assessmentPollContract.checkIsDesignatedVerifierForProposal(
+    int proposalVerifiersArrayIndex =
+        await _assessmentPollContract.getUserIndexAmongProposalVerifiers(
       thingId,
       proposalId,
     );
@@ -236,7 +236,7 @@ class SettlementService {
       currentUserId,
       initBlock,
       durationBlocks,
-      isDesignatedVerifier,
+      proposalVerifiersArrayIndex,
       latestBlockNumber,
     );
   }
@@ -277,12 +277,14 @@ class SettlementService {
   Future castVoteOnChain(
     String thingId,
     String proposalId,
+    int userIndexInProposalVerifiersArray,
     DecisionIm decision,
     String reason,
   ) async {
     await _assessmentPollContract.castVote(
       thingId,
       proposalId,
+      userIndexInProposalVerifiersArray,
       decision,
       reason,
     );

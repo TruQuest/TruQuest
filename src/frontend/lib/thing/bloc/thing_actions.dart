@@ -104,11 +104,13 @@ class CastVoteOffChain extends ThingActionAwaitable<CastVoteResultVm> {
 
 class CastVoteOnChain extends ThingActionAwaitable<CastVoteResultVm> {
   final String thingId;
+  final int userIndexInThingVerifiersArray;
   final DecisionIm decision;
   final String reason;
 
   CastVoteOnChain({
     required this.thingId,
+    required this.userIndexInThingVerifiersArray,
     required this.decision,
     required this.reason,
   });

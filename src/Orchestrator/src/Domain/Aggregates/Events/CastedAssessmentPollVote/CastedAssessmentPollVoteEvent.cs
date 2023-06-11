@@ -12,10 +12,12 @@ public class CastedAssessmentPollVoteEvent : Entity, IAggregateRoot
     public string UserId { get; }
     public AssessmentPollVote.VoteDecision Decision { get; }
     public string? Reason { get; }
+    public long L1BlockNumber { get; }
 
     public CastedAssessmentPollVoteEvent(
         long blockNumber, int txnIndex, Guid thingId, Guid settlementProposalId,
-        string userId, AssessmentPollVote.VoteDecision decision, string? reason
+        string userId, AssessmentPollVote.VoteDecision decision, string? reason,
+        long l1BlockNumber
     )
     {
         BlockNumber = blockNumber;
@@ -25,5 +27,6 @@ public class CastedAssessmentPollVoteEvent : Entity, IAggregateRoot
         UserId = userId;
         Decision = decision;
         Reason = reason;
+        L1BlockNumber = l1BlockNumber;
     }
 }

@@ -32,7 +32,7 @@ internal class ThingAcceptancePollVoteQueryable : Queryable, IThingAcceptancePol
         var dbConn = await _getOpenConnection();
         var onChainVotes = await dbConn.QueryAsync<VoteQm>(
             @"
-                SELECT e.""UserId"", e.""BlockNumber""
+                SELECT e.""UserId"", e.""L1BlockNumber"" AS ""BlockNumber""
                 FROM truquest_events.""CastedAcceptancePollVoteEvents"" AS e
                 WHERE e.""ThingId"" = @ThingId
                 ORDER BY e.""BlockNumber"", e.""TxnIndex""

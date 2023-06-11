@@ -37,7 +37,7 @@ class _PollStepperState extends StateX<PollStepper> {
     var info = widget.info;
     return info.initBlock != null &&
         widget.currentBlock < widget.endBlock &&
-        info.isDesignatedVerifier;
+        info.userIndexInThingVerifiersArray >= 0;
   }
 
   @override
@@ -78,6 +78,8 @@ class _PollStepperState extends StateX<PollStepper> {
                             )
                           : CastVoteOnChain(
                               thingId: widget.thing.id,
+                              userIndexInThingVerifiersArray:
+                                  widget.info.userIndexInThingVerifiersArray,
                               decision: decision,
                               reason: reason,
                             );

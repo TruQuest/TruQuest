@@ -1,3 +1,5 @@
+using System.Numerics;
+
 using Nethereum.ABI.FunctionEncoding.Attributes;
 
 namespace Infrastructure.Ethereum.Events.AssessmentPoll;
@@ -15,4 +17,6 @@ public class CastedVoteWithReasonEvent : IEventDTO
     public int Vote { get; set; }
     [Parameter("string", "reason", 5, false)]
     public string Reason { get; set; }
+    [Parameter("uint256", "l1BlockNumber", 6, false)]
+    public BigInteger L1BlockNumber { get; set; }
 }

@@ -47,6 +47,11 @@ class AcceptancePollContract {
           "type": "bytes16"
         },
         {
+          "internalType": "uint16",
+          "name": "_thingVerifiersArrayIndex",
+          "type": "uint16"
+        },
+        {
           "internalType": "enum AcceptancePoll.Vote",
           "name": "_vote",
           "type": "uint8"
@@ -63,6 +68,11 @@ class AcceptancePollContract {
           "internalType": "bytes16",
           "name": "_thingId",
           "type": "bytes16"
+        },
+        {
+          "internalType": "uint16",
+          "name": "_thingVerifiersArrayIndex",
+          "type": "uint16"
         },
         {
           "internalType": "enum AcceptancePoll.Vote",
@@ -137,7 +147,12 @@ class AcceptancePollContract {
         .toInt();
   }
 
-  Future castVote(String thingId, DecisionIm decision, String reason) async {
+  Future castVote(
+    String thingId,
+    int userIndexInThingVerifiersArray,
+    DecisionIm decision,
+    String reason,
+  ) async {
     var contract = _contract;
     if (contract == null) {
       return;
@@ -158,6 +173,7 @@ class AcceptancePollContract {
           'castVote',
           [
             thingIdHex,
+            userIndexInThingVerifiersArray,
             decision.index,
           ],
         );
@@ -166,6 +182,7 @@ class AcceptancePollContract {
           'castVoteWithReason',
           [
             thingIdHex,
+            userIndexInThingVerifiersArray,
             decision.index,
             reason,
           ],

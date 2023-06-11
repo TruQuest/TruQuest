@@ -95,7 +95,7 @@ public class EventBroadcaster
                 {
                     OnProposalAssessmentVerifierLotteryClosedWithSuccess(proposalLotteryClosedWithSuccessEvent);
                 }
-                else if (@event is AssessmentPollEvents.CastedAssessmentPollVote.CastedAssessmentPollVoteEvent)
+                else if (@event is AssessmentPollEvents.CastedVote.CastedVoteEvent)
                 {
                     OnCastedProposalAssessmentVote();
                 }

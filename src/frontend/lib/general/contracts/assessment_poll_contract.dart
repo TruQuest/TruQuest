@@ -15,6 +15,11 @@ class AssessmentPollContract {
           "type": "bytes32"
         },
         {
+          "internalType": "uint16",
+          "name": "_proposalVerifiersArrayIndex",
+          "type": "uint16"
+        },
+        {
           "internalType": "enum AssessmentPoll.Vote",
           "name": "_vote",
           "type": "uint8"
@@ -31,6 +36,11 @@ class AssessmentPollContract {
           "internalType": "bytes32",
           "name": "_thingProposalId",
           "type": "bytes32"
+        },
+        {
+          "internalType": "uint16",
+          "name": "_proposalVerifiersArrayIndex",
+          "type": "uint16"
         },
         {
           "internalType": "enum AssessmentPoll.Vote",
@@ -61,12 +71,12 @@ class AssessmentPollContract {
           "type": "address"
         }
       ],
-      "name": "checkIsDesignatedVerifierForProposal",
+      "name": "getUserIndexAmongProposalVerifiers",
       "outputs": [
         {
-          "internalType": "bool",
+          "internalType": "int256",
           "name": "",
-          "type": "bool"
+          "type": "int256"
         }
       ],
       "stateMutability": "view",
@@ -143,34 +153,36 @@ class AssessmentPollContract {
     return initBlock.toInt();
   }
 
-  Future<bool?> checkIsDesignatedVerifierForProposal(
+  Future<int> getUserIndexAmongProposalVerifiers(
     String thingId,
     String proposalId,
   ) async {
     var contract = _contract;
     if (contract == null) {
-      return null;
+      return -1;
     }
     if (_ethereumService.connectedAccount == null) {
-      return null;
+      return -1;
     }
 
     var thingIdHex = thingId.toSolInputFormat(prefix: false);
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    return await contract.call<bool>(
-      'checkIsDesignatedVerifierForProposal',
+    return (await contract.call<BigInt>(
+      'getUserIndexAmongProposalVerifiers',
       [
         thingProposalIdHex,
         _ethereumService.connectedAccount,
       ],
-    );
+    ))
+        .toInt();
   }
 
   Future castVote(
     String thingId,
     String proposalId,
+    int userIndexInProposalVerifiersArray,
     DecisionIm decision,
     String reason,
   ) async {
@@ -196,6 +208,7 @@ class AssessmentPollContract {
           'castVote',
           [
             thingProposalIdHex,
+            userIndexInProposalVerifiersArray,
             decision.index,
           ],
         );
@@ -204,6 +217,7 @@ class AssessmentPollContract {
           'castVoteWithReason',
           [
             thingProposalIdHex,
+            userIndexInProposalVerifiersArray,
             decision.index,
             reason,
           ],

@@ -44,7 +44,8 @@ contract AssessmentPoll {
         bytes16 indexed thingId,
         bytes16 indexed settlementProposalId,
         address indexed user,
-        Vote vote
+        Vote vote,
+        uint256 l1BlockNumber
     );
 
     event CastedVoteWithReason(
@@ -52,7 +53,8 @@ contract AssessmentPoll {
         bytes16 indexed settlementProposalId,
         address indexed user,
         Vote vote,
-        string reason
+        string reason,
+        uint256 l1BlockNumber
     );
 
     event PollFinalized(
@@ -97,19 +99,15 @@ contract AssessmentPoll {
         _;
     }
 
-    modifier onlyDesignatedVerifiers(bytes32 _thingProposalId) {
-        uint256 designatedVerifiersCount = s_proposalVerifiers[_thingProposalId]
-            .length; // @@??: static var ?
-        bool isDesignatedVerifier = false;
-        // while?
-        for (uint8 i = 0; i < designatedVerifiersCount; ++i) {
-            if (msg.sender == s_proposalVerifiers[_thingProposalId][i]) {
-                // @@??: No point saving array in memory ?
-                isDesignatedVerifier = true;
-                break;
-            }
-        }
-        if (!isDesignatedVerifier) {
+    modifier onlyDesignatedVerifier(
+        bytes32 _thingProposalId,
+        uint16 _proposalVerifiersArrayIndex
+    ) {
+        if (
+            s_proposalVerifiers[_thingProposalId][
+                _proposalVerifiersArrayIndex
+            ] != msg.sender
+        ) {
             revert AssessmentPoll__NotDesignatedVerifier(_thingProposalId);
         }
         _;
@@ -190,41 +188,34 @@ contract AssessmentPoll {
         s_proposalVerifiers[_thingProposalId] = _verifiers;
     }
 
-    function checkIsDesignatedVerifierForProposal(
-        bytes32 _thingProposalId,
-        address _user
-    ) public view returns (bool) {
-        uint256 designatedVerifiersCount = s_proposalVerifiers[_thingProposalId]
-            .length;
-        for (uint8 i = 0; i < designatedVerifiersCount; ++i) {
-            if (_user == s_proposalVerifiers[_thingProposalId][i]) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     function castVote(
         bytes32 _thingProposalId,
+        uint16 _proposalVerifiersArrayIndex,
         Vote _vote
     )
         public
         whenActiveAndNotExpired(_thingProposalId)
-        onlyDesignatedVerifiers(_thingProposalId)
+        onlyDesignatedVerifier(_thingProposalId, _proposalVerifiersArrayIndex)
     {
         (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
-        emit CastedVote(thingId, proposalId, msg.sender, _vote);
+        emit CastedVote(
+            thingId,
+            proposalId,
+            msg.sender,
+            _vote,
+            _getL1BlockNumber()
+        );
     }
 
     function castVoteWithReason(
         bytes32 _thingProposalId,
+        uint16 _proposalVerifiersArrayIndex,
         Vote _vote,
         string calldata _reason
     )
         public
         whenActiveAndNotExpired(_thingProposalId)
-        onlyDesignatedVerifiers(_thingProposalId)
+        onlyDesignatedVerifier(_thingProposalId, _proposalVerifiersArrayIndex)
     {
         (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
         emit CastedVoteWithReason(
@@ -232,7 +223,8 @@ contract AssessmentPoll {
             proposalId,
             msg.sender,
             _vote,
-            _reason
+            _reason,
+            _getL1BlockNumber()
         );
     }
 
@@ -428,5 +420,21 @@ contract AssessmentPoll {
             rewardedVerifiers,
             slashedVerifiers
         );
+    }
+
+    function getUserIndexAmongProposalVerifiers(
+        bytes32 _thingProposalId,
+        address _user
+    ) public view returns (int256) {
+        int256 index = -1;
+        address[] memory verifiers = s_proposalVerifiers[_thingProposalId];
+        for (uint256 i = 0; i < verifiers.length; ++i) {
+            if (verifiers[i] == _user) {
+                index = int256(i);
+                break;
+            }
+        }
+
+        return index;
     }
 }

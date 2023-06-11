@@ -816,7 +816,9 @@ public class E2ETests : IAsyncLifetime
 
             var verifierAccountName = _sut.AccountProvider.LookupNameByAddress(verifier.Value);
 
-            await _sut.ContractCaller.CastAssessmentPollVoteAs(verifierAccountName, thingProposalIdBytes, Vote.Accept);
+            await _sut.ContractCaller.CastAssessmentPollVoteAs(
+                verifierAccountName, thingProposalIdBytes, (ushort)i, Vote.Accept
+            );
         }
 
         await cde.WaitAsync();

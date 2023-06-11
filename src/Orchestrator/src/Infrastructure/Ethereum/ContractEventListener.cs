@@ -196,25 +196,27 @@ internal class ContractEventListener : IContractEventListener
             }
             else if (@event is EventLog<AcceptancePoll.CastedVoteEvent> castedAcceptancePollVoteEvent)
             {
-                yield return new AppEvents.AcceptancePoll.CastedAcceptancePollVote.CastedAcceptancePollVoteEvent
+                yield return new AppEvents.AcceptancePoll.CastedVote.CastedVoteEvent
                 {
                     BlockNumber = (long)castedAcceptancePollVoteEvent.Log.BlockNumber.Value,
                     TxnIndex = (int)castedAcceptancePollVoteEvent.Log.TransactionIndex.Value,
                     ThingId = castedAcceptancePollVoteEvent.Event.ThingId,
                     UserId = castedAcceptancePollVoteEvent.Event.UserId.Substring(2).ToLower(),
-                    Vote = castedAcceptancePollVoteEvent.Event.Vote
+                    Vote = castedAcceptancePollVoteEvent.Event.Vote,
+                    L1BlockNumber = (long)castedAcceptancePollVoteEvent.Event.L1BlockNumber
                 };
             }
             else if (@event is EventLog<AcceptancePoll.CastedVoteWithReasonEvent> castedAcceptancePollVoteWithReasonEvent)
             {
-                yield return new AppEvents.AcceptancePoll.CastedAcceptancePollVote.CastedAcceptancePollVoteEvent
+                yield return new AppEvents.AcceptancePoll.CastedVote.CastedVoteEvent
                 {
                     BlockNumber = (long)castedAcceptancePollVoteWithReasonEvent.Log.BlockNumber.Value,
                     TxnIndex = (int)castedAcceptancePollVoteWithReasonEvent.Log.TransactionIndex.Value,
                     ThingId = castedAcceptancePollVoteWithReasonEvent.Event.ThingId,
                     UserId = castedAcceptancePollVoteWithReasonEvent.Event.UserId.Substring(2).ToLower(),
                     Vote = castedAcceptancePollVoteWithReasonEvent.Event.Vote,
-                    Reason = castedAcceptancePollVoteWithReasonEvent.Event.Reason
+                    Reason = castedAcceptancePollVoteWithReasonEvent.Event.Reason,
+                    L1BlockNumber = (long)castedAcceptancePollVoteWithReasonEvent.Event.L1BlockNumber
                 };
             }
             else if (@event is EventLog<AcceptancePoll.PollFinalizedEvent> thingAcceptancePollFinalizedEvent)
@@ -302,19 +304,20 @@ internal class ContractEventListener : IContractEventListener
             }
             else if (@event is EventLog<AssessmentPoll.CastedVoteEvent> castedAssessmentPollVoteEvent)
             {
-                yield return new AppEvents.AssessmentPoll.CastedAssessmentPollVote.CastedAssessmentPollVoteEvent
+                yield return new AppEvents.AssessmentPoll.CastedVote.CastedVoteEvent
                 {
                     BlockNumber = (long)castedAssessmentPollVoteEvent.Log.BlockNumber.Value,
                     TxnIndex = (int)castedAssessmentPollVoteEvent.Log.TransactionIndex.Value,
                     ThingId = castedAssessmentPollVoteEvent.Event.ThingId,
                     SettlementProposalId = castedAssessmentPollVoteEvent.Event.SettlementProposalId,
                     UserId = castedAssessmentPollVoteEvent.Event.UserId.Substring(2).ToLower(),
-                    Vote = castedAssessmentPollVoteEvent.Event.Vote
+                    Vote = castedAssessmentPollVoteEvent.Event.Vote,
+                    L1BlockNumber = (long)castedAssessmentPollVoteEvent.Event.L1BlockNumber
                 };
             }
             else if (@event is EventLog<AssessmentPoll.CastedVoteWithReasonEvent> castedAssessmentPollVoteWithReasonEvent)
             {
-                yield return new AppEvents.AssessmentPoll.CastedAssessmentPollVote.CastedAssessmentPollVoteEvent
+                yield return new AppEvents.AssessmentPoll.CastedVote.CastedVoteEvent
                 {
                     BlockNumber = (long)castedAssessmentPollVoteWithReasonEvent.Log.BlockNumber.Value,
                     TxnIndex = (int)castedAssessmentPollVoteWithReasonEvent.Log.TransactionIndex.Value,
@@ -322,7 +325,8 @@ internal class ContractEventListener : IContractEventListener
                     SettlementProposalId = castedAssessmentPollVoteWithReasonEvent.Event.SettlementProposalId,
                     UserId = castedAssessmentPollVoteWithReasonEvent.Event.UserId.Substring(2).ToLower(),
                     Vote = castedAssessmentPollVoteWithReasonEvent.Event.Vote,
-                    Reason = castedAssessmentPollVoteWithReasonEvent.Event.Reason
+                    Reason = castedAssessmentPollVoteWithReasonEvent.Event.Reason,
+                    L1BlockNumber = (long)castedAssessmentPollVoteWithReasonEvent.Event.L1BlockNumber
                 };
             }
             else if (@event is EventLog<AssessmentPoll.PollFinalizedEvent> assessmentPollFinalizedEvent)

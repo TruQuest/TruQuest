@@ -175,7 +175,7 @@ class SettlementBloc extends Bloc<SettlementAction> {
         userId: info.$1,
         initBlock: info.$2,
         durationBlocks: info.$3,
-        isDesignatedVerifier: info.$4,
+        userIndexInProposalVerifiersArray: info.$4,
         latestL1BlockNumber: info.$5,
       ),
     );
@@ -195,6 +195,7 @@ class SettlementBloc extends Bloc<SettlementAction> {
     await _settlementService.castVoteOnChain(
       action.thingId,
       action.proposalId,
+      action.userIndexInProposalVerifiersArray,
       action.decision,
       action.reason,
     );

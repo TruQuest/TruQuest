@@ -61,6 +61,7 @@ public class EventDbContext : DbContext
             builder.Property(e => e.UserId).IsRequired();
             builder.Property(e => e.Decision).HasConversion<int>().IsRequired();
             builder.Property(e => e.Reason).IsRequired(false);
+            builder.Property(e => e.L1BlockNumber).IsRequired();
         });
 
         modelBuilder.Entity<JoinedThingAssessmentVerifierLotteryEvent>(builder =>
@@ -100,6 +101,7 @@ public class EventDbContext : DbContext
             builder.Property(e => e.UserId).IsRequired();
             builder.Property(e => e.Decision).HasConversion<int>().IsRequired();
             builder.Property(e => e.Reason).IsRequired(false);
+            builder.Property(e => e.L1BlockNumber).IsRequired();
         });
 
         modelBuilder.Entity<BlockProcessedEvent>(builder =>

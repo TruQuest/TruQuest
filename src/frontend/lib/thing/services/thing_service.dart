@@ -162,7 +162,7 @@ class ThingService {
     return result;
   }
 
-  Future<(String?, int?, int, bool, int)> getAcceptancePollInfo(
+  Future<(String?, int?, int, int, int)> getAcceptancePollInfo(
     String thingId,
   ) async {
     var currentUserId = _userService.latestCurrentUser?.id;
@@ -171,16 +171,15 @@ class ThingService {
       initBlock = null;
     }
     int durationBlocks = await _acceptancePollContract.getPollDurationBlocks();
-    bool isDesignatedVerifier = (await _acceptancePollContract
-            .getUserIndexAmongThingVerifiers(thingId)) >=
-        0;
+    int thingVerifiersArrayIndex =
+        await _acceptancePollContract.getUserIndexAmongThingVerifiers(thingId);
     int latestBlockNumber = await _ethereumService.getLatestL1BlockNumber();
 
     return (
       currentUserId,
       initBlock,
       durationBlocks,
-      isDesignatedVerifier,
+      thingVerifiersArrayIndex,
       latestBlockNumber,
     );
   }
@@ -215,10 +214,16 @@ class ThingService {
 
   Future castVoteOnChain(
     String thingId,
+    int userIndexInThingVerifiersArray,
     DecisionIm decision,
     String reason,
   ) async {
-    await _acceptancePollContract.castVote(thingId, decision, reason);
+    await _acceptancePollContract.castVote(
+      thingId,
+      userIndexInThingVerifiersArray,
+      decision,
+      reason,
+    );
   }
 
   Future<GetVerifiersRvm> getVerifiers(String thingId) async {

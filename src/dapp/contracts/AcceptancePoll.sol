@@ -40,13 +40,19 @@ contract AcceptancePoll {
     mapping(bytes16 => int256) private s_thingIdToPollInitBlock;
     mapping(bytes16 => address[]) private s_thingVerifiers;
 
-    event CastedVote(bytes16 indexed thingId, address indexed user, Vote vote);
+    event CastedVote(
+        bytes16 indexed thingId,
+        address indexed user,
+        Vote vote,
+        uint256 l1BlockNumber
+    );
 
     event CastedVoteWithReason(
         bytes16 indexed thingId,
         address indexed user,
         Vote vote,
-        string reason
+        string reason,
+        uint256 l1BlockNumber
     );
 
     event PollFinalized(
@@ -90,18 +96,13 @@ contract AcceptancePoll {
         _;
     }
 
-    modifier onlyDesignatedVerifiers(bytes16 _thingId) {
-        uint256 designatedVerifiersCount = s_thingVerifiers[_thingId].length; // @@??: static var ?
-        bool isDesignatedVerifier = false;
-        // while?
-        for (uint8 i = 0; i < designatedVerifiersCount; ++i) {
-            if (msg.sender == s_thingVerifiers[_thingId][i]) {
-                // @@??: No point saving array in memory ?
-                isDesignatedVerifier = true;
-                break;
-            }
-        }
-        if (!isDesignatedVerifier) {
+    modifier onlyDesignatedVerifier(
+        bytes16 _thingId,
+        uint16 _thingVerifiersArrayIndex
+    ) {
+        if (
+            s_thingVerifiers[_thingId][_thingVerifiersArrayIndex] != msg.sender
+        ) {
             revert AcceptancePoll__NotDesignatedVerifier(_thingId);
         }
         _;
@@ -168,29 +169,35 @@ contract AcceptancePoll {
         s_thingVerifiers[_thingId] = _verifiers;
     }
 
-    // @@TODO: Provide index in verifiers array.
-    // @@TODO: Event must contain l1 block number.
     function castVote(
         bytes16 _thingId,
+        uint16 _thingVerifiersArrayIndex,
         Vote _vote
     )
         public
         whenActiveAndNotExpired(_thingId)
-        onlyDesignatedVerifiers(_thingId)
+        onlyDesignatedVerifier(_thingId, _thingVerifiersArrayIndex)
     {
-        emit CastedVote(_thingId, msg.sender, _vote);
+        emit CastedVote(_thingId, msg.sender, _vote, _getL1BlockNumber());
     }
 
     function castVoteWithReason(
         bytes16 _thingId,
+        uint16 _thingVerifiersArrayIndex,
         Vote _vote,
         string calldata _reason
     )
         public
         whenActiveAndNotExpired(_thingId)
-        onlyDesignatedVerifiers(_thingId)
+        onlyDesignatedVerifier(_thingId, _thingVerifiersArrayIndex)
     {
-        emit CastedVoteWithReason(_thingId, msg.sender, _vote, _reason);
+        emit CastedVoteWithReason(
+            _thingId,
+            msg.sender,
+            _vote,
+            _reason,
+            _getL1BlockNumber()
+        );
     }
 
     function getVerifiers(

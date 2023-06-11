@@ -112,12 +112,14 @@ class CastVoteOffChain extends SettlementActionAwaitable<CastVoteResultVm> {
 class CastVoteOnChain extends SettlementActionAwaitable<CastVoteResultVm> {
   final String thingId;
   final String proposalId;
+  final int userIndexInProposalVerifiersArray;
   final DecisionIm decision;
   final String reason;
 
   CastVoteOnChain({
     required this.thingId,
     required this.proposalId,
+    required this.userIndexInProposalVerifiersArray,
     required this.decision,
     required this.reason,
   });

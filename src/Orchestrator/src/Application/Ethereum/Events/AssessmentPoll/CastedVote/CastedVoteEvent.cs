@@ -2,11 +2,10 @@ using MediatR;
 
 using Domain.Aggregates;
 using Domain.Aggregates.Events;
-using CastedAssessmentPollVoteEventDm = Domain.Aggregates.Events.CastedAssessmentPollVoteEvent;
 
-namespace Application.Ethereum.Events.AssessmentPoll.CastedAssessmentPollVote;
+namespace Application.Ethereum.Events.AssessmentPoll.CastedVote;
 
-public class CastedAssessmentPollVoteEvent : INotification
+public class CastedVoteEvent : INotification
 {
     public required long BlockNumber { get; init; }
     public required int TxnIndex { get; init; }
@@ -15,29 +14,31 @@ public class CastedAssessmentPollVoteEvent : INotification
     public required string UserId { get; init; }
     public required int Vote { get; init; }
     public string? Reason { get; init; }
+    public required long L1BlockNumber { get; init; }
 }
 
-internal class CastedAssessmentPollVoteEventHandler : INotificationHandler<CastedAssessmentPollVoteEvent>
+internal class CastedVoteEventHandler : INotificationHandler<CastedVoteEvent>
 {
     private readonly ICastedAssessmentPollVoteEventRepository _castedAssessmentPollVoteEventRepository;
 
-    public CastedAssessmentPollVoteEventHandler(
+    public CastedVoteEventHandler(
         ICastedAssessmentPollVoteEventRepository castedAssessmentPollVoteEventRepository
     )
     {
         _castedAssessmentPollVoteEventRepository = castedAssessmentPollVoteEventRepository;
     }
 
-    public async Task Handle(CastedAssessmentPollVoteEvent @event, CancellationToken ct)
+    public async Task Handle(CastedVoteEvent @event, CancellationToken ct)
     {
-        var castedVoteEvent = new CastedAssessmentPollVoteEventDm(
+        var castedVoteEvent = new CastedAssessmentPollVoteEvent(
             blockNumber: @event.BlockNumber,
             txnIndex: @event.TxnIndex,
             thingId: new Guid(@event.ThingId),
             settlementProposalId: new Guid(@event.SettlementProposalId),
             userId: @event.UserId,
             decision: (AssessmentPollVote.VoteDecision)@event.Vote,
-            reason: @event.Reason
+            reason: @event.Reason,
+            l1BlockNumber: @event.L1BlockNumber
         );
         _castedAssessmentPollVoteEventRepository.Create(castedVoteEvent);
 
