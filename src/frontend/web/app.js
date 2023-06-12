@@ -68,3 +68,43 @@ async function getImagePalette(url) {
 
   return { colors: colors };
 }
+
+class EthereumDart {
+  constructor() {}
+
+  isInstalled() {
+    return typeof ethereum !== "undefined";
+  }
+
+  instance() {
+    return ethereum;
+  }
+
+  isInitialized() {
+    return ethereum._state.initialized;
+  }
+
+  async requestAccounts() {
+    try {
+      var accounts = await ethereum.request({ method: "eth_requestAccounts" });
+      return {
+        accounts: accounts,
+        error: null,
+      };
+    } catch (error) {
+      return {
+        accounts: null,
+        error: {
+          code: error.code,
+          message: error.message,
+        },
+      };
+    }
+  }
+
+  on(event, handler) {
+    ethereum.on(event, handler);
+  }
+}
+
+window.EthereumDart = EthereumDart;
