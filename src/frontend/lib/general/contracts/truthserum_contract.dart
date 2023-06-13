@@ -1,6 +1,5 @@
-import 'package:flutter_web3/ethers.dart';
-
 import '../../ethereum/errors/ethereum_error.dart';
+import '../../ethereum_js_interop.dart';
 import 'truquest_contract.dart';
 import '../../ethereum/services/ethereum_service.dart';
 
@@ -73,9 +72,9 @@ class TruthserumContract {
     }
 
     try {
-      var balance = await contract.call<BigInt>(
+      var balance = await contract.read<BigInt>(
         'balanceOf',
-        [connectedAccount],
+        args: [connectedAccount],
       );
 
       print('Balance: $balance');
@@ -87,14 +86,14 @@ class TruthserumContract {
       var signer = _ethereumService.provider.getSigner();
       contract = contract.connect(signer);
 
-      var txnResponse = await contract.send(
+      var txnResponse = await contract.write(
         'approve',
-        [
+        args: [
           TruQuestContract.address,
           BigInt.from(amount),
         ],
-        TransactionOverride(
-          gasLimit: BigInt.from(150000),
+        override: TransactionOverride(
+          gasLimit: 150000,
         ),
       );
 
@@ -102,9 +101,12 @@ class TruthserumContract {
       print('Approve usage txn mined!');
 
       return null;
-    } catch (e) {
-      print(e);
-      return EthereumError(e.toString());
+    } on ContractRequestError catch (e) {
+      print('Approve funds usage error: [${e.code}] ${e.message}');
+      return EthereumError('Error approving usage of funds');
+    } on ContractExecError catch (e) {
+      print('Approve funds usage error: [${e.code}] ${e.reason}');
+      return EthereumError('Error approving usage of funds');
     }
   }
 }

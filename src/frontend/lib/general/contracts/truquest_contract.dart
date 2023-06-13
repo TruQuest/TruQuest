@@ -1,8 +1,8 @@
 import 'package:convert/convert.dart';
-import 'package:flutter_web3/ethers.dart';
 
 import '../../ethereum/errors/ethereum_error.dart';
 import '../../ethereum/services/ethereum_service.dart';
+import '../../ethereum_js_interop.dart';
 import '../extensions/uuid_extension.dart';
 
 class TruQuestContract {
@@ -138,7 +138,10 @@ class TruQuestContract {
 
     var thingIdHex = thingId.toSolInputFormat();
 
-    return await contract.call<bool>('checkThingAlreadyFunded', [thingIdHex]);
+    return await contract.read<bool>(
+      'checkThingAlreadyFunded',
+      args: [thingIdHex],
+    );
   }
 
   Future fundThing(String thingId, String signature) async {
@@ -161,29 +164,25 @@ class TruQuestContract {
     var v = hex.decode(signature.substring(128, 130)).first;
 
     try {
-      var txnResponse = await contract.send(
+      var txnResponse = await contract.write(
         'fundThing',
-        [
+        args: [
           [thingIdHex],
           v,
           r,
           s,
         ],
-        TransactionOverride(
-          gasLimit: BigInt.from(100000), // 83397
+        override: TransactionOverride(
+          gasLimit: 100000, // 83397
         ),
       );
 
-      // print('Fund txn sent! Awaiting confirmations...');
-
-      // await txnResponse.wait(2); // @@??: Do not await confirmations?
-
-      // print('Fund txn confirmed!');
-
       await txnResponse.wait();
       print('Fund txn mined!');
-    } catch (e) {
-      print(e);
+    } on ContractRequestError catch (e) {
+      print('Fund thing error: [${e.code}] ${e.message}');
+    } on ContractExecError catch (e) {
+      print('Fund thing error: [${e.code}] ${e.reason}');
     }
   }
 
@@ -197,9 +196,9 @@ class TruQuestContract {
 
     var thingIdHex = thingId.toSolInputFormat();
 
-    return await contract.call<bool>(
+    return await contract.read<bool>(
       'checkThingAlreadyHasSettlementProposalUnderAssessment',
-      [thingIdHex],
+      args: [thingIdHex],
     );
   }
 
@@ -227,28 +226,25 @@ class TruQuestContract {
     var v = hex.decode(signature.substring(128, 130)).first;
 
     try {
-      var txnResponse = await contract.send(
+      var txnResponse = await contract.write(
         'fundThingSettlementProposal',
-        [
+        args: [
           [thingIdHex, proposalIdHex],
           v,
           r,
           s,
         ],
-        TransactionOverride(
-          gasLimit: BigInt.from(150000),
+        override: TransactionOverride(
+          gasLimit: 150000,
         ),
       );
 
-      // print('Fund txn sent! Awaiting confirmations...');
-
-      // await txnResponse.wait(2); // @@??: Do not await confirmations?
-
-      // print('Fund txn confirmed!');
       await txnResponse.wait();
       print('Fund txn mined!');
-    } catch (e) {
-      print(e);
+    } on ContractRequestError catch (e) {
+      print('Fund proposal error: [${e.code}] ${e.message}');
+    } on ContractExecError catch (e) {
+      print('Fund proposal error: [${e.code}] ${e.reason}');
     }
   }
 
@@ -265,11 +261,11 @@ class TruQuestContract {
     contract = contract.connect(signer);
 
     try {
-      var txnResponse = await contract.send(
+      var txnResponse = await contract.write(
         'deposit',
-        [BigInt.from(amount)],
-        TransactionOverride(
-          gasLimit: BigInt.from(150000),
+        args: [BigInt.from(amount)],
+        override: TransactionOverride(
+          gasLimit: 150000,
         ),
       );
 
@@ -277,9 +273,12 @@ class TruQuestContract {
       print('Deposit funds txn mined!');
 
       return null;
-    } catch (e) {
-      print(e);
-      return EthereumError(e.toString());
+    } on ContractRequestError catch (e) {
+      print('Deposit funds error: [${e.code}] ${e.message}');
+      return EthereumError('Error depositing funds');
+    } on ContractExecError catch (e) {
+      print('Deposit funds error: [${e.code}] ${e.reason}');
+      return EthereumError('Error depositing funds');
     }
   }
 }

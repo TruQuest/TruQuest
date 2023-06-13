@@ -28,6 +28,3 @@ class ColorResult {
   external int get green;
   external int get blue;
 }
-
-@JS('window.ethereum._state.initialized')
-external bool isMetamaskInitialized;

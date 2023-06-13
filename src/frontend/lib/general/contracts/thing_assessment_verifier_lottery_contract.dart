@@ -1,10 +1,10 @@
 import 'dart:math';
 
 import 'package:convert/convert.dart';
-import 'package:flutter_web3/flutter_web3.dart';
 
 import '../../ethereum/errors/ethereum_error.dart';
 import '../../ethereum/services/ethereum_service.dart';
+import '../../ethereum_js_interop.dart';
 import '../extensions/uuid_extension.dart';
 
 class ThingAssessmentVerifierLotteryContract {
@@ -50,27 +50,18 @@ class ThingAssessmentVerifierLotteryContract {
           "type": "bytes32"
         }
       ],
-      "name": "getOrchestratorCommitmentDataHash",
+      "name": "getOrchestratorCommitment",
       "outputs": [
+        {
+          "internalType": "int256",
+          "name": "",
+          "type": "int256"
+        },
         {
           "internalType": "bytes32",
           "name": "",
           "type": "bytes32"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "_thingProposalId",
-          "type": "bytes32"
-        }
-      ],
-      "name": "getOrchestratorCommitmentUserXorDataHash",
-      "outputs": [
+        },
         {
           "internalType": "bytes32",
           "name": "",
@@ -184,7 +175,7 @@ class ThingAssessmentVerifierLotteryContract {
       return 0;
     }
 
-    return await contract.call<int>('getLotteryDurationBlocks');
+    return await contract.read<int>('getLotteryDurationBlocks');
   }
 
   Future<int> getLotteryInitBlock(String thingId, String proposalId) async {
@@ -197,49 +188,36 @@ class ThingAssessmentVerifierLotteryContract {
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    var initBlock = await contract.call<BigInt>(
+    return (await contract.read<BigInt>(
       'getLotteryInitBlock',
-      [thingProposalIdHex],
-    );
-
-    return initBlock.toInt();
+      args: [thingProposalIdHex],
+    ))
+        .toInt();
   }
 
-  Future<String?> getOrchestratorCommitmentDataHash(
+  Future<(int, String, String)> getOrchestratorCommitment(
     String thingId,
     String proposalId,
   ) async {
     var contract = _contract;
     if (contract == null) {
-      return null;
+      var nullString = '0x${List.generate(64, (_) => '0').join()}';
+      return (0, nullString, nullString);
     }
 
     var thingIdHex = thingId.toSolInputFormat(prefix: false);
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    return await contract.call<String>(
-      'getOrchestratorCommitmentDataHash',
-      [thingProposalIdHex],
+    var result = await contract.read<List<dynamic>>(
+      'getOrchestratorCommitment',
+      args: [thingProposalIdHex],
     );
-  }
 
-  Future<String?> getOrchestratorCommitmentUserXorDataHash(
-    String thingId,
-    String proposalId,
-  ) async {
-    var contract = _contract;
-    if (contract == null) {
-      return null;
-    }
-
-    var thingIdHex = thingId.toSolInputFormat(prefix: false);
-    var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
-    var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
-
-    return await contract.call<String>(
-      'getOrchestratorCommitmentUserXorDataHash',
-      [thingProposalIdHex],
+    return (
+      (result[0] as BigInt).toInt(),
+      result[1] as String,
+      result[2] as String
     );
   }
 
@@ -259,9 +237,9 @@ class ThingAssessmentVerifierLotteryContract {
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    return await contract.call<bool>(
+    return await contract.read<bool>(
       'checkAlreadyClaimedLotterySpot',
-      [
+      args: [
         thingProposalIdHex,
         _ethereumService.connectedAccount,
       ],
@@ -284,9 +262,9 @@ class ThingAssessmentVerifierLotteryContract {
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    return await contract.call<bool>(
+    return await contract.read<bool>(
       'checkAlreadyJoinedLottery',
-      [
+      args: [
         thingProposalIdHex,
         _ethereumService.connectedAccount,
       ],
@@ -314,11 +292,11 @@ class ThingAssessmentVerifierLotteryContract {
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
     try {
-      var txnResponse = await contract.send(
+      var txnResponse = await contract.write(
         'claimLotterySpot',
-        [thingProposalIdHex, userIndexInThingVerifiersArray],
-        TransactionOverride(
-          gasLimit: BigInt.from(250000),
+        args: [thingProposalIdHex, userIndexInThingVerifiersArray],
+        override: TransactionOverride(
+          gasLimit: 250000,
         ),
       );
 
@@ -326,9 +304,12 @@ class ThingAssessmentVerifierLotteryContract {
       print('Claim txn mined!');
 
       return null;
-    } catch (e) {
-      print(e);
-      return EthereumError(e.toString());
+    } on ContractRequestError catch (e) {
+      print('Claim lottery spot error: [${e.code}] ${e.message}');
+      return EthereumError('Error claiming lottery spot');
+    } on ContractExecError catch (e) {
+      print('Claim lottery spot error: [${e.code}] ${e.reason}');
+      return EthereumError('Error claiming lottery spot');
     }
   }
 
@@ -352,11 +333,11 @@ class ThingAssessmentVerifierLotteryContract {
     var userDataHex = '0x' + hex.encode(userData);
 
     try {
-      var txnResponse = await contract.send(
+      var txnResponse = await contract.write(
         'joinLottery',
-        [thingProposalIdHex, userDataHex],
-        TransactionOverride(
-          gasLimit: BigInt.from(250000),
+        args: [thingProposalIdHex, userDataHex],
+        override: TransactionOverride(
+          gasLimit: 250000,
         ),
       );
 
@@ -364,9 +345,12 @@ class ThingAssessmentVerifierLotteryContract {
       print('Join txn mined!');
 
       return null;
-    } catch (e) {
-      print(e);
-      return EthereumError(e.toString());
+    } on ContractRequestError catch (e) {
+      print('Join lottery error: [${e.code}] ${e.message}');
+      return EthereumError('Error joining lottery');
+    } on ContractExecError catch (e) {
+      print('Join lottery error: [${e.code}] ${e.reason}');
+      return EthereumError('Error joining lottery');
     }
   }
 }

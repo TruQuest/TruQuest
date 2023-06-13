@@ -171,16 +171,17 @@ contract ThingSubmissionVerifierLottery {
         return keccak256(abi.encodePacked(address(this), _data));
     }
 
-    function getOrchestratorCommitmentDataHash(
+    function getOrchestratorCommitment(
         bytes16 _thingId
-    ) public view returns (bytes32) {
-        return s_thingIdToOrchestratorCommitment[_thingId].dataHash;
-    }
-
-    function getOrchestratorCommitmentUserXorDataHash(
-        bytes16 _thingId
-    ) public view returns (bytes32) {
-        return s_thingIdToOrchestratorCommitment[_thingId].userXorDataHash;
+    ) public view returns (int256, bytes32, bytes32) {
+        Commitment memory commitment = s_thingIdToOrchestratorCommitment[
+            _thingId
+        ];
+        return (
+            commitment.block,
+            commitment.dataHash,
+            commitment.userXorDataHash
+        );
     }
 
     function getLotteryDurationBlocks() public view returns (uint16) {

@@ -69,7 +69,7 @@ async function getImagePalette(url) {
   return { colors: colors };
 }
 
-class EthereumDart {
+class EthereumWallet {
   constructor() {}
 
   isInstalled() {
@@ -82,6 +82,24 @@ class EthereumDart {
 
   isInitialized() {
     return ethereum._state.initialized;
+  }
+
+  async getChainId() {
+    try {
+      var chainId = await ethereum.request({ method: "eth_chainId" });
+      return {
+        chainId: chainId,
+        error: null,
+      };
+    } catch (error) {
+      return {
+        chainId: null,
+        error: {
+          code: error.code,
+          message: error.message,
+        },
+      };
+    }
   }
 
   async requestAccounts() {
@@ -102,9 +120,119 @@ class EthereumDart {
     }
   }
 
+  async getAccounts() {
+    try {
+      var accounts = await ethereum.request({ method: "eth_accounts" });
+      return {
+        accounts: accounts,
+        error: null,
+      };
+    } catch (error) {
+      return {
+        accounts: null,
+        error: {
+          code: error.code,
+          message: error.message,
+        },
+      };
+    }
+  }
+
+  async switchChain(chainParams) {
+    var error = null;
+    try {
+      await ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: chainParams.id }],
+      });
+    } catch (switchError) {
+      if (switchError.code === 4902) {
+        try {
+          await ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [
+              {
+                chainId: chainParams.id,
+                chainName: chainParams.name,
+                rpcUrls: [chainParams.rpcUrl],
+                nativeCurrency: {
+                  name: "Ether",
+                  symbol: "ETH",
+                  decimals: 18,
+                },
+              },
+            ],
+          });
+        } catch (addError) {
+          error = addError;
+        }
+      } else {
+        error = switchError;
+      }
+    }
+
+    return {
+      error:
+        error != null
+          ? {
+              code: error.code,
+              message: error.message,
+            }
+          : null,
+    };
+  }
+
+  async signTypedData(account, data) {
+    try {
+      var signature = await ethereum.request({
+        method: "eth_signTypedData_v4",
+        params: [account, data],
+      });
+
+      return {
+        signature: signature,
+        error: null,
+      };
+    } catch (error) {
+      return {
+        signature: null,
+        error: {
+          code: error.code,
+          message: error.message,
+        },
+      };
+    }
+  }
+
+  async personalSign(account, data) {
+    try {
+      var signature = await ethereum.request({
+        method: "personal_sign",
+        params: [data, account],
+      });
+
+      return {
+        signature: signature,
+        error: null,
+      };
+    } catch (error) {
+      return {
+        signature: null,
+        error: {
+          code: error.code,
+          message: error.message,
+        },
+      };
+    }
+  }
+
+  removeAllListeners(event) {
+    ethereum.removeAllListeners(event);
+  }
+
   on(event, handler) {
     ethereum.on(event, handler);
   }
 }
 
-window.EthereumDart = EthereumDart;
+window.EthereumWallet = EthereumWallet;

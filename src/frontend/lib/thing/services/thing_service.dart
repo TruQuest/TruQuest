@@ -117,16 +117,9 @@ class ThingService {
   ) async {
     var result = await _thingApiService.getVerifierLotteryParticipants(thingId);
 
-    var nullString = '0x${List.generate(64, (_) => '0').join()}';
-    // @@TODO: Query all at once.
-    var lotteryInitBlock = await _thingSubmissionVerifierLotteryContract
-        .getLotteryInitBlock(thingId);
-    var dataHash = await _thingSubmissionVerifierLotteryContract
-            .getOrchestratorCommitmentDataHash(thingId) ??
-        nullString;
-    var userXorDataHash = await _thingSubmissionVerifierLotteryContract
-            .getOrchestratorCommitmentUserXorDataHash(thingId) ??
-        nullString;
+    var (lotteryInitBlock, dataHash, userXorDataHash) =
+        await _thingSubmissionVerifierLotteryContract
+            .getOrchestratorCommitment(thingId);
 
     var entries = result.entries;
     if (entries.isEmpty || !entries.first.isOrchestrator) {

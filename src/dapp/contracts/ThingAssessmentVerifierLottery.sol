@@ -218,20 +218,18 @@ contract ThingAssessmentVerifierLottery {
         return keccak256(abi.encodePacked(address(this), _data));
     }
 
-    function getOrchestratorCommitmentDataHash(
+    function getOrchestratorCommitment(
         bytes32 _thingProposalId
-    ) public view returns (bytes32) {
-        return
-            s_thingProposalIdToOrchestratorCommitment[_thingProposalId]
-                .dataHash;
-    }
-
-    function getOrchestratorCommitmentUserXorDataHash(
-        bytes32 _thingProposalId
-    ) public view returns (bytes32) {
-        return
-            s_thingProposalIdToOrchestratorCommitment[_thingProposalId]
-                .userXorDataHash;
+    ) public view returns (int256, bytes32, bytes32) {
+        Commitment
+            memory commitment = s_thingProposalIdToOrchestratorCommitment[
+                _thingProposalId
+            ];
+        return (
+            commitment.block,
+            commitment.dataHash,
+            commitment.userXorDataHash
+        );
     }
 
     function getLotteryDurationBlocks() public view returns (uint16) {

@@ -167,16 +167,11 @@ class SettlementService {
       proposalId,
     );
 
-    var nullString = '0x${List.generate(64, (_) => '0').join()}';
-    // @@TODO: Query all at once.
-    var lotteryInitBlock = await _thingAssessmentVerifierLotteryContract
-        .getLotteryInitBlock(thingId, proposalId);
-    var dataHash = await _thingAssessmentVerifierLotteryContract
-            .getOrchestratorCommitmentDataHash(thingId, proposalId) ??
-        nullString;
-    var userXorDataHash = await _thingAssessmentVerifierLotteryContract
-            .getOrchestratorCommitmentUserXorDataHash(thingId, proposalId) ??
-        nullString;
+    var (lotteryInitBlock, dataHash, userXorDataHash) =
+        await _thingAssessmentVerifierLotteryContract.getOrchestratorCommitment(
+      thingId,
+      proposalId,
+    );
 
     var entries = result.entries;
     if (entries.isEmpty || !entries.first.isOrchestrator) {

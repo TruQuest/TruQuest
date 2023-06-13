@@ -3,16 +3,14 @@ import 'dart:convert';
 
 import 'package:convert/convert.dart';
 import 'package:either_dart/either.dart';
-import 'package:flutter_web3/flutter_web3.dart';
 import 'package:universal_html/html.dart' as html;
 
+import '../../ethereum_js_interop.dart';
 import '../../thing/models/im/decision_im.dart' as thing;
 import '../../settlement/models/im/decision_im.dart' as settlement;
-import '../../js.dart';
 import '../errors/ethereum_error.dart';
 
 class EthereumService {
-  final bool available;
   final int validChainId = 901;
 
   int? _connectedChainId;
@@ -21,8 +19,11 @@ class EthereumService {
   String? _connectedAccount;
   String? get connectedAccount => _connectedAccount;
 
-  late final provider = Web3Provider(ethereum!);
-  late final l1Provider = JsonRpcProvider('http://localhost:8545');
+  final EthereumWallet _ethereumWallet;
+  late final Web3Provider provider;
+  late final JsonRpcProvider l1Provider;
+
+  bool get available => _ethereumWallet.isInstalled();
 
   final StreamController<(int, bool)> _connectedChainChangedEventChannel =
       StreamController<(int, bool)>();
@@ -38,21 +39,21 @@ class EthereumService {
       StreamController<int>();
   Stream<int> get l1BlockMined$ => _l1BlockMinedEventChannel.stream;
 
-  EthereumService() : available = ethereum != null {
-    var metamask = ethereum;
-    if (metamask != null) {
-      if (!isMetamaskInitialized) {
+  EthereumService() : _ethereumWallet = EthereumWallet() {
+    l1Provider = JsonRpcProvider('http://localhost:8545');
+    if (available) {
+      provider = Web3Provider(_ethereumWallet);
+
+      if (!_ethereumWallet.isInitialized()) {
         html.window.location.reload();
       }
 
-      // @@??: metamask.autoRefreshOnNetworkChange ?
+      _ethereumWallet.removeAllListeners('chainChanged');
+      _ethereumWallet.removeAllListeners('accountsChanged');
+      l1Provider.removeAllListeners('block');
 
-      metamask.removeAllListeners('chainChanged');
-      metamask.removeAllListeners('accountsChanged');
-
-      metamask.onChainChanged((chainId) {
+      _ethereumWallet.onChainChanged((chainId) {
         print('Chain changed: $chainId');
-        // is this redundant?
         if (_connectedChainId != chainId) {
           _connectedChainId = chainId;
           _connectedChainChangedEventChannel.add(
@@ -61,17 +62,16 @@ class EthereumService {
         }
       });
 
-      metamask.onAccountsChanged((accounts) {
+      _ethereumWallet.onAccountsChanged((accounts) {
         print('Accounts changed: $accounts');
         var connectedAccount = accounts.isNotEmpty ? accounts.first : null;
-        // is this redundant?
         if (_connectedAccount != connectedAccount) {
           _connectedAccount = connectedAccount;
           _connectedAccountChangedEventChannel.add(_connectedAccount);
         }
       });
 
-      metamask.getChainId().then((chainId) {
+      _ethereumWallet.getChainId().then((chainId) {
         print('Current chain: $chainId');
         _connectedChainId = chainId;
         _connectedChainChangedEventChannel.add(
@@ -79,76 +79,50 @@ class EthereumService {
         );
       });
 
-      // @@NOTE: ?? accountsChanged event doesn't fire on launch even though MM says it does ??
-      metamask.getAccounts().then((accounts) {
+      _ethereumWallet.getAccounts().then((accounts) {
         _connectedAccount = accounts.isNotEmpty ? accounts.first : null;
         print('Current account: $_connectedAccount');
         _connectedAccountChangedEventChannel.add(_connectedAccount);
       });
 
-      l1Provider.onBlock((blockNumber) {
+      l1Provider.onBlockMined((blockNumber) {
         print('Latest L1 block: $blockNumber');
         _l1BlockMinedEventChannel.add(blockNumber);
       });
     }
   }
 
-  Future<int> getLatestL1BlockNumber() async {
-    if (!available) {
-      return 0;
-    }
-
-    return await l1Provider.getBlockNumber();
-  }
+  Future<int> getLatestL1BlockNumber() => l1Provider.getBlockNumber();
 
   Future<EthereumError?> switchEthereumChain() async {
-    var metamask = ethereum;
-    if (metamask == null) {
+    if (!available) {
       return EthereumError('Metamask not installed');
     }
 
-    try {
-      await metamask.walletSwitchChain(validChainId);
-    } catch (e) {
-      // @@TODO: Find out why catching EthereumUnrecognizedChainException doesn't work.
-      print(e);
-      try {
-        await metamask.walletAddChain(
-          chainId: validChainId,
-          chainName: 'Optimism Local',
-          nativeCurrency: CurrencyParams(
-            name: 'Ether',
-            symbol: 'ETH',
-            decimals: 18,
-          ),
-          rpcUrls: ['http://localhost:9545/'],
-        );
-      } catch (e) {
-        print(e);
-        return EthereumError(e.toString());
-      }
+    var error = await _ethereumWallet.switchChain(
+      validChainId,
+      'Optimism Local',
+      'http://localhost:9545',
+    );
+    if (error != null) {
+      print('Switch chain error: [${error.code}] ${error.message}');
+      return EthereumError('Error trying to switch chain');
     }
 
     return null;
   }
 
   Future<EthereumError?> connectAccount() async {
-    var metamask = ethereum;
-    if (metamask == null) {
+    if (!available) {
       return EthereumError('Metamask not installed');
     }
 
-    try {
-      var accounts = await metamask.requestAccount();
-      if (accounts.isEmpty) {
-        return EthereumError('No account selected');
-      }
-    } on EthereumUserRejected catch (e) {
-      print(e);
-      return EthereumError('User rejected the request');
-    } catch (e) {
-      print(e);
-      return EthereumError(e.toString());
+    var result = await _ethereumWallet.requestAccounts();
+    if (result.error != null) {
+      print(
+        'Request accounts error: [${result.error!.code}] ${result.error!.message}',
+      );
+      return EthereumError('Error requesting accounts');
     }
 
     return null;
@@ -160,8 +134,7 @@ class EthereumService {
     thing.DecisionIm decision,
     String reason,
   ) async {
-    var metamask = ethereum;
-    if (metamask == null) {
+    if (!available) {
       return Left(EthereumError('Metamask not installed'));
     }
 
@@ -205,17 +178,15 @@ class EthereumService {
 
     var data = jsonEncode(map);
 
-    try {
-      var signature = await metamask.request<String>(
-        'eth_signTypedData_v4',
-        [connectedAccount, data],
+    var result = await _ethereumWallet.signTypedData(connectedAccount, data);
+    if (result.error != null) {
+      print(
+        'Sign message error: [${result.error!.code}] ${result.error!.message}',
       );
-
-      return Right(signature);
-    } catch (e) {
-      print(e);
-      return Left(EthereumError(e.toString()));
+      return Left(EthereumError('Error signing message'));
     }
+
+    return Right(result.signature!);
   }
 
   Future<Either<EthereumError, String>>
@@ -226,8 +197,7 @@ class EthereumService {
     settlement.DecisionIm decision,
     String reason,
   ) async {
-    var metamask = ethereum;
-    if (metamask == null) {
+    if (!available) {
       return Left(EthereumError('Metamask not installed'));
     }
 
@@ -273,25 +243,22 @@ class EthereumService {
 
     var data = jsonEncode(map);
 
-    try {
-      var signature = await metamask.request<String>(
-        'eth_signTypedData_v4',
-        [connectedAccount, data],
+    var result = await _ethereumWallet.signTypedData(connectedAccount, data);
+    if (result.error != null) {
+      print(
+        'Sign message error: [${result.error!.code}] ${result.error!.message}',
       );
-
-      return Right(signature);
-    } catch (e) {
-      print(e);
-      return Left(EthereumError(e.toString()));
+      return Left(EthereumError('Error signing message'));
     }
+
+    return Right(result.signature!);
   }
 
   Future<Either<EthereumError, (String, String)>> signSiweMessage(
     String account,
     String nonce,
   ) async {
-    var metamask = ethereum;
-    if (metamask == null) {
+    if (!available) {
       return Left(EthereumError('Metamask not installed'));
     }
 
@@ -322,16 +289,17 @@ class EthereumService {
         'Nonce: $nonce\n'
         'Issued At: $nowWithoutMicroseconds';
 
-    try {
-      var signature = await metamask.request<String>(
-        'personal_sign',
-        [hex.encode(utf8.encode(message)), account],
+    var result = await _ethereumWallet.personalSign(
+      connectedAccount,
+      hex.encode(utf8.encode(message)),
+    );
+    if (result.error != null) {
+      print(
+        'Personal sign message error: [${result.error!.code}] ${result.error!.message}',
       );
-
-      return Right((message, signature));
-    } catch (e) {
-      print(e);
-      return Left(EthereumError(e.toString()));
+      return Left(EthereumError('Error personal signing message'));
     }
+
+    return Right((message, result.signature!));
   }
 }

@@ -1,6 +1,5 @@
-import 'package:flutter_web3/flutter_web3.dart';
-
 import '../../ethereum/services/ethereum_service.dart';
+import '../../ethereum_js_interop.dart';
 import '../../settlement/models/im/decision_im.dart';
 import '../extensions/uuid_extension.dart';
 
@@ -132,7 +131,7 @@ class AssessmentPollContract {
       return 0;
     }
 
-    return await contract.call<int>('getPollDurationBlocks');
+    return await contract.read<int>('getPollDurationBlocks');
   }
 
   Future<int> getPollInitBlock(String thingId, String proposalId) async {
@@ -145,12 +144,11 @@ class AssessmentPollContract {
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    var initBlock = await contract.call<BigInt>(
+    return (await contract.read<BigInt>(
       'getPollInitBlock',
-      [thingProposalIdHex],
-    );
-
-    return initBlock.toInt();
+      args: [thingProposalIdHex],
+    ))
+        .toInt();
   }
 
   Future<int> getUserIndexAmongProposalVerifiers(
@@ -169,9 +167,9 @@ class AssessmentPollContract {
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    return (await contract.call<BigInt>(
+    return (await contract.read<BigInt>(
       'getUserIndexAmongProposalVerifiers',
-      [
+      args: [
         thingProposalIdHex,
         _ethereumService.connectedAccount,
       ],
@@ -204,18 +202,18 @@ class AssessmentPollContract {
     try {
       TransactionResponse txnResponse;
       if (reason.isEmpty) {
-        txnResponse = await contract.send(
+        txnResponse = await contract.write(
           'castVote',
-          [
+          args: [
             thingProposalIdHex,
             userIndexInProposalVerifiersArray,
             decision.index,
           ],
         );
       } else {
-        txnResponse = await contract.send(
+        txnResponse = await contract.write(
           'castVoteWithReason',
-          [
+          args: [
             thingProposalIdHex,
             userIndexInProposalVerifiersArray,
             decision.index,
@@ -226,8 +224,10 @@ class AssessmentPollContract {
 
       await txnResponse.wait();
       print('Cast vote txn mined!');
-    } catch (e) {
-      print(e);
+    } on ContractRequestError catch (e) {
+      print('Cast vote error: [${e.code}] ${e.message}');
+    } on ContractExecError catch (e) {
+      print('Cast vote error: [${e.code}] ${e.reason}');
     }
   }
 }

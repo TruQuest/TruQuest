@@ -8,44 +8,136 @@ import 'package:js/js.dart';
 
 @JS()
 @anonymous
-class EthereumError {
+class EthereumWalletError {
   external int get code;
   external String get message;
 }
 
 @JS()
 @anonymous
-class EthereumRequestAccountsResult {
-  external List<String>? get accounts;
-  external EthereumError? get error;
+class EthereumChainIdResult {
+  external String? get chainId;
+  external EthereumWalletError? get error;
 }
 
-@JS('EthereumDart')
-class _Ethereum {
+@JS()
+@anonymous
+class EthereumRequestAccountsResult {
+  external List<String>? get accounts;
+  external EthereumWalletError? get error;
+}
+
+@JS()
+@anonymous
+class EthereumAccountsResult {
+  external List<dynamic>? get accounts;
+  external EthereumWalletError? get error;
+}
+
+@JS()
+@anonymous
+class EthereumSwitchChainResult {
+  external EthereumWalletError? get error;
+}
+
+@JS()
+@anonymous
+class EthereumChainParams {
+  external factory EthereumChainParams({
+    String id,
+    String name,
+    String rpcUrl,
+  });
+
+  external String get id;
+  external String get name;
+  external String get rpcUrl;
+}
+
+@JS()
+@anonymous
+class EthereumSignResult {
+  external String? get signature;
+  external EthereumWalletError? get error;
+}
+
+@JS('EthereumWallet')
+class _EthereumWallet {
   external bool isInstalled();
   external dynamic instance();
   external bool isInitialized();
+  external dynamic getChainId();
   external dynamic requestAccounts();
+  external dynamic getAccounts();
+  external dynamic switchChain(EthereumChainParams chainParams);
+  external dynamic signTypedData(String account, String data);
+  external dynamic personalSign(String account, String data);
+  external dynamic removeAllListeners([String? event]);
   external void on(String event, Function handler);
 }
 
-class Ethereum {
-  final _Ethereum _ethereum;
+class EthereumWallet {
+  final _EthereumWallet _ethereumWallet;
 
-  Ethereum() : _ethereum = _Ethereum();
+  EthereumWallet() : _ethereumWallet = _EthereumWallet();
 
-  bool isInstalled() => _ethereum.isInstalled();
-  dynamic instance() => _ethereum.instance();
-  bool isInitialized() => _ethereum.isInitialized();
+  bool isInstalled() => _ethereumWallet.isInstalled();
+  dynamic _instance() => _ethereumWallet.instance();
+  bool isInitialized() => _ethereumWallet.isInitialized();
 
-  Future<EthereumRequestAccountsResult> requestAccounts() {
-    return promiseToFuture<EthereumRequestAccountsResult>(
-      _ethereum.requestAccounts(),
+  Future<int> getChainId() async {
+    var result = await promiseToFuture<EthereumChainIdResult>(
+      _ethereumWallet.getChainId(),
     );
+    // when starts with 0x defaults to radix = 16
+    return int.parse(result.chainId!);
   }
 
+  Future<EthereumRequestAccountsResult> requestAccounts() =>
+      promiseToFuture<EthereumRequestAccountsResult>(
+        _ethereumWallet.requestAccounts(),
+      );
+
+  Future<List<String>> getAccounts() async {
+    var result = await promiseToFuture<EthereumAccountsResult>(
+      _ethereumWallet.getAccounts(),
+    );
+    return result.accounts!.cast<String>();
+  }
+
+  Future<EthereumWalletError?> switchChain(
+    int chainId,
+    String chainName,
+    String chainRpcUrl,
+  ) async {
+    var result = await promiseToFuture<EthereumSwitchChainResult>(
+      _ethereumWallet.switchChain(
+        EthereumChainParams(
+          id: '0x' + chainId.toRadixString(16),
+          name: chainName,
+          rpcUrl: chainRpcUrl,
+        ),
+      ),
+    );
+
+    return result.error;
+  }
+
+  Future<EthereumSignResult> signTypedData(String account, String data) =>
+      promiseToFuture<EthereumSignResult>(
+        _ethereumWallet.signTypedData(account, data),
+      );
+
+  Future<EthereumSignResult> personalSign(String account, String data) =>
+      promiseToFuture<EthereumSignResult>(
+        _ethereumWallet.personalSign(account, data),
+      );
+
+  void removeAllListeners([String? event]) =>
+      _ethereumWallet.removeAllListeners(event);
+
   void onAccountsChanged(void Function(List<String>) handler) {
-    _ethereum.on(
+    _ethereumWallet.on(
       'accountsChanged',
       allowInterop(
         (List<dynamic> accounts) => handler(accounts.cast<String>()),
@@ -54,7 +146,7 @@ class Ethereum {
   }
 
   void onChainChanged(void Function(int) handler) {
-    _ethereum.on(
+    _ethereumWallet.on(
       'chainChanged',
       allowInterop(
         (dynamic chainId) => handler(int.parse(chainId)),
@@ -101,7 +193,8 @@ class _Web3Provider extends _Provider {
 class Web3Provider extends Provider {
   late final _Web3Provider _provider;
 
-  Web3Provider(dynamic ethereum) : super(_Web3Provider(ethereum)) {
+  Web3Provider(EthereumWallet ethereumWallet)
+      : super(_Web3Provider(ethereumWallet._instance())) {
     _provider = super._provider as _Web3Provider;
   }
 
@@ -159,7 +252,7 @@ class Contract {
 
   Contract connect(Signer signer) => Contract._(_contract.connect(signer));
 
-  Future<T> get<T>(
+  Future<T> read<T>(
     String functionName, {
     List<dynamic> args = const [],
   }) async {
@@ -234,7 +327,7 @@ class Contract {
     }
   }
 
-  Future<TransactionResponse> post(
+  Future<TransactionResponse> write(
     String functionName, {
     List<dynamic> args = const [],
     TransactionOverride? override,
@@ -267,6 +360,13 @@ class Contract {
 
       return TransactionResponse._(response);
     } catch (jsError) {
+      if (jsError.runtimeType.toString() == 'JSNoSuchMethodError') {
+        throw ContractRequestError(
+          code: -51234,
+          message: 'Invalid function name',
+        );
+      }
+
       var error = _dartify(jsError);
       throw ContractRequestError(
         code: error['code'],
