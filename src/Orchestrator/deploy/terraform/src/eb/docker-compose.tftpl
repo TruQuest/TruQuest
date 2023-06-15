@@ -1,0 +1,30 @@
+version: '3.7'
+
+services:
+  ipfs:
+    image: ipfs/kubo:v0.20.0
+    ports:
+      - '4001'
+      - '4001/udp'
+      - '8080:8080'
+      - '5001'
+    volumes:
+      - /backend/ipfs/data:/data/ipfs
+    networks:
+      - truquest
+    restart: unless-stopped
+
+  dummy:
+    image: ${dummy_image_uri}
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - '80:80'
+    networks:
+      - truquest
+    restart: unless-stopped
+    
+networks:
+  truquest:
+    driver: bridge

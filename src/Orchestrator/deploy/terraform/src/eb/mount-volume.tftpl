@@ -1,0 +1,57 @@
+#!/bin/sh
+
+# Make sure LF line endings are used in the file.
+
+# All platform hooks run as root user.
+
+if mountpoint ${mount_dir}; then
+  echo "Volume ${volume_id} is already mounted!"
+  exit 0
+fi
+
+echo "Waiting for volume ${volume_id} to become available..."
+aws ec2 wait volume-available --volume-ids ${volume_id} --region ${region}
+echo "Volume ${volume_id} is available!"
+
+# Before attaching the volume find out the root volume's name, so that we can later use it for filtering purposes.
+# -d – to filter out partitions.
+# -P – to display the result as key-value pairs.
+# -o – to output only the matching part.
+# On nitro instances device names are "/dev/nvme[0-26]n1". lsblk strips the "/dev/" part.
+ROOT_VOLUME_NAME=$(lsblk -d -P | grep -o 'NAME="[a-z0-9]*"' | grep -o '[a-z0-9]*')
+
+echo "Attaching volume ${volume_id}..."
+aws ec2 attach-volume --volume-id ${volume_id} --instance-id $(curl -s http://169.254.169.254/latest/meta-data/instance-id) --device /dev/sdf --region ${region}
+# The above command is async, so we need to wait. "ec2:DescribeVolumes" permission is required.
+echo "Waiting for volume ${volume_id} to get attached..."
+aws ec2 wait volume-in-use --volume-ids ${volume_id} --region ${region}
+echo "Volume ${volume_id} is attached!"
+
+# Now lsblk should show two devices. We figure out which one is non-root by filtering out the root volume name.
+NON_ROOT_VOLUME_NAME=$(lsblk -d -P | grep -o 'NAME="[a-z0-9]*"' | grep -o '[a-z0-9]*' | awk -v name="$ROOT_VOLUME_NAME" '$0 !~ name')
+
+FILE_COMMAND_OUTPUT=$(file -s /dev/$NON_ROOT_VOLUME_NAME)
+
+# Create a file system on the non-root device only if there isn't one already, so that we don't accidentally override it.
+if test "$FILE_COMMAND_OUTPUT" = "/dev/$NON_ROOT_VOLUME_NAME: data"; then
+  echo "Creating file system on volume ${volume_id}..."
+  mkfs -t xfs /dev/$NON_ROOT_VOLUME_NAME
+  echo "File system on volume ${volume_id} is created!"
+fi
+
+mkdir -p ${mount_dir}
+
+echo "Mounting volume ${volume_id} at ${mount_dir}..."
+mount /dev/$NON_ROOT_VOLUME_NAME ${mount_dir}
+echo "Volume ${volume_id} is mounted at ${mount_dir}!"
+
+# Need to make sure that the volume gets mounted after every reboot, because by default only root volume is automatically mounted.
+cp /etc/fstab /etc/fstab.orig
+
+NON_ROOT_VOLUME_UUID=$(lsblk -d -P -o +UUID | awk -v name="$NON_ROOT_VOLUME_NAME" '$0 ~ name' | grep -o 'UUID="[-0-9a-z]*"' | grep -o '[-0-9a-z]*')
+
+# We specify 0 to prevent the file system from being dumped, and 2 to indicate that it is a non-root device.
+# If you ever boot your instance without this volume attached, the nofail mount option enables the instance to boot
+# even if there are errors mounting the volume.
+# Debian derivatives, including Ubuntu versions earlier than 16.04, must also add the nobootwait mount option.
+echo "UUID=$NON_ROOT_VOLUME_UUID ${mount_dir} xfs defaults,nofail 0 2" | tee -a /etc/fstab
