@@ -153,6 +153,7 @@ resource "aws_elastic_beanstalk_application_version" "backend" {
 }
 
 resource "aws_elastic_beanstalk_environment" "backend_staging" {
+  depends_on          = [docker_container.migrator]
   name                = "${local.prefix}-backend"
   application         = aws_elastic_beanstalk_application.backend.name
   tier                = "WebServer"

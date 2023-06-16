@@ -22,7 +22,7 @@ public class DummyController : ControllerBase
     {
         var obj = new
         {
-            Name = "Kid Win"
+            Name = "Win!"
         };
 
         using var client = new HttpClient();
