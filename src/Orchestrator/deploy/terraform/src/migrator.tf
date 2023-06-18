@@ -20,7 +20,14 @@ resource "docker_container" "migrator" {
   # If true, then the container will be automatically removed when it exits.
   # rm = true # Error: No such container XXX
   env = [
-    "SOME_ENV_VAR_KEY=SOME_COOL_ENV_VAR_VALUE"
+    "BASTION_HOST=${aws_elastic_beanstalk_environment.backend_staging.cname}", # should tunnel through a separate bastion host
+    "BASTION_USER=ec2-user",
+    "BASTION_PRIVATE_KEY=${var.bastion_private_key}",
+    "DB_HOST=${aws_db_instance.main.address}",
+    "DB_PORT=5432",
+    "DB_NAME=TruQuest",
+    "DB_USERNAME=${var.db_username}",
+    "DB_PASSWORD=${var.db_password}"
   ]
 }
 

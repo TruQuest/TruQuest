@@ -18,6 +18,7 @@ data "archive_file" "backend_source" {
       "./eb/docker-compose.tftpl",
       {
         dummy_image_uri = "chekhenkho/truquest_dummy:${count.index + 1}"
+        db_host         = aws_db_instance.main.address
       }
     )
     filename = "docker-compose.yml"
@@ -153,7 +154,7 @@ resource "aws_elastic_beanstalk_application_version" "backend" {
 }
 
 resource "aws_elastic_beanstalk_environment" "backend_staging" {
-  depends_on          = [docker_container.migrator]
+  # depends_on          = [docker_container.migrator]
   name                = "${local.prefix}-backend"
   application         = aws_elastic_beanstalk_application.backend.name
   tier                = "WebServer"

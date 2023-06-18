@@ -1,15 +1,74 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Identity;
+﻿// using Microsoft.EntityFrameworkCore;
+// using Microsoft.Extensions.DependencyInjection;
+// using Microsoft.AspNetCore.Identity;
 
-using Domain.Aggregates;
-using Domain.Aggregates.Events;
-using Infrastructure.Persistence;
-using API;
+// using Domain.Aggregates;
+// using Domain.Aggregates.Events;
+// using Infrastructure.Persistence;
+// using API;
 
-Console.WriteLine(Environment.GetEnvironmentVariable("SOME_ENV_VAR_KEY"));
-Console.WriteLine(Environment.GetEnvironmentVariable("SOME_ENV_VAR_KEY"));
-Thread.Sleep(11000);
+using Npgsql;
+using Renci.SshNet;
+using Renci.SshNet.Common;
+
+using var stream = new MemoryStream();
+using var writer = new StreamWriter(stream);
+writer.Write(Environment.GetEnvironmentVariable("BASTION_PRIVATE_KEY"));
+writer.Flush();
+stream.Position = 0;
+
+using var keyFile = new PrivateKeyFile(stream);
+
+using var client = new SshClient(
+    Environment.GetEnvironmentVariable("BASTION_HOST"),
+    Environment.GetEnvironmentVariable("BASTION_USER"),
+    keyFile
+);
+
+client.Connect();
+
+var localhost = "127.0.0.1";
+uint localPort = 5432;
+
+var dbHost = Environment.GetEnvironmentVariable("DB_HOST");
+var dbPort = uint.Parse(Environment.GetEnvironmentVariable("DB_PORT")!);
+var dbName = Environment.GetEnvironmentVariable("DB_NAME");
+var dbUser = Environment.GetEnvironmentVariable("DB_USERNAME");
+var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD");
+
+using var tunnel = new ForwardedPortLocal(localhost, localPort, dbHost, dbPort);
+client.AddForwardedPort(tunnel);
+
+Console.WriteLine($"Connected to bastion: {client.IsConnected}");
+
+tunnel.Exception += (object? _, ExceptionEventArgs e) =>
+{
+    Console.WriteLine(e.Exception.ToString());
+};
+
+tunnel.Start();
+
+using var dbConn = new NpgsqlConnection($"Host={localhost};Port={localPort};Database={dbName};Username={dbUser};Password={dbPassword};");
+dbConn.Open();
+using var cmd = new NpgsqlCommand();
+cmd.Connection = dbConn;
+cmd.CommandText = @"
+    CREATE TABLE IF NOT EXISTS ""TestTest"" (
+        ""Id"" SERIAL PRIMARY KEY,
+        ""Name"" TEXT NOT NULL
+    );
+";
+
+cmd.ExecuteNonQuery();
+
+tunnel.Stop();
+client.Disconnect();
+
+Console.WriteLine("Migrations applied");
+
+// Console.WriteLine(Environment.GetEnvironmentVariable("SOME_ENV_VAR_KEY"));
+// Console.WriteLine(Environment.GetEnvironmentVariable("SOME_ENV_VAR_KEY"));
+// Thread.Sleep(11000);
 
 // var app = API.Program.CreateWebApplicationBuilder(new[] { "DbMigrator=true" })
 //     .ConfigureServices()
