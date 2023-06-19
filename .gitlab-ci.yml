@@ -1,0 +1,34 @@
+# image:
+#   name: hashicorp/terraform:1.5
+#   entrypoint:
+#     - "/usr/bin/env"
+#     - "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+services:
+  - docker:24.0.2-dind
+
+variables:
+  # Specify to Docker where to create the certificates. Docker
+  # creates them automatically on boot, and creates
+  # `/certs/client` to share between the service and job
+  # container, thanks to volume mount from config.toml
+  DOCKER_TLS_CERTDIR: "/certs"
+
+stages:
+  - Build
+
+build:
+  stage: Build
+  image: docker:24.0.2
+  script:
+    - export SHARED_PATH="$(dirname $CI_PROJECT_DIR)/shared"
+    - mkdir -p ${SHARED_PATH}
+    - cp -R ./src/dapp ${SHARED_PATH}/dapp
+    - echo "********* Before yarn install *********"
+    - ls ${SHARED_PATH}/dapp
+    - docker run --rm -v ${SHARED_PATH}/dapp:/usr/src/app -w /usr/src/app node:16.20.0 yarn install
+    - echo "********* After yarn install *********"
+    - ls ${SHARED_PATH}/dapp
+    - docker run --rm -v ${SHARED_PATH}/dapp:/usr/src/app -w /usr/src/app ethereum/solc:0.8.17 --bin --base-path . --include-path node_modules/ -o ./artifacts contracts/TruQuest.sol
+    - echo "********* After compile *********"
+    - ls ${SHARED_PATH}/dapp/artifacts
