@@ -19,7 +19,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Console.WriteLine("Registered debezium connector!");
 
 builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer(); // @@NOCHECKIN
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
