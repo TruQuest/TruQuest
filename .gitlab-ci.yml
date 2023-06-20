@@ -1,8 +1,8 @@
-# image:
-#   name: hashicorp/terraform:1.5
-#   entrypoint:
-#     - "/usr/bin/env"
-#     - "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+image:
+  name: hashicorp/terraform:1.5
+  entrypoint:
+    - "/usr/bin/env"
+    - "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 services:
   - docker:24.0.2-dind
@@ -13,22 +13,52 @@ variables:
   # `/certs/client` to share between the service and job
   # container, thanks to volume mount from config.toml
   DOCKER_TLS_CERTDIR: "/certs"
+  IMAGE_REGISTRY_URI: 547869531597.dkr.ecr.us-east-1.amazonaws.com
+  DOCKER_REGISTRY_USER: AWS
 
 stages:
   - Build
+  - Terraform Apply
+  - Terraform Destroy
 
 build:
   stage: Build
   image: docker:24.0.2
   script:
     - export SHARED_PATH="$(dirname $CI_PROJECT_DIR)/shared"
+    - rm -rf ${SHARED_PATH}
     - mkdir -p ${SHARED_PATH}
-    - cp -R ./src/dapp ${SHARED_PATH}/dapp
-    - echo "********* Before yarn install *********"
-    - ls ${SHARED_PATH}/dapp
+    - cp -r ./src/dapp ${SHARED_PATH}/dapp
     - docker run --rm -v ${SHARED_PATH}/dapp:/usr/src/app -w /usr/src/app node:16.20.0 yarn install
-    - echo "********* After yarn install *********"
-    - ls ${SHARED_PATH}/dapp
     - docker run --rm -v ${SHARED_PATH}/dapp:/usr/src/app -w /usr/src/app ethereum/solc:0.8.17 --bin --base-path . --include-path node_modules/ -o ./artifacts contracts/TruQuest.sol
-    - echo "********* After compile *********"
-    - ls ${SHARED_PATH}/dapp/artifacts
+
+    - apk --update add python3 py3-pip
+    - pip install awscli
+    - export DOCKER_REGISTRY_PASS="$(aws ecr get-login-password --region us-east-1)"
+    - echo "DOCKER_REGISTRY_PASS=${DOCKER_REGISTRY_PASS}" >> build.env
+    - docker login --username $DOCKER_REGISTRY_USER --password ${DOCKER_REGISTRY_PASS} $IMAGE_REGISTRY_URI
+    - docker build -t $IMAGE_REGISTRY_URI/truquest_contract_migrator:latest -f ./src/Orchestrator/deploy/ContractMigrator/Dockerfile ./src/Orchestrator
+    - docker push $IMAGE_REGISTRY_URI/truquest_contract_migrator:latest
+  artifacts:
+    reports:
+      dotenv: build.env
+
+apply:
+  stage: Terraform Apply
+  script:
+    - cd ./src/Orchestrator/deploy/terraform/src
+    - export TF_VAR_artifacts_host_path="$(dirname $CI_PROJECT_DIR)/shared/dapp/artifacts"
+    - terraform init
+    - terraform workspace select staging || terraform workspace new staging
+    - terraform apply -auto-approve
+    - cat ${TF_VAR_artifacts_host_path}/TruQuest-clone.bin
+
+destroy:
+  stage: Terraform Destroy
+  script:
+    - cd ./src/Orchestrator/deploy/terraform/src
+    - export TF_VAR_artifacts_host_path="$(dirname $CI_PROJECT_DIR)/shared/dapp/artifacts"
+    - terraform init
+    - terraform workspace select staging
+    - terraform destroy -auto-approve
+  when: manual
