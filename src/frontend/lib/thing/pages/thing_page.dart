@@ -311,7 +311,7 @@ class _ThingPageState extends StateX<ThingPage> {
                     : 'Not enough lottery participants',
                 child: InkWell(
                   onTap: () => _pageContext.goto(
-                    '/things/${vm.thing.relatedThingId!}',
+                    '/things/${vm.thing.relatedThings!['next']}',
                   ),
                   child: Card(
                     margin: EdgeInsets.zero,

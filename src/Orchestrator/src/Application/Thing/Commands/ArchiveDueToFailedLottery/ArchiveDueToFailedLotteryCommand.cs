@@ -42,7 +42,7 @@ internal class ArchiveDueToFailedLotteryCommandHandler : IRequestHandler<Archive
                 state: ThingState.AwaitingFunding
             );
 
-            thing.SetRelatedThing(thingCopyId);
+            thing.AddRelatedThingAs(thingCopyId, relation: "next");
 
             await _thingUpdateRepository.AddOrUpdate(
                 new ThingUpdate(

@@ -71,13 +71,13 @@ internal class ThingRepository : Repository<Thing>, IThingRepository
                     ""Id"", ""State"", ""SubmittedAt"",
                     ""Title"", ""Details"", ""ImageIpfsCid"",
                     ""CroppedImageIpfsCid"", ""SubmitterId"", ""SubjectId"",
-                    ""RelatedThingId""
+                    ""RelatedThings""
                 )
                     SELECT
                         @DestThingId, @State, ""SubmittedAt"",
                         ""Title"", ""Details"", ""ImageIpfsCid"",
                         ""CroppedImageIpfsCid"", ""SubmitterId"", ""SubjectId"",
-                        ""Id""
+                        jsonb_build_object('prev', ""Id""::TEXT)
                     FROM truquest.""Things""
                     WHERE ""Id"" = @SourceThingId;
 

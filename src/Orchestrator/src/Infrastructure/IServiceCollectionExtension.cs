@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using Dapper;
 using KafkaFlow;
 using KafkaFlow.TypedHandler;
 using Nethereum.Signer;
@@ -182,6 +183,8 @@ public static class IServiceCollectionExtension
         services.AddScoped<IJoinedThingAssessmentVerifierLotteryEventRepository, JoinedThingAssessmentVerifierLotteryEventRepository>();
         services.AddScoped<IThingAssessmentVerifierLotterySpotClaimedEventRepository, ThingAssessmentVerifierLotterySpotClaimedEventRepository>();
         services.AddScoped<ICastedAssessmentPollVoteEventRepository, CastedAssessmentPollVoteEventRepository>();
+
+        SqlMapper.AddTypeHandler(new JsonTypeHandler());
 
         services.AddScoped<ITagQueryable, TagQueryable>();
         services.AddScoped<ISubjectQueryable, SubjectQueryable>();

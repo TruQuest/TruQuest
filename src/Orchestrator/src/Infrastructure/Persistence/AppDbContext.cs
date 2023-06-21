@@ -87,7 +87,11 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.Property(t => t.VoteAggIpfsCid).IsRequired(false);
             builder.Property(t => t.AcceptedSettlementProposalId).IsRequired(false);
             builder.Property(t => t.SettledAt).IsRequired(false);
-            builder.Property(t => t.RelatedThingId).IsRequired(false); // @@??: Foreign key?
+            builder
+                .Property(t => t.RelatedThings)
+                .HasColumnType("jsonb")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .IsRequired(false);
 
             builder
                 .HasOne<UserDm>()

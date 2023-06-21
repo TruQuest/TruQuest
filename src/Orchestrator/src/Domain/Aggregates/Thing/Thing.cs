@@ -28,7 +28,8 @@ public class Thing : Entity, IAggregateRoot
     private List<ThingVerifier> _verifiers = new();
     public IReadOnlyList<ThingVerifier> Verifiers => _verifiers;
 
-    public Guid? RelatedThingId { get; private set; }
+    private Dictionary<string, string>? _relatedThings;
+    public IReadOnlyDictionary<string, string>? RelatedThings => _relatedThings;
 
     public Thing(
         Guid id, string title, string details, string? imageIpfsCid,
@@ -83,8 +84,9 @@ public class Thing : Entity, IAggregateRoot
         AcceptedSettlementProposalId = settlementProposalId;
     }
 
-    public void SetRelatedThing(Guid thingId)
+    public void AddRelatedThingAs(Guid thingId, string relation)
     {
-        RelatedThingId = thingId;
+        _relatedThings ??= new();
+        _relatedThings[relation] = thingId.ToString();
     }
 }

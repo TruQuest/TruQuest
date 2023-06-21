@@ -22,7 +22,7 @@ public class ThingQm
     public HashSet<EvidenceQm> Evidence { get; } = new();
     public HashSet<TagQm> Tags { get; } = new();
     public bool Watched { get; set; }
-    public Guid? RelatedThingId { get; }
+    public Dictionary<string, string>? RelatedThings { get; }
 
     public override bool Equals(object? obj)
     {

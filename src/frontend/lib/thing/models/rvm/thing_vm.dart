@@ -23,7 +23,7 @@ class ThingVm {
   final List<EvidenceVm> evidence;
   final List<TagVm> tags;
   final bool watched;
-  final String? relatedThingId;
+  final Map<String, String>? relatedThings;
 
   final bool? fundedAwaitingConfirmation;
 
@@ -63,7 +63,9 @@ class ThingVm {
           (map['tags'] as List<dynamic>).map((submap) => TagVm.fromMap(submap)),
         ),
         watched = map['watched'],
-        relatedThingId = map['relatedThingId'],
+        relatedThings = map['relatedThings'] != null
+            ? (map['relatedThings'] as Map).cast<String, String>()
+            : null,
         fundedAwaitingConfirmation = null;
 
   ThingVm._({
@@ -85,7 +87,7 @@ class ThingVm {
     required this.evidence,
     required this.tags,
     required this.watched,
-    required this.relatedThingId,
+    required this.relatedThings,
     required this.fundedAwaitingConfirmation,
   });
 
@@ -109,7 +111,7 @@ class ThingVm {
       evidence: evidence,
       tags: tags,
       watched: watched,
-      relatedThingId: relatedThingId,
+      relatedThings: relatedThings,
       fundedAwaitingConfirmation:
           fundedAwaitingConfirmation ?? this.fundedAwaitingConfirmation,
     );

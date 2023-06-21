@@ -70,7 +70,7 @@ internal class FinalizeAcceptancePollCommandHandler : IRequestHandler<FinalizeAc
                     state: ThingState.AwaitingFunding
                 );
 
-                thing.SetRelatedThing(thingCopyId);
+                thing.AddRelatedThingAs(thingCopyId, relation: "next");
 
                 await _watchedItemRepository.DuplicateGeneralItemsFrom(
                     WatchedItemType.Thing,

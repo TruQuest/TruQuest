@@ -40,7 +40,6 @@ internal class ThingQueryable : Queryable, IThingQueryable
                     t.""State"" != @LotteryFailedState AND
                     t.""State"" != @ConsensusNotReachedState AND
                     (t.""State"" > @DraftState OR t.""SubmitterId"" = @UserId);
-                -- @@TODO: Check that it works with UserId == null as intended
             ",
             joinedCollectionSelector: thing => thing.Tags,
             param: new
