@@ -1,4 +1,5 @@
 using MediatR;
+using FluentValidation;
 
 using Domain.Results;
 
@@ -9,6 +10,24 @@ namespace Application.User.Commands.SubscribeToUpdates;
 public class SubscribeToUpdatesCommand : IRequest<VoidResult>
 {
     public required string UpdateStreamIdentifier { get; init; }
+}
+
+internal class Validator : AbstractValidator<SubscribeToUpdatesCommand>
+{
+    public Validator()
+    {
+        RuleFor(c => c.UpdateStreamIdentifier).Must(_beAValidStreamIdentifier);
+    }
+
+    private bool _beAValidStreamIdentifier(string streamIdentifier)
+    {
+        var streamIdentifierSplit = streamIdentifier.Split('/');
+        return
+            streamIdentifierSplit.Length == 3 &&
+            streamIdentifierSplit[0] == string.Empty &&
+            streamIdentifierSplit[1] is "subjects" or "things" or "proposals" &&
+            Guid.TryParse(streamIdentifierSplit[2], out _);
+    }
 }
 
 internal class SubscribeToUpdatesCommandHandler : IRequestHandler<SubscribeToUpdatesCommand, VoidResult>

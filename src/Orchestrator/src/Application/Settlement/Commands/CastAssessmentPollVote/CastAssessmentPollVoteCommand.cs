@@ -1,4 +1,5 @@
 using MediatR;
+using FluentValidation;
 
 using Domain.Results;
 using Domain.Errors;
@@ -14,6 +15,15 @@ public class CastAssessmentPollVoteCommand : IRequest<HandleResult<string>>
 {
     public required NewAssessmentPollVoteIm Input { get; init; }
     public required string Signature { get; init; }
+}
+
+internal class Validator : AbstractValidator<CastAssessmentPollVoteCommand>
+{
+    public Validator()
+    {
+        RuleFor(c => c.Input).SetValidator(new NewAssessmentPollVoteImValidator());
+        RuleFor(c => c.Signature).NotEmpty();
+    }
 }
 
 internal class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssessmentPollVoteCommand, HandleResult<string>>

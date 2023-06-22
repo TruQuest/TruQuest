@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 
 using MediatR;
+using FluentValidation;
 
 using Domain.Results;
 using Domain.Aggregates;
@@ -15,6 +16,14 @@ namespace Application.Thing.Commands.SubmitNewThing;
 public class SubmitNewThingCommand : IRequest<HandleResult<SubmitNewThingResultVm>>
 {
     public required Guid ThingId { get; init; }
+}
+
+internal class Validator : AbstractValidator<SubmitNewThingCommand>
+{
+    public Validator()
+    {
+        RuleFor(c => c.ThingId).NotEmpty();
+    }
 }
 
 internal class SubmitNewThingCommandHandler : IRequestHandler<SubmitNewThingCommand, HandleResult<SubmitNewThingResultVm>>

@@ -1,4 +1,5 @@
 using MediatR;
+using FluentValidation;
 
 using Domain.Results;
 using Domain.Errors;
@@ -10,6 +11,14 @@ namespace Application.Subject.Queries.GetSubject;
 public class GetSubjectQuery : IRequest<HandleResult<SubjectQm>>
 {
     public required Guid Id { get; init; }
+}
+
+internal class Validator : AbstractValidator<GetSubjectQuery>
+{
+    public Validator()
+    {
+        RuleFor(q => q.Id).NotEmpty();
+    }
 }
 
 internal class GetSubjectQueryHandler : IRequestHandler<GetSubjectQuery, HandleResult<SubjectQm>>

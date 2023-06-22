@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 
 using MediatR;
+using FluentValidation;
 
 using Domain.Results;
 using Domain.Aggregates;
@@ -15,6 +16,14 @@ namespace Application.Settlement.Commands.SubmitNewSettlementProposal;
 public class SubmitNewSettlementProposalCommand : IRequest<HandleResult<SubmitNewSettlementProposalResultVm>>
 {
     public required Guid ProposalId { get; init; }
+}
+
+internal class Validator : AbstractValidator<SubmitNewSettlementProposalCommand>
+{
+    public Validator()
+    {
+        RuleFor(c => c.ProposalId).NotEmpty();
+    }
 }
 
 internal class SubmitNewSettlementProposalCommandHandler :

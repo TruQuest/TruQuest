@@ -1,4 +1,5 @@
 using MediatR;
+using FluentValidation;
 
 using Domain.Results;
 
@@ -9,6 +10,14 @@ namespace Application.Thing.Queries.GetSettlementProposalsList;
 public class GetSettlementProposalsListQuery : IRequest<HandleResult<GetSettlementProposalsListResultVm>>
 {
     public required Guid ThingId { get; init; }
+}
+
+internal class Validator : AbstractValidator<GetSettlementProposalsListQuery>
+{
+    public Validator()
+    {
+        RuleFor(q => q.ThingId).NotEmpty();
+    }
 }
 
 internal class GetSettlementProposalsListQueryHandler :

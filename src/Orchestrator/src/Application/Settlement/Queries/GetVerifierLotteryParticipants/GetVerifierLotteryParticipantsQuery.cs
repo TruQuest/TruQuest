@@ -1,6 +1,7 @@
 using System.Diagnostics;
 
 using MediatR;
+using FluentValidation;
 
 using Domain.Results;
 
@@ -11,6 +12,14 @@ namespace Application.Settlement.Queries.GetVerifierLotteryParticipants;
 public class GetVerifierLotteryParticipantsQuery : IRequest<HandleResult<GetVerifierLotteryParticipantsResultVm>>
 {
     public required Guid ProposalId { get; init; }
+}
+
+internal class Validator : AbstractValidator<GetVerifierLotteryParticipantsQuery>
+{
+    public Validator()
+    {
+        RuleFor(q => q.ProposalId).NotEmpty();
+    }
 }
 
 internal class GetVerifierLotteryParticipantsQueryHandler :

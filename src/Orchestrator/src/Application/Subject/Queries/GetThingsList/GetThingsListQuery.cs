@@ -1,4 +1,5 @@
 using MediatR;
+using FluentValidation;
 
 using Domain.Results;
 
@@ -9,6 +10,14 @@ namespace Application.Subject.Queries.GetThingsList;
 public class GetThingsListQuery : IRequest<HandleResult<GetThingsListResultVm>>
 {
     public required Guid SubjectId { get; init; }
+}
+
+internal class Validator : AbstractValidator<GetThingsListQuery>
+{
+    public Validator()
+    {
+        RuleFor(q => q.SubjectId).NotEmpty();
+    }
 }
 
 internal class GetThingsListQueryHandler : IRequestHandler<GetThingsListQuery, HandleResult<GetThingsListResultVm>>

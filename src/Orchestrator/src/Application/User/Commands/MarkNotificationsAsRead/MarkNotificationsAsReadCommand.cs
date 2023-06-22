@@ -1,4 +1,5 @@
 using MediatR;
+using FluentValidation;
 
 using Domain.Aggregates;
 using Domain.Results;
@@ -12,6 +13,15 @@ namespace Application.User.Commands.MarkNotificationsAsRead;
 public class MarkNotificationsAsReadCommand : IRequest<VoidResult>
 {
     public required IEnumerable<NotificationIm> Notifications { get; init; }
+}
+
+internal class Validator : AbstractValidator<MarkNotificationsAsReadCommand>
+{
+    public Validator()
+    {
+        RuleFor(c => c.Notifications).NotEmpty();
+        RuleForEach(c => c.Notifications).SetValidator(new NotificationImValidator());
+    }
 }
 
 internal class MarkNotificationsAsReadCommandHandler : IRequestHandler<MarkNotificationsAsReadCommand, VoidResult>

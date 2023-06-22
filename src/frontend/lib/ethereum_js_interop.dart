@@ -467,6 +467,9 @@ class TransactionReceipt {
   external int get status;
 }
 
+@JS('ethers.utils.getAddress')
+external String convertToEip55Address(String address);
+
 @JS('JSON.stringify')
 external String _stringify(dynamic obj);
 

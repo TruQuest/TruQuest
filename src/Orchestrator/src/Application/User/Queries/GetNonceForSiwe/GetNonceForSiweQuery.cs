@@ -1,4 +1,5 @@
 using MediatR;
+using FluentValidation;
 
 using Domain.Results;
 
@@ -9,6 +10,14 @@ namespace Application.User.Queries.GetNonceForSiwe;
 public class GetNonceForSiweQuery : IRequest<HandleResult<string>>
 {
     public required string Address { get; init; }
+}
+
+internal class Validator : AbstractValidator<GetNonceForSiweQuery>
+{
+    public Validator(IEthereumAddressFormatter addressFormatter)
+    {
+        RuleFor(q => q.Address).Must(a => addressFormatter.IsValidEIP55EncodedAddress(a));
+    }
 }
 
 internal class GetNonceForSiweQueryHandler : IRequestHandler<GetNonceForSiweQuery, HandleResult<string>>

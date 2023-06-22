@@ -63,6 +63,7 @@ class EthereumService {
       });
 
       _ethereumWallet.onAccountsChanged((accounts) {
+        accounts = accounts.map((a) => convertToEip55Address(a)).toList();
         print('Accounts changed: $accounts');
         var connectedAccount = accounts.isNotEmpty ? accounts.first : null;
         if (_connectedAccount != connectedAccount) {
@@ -80,6 +81,7 @@ class EthereumService {
       });
 
       _ethereumWallet.getAccounts().then((accounts) {
+        accounts = accounts.map((a) => convertToEip55Address(a)).toList();
         _connectedAccount = accounts.isNotEmpty ? accounts.first : null;
         print('Current account: $_connectedAccount');
         _connectedAccountChangedEventChannel.add(_connectedAccount);

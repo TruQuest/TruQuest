@@ -1,4 +1,5 @@
 using MediatR;
+using FluentValidation;
 
 using Domain.Aggregates;
 using Domain.Results;
@@ -13,6 +14,14 @@ public class WatchCommand : IRequest<VoidResult>
 {
     public required Guid ThingId { get; init; }
     public required bool MarkedAsWatched { get; init; }
+}
+
+internal class Validator : AbstractValidator<WatchCommand>
+{
+    public Validator()
+    {
+        RuleFor(c => c.ThingId).NotEmpty();
+    }
 }
 
 internal class WatchCommandHandler : IRequestHandler<WatchCommand, VoidResult>

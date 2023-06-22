@@ -1,4 +1,5 @@
 using MediatR;
+using FluentValidation;
 
 using Domain.Aggregates;
 using Domain.Errors;
@@ -11,6 +12,14 @@ namespace Application.Settlement.Queries.GetSettlementProposal;
 public class GetSettlementProposalQuery : IRequest<HandleResult<GetSettlementProposalResultVm>>
 {
     public required Guid ProposalId { get; init; }
+}
+
+internal class Validator : AbstractValidator<GetSettlementProposalQuery>
+{
+    public Validator()
+    {
+        RuleFor(q => q.ProposalId).NotEmpty();
+    }
 }
 
 internal class GetSettlementProposalQueryHandler :

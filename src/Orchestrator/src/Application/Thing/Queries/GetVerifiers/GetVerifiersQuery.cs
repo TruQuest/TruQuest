@@ -1,4 +1,5 @@
 using MediatR;
+using FluentValidation;
 
 using Domain.Results;
 
@@ -9,6 +10,14 @@ namespace Application.Thing.Queries.GetVerifiers;
 public class GetVerifiersQuery : IRequest<HandleResult<GetVerifiersResultVm>>
 {
     public required Guid ThingId { get; init; }
+}
+
+internal class Validator : AbstractValidator<GetVerifiersQuery>
+{
+    public Validator()
+    {
+        RuleFor(q => q.ThingId).NotEmpty();
+    }
 }
 
 internal class GetVerifiersQueryHandler : IRequestHandler<GetVerifiersQuery, HandleResult<GetVerifiersResultVm>>

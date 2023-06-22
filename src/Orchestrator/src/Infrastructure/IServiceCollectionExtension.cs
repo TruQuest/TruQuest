@@ -211,6 +211,7 @@ public static class IServiceCollectionExtension
         }
         services.AddSingleton<IL1BlockchainQueryable, L1BlockchainQueryable>();
         services.AddSingleton<IContractStorageQueryable, ContractStorageQueryable>();
+        services.AddSingleton<IEthereumAddressFormatter, EthereumAddressFormatter>();
 
         services.AddSingleton<IRequestDispatcher, RequestDispatcher>();
 
