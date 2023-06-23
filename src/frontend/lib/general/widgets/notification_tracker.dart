@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
+// ignore: implementation_imports
+import 'package:lottie/src/model/layer/layer.dart';
 import 'package:side_sheet/side_sheet.dart';
 
 import '../contexts/page_context.dart';
@@ -10,13 +15,81 @@ import '../services/notifications_cache.dart';
 import '../../widget_extensions.dart';
 import 'clipped_rect.dart';
 
-// ignore: must_be_immutable
-class NotificationTracker extends StatelessWidgetX {
+class NotificationTracker extends StatefulWidget {
+  NotificationTracker({super.key});
+
+  @override
+  State<NotificationTracker> createState() => _NotificationTrackerState();
+}
+
+class _NotificationTrackerState extends StateX<NotificationTracker>
+    with SingleTickerProviderStateMixin {
   late final _notificationBloc = use<NotificationBloc>();
+  // @@??: Should go through the bloc instead of exposing directly ?
   late final _notificationsCache = use<NotificationsCache>();
   late final _pageContext = use<PageContext>();
 
-  NotificationTracker({super.key});
+  late final AnimationController _animationController;
+  late final StreamSubscription<int> _unreadNotificationsCount$$;
+
+  LottieComposition? _composition;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(seconds: 1),
+    );
+
+    AssetLottie('assets/icons/bell.json').load().then((composition) {
+      var oldLayer = composition.layers[1];
+      composition.layers[1] = Layer(
+        shapes: oldLayer.shapes,
+        composition: oldLayer.composition,
+        name: oldLayer.name,
+        id: oldLayer.id,
+        layerType: oldLayer.layerType,
+        parentId: oldLayer.parentId,
+        refId: oldLayer.refId,
+        masks: oldLayer.masks,
+        transform: oldLayer.transform,
+        solidWidth: oldLayer.solidWidth,
+        solidHeight: oldLayer.solidHeight,
+        solidColor: Color(0xFFB73E3E),
+        timeStretch: oldLayer.timeStretch,
+        startFrame: oldLayer.startFrame,
+        preCompWidth: oldLayer.preCompWidth,
+        preCompHeight: oldLayer.preCompHeight,
+        text: oldLayer.text,
+        textProperties: oldLayer.textProperties,
+        inOutKeyframes: oldLayer.inOutKeyframes,
+        matteType: oldLayer.matteType,
+        timeRemapping: oldLayer.timeRemapping,
+        isHidden: oldLayer.isHidden,
+        blurEffect: oldLayer.blurEffect,
+        dropShadowEffect: oldLayer.dropShadowEffect,
+      );
+
+      setState(() {
+        _composition = composition;
+      });
+
+      _unreadNotificationsCount$$ =
+          _notificationsCache.unreadNotificationsCount$.listen((_) {
+        _animationController.reset();
+        _animationController.forward();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _unreadNotificationsCount$$.cancel();
+    super.dispose();
+  }
 
   Widget _buildNotificationPanel() {
     return StreamBuilder(
@@ -142,39 +215,34 @@ class NotificationTracker extends StatelessWidgetX {
   }
 
   @override
-  Widget buildX(BuildContext context) {
-    return StreamBuilder(
-      stream: _notificationsCache.unreadNotificationsCount$,
-      builder: (context, snapshot) {
-        var count = snapshot.data ?? 0;
-        var icon = count == 0
-            ? Icon(
-                Icons.notifications,
-                color: Colors.black,
-              )
-            : Icon(
-                Icons.notifications_active,
-                color: Colors.red,
-              );
-
-        return Stack(
-          children: [
-            ClippedRect(
-              height: 50,
-              color: Colors.white,
-              fromNarrowToWide: false,
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        ClippedRect(
+          height: 50,
+          color: Colors.white,
+          fromNarrowToWide: false,
+        ),
+        if (_composition != null)
+          IconButton(
+            icon: Lottie(
+              composition: _composition,
+              controller: _animationController,
             ),
-            IconButton(
-              icon: icon,
-              padding: const EdgeInsets.all(12),
-              onPressed: () => SideSheet.left(
-                context: context,
-                sheetColor: Colors.black54,
-                width: MediaQuery.of(context).size.width * 0.2,
-                body: _buildNotificationPanel(),
-              ),
+            iconSize: 35,
+            onPressed: () => SideSheet.left(
+              context: context,
+              sheetColor: Colors.black54,
+              width: MediaQuery.of(context).size.width * 0.2,
+              body: _buildNotificationPanel(),
             ),
-            Positioned(
+          ),
+        StreamBuilder(
+          stream: _notificationsCache.unreadNotificationsCount$,
+          initialData: 0,
+          builder: (context, snapshot) {
+            var count = snapshot.data!;
+            return Positioned(
               top: 8,
               left: 36,
               child: count > 0
@@ -186,10 +254,10 @@ class NotificationTracker extends StatelessWidgetX {
                       ),
                     )
                   : SizedBox.shrink(),
-            ),
-          ],
-        );
-      },
+            );
+          },
+        ),
+      ],
     );
   }
 }

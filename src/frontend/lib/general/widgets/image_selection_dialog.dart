@@ -3,6 +3,7 @@ import 'dart:js_util';
 import 'package:flutter/material.dart';
 import 'package:crop_your_image/crop_your_image.dart';
 import 'package:flutter/services.dart';
+// ignore: depend_on_referenced_packages
 import 'package:image/image.dart' hide Color;
 
 import '../../js.dart';
