@@ -1,8 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/scheduler.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:universal_html/html.dart' as html;
 
 import '../../general/contracts/truquest_contract.dart';
 import '../../general/contracts/truthserum_contract.dart';
@@ -15,11 +13,6 @@ class EthereumBloc extends Bloc<EthereumAction> {
   final EthereumService _ethereumService;
   final TruthserumContract _truthserumContract;
   final TruQuestContract _truQuestContract;
-
-  final BehaviorSubject<SwitchEthereumChainSuccessVm> _selectedChainChannel =
-      BehaviorSubject<SwitchEthereumChainSuccessVm>();
-  Stream<SwitchEthereumChainSuccessVm> get selectedChain$ =>
-      _selectedChainChannel.stream;
 
   final BehaviorSubject<int> _latestL1BlockNumberChannel =
       BehaviorSubject<int>();
@@ -42,28 +35,13 @@ class EthereumBloc extends Bloc<EthereumAction> {
       }
     });
 
-    _ethereumService.connectedChainChanged$.listen((event) {
-      var (chainId, shouldReloadPage) = event;
-      if (shouldReloadPage) {
-        SchedulerBinding.instance.addPostFrameCallback(
-          (_) => html.window.location.reload(),
-        );
-      }
-
-      _selectedChainChannel.add(SwitchEthereumChainSuccessVm(
-        chainId: chainId,
-        shouldOfferToSwitchChain: chainId != _ethereumService.validChainId,
-      ));
-    });
-
     _ethereumService.l1BlockMined$.listen((blockNumber) {
       _latestL1BlockNumberChannel.add(blockNumber);
     });
   }
 
   void _switchEthereumChain(SwitchEthereumChain action) async {
-    var error = await _ethereumService.switchEthereumChain();
-    action.complete(error != null ? SwitchEthereumChainFailureVm() : null);
+    await _ethereumService.switchEthereumChain();
   }
 
   void _connectEthereumAccount(ConnectEthereumAccount action) async {

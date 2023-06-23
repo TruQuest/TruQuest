@@ -1,7 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/scheduler.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:universal_html/html.dart' as html;
 
+import '../../ethereum/services/ethereum_service.dart';
 import '../../user/services/user_service.dart';
 import '../../user/services/user_api_service.dart';
 import '../models/rvm/notification_vm.dart';
@@ -27,10 +30,13 @@ class NotificationsCache {
   Stream<(List<NotificationVm>, String?)> get unreadNotifications$ =>
       _unreadNotificationsChannel.stream;
 
+  NotificationVm? _clientSideWarning;
+
   NotificationsCache(
     this._userService,
     this._userApiService,
     ServerConnector serverConnector,
+    EthereumService ethereumService,
   ) {
     serverConnector.serverEvent$
         .where((event) => event.$1 == ServerEventType.notification)
@@ -71,6 +77,30 @@ class NotificationsCache {
       }
     });
 
+    ethereumService.connectedChainChanged$.listen((event) {
+      var (chainId, shouldReloadPage) = event;
+      if (shouldReloadPage) {
+        SchedulerBinding.instance.addPostFrameCallback(
+          (_) => html.window.location.reload(),
+        );
+      }
+
+      if (chainId != ethereumService.validChainId) {
+        _clientSideWarning = NotificationVm(
+          updateTimestamp: DateTime.now(),
+          itemType: WatchedItemTypeVm.subject,
+          itemId: '',
+          itemUpdateCategory: 0,
+          title: 'You are on an unsupported chain',
+          details: 'Click to switch',
+        );
+      } else {
+        _clientSideWarning = null;
+      }
+
+      _notify();
+    });
+
     _userService.currentUserChanged$.listen((user) {
       _unreadNotifications = _usernameToUnreadNotifications.putIfAbsent(
         user.username,
@@ -85,14 +115,21 @@ class NotificationsCache {
     _unreadNotificationsChannel.add(
       (
         List.unmodifiable(
-          List.from(_unreadNotifications ?? {})
+          List<NotificationVm>.from(_unreadNotifications ?? {})
             ..sort(
-                (n1, n2) => n2.updateTimestamp.compareTo(n1.updateTimestamp)),
+              (n1, n2) => n2.updateTimestamp.compareTo(n1.updateTimestamp),
+            )
+            ..insertAll(
+              0,
+              _clientSideWarning != null ? [_clientSideWarning!] : [],
+            ),
         ),
         _username,
       ),
     );
-    _unreadNotificationsCountChannel.add(_unreadNotifications?.length ?? 0);
+    _unreadNotificationsCountChannel.add(
+      _clientSideWarning != null ? -1 : _unreadNotifications?.length ?? 0,
+    );
   }
 
   void _onInitialRetrieve(
@@ -134,6 +171,7 @@ class NotificationsCache {
   }
 
   Future remove(List<NotificationVm> notifications, String? username) async {
+    notifications = notifications.where((n) => n.itemId != '').toList();
     var usersUnreadNotifications = _usernameToUnreadNotifications[username]!;
     usersUnreadNotifications.removeAll(notifications);
     _notify();

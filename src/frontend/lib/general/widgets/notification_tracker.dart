@@ -8,6 +8,8 @@ import 'package:lottie/lottie.dart';
 import 'package:lottie/src/model/layer/layer.dart';
 import 'package:side_sheet/side_sheet.dart';
 
+import '../../ethereum/bloc/ethereum_bloc.dart';
+import '../../ethereum/bloc/ethereum_actions.dart';
 import '../contexts/page_context.dart';
 import '../bloc/notification_actions.dart';
 import '../bloc/notification_bloc.dart';
@@ -27,6 +29,7 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
   late final _notificationBloc = use<NotificationBloc>();
   // @@??: Should go through the bloc instead of exposing directly ?
   late final _notificationsCache = use<NotificationsCache>();
+  late final _ethereumBloc = use<EthereumBloc>();
   late final _pageContext = use<PageContext>();
 
   late final AnimationController _animationController;
@@ -57,7 +60,7 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
         transform: oldLayer.transform,
         solidWidth: oldLayer.solidWidth,
         solidHeight: oldLayer.solidHeight,
-        solidColor: Color(0xFFB73E3E),
+        solidColor: Color.fromARGB(255, 208, 53, 76),
         timeStretch: oldLayer.timeStretch,
         startFrame: oldLayer.startFrame,
         preCompWidth: oldLayer.preCompWidth,
@@ -148,6 +151,12 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
                   var notification = notifications[index];
                   return InkWell(
                     onTap: () {
+                      if (notification.itemId == '') {
+                        // client-side warning
+                        _ethereumBloc.dispatch(SwitchEthereumChain());
+                        return;
+                      }
+
                       _notificationBloc.dispatch(Dismiss(
                         notifications: [notification],
                         username: username,
@@ -188,18 +197,19 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
                                 ],
                               ),
                             ),
-                            IconButton(
-                              icon: Icon(
-                                Icons.delete,
-                                color: Colors.red,
-                              ),
-                              onPressed: () => _notificationBloc.dispatch(
-                                Dismiss(
-                                  notifications: [notification],
-                                  username: username,
+                            if (notification.itemId != '')
+                              IconButton(
+                                icon: Icon(
+                                  Icons.delete,
+                                  color: Colors.red,
+                                ),
+                                onPressed: () => _notificationBloc.dispatch(
+                                  Dismiss(
+                                    notifications: [notification],
+                                    username: username,
+                                  ),
                                 ),
                               ),
-                            ),
                           ],
                         ),
                       ),
@@ -245,15 +255,24 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
             return Positioned(
               top: 8,
               left: 36,
-              child: count > 0
+              child: count == -1
                   ? Text(
-                      count.toString(),
-                      style: TextStyle(
+                      '!',
+                      style: GoogleFonts.exo2(
                         color: Colors.red[800],
-                        fontSize: 12,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
                     )
-                  : SizedBox.shrink(),
+                  : count > 0
+                      ? Text(
+                          count.toString(),
+                          style: TextStyle(
+                            color: Colors.red[800],
+                            fontSize: 12,
+                          ),
+                        )
+                      : SizedBox.shrink(),
             );
           },
         ),

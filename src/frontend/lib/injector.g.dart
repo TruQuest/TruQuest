@@ -54,8 +54,8 @@ class _$Injector extends Injector {
       ..registerSingleton(
           (c) => ThingAssessmentVerifierLotteryContract(c<EthereumService>()))
       ..registerSingleton((c) => AssessmentPollContract(c<EthereumService>()))
-      ..registerSingleton((c) => NotificationsCache(
-          c<UserService>(), c<UserApiService>(), c<ServerConnector>()))
+      ..registerSingleton((c) => NotificationsCache(c<UserService>(),
+          c<UserApiService>(), c<ServerConnector>(), c<EthereumService>()))
       ..registerSingleton(
           (c) => SubscriptionManager(c<PageContext>(), c<ServerConnector>()))
       ..registerSingleton((c) => LocalStorage())
