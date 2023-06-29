@@ -13,6 +13,8 @@ using Microsoft.AspNetCore.Hosting;
 using Respawn;
 using Respawn.Graph;
 using MediatR;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Metrics;
 
 using Domain.Aggregates;
 using Domain.Aggregates.Events;
@@ -86,6 +88,11 @@ public class Sut : IAsyncLifetime
         await _app.DeployContracts();
         await _app.RegisterDebeziumConnector();
         await _app.DepositFunds();
+
+        // @@NOTE: Activity listener gets registered by a hosted service, which during testing we don't
+        // actually start, so, instead, we resolve these providers, which accomplishes the same thing.
+        _app.Services.GetRequiredService<TracerProvider>();
+        _app.Services.GetRequiredService<MeterProvider>();
 
         AccountProvider = _app.Services.GetRequiredService<AccountProvider>();
         Signer = new Signer(_app.Configuration, AccountProvider);

@@ -11,6 +11,10 @@
         <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.25.0" />
         <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
         <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.5.2" />
+        <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.5.1" />
+        <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.5.1" />
+        <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol.Logs" Version="1.5.0-rc.1" />
+        <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.5.1" />
     </ItemGroup>
 
     <ItemGroup>

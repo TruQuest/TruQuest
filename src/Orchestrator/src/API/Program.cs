@@ -9,6 +9,10 @@ using Nethereum.Web3;
 using Nethereum.ABI.FunctionEncoding.Attributes;
 using Nethereum.Contracts;
 using Nethereum.JsonRpc.Client;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Logs;
 
 using Application;
 using Application.Common.Interfaces;
@@ -50,6 +54,50 @@ public static class WebApplicationBuilderExtension
 {
     public static WebApplicationBuilder ConfigureServices(this WebApplicationBuilder builder)
     {
+        var configuration = builder.Configuration;
+
+        Action<ResourceBuilder> configureResource = resource =>
+            resource.AddService(
+                serviceName: Instrumentation.ServiceName,
+                serviceVersion: "0.1.0",
+                serviceInstanceId: Environment.MachineName
+            );
+
+        builder.Services.AddOpenTelemetry()
+            .ConfigureResource(configureResource)
+            .WithTracing(builder =>
+                builder
+                    .AddSource(Instrumentation.ActivitySource.Name)
+                    .AddOtlpExporter(otlpOptions =>
+                    {
+                        otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
+                    })
+            )
+            .WithMetrics(builder =>
+                builder
+                    .AddMeter(Instrumentation.Meter.Name)
+                    .AddOtlpExporter(otlpOptions =>
+                    {
+                        otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
+                    })
+            );
+
+        builder.Logging.ClearProviders();
+        builder.Logging.AddDebug();
+        builder.Logging.AddConsole();
+
+        builder.Logging.AddOpenTelemetry(options =>
+        {
+            var resourceBuilder = ResourceBuilder.CreateDefault();
+            configureResource(resourceBuilder);
+            options.SetResourceBuilder(resourceBuilder);
+
+            options.AddOtlpExporter(otlpOptions =>
+            {
+                otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
+            });
+        });
+
         builder.Services
             .AddControllers(options =>
             {
