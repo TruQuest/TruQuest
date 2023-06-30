@@ -16,9 +16,10 @@ public static class IServiceCollectionExtension
         {
             config.Lifetime = ServiceLifetime.Scoped;
             config.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+            config.AddOpenBehavior(typeof(TracingBehavior<,>), ServiceLifetime.Singleton);
             config.AddOpenBehavior(typeof(AuthorizationBehavior<,>), ServiceLifetime.Scoped);
-            config.AddOpenBehavior(typeof(TransactionBehavior<,>), ServiceLifetime.Scoped);
             config.AddOpenBehavior(typeof(ValidationBehavior<,>), ServiceLifetime.Singleton);
+            config.AddOpenBehavior(typeof(TransactionBehavior<,>), ServiceLifetime.Scoped);
         });
         services.AddScoped<PublisherWrapper>();
 

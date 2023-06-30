@@ -47,8 +47,6 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
 
     public async Task<HandleResult<Guid>> Handle(AddNewSubjectCommand command, CancellationToken ct)
     {
-        using var span = Telemetry.StartActivity(nameof(AddNewSubjectCommand));
-
         var receiveResult = await _fileReceiver.ReceiveFilesAndFormValues(
             command.Request,
             maxSize: 10 * 1024 * 1024,
