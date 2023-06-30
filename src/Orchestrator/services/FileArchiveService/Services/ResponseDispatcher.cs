@@ -1,4 +1,5 @@
 using System.Text;
+using System.Diagnostics;
 
 using KafkaFlow;
 
@@ -18,10 +19,24 @@ internal class ResponseDispatcher : IResponseDispatcher
         _producer = producer;
     }
 
-    public async Task ReplyTo(string requestId, object message)
+    public async Task ReplyTo(string requestId, object message, ActivityContext? parentContext = null)
     {
+        using var span = Telemetry.StartActivity(
+            "responses publish",
+            ActivityKind.Server,
+            parentContext: parentContext ?? new ActivityContext()
+        );
+
+        var messageKey = Guid.NewGuid().ToString();
+
+        span!.SetTag("messaging.system", "kafka");
+        span.SetTag("messaging.operation", "publish");
+        span.SetTag("messaging.message.conversation_id", requestId);
+        span.SetTag("messaging.destination.name", "responses");
+        span.SetTag("messaging.kafka.message.key", messageKey);
+
         await _producer.ProduceAsync(
-            messageKey: Guid.NewGuid().ToString(),
+            messageKey: messageKey,
             messageValue: message,
             headers: new MessageHeaders
             {

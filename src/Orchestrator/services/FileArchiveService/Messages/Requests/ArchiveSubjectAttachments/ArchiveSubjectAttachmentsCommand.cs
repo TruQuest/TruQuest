@@ -19,8 +19,6 @@ internal class ArchiveSubjectAttachmentsCommand
 
 internal class ArchiveSubjectAttachmentsCommandHandler : IMessageHandler<ArchiveSubjectAttachmentsCommand>
 {
-    private static readonly TextMapPropagator _propagator = Propagators.DefaultTextMapPropagator;
-
     private readonly ILogger<ArchiveSubjectAttachmentsCommandHandler> _logger;
     private readonly IFileArchiver _fileArchiver;
     private readonly IResponseDispatcher _responseDispatcher;
@@ -38,7 +36,7 @@ internal class ArchiveSubjectAttachmentsCommandHandler : IMessageHandler<Archive
 
     public async Task Handle(IMessageContext context, ArchiveSubjectAttachmentsCommand message)
     {
-        var propagationContext = _propagator.Extract(
+        var propagationContext = Propagators.DefaultTextMapPropagator.Extract(
             default,
             context.Headers,
             (headers, key) =>
@@ -53,14 +51,12 @@ internal class ArchiveSubjectAttachmentsCommandHandler : IMessageHandler<Archive
         Baggage.Current = propagationContext.Baggage;
 
         object response;
-        using (var span = Instrumentation.ActivitySource.StartActivity(
+        using (var span = Telemetry.StartActivity(
             "requests process",
             ActivityKind.Server,
-            propagationContext.ActivityContext
+            parentContext: propagationContext.ActivityContext
         ))
         {
-            span!.SetTag("messaging.kafka.consumer.group", context.ConsumerContext.GroupId);
-
             var error = await _fileArchiver.ArchiveAllAttachments(message.Input);
             if (error != null)
             {
@@ -79,6 +75,10 @@ internal class ArchiveSubjectAttachmentsCommandHandler : IMessageHandler<Archive
             }
         }
 
-        await _responseDispatcher.ReplyTo(Encoding.UTF8.GetString(context.Headers["requestId"]), response);
+        await _responseDispatcher.ReplyTo(
+            Encoding.UTF8.GetString(context.Headers["requestId"]),
+            response,
+            parentContext: propagationContext.ActivityContext
+        );
     }
 }

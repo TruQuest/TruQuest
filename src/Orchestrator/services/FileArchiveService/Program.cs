@@ -11,7 +11,7 @@ using Services;
 
 Action<ResourceBuilder> configureResource = resource =>
     resource.AddService(
-        serviceName: Instrumentation.ServiceName,
+        serviceName: Telemetry.ServiceName,
         serviceVersion: "0.1.0",
         serviceInstanceId: Environment.MachineName
     );
@@ -43,7 +43,7 @@ IHost host = Host.CreateDefaultBuilder(args)
             .ConfigureResource(configureResource)
             .WithTracing(builder =>
                 builder
-                    .AddSource(Instrumentation.ActivitySource.Name)
+                    .AddSource(Telemetry.ActivitySource.Name)
                     .AddOtlpExporter(otlpOptions =>
                     {
                         otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
@@ -51,7 +51,7 @@ IHost host = Host.CreateDefaultBuilder(args)
             )
             .WithMetrics(builder =>
                 builder
-                    .AddMeter(Instrumentation.Meter.Name)
+                    .AddMeter(Telemetry.Meter.Name)
                     .AddOtlpExporter(otlpOptions =>
                     {
                         otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);

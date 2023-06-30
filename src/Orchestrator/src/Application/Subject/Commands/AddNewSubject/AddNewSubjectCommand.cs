@@ -47,7 +47,7 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
 
     public async Task<HandleResult<Guid>> Handle(AddNewSubjectCommand command, CancellationToken ct)
     {
-        using var span = Instrumentation.ActivitySource.StartActivity(nameof(AddNewSubjectCommand));
+        using var span = Telemetry.StartActivity(nameof(AddNewSubjectCommand));
 
         var receiveResult = await _fileReceiver.ReceiveFilesAndFormValues(
             command.Request,
@@ -80,11 +80,15 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
                 .ToList()
         };
 
-        var result = await _requestDispatcher.GetResult(new ArchiveSubjectAttachmentsCommand
+        object result;
+        using (var archiveSpan = Telemetry.StartActivity(nameof(ArchiveSubjectAttachmentsCommand)))
         {
-            SubmitterId = _currentPrincipal.Id!,
-            Input = input
-        });
+            result = await _requestDispatcher.GetResult(new ArchiveSubjectAttachmentsCommand
+            {
+                SubmitterId = _currentPrincipal.Id!,
+                Input = input
+            });
+        }
 
         if (result is ArchiveSubjectAttachmentsFailureResult failureResult)
         {
@@ -109,10 +113,6 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
 
         _subjectRepository.Create(subject);
         await _subjectRepository.SaveChanges();
-
-        _logger.LogInformation("Created subject {SubjectId}", subject.Id!.Value);
-
-        Instrumentation.TestCounter.Add(5);
 
         return new()
         {

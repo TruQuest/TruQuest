@@ -13,8 +13,6 @@ namespace Infrastructure.Kafka;
 
 internal class RequestDispatcher : IRequestDispatcher
 {
-    private static readonly TextMapPropagator _propagator = Propagators.DefaultTextMapPropagator;
-
     private readonly IMessageProducer<RequestDispatcher> _producer;
 
     private readonly ConcurrentDictionary<string, TaskCompletionSource<object>> _requestIdToResponseReceivedTcs = new();
@@ -35,37 +33,31 @@ internal class RequestDispatcher : IRequestDispatcher
     public async Task<object> GetResult(object request)
     {
         TaskCompletionSource<object> tcs;
-        using (var span = Instrumentation.ActivitySource.StartActivity("requests publish", ActivityKind.Client))
+        using (var publishSpan = Telemetry.StartActivity("requests publish", ActivityKind.Client))
         {
-            // ActivityContext contextToInject = default;
-            // if (span != null)
-            // {
-            //     contextToInject = span.Context;
-            // }
-            // else if (Activity.Current != null)
-            // {
-            //     contextToInject = Activity.Current.Context;
-            // }
-
-            var contextToInject = span!.Context;
+            var context = publishSpan!.Context;
             var requestId = Guid.NewGuid().ToString();
             var messageKey = Guid.NewGuid().ToString();
 
-            span.SetTag("messaging.system", "kafka");
-            span.SetTag("messaging.operation", "publish");
-            span.SetTag("messaging.message.conversation_id", requestId);
-            span.SetTag("messaging.destination.name", "requests");
-            span.SetTag("messaging.kafka.message.key", messageKey);
+            publishSpan.SetTag("messaging.system", "kafka");
+            publishSpan.SetTag("messaging.operation", "publish");
+            publishSpan.SetTag("messaging.message.conversation_id", requestId);
+            publishSpan.SetTag("messaging.destination.name", "requests");
+            publishSpan.SetTag("messaging.kafka.message.key", messageKey);
 
             var headers = new MessageHeaders
             {
                 ["requestId"] = Encoding.UTF8.GetBytes(requestId)
             };
 
-            _propagator.Inject(new PropagationContext(contextToInject, Baggage.Current), headers, (headers, key, value) =>
-            {
-                headers[key] = Encoding.UTF8.GetBytes(value);
-            });
+            Propagators.DefaultTextMapPropagator.Inject(
+                new PropagationContext(context, Baggage.Current),
+                headers,
+                (headers, key, value) =>
+                {
+                    headers[key] = Encoding.UTF8.GetBytes(value);
+                }
+            );
 
             tcs = _requestIdToResponseReceivedTcs[requestId] = new();
 
@@ -76,6 +68,7 @@ internal class RequestDispatcher : IRequestDispatcher
             );
         }
 
+        using var waitForResponseSpan = Telemetry.StartActivity("responses wait");
         var result = await tcs.Task;
 
         return result;
