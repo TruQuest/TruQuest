@@ -54,7 +54,7 @@ internal class CastAcceptancePollVoteCommandHandler :
     {
         // @@TODO: Use queryable instead of repo.
         bool isDesignatedVerifier = await _thingRepository.CheckIsDesignatedVerifierFor(
-            command.Input.ThingId,
+            command.Input.ThingId!.Value,
             _currentPrincipal.Id!
         );
 
@@ -115,7 +115,7 @@ internal class CastAcceptancePollVoteCommandHandler :
         }
 
         var vote = new AcceptancePollVote(
-            thingId: command.Input.ThingId,
+            thingId: command.Input.ThingId.Value,
             voterId: _currentPrincipal.Id!,
             castedAtMs: castedAtUtc.ToUnixTimeMilliseconds(),
             decision: (AcceptancePollVote.VoteDecision)command.Input.Decision,

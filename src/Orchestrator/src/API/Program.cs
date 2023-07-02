@@ -14,6 +14,8 @@ using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Logs;
 
+using Domain.Results;
+using Domain.Errors;
 using Application;
 using Application.Common.Interfaces;
 using Infrastructure;
@@ -22,9 +24,9 @@ using Infrastructure.Ethereum;
 using API.BackgroundServices;
 using API.Hubs.Filters;
 using API.Hubs;
-using API.Controllers.Filters;
 using API.Hubs.Misc;
 using API.Hubs.Clients;
+using API.Endpoints;
 
 namespace API;
 
@@ -56,61 +58,56 @@ public static class WebApplicationBuilderExtension
     {
         var configuration = builder.Configuration;
 
-        Action<ResourceBuilder> configureResource = resource =>
-            resource.AddService(
-                serviceName: Telemetry.ServiceName,
-                serviceVersion: "0.1.0",
-                serviceInstanceId: Environment.MachineName
-            );
-
-        builder.Services.AddOpenTelemetry()
-            .ConfigureResource(configureResource)
-            .WithTracing(builder =>
-                builder
-                    .AddSource(Telemetry.ActivitySource.Name)
-                    .AddOtlpExporter(otlpOptions =>
-                    {
-                        otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
-                    })
-            )
-            .WithMetrics(builder =>
-                builder
-                    .AddMeter(Telemetry.Meter.Name)
-                    .AddOtlpExporter(otlpOptions =>
-                    {
-                        otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
-                    })
-            );
-
         builder.Logging.ClearProviders();
         builder.Logging.AddDebug();
         builder.Logging.AddConsole();
 
-        builder.Logging.AddOpenTelemetry(options =>
+        if (!configuration.GetValue<bool>("DbMigrator"))
         {
-            var resourceBuilder = ResourceBuilder.CreateDefault();
-            configureResource(resourceBuilder);
-            options.SetResourceBuilder(resourceBuilder);
+            Action<ResourceBuilder> configureResource = resource =>
+                resource.AddService(
+                    serviceName: Telemetry.ServiceName,
+                    serviceVersion: "0.1.0",
+                    serviceInstanceId: Environment.MachineName
+                );
 
-            options.AddOtlpExporter(otlpOptions =>
+            builder.Services.AddOpenTelemetry()
+                .ConfigureResource(configureResource)
+                .WithTracing(builder =>
+                    builder
+                        .AddSource(Telemetry.ActivitySource.Name)
+                        .AddOtlpExporter(otlpOptions =>
+                        {
+                            otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
+                        })
+                )
+                .WithMetrics(builder =>
+                    builder
+                        .AddMeter(Telemetry.Meter.Name)
+                        .AddOtlpExporter(otlpOptions =>
+                        {
+                            otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
+                        })
+                );
+
+            builder.Logging.AddOpenTelemetry(options =>
             {
-                otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
+                var resourceBuilder = ResourceBuilder.CreateDefault();
+                configureResource(resourceBuilder);
+                options.SetResourceBuilder(resourceBuilder);
+
+                options.AddOtlpExporter(otlpOptions =>
+                {
+                    otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
+                });
             });
+        }
+
+        builder.Services.ConfigureHttpJsonOptions(options =>
+        {
+            options.SerializerOptions.PropertyNameCaseInsensitive = true;
+            options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
         });
-
-        builder.Services
-            .AddControllers(options =>
-            {
-                options.Filters.Add<ConvertHandleErrorToMvcResponseFilter>();
-            })
-            .AddJsonOptions(options =>
-            {
-                options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-                options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-            });
-
-        builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
 
         builder.Services.AddCors(options =>
             options.AddDefaultPolicy(builder =>
@@ -154,17 +151,55 @@ public static class WebApplicationBuilderExtension
     public static WebApplication ConfigurePipeline(this WebApplication app)
     {
         app.UseCors();
-
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI();
-        }
-
-        // app.UseHttpsRedirection();
         app.UseAuthentication();
 
-        app.MapControllers();
+        async ValueTask<object?> EndpointFilter(
+            EndpointFilterInvocationContext context, EndpointFilterDelegate next
+        )
+        {
+            var handleResult = (HandleResult?)await next(context);
+            Debug.Assert(handleResult != null);
+            if (handleResult.Error != null)
+            {
+                switch (handleResult.Error)
+                {
+                    case AuthorizationError:
+                        return TypedResults.Json(
+                            handleResult,
+                            statusCode: handleResult.Error.Errors.Values.First().First() == "Forbidden" ?
+                                StatusCodes.Status403Forbidden :
+                                StatusCodes.Status401Unauthorized
+                        );
+                    default:
+                        return TypedResults.BadRequest(handleResult);
+                }
+            }
+
+            return TypedResults.Ok(handleResult);
+        }
+
+        // @@TODO: Figure out how to add endpoint filter to all groups and endpoints at once.
+        // app.MapGroup("").AddEndpointFilter(...) doesn't work.
+        app
+            .MapUserEndpoints()
+            .AddEndpointFilter(EndpointFilter);
+
+        app
+            .MapSubjectEndpoints()
+            .AddEndpointFilter(EndpointFilter);
+
+        app
+            .MapThingEndpoints()
+            .AddEndpointFilter(EndpointFilter);
+
+        app
+            .MapSettlementProposalEndpoints()
+            .AddEndpointFilter(EndpointFilter);
+
+        app
+            .MapGeneralEndpoints()
+            .ForEach(endpoint => endpoint.AddEndpointFilter(EndpointFilter));
+
         app.MapHub<TruQuestHub>("/hub");
 
         return app;

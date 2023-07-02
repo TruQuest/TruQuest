@@ -53,7 +53,7 @@ internal class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssess
     {
         // @@TODO: Use queryable instead of repo.
         bool isDesignatedVerifier = await _settlementProposalRepository.CheckIsDesignatedVerifierFor(
-            command.Input.SettlementProposalId,
+            command.Input.SettlementProposalId!.Value,
             _currentPrincipal.Id!
         );
 
@@ -117,7 +117,7 @@ internal class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssess
         }
 
         var vote = new AssessmentPollVote(
-            settlementProposalId: command.Input.SettlementProposalId,
+            settlementProposalId: command.Input.SettlementProposalId.Value,
             voterId: _currentPrincipal.Id!,
             castedAtMs: castedAtUtc.ToUnixTimeMilliseconds(),
             decision: (AssessmentPollVote.VoteDecision)command.Input.Decision,

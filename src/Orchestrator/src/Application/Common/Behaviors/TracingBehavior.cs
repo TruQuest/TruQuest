@@ -24,7 +24,7 @@ public class TracingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
         }
         catch (Exception e)
         {
-            span.RecordException(e);
+            span?.RecordException(e);
             return new TResponse
             {
                 Error = new ServerError(e.Message)
@@ -32,7 +32,8 @@ public class TracingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
         }
         finally
         {
-            span!.Dispose();
+            // @@!!: Figure out why it is not null when testing but null when running.
+            span?.Dispose();
         }
     }
 }
