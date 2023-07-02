@@ -76,6 +76,7 @@ public static class WebApplicationBuilderExtension
                 .WithTracing(builder =>
                     builder
                         .AddSource(Telemetry.ActivitySource.Name)
+                        .SetSampler(new AlwaysOnSampler()) // @@??: Use this in conjunction with OTEL collector tail sampling?
                         .AddOtlpExporter(otlpOptions =>
                         {
                             otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
