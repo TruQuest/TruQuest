@@ -27,8 +27,13 @@ import '../../widget_extensions.dart';
 
 class SettlementProposalPage extends StatefulWidget {
   final String proposalId;
+  final DateTime timestamp;
 
-  const SettlementProposalPage({super.key, required this.proposalId});
+  const SettlementProposalPage({
+    super.key,
+    required this.proposalId,
+    required this.timestamp,
+  });
 
   @override
   State<SettlementProposalPage> createState() => _SettlementProposalPageState();
@@ -54,6 +59,16 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
         GetSettlementProposal(proposalId: widget.proposalId),
       ),
     );
+  }
+
+  @override
+  void didUpdateWidget(covariant SettlementProposalPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.timestamp != oldWidget.timestamp) {
+      _settlementBloc.dispatch(
+        GetSettlementProposal(proposalId: widget.proposalId),
+      );
+    }
   }
 
   @override

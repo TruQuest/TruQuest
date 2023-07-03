@@ -372,6 +372,21 @@ class _TabContainerState extends AnimatedWidgetBaseState<TabContainer> {
   }
 
   @override
+  void didUpdateWidget(covariant TabContainer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.tabs.length != oldWidget.tabs.length) {
+      // @@??: Make initial index = old index ?
+      _controller = widget.controller ??
+          TabContainerController(length: widget.tabs.length);
+
+      _currentIndex = _controller!.index;
+      _prevIndex = _controller!.index;
+
+      _controller!.addListener(_listen);
+    }
+  }
+
+  @override
   void didChangeDependencies() {
     _selectedTextStyle = widget.selectedTextStyle ??
         Theme.of(context).textTheme.bodyMedium ??

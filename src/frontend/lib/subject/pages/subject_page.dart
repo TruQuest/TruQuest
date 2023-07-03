@@ -17,8 +17,13 @@ import '../../widget_extensions.dart';
 
 class SubjectPage extends StatefulWidget {
   final String subjectId;
+  final DateTime timestamp;
 
-  SubjectPage({super.key, required this.subjectId});
+  SubjectPage({
+    super.key,
+    required this.subjectId,
+    required this.timestamp,
+  });
 
   @override
   State<SubjectPage> createState() => _SubjectPageState();
@@ -30,7 +35,16 @@ class _SubjectPageState extends StateX<SubjectPage> {
   @override
   void initState() {
     super.initState();
+    // @@TODO: Refresh when account changes.
     _subjectBloc.dispatch(GetSubject(subjectId: widget.subjectId));
+  }
+
+  @override
+  void didUpdateWidget(covariant SubjectPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.timestamp != oldWidget.timestamp) {
+      _subjectBloc.dispatch(GetSubject(subjectId: widget.subjectId));
+    }
   }
 
   List<Widget> _buildTagChips(SubjectVm subject) {

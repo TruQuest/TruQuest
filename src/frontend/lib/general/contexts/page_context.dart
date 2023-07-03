@@ -27,6 +27,9 @@ class PageContext {
       _localStorage.setString('currentRoute', route);
 
   void goto(String route) async {
+    if (route.lastIndexOf('/') > 0) {
+      route += '/${DateTime.now().millisecondsSinceEpoch}';
+    }
     _routeChannel.add(route);
     await _saveCurrentRoute(route);
   }

@@ -145,15 +145,26 @@ class _HomePageState extends StateX<HomePage> {
                   );
                 default:
                   var routeSplit = route.split('/');
+                  var id = routeSplit[2];
+                  var timestamp = DateTime.fromMillisecondsSinceEpoch(
+                    int.parse(routeSplit.last),
+                  );
+
                   if (routeSplit[1] == 'subjects') {
-                    var subjectId = routeSplit.last;
-                    return SubjectPage(subjectId: subjectId);
+                    return SubjectPage(
+                      subjectId: id,
+                      timestamp: timestamp,
+                    );
                   } else if (routeSplit[1] == 'things') {
-                    var thingId = routeSplit.last;
-                    return ThingPage(thingId: thingId);
+                    return ThingPage(
+                      thingId: id,
+                      timestamp: timestamp,
+                    );
                   } else if (routeSplit[1] == 'proposals') {
-                    var proposalId = routeSplit.last;
-                    return SettlementProposalPage(proposalId: proposalId);
+                    return SettlementProposalPage(
+                      proposalId: id,
+                      timestamp: timestamp,
+                    );
                   }
 
                   return SliverFillRemaining(

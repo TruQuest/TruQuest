@@ -37,8 +37,13 @@ import '../bloc/thing_bloc.dart';
 
 class ThingPage extends StatefulWidget {
   final String thingId;
+  final DateTime timestamp;
 
-  const ThingPage({super.key, required this.thingId});
+  const ThingPage({
+    super.key,
+    required this.thingId,
+    required this.timestamp,
+  });
 
   @override
   State<ThingPage> createState() => _ThingPageState();
@@ -65,6 +70,14 @@ class _ThingPageState extends StateX<ThingPage> {
     _currentUser$$ = _userBloc.currentUser$.listen(
       (_) => _thingBloc.dispatch(GetThing(thingId: widget.thingId)),
     );
+  }
+
+  @override
+  void didUpdateWidget(covariant ThingPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.timestamp != oldWidget.timestamp) {
+      _thingBloc.dispatch(GetThing(thingId: widget.thingId));
+    }
   }
 
   @override
