@@ -164,7 +164,7 @@ class ThingAssessmentVerifierLotteryContract {
   late final Contract? _contract;
 
   ThingAssessmentVerifierLotteryContract(this._ethereumService) {
-    if (_ethereumService.available) {
+    if (_ethereumService.isAvailable) {
       _contract = Contract(_address, _abi, _ethereumService.provider);
     }
   }

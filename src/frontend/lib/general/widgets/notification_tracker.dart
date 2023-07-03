@@ -7,6 +7,7 @@ import 'package:lottie/lottie.dart';
 // ignore: implementation_imports
 import 'package:lottie/src/model/layer/layer.dart';
 import 'package:side_sheet/side_sheet.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../ethereum/bloc/ethereum_bloc.dart';
 import '../../ethereum/bloc/ethereum_actions.dart';
@@ -153,7 +154,13 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
                     onTap: () {
                       if (notification.itemId == '') {
                         // client-side warning
-                        _ethereumBloc.dispatch(SwitchEthereumChain());
+                        if (notification.itemUpdateCategory == 0) {
+                          // metamask not installed
+                          launchUrl(Uri.parse('https://metamask.io'));
+                        } else {
+                          // unsupported chain
+                          _ethereumBloc.dispatch(SwitchEthereumChain());
+                        }
                         return;
                       }
 

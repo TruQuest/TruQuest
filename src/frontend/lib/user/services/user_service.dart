@@ -26,6 +26,11 @@ class UserService {
     this._serverConnector,
     this._localStorage,
   ) {
+    if (!_ethereumService.isAvailable) {
+      _reloadUser(null);
+      return;
+    }
+
     _ethereumService.connectedAccountChanged$.listen(
       (account) => _reloadUser(account),
     );

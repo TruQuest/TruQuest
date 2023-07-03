@@ -125,7 +125,7 @@ class TruQuestContract {
   late final Contract? _contract;
 
   TruQuestContract(this._ethereumService) {
-    if (_ethereumService.available) {
+    if (_ethereumService.isAvailable) {
       _contract = Contract(address, _abi, _ethereumService.provider);
     }
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'restrict_when_no_wallet_button.dart';
 import '../../user/bloc/user_actions.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';
 import '../../ethereum/bloc/ethereum_actions.dart';
@@ -28,13 +29,15 @@ class UserStatusTracker extends StatelessWidgetX {
         if (user.state == UserAccountState.guest) {
           return Tooltip(
             message: 'Connect',
-            child: IconButton(
-              icon: Icon(
-                Icons.wifi_tethering,
-                color: Colors.white,
-              ),
-              onPressed: () => _ethereumBloc.dispatch(
-                ConnectEthereumAccount(),
+            child: RestrictWhenNoWalletButton(
+              child: IconButton(
+                icon: Icon(
+                  Icons.wifi_tethering,
+                  color: Colors.white,
+                ),
+                onPressed: () => _ethereumBloc.dispatch(
+                  ConnectEthereumAccount(),
+                ),
               ),
             ),
           );

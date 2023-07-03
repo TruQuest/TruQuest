@@ -77,6 +77,17 @@ class NotificationsCache {
       }
     });
 
+    if (!ethereumService.isAvailable) {
+      _clientSideWarning = NotificationVm(
+        updateTimestamp: DateTime.now(),
+        itemType: WatchedItemTypeVm.subject,
+        itemId: '',
+        itemUpdateCategory: 0,
+        title: 'Please install Metamask and reload the page',
+        details: 'Click to open metamask.io',
+      );
+    }
+
     ethereumService.connectedChainChanged$.listen((event) {
       var (chainId, shouldReloadPage) = event;
       if (shouldReloadPage) {
@@ -90,7 +101,7 @@ class NotificationsCache {
           updateTimestamp: DateTime.now(),
           itemType: WatchedItemTypeVm.subject,
           itemId: '',
-          itemUpdateCategory: 0,
+          itemUpdateCategory: 1,
           title: 'You are on an unsupported chain',
           details: 'Click to switch',
         );

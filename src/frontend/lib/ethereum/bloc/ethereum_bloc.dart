@@ -14,6 +14,8 @@ class EthereumBloc extends Bloc<EthereumAction> {
   final TruthserumContract _truthserumContract;
   final TruQuestContract _truQuestContract;
 
+  final bool isAvailable;
+
   final BehaviorSubject<int> _latestL1BlockNumberChannel =
       BehaviorSubject<int>();
   Stream<int> get latestL1BlockNumber$ => _latestL1BlockNumberChannel.stream;
@@ -22,7 +24,7 @@ class EthereumBloc extends Bloc<EthereumAction> {
     this._ethereumService,
     this._truthserumContract,
     this._truQuestContract,
-  ) {
+  ) : isAvailable = _ethereumService.isAvailable {
     actionChannel.stream.listen((action) {
       if (action is SwitchEthereumChain) {
         _switchEthereumChain(action);

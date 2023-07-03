@@ -23,7 +23,7 @@ class EthereumService {
   late final Web3Provider provider;
   late final JsonRpcProvider l1Provider;
 
-  bool get available => _ethereumWallet.isInstalled();
+  late final bool isAvailable;
 
   final StreamController<(int, bool)> _connectedChainChangedEventChannel =
       StreamController<(int, bool)>();
@@ -40,8 +40,16 @@ class EthereumService {
   Stream<int> get l1BlockMined$ => _l1BlockMinedEventChannel.stream;
 
   EthereumService() : _ethereumWallet = EthereumWallet() {
+    isAvailable = _ethereumWallet.isInstalled();
+
     l1Provider = JsonRpcProvider('http://localhost:8545');
-    if (available) {
+    l1Provider.removeAllListeners('block');
+    l1Provider.onBlockMined((blockNumber) {
+      print('Latest L1 block: $blockNumber');
+      _l1BlockMinedEventChannel.add(blockNumber);
+    });
+
+    if (isAvailable) {
       provider = Web3Provider(_ethereumWallet);
 
       if (!_ethereumWallet.isInitialized()) {
@@ -50,7 +58,6 @@ class EthereumService {
 
       _ethereumWallet.removeAllListeners('chainChanged');
       _ethereumWallet.removeAllListeners('accountsChanged');
-      l1Provider.removeAllListeners('block');
 
       _ethereumWallet.onChainChanged((chainId) {
         print('Chain changed: $chainId');
@@ -86,18 +93,13 @@ class EthereumService {
         print('Current account: $_connectedAccount');
         _connectedAccountChangedEventChannel.add(_connectedAccount);
       });
-
-      l1Provider.onBlockMined((blockNumber) {
-        print('Latest L1 block: $blockNumber');
-        _l1BlockMinedEventChannel.add(blockNumber);
-      });
     }
   }
 
   Future<int> getLatestL1BlockNumber() => l1Provider.getBlockNumber();
 
   Future<EthereumError?> switchEthereumChain() async {
-    if (!available) {
+    if (!isAvailable) {
       return EthereumError('Metamask not installed');
     }
 
@@ -115,7 +117,7 @@ class EthereumService {
   }
 
   Future<EthereumError?> connectAccount() async {
-    if (!available) {
+    if (!isAvailable) {
       return EthereumError('Metamask not installed');
     }
 
@@ -136,7 +138,7 @@ class EthereumService {
     thing.DecisionIm decision,
     String reason,
   ) async {
-    if (!available) {
+    if (!isAvailable) {
       return Left(EthereumError('Metamask not installed'));
     }
 
@@ -199,7 +201,7 @@ class EthereumService {
     settlement.DecisionIm decision,
     String reason,
   ) async {
-    if (!available) {
+    if (!isAvailable) {
       return Left(EthereumError('Metamask not installed'));
     }
 
@@ -260,7 +262,7 @@ class EthereumService {
     String account,
     String nonce,
   ) async {
-    if (!available) {
+    if (!isAvailable) {
       return Left(EthereumError('Metamask not installed'));
     }
 
