@@ -118,33 +118,28 @@ class AssessmentPollContract {
   final EthereumService _ethereumService;
 
   late final Contract? _contract;
+  late final Contract _readOnlyContract;
 
   AssessmentPollContract(this._ethereumService) {
+    _readOnlyContract = Contract(
+      _address,
+      _abi,
+      _ethereumService.l2ReadOnlyProvider,
+    );
     if (_ethereumService.isAvailable) {
       _contract = Contract(_address, _abi, _ethereumService.provider);
     }
   }
 
-  Future<int> getPollDurationBlocks() async {
-    var contract = _contract;
-    if (contract == null) {
-      return 0;
-    }
-
-    return await contract.read<int>('getPollDurationBlocks');
-  }
+  Future<int> getPollDurationBlocks() =>
+      _readOnlyContract.read<int>('getPollDurationBlocks');
 
   Future<int> getPollInitBlock(String thingId, String proposalId) async {
-    var contract = _contract;
-    if (contract == null) {
-      return 0;
-    }
-
     var thingIdHex = thingId.toSolInputFormat(prefix: false);
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    return (await contract.read<BigInt>(
+    return (await _readOnlyContract.read<BigInt>(
       'getPollInitBlock',
       args: [thingProposalIdHex],
     ))

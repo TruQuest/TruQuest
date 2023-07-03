@@ -123,22 +123,23 @@ class TruQuestContract {
   final EthereumService _ethereumService;
 
   late final Contract? _contract;
+  late final Contract _readOnlyContract;
 
   TruQuestContract(this._ethereumService) {
+    _readOnlyContract = Contract(
+      address,
+      _abi,
+      _ethereumService.l2ReadOnlyProvider,
+    );
     if (_ethereumService.isAvailable) {
       _contract = Contract(address, _abi, _ethereumService.provider);
     }
   }
 
   Future<bool> checkThingAlreadyFunded(String thingId) async {
-    var contract = _contract;
-    if (contract == null) {
-      return false;
-    }
-
     var thingIdHex = thingId.toSolInputFormat();
 
-    return await contract.read<bool>(
+    return await _readOnlyContract.read<bool>(
       'checkThingAlreadyFunded',
       args: [thingIdHex],
     );
@@ -189,14 +190,9 @@ class TruQuestContract {
   Future<bool> checkThingAlreadyHasSettlementProposalUnderAssessment(
     String thingId,
   ) async {
-    var contract = _contract;
-    if (contract == null) {
-      return false;
-    }
-
     var thingIdHex = thingId.toSolInputFormat();
 
-    return await contract.read<bool>(
+    return await _readOnlyContract.read<bool>(
       'checkThingAlreadyHasSettlementProposalUnderAssessment',
       args: [thingIdHex],
     );

@@ -162,33 +162,28 @@ class ThingAssessmentVerifierLotteryContract {
   final _random = Random.secure();
 
   late final Contract? _contract;
+  late final Contract _readOnlyContract;
 
   ThingAssessmentVerifierLotteryContract(this._ethereumService) {
+    _readOnlyContract = Contract(
+      _address,
+      _abi,
+      _ethereumService.l2ReadOnlyProvider,
+    );
     if (_ethereumService.isAvailable) {
       _contract = Contract(_address, _abi, _ethereumService.provider);
     }
   }
 
-  Future<int> getLotteryDurationBlocks() async {
-    var contract = _contract;
-    if (contract == null) {
-      return 0;
-    }
-
-    return await contract.read<int>('getLotteryDurationBlocks');
-  }
+  Future<int> getLotteryDurationBlocks() =>
+      _readOnlyContract.read<int>('getLotteryDurationBlocks');
 
   Future<int> getLotteryInitBlock(String thingId, String proposalId) async {
-    var contract = _contract;
-    if (contract == null) {
-      return 0;
-    }
-
     var thingIdHex = thingId.toSolInputFormat(prefix: false);
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    return (await contract.read<BigInt>(
+    return (await _readOnlyContract.read<BigInt>(
       'getLotteryInitBlock',
       args: [thingProposalIdHex],
     ))
@@ -199,17 +194,11 @@ class ThingAssessmentVerifierLotteryContract {
     String thingId,
     String proposalId,
   ) async {
-    var contract = _contract;
-    if (contract == null) {
-      var nullString = '0x${List.generate(64, (_) => '0').join()}';
-      return (0, nullString, nullString);
-    }
-
     var thingIdHex = thingId.toSolInputFormat(prefix: false);
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    var result = await contract.read<List<dynamic>>(
+    var result = await _readOnlyContract.read<List<dynamic>>(
       'getOrchestratorCommitment',
       args: [thingProposalIdHex],
     );

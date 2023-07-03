@@ -21,6 +21,7 @@ class EthereumService {
 
   final EthereumWallet _ethereumWallet;
   late final Web3Provider provider;
+  late final JsonRpcProvider l2ReadOnlyProvider;
   late final JsonRpcProvider l1Provider;
 
   late final bool isAvailable;
@@ -48,6 +49,8 @@ class EthereumService {
       print('Latest L1 block: $blockNumber');
       _l1BlockMinedEventChannel.add(blockNumber);
     });
+
+    l2ReadOnlyProvider = JsonRpcProvider('http://localhost:9545');
 
     if (isAvailable) {
       provider = Web3Provider(_ethereumWallet);
