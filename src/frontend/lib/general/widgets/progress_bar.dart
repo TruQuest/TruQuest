@@ -5,18 +5,14 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import '../bloc/notification_bloc.dart';
 import '../../widget_extensions.dart';
 
-class ProgressBar extends StatefulWidget {
-  const ProgressBar({super.key});
-
-  @override
-  State<ProgressBar> createState() => _ProgressBarState();
-}
-
-class _ProgressBarState extends StateX<ProgressBar> {
+// ignore: must_be_immutable
+class ProgressBar extends StatelessWidgetX {
   late final _notificationBloc = use<NotificationBloc>();
 
+  ProgressBar({super.key});
+
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return StreamBuilder(
       stream: _notificationBloc.progress$$,
       builder: (context, snapshot) {

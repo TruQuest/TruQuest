@@ -44,7 +44,7 @@ class _EvidenceViewBlockState extends StateX<EvidenceViewBlock> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return StackedCardCarousel(
       pageController: _pageController,
       spaceBetweenItems: 220,

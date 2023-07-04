@@ -58,7 +58,7 @@ class _VerdictSelectionBlockState extends StateX<VerdictSelectionBlock> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return Column(
       children: [
         Card(

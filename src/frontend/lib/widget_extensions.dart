@@ -80,4 +80,9 @@ abstract class StateX<TWidget extends StatefulWidget> extends State<TWidget> {
   T use<T>() => resolveDependency<T>();
 
   T useScoped<T>() => _resolveScoped<T>();
+
+  @override
+  Widget build(BuildContext context) => buildX(context);
+
+  Widget buildX(BuildContext context);
 }

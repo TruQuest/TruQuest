@@ -41,7 +41,7 @@ class _PollStepperState extends StateX<PollStepper> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return Theme(
       data: ThemeData(
         brightness: Brightness.dark,

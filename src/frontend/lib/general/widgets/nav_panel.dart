@@ -95,27 +95,6 @@ class NavPanel extends StatelessWidgetX {
               ),
               SizedBox(width: 48),
               InkWell(
-                onTap: () => _pageContext.goto('/pong'),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.circle,
-                      color: Colors.white,
-                      size: 8,
-                    ),
-                    SizedBox(width: 12),
-                    Text(
-                      'Pong!',
-                      style: GoogleFonts.raleway(
-                        fontSize: 17,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(width: 48),
-              InkWell(
                 onTap: () => _pageContext.goto('/goto'),
                 child: Row(
                   children: [

@@ -40,7 +40,7 @@ class _ThingsListState extends StateX<ThingsList> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return StreamBuilder(
       stream: _subjectBloc.thingsList$,
       builder: (context, snapshot) {

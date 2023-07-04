@@ -19,7 +19,7 @@ class _PrepareDraftButtonState extends StateX<PrepareDraftButton> {
   bool _enabled = true;
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.amber[900],

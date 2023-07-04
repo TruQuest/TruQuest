@@ -39,7 +39,7 @@ class _DocumentComposerState extends StateX<DocumentComposer> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return SimpleDialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),

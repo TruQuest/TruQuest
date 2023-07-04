@@ -63,7 +63,7 @@ class _LotteryState extends StateX<Lottery> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return Row(
       children: [
         Expanded(

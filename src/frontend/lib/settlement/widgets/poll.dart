@@ -59,7 +59,7 @@ class _PollState extends StateX<Poll> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return Row(
       children: [
         Expanded(

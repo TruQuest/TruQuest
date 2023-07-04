@@ -37,7 +37,7 @@ class _DepositStepperState extends StateX<DepositStepper> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return Theme(
       data: ThemeData(
         brightness: Brightness.dark,

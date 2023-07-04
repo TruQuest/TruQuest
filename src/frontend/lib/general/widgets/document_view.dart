@@ -44,7 +44,7 @@ class _DocumentViewState extends StateX<DocumentView> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return SizedBox.expand(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

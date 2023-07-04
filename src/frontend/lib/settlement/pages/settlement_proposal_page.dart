@@ -278,7 +278,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return StreamBuilder(
       stream: _settlementBloc.proposal$,
       builder: (context, snapshot) {

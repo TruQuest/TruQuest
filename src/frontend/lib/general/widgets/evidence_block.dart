@@ -22,7 +22,7 @@ class _EvidenceBlockState extends StateX<EvidenceBlock> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

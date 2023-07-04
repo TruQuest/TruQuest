@@ -232,7 +232,7 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return Stack(
       children: [
         ClippedRect(

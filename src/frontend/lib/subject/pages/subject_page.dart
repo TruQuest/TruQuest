@@ -216,7 +216,7 @@ class _SubjectPageState extends StateX<SubjectPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return StreamBuilder(
       stream: _subjectBloc.subject$,
       builder: (context, snapshot) {

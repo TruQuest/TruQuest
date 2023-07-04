@@ -41,7 +41,7 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return StreamBuilder(
       stream: _thingBloc.proposalsList$,
       builder: (context, snapshot) {

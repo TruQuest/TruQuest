@@ -310,7 +310,7 @@ class SwipeButtonState extends StateX<SwipeButton> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return _SwipeButton.expand(
       enabled: _enabled,
       swiped: _swiped,

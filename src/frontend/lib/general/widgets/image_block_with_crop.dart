@@ -19,7 +19,7 @@ class _ImageBlockWithCropState extends StateX<ImageBlockWithCrop> {
   late final _documentContext = useScoped<DocumentContext>();
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return Column(
       children: [
         OutlinedButton(

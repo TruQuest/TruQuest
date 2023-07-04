@@ -30,7 +30,7 @@ class _TagsBlockState extends StateX<TagsBlock> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return FutureBuilder(
       future: _tagsLoaded,
       builder: (context, snapshot) {

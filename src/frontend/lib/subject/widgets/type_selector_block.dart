@@ -15,7 +15,7 @@ class _TypeSelectorBlockState extends StateX<TypeSelectorBlock> {
   late final _documentContext = useScoped<DocumentContext>();
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return Column(
       children: [
         Card(

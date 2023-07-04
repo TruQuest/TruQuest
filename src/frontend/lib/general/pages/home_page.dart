@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flame/game.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 import '../widgets/deposit_funds_button.dart';
@@ -7,7 +6,6 @@ import '../widgets/clipped_rect.dart';
 import '../widgets/nav_panel.dart';
 import '../bloc/notification_bloc.dart';
 import '../../settlement/pages/settlement_proposal_page.dart';
-import '../../pong/game.dart';
 import '../../subject/pages/subject_page.dart';
 import '../../thing/pages/thing_page.dart';
 import '../contexts/page_context.dart';
@@ -26,9 +24,6 @@ class _HomePageState extends StateX<HomePage> {
   late final _subscriptionManager = use<SubscriptionManager>();
   late final _pageContext = use<PageContext>();
   late final _notificationBloc = use<NotificationBloc>();
-
-  PongGame? _game;
-  BoxConstraints? _gameWidgetConstraints;
 
   late final FToast _fToast;
 
@@ -51,7 +46,7 @@ class _HomePageState extends StateX<HomePage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xffF8F9FA),
       body: CustomScrollView(
@@ -91,20 +86,6 @@ class _HomePageState extends StateX<HomePage> {
               switch (route) {
                 case '/subjects':
                   return SubjectsPage();
-                case '/pong':
-                  return SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        if (_game == null ||
-                            _gameWidgetConstraints != constraints) {
-                          _game = PongGame();
-                          _gameWidgetConstraints = constraints;
-                        }
-                        return GameWidget(game: _game!);
-                      },
-                    ),
-                  );
                 case '/goto':
                   return SliverFillRemaining(
                     hasScrollBody: false,

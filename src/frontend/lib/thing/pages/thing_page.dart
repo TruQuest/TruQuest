@@ -474,7 +474,7 @@ class _ThingPageState extends StateX<ThingPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return StreamBuilder(
       stream: _thingBloc.thing$,
       builder: (context, snapshot) {
