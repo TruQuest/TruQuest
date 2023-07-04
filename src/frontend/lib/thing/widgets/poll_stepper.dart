@@ -50,6 +50,8 @@ class _PollStepperState extends StateX<PollStepper> {
               secondary: Color(0xffF8F9FA),
             ),
       ),
+      // @@BUG: When widget.info.userId is null a part of the line connecting two steps
+      // is moved to the right fsr.
       child: Stepper(
         currentStep: _currentStep,
         controlsBuilder: (context, details) => widget.info.userId != null

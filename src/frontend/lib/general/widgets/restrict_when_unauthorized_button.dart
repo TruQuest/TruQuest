@@ -25,7 +25,7 @@ class RestrictWhenUnauthorizedButton extends StatelessWidgetX {
               var user = snapshot.data?.user;
 
               return IgnorePointer(
-                ignoring: user?.username != null,
+                ignoring: user?.id != null,
                 child: GestureDetector(
                   onTap: () => showDialog(
                     context: context,

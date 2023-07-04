@@ -170,9 +170,9 @@ class ThingAssessmentVerifierLotteryContract {
       _abi,
       _ethereumService.l2ReadOnlyProvider,
     );
-    if (_ethereumService.isAvailable) {
-      _contract = Contract(_address, _abi, _ethereumService.provider);
-    }
+    _contract = _ethereumService.isAvailable
+        ? Contract(_address, _abi, _ethereumService.provider)
+        : null;
   }
 
   Future<int> getLotteryDurationBlocks() =>
