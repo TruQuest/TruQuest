@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
+import '../../general/widgets/restrict_when_unauthorized_button.dart';
 import '../../general/contexts/document_context.dart';
 import '../../general/contexts/page_context.dart';
 import '../../general/widgets/document_composer.dart';
@@ -304,6 +305,7 @@ class _ThingPageState extends StateX<ThingPage> {
       child: Stack(
         children: [
           TabContainer(
+            key: ValueKey('${vm.thing.id} ${vm.thing.state}'),
             controller: TabContainerController(length: tabs.length),
             tabEdge: TabEdge.top,
             tabStart: 0.33,
@@ -347,74 +349,76 @@ class _ThingPageState extends StateX<ThingPage> {
             Positioned(
               top: 30,
               left: 24,
-              child: InkWell(
-                onTap: () {
-                  var documentContext = DocumentContext();
-                  documentContext.thingId = widget.thingId;
+              child: RestrictWhenUnauthorizedButton(
+                child: InkWell(
+                  onTap: () {
+                    var documentContext = DocumentContext();
+                    documentContext.thingId = widget.thingId;
 
-                  var btnController = RoundedLoadingButtonController();
+                    var btnController = RoundedLoadingButtonController();
 
-                  showDialog(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (context) => ScopeX(
-                      useInstances: [documentContext],
-                      child: DocumentComposer(
-                        title: 'New settlement proposal',
-                        nameFieldLabel: 'Title',
-                        submitButton: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: RoundedLoadingButton(
-                            child: Text('Prepare draft'),
-                            controller: btnController,
-                            onPressed: () async {
-                              var action = CreateNewSettlementProposalDraft(
-                                documentContext: DocumentContext.fromEditable(
-                                  documentContext,
-                                ),
-                              );
-                              _settlementBloc.dispatch(action);
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (context) => ScopeX(
+                        useInstances: [documentContext],
+                        child: DocumentComposer(
+                          title: 'New settlement proposal',
+                          nameFieldLabel: 'Title',
+                          submitButton: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: RoundedLoadingButton(
+                              child: Text('Prepare draft'),
+                              controller: btnController,
+                              onPressed: () async {
+                                var action = CreateNewSettlementProposalDraft(
+                                  documentContext: DocumentContext.fromEditable(
+                                    documentContext,
+                                  ),
+                                );
+                                _settlementBloc.dispatch(action);
 
-                              var failure = await action.result;
-                              if (failure != null) {
-                                btnController.error();
+                                var failure = await action.result;
+                                if (failure != null) {
+                                  btnController.error();
+                                  await Future.delayed(
+                                    Duration(milliseconds: 1500),
+                                  );
+                                  btnController.reset();
+
+                                  return;
+                                }
+
+                                btnController.success();
                                 await Future.delayed(
                                   Duration(milliseconds: 1500),
                                 );
-                                btnController.reset();
-
-                                return;
-                              }
-
-                              btnController.success();
-                              await Future.delayed(
-                                Duration(milliseconds: 1500),
-                              );
-                              if (context.mounted) {
-                                Navigator.of(context).pop();
-                              }
-                            },
+                                if (context.mounted) {
+                                  Navigator.of(context).pop();
+                                }
+                              },
+                            ),
                           ),
+                          sideBlocks: [
+                            VerdictSelectionBlock(),
+                            ImageBlockWithCrop(cropCircle: false),
+                            EvidenceBlock(),
+                          ],
                         ),
-                        sideBlocks: [
-                          VerdictSelectionBlock(),
-                          ImageBlockWithCrop(cropCircle: false),
-                          EvidenceBlock(),
-                        ],
                       ),
-                    ),
-                  );
-                },
-                child: Card(
-                  margin: EdgeInsets.zero,
-                  color: Colors.redAccent,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                    child: Text(
-                      'Awaiting settlement',
-                      style: GoogleFonts.righteous(
-                        color: Colors.white,
-                        fontSize: 20,
+                    );
+                  },
+                  child: Card(
+                    margin: EdgeInsets.zero,
+                    color: Colors.redAccent,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                      child: Text(
+                        'Awaiting settlement',
+                        style: GoogleFonts.righteous(
+                          color: Colors.white,
+                          fontSize: 20,
+                        ),
                       ),
                     ),
                   ),

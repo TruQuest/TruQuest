@@ -32,6 +32,8 @@ class SettlementProposalVm {
       '...' +
       submitterId.substring(submitterId.length - 4, submitterId.length);
 
+  bool isSubmitter(String? userId) => userId == submitterId;
+
   SettlementProposalVm.fromMap(Map<String, dynamic> map)
       : id = map['id'],
         thingId = map['thingId'],

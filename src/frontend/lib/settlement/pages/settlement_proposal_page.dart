@@ -240,6 +240,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
       child: Stack(
         children: [
           TabContainer(
+            key: ValueKey('${vm.proposal.id} ${vm.proposal.state}'),
             controller: TabContainerController(length: tabs.length),
             tabEdge: TabEdge.top,
             tabStart: 0.33,

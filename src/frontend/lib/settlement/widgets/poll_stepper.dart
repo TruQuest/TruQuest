@@ -52,48 +52,50 @@ class _PollStepperState extends StateX<PollStepper> {
       ),
       child: Stepper(
         currentStep: _currentStep,
-        controlsBuilder: (context, details) => SwipeButton(
-          key: ValueKey('${widget.info.userId} ${details.currentStep}'),
-          text: 'Slide to vote',
-          enabled: _checkButtonShouldBeEnabled(),
-          swiped: false,
-          onCompletedSwipe: () async {
-            await showDialog(
-              context: context,
-              builder: (_) => VoteDialog<DecisionIm>(
-                decisions: [
-                  DecisionIm.accept,
-                  DecisionIm.softDecline,
-                  DecisionIm.hardDecline,
-                ],
-                getDisplayString: (decision) => decision.getString(),
-                onVote: (decision, reason) async {
-                  SettlementActionAwaitable<CastVoteResultVm> action =
-                      details.currentStep == 0
-                          ? CastVoteOffChain(
-                              thingId: widget.proposal.thingId,
-                              proposalId: widget.proposal.id,
-                              decision: decision,
-                              reason: reason,
-                            )
-                          : CastVoteOnChain(
-                              thingId: widget.proposal.thingId,
-                              proposalId: widget.proposal.id,
-                              userIndexInProposalVerifiersArray:
-                                  widget.info.userIndexInProposalVerifiersArray,
-                              decision: decision,
-                              reason: reason,
-                            );
+        controlsBuilder: (context, details) => widget.info.userId != null
+            ? SwipeButton(
+                key: ValueKey('${widget.info.userId} ${details.currentStep}'),
+                text: 'Slide to vote',
+                enabled: _checkButtonShouldBeEnabled(),
+                swiped: false,
+                onCompletedSwipe: () async {
+                  await showDialog(
+                    context: context,
+                    builder: (_) => VoteDialog<DecisionIm>(
+                      decisions: [
+                        DecisionIm.accept,
+                        DecisionIm.softDecline,
+                        DecisionIm.hardDecline,
+                      ],
+                      getDisplayString: (decision) => decision.getString(),
+                      onVote: (decision, reason) async {
+                        SettlementActionAwaitable<CastVoteResultVm> action =
+                            details.currentStep == 0
+                                ? CastVoteOffChain(
+                                    thingId: widget.proposal.thingId,
+                                    proposalId: widget.proposal.id,
+                                    decision: decision,
+                                    reason: reason,
+                                  )
+                                : CastVoteOnChain(
+                                    thingId: widget.proposal.thingId,
+                                    proposalId: widget.proposal.id,
+                                    userIndexInProposalVerifiersArray: widget
+                                        .info.userIndexInProposalVerifiersArray,
+                                    decision: decision,
+                                    reason: reason,
+                                  );
 
-                  _settlementBloc.dispatch(action);
-                  await action.result;
+                        _settlementBloc.dispatch(action);
+                        await action.result;
+                      },
+                    ),
+                  );
+
+                  return false;
                 },
-              ),
-            );
-
-            return false;
-          },
-        ),
+              )
+            : SizedBox.shrink(),
         onStepTapped: (value) => setState(() {
           _currentStep = value;
         }),

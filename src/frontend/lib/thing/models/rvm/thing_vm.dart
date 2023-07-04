@@ -35,6 +35,8 @@ class ThingVm {
       '...' +
       submitterId.substring(submitterId.length - 4, submitterId.length);
 
+  bool isSubmitter(String? userId) => userId == submitterId;
+
   ThingVm.fromMap(Map<String, dynamic> map)
       : id = map['id'],
         state = ThingStateVm.values[map['state']],

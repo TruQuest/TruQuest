@@ -138,6 +138,7 @@ class _VoteDialogState<T> extends State<VoteDialog<T>> {
           onPressed: () async {
             if (_decision != null) {
               await widget.onVote(_decision!, _textController.text);
+              // @@TODO: When voting on-chain don't wait for the block to be mined before popping the dialog.
               if (context.mounted) {
                 Navigator.of(context).pop();
               }

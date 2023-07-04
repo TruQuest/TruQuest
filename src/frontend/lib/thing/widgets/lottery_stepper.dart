@@ -8,13 +8,16 @@ import '../models/rvm/thing_vm.dart';
 import '../../general/widgets/swipe_button.dart';
 import '../../widget_extensions.dart';
 
-class LotteryStepper extends StatefulWidget {
+// ignore: must_be_immutable
+class LotteryStepper extends StatelessWidgetX {
+  late final _thingBloc = use<ThingBloc>();
+
   final ThingVm thing;
   final GetVerifierLotteryInfoSuccessVm info;
   final int currentBlock;
   final int endBlock;
 
-  const LotteryStepper({
+  LotteryStepper({
     super.key,
     required this.thing,
     required this.info,
@@ -22,28 +25,17 @@ class LotteryStepper extends StatefulWidget {
     required this.endBlock,
   });
 
-  @override
-  State<LotteryStepper> createState() => _LotteryStepperState();
-}
+  bool _checkButtonShouldBeEnabled() =>
+      info.initBlock != null &&
+      info.alreadyJoined != null &&
+      !info.alreadyJoined! &&
+      currentBlock < endBlock;
 
-class _LotteryStepperState extends StateX<LotteryStepper> {
-  late final _thingBloc = use<ThingBloc>();
-
-  bool _checkButtonShouldBeEnabled() {
-    var info = widget.info;
-    return info.initBlock != null &&
-        info.alreadyJoined != null &&
-        !info.alreadyJoined! &&
-        widget.currentBlock < widget.endBlock;
-  }
-
-  bool _checkButtonShouldBeSwiped() {
-    var info = widget.info;
-    return info.alreadyJoined != null && info.alreadyJoined!;
-  }
+  bool _checkButtonShouldBeSwiped() =>
+      info.alreadyJoined != null && info.alreadyJoined!;
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return Theme(
       data: ThemeData(
         brightness: Brightness.dark,
@@ -53,19 +45,21 @@ class _LotteryStepperState extends StateX<LotteryStepper> {
             ),
       ),
       child: Stepper(
-        controlsBuilder: (context, details) => SwipeButton(
-          key: ValueKey(widget.info.userId),
-          text: 'Slide to join',
-          enabled: _checkButtonShouldBeEnabled(),
-          swiped: _checkButtonShouldBeSwiped(),
-          onCompletedSwipe: () async {
-            var action = JoinLottery(thingId: widget.thing.id);
-            _thingBloc.dispatch(action);
+        controlsBuilder: (context, details) => info.userId != null
+            ? SwipeButton(
+                key: ValueKey(info.userId),
+                text: 'Slide to join',
+                enabled: _checkButtonShouldBeEnabled(),
+                swiped: _checkButtonShouldBeSwiped(),
+                onCompletedSwipe: () async {
+                  var action = JoinLottery(thingId: thing.id);
+                  _thingBloc.dispatch(action);
 
-            var failure = await action.result;
-            return failure == null;
-          },
-        ),
+                  var failure = await action.result;
+                  return failure == null;
+                },
+              )
+            : SizedBox.shrink(),
         steps: [
           Step(
             title: Text(

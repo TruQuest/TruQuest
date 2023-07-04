@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../general/contexts/document_view_context.dart';
 import '../../general/widgets/swipe_button.dart';
+import '../../user/bloc/user_bloc.dart';
 import '../bloc/thing_actions.dart';
 import '../bloc/thing_bloc.dart';
 import '../bloc/thing_result_vm.dart';
@@ -10,25 +11,20 @@ import '../models/rvm/thing_state_vm.dart';
 import '../models/rvm/thing_vm.dart';
 import '../../widget_extensions.dart';
 
-class StatusStepperBlock extends StatefulWidget {
-  const StatusStepperBlock({super.key});
-
-  @override
-  State<StatusStepperBlock> createState() => _StatusStepperBlockState();
-}
-
-class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
+// ignore: must_be_immutable
+class StatusStepperBlock extends StatelessWidgetX {
+  late final _userBloc = use<UserBloc>();
   late final _thingBloc = use<ThingBloc>();
+  late final _documentViewContext = useScoped<DocumentViewContext>();
 
-  late DocumentViewContext _documentViewContext;
+  String? _currentUserId;
   late ThingVm _thing;
-
   late int _currentStep;
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _documentViewContext = useScoped<DocumentViewContext>();
+  StatusStepperBlock({super.key});
+
+  void _setup() {
+    _currentUserId = _userBloc.latestCurrentUser?.user.id;
     _thing = _documentViewContext.thing!;
     if (_thing.state.index <=
         ThingStateVm.fundedAndVerifierLotteryInitiated.index) {
@@ -207,7 +203,8 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
                   _thing.fundedAwaitingConfirmation!);
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
+    _setup();
     return Theme(
       data: ThemeData(
         brightness: Brightness.dark,
@@ -220,7 +217,7 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
         currentStep: _currentStep,
         controlsBuilder: (context, details) {
           var step = details.currentStep;
-          if (step <= 2) {
+          if (_thing.isSubmitter(_currentUserId) && step <= 2) {
             return SwipeButton(
               key: ValueKey(step),
               text:
@@ -259,7 +256,7 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
         steps: [
           Step(
             title: Text(
-              'Draft',
+              _thing.isSubmitter(_currentUserId) ? 'Draft' : 'Draft created',
               style: GoogleFonts.philosopher(
                 color: Color(0xffF8F9FA),
                 fontSize: 16,
@@ -278,7 +275,9 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
           ),
           Step(
             title: Text(
-              'Submit',
+              _thing.isSubmitter(_currentUserId)
+                  ? 'Submit'
+                  : 'Awaiting submission',
               style: GoogleFonts.philosopher(
                 color: Color(0xffF8F9FA),
                 fontSize: 16,
@@ -297,7 +296,7 @@ class _StatusStepperBlockState extends StateX<StatusStepperBlock> {
           ),
           Step(
             title: Text(
-              'Fund',
+              _thing.isSubmitter(_currentUserId) ? 'Fund' : 'Awaiting funding',
               style: GoogleFonts.philosopher(
                 color: Color(0xffF8F9FA),
                 fontSize: 16,

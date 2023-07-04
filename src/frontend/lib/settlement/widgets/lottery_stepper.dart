@@ -8,13 +8,16 @@ import '../bloc/settlement_actions.dart';
 import '../bloc/settlement_bloc.dart';
 import '../bloc/settlement_result_vm.dart';
 
-class LotteryStepper extends StatefulWidget {
+// ignore: must_be_immutable
+class LotteryStepper extends StatelessWidgetX {
+  late final _settlementBloc = use<SettlementBloc>();
+
   final SettlementProposalVm proposal;
   final GetVerifierLotteryInfoSuccessVm info;
   final int currentBlock;
   final int endBlock;
 
-  const LotteryStepper({
+  LotteryStepper({
     super.key,
     required this.proposal,
     required this.info,
@@ -22,34 +25,23 @@ class LotteryStepper extends StatefulWidget {
     required this.endBlock,
   });
 
-  @override
-  State<LotteryStepper> createState() => _LotteryStepperState();
-}
+  bool _checkButtonShouldBeEnabled(int step) =>
+      info.initBlock != null &&
+      info.alreadyJoined != null &&
+      !info.alreadyJoined! &&
+      info.alreadyClaimedASpot != null &&
+      !info.alreadyClaimedASpot! &&
+      currentBlock < endBlock &&
+      (step == 0 || info.userIndexInThingVerifiersArray >= 0);
 
-class _LotteryStepperState extends StateX<LotteryStepper> {
-  late final _settlementBloc = use<SettlementBloc>();
-
-  bool _checkButtonShouldBeEnabled(int step) {
-    var info = widget.info;
-    return info.initBlock != null &&
-        info.alreadyJoined != null &&
-        !info.alreadyJoined! &&
-        info.alreadyClaimedASpot != null &&
-        !info.alreadyClaimedASpot! &&
-        widget.currentBlock < widget.endBlock &&
-        (step == 0 || info.userIndexInThingVerifiersArray >= 0);
-  }
-
-  bool _checkButtonShouldBeSwiped(int step) {
-    var info = widget.info;
-    return step == -1 &&
-            info.alreadyClaimedASpot != null &&
-            info.alreadyClaimedASpot! ||
-        info.alreadyJoined != null && info.alreadyJoined!;
-  }
+  bool _checkButtonShouldBeSwiped(int step) =>
+      step == -1 &&
+          info.alreadyClaimedASpot != null &&
+          info.alreadyClaimedASpot! ||
+      info.alreadyJoined != null && info.alreadyJoined!;
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildX(BuildContext context) {
     return Theme(
       data: ThemeData(
         brightness: Brightness.dark,
@@ -61,24 +53,26 @@ class _LotteryStepperState extends StateX<LotteryStepper> {
       child: Column(
         children: [
           Stepper(
-            controlsBuilder: (context, details) => SwipeButton(
-              key: ValueKey(widget.info.userId),
-              text: 'Slide to claim',
-              enabled: _checkButtonShouldBeEnabled(-1),
-              swiped: _checkButtonShouldBeSwiped(-1),
-              onCompletedSwipe: () async {
-                var action = ClaimLotterySpot(
-                  thingId: widget.proposal.thingId,
-                  proposalId: widget.proposal.id,
-                  userIndexInThingVerifiersArray:
-                      widget.info.userIndexInThingVerifiersArray,
-                );
-                _settlementBloc.dispatch(action);
+            controlsBuilder: (context, details) => info.userId != null
+                ? SwipeButton(
+                    key: ValueKey(info.userId),
+                    text: 'Slide to claim',
+                    enabled: _checkButtonShouldBeEnabled(-1),
+                    swiped: _checkButtonShouldBeSwiped(-1),
+                    onCompletedSwipe: () async {
+                      var action = ClaimLotterySpot(
+                        thingId: proposal.thingId,
+                        proposalId: proposal.id,
+                        userIndexInThingVerifiersArray:
+                            info.userIndexInThingVerifiersArray,
+                      );
+                      _settlementBloc.dispatch(action);
 
-                var failure = await action.result;
-                return failure == null;
-              },
-            ),
+                      var failure = await action.result;
+                      return failure == null;
+                    },
+                  )
+                : SizedBox.shrink(),
             steps: [
               Step(
                 title: Text(
@@ -109,22 +103,24 @@ class _LotteryStepperState extends StateX<LotteryStepper> {
           ),
           SizedBox(height: 6),
           Stepper(
-            controlsBuilder: (context, details) => SwipeButton(
-              key: ValueKey(widget.info.userId),
-              text: 'Slide to join',
-              enabled: _checkButtonShouldBeEnabled(0),
-              swiped: _checkButtonShouldBeSwiped(0),
-              onCompletedSwipe: () async {
-                var action = JoinLottery(
-                  thingId: widget.proposal.thingId,
-                  proposalId: widget.proposal.id,
-                );
-                _settlementBloc.dispatch(action);
+            controlsBuilder: (context, details) => info.userId != null
+                ? SwipeButton(
+                    key: ValueKey(info.userId),
+                    text: 'Slide to join',
+                    enabled: _checkButtonShouldBeEnabled(0),
+                    swiped: _checkButtonShouldBeSwiped(0),
+                    onCompletedSwipe: () async {
+                      var action = JoinLottery(
+                        thingId: proposal.thingId,
+                        proposalId: proposal.id,
+                      );
+                      _settlementBloc.dispatch(action);
 
-                var failure = await action.result;
-                return failure == null;
-              },
-            ),
+                      var failure = await action.result;
+                      return failure == null;
+                    },
+                  )
+                : SizedBox.shrink(),
             steps: [
               Step(
                 title: Text(
