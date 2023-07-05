@@ -70,23 +70,57 @@ async function getImagePalette(url) {
 }
 
 class EthereumWallet {
-  constructor() {}
+  provider;
+
+  constructor() {
+    this.provider = null;
+  }
 
   isInstalled() {
     return typeof ethereum !== "undefined";
   }
 
+  count() {
+    return ethereum.providers?.length ?? 1;
+  }
+
+  select(walletName) {
+    if (ethereum.providers?.length) {
+      for (var i = 0; i < ethereum.providers.length; ++i) {
+        var p = ethereum.providers[i];
+        if (walletName == "Metamask" && p.isMetaMask) {
+          this.provider = p;
+          return;
+        } else if (walletName == "CoinbaseWallet" && p.isCoinbaseWallet) {
+          this.provider = p;
+          return;
+        }
+      }
+    }
+
+    throw new Error("Unsupported wallet");
+  }
+
   instance() {
-    return ethereum;
+    this.provider ??= ethereum;
+    if (!(this.provider.isMetaMask || this.provider.isCoinbaseWallet)) {
+      throw new Error("Unsupported wallet");
+    }
+    return this.provider;
+  }
+
+  name() {
+    if (this.provider.isMetaMask) return "Metamask";
+    else return "CoinbaseWallet";
   }
 
   isInitialized() {
-    return ethereum._state.initialized;
+    return this.provider.isCoinbaseWallet || this.provider._state.initialized;
   }
 
   async getChainId() {
     try {
-      var chainId = await ethereum.request({ method: "eth_chainId" });
+      var chainId = await this.provider.request({ method: "eth_chainId" });
       return {
         chainId: chainId,
         error: null,
@@ -104,7 +138,9 @@ class EthereumWallet {
 
   async requestAccounts() {
     try {
-      var accounts = await ethereum.request({ method: "eth_requestAccounts" });
+      var accounts = await this.provider.request({
+        method: "eth_requestAccounts",
+      });
       return {
         accounts: accounts,
         error: null,
@@ -122,7 +158,7 @@ class EthereumWallet {
 
   async getAccounts() {
     try {
-      var accounts = await ethereum.request({ method: "eth_accounts" });
+      var accounts = await this.provider.request({ method: "eth_accounts" });
       return {
         accounts: accounts,
         error: null,
@@ -141,14 +177,17 @@ class EthereumWallet {
   async switchChain(chainParams) {
     var error = null;
     try {
-      await ethereum.request({
+      await this.provider.request({
         method: "wallet_switchEthereumChain",
         params: [{ chainId: chainParams.id }],
       });
     } catch (switchError) {
-      if (switchError.code === 4902) {
+      if (
+        (this.provider.isMetaMask && switchError.code === 4902) ||
+        (this.provider.isCoinbaseWallet && switchError.code === -32603)
+      ) {
         try {
-          await ethereum.request({
+          await this.provider.request({
             method: "wallet_addEthereumChain",
             params: [
               {
@@ -184,7 +223,7 @@ class EthereumWallet {
 
   async signTypedData(account, data) {
     try {
-      var signature = await ethereum.request({
+      var signature = await this.provider.request({
         method: "eth_signTypedData_v4",
         params: [account, data],
       });
@@ -206,7 +245,7 @@ class EthereumWallet {
 
   async personalSign(account, data) {
     try {
-      var signature = await ethereum.request({
+      var signature = await this.provider.request({
         method: "personal_sign",
         params: [data, account],
       });
@@ -227,11 +266,11 @@ class EthereumWallet {
   }
 
   removeAllListeners(event) {
-    ethereum.removeAllListeners(event);
+    this.provider.removeAllListeners(event);
   }
 
   on(event, handler) {
-    ethereum.on(event, handler);
+    this.provider.on(event, handler);
   }
 }
 

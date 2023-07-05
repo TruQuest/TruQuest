@@ -14,7 +14,9 @@ class EthereumBloc extends Bloc<EthereumAction> {
   final TruthserumContract _truthserumContract;
   final TruQuestContract _truQuestContract;
 
-  final bool isAvailable;
+  bool get isAvailable => _ethereumService.isAvailable;
+  bool get multipleWalletsDetected => _ethereumService.multipleWalletsDetected;
+  bool get walletSelected => _ethereumService.walletSelected.isCompleted;
 
   final BehaviorSubject<int> _latestL1BlockNumberChannel =
       BehaviorSubject<int>();
@@ -24,9 +26,11 @@ class EthereumBloc extends Bloc<EthereumAction> {
     this._ethereumService,
     this._truthserumContract,
     this._truQuestContract,
-  ) : isAvailable = _ethereumService.isAvailable {
+  ) {
     actionChannel.stream.listen((action) {
-      if (action is SwitchEthereumChain) {
+      if (action is SelectWallet) {
+        _selectWallet(action);
+      } else if (action is SwitchEthereumChain) {
         _switchEthereumChain(action);
       } else if (action is ConnectEthereumAccount) {
         _connectEthereumAccount(action);
@@ -40,6 +44,10 @@ class EthereumBloc extends Bloc<EthereumAction> {
     _ethereumService.l1BlockMined$.listen((blockNumber) {
       _latestL1BlockNumberChannel.add(blockNumber);
     });
+  }
+
+  void _selectWallet(SelectWallet action) {
+    _ethereumService.selectWallet(action.walletName);
   }
 
   void _switchEthereumChain(SwitchEthereumChain action) async {

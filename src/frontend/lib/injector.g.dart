@@ -16,7 +16,7 @@ class _$Injector extends Injector {
           c<UserApiService>(), c<ServerConnector>(), c<LocalStorage>()))
       ..registerSingleton((c) => EthereumBloc(
           c<EthereumService>(), c<TruthserumContract>(), c<TruQuestContract>()))
-      ..registerSingleton((c) => EthereumService())
+      ..registerSingleton((c) => EthereumService(c<LocalStorage>()))
       ..registerSingleton((c) => ServerConnector())
       ..registerSingleton((c) => UserApiService(c<ServerConnector>()))
       ..registerSingleton((c) => ThingApiService(c<ServerConnector>()))

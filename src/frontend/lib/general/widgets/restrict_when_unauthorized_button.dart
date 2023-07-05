@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'wallet_selection_button.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../../widget_extensions.dart';
@@ -23,6 +24,7 @@ class RestrictWhenUnauthorizedButton extends StatelessWidgetX {
             stream: _userBloc.currentUser$,
             builder: (context, snapshot) {
               var user = snapshot.data?.user;
+              int i = 1;
 
               return IgnorePointer(
                 ignoring: user?.id != null,
@@ -44,12 +46,35 @@ class RestrictWhenUnauthorizedButton extends StatelessWidgetX {
                                         Icons.check_box,
                                         color: Colors.green,
                                       )
-                                    : Text('1)'),
+                                    : Text('$i)'),
                                 SizedBox(width: 6),
-                                Text('Install Metamask'),
+                                Text(
+                                  'Install Metamask or Coinbase Wallet extension',
+                                ),
                               ],
                             ),
-                            SizedBox(height: 8),
+                            if (_ethereumBloc.multipleWalletsDetected)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Row(
+                                  children: [
+                                    i++ > 0 && _ethereumBloc.walletSelected
+                                        ? Icon(
+                                            Icons.check_box,
+                                            color: Colors.green,
+                                          )
+                                        : Text('$i)'),
+                                    SizedBox(width: 6),
+                                    Text('Select which wallet to use'),
+                                    if (!_ethereumBloc.walletSelected)
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 6),
+                                        child: WalletSelectionButton(),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            if (i++ > 0) SizedBox(height: 8),
                             Row(
                               children: [
                                 user?.ethereumAccount != null
@@ -57,7 +82,7 @@ class RestrictWhenUnauthorizedButton extends StatelessWidgetX {
                                         Icons.check_box,
                                         color: Colors.green,
                                       )
-                                    : Text('2)'),
+                                    : Text('$i)'),
                                 SizedBox(width: 6),
                                 Text(
                                   'Connect your Ethereum account to TruQuest',
@@ -67,7 +92,7 @@ class RestrictWhenUnauthorizedButton extends StatelessWidgetX {
                             SizedBox(height: 8),
                             Row(
                               children: [
-                                Text('3)'),
+                                Text('${++i})'),
                                 SizedBox(width: 6),
                                 Text('Sign-in to TruQuest'),
                               ],

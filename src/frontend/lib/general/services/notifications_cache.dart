@@ -83,11 +83,31 @@ class NotificationsCache {
         itemType: WatchedItemTypeVm.subject,
         itemId: '',
         itemUpdateCategory: 0,
-        title: 'Please install Metamask and reload the page',
-        details: 'Click to open metamask.io',
+        title: 'Please install Metamask or Coinbase wallet extension',
+        details: 'Reload the page after installation',
       );
+    } else {
+      if (!ethereumService.multipleWalletsDetected ||
+          ethereumService.walletSelected.isCompleted) {
+        _listenForChainChanges(ethereumService);
+      } else {
+        ethereumService.walletSelected.future.then((_) {
+          _listenForChainChanges(ethereumService);
+        });
+      }
     }
 
+    _userService.currentUserChanged$.listen((user) {
+      _unreadNotifications = _usernameToUnreadNotifications.putIfAbsent(
+        user.username,
+        () => {},
+      );
+      _username = user.username;
+      _notify();
+    });
+  }
+
+  void _listenForChainChanges(EthereumService ethereumService) {
     ethereumService.connectedChainChanged$.listen((event) {
       var (chainId, shouldReloadPage) = event;
       if (shouldReloadPage) {
@@ -109,15 +129,6 @@ class NotificationsCache {
         _clientSideWarning = null;
       }
 
-      _notify();
-    });
-
-    _userService.currentUserChanged$.listen((user) {
-      _unreadNotifications = _usernameToUnreadNotifications.putIfAbsent(
-        user.username,
-        () => {},
-      );
-      _username = user.username;
       _notify();
     });
   }

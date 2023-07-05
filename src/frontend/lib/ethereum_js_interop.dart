@@ -4,6 +4,7 @@ library app;
 import 'dart:convert';
 import 'dart:js_util';
 
+// ignore: depend_on_referenced_packages
 import 'package:js/js.dart';
 
 @JS()
@@ -64,7 +65,10 @@ class EthereumSignResult {
 @JS('EthereumWallet')
 class _EthereumWallet {
   external bool isInstalled();
+  external int count();
+  external void select(String walletName);
   external dynamic instance();
+  external String name();
   external bool isInitialized();
   external dynamic getChainId();
   external dynamic requestAccounts();
@@ -82,6 +86,9 @@ class EthereumWallet {
   EthereumWallet() : _ethereumWallet = _EthereumWallet();
 
   bool isInstalled() => _ethereumWallet.isInstalled();
+  int count() => _ethereumWallet.count();
+  void select(String walletName) => _ethereumWallet.select(walletName);
+  String name() => _ethereumWallet.name();
   dynamic _instance() => _ethereumWallet.instance();
   bool isInitialized() => _ethereumWallet.isInitialized();
 
@@ -146,10 +153,12 @@ class EthereumWallet {
   }
 
   void onChainChanged(void Function(int) handler) {
+    var name = _ethereumWallet.name();
     _ethereumWallet.on(
       'chainChanged',
       allowInterop(
-        (dynamic chainId) => handler(int.parse(chainId)),
+        (dynamic chainId) =>
+            name == 'Metamask' ? handler(int.parse(chainId)) : handler(chainId),
       ),
     );
   }
@@ -166,6 +175,7 @@ abstract class _Provider {
 abstract class Provider {
   final _Provider _provider;
 
+  // ignore: library_private_types_in_public_api
   Provider(this._provider);
 
   void onBlockMined(void Function(int blockNumber) handler) {

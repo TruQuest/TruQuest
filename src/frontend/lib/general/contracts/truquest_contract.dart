@@ -131,8 +131,18 @@ class TruQuestContract {
       _abi,
       _ethereumService.l2ReadOnlyProvider,
     );
+
     if (_ethereumService.isAvailable) {
-      _contract = Contract(address, _abi, _ethereumService.provider);
+      if (!_ethereumService.multipleWalletsDetected ||
+          _ethereumService.walletSelected.isCompleted) {
+        _contract = Contract(address, _abi, _ethereumService.provider);
+      } else {
+        _ethereumService.walletSelected.future.then((_) {
+          _contract = Contract(address, _abi, _ethereumService.provider);
+        });
+      }
+    } else {
+      _contract = null;
     }
   }
 

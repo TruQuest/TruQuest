@@ -5,12 +5,15 @@ import 'package:convert/convert.dart';
 import 'package:either_dart/either.dart';
 import 'package:universal_html/html.dart' as html;
 
+import '../../general/services/local_storage.dart';
 import '../../ethereum_js_interop.dart';
 import '../../thing/models/im/decision_im.dart' as thing;
 import '../../settlement/models/im/decision_im.dart' as settlement;
 import '../errors/ethereum_error.dart';
 
 class EthereumService {
+  final LocalStorage _localStorage;
+
   final int validChainId = 901;
 
   int? _connectedChainId;
@@ -25,6 +28,8 @@ class EthereumService {
   late final JsonRpcProvider l1Provider;
 
   late final bool isAvailable;
+  late final bool multipleWalletsDetected;
+  final Completer walletSelected = Completer();
 
   final StreamController<(int, bool)> _connectedChainChangedEventChannel =
       StreamController<(int, bool)>();
@@ -40,7 +45,7 @@ class EthereumService {
       StreamController<int>();
   Stream<int> get l1BlockMined$ => _l1BlockMinedEventChannel.stream;
 
-  EthereumService() : _ethereumWallet = EthereumWallet() {
+  EthereumService(this._localStorage) : _ethereumWallet = EthereumWallet() {
     isAvailable = _ethereumWallet.isInstalled();
 
     l1Provider = JsonRpcProvider('http://localhost:8545');
@@ -53,53 +58,77 @@ class EthereumService {
     l2ReadOnlyProvider = JsonRpcProvider('http://localhost:9545');
 
     if (isAvailable) {
-      provider = Web3Provider(_ethereumWallet);
+      if (_ethereumWallet.count() > 1) {
+        multipleWalletsDetected = true;
+        String? walletName;
+        if ((walletName = _localStorage.getString('SelectedWallet')) != null) {
+          _ethereumWallet.select(walletName!);
+          _setup();
+          walletSelected.complete();
+        }
 
-      if (!_ethereumWallet.isInitialized()) {
-        html.window.location.reload();
+        return;
       }
 
-      _ethereumWallet.removeAllListeners('chainChanged');
-      _ethereumWallet.removeAllListeners('accountsChanged');
-
-      _ethereumWallet.onChainChanged((chainId) {
-        print('Chain changed: $chainId');
-        if (_connectedChainId != chainId) {
-          _connectedChainId = chainId;
-          _connectedChainChangedEventChannel.add(
-            (_connectedChainId!, true),
-          );
-        }
-      });
-
-      _ethereumWallet.onAccountsChanged((accounts) {
-        accounts = accounts.map((a) => convertToEip55Address(a)).toList();
-        print('Accounts changed: $accounts');
-        var connectedAccount = accounts.isNotEmpty ? accounts.first : null;
-        if (_connectedAccount != connectedAccount) {
-          _connectedAccount = connectedAccount;
-          _connectedAccountChangedEventChannel.add(_connectedAccount);
-        }
-      });
-
-      _ethereumWallet.getChainId().then((chainId) {
-        print('Current chain: $chainId');
-        _connectedChainId = chainId;
-        _connectedChainChangedEventChannel.add(
-          (_connectedChainId!, false),
-        );
-      });
-
-      _ethereumWallet.getAccounts().then((accounts) {
-        accounts = accounts.map((a) => convertToEip55Address(a)).toList();
-        _connectedAccount = accounts.isNotEmpty ? accounts.first : null;
-        print('Current account: $_connectedAccount');
-        _connectedAccountChangedEventChannel.add(_connectedAccount);
-      });
+      multipleWalletsDetected = false;
+      _setup();
     }
   }
 
+  void _setup() {
+    provider = Web3Provider(_ethereumWallet);
+
+    if (!_ethereumWallet.isInitialized()) {
+      html.window.location.reload();
+    }
+
+    _ethereumWallet.removeAllListeners('chainChanged');
+    _ethereumWallet.removeAllListeners('accountsChanged');
+
+    _ethereumWallet.onChainChanged((chainId) {
+      print('Chain changed: $chainId');
+      if (_connectedChainId != chainId) {
+        _connectedChainId = chainId;
+        _connectedChainChangedEventChannel.add(
+          (_connectedChainId!, true),
+        );
+      }
+    });
+
+    _ethereumWallet.onAccountsChanged((accounts) {
+      accounts = accounts.map((a) => convertToEip55Address(a)).toList();
+      print('Accounts changed: $accounts');
+      var connectedAccount = accounts.isNotEmpty ? accounts.first : null;
+      if (_connectedAccount != connectedAccount) {
+        _connectedAccount = connectedAccount;
+        _connectedAccountChangedEventChannel.add(_connectedAccount);
+      }
+    });
+
+    _ethereumWallet.getChainId().then((chainId) {
+      print('Current chain: $chainId');
+      _connectedChainId = chainId;
+      _connectedChainChangedEventChannel.add(
+        (_connectedChainId!, false),
+      );
+    });
+
+    _ethereumWallet.getAccounts().then((accounts) {
+      accounts = accounts.map((a) => convertToEip55Address(a)).toList();
+      _connectedAccount = accounts.isNotEmpty ? accounts.first : null;
+      print('Current account: $_connectedAccount');
+      _connectedAccountChangedEventChannel.add(_connectedAccount);
+    });
+  }
+
   Future<int> getLatestL1BlockNumber() => l1Provider.getBlockNumber();
+
+  void selectWallet(String walletName) async {
+    _ethereumWallet.select(walletName);
+    _setup();
+    walletSelected.complete();
+    await _localStorage.setString('SelectedWallet', walletName);
+  }
 
   Future<EthereumError?> switchEthereumChain() async {
     if (!isAvailable) {
@@ -298,7 +327,7 @@ class EthereumService {
 
     var result = await _ethereumWallet.personalSign(
       connectedAccount,
-      hex.encode(utf8.encode(message)),
+      '0x' + hex.encode(utf8.encode(message)),
     );
     if (result.error != null) {
       print(

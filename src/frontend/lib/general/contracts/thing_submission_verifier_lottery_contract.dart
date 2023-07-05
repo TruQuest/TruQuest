@@ -128,9 +128,19 @@ class ThingSubmissionVerifierLotteryContract {
       _abi,
       _ethereumService.l2ReadOnlyProvider,
     );
-    _contract = _ethereumService.isAvailable
-        ? Contract(_address, _abi, _ethereumService.provider)
-        : null;
+
+    if (_ethereumService.isAvailable) {
+      if (!_ethereumService.multipleWalletsDetected ||
+          _ethereumService.walletSelected.isCompleted) {
+        _contract = Contract(_address, _abi, _ethereumService.provider);
+      } else {
+        _ethereumService.walletSelected.future.then((_) {
+          _contract = Contract(_address, _abi, _ethereumService.provider);
+        });
+      }
+    } else {
+      _contract = null;
+    }
   }
 
   Future<(int, String, String)> getOrchestratorCommitment(

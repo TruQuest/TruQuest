@@ -57,7 +57,16 @@ class TruthserumContract {
 
   TruthserumContract(this._ethereumService) {
     if (_ethereumService.isAvailable) {
-      _contract = Contract(_address, _abi, _ethereumService.provider);
+      if (!_ethereumService.multipleWalletsDetected ||
+          _ethereumService.walletSelected.isCompleted) {
+        _contract = Contract(_address, _abi, _ethereumService.provider);
+      } else {
+        _ethereumService.walletSelected.future.then((_) {
+          _contract = Contract(_address, _abi, _ethereumService.provider);
+        });
+      }
+    } else {
+      _contract = null;
     }
   }
 
