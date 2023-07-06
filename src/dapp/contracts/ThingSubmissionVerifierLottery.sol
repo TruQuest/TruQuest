@@ -6,6 +6,9 @@ import "./AcceptancePoll.sol";
 import "./L1Block.sol";
 
 error ThingSubmissionVerifierLottery__Unauthorized();
+error ThingSubmissionVerifierLottery__SubmitterCannotParticipate(
+    bytes16 thingId
+);
 error ThingSubmissionVerifierLottery__NotActive(bytes16 thingId);
 error ThingSubmissionVerifierLottery__Expired(bytes16 thingId);
 error ThingSubmissionVerifierLottery__NotEnoughFunds();
@@ -86,6 +89,15 @@ contract ThingSubmissionVerifierLottery {
     modifier onlyAcceptancePoll() {
         if (msg.sender != address(s_acceptancePoll)) {
             revert ThingSubmissionVerifierLottery__Unauthorized();
+        }
+        _;
+    }
+
+    modifier notSubmitter(bytes16 _thingId) {
+        if (i_truQuest.s_thingSubmitter(_thingId) == msg.sender) {
+            revert ThingSubmissionVerifierLottery__SubmitterCannotParticipate(
+                _thingId
+            );
         }
         _;
     }
@@ -226,6 +238,7 @@ contract ThingSubmissionVerifierLottery {
         bytes32 _userData
     )
         public
+        notSubmitter(_thingId)
         whenHasEnoughFundsToStakeAsVerifier
         whenActiveAndNotExpired(_thingId)
         whenNotAlreadyJoined(_thingId)

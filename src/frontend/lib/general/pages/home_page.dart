@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
+import '../widgets/fixed_width.dart';
 import '../widgets/deposit_funds_button.dart';
 import '../widgets/clipped_rect.dart';
 import '../widgets/nav_panel.dart';
@@ -49,113 +50,116 @@ class _HomePageState extends StateX<HomePage> {
   Widget buildX(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xffF8F9FA),
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            floating: true,
-            pinned: false,
-            snap: false,
-            backgroundColor: Colors.white,
-            leadingWidth: 150,
-            leading: ClippedRect(
-              height: 70,
-              color: Colors.black,
-              fromNarrowToWide: true,
+      body: FixedWidth(
+        width: 1400,
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              floating: true,
+              pinned: false,
+              snap: false,
+              backgroundColor: Colors.white,
+              leadingWidth: 150,
+              leading: ClippedRect(
+                height: 70,
+                color: Colors.black,
+                fromNarrowToWide: true,
+              ),
+              title: Image.asset(
+                'assets/images/logo1.png',
+                height: 60,
+              ),
+              toolbarHeight: 70,
+              centerTitle: true,
+              elevation: 0,
+              actions: [DepositFundsButton()],
             ),
-            title: Image.asset(
-              'assets/images/logo1.png',
-              height: 60,
-            ),
-            toolbarHeight: 70,
-            centerTitle: true,
-            elevation: 0,
-            actions: [DepositFundsButton()],
-          ),
-          NavPanel(),
-          StreamBuilder(
-            stream: _pageContext.route$,
-            builder: (context, snapshot) {
-              if (snapshot.data == null) {
-                return SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-
-              var route = snapshot.data!;
-              switch (route) {
-                case '/subjects':
-                  return SubjectsPage();
-                case '/goto':
+            NavPanel(),
+            StreamBuilder(
+              stream: _pageContext.route$,
+              builder: (context, snapshot) {
+                if (snapshot.data == null) {
                   return SliverFillRemaining(
                     hasScrollBody: false,
-                    child: Center(
-                      child: TextButton(
-                        child: Text('Go To'),
-                        onPressed: () async {
-                          var route = '';
-                          var shouldGo = await showDialog<bool>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text('Page'),
-                              content: SizedBox(
-                                width: 100,
-                                child: TextField(
-                                  onChanged: (value) => route = value,
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                var route = snapshot.data!;
+                switch (route) {
+                  case '/subjects':
+                    return SubjectsPage();
+                  case '/goto':
+                    return SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: TextButton(
+                          child: Text('Go To'),
+                          onPressed: () async {
+                            var route = '';
+                            var shouldGo = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text('Page'),
+                                content: SizedBox(
+                                  width: 100,
+                                  child: TextField(
+                                    onChanged: (value) => route = value,
+                                  ),
                                 ),
+                                actions: [
+                                  TextButton(
+                                    child: Text('Ok'),
+                                    onPressed: () {
+                                      Navigator.of(context).pop(true);
+                                    },
+                                  ),
+                                ],
                               ),
-                              actions: [
-                                TextButton(
-                                  child: Text('Ok'),
-                                  onPressed: () {
-                                    Navigator.of(context).pop(true);
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
+                            );
 
-                          if (shouldGo != null &&
-                              shouldGo &&
-                              route.isNotEmpty) {
-                            _pageContext.goto(route);
-                          }
-                        },
+                            if (shouldGo != null &&
+                                shouldGo &&
+                                route.isNotEmpty) {
+                              _pageContext.goto(route);
+                            }
+                          },
+                        ),
                       ),
-                    ),
-                  );
-                default:
-                  var routeSplit = route.split('/');
-                  var id = routeSplit[2];
-                  var timestamp = DateTime.fromMillisecondsSinceEpoch(
-                    int.parse(routeSplit.last),
-                  );
+                    );
+                  default:
+                    var routeSplit = route.split('/');
+                    var id = routeSplit[2];
+                    var timestamp = DateTime.fromMillisecondsSinceEpoch(
+                      int.parse(routeSplit.last),
+                    );
 
-                  if (routeSplit[1] == 'subjects') {
-                    return SubjectPage(
-                      subjectId: id,
-                      timestamp: timestamp,
-                    );
-                  } else if (routeSplit[1] == 'things') {
-                    return ThingPage(
-                      thingId: id,
-                      timestamp: timestamp,
-                    );
-                  } else if (routeSplit[1] == 'proposals') {
-                    return SettlementProposalPage(
-                      proposalId: id,
-                      timestamp: timestamp,
-                    );
-                  }
+                    if (routeSplit[1] == 'subjects') {
+                      return SubjectPage(
+                        subjectId: id,
+                        timestamp: timestamp,
+                      );
+                    } else if (routeSplit[1] == 'things') {
+                      return ThingPage(
+                        thingId: id,
+                        timestamp: timestamp,
+                      );
+                    } else if (routeSplit[1] == 'proposals') {
+                      return SettlementProposalPage(
+                        proposalId: id,
+                        timestamp: timestamp,
+                      );
+                    }
 
-                  return SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(child: Text('Not found')),
-                  );
-              }
-            },
-          ),
-        ],
+                    return SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(child: Text('Not found')),
+                    );
+                }
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

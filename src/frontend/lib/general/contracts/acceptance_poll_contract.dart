@@ -117,7 +117,7 @@ class AcceptancePollContract {
 
   final EthereumService _ethereumService;
 
-  late final Contract? _contract;
+  Contract? _contract;
   late final Contract _readOnlyContract;
 
   AcceptancePollContract(this._ethereumService) {
@@ -136,8 +136,6 @@ class AcceptancePollContract {
           _contract = Contract(_address, _abi, _ethereumService.provider);
         });
       }
-    } else {
-      _contract = null;
     }
   }
 

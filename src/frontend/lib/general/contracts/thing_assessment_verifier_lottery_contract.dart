@@ -161,7 +161,7 @@ class ThingAssessmentVerifierLotteryContract {
 
   final _random = Random.secure();
 
-  late final Contract? _contract;
+  Contract? _contract;
   late final Contract _readOnlyContract;
 
   ThingAssessmentVerifierLotteryContract(this._ethereumService) {
@@ -180,8 +180,6 @@ class ThingAssessmentVerifierLotteryContract {
           _contract = Contract(_address, _abi, _ethereumService.provider);
         });
       }
-    } else {
-      _contract = null;
     }
   }
 

@@ -53,26 +53,27 @@ class LotteryStepper extends StatelessWidgetX {
       child: Column(
         children: [
           Stepper(
-            controlsBuilder: (context, details) => info.userId != null
-                ? SwipeButton(
-                    key: ValueKey(info.userId),
-                    text: 'Slide to claim',
-                    enabled: _checkButtonShouldBeEnabled(-1),
-                    swiped: _checkButtonShouldBeSwiped(-1),
-                    onCompletedSwipe: () async {
-                      var action = ClaimLotterySpot(
-                        thingId: proposal.thingId,
-                        proposalId: proposal.id,
-                        userIndexInThingVerifiersArray:
-                            info.userIndexInThingVerifiersArray,
-                      );
-                      _settlementBloc.dispatch(action);
+            controlsBuilder: (context, details) =>
+                info.userId != null && !proposal.isSubmitter(info.userId)
+                    ? SwipeButton(
+                        key: ValueKey(info.userId),
+                        text: 'Slide to claim',
+                        enabled: _checkButtonShouldBeEnabled(-1),
+                        swiped: _checkButtonShouldBeSwiped(-1),
+                        onCompletedSwipe: () async {
+                          var action = ClaimLotterySpot(
+                            thingId: proposal.thingId,
+                            proposalId: proposal.id,
+                            userIndexInThingVerifiersArray:
+                                info.userIndexInThingVerifiersArray,
+                          );
+                          _settlementBloc.dispatch(action);
 
-                      var failure = await action.result;
-                      return failure == null;
-                    },
-                  )
-                : SizedBox.shrink(),
+                          var failure = await action.result;
+                          return failure == null;
+                        },
+                      )
+                    : SizedBox.shrink(),
             steps: [
               Step(
                 title: Text(
@@ -103,24 +104,25 @@ class LotteryStepper extends StatelessWidgetX {
           ),
           SizedBox(height: 6),
           Stepper(
-            controlsBuilder: (context, details) => info.userId != null
-                ? SwipeButton(
-                    key: ValueKey(info.userId),
-                    text: 'Slide to join',
-                    enabled: _checkButtonShouldBeEnabled(0),
-                    swiped: _checkButtonShouldBeSwiped(0),
-                    onCompletedSwipe: () async {
-                      var action = JoinLottery(
-                        thingId: proposal.thingId,
-                        proposalId: proposal.id,
-                      );
-                      _settlementBloc.dispatch(action);
+            controlsBuilder: (context, details) =>
+                info.userId != null && !proposal.isSubmitter(info.userId)
+                    ? SwipeButton(
+                        key: ValueKey(info.userId),
+                        text: 'Slide to join',
+                        enabled: _checkButtonShouldBeEnabled(0),
+                        swiped: _checkButtonShouldBeSwiped(0),
+                        onCompletedSwipe: () async {
+                          var action = JoinLottery(
+                            thingId: proposal.thingId,
+                            proposalId: proposal.id,
+                          );
+                          _settlementBloc.dispatch(action);
 
-                      var failure = await action.result;
-                      return failure == null;
-                    },
-                  )
-                : SizedBox.shrink(),
+                          var failure = await action.result;
+                          return failure == null;
+                        },
+                      )
+                    : SizedBox.shrink(),
             steps: [
               Step(
                 title: Text(

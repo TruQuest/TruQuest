@@ -53,7 +53,7 @@ class TruthserumContract {
 
   final EthereumService _ethereumService;
 
-  late final Contract? _contract;
+  Contract? _contract;
 
   TruthserumContract(this._ethereumService) {
     if (_ethereumService.isAvailable) {
@@ -65,8 +65,6 @@ class TruthserumContract {
           _contract = Contract(_address, _abi, _ethereumService.provider);
         });
       }
-    } else {
-      _contract = null;
     }
   }
 

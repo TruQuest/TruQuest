@@ -7,6 +7,9 @@ import "./AssessmentPoll.sol";
 import "./L1Block.sol";
 
 error ThingAssessmentVerifierLottery__Unauthorized();
+error ThingAssessmentVerifierLottery__SubmitterCannotParticipate(
+    bytes32 thingProposalId
+);
 error ThingAssessmentVerifierLottery__NotActive(bytes32 thingProposalId);
 error ThingAssessmentVerifierLottery__Expired(bytes32 thingProposalId);
 error ThingAssessmentVerifierLottery__NotEnoughFunds();
@@ -340,6 +343,13 @@ contract ThingAssessmentVerifierLottery {
         whenNotAlreadyJoined(_thingProposalId)
     {
         (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
+
+        if (i_truQuest.getSettlementProposalSubmitter(thingId) == msg.sender) {
+            revert ThingAssessmentVerifierLottery__SubmitterCannotParticipate(
+                _thingProposalId
+            );
+        }
+
         if (
             !s_acceptancePoll.checkUserIsThingsVerifierAtIndex(
                 thingId,
@@ -371,14 +381,20 @@ contract ThingAssessmentVerifierLottery {
         whenActiveAndNotExpired(_thingProposalId)
         whenNotAlreadyJoined(_thingProposalId)
     {
+        (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
+
+        if (i_truQuest.getSettlementProposalSubmitter(thingId) == msg.sender) {
+            revert ThingAssessmentVerifierLottery__SubmitterCannotParticipate(
+                _thingProposalId
+            );
+        }
+
         i_truQuest.stakeAsVerifier(msg.sender);
         uint256 l1BlockNumber = _getL1BlockNumber();
         s_thingProposalIdToParticipantJoinedBlockNo[_thingProposalId][
             msg.sender
         ] = l1BlockNumber;
         s_thingProposalIdToParticipants[_thingProposalId].push(msg.sender);
-
-        (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
 
         emit JoinedLottery(
             thingId,

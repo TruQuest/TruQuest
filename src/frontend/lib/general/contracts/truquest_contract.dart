@@ -122,7 +122,7 @@ class TruQuestContract {
 
   final EthereumService _ethereumService;
 
-  late final Contract? _contract;
+  Contract? _contract;
   late final Contract _readOnlyContract;
 
   TruQuestContract(this._ethereumService) {
@@ -141,8 +141,6 @@ class TruQuestContract {
           _contract = Contract(address, _abi, _ethereumService.provider);
         });
       }
-    } else {
-      _contract = null;
     }
   }
 
