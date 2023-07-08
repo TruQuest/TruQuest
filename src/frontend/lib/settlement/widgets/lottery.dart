@@ -71,7 +71,7 @@ class _LotteryState extends StateX<Lottery> {
             stream: _settlementBloc.verifierLotteryParticipants$,
             builder: (context, snapshot) {
               if (snapshot.data == null) {
-                return Center(child: CircularProgressIndicator());
+                return const Center(child: CircularProgressIndicator());
               }
 
               var entries = snapshot.data!.entries;
@@ -94,7 +94,7 @@ class _LotteryState extends StateX<Lottery> {
             stream: _settlementBloc.verifierLotteryInfo$,
             builder: (context, snapshot) {
               if (snapshot.data == null) {
-                return Center(child: CircularProgressIndicator());
+                return const Center(child: CircularProgressIndicator());
               }
 
               var info = snapshot.data!;
@@ -117,7 +117,7 @@ class _LotteryState extends StateX<Lottery> {
                         children: [
                           Container(
                             margin: const EdgeInsets.only(top: 18),
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               border: Border(
                                 bottom: BorderSide(color: Colors.white),
                               ),
@@ -131,7 +131,7 @@ class _LotteryState extends StateX<Lottery> {
                               ),
                             ),
                           ),
-                          SizedBox(height: 12),
+                          const SizedBox(height: 12),
                           Stack(
                             alignment: Alignment.center,
                             children: [
@@ -145,7 +145,7 @@ class _LotteryState extends StateX<Lottery> {
                                     dotColor: Colors.transparent,
                                   ),
                                 ),
-                                innerWidget: (_) => SizedBox.shrink(),
+                                innerWidget: (_) => const SizedBox.shrink(),
                               ),
                               if (info.initBlock != null)
                                 BlockCountdown(
@@ -164,7 +164,7 @@ class _LotteryState extends StateX<Lottery> {
                                         fontSize: 26,
                                       ),
                                     ),
-                                    Spacer(),
+                                    const Spacer(),
                                     Text(
                                       endBlock.toStringAsFixed(0),
                                       style: GoogleFonts.righteous(
@@ -177,7 +177,7 @@ class _LotteryState extends StateX<Lottery> {
                               ),
                             ],
                           ),
-                          SizedBox(height: 12),
+                          const SizedBox(height: 12),
                           LotteryStepper(
                             proposal: widget.proposal,
                             info: info,

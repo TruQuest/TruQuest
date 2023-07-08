@@ -221,6 +221,39 @@ class EthereumWallet {
     };
   }
 
+  async watchTruthserum() {
+    try {
+      var success = await this.provider.request({
+        method: "wallet_watchAsset",
+        params: {
+          type: "ERC20",
+          options: {
+            address: "0x19CFc85e3dffb66295695Bf48e06386CB1B5f320",
+            symbol: "TRU",
+            decimals: 18,
+            image: "https://svgshare.com/i/v42.svg",
+          },
+        },
+      });
+
+      return {
+        error: success
+          ? null
+          : {
+              code: 23666,
+              message: "Something went wrong",
+            },
+      };
+    } catch (error) {
+      return {
+        error: {
+          code: error.code,
+          message: error.message,
+        },
+      };
+    }
+  }
+
   async signTypedData(account, data) {
     try {
       var signature = await this.provider.request({

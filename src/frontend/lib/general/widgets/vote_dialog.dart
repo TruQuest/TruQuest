@@ -53,7 +53,7 @@ class _VoteDialogState<T> extends State<VoteDialog<T>> {
           if (decision != decisions.last)
             DropdownMenuItem<T>(
               enabled: false,
-              child: Divider(),
+              child: const Divider(),
             ),
         ],
       );
@@ -74,7 +74,7 @@ class _VoteDialogState<T> extends State<VoteDialog<T>> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: Color(0xFF242423),
+      backgroundColor: const Color(0xFF242423),
       title: Text(
         'Vote details',
         style: GoogleFonts.philosopher(),
@@ -101,7 +101,7 @@ class _VoteDialogState<T> extends State<VoteDialog<T>> {
               dropdownMaxHeight: 200,
               itemPadding: const EdgeInsets.symmetric(horizontal: 8),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Expanded(
               child: TextField(
                 controller: _textController,
@@ -111,10 +111,10 @@ class _VoteDialogState<T> extends State<VoteDialog<T>> {
                 decoration: InputDecoration(
                   hintText: 'Reason (optional). Be succinct.',
                   hintStyle: GoogleFonts.raleway(),
-                  enabledBorder: UnderlineInputBorder(
+                  enabledBorder: const UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.white70),
                   ),
-                  focusedBorder: UnderlineInputBorder(
+                  focusedBorder: const UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.white),
                   ),
                 ),
@@ -137,6 +137,7 @@ class _VoteDialogState<T> extends State<VoteDialog<T>> {
           ),
           onPressed: () async {
             if (_decision != null) {
+              // ignore: null_check_on_nullable_type_parameter
               await widget.onVote(_decision!, _textController.text);
               // @@TODO: When voting on-chain don't wait for the block to be mined before popping the dialog.
               if (context.mounted) {

@@ -10,7 +10,7 @@ Future main() async {
   setup();
   var localStorage = resolveDependency<LocalStorage>();
   await localStorage.init();
-  runApp(App());
+  runApp(const App());
 }
 
 class App extends StatelessWidget {
@@ -25,7 +25,7 @@ class App extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: HomePage(),
+      home: const HomePage(),
     );
   }
 }

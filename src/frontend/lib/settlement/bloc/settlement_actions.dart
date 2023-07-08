@@ -3,7 +3,9 @@ import '../models/im/decision_im.dart';
 import 'settlement_result_vm.dart';
 import '../../general/contexts/document_context.dart';
 
-abstract class SettlementAction {}
+abstract class SettlementAction {
+  const SettlementAction();
+}
 
 abstract class SettlementActionAwaitable<T extends SettlementResultVm?>
     extends SettlementAction with AwaitableResult<T> {}
@@ -18,7 +20,7 @@ class CreateNewSettlementProposalDraft extends SettlementActionAwaitable<
 class GetSettlementProposal extends SettlementAction {
   final String proposalId;
 
-  GetSettlementProposal({required this.proposalId});
+  const GetSettlementProposal({required this.proposalId});
 }
 
 class SubmitNewSettlementProposal
@@ -45,7 +47,7 @@ class GetVerifierLotteryInfo extends SettlementAction {
   final String thingId;
   final String proposalId;
 
-  GetVerifierLotteryInfo({
+  const GetVerifierLotteryInfo({
     required this.thingId,
     required this.proposalId,
   });
@@ -78,7 +80,7 @@ class GetVerifierLotteryParticipants extends SettlementAction {
   final String thingId;
   final String proposalId;
 
-  GetVerifierLotteryParticipants({
+  const GetVerifierLotteryParticipants({
     required this.thingId,
     required this.proposalId,
   });
@@ -128,5 +130,5 @@ class CastVoteOnChain extends SettlementActionAwaitable<CastVoteResultVm> {
 class GetVerifiers extends SettlementAction {
   final String proposalId;
 
-  GetVerifiers({required this.proposalId});
+  const GetVerifiers({required this.proposalId});
 }

@@ -22,15 +22,15 @@ class SettlementProposalPreviewVm {
       case VerdictVm.delivered:
         return Colors.green;
       case VerdictVm.guessItCounts:
-        return Color.fromARGB(255, 136, 193, 93);
+        return const Color.fromARGB(255, 136, 193, 93);
       case VerdictVm.aintGoodEnough:
-        return Color.fromARGB(255, 238, 255, 83);
+        return const Color.fromARGB(255, 238, 255, 83);
       case VerdictVm.motionNotAction:
-        return Color.fromARGB(255, 255, 209, 84);
+        return const Color.fromARGB(255, 255, 209, 84);
       case VerdictVm.noEffortWhatsoever:
-        return Color.fromARGB(255, 255, 108, 108);
+        return const Color.fromARGB(255, 255, 108, 108);
       case VerdictVm.asGoodAsMaliciousIntent:
-        return Color.fromARGB(255, 145, 0, 0);
+        return const Color.fromARGB(255, 145, 0, 0);
     }
   }
 

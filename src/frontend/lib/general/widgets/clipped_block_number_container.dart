@@ -21,12 +21,12 @@ class ClippedBlockNumberContainer extends StatelessWidget {
         height: height,
         decoration: BoxDecoration(
           color: color,
-          borderRadius: BorderRadius.only(
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(12),
             bottomLeft: Radius.circular(12),
           ),
         ),
-        alignment: Alignment(-0.2, 0),
+        alignment: const Alignment(-0.2, 0),
         child: child,
       ),
     );

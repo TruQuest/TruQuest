@@ -46,14 +46,14 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
       stream: _thingBloc.proposalsList$,
       builder: (context, snapshot) {
         if (snapshot.data == null) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
 
         var proposals = snapshot.data!.proposals;
         if (proposals.isEmpty) {
           return Center(
             child: IconButton(
-              icon: Icon(Icons.add_box_outlined),
+              icon: const Icon(Icons.add_box_outlined),
               onPressed: () {
                 var documentContext = DocumentContext();
                 documentContext.thingId = widget.thingId;
@@ -70,7 +70,7 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
                       submitButton: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         child: RoundedLoadingButton(
-                          child: Text('Prepare draft'),
+                          child: const Text('Prepare draft'),
                           controller: btnController,
                           onPressed: () async {
                             var action = CreateNewSettlementProposalDraft(
@@ -87,14 +87,14 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
                             }
 
                             btnController.success();
-                            await Future.delayed(Duration(seconds: 2));
+                            await Future.delayed(const Duration(seconds: 2));
                             if (context.mounted) {
                               Navigator.of(context).pop();
                             }
                           },
                         ),
                       ),
-                      sideBlocks: [
+                      sideBlocks: const [
                         VerdictSelectionBlock(),
                         ImageBlockWithCrop(cropCircle: false),
                         EvidenceBlock(),
@@ -113,7 +113,7 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 IconButton(
-                  icon: Icon(Icons.add_box_outlined),
+                  icon: const Icon(Icons.add_box_outlined),
                   onPressed: () {
                     var documentContext = DocumentContext();
                     documentContext.thingId = widget.thingId;
@@ -130,7 +130,7 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
                           submitButton: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             child: RoundedLoadingButton(
-                              child: Text('Prepare draft'),
+                              child: const Text('Prepare draft'),
                               controller: btnController,
                               onPressed: () async {
                                 var action = CreateNewSettlementProposalDraft(
@@ -147,14 +147,16 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
                                 }
 
                                 btnController.success();
-                                await Future.delayed(Duration(seconds: 2));
+                                await Future.delayed(
+                                  const Duration(seconds: 2),
+                                );
                                 if (context.mounted) {
                                   Navigator.of(context).pop();
                                 }
                               },
                             ),
                           ),
-                          sideBlocks: [
+                          sideBlocks: const [
                             VerdictSelectionBlock(),
                             ImageBlockWithCrop(cropCircle: false),
                             EvidenceBlock(),
@@ -195,21 +197,21 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
                                   children: [
                                     AutoSizeText(
                                       proposal.title,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 18,
                                       ),
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                    SizedBox(height: 12),
+                                    const SizedBox(height: 12),
                                     Text(
                                       proposal.displayedTimestampFormatted,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         color: Colors.white70,
                                       ),
                                     ),
-                                    SizedBox(height: 8),
+                                    const SizedBox(height: 8),
                                     Container(
                                       color: proposal.verdictColor,
                                       width: 300,
@@ -220,9 +222,9 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
                                   ],
                                 ),
                               ),
-                              SizedBox(width: 12),
+                              const SizedBox(width: 12),
                               InkWell(
-                                borderRadius: BorderRadius.only(
+                                borderRadius: const BorderRadius.only(
                                   topRight: Radius.circular(12),
                                   bottomRight: Radius.circular(12),
                                 ),
@@ -231,13 +233,13 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
                                   height: double.infinity,
                                   decoration: BoxDecoration(
                                     color: Colors.grey[400],
-                                    borderRadius: BorderRadius.only(
+                                    borderRadius: const BorderRadius.only(
                                       topRight: Radius.circular(12),
                                       bottomRight: Radius.circular(12),
                                     ),
                                   ),
                                   alignment: Alignment.center,
-                                  child: Icon(
+                                  child: const Icon(
                                     Icons.arrow_forward_ios_rounded,
                                     color: Colors.white,
                                   ),

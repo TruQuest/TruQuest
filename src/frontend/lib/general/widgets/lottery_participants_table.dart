@@ -11,7 +11,7 @@ class LotteryParticipantsTable extends StatelessWidget {
   final String? currentUserId;
   final VoidCallback onRefresh;
 
-  LotteryParticipantsTable({
+  const LotteryParticipantsTable({
     super.key,
     required this.entries,
     required this.currentUserId,
@@ -24,7 +24,7 @@ class LotteryParticipantsTable extends StatelessWidget {
       children: [
         Container(
           margin: const EdgeInsets.only(top: 18),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             border: Border(
               bottom: BorderSide(color: Colors.white),
             ),
@@ -68,14 +68,14 @@ class LotteryParticipantsTable extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        SizedBox(height: 6),
+                        const SizedBox(height: 6),
                         Text(
                           'Commitment',
                           style: GoogleFonts.raleway(
                             color: Colors.black87,
                           ),
                         ),
-                        SizedBox(height: 6),
+                        const SizedBox(height: 6),
                         Text(
                           'Nonce',
                           style: GoogleFonts.raleway(
@@ -88,7 +88,7 @@ class LotteryParticipantsTable extends StatelessWidget {
                 ),
               ),
               ClippedBlockNumberContainer(
-                color: Color(0xFF4A47A3),
+                color: const Color(0xFF4A47A3),
                 height: 80,
                 child: Text(
                   'Block',
@@ -98,7 +98,7 @@ class LotteryParticipantsTable extends StatelessWidget {
                   ),
                 ),
               ),
-              CornerBanner(
+              const CornerBanner(
                 position: Alignment.topLeft,
                 size: 40,
                 cornerRadius: 12,
@@ -114,7 +114,7 @@ class LotteryParticipantsTable extends StatelessWidget {
                 right: 0,
                 child: Center(
                   child: IconButton(
-                    icon: Icon(Icons.refresh),
+                    icon: const Icon(Icons.refresh),
                     onPressed: onRefresh,
                   ),
                 ),
@@ -166,14 +166,14 @@ class LotteryParticipantsTable extends StatelessWidget {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      SizedBox(height: 12),
+                                      const SizedBox(height: 12),
                                       Text(
                                         entry.userData!.substring(0, 20),
                                         style: GoogleFonts.raleway(
                                           color: Colors.black87,
                                         ),
                                       ),
-                                      SizedBox(height: 12),
+                                      const SizedBox(height: 12),
                                       Text(
                                         entry.nonce?.toString() ?? '*',
                                         style: GoogleFonts.raleway(
@@ -185,7 +185,7 @@ class LotteryParticipantsTable extends StatelessWidget {
                                     ],
                                   ),
                                 ),
-                                SizedBox(width: 16),
+                                const SizedBox(width: 16),
                                 if (entry.isWinner)
                                   Tooltip(
                                     message: 'Winner',
@@ -194,7 +194,7 @@ class LotteryParticipantsTable extends StatelessWidget {
                                       height: double.infinity,
                                       decoration: BoxDecoration(
                                         color: Colors.amber[200],
-                                        borderRadius: BorderRadius.only(
+                                        borderRadius: const BorderRadius.only(
                                           topRight: Radius.circular(12),
                                           bottomRight: Radius.circular(12),
                                         ),
@@ -214,16 +214,16 @@ class LotteryParticipantsTable extends StatelessWidget {
                                 : 'Participant',
                         child: ClippedBlockNumberContainer(
                           color: entry.isOrchestrator
-                              ? Color(0x33242423)
+                              ? const Color(0x33242423)
                               : entry.userId == currentUserId
-                                  ? Color(0xFFE06469)
+                                  ? const Color(0xFFE06469)
                                   : Colors.blueAccent,
                           height: 120,
                           child: Text(
                             entry.joinedBlockNumber.toString(),
                             style: GoogleFonts.righteous(
                               color: entry.isOrchestrator
-                                  ? Color(0xAA242423)
+                                  ? const Color(0xAA242423)
                                   : Colors.white,
                               fontSize: 26,
                             ),

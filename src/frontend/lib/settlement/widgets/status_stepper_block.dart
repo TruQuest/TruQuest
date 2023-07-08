@@ -51,7 +51,7 @@ class StatusStepperBlock extends StatelessWidgetX {
           title: Text(
             'Lottery failed',
             style: GoogleFonts.philosopher(
-              color: Color(0xffF8F9FA),
+              color: const Color(0xffF8F9FA),
               fontSize: 16,
             ),
           ),
@@ -74,7 +74,7 @@ class StatusStepperBlock extends StatelessWidgetX {
         title: Text(
           'Poll in progress',
           style: GoogleFonts.philosopher(
-            color: Color(0xffF8F9FA),
+            color: const Color(0xffF8F9FA),
             fontSize: 16,
           ),
         ),
@@ -101,7 +101,7 @@ class StatusStepperBlock extends StatelessWidgetX {
           title: Text(
             'Accepted',
             style: GoogleFonts.philosopher(
-              color: Color(0xffF8F9FA),
+              color: const Color(0xffF8F9FA),
               fontSize: 16,
             ),
           ),
@@ -124,7 +124,7 @@ class StatusStepperBlock extends StatelessWidgetX {
           title: Text(
             'Declined',
             style: GoogleFonts.philosopher(
-              color: Color(0xffF8F9FA),
+              color: const Color(0xffF8F9FA),
               fontSize: 16,
             ),
           ),
@@ -148,7 +148,7 @@ class StatusStepperBlock extends StatelessWidgetX {
         title: Text(
           'Consensus not reached',
           style: GoogleFonts.philosopher(
-            color: Color(0xffF8F9FA),
+            color: const Color(0xffF8F9FA),
             fontSize: 16,
           ),
         ),
@@ -190,7 +190,7 @@ class StatusStepperBlock extends StatelessWidgetX {
         brightness: Brightness.dark,
         colorScheme: Theme.of(context).colorScheme.copyWith(
               brightness: Brightness.dark,
-              secondary: Color(0xffF8F9FA),
+              secondary: const Color(0xffF8F9FA),
             ),
       ),
       child: Stepper(
@@ -236,14 +236,14 @@ class StatusStepperBlock extends StatelessWidgetX {
             );
           }
 
-          return SizedBox.shrink();
+          return const SizedBox.shrink();
         },
         steps: [
           Step(
             title: Text(
               _proposal.isSubmitter(_currentUserId) ? 'Draft' : 'Draft created',
               style: GoogleFonts.philosopher(
-                color: Color(0xffF8F9FA),
+                color: const Color(0xffF8F9FA),
                 fontSize: 16,
               ),
             ),
@@ -264,7 +264,7 @@ class StatusStepperBlock extends StatelessWidgetX {
                   ? 'Submit'
                   : 'Awaiting submission',
               style: GoogleFonts.philosopher(
-                color: Color(0xffF8F9FA),
+                color: const Color(0xffF8F9FA),
                 fontSize: 16,
               ),
             ),
@@ -285,7 +285,7 @@ class StatusStepperBlock extends StatelessWidgetX {
                   ? 'Fund'
                   : 'Awaiting funding',
               style: GoogleFonts.philosopher(
-                color: Color(0xffF8F9FA),
+                color: const Color(0xffF8F9FA),
                 fontSize: 16,
               ),
             ),
@@ -304,7 +304,7 @@ class StatusStepperBlock extends StatelessWidgetX {
             title: Text(
               'Lottery in progress',
               style: GoogleFonts.philosopher(
-                color: Color(0xffF8F9FA),
+                color: const Color(0xffF8F9FA),
                 fontSize: 16,
               ),
             ),

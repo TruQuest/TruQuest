@@ -32,7 +32,7 @@ class _EvidenceBlockState extends StateX<EvidenceBlock> {
             foregroundColor: Colors.white,
             elevation: 5,
           ),
-          child: Row(
+          child: const Row(
             children: [
               Spacer(),
               Text('Evidence'),
@@ -48,14 +48,14 @@ class _EvidenceBlockState extends StateX<EvidenceBlock> {
             var ok = await showDialog<bool>(
               context: context,
               builder: (_) => AlertDialog(
-                title: Text('Add evidence'),
+                title: const Text('Add evidence'),
                 content: Container(
                   width: 400,
                   height: 60,
                   alignment: Alignment.center,
                   child: TextField(
                     controller: _textController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       hintText: 'Paste url here',
                     ),
                     onSubmitted: (_) => Navigator.of(context).pop(true),
@@ -64,10 +64,10 @@ class _EvidenceBlockState extends StateX<EvidenceBlock> {
                 actions: [
                   TextButton(
                     style: TextButton.styleFrom(
-                      backgroundColor: Color(0xFF242423),
+                      backgroundColor: const Color(0xFF242423),
                       foregroundColor: Colors.white,
                     ),
-                    child: Text('Ok'),
+                    child: const Text('Ok'),
                     onPressed: () {
                       Navigator.of(context).pop(true);
                     },
@@ -84,7 +84,7 @@ class _EvidenceBlockState extends StateX<EvidenceBlock> {
             }
           },
         ),
-        SizedBox(height: 6),
+        const SizedBox(height: 6),
         ..._documentContext.evidence.map(
           (link) => Padding(
             padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
@@ -93,23 +93,23 @@ class _EvidenceBlockState extends StateX<EvidenceBlock> {
                 foregroundColor: Colors.blue[800],
                 side: BorderSide(color: Colors.blue[800]!),
                 padding: const EdgeInsets.fromLTRB(4, 0, 8, 0),
-                minimumSize: Size(0, 36),
+                minimumSize: const Size(0, 36),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.delete_outline,
                     size: 18,
                   ),
-                  SizedBox(width: 2),
+                  const SizedBox(width: 2),
                   Flexible(
                     child: Text(
                       link,
                       overflow: TextOverflow.fade,
                       softWrap: false,
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 12),
+                      style: const TextStyle(fontSize: 12),
                     ),
                   ),
                 ],

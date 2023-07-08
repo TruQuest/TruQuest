@@ -45,7 +45,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
 
   late final StreamSubscription<LoadCurrentUserSuccessVm> _currentUser$$;
 
-  final List<Color> _tabColors = [
+  final List<Color> _tabColors = const [
     Color(0xFF242423),
     Color(0xFF413C69),
     Color(0xFF32407B),
@@ -80,7 +80,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
   List<Widget> _buildTabs(SettlementProposalVm proposal) {
     var state = proposal.state;
     var items = [
-      Icon(
+      const Icon(
         Icons.content_paste,
         color: Colors.white,
       )
@@ -89,7 +89,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
     if (state.index >=
         SettlementProposalStateVm.fundedAndVerifierLotteryInitiated.index) {
       items.add(
-        Icon(
+        const Icon(
           Icons.people,
           color: Colors.white,
         ),
@@ -97,7 +97,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
       if (state.index >=
           SettlementProposalStateVm.verifiersSelectedAndPollInitiated.index) {
         items.add(
-          Icon(
+          const Icon(
             Icons.poll_outlined,
             color: Colors.white,
           ),
@@ -130,7 +130,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
             VerdictViewBlock(),
             StatusStepperBlock(),
           ],
-          leftSideBlock: EvidenceViewBlock(),
+          leftSideBlock: const EvidenceViewBlock(),
         ),
       ),
     ];
@@ -165,7 +165,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
                 proposal.croppedImageIpfsCid!,
                 height: 200,
               ),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,7 +180,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
                   ],
                 ),
               ),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               if (proposal.state.index >=
                   SettlementProposalStateVm.awaitingFunding.index)
                 Column(
@@ -190,14 +190,14 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
                       'Submitted on',
                       style: GoogleFonts.raleway(),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       proposal.submittedAtFormatted,
                       style: GoogleFonts.raleway(
                         fontSize: 16,
                       ),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     RichText(
                       text: TextSpan(
                         children: [
@@ -283,7 +283,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
       stream: _settlementBloc.proposal$,
       builder: (context, snapshot) {
         if (snapshot.data == null) {
-          return SliverFillRemaining(
+          return const SliverFillRemaining(
             hasScrollBody: false,
             child: Center(child: CircularProgressIndicator()),
           );

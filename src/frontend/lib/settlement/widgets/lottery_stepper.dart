@@ -47,7 +47,7 @@ class LotteryStepper extends StatelessWidgetX {
         brightness: Brightness.dark,
         colorScheme: Theme.of(context).colorScheme.copyWith(
               brightness: Brightness.dark,
-              secondary: Color(0xffF8F9FA),
+              secondary: const Color(0xffF8F9FA),
             ),
       ),
       child: Column(
@@ -73,13 +73,13 @@ class LotteryStepper extends StatelessWidgetX {
                           return failure == null;
                         },
                       )
-                    : SizedBox.shrink(),
+                    : const SizedBox.shrink(),
             steps: [
               Step(
                 title: Text(
                   'Claim a spot',
                   style: GoogleFonts.philosopher(
-                    color: Color(0xffF8F9FA),
+                    color: const Color(0xffF8F9FA),
                     fontSize: 16,
                   ),
                 ),
@@ -96,13 +96,13 @@ class LotteryStepper extends StatelessWidgetX {
               ),
             ],
           ),
-          SizedBox(height: 6),
-          Divider(
+          const SizedBox(height: 6),
+          const Divider(
             color: Colors.white70,
             indent: 116,
             endIndent: 80,
           ),
-          SizedBox(height: 6),
+          const SizedBox(height: 6),
           Stepper(
             controlsBuilder: (context, details) =>
                 info.userId != null && !proposal.isSubmitter(info.userId)
@@ -122,13 +122,13 @@ class LotteryStepper extends StatelessWidgetX {
                           return failure == null;
                         },
                       )
-                    : SizedBox.shrink(),
+                    : const SizedBox.shrink(),
             steps: [
               Step(
                 title: Text(
                   'Join lottery',
                   style: GoogleFonts.philosopher(
-                    color: Color(0xffF8F9FA),
+                    color: const Color(0xffF8F9FA),
                     fontSize: 16,
                   ),
                 ),

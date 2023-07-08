@@ -43,7 +43,7 @@ class _DepositStepperState extends StateX<DepositStepper> {
         brightness: Brightness.dark,
         colorScheme: Theme.of(context).colorScheme.copyWith(
               brightness: Brightness.dark,
-              secondary: Color(0xffF8F9FA),
+              secondary: const Color(0xffF8F9FA),
             ),
       ),
       child: Stepper(
@@ -82,7 +82,7 @@ class _DepositStepperState extends StateX<DepositStepper> {
             title: Text(
               'Approve',
               style: GoogleFonts.philosopher(
-                color: Color(0xffF8F9FA),
+                color: const Color(0xffF8F9FA),
                 fontSize: 16,
               ),
             ),
@@ -97,7 +97,7 @@ class _DepositStepperState extends StateX<DepositStepper> {
               child: TextField(
                 controller: _approveController,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: 'Amount',
                   hintStyle: TextStyle(color: Colors.white70),
                   enabledBorder: UnderlineInputBorder(
@@ -115,7 +115,7 @@ class _DepositStepperState extends StateX<DepositStepper> {
             title: Text(
               'Deposit',
               style: GoogleFonts.philosopher(
-                color: Color(0xffF8F9FA),
+                color: const Color(0xffF8F9FA),
                 fontSize: 16,
               ),
             ),
@@ -130,7 +130,7 @@ class _DepositStepperState extends StateX<DepositStepper> {
               child: TextField(
                 controller: _depositController,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: 'Amount',
                   hintStyle: TextStyle(color: Colors.white70),
                   enabledBorder: UnderlineInputBorder(

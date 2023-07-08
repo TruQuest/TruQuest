@@ -42,7 +42,7 @@ class _TagsBlockState extends StateX<TagsBlock> {
         }
 
         return Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             border: Border.symmetric(
               horizontal: BorderSide(
                 color: Colors.blue,
@@ -52,7 +52,7 @@ class _TagsBlockState extends StateX<TagsBlock> {
           ),
           padding: const EdgeInsets.only(bottom: 4),
           child: MultiSelectDialogField<int>(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               border: Border(
                 bottom: BorderSide(
                   color: Colors.transparent,
@@ -60,7 +60,7 @@ class _TagsBlockState extends StateX<TagsBlock> {
                 ),
               ),
             ),
-            buttonText: Text('Tags'),
+            buttonText: const Text('Tags'),
             dialogWidth: 400,
             items: items ?? [],
             listType: MultiSelectListType.CHIP,

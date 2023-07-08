@@ -28,7 +28,7 @@ class _ImageBlockWithCropState extends StateX<ImageBlockWithCrop> {
             foregroundColor: Colors.white,
             elevation: 5,
           ),
-          child: Row(
+          child: const Row(
             children: [
               Spacer(),
               Text('Image'),

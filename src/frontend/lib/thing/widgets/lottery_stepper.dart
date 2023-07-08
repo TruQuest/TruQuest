@@ -41,7 +41,7 @@ class LotteryStepper extends StatelessWidgetX {
         brightness: Brightness.dark,
         colorScheme: Theme.of(context).colorScheme.copyWith(
               brightness: Brightness.dark,
-              secondary: Color(0xffF8F9FA),
+              secondary: const Color(0xffF8F9FA),
             ),
       ),
       child: Stepper(
@@ -60,13 +60,13 @@ class LotteryStepper extends StatelessWidgetX {
                       return failure == null;
                     },
                   )
-                : SizedBox.shrink(),
+                : const SizedBox.shrink(),
         steps: [
           Step(
             title: Text(
               'Join lottery',
               style: GoogleFonts.philosopher(
-                color: Color(0xffF8F9FA),
+                color: const Color(0xffF8F9FA),
                 fontSize: 16,
               ),
             ),

@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../ethereum/bloc/ethereum_actions.dart';
+import '../../ethereum/bloc/ethereum_bloc.dart';
 import 'restrict_when_unauthorized_button.dart';
 import 'deposit_stepper.dart';
 import '../../widget_extensions.dart';
 
 // ignore: must_be_immutable
 class DepositFundsButton extends StatelessWidgetX {
+  late final _ethereumBloc = use<EthereumBloc>();
+
   DepositFundsButton({super.key});
 
   @override
@@ -24,11 +28,11 @@ class DepositFundsButton extends StatelessWidgetX {
               fontSize: 12,
             ),
           ),
-          child: Text('Deposit'),
+          child: const Text('Deposit'),
           onPressed: () => showDialog(
             context: context,
             builder: (context) => SimpleDialog(
-              backgroundColor: Color(0xFF242423),
+              backgroundColor: const Color(0xFF242423),
               title: Text(
                 'Deposit Truthserum to be used on the platform',
                 style: GoogleFonts.philosopher(
@@ -51,8 +55,17 @@ class DepositFundsButton extends StatelessWidgetX {
                     ),
                   ),
                 ),
-                SizedBox(height: 16),
-                SizedBox(
+                const SizedBox(height: 16),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Track Truthserum in the wallet'),
+                  onPressed: () =>
+                      _ethereumBloc.dispatch(const WatchTruthserum()),
+                ),
+                const SizedBox(height: 16),
+                const SizedBox(
                   width: 300,
                   child: DepositStepper(),
                 ),

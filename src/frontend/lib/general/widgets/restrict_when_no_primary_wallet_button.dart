@@ -27,18 +27,18 @@ class RestrictWhenNoPrimaryWalletButton extends StatelessWidgetX {
                 context: context,
                 builder: (context) => AlertDialog(
                   title: !_ethereumBloc.isAvailable
-                      ? Text('Wallet not installed')
-                      : Text('Primary wallet not selected'),
+                      ? const Text('Wallet not installed')
+                      : const Text('Primary wallet not selected'),
                   content: !_ethereumBloc.isAvailable
-                      ? Text(
+                      ? const Text(
                           'Please install either Metamask or Coinbase Wallet extension',
                         )
                       : SizedBox(
                           width: 400,
                           child: Row(
                             children: [
-                              Text('Select which wallet to use'),
-                              SizedBox(width: 6),
+                              const Text('Select which wallet to use'),
+                              const SizedBox(width: 6),
                               WalletSelectionButton(),
                             ],
                           ),

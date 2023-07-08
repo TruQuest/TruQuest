@@ -47,7 +47,7 @@ class _PollStepperState extends StateX<PollStepper> {
         brightness: Brightness.dark,
         colorScheme: Theme.of(context).colorScheme.copyWith(
               brightness: Brightness.dark,
-              secondary: Color(0xffF8F9FA),
+              secondary: const Color(0xffF8F9FA),
             ),
       ),
       // @@BUG: When widget.info.userId is null a part of the line connecting two steps
@@ -65,7 +65,7 @@ class _PollStepperState extends StateX<PollStepper> {
                   await showDialog(
                     context: context,
                     builder: (_) => VoteDialog<DecisionIm>(
-                      decisions: [
+                      decisions: const [
                         DecisionIm.accept,
                         DecisionIm.softDecline,
                         DecisionIm.hardDecline,
@@ -96,7 +96,7 @@ class _PollStepperState extends StateX<PollStepper> {
                   return false;
                 },
               )
-            : SizedBox.shrink(),
+            : const SizedBox.shrink(),
         onStepTapped: (value) => setState(() {
           _currentStep = value;
         }),
@@ -106,7 +106,7 @@ class _PollStepperState extends StateX<PollStepper> {
             title: Text(
               'Vote off-chain',
               style: GoogleFonts.philosopher(
-                color: Color(0xffF8F9FA),
+                color: const Color(0xffF8F9FA),
                 fontSize: 16,
               ),
             ),
@@ -126,7 +126,7 @@ class _PollStepperState extends StateX<PollStepper> {
             title: Text(
               'Vote on-chain',
               style: GoogleFonts.philosopher(
-                color: Color(0xffF8F9FA),
+                color: const Color(0xffF8F9FA),
                 fontSize: 16,
               ),
             ),

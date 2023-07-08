@@ -38,7 +38,7 @@ class LatestThingsBlock extends StatelessWidgetX {
               color: Colors.grey.withOpacity(0.2),
               spreadRadius: 3,
               blurRadius: 7,
-              offset: Offset(0, 3),
+              offset: const Offset(0, 3),
             ),
           ],
         ),
@@ -55,7 +55,7 @@ class LatestThingsBlock extends StatelessWidgetX {
                       fit: BoxFit.cover,
                     )
                   : Container(
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
@@ -90,7 +90,7 @@ class LatestThingsBlock extends StatelessWidgetX {
                   ),
                 ),
               ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -113,14 +113,14 @@ class LatestThingsBlock extends StatelessWidgetX {
             ),
             child: Row(
               children: [
-                Text('> '),
+                const Text('> '),
                 AnimatedTextKit(
                   repeatForever: true,
-                  pause: Duration(seconds: 2),
+                  pause: const Duration(seconds: 2),
                   animatedTexts: [
                     TypewriterAnimatedText(
                       'Latest',
-                      speed: Duration(milliseconds: 70),
+                      speed: const Duration(milliseconds: 70),
                     ),
                   ],
                 ),

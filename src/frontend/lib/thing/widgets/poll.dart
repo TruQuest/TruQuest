@@ -60,7 +60,7 @@ class _PollState extends StateX<Poll> {
             stream: _thingBloc.verifiers$,
             builder: (context, snapshot) {
               if (snapshot.data == null) {
-                return Center(child: CircularProgressIndicator());
+                return const Center(child: CircularProgressIndicator());
               }
 
               var verifiers = snapshot.data!.verifiers;
@@ -82,7 +82,7 @@ class _PollState extends StateX<Poll> {
             future: _getInfoAction.result,
             builder: (context, snapshot) {
               if (snapshot.data == null) {
-                return Center(child: CircularProgressIndicator());
+                return const Center(child: CircularProgressIndicator());
               }
 
               var info = snapshot.data!;
@@ -104,7 +104,7 @@ class _PollState extends StateX<Poll> {
                       children: [
                         Container(
                           margin: const EdgeInsets.only(top: 18),
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             border: Border(
                               bottom: BorderSide(color: Colors.white),
                             ),
@@ -118,7 +118,7 @@ class _PollState extends StateX<Poll> {
                             ),
                           ),
                         ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                         Stack(
                           alignment: Alignment.center,
                           children: [
@@ -132,7 +132,7 @@ class _PollState extends StateX<Poll> {
                                   dotColor: Colors.transparent,
                                 ),
                               ),
-                              innerWidget: (_) => SizedBox.shrink(),
+                              innerWidget: (_) => const SizedBox.shrink(),
                             ),
                             if (info.initBlock != null)
                               BlockCountdown(
@@ -151,7 +151,7 @@ class _PollState extends StateX<Poll> {
                                       fontSize: 26,
                                     ),
                                   ),
-                                  Spacer(),
+                                  const Spacer(),
                                   Text(
                                     endBlock.toStringAsFixed(0),
                                     style: GoogleFonts.righteous(
@@ -164,7 +164,7 @@ class _PollState extends StateX<Poll> {
                             ),
                           ],
                         ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                         PollStepper(
                           thing: widget.thing,
                           info: info,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'restrict_when_not_on_valid_chain_button.dart';
 import 'restrict_when_no_primary_wallet_button.dart';
 import '../../user/bloc/user_actions.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';
@@ -22,7 +23,7 @@ class UserStatusTracker extends StatelessWidgetX {
       initialData: _userBloc.latestCurrentUser,
       builder: (context, snapshot) {
         if (snapshot.data == null) {
-          return SizedBox.shrink();
+          return const SizedBox.shrink();
         }
 
         var user = snapshot.data!.user;
@@ -31,7 +32,7 @@ class UserStatusTracker extends StatelessWidgetX {
             message: 'Connect',
             child: RestrictWhenNoPrimaryWalletButton(
               child: IconButton(
-                icon: Icon(
+                icon: const Icon(
                   Icons.wifi_tethering,
                   color: Colors.white,
                 ),
@@ -44,12 +45,14 @@ class UserStatusTracker extends StatelessWidgetX {
         } else if (user.state == UserAccountState.connectedNotLoggedIn) {
           return Tooltip(
             message: 'Sign-in with Ethereum',
-            child: IconButton(
-              icon: Icon(
-                Icons.door_sliding,
-                color: Colors.white,
+            child: RestrictWhenNotOnValidChainButton(
+              child: IconButton(
+                icon: const Icon(
+                  Icons.door_sliding,
+                  color: Colors.white,
+                ),
+                onPressed: () => _userBloc.dispatch(const SignInWithEthereum()),
               ),
-              onPressed: () => _userBloc.dispatch(SignInWithEthereum()),
             ),
           );
         }
@@ -57,7 +60,7 @@ class UserStatusTracker extends StatelessWidgetX {
         return Tooltip(
           message: user.ethereumAccount!,
           child: IconButton(
-            icon: Icon(
+            icon: const Icon(
               Icons.account_box,
               color: Colors.white,
             ),

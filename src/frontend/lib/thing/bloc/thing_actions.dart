@@ -7,6 +7,8 @@ import '../../general/contexts/document_context.dart';
 abstract class ThingAction {
   bool get mustValidate => false;
   List<String>? validate() => null;
+
+  const ThingAction();
 }
 
 abstract class ThingActionAwaitable<T extends ThingResultVm?>
@@ -49,7 +51,7 @@ class CreateNewThingDraft
 class GetThing extends ThingAction {
   final String thingId;
 
-  GetThing({required this.thingId});
+  const GetThing({required this.thingId});
 }
 
 class SubmitNewThing extends ThingActionAwaitable<SubmitNewThingFailureVm?> {
@@ -68,7 +70,7 @@ class FundThing extends ThingActionAwaitable<FundThingFailureVm?> {
 class GetVerifierLotteryInfo extends ThingAction {
   final String thingId;
 
-  GetVerifierLotteryInfo({required this.thingId});
+  const GetVerifierLotteryInfo({required this.thingId});
 }
 
 class JoinLottery extends ThingActionAwaitable<JoinLotteryFailureVm?> {
@@ -80,7 +82,7 @@ class JoinLottery extends ThingActionAwaitable<JoinLotteryFailureVm?> {
 class GetVerifierLotteryParticipants extends ThingAction {
   final String thingId;
 
-  GetVerifierLotteryParticipants({required this.thingId});
+  const GetVerifierLotteryParticipants({required this.thingId});
 }
 
 class GetAcceptancePollInfo
@@ -119,20 +121,20 @@ class CastVoteOnChain extends ThingActionAwaitable<CastVoteResultVm> {
 class GetVerifiers extends ThingAction {
   final String thingId;
 
-  GetVerifiers({required this.thingId});
+  const GetVerifiers({required this.thingId});
 }
 
 class GetSettlementProposalsList extends ThingAction {
   final String thingId;
 
-  GetSettlementProposalsList({required this.thingId});
+  const GetSettlementProposalsList({required this.thingId});
 }
 
 class Watch extends ThingAction {
   final String thingId;
   final bool markedAsWatched;
 
-  Watch({
+  const Watch({
     required this.thingId,
     required this.markedAsWatched,
   });

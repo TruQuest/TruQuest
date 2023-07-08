@@ -25,14 +25,14 @@ class _TypeSelectorBlockState extends StateX<TypeSelectorBlock> {
             width: double.infinity,
             height: 30,
             alignment: Alignment.center,
-            child: Text(
+            child: const Text(
               'Type',
               style: TextStyle(color: Colors.white),
             ),
           ),
         ),
         ListTile(
-          title: Text('Person'),
+          title: const Text('Person'),
           dense: true,
           leading: Radio<SubjectTypeIm>(
             value: SubjectTypeIm.person,
@@ -45,7 +45,7 @@ class _TypeSelectorBlockState extends StateX<TypeSelectorBlock> {
           ),
         ),
         ListTile(
-          title: Text('Organization'),
+          title: const Text('Organization'),
           dense: true,
           leading: Radio<SubjectTypeIm>(
             value: SubjectTypeIm.organization,

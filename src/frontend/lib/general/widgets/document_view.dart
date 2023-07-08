@@ -56,12 +56,12 @@ class _DocumentViewState extends StateX<DocumentView> {
             child: Container(
               margin: widget.mainBlockMargin,
               decoration: BoxDecoration(
-                color: Color(0xffF8F9FA),
+                color: const Color(0xffF8F9FA),
                 borderRadius: BorderRadius.circular(12),
               ),
               padding: const EdgeInsets.all(4),
               child: QuillEditor(
-                key: PageStorageKey('quill'),
+                key: const PageStorageKey('quill'),
                 controller: _controller,
                 scrollController: _scrollController,
                 scrollable: true,
@@ -77,7 +77,7 @@ class _DocumentViewState extends StateX<DocumentView> {
           Expanded(
             flex: 24,
             child: SingleChildScrollView(
-              key: PageStorageKey('side-blocks'),
+              key: const PageStorageKey('side-blocks'),
               controller: _sideBlocksScrollController,
               child: Column(
                 children: widget.rightSideBlocks

@@ -19,7 +19,7 @@ class SubjectPage extends StatefulWidget {
   final String subjectId;
   final DateTime timestamp;
 
-  SubjectPage({
+  const SubjectPage({
     super.key,
     required this.subjectId,
     required this.timestamp,
@@ -55,9 +55,9 @@ class _SubjectPageState extends StateX<SubjectPage> {
             child: Chip(
               label: Text(tag.name),
               labelStyle: GoogleFonts.righteous(
-                color: Color(0xffF8F9FA),
+                color: const Color(0xffF8F9FA),
               ),
-              backgroundColor: Color(0xFF242423),
+              backgroundColor: const Color(0xFF242423),
             ),
           ),
         )
@@ -83,9 +83,9 @@ class _SubjectPageState extends StateX<SubjectPage> {
                 subjectAvatarIpfsCid: subject.croppedImageIpfsCid,
                 value: subject.avgScore.toDouble(),
                 size: AvatarSize.big,
-                color: Color(0xFF242423),
+                color: const Color(0xFF242423),
               ),
-              SizedBox(width: 32),
+              const SizedBox(width: 32),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,12 +94,12 @@ class _SubjectPageState extends StateX<SubjectPage> {
                       subject.name,
                       style: GoogleFonts.philosopher(fontSize: 31),
                     ),
-                    SizedBox(height: 12),
+                    const SizedBox(height: 12),
                     Row(children: _buildTagChips(subject)),
                   ],
                 ),
               ),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -107,14 +107,14 @@ class _SubjectPageState extends StateX<SubjectPage> {
                     'Submitted on',
                     style: GoogleFonts.raleway(),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     subject.submittedAtFormatted,
                     style: GoogleFonts.raleway(
                       fontSize: 16,
                     ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   RichText(
                     text: TextSpan(
                       children: [
@@ -163,7 +163,7 @@ class _SubjectPageState extends StateX<SubjectPage> {
   }
 
   Widget _buildBody(SubjectVm subject) {
-    var tabs = [
+    var tabs = const [
       Icon(
         Icons.content_paste,
         color: Colors.white,
@@ -184,7 +184,7 @@ class _SubjectPageState extends StateX<SubjectPage> {
             tabEdge: TabEdge.top,
             tabStart: 0.33,
             tabEnd: 0.66,
-            colors: [
+            colors: const [
               Color(0xFF242423),
               Color(0xFF413C69),
             ],
@@ -221,7 +221,7 @@ class _SubjectPageState extends StateX<SubjectPage> {
       stream: _subjectBloc.subject$,
       builder: (context, snapshot) {
         if (snapshot.data == null) {
-          return SliverFillRemaining(
+          return const SliverFillRemaining(
             hasScrollBody: false,
             child: Center(child: CircularProgressIndicator()),
           );

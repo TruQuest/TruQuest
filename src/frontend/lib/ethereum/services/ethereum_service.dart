@@ -15,6 +15,7 @@ class EthereumService {
   final LocalStorage _localStorage;
 
   final int validChainId = 901;
+  final String validChainName = 'Optimism Local';
 
   int? _connectedChainId;
   int? get connectedChainId => _connectedChainId;
@@ -125,9 +126,9 @@ class EthereumService {
 
   void selectWallet(String walletName) async {
     _ethereumWallet.select(walletName);
+    await _localStorage.setString('SelectedWallet', walletName);
     _setup();
     walletSelected.complete();
-    await _localStorage.setString('SelectedWallet', walletName);
   }
 
   Future<EthereumError?> switchEthereumChain() async {
@@ -162,6 +163,13 @@ class EthereumService {
     }
 
     return null;
+  }
+
+  void watchTruthserum() async {
+    var error = await _ethereumWallet.watchTruthserum();
+    if (error != null) {
+      print('Watch Truthserum error: [${error.code}] ${error.message}');
+    }
   }
 
   Future<Either<EthereumError, String>> signThingAcceptancePollVote(

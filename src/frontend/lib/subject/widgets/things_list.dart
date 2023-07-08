@@ -45,7 +45,7 @@ class _ThingsListState extends StateX<ThingsList> {
       stream: _subjectBloc.thingsList$,
       builder: (context, snapshot) {
         if (snapshot.data == null) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
 
         var things = snapshot.data!.things;
@@ -68,14 +68,14 @@ class _ThingsListState extends StateX<ThingsList> {
                         ),
                         child: Row(
                           children: [
-                            Text('> '),
+                            const Text('> '),
                             AnimatedTextKit(
                               repeatForever: true,
-                              pause: Duration(seconds: 2),
+                              pause: const Duration(seconds: 2),
                               animatedTexts: [
                                 TypewriterAnimatedText(
                                   'Blockchain never forgets',
-                                  speed: Duration(milliseconds: 70),
+                                  speed: const Duration(milliseconds: 70),
                                 ),
                               ],
                             ),
@@ -83,27 +83,27 @@ class _ThingsListState extends StateX<ThingsList> {
                         ),
                       ),
                     ),
-                    Spacer(),
+                    const Spacer(),
                     ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF242423),
-                        foregroundColor: Color(0xffF8F9FA),
+                        backgroundColor: const Color(0xFF242423),
+                        foregroundColor: const Color(0xffF8F9FA),
                         elevation: 10,
                       ),
-                      icon: Icon(Icons.search),
-                      label: Text('Search'),
+                      icon: const Icon(Icons.search),
+                      label: const Text('Search'),
                       onPressed: () {},
                     ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                     RestrictWhenUnauthorizedButton(
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xffF8F9FA),
-                          foregroundColor: Color(0xFF242423),
+                          backgroundColor: const Color(0xffF8F9FA),
+                          foregroundColor: const Color(0xFF242423),
                           elevation: 10,
                         ),
-                        icon: Icon(Icons.add),
-                        label: Text('Add'),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add'),
                         onPressed: () {
                           var documentContext = DocumentContext();
                           documentContext.subjectId = widget.subjectId;
@@ -123,7 +123,7 @@ class _ThingsListState extends StateX<ThingsList> {
                                     horizontal: 12,
                                   ),
                                   child: RoundedLoadingButton(
-                                    child: Text('Prepare draft'),
+                                    child: const Text('Prepare draft'),
                                     controller: btnController,
                                     onPressed: () async {
                                       var action = CreateNewThingDraft(
@@ -138,7 +138,7 @@ class _ThingsListState extends StateX<ThingsList> {
                                       if (failure != null) {
                                         btnController.error();
                                         await Future.delayed(
-                                          Duration(milliseconds: 1500),
+                                          const Duration(milliseconds: 1500),
                                         );
                                         btnController.reset();
 
@@ -147,7 +147,7 @@ class _ThingsListState extends StateX<ThingsList> {
 
                                       btnController.success();
                                       await Future.delayed(
-                                        Duration(milliseconds: 1500),
+                                        const Duration(milliseconds: 1500),
                                       );
                                       if (context.mounted) {
                                         Navigator.of(context).pop();
@@ -155,7 +155,7 @@ class _ThingsListState extends StateX<ThingsList> {
                                     },
                                   ),
                                 ),
-                                sideBlocks: [
+                                sideBlocks: const [
                                   ImageBlockWithCrop(cropCircle: false),
                                   TagsBlock(),
                                   EvidenceBlock(),
@@ -173,7 +173,8 @@ class _ThingsListState extends StateX<ThingsList> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(25, 20, 25, 24),
                   child: GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       mainAxisSpacing: 22,
                       crossAxisSpacing: 50,
@@ -188,8 +189,8 @@ class _ThingsListState extends StateX<ThingsList> {
                           Card(
                             margin: EdgeInsets.zero,
                             color: blackOnWhite
-                                ? Color(0xffF8F9FA)
-                                : Color(0xFF242423),
+                                ? const Color(0xffF8F9FA)
+                                : const Color(0xFF242423),
                             elevation: 15,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -212,23 +213,23 @@ class _ThingsListState extends StateX<ThingsList> {
                                             thing.title,
                                             style: GoogleFonts.philosopher(
                                               color: blackOnWhite
-                                                  ? Color(0xFF242423)
-                                                  : Color(0xffF8F9FA),
+                                                  ? const Color(0xFF242423)
+                                                  : const Color(0xffF8F9FA),
                                               fontSize: 18,
                                             ),
                                             maxLines: 2,
                                             overflow: TextOverflow.ellipsis,
                                           ),
-                                          SizedBox(height: 12),
+                                          const SizedBox(height: 12),
                                           Text(
                                             thing.displayedTimestampFormatted,
                                             style: GoogleFonts.raleway(
                                               color: blackOnWhite
-                                                  ? Color(0xFF242423)
-                                                  : Color(0xffF8F9FA),
+                                                  ? const Color(0xFF242423)
+                                                  : const Color(0xffF8F9FA),
                                             ),
                                           ),
-                                          SizedBox(height: 12),
+                                          const SizedBox(height: 12),
                                           Wrap(
                                             spacing: 8,
                                             runSpacing: 6,
@@ -239,15 +240,19 @@ class _ThingsListState extends StateX<ThingsList> {
                                                     labelStyle:
                                                         GoogleFonts.righteous(
                                                       color: blackOnWhite
-                                                          ? Color(0xffF8F9FA)
-                                                          : Color(0xFF242423),
+                                                          ? const Color(
+                                                              0xffF8F9FA,
+                                                            )
+                                                          : const Color(
+                                                              0xFF242423,
+                                                            ),
                                                     ),
                                                     backgroundColor:
                                                         blackOnWhite
-                                                            ? Color(
+                                                            ? const Color(
                                                                 0xFF242423,
                                                               )
-                                                            : Color(
+                                                            : const Color(
                                                                 0xffF8F9FA,
                                                               ),
                                                   ),
@@ -257,12 +262,12 @@ class _ThingsListState extends StateX<ThingsList> {
                                         ],
                                       ),
                                     ),
-                                    SizedBox(width: 16),
+                                    const SizedBox(width: 16),
                                     InkWell(
                                       onTap: () => _pageContext.goto(
                                         '/things/${thing.id}',
                                       ),
-                                      borderRadius: BorderRadius.only(
+                                      borderRadius: const BorderRadius.only(
                                         topRight: Radius.circular(12),
                                         bottomRight: Radius.circular(12),
                                       ),
@@ -271,9 +276,9 @@ class _ThingsListState extends StateX<ThingsList> {
                                         height: double.infinity,
                                         decoration: BoxDecoration(
                                           color: blackOnWhite
-                                              ? Color(0xFF242423)
-                                              : Color(0xffF8F9FA),
-                                          borderRadius: BorderRadius.only(
+                                              ? const Color(0xFF242423)
+                                              : const Color(0xffF8F9FA),
+                                          borderRadius: const BorderRadius.only(
                                             topRight: Radius.circular(12),
                                             bottomRight: Radius.circular(12),
                                           ),
@@ -282,8 +287,8 @@ class _ThingsListState extends StateX<ThingsList> {
                                         child: Icon(
                                           Icons.arrow_forward_ios_rounded,
                                           color: blackOnWhite
-                                              ? Color(0xffF8F9FA)
-                                              : Color(0xFF242423),
+                                              ? const Color(0xffF8F9FA)
+                                              : const Color(0xFF242423),
                                         ),
                                       ),
                                     ),
@@ -305,16 +310,16 @@ class _ThingsListState extends StateX<ThingsList> {
                             color: thing.verdict != null
                                 ? thing.verdictColor
                                 : blackOnWhite
-                                    ? Color(0xffF8F9FA)
-                                    : Color(0xFF242423),
+                                    ? const Color(0xffF8F9FA)
+                                    : const Color(0xFF242423),
                             child: Icon(
                               thing.stateIcon,
                               size: 18,
                               color: thing.verdict != null
                                   ? Colors.white
                                   : blackOnWhite
-                                      ? Color(0xFF242423)
-                                      : Color(0xffF8F9FA),
+                                      ? const Color(0xFF242423)
+                                      : const Color(0xffF8F9FA),
                             ),
                           ),
                         ],

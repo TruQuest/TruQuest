@@ -28,7 +28,7 @@ class VerdictViewBlock extends StatelessWidgetX {
             color: Colors.black,
             width: 150,
             padding: const EdgeInsets.all(8),
-            child: Text(
+            child: const Text(
               '> Verdict:',
               style: TextStyle(fontSize: 20),
             ),
@@ -41,17 +41,17 @@ class VerdictViewBlock extends StatelessWidgetX {
             padding: const EdgeInsets.all(8),
             child: Row(
               children: [
-                Text('> '),
+                const Text('> '),
                 Expanded(
                   child: FittedBox(
                     alignment: Alignment.centerLeft,
                     child: AnimatedTextKit(
                       repeatForever: true,
-                      pause: Duration(seconds: 2),
+                      pause: const Duration(seconds: 2),
                       animatedTexts: [
                         TypewriterAnimatedText(
                           _verdict.getString(),
-                          speed: Duration(milliseconds: 70),
+                          speed: const Duration(milliseconds: 70),
                         ),
                       ],
                     ),

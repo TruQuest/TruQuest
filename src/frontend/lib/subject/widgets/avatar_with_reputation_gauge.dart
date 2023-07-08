@@ -41,7 +41,7 @@ class AvatarWithReputationGauge extends StatelessWidget {
             customColors: CustomSliderColors(
               dotColor: Colors.transparent,
               trackColor: color.withOpacity(0.7),
-              progressBarColors: [
+              progressBarColors: const [
                 // Color(0xff5465ff),
                 // Color(0xff788bff),
                 // Color(0xffb0c1ff),
@@ -64,9 +64,9 @@ class AvatarWithReputationGauge extends StatelessWidget {
               alignment: Alignment.bottomLeft,
               child: Transform.translate(
                 offset: size == AvatarSize.big
-                    ? Offset(40, 0)
+                    ? const Offset(40, 0)
                     : size == AvatarSize.medium
-                        ? Offset(40, 4)
+                        ? const Offset(40, 4)
                         : Offset(
                             reputation < 10 ? 40 : 20,
                             20,
@@ -105,7 +105,7 @@ class AvatarWithReputationGauge extends StatelessWidget {
                       ? 90
                       : 55,
             ),
-            color: Color(0xff4361ee),
+            color: const Color(0xff4361ee),
           ),
         ),
         Container(

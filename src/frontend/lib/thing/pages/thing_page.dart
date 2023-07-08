@@ -58,7 +58,7 @@ class _ThingPageState extends StateX<ThingPage> {
 
   late final StreamSubscription<LoadCurrentUserSuccessVm> _currentUser$$;
 
-  final List<Color> _tabColors = [
+  final List<Color> _tabColors = const [
     Color(0xFF242423),
     Color(0xFF413C69),
     Color(0xFF32407B),
@@ -90,24 +90,24 @@ class _ThingPageState extends StateX<ThingPage> {
   List<Widget> _buildTabs(ThingVm thing) {
     var state = thing.state;
     var items = [
-      Icon(
+      const Icon(
         Icons.content_paste,
         color: Colors.white,
       )
     ];
 
     if (state.index >= ThingStateVm.fundedAndVerifierLotteryInitiated.index) {
-      items.add(Icon(
+      items.add(const Icon(
         Icons.people,
         color: Colors.white,
       ));
       if (state.index >= ThingStateVm.verifiersSelectedAndPollInitiated.index) {
-        items.add(Icon(
+        items.add(const Icon(
           Icons.poll_outlined,
           color: Colors.white,
         ));
         if (state.index >= ThingStateVm.awaitingSettlement.index) {
-          items.add(Icon(
+          items.add(const Icon(
             Icons.handshake,
             color: Colors.white,
           ));
@@ -141,7 +141,7 @@ class _ThingPageState extends StateX<ThingPage> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Column(
                   children: [
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     InkWell(
                       onTap: () => _pageContext.goto(
                         '/subjects/${thing.subjectId}',
@@ -154,9 +154,9 @@ class _ThingPageState extends StateX<ThingPage> {
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     Container(
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         border: Border(
                           bottom: BorderSide(color: Colors.white),
                         ),
@@ -176,7 +176,7 @@ class _ThingPageState extends StateX<ThingPage> {
             ),
             StatusStepperBlock(),
           ],
-          leftSideBlock: EvidenceViewBlock(),
+          leftSideBlock: const EvidenceViewBlock(),
         ),
       ),
     ];
@@ -201,9 +201,9 @@ class _ThingPageState extends StateX<ThingPage> {
               child: Chip(
                 label: Text(tag.name),
                 labelStyle: GoogleFonts.righteous(
-                  color: Color(0xffF8F9FA),
+                  color: const Color(0xffF8F9FA),
                 ),
-                backgroundColor: Color(0xFF242423),
+                backgroundColor: const Color(0xFF242423),
               ),
             ))
         .toList();
@@ -227,7 +227,7 @@ class _ThingPageState extends StateX<ThingPage> {
                 thing.croppedImageIpfsCid!,
                 height: 200,
               ),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,12 +236,12 @@ class _ThingPageState extends StateX<ThingPage> {
                       thing.title,
                       style: GoogleFonts.philosopher(fontSize: 31),
                     ),
-                    SizedBox(height: 12),
+                    const SizedBox(height: 12),
                     Row(children: _buildTagChips(thing)),
                   ],
                 ),
               ),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               if (thing.state.index >= ThingStateVm.awaitingFunding.index)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -250,14 +250,14 @@ class _ThingPageState extends StateX<ThingPage> {
                       'Submitted on',
                       style: GoogleFonts.raleway(),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       thing.submittedAtFormatted,
                       style: GoogleFonts.raleway(
                         fontSize: 16,
                       ),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     RichText(
                       text: TextSpan(
                         children: [
@@ -368,7 +368,7 @@ class _ThingPageState extends StateX<ThingPage> {
                           submitButton: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             child: RoundedLoadingButton(
-                              child: Text('Prepare draft'),
+                              child: const Text('Prepare draft'),
                               controller: btnController,
                               onPressed: () async {
                                 var action = CreateNewSettlementProposalDraft(
@@ -382,7 +382,7 @@ class _ThingPageState extends StateX<ThingPage> {
                                 if (failure != null) {
                                   btnController.error();
                                   await Future.delayed(
-                                    Duration(milliseconds: 1500),
+                                    const Duration(milliseconds: 1500),
                                   );
                                   btnController.reset();
 
@@ -391,7 +391,7 @@ class _ThingPageState extends StateX<ThingPage> {
 
                                 btnController.success();
                                 await Future.delayed(
-                                  Duration(milliseconds: 1500),
+                                  const Duration(milliseconds: 1500),
                                 );
                                 if (context.mounted) {
                                   Navigator.of(context).pop();
@@ -399,7 +399,7 @@ class _ThingPageState extends StateX<ThingPage> {
                               },
                             ),
                           ),
-                          sideBlocks: [
+                          sideBlocks: const [
                             VerdictSelectionBlock(),
                             ImageBlockWithCrop(cropCircle: false),
                             EvidenceBlock(),
@@ -479,7 +479,7 @@ class _ThingPageState extends StateX<ThingPage> {
       stream: _thingBloc.thing$,
       builder: (context, snapshot) {
         if (snapshot.data == null) {
-          return SliverFillRemaining(
+          return const SliverFillRemaining(
             hasScrollBody: false,
             child: Center(child: CircularProgressIndicator()),
           );

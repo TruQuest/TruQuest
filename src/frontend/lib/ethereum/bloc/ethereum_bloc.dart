@@ -18,6 +18,10 @@ class EthereumBloc extends Bloc<EthereumAction> {
   bool get multipleWalletsDetected => _ethereumService.multipleWalletsDetected;
   bool get walletSelected => _ethereumService.walletSelected.isCompleted;
 
+  bool get connectedToValidChain =>
+      _ethereumService.connectedChainId == _ethereumService.validChainId;
+  String get validChainName => _ethereumService.validChainName;
+
   final BehaviorSubject<int> _latestL1BlockNumberChannel =
       BehaviorSubject<int>();
   Stream<int> get latestL1BlockNumber$ => _latestL1BlockNumberChannel.stream;
@@ -34,6 +38,8 @@ class EthereumBloc extends Bloc<EthereumAction> {
         _switchEthereumChain(action);
       } else if (action is ConnectEthereumAccount) {
         _connectEthereumAccount(action);
+      } else if (action is WatchTruthserum) {
+        _watchTruthserum(action);
       } else if (action is ApproveFundsUsage) {
         _approveFundsUsage(action);
       } else if (action is DepositFunds) {
@@ -58,6 +64,9 @@ class EthereumBloc extends Bloc<EthereumAction> {
     var error = await _ethereumService.connectAccount();
     action.complete(error != null ? ConnectEthereumAccountFailureVm() : null);
   }
+
+  void _watchTruthserum(WatchTruthserum action) =>
+      _ethereumService.watchTruthserum();
 
   void _approveFundsUsage(ApproveFundsUsage action) async {
     var error = await _truthserumContract.approve(action.amount);

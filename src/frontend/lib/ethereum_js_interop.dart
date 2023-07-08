@@ -57,6 +57,12 @@ class EthereumChainParams {
 
 @JS()
 @anonymous
+class EthereumWatchTruthserumResult {
+  external EthereumWalletError? get error;
+}
+
+@JS()
+@anonymous
 class EthereumSignResult {
   external String? get signature;
   external EthereumWalletError? get error;
@@ -74,6 +80,7 @@ class _EthereumWallet {
   external dynamic requestAccounts();
   external dynamic getAccounts();
   external dynamic switchChain(EthereumChainParams chainParams);
+  external dynamic watchTruthserum();
   external dynamic signTypedData(String account, String data);
   external dynamic personalSign(String account, String data);
   external dynamic removeAllListeners([String? event]);
@@ -127,6 +134,13 @@ class EthereumWallet {
       ),
     );
 
+    return result.error;
+  }
+
+  Future<EthereumWalletError?> watchTruthserum() async {
+    var result = await promiseToFuture<EthereumWatchTruthserumResult>(
+      _ethereumWallet.watchTruthserum(),
+    );
     return result.error;
   }
 
@@ -201,6 +215,7 @@ class _Web3Provider extends _Provider {
 }
 
 class Web3Provider extends Provider {
+  // ignore: annotate_overrides,overridden_fields
   late final _Web3Provider _provider;
 
   Web3Provider(EthereumWallet ethereumWallet)
@@ -217,6 +232,7 @@ class _JsonRpcProvider extends _Provider {
 }
 
 class JsonRpcProvider extends Provider {
+  // ignore: annotate_overrides,overridden_fields
   late final _JsonRpcProvider _provider;
 
   JsonRpcProvider([String? rpcUrl]) : super(_JsonRpcProvider(rpcUrl)) {

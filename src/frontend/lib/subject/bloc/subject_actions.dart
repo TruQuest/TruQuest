@@ -2,7 +2,9 @@ import '../../general/contexts/document_context.dart';
 import '../../general/bloc/mixins.dart';
 import 'subject_result_vm.dart';
 
-abstract class SubjectAction {}
+abstract class SubjectAction {
+  const SubjectAction();
+}
 
 abstract class SubjectActionAwaitable<T extends SubjectResultVm?>
     extends SubjectAction with AwaitableResult<T> {}
@@ -14,16 +16,18 @@ class AddNewSubject
   AddNewSubject({required this.documentContext});
 }
 
-class GetSubjects extends SubjectAction {}
+class GetSubjects extends SubjectAction {
+  const GetSubjects();
+}
 
 class GetSubject extends SubjectAction {
   final String subjectId;
 
-  GetSubject({required this.subjectId});
+  const GetSubject({required this.subjectId});
 }
 
 class GetThingsList extends SubjectAction {
   final String subjectId;
 
-  GetThingsList({required this.subjectId});
+  const GetThingsList({required this.subjectId});
 }

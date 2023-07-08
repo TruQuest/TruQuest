@@ -18,7 +18,7 @@ import '../../widget_extensions.dart';
 import 'clipped_rect.dart';
 
 class NotificationTracker extends StatefulWidget {
-  NotificationTracker({super.key});
+  const NotificationTracker({super.key});
 
   @override
   State<NotificationTracker> createState() => _NotificationTrackerState();
@@ -43,7 +43,7 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
 
     _animationController = AnimationController(
       vsync: this,
-      duration: Duration(seconds: 1),
+      duration: const Duration(seconds: 1),
     );
 
     AssetLottie('assets/icons/bell.json').load().then((composition) {
@@ -60,7 +60,7 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
         transform: oldLayer.transform,
         solidWidth: oldLayer.solidWidth,
         solidHeight: oldLayer.solidHeight,
-        solidColor: Color.fromARGB(255, 208, 53, 76),
+        solidColor: const Color.fromARGB(255, 208, 53, 76),
         timeStretch: oldLayer.timeStretch,
         startFrame: oldLayer.startFrame,
         preCompWidth: oldLayer.preCompWidth,
@@ -99,7 +99,7 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
       stream: _notificationsCache.unreadNotifications$,
       builder: (context, snapshot) {
         if (snapshot.data == null || snapshot.data!.$1.isEmpty) {
-          return Center(
+          return const Center(
             child: Text(
               'Nothing here yet',
               style: TextStyle(color: Colors.white),
@@ -118,7 +118,7 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
                 padding: const EdgeInsets.all(6),
                 child: Row(
                   children: [
-                    SizedBox(width: 40),
+                    const SizedBox(width: 40),
                     Expanded(
                       child: Text(
                         '${notifications.length} notification(s)',
@@ -129,7 +129,7 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
                       ),
                     ),
                     IconButton(
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.delete_sweep,
                         color: Colors.red,
                       ),
@@ -155,7 +155,7 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
                         // client-side warning
                         if (notification.itemUpdateCategory == 1) {
                           // unsupported chain
-                          _ethereumBloc.dispatch(SwitchEthereumChain());
+                          _ethereumBloc.dispatch(const SwitchEthereumChain());
                         }
                         return;
                       }
@@ -189,7 +189,7 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  SizedBox(height: 6),
+                                  const SizedBox(height: 6),
                                   Text(
                                     notification.details ?? '',
                                     style: GoogleFonts.raleway(
@@ -202,7 +202,7 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
                             ),
                             if (notification.itemId != '')
                               IconButton(
-                                icon: Icon(
+                                icon: const Icon(
                                   Icons.delete,
                                   color: Colors.red,
                                 ),
@@ -231,9 +231,9 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
   Widget buildX(BuildContext context) {
     return Stack(
       children: [
-        ClippedRect(
+        const ClippedRect(
           height: 50,
-          color: Colors.white,
+          color: Color(0xffF8F9FA),
           fromNarrowToWide: false,
         ),
         if (_composition != null)
@@ -275,7 +275,7 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
                             fontSize: 12,
                           ),
                         )
-                      : SizedBox.shrink(),
+                      : const SizedBox.shrink(),
             );
           },
         ),

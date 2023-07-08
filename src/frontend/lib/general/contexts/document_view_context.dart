@@ -29,7 +29,7 @@ class DocumentViewContext implements IDisposable {
   }) {
     quillController = QuillController(
       document: Document.fromJson(jsonDecode(details)),
-      selection: TextSelection.collapsed(offset: 0),
+      selection: const TextSelection.collapsed(offset: 0),
     );
   }
 

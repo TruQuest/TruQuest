@@ -23,12 +23,12 @@ class ClippedAvatarContainer extends StatelessWidget {
         height: 200,
         decoration: BoxDecoration(
           color: color,
-          borderRadius: BorderRadius.only(
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(12),
             bottomLeft: Radius.circular(12),
           ),
         ),
-        alignment: Alignment(-0.5, -0.2),
+        alignment: const Alignment(-0.5, -0.2),
         child: child,
       ),
     );

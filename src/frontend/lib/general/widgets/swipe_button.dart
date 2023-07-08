@@ -314,13 +314,13 @@ class SwipeButtonState extends StateX<SwipeButton> {
     return _SwipeButton.expand(
       enabled: _enabled,
       swiped: _swiped,
-      thumb: Icon(
+      thumb: const Icon(
         Icons.double_arrow_rounded,
         color: Colors.white,
       ),
       child: Text(
         widget.text,
-        style: TextStyle(
+        style: const TextStyle(
           color: Colors.white,
         ),
       ),

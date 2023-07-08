@@ -6,7 +6,7 @@ class Poster extends StatelessWidget {
   final String imageIpfsCid;
   final double height;
 
-  Poster(
+  const Poster(
     this.imageIpfsCid, {
     super.key,
     this.height = 200,

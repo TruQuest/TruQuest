@@ -1,9 +1,13 @@
 import 'user_result_vm.dart';
 import '../../general/bloc/mixins.dart';
 
-abstract class UserAction {}
+abstract class UserAction {
+  const UserAction();
+}
 
 abstract class UserActionAwaitable<T extends UserResultVm?> extends UserAction
     with AwaitableResult<T> {}
 
-class SignInWithEthereum extends UserAction {}
+class SignInWithEthereum extends UserAction {
+  const SignInWithEthereum();
+}

@@ -61,7 +61,7 @@ class _ImageSelectionDialogState extends State<ImageSelectionDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Add image'),
+      title: const Text('Add image'),
       content: SizedBox(
         width: 720,
         height: 450,
@@ -72,7 +72,7 @@ class _ImageSelectionDialogState extends State<ImageSelectionDialog> {
               decoration: InputDecoration(
                 hintText: 'Paste url here',
                 suffix: IconButton(
-                  icon: Icon(Icons.file_download_rounded),
+                  icon: const Icon(Icons.file_download_rounded),
                   onPressed: () {
                     if (_textController.text.isNotEmpty) {
                       setState(() {
@@ -91,7 +91,7 @@ class _ImageSelectionDialogState extends State<ImageSelectionDialog> {
                   future: _getImageFuture,
                   builder: (context, snapshot) {
                     if (snapshot.data == null) {
-                      return Center(child: CircularProgressIndicator());
+                      return const Center(child: CircularProgressIndicator());
                     }
 
                     _imageBytes = snapshot.data!.$1;
@@ -147,10 +147,10 @@ class _ImageSelectionDialogState extends State<ImageSelectionDialog> {
           },
           child: TextButton(
             style: TextButton.styleFrom(
-              backgroundColor: Color(0xFF242423),
+              backgroundColor: const Color(0xFF242423),
               foregroundColor: Colors.white,
             ),
-            child: Text('Ok'),
+            child: const Text('Ok'),
             onPressed: () {
               if (_imageBytes != null) {
                 _cropController.crop();

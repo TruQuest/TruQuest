@@ -23,7 +23,7 @@ class ThingPreviewBlock extends StatelessWidgetX {
       onTap: () => _pageContext.goto('/things/${_proposal.thingId}'),
       child: Card(
         margin: const EdgeInsets.fromLTRB(10, 28, 10, 0),
-        color: Color(0xffF8F9FA),
+        color: const Color(0xffF8F9FA),
         elevation: 15,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -46,17 +46,17 @@ class ThingPreviewBlock extends StatelessWidgetX {
                     AutoSizeText(
                       _proposal.subjectName,
                       style: GoogleFonts.philosopher(
-                        color: Color(0xAA242423),
+                        color: const Color(0xAA242423),
                         fontSize: 10,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(height: 6),
+                    const SizedBox(height: 6),
                     AutoSizeText(
                       _proposal.thingTitle,
                       style: GoogleFonts.philosopher(
-                        color: Color(0xFF242423),
+                        color: const Color(0xFF242423),
                         fontSize: 14,
                       ),
                       maxLines: 2,
@@ -66,7 +66,7 @@ class ThingPreviewBlock extends StatelessWidgetX {
                 ),
               ),
             ),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
           ],
         ),
       ),

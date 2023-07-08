@@ -30,14 +30,14 @@ class _VerdictSelectionBlockState extends StateX<VerdictSelectionBlock> {
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Text(
                 verdict.getString(),
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                 ),
               ),
             ),
           ),
           if (verdict != verdicts.last)
-            DropdownMenuItem<VerdictIm>(
+            const DropdownMenuItem<VerdictIm>(
               enabled: false,
               child: Divider(),
             ),
@@ -68,13 +68,13 @@ class _VerdictSelectionBlockState extends StateX<VerdictSelectionBlock> {
             width: double.infinity,
             height: 30,
             alignment: Alignment.center,
-            child: Text(
+            child: const Text(
               'Verdict',
               style: TextStyle(color: Colors.white),
             ),
           ),
         ),
-        SizedBox(height: 6),
+        const SizedBox(height: 6),
         DropdownButtonHideUnderline(
           child: DropdownButton2<VerdictIm>(
             isExpanded: true,

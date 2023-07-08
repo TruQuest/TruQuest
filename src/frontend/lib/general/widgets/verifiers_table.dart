@@ -24,7 +24,7 @@ class VerifiersTable extends StatelessWidget {
       children: [
         Container(
           margin: const EdgeInsets.only(top: 18),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             border: Border(
               bottom: BorderSide(color: Colors.white),
             ),
@@ -68,14 +68,14 @@ class VerifiersTable extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        SizedBox(height: 6),
+                        const SizedBox(height: 6),
                         Text(
                           'Username',
                           style: GoogleFonts.raleway(
                             color: Colors.black87,
                           ),
                         ),
-                        SizedBox(height: 6),
+                        const SizedBox(height: 6),
                         Text(
                           'On-/Off-Chain',
                           style: GoogleFonts.raleway(
@@ -88,7 +88,7 @@ class VerifiersTable extends StatelessWidget {
                 ),
               ),
               ClippedBlockNumberContainer(
-                color: Color(0xFF4A47A3),
+                color: const Color(0xFF4A47A3),
                 height: 80,
                 child: Text(
                   'Block/Time',
@@ -98,7 +98,7 @@ class VerifiersTable extends StatelessWidget {
                   ),
                 ),
               ),
-              CornerBanner(
+              const CornerBanner(
                 position: Alignment.topLeft,
                 size: 40,
                 cornerRadius: 12,
@@ -114,7 +114,7 @@ class VerifiersTable extends StatelessWidget {
                 right: 0,
                 child: Center(
                   child: IconButton(
-                    icon: Icon(Icons.refresh),
+                    icon: const Icon(Icons.refresh),
                     onPressed: onRefresh,
                   ),
                 ),
@@ -164,14 +164,14 @@ class VerifiersTable extends StatelessWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                SizedBox(height: 12),
+                                const SizedBox(height: 12),
                                 Text(
                                   verifier.username,
                                   style: GoogleFonts.raleway(
                                     color: Colors.black87,
                                   ),
                                 ),
-                                SizedBox(height: 12),
+                                const SizedBox(height: 12),
                                 Text(
                                   verifier.vote == null
                                       ? 'No vote'
@@ -193,7 +193,7 @@ class VerifiersTable extends StatelessWidget {
                             : 'Verifier',
                         child: ClippedBlockNumberContainer(
                           color: verifier.verifierId == currentUserId
-                              ? Color(0xFFE06469)
+                              ? const Color(0xFFE06469)
                               : Colors.blueAccent,
                           height: 120,
                           child: Text(

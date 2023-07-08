@@ -22,10 +22,10 @@ class _EvidenceViewBlockState extends StateX<EvidenceViewBlock> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(seconds: 1)).then(
+    Future.delayed(const Duration(seconds: 1)).then(
       (_) => _pageController.animateToPage(
         _evidence.length - 1,
-        duration: Duration(milliseconds: 1500),
+        duration: const Duration(milliseconds: 1500),
         curve: Curves.ease,
       ),
     );
@@ -61,7 +61,7 @@ class _EvidenceViewBlockState extends StateX<EvidenceViewBlock> {
                     'http://localhost:8080/ipfs/' + e.previewImageIpfsCid,
                     width: double.infinity,
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Text(
@@ -71,7 +71,7 @@ class _EvidenceViewBlockState extends StateX<EvidenceViewBlock> {
                       style: GoogleFonts.raleway(),
                     ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   ElevatedButton.icon(
                     onPressed: () async {
                       await launchUrl(
@@ -79,16 +79,16 @@ class _EvidenceViewBlockState extends StateX<EvidenceViewBlock> {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color.fromARGB(255, 183, 166, 190),
+                      backgroundColor: const Color.fromARGB(255, 183, 166, 190),
                       foregroundColor: Colors.white,
                     ),
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.launch,
                       size: 18,
                     ),
-                    label: Text('Open'),
+                    label: const Text('Open'),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                 ],
               ),
             ),

@@ -39,7 +39,7 @@ class NotificationBloc extends Bloc<NotificationAction> {
     _thingService.progress$$.listen((progress$) {
       _progress$Channel.add(progress$);
       progress$.listen(null, onDone: () {
-        Future.delayed(Duration(seconds: 2)).then(
+        Future.delayed(const Duration(seconds: 2)).then(
           (_) {
             if (_progress$Channel.value == progress$) {
               _progress$Channel.add(null);
@@ -52,7 +52,7 @@ class NotificationBloc extends Bloc<NotificationAction> {
     _settlementService.progress$$.listen((progress$) {
       _progress$Channel.add(progress$);
       progress$.listen(null, onDone: () {
-        Future.delayed(Duration(seconds: 2)).then(
+        Future.delayed(const Duration(seconds: 2)).then(
           (_) {
             if (_progress$Channel.value == progress$) {
               _progress$Channel.add(null);

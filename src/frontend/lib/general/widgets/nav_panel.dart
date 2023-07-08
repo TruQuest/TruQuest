@@ -19,28 +19,28 @@ class NavPanel extends StatelessWidgetX {
     return SliverPinnedHeader(
       child: Material(
         color: Colors.black,
-        elevation: 10,
+        elevation: 3,
         child: Container(
           height: 50,
           alignment: Alignment.center,
           child: Row(
             children: [
-              NotificationTracker(),
+              const NotificationTracker(),
               SizedBox(
                 width: 150,
                 child: ProgressBar(),
               ),
-              Spacer(),
+              const Spacer(),
               InkWell(
                 onTap: () => _pageContext.goto('/subjects'),
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.circle,
                       color: Colors.white,
                       size: 8,
                     ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                     Text(
                       'Subjects',
                       style: GoogleFonts.raleway(
@@ -51,17 +51,17 @@ class NavPanel extends StatelessWidgetX {
                   ],
                 ),
               ),
-              SizedBox(width: 48),
+              const SizedBox(width: 48),
               InkWell(
                 onTap: () => _pageContext.goto('/things'),
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.circle,
                       color: Colors.white,
                       size: 8,
                     ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                     Text(
                       'Things',
                       style: GoogleFonts.raleway(
@@ -72,17 +72,17 @@ class NavPanel extends StatelessWidgetX {
                   ],
                 ),
               ),
-              SizedBox(width: 48),
+              const SizedBox(width: 48),
               InkWell(
                 onTap: () => _pageContext.goto('/how-to'),
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.circle,
                       color: Colors.white,
                       size: 8,
                     ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                     Text(
                       'How To',
                       style: GoogleFonts.raleway(
@@ -93,17 +93,17 @@ class NavPanel extends StatelessWidgetX {
                   ],
                 ),
               ),
-              SizedBox(width: 48),
+              const SizedBox(width: 48),
               InkWell(
                 onTap: () => _pageContext.goto('/goto'),
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.circle,
                       color: Colors.white,
                       size: 8,
                     ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                     Text(
                       'Go To',
                       style: GoogleFonts.raleway(
@@ -114,7 +114,7 @@ class NavPanel extends StatelessWidgetX {
                   ],
                 ),
               ),
-              Spacer(),
+              const Spacer(),
               Container(
                 width: 300,
                 alignment: Alignment.centerRight,

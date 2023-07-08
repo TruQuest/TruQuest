@@ -22,13 +22,13 @@ class _BlockCountdownState extends State<BlockCountdown> {
     ),
     customColors: CustomSliderColors(
       dotColor: Colors.transparent,
-      trackColor: Color(0xffF9EBE0).withOpacity(0.5),
-      progressBarColors: [
+      trackColor: const Color(0xffF9EBE0).withOpacity(0.5),
+      progressBarColors: const [
         Color(0xffA586EE),
         Color(0xffF9D3D2),
         Color(0xffBF79C2),
       ],
-      shadowColor: Color(0xff7F5ED9),
+      shadowColor: const Color(0xff7F5ED9),
       shadowMaxOpacity: 0.05,
     ),
     startAngle: 180,
@@ -46,7 +46,7 @@ class _BlockCountdownState extends State<BlockCountdown> {
 
     if (_currentValue == 360) {
       _currentValue = 0;
-      Future.delayed(Duration(seconds: 1)).then((_) {
+      Future.delayed(const Duration(seconds: 1)).then((_) {
         if (mounted) {
           setState(() => _currentValue = 360);
         }

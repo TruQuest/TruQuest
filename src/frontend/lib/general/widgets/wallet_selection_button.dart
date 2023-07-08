@@ -13,7 +13,7 @@ class WalletSelectionButton extends StatelessWidgetX {
   @override
   Widget buildX(BuildContext context) {
     return IconButton(
-      icon: Icon(
+      icon: const Icon(
         Icons.wallet,
         color: Colors.black,
       ),
@@ -21,14 +21,14 @@ class WalletSelectionButton extends StatelessWidgetX {
         var walletName = await showDialog<String>(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('Choose wallet'),
+            title: const Text('Choose wallet'),
             actions: [
               TextButton(
-                child: Text('Metamask'),
+                child: const Text('Metamask'),
                 onPressed: () => Navigator.of(context).pop('Metamask'),
               ),
               TextButton(
-                child: Text('Coinbase Wallet'),
+                child: const Text('Coinbase Wallet'),
                 onPressed: () => Navigator.of(context).pop('CoinbaseWallet'),
               ),
             ],

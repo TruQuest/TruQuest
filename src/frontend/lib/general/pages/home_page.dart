@@ -41,7 +41,7 @@ class _HomePageState extends StateX<HomePage> {
       (toast) => _fToast.showToast(
         child: toast,
         gravity: ToastGravity.BOTTOM_RIGHT,
-        toastDuration: Duration(seconds: 10),
+        toastDuration: const Duration(seconds: 10),
       ),
     );
   }
@@ -49,7 +49,7 @@ class _HomePageState extends StateX<HomePage> {
   @override
   Widget buildX(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xffF8F9FA),
+      backgroundColor: const Color(0xffF8F9FA),
       body: FixedWidth(
         width: 1400,
         child: CustomScrollView(
@@ -58,9 +58,9 @@ class _HomePageState extends StateX<HomePage> {
               floating: true,
               pinned: false,
               snap: false,
-              backgroundColor: Colors.white,
+              backgroundColor: const Color(0xffF8F9FA),
               leadingWidth: 150,
-              leading: ClippedRect(
+              leading: const ClippedRect(
                 height: 70,
                 color: Colors.black,
                 fromNarrowToWide: true,
@@ -79,7 +79,7 @@ class _HomePageState extends StateX<HomePage> {
               stream: _pageContext.route$,
               builder: (context, snapshot) {
                 if (snapshot.data == null) {
-                  return SliverFillRemaining(
+                  return const SliverFillRemaining(
                     hasScrollBody: false,
                     child: Center(child: CircularProgressIndicator()),
                   );
@@ -88,19 +88,19 @@ class _HomePageState extends StateX<HomePage> {
                 var route = snapshot.data!;
                 switch (route) {
                   case '/subjects':
-                    return SubjectsPage();
+                    return const SubjectsPage();
                   case '/goto':
                     return SliverFillRemaining(
                       hasScrollBody: false,
                       child: Center(
                         child: TextButton(
-                          child: Text('Go To'),
+                          child: const Text('Go To'),
                           onPressed: () async {
                             var route = '';
                             var shouldGo = await showDialog<bool>(
                               context: context,
                               builder: (context) => AlertDialog(
-                                title: Text('Page'),
+                                title: const Text('Page'),
                                 content: SizedBox(
                                   width: 100,
                                   child: TextField(
@@ -109,7 +109,7 @@ class _HomePageState extends StateX<HomePage> {
                                 ),
                                 actions: [
                                   TextButton(
-                                    child: Text('Ok'),
+                                    child: const Text('Ok'),
                                     onPressed: () {
                                       Navigator.of(context).pop(true);
                                     },
@@ -151,7 +151,7 @@ class _HomePageState extends StateX<HomePage> {
                       );
                     }
 
-                    return SliverFillRemaining(
+                    return const SliverFillRemaining(
                       hasScrollBody: false,
                       child: Center(child: Text('Not found')),
                     );

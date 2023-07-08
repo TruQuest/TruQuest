@@ -1,7 +1,9 @@
 import '../../general/bloc/mixins.dart';
 import 'ethereum_result_vm.dart';
 
-abstract class EthereumAction {}
+abstract class EthereumAction {
+  const EthereumAction();
+}
 
 abstract class EthereumActionAwaitable<T extends EthereumResultVm?>
     extends EthereumAction with AwaitableResult<T> {}
@@ -9,13 +11,19 @@ abstract class EthereumActionAwaitable<T extends EthereumResultVm?>
 class SelectWallet extends EthereumAction {
   final String walletName;
 
-  SelectWallet({required this.walletName});
+  const SelectWallet({required this.walletName});
 }
 
-class SwitchEthereumChain extends EthereumAction {}
+class SwitchEthereumChain extends EthereumAction {
+  const SwitchEthereumChain();
+}
 
 class ConnectEthereumAccount
     extends EthereumActionAwaitable<ConnectEthereumAccountFailureVm?> {}
+
+class WatchTruthserum extends EthereumAction {
+  const WatchTruthserum();
+}
 
 class ApproveFundsUsage
     extends EthereumActionAwaitable<ApproveFundsUsageFailureVm?> {
@@ -27,5 +35,5 @@ class ApproveFundsUsage
 class DepositFunds extends EthereumAction {
   final int amount;
 
-  DepositFunds({required this.amount});
+  const DepositFunds({required this.amount});
 }

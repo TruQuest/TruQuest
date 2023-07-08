@@ -16,7 +16,7 @@ class ProgressBar extends StatelessWidgetX {
     return StreamBuilder(
       stream: _notificationBloc.progress$$,
       builder: (context, snapshot) {
-        if (snapshot.data == null) return SizedBox.shrink();
+        if (snapshot.data == null) return const SizedBox.shrink();
 
         var progress$ = snapshot.data!;
 
@@ -26,7 +26,7 @@ class ProgressBar extends StatelessWidgetX {
               color: Colors.white,
               size: 20,
             ),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Expanded(
               child: StreamBuilder(
                 stream: progress$,
