@@ -3,9 +3,11 @@ library app;
 
 import 'dart:convert';
 import 'dart:js_util';
+import 'dart:typed_data';
 
 // ignore: depend_on_referenced_packages
 import 'package:js/js.dart';
+import 'package:convert/convert.dart';
 
 @JS()
 @anonymous
@@ -259,21 +261,6 @@ class Signer {
   Future<String> getAddress() => promiseToFuture<String>(_signer.getAddress());
 }
 
-@JS('ethers.Wallet')
-class _Wallet {
-  external _Wallet(dynamic privateKey);
-  external dynamic signMessage(dynamic message);
-}
-
-class Wallet {
-  final _Wallet _wallet;
-
-  Wallet(String privateKey) : _wallet = _Wallet(privateKey);
-
-  Future<String> signMessage(String message) =>
-      promiseToFuture<String>(_wallet.signMessage(message));
-}
-
 @JS('ethers.utils.Interface')
 class _Interface {
   external _Interface(dynamic abi);
@@ -288,6 +275,33 @@ class Abi {
   String encodeFunctionData(String fragment, [dynamic values]) =>
       _interface.encodeFunctionData(fragment, values);
 }
+
+@JS('ethers.utils.keccak256')
+external String keccak256(Uint8List data);
+
+@JS('ethers.utils.hashMessage')
+external String hashMessage(Uint8List message);
+
+@JS('ethers.utils.SigningKey')
+class SigningKey {
+  external SigningKey(Uint8List privateKey);
+  external Signature signDigest(Uint8List digest);
+}
+
+@JS('ethers.crypto.Signature')
+class Signature {
+  external String get r;
+  external String get s;
+  external int get v;
+}
+
+extension SignatureExtension on Signature {
+  String get combined =>
+      '0x' + r.substring(2) + s.substring(2) + hex.encode([v]);
+}
+
+@JS('ethers.utils.formatUnits')
+external String formatUnits(BigNumber value, [String unit = 'ether']);
 
 @JS('ethers.Contract')
 class _Contract {
