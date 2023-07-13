@@ -1,5 +1,17 @@
-abstract class EthereumResultVm {}
+abstract class EthereumResultVm {
+  const EthereumResultVm();
+}
 
-class ConnectEthereumAccountFailureVm extends EthereumResultVm {}
+class SelectWalletFailureVm extends EthereumResultVm {
+  const SelectWalletFailureVm();
+}
 
-class ApproveFundsUsageFailureVm extends EthereumResultVm {}
+class ConnectEthereumAccountSuccessVm extends EthereumResultVm {
+  final String? walletConnectUri;
+
+  const ConnectEthereumAccountSuccessVm({required this.walletConnectUri});
+}
+
+class ApproveFundsUsageFailureVm extends EthereumResultVm {
+  const ApproveFundsUsageFailureVm();
+}

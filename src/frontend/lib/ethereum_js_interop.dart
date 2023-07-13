@@ -24,7 +24,6 @@ class EthereumChainIdResult {
 @JS()
 @anonymous
 class EthereumRequestAccountsResult {
-  external List<String>? get accounts;
   external EthereumWalletError? get error;
 }
 
@@ -70,21 +69,22 @@ class EthereumSignResult {
 
 @JS('EthereumWallet')
 class _EthereumWallet {
-  external bool isInstalled();
-  external int count();
   external void select(String walletName);
   external dynamic instance();
-  external String name();
   external bool isInitialized();
+  external bool walletConnectSessionExists();
   external dynamic getChainId();
-  external dynamic requestAccounts();
+  external dynamic requestAccounts([
+    WalletConnectConnectionOpts? walletConnectConnectionOpts,
+  ]);
   external dynamic getAccounts();
   external dynamic switchChain(EthereumChainParams chainParams);
   external dynamic watchTruthserum();
   external dynamic signTypedData(String account, String data);
   external dynamic personalSign(String account, String data);
-  external dynamic removeAllListeners([String? event]);
+  external void removeListener(String event, Function handler);
   external void on(String event, Function handler);
+  external void once(String event, Function handler);
 }
 
 class EthereumWallet {
@@ -92,12 +92,11 @@ class EthereumWallet {
 
   EthereumWallet() : _ethereumWallet = _EthereumWallet();
 
-  bool isInstalled() => _ethereumWallet.isInstalled();
-  int count() => _ethereumWallet.count();
   void select(String walletName) => _ethereumWallet.select(walletName);
-  String name() => _ethereumWallet.name();
   dynamic _instance() => _ethereumWallet.instance();
   bool isInitialized() => _ethereumWallet.isInitialized();
+  bool walletConnectSessionExists() =>
+      _ethereumWallet.walletConnectSessionExists();
 
   Future<int> getChainId() async {
     var result = await promiseToFuture<EthereumChainIdResult>(
@@ -107,10 +106,14 @@ class EthereumWallet {
     return int.parse(result.chainId!);
   }
 
-  Future<EthereumRequestAccountsResult> requestAccounts() =>
-      promiseToFuture<EthereumRequestAccountsResult>(
-        _ethereumWallet.requestAccounts(),
-      );
+  Future<EthereumWalletError?> requestAccounts([
+    WalletConnectConnectionOpts? walletConnectConnectionOpts,
+  ]) async {
+    var result = await promiseToFuture<EthereumRequestAccountsResult>(
+      _ethereumWallet.requestAccounts(walletConnectConnectionOpts),
+    );
+    return result.error;
+  }
 
   Future<List<String>> getAccounts() async {
     var result = await promiseToFuture<EthereumAccountsResult>(
@@ -154,8 +157,17 @@ class EthereumWallet {
         _ethereumWallet.personalSign(account, data),
       );
 
-  void removeAllListeners([String? event]) =>
-      _ethereumWallet.removeAllListeners(event);
+  void removeListener(String event, Function handler) =>
+      _ethereumWallet.removeListener(event, allowInterop(handler));
+
+  void onDisplayUriOnce(void Function(String) handler) {
+    _ethereumWallet.once(
+      'display_uri',
+      allowInterop(
+        (dynamic uri) => handler(uri as String),
+      ),
+    );
+  }
 
   void onAccountsChanged(void Function(List<String>) handler) {
     _ethereumWallet.on(
@@ -167,12 +179,11 @@ class EthereumWallet {
   }
 
   void onChainChanged(void Function(int) handler) {
-    var name = _ethereumWallet.name();
     _ethereumWallet.on(
       'chainChanged',
       allowInterop(
         (dynamic chainId) =>
-            name == 'Metamask' ? handler(int.parse(chainId)) : handler(chainId),
+            chainId is String ? handler(int.parse(chainId)) : handler(chainId),
       ),
     );
   }
@@ -181,7 +192,6 @@ class EthereumWallet {
 @JS('ethers.providers.Provider')
 abstract class _Provider {
   external _Provider on(String eventName, Function listener);
-  external _Provider off(String eventName, [Function? listener]);
   external _Provider removeAllListeners([String? eventName]);
   external dynamic getBlockNumber();
 }
@@ -196,11 +206,6 @@ abstract class Provider {
     _provider.on('block', allowInterop(handler));
   }
 
-  void off(String eventName, [Function? handler]) => _provider.off(
-        eventName,
-        handler != null ? allowInterop(handler) : null,
-      );
-
   void removeAllListeners([String? eventName]) =>
       _provider.removeAllListeners(eventName);
 
@@ -211,7 +216,7 @@ abstract class Provider {
 @JS('ethers.providers.Web3Provider')
 class _Web3Provider extends _Provider {
   external _Web3Provider(dynamic ethereum);
-  external Signer getSigner();
+  external _Signer getSigner();
 }
 
 class Web3Provider extends Provider {
@@ -223,7 +228,7 @@ class Web3Provider extends Provider {
     _provider = super._provider as _Web3Provider;
   }
 
-  Signer getSigner() => _provider.getSigner();
+  Signer getSigner() => Signer(_provider.getSigner());
 }
 
 @JS('ethers.providers.JsonRpcProvider')
@@ -241,20 +246,47 @@ class JsonRpcProvider extends Provider {
 }
 
 @JS('ethers.Signer')
-class Signer {}
-
-class ContractRequestError {
-  final int code;
-  final String message;
-
-  ContractRequestError({required this.code, required this.message});
+class _Signer {
+  external dynamic getAddress();
 }
 
-class ContractExecError {
-  final String code;
-  final String reason;
+class Signer {
+  final _Signer _signer;
 
-  ContractExecError({required this.code, required this.reason});
+  // ignore: library_private_types_in_public_api
+  Signer(this._signer);
+
+  Future<String> getAddress() => promiseToFuture<String>(_signer.getAddress());
+}
+
+@JS('ethers.Wallet')
+class _Wallet {
+  external _Wallet(dynamic privateKey);
+  external dynamic signMessage(dynamic message);
+}
+
+class Wallet {
+  final _Wallet _wallet;
+
+  Wallet(String privateKey) : _wallet = _Wallet(privateKey);
+
+  Future<String> signMessage(String message) =>
+      promiseToFuture<String>(_wallet.signMessage(message));
+}
+
+@JS('ethers.utils.Interface')
+class _Interface {
+  external _Interface(dynamic abi);
+  external String encodeFunctionData(String fragment, [dynamic values]);
+}
+
+class Abi {
+  final _Interface _interface;
+
+  Abi(dynamic abi) : _interface = _Interface(abi);
+
+  String encodeFunctionData(String fragment, [dynamic values]) =>
+      _interface.encodeFunctionData(fragment, values);
 }
 
 @JS('ethers.Contract')
@@ -267,16 +299,18 @@ class Contract {
   late final _Contract _contract;
 
   Contract(String address, dynamic abi, dynamic providerOrSigner) {
+    assert(providerOrSigner is Provider || providerOrSigner is Signer);
     if (providerOrSigner is Provider) {
       _contract = _Contract(address, abi, providerOrSigner._provider);
     } else {
-      _contract = _Contract(address, abi, providerOrSigner);
+      _contract = _Contract(address, abi, providerOrSigner._signer);
     }
   }
 
   Contract._(this._contract);
 
-  Contract connect(Signer signer) => Contract._(_contract.connect(signer));
+  Contract connect(Signer signer) =>
+      Contract._(_contract.connect(signer._signer));
 
   Future<T> read<T>(
     String functionName, {
@@ -305,20 +339,16 @@ class Contract {
         ),
       );
     } catch (jsError) {
-      if (jsError.runtimeType.toString() == 'JSNoSuchMethodError') {
-        throw ContractRequestError(
-          code: -51234,
-          message: 'Invalid function name',
-        );
-      } else if (jsError.runtimeType.toString() == 'NativeError') {
-        var error = _dartify(jsError);
-        throw ContractExecError(
-          code: error['code'],
-          reason: error['reason'],
-        );
+      print('Contract.read JS error: $jsError');
+      dynamic error;
+      try {
+        error = _dartify(jsError);
+        print('Contract.read error: $error');
+      } catch (_) {
+        error = 'Contract.read error';
       }
 
-      rethrow;
+      throw error;
     }
 
     var result = _dartify(jsResult);
@@ -386,18 +416,16 @@ class Contract {
 
       return TransactionResponse._(response);
     } catch (jsError) {
-      if (jsError.runtimeType.toString() == 'JSNoSuchMethodError') {
-        throw ContractRequestError(
-          code: -51234,
-          message: 'Invalid function name',
-        );
+      print('Contract.write JS error: $jsError');
+      dynamic error;
+      try {
+        error = _dartify(jsError);
+        print('Contract.write error: $error');
+      } catch (_) {
+        error = 'Contract.write error';
       }
 
-      var error = _dartify(jsError);
-      throw ContractRequestError(
-        code: error['code'],
-        message: error['message'],
-      );
+      throw error;
     }
   }
 }
@@ -463,11 +491,16 @@ class TransactionResponse {
         _transactionResponse.wait(confirms),
       );
     } catch (jsError) {
-      var error = _dartify(jsError);
-      throw ContractExecError(
-        code: error['code'],
-        reason: error['reason'],
-      );
+      print('TransactionResponse.wait JS error: $jsError');
+      dynamic error;
+      try {
+        error = _dartify(jsError);
+        print('TransactionResponse.wait error: $error');
+      } catch (_) {
+        error = 'TransactionResponse.wait error';
+      }
+
+      throw error;
     }
   }
 }
@@ -500,3 +533,80 @@ external String convertToEip55Address(String address);
 external String _stringify(dynamic obj);
 
 dynamic _dartify(dynamic jsObject) => json.decode(_stringify(jsObject));
+
+@JS('initWalletConnectProvider')
+external dynamic initWalletConnectProvider(WalletConnectProviderOpts opts);
+
+@JS()
+@anonymous
+class Redirect {
+  external factory Redirect({
+    String? native,
+    String? universal,
+  });
+
+  external String? get native;
+  external String? get universal;
+}
+
+@JS()
+@anonymous
+class Metadata {
+  external factory Metadata({
+    String name,
+    String description,
+    String url,
+    List<String> icons,
+    String? verifyUrl,
+    Redirect? redirect,
+  });
+
+  external String get name;
+  external String get description;
+  external String get url;
+  external List<String> get icons;
+  external String? get verifyUrl;
+  external Redirect? get redirect;
+}
+
+@JS()
+@anonymous
+class WalletConnectProviderOpts {
+  external factory WalletConnectProviderOpts({
+    String projectId,
+    List<int> chains,
+    List<int>? optionalChains,
+    List<String>? methods,
+    List<String>? optionalMethods,
+    List<String>? events,
+    List<String>? optionalEvents,
+    dynamic rpcMap,
+    Metadata? metadata,
+    bool showQrModal,
+  });
+
+  external String get projectId;
+  external List<int> get chains;
+  external List<int>? get optionalChains;
+  external List<String>? get methods;
+  external List<String>? get optionalMethods;
+  external List<String>? get events;
+  external List<String>? get optionalEvents;
+  external dynamic get rpcMap;
+  external Metadata? get metadata;
+  external bool get showQrModal;
+}
+
+@JS()
+@anonymous
+class WalletConnectConnectionOpts {
+  external factory WalletConnectConnectionOpts({
+    List<int>? chains,
+    List<int>? optionalChains,
+    String? pairingTopic,
+  });
+
+  external List<int>? get chains;
+  external List<int>? get optionalChains;
+  external String? get pairingTopic;
+}

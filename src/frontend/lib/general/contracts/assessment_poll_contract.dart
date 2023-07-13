@@ -127,16 +127,9 @@ class AssessmentPollContract {
       _ethereumService.l2ReadOnlyProvider,
     );
 
-    if (_ethereumService.isAvailable) {
-      if (!_ethereumService.multipleWalletsDetected ||
-          _ethereumService.walletSelected.isCompleted) {
-        _contract = Contract(_address, _abi, _ethereumService.provider);
-      } else {
-        _ethereumService.walletSelected.future.then((_) {
-          _contract = Contract(_address, _abi, _ethereumService.provider);
-        });
-      }
-    }
+    _ethereumService.walletSetup.future.then((_) {
+      _contract = Contract(_address, _abi, _ethereumService.provider);
+    });
   }
 
   Future<int> getPollDurationBlocks() =>
@@ -202,35 +195,29 @@ class AssessmentPollContract {
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    try {
-      TransactionResponse txnResponse;
-      if (reason.isEmpty) {
-        txnResponse = await contract.write(
-          'castVote',
-          args: [
-            thingProposalIdHex,
-            userIndexInProposalVerifiersArray,
-            decision.index,
-          ],
-        );
-      } else {
-        txnResponse = await contract.write(
-          'castVoteWithReason',
-          args: [
-            thingProposalIdHex,
-            userIndexInProposalVerifiersArray,
-            decision.index,
-            reason,
-          ],
-        );
-      }
-
-      await txnResponse.wait();
-      print('Cast vote txn mined!');
-    } on ContractRequestError catch (e) {
-      print('Cast vote error: [${e.code}] ${e.message}');
-    } on ContractExecError catch (e) {
-      print('Cast vote error: [${e.code}] ${e.reason}');
+    TransactionResponse txnResponse;
+    if (reason.isEmpty) {
+      txnResponse = await contract.write(
+        'castVote',
+        args: [
+          thingProposalIdHex,
+          userIndexInProposalVerifiersArray,
+          decision.index,
+        ],
+      );
+    } else {
+      txnResponse = await contract.write(
+        'castVoteWithReason',
+        args: [
+          thingProposalIdHex,
+          userIndexInProposalVerifiersArray,
+          decision.index,
+          reason,
+        ],
+      );
     }
+
+    await txnResponse.wait();
+    print('Cast vote txn mined!');
   }
 }

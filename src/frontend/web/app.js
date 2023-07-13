@@ -69,53 +69,67 @@ async function getImagePalette(url) {
   return { colors: colors };
 }
 
+async function initWalletConnectProvider(walletConnectProviderOpts) {
+  window.truquest_walletConnectProvider = await window[
+    "@walletconnect/ethereum-provider"
+  ].EthereumProvider.init(walletConnectProviderOpts);
+}
+
 class EthereumWallet {
   provider;
+  name;
 
   constructor() {
     this.provider = null;
-  }
-
-  isInstalled() {
-    return typeof ethereum !== "undefined";
-  }
-
-  count() {
-    return ethereum.providers?.length ?? 1;
+    this.name = null;
   }
 
   select(walletName) {
-    if (ethereum.providers?.length) {
-      for (var i = 0; i < ethereum.providers.length; ++i) {
-        var p = ethereum.providers[i];
-        if (walletName == "Metamask" && p.isMetaMask) {
-          this.provider = p;
-          return;
-        } else if (walletName == "CoinbaseWallet" && p.isCoinbaseWallet) {
-          this.provider = p;
-          return;
+    // @@TODO: Check with both MM and CB installed and with only one wallet installed.
+    if (walletName == "WalletConnect") {
+      this.provider = window.truquest_walletConnectProvider;
+    } else if (typeof ethereum !== "undefined") {
+      if (ethereum.providers?.length) {
+        for (var i = 0; i < ethereum.providers.length; ++i) {
+          var provider = ethereum.providers[i];
+          if (walletName == "Metamask" && provider.isMetaMask) {
+            this.provider = provider;
+            break;
+          } else if (
+            walletName == "CoinbaseWallet" &&
+            provider.isCoinbaseWallet
+          ) {
+            this.provider = provider;
+            break;
+          }
         }
+      } else if (
+        (walletName == "Metamask" && ethereum.isMetaMask) ||
+        (walletName == "CoinbaseWallet" && ethereum.isCoinbaseWallet)
+      ) {
+        this.provider = ethereum;
       }
     }
 
-    throw new Error("Unsupported wallet");
+    if (this.provider != null) {
+      this.name = walletName;
+      return;
+    }
+
+    throw new Error(`${walletName} not available`);
   }
 
   instance() {
-    this.provider ??= ethereum;
-    if (!(this.provider.isMetaMask || this.provider.isCoinbaseWallet)) {
-      throw new Error("Unsupported wallet");
-    }
     return this.provider;
   }
 
-  name() {
-    if (this.provider.isMetaMask) return "Metamask";
-    else return "CoinbaseWallet";
+  isInitialized() {
+    return this.name != "Metamask" || this.provider._state.initialized;
   }
 
-  isInitialized() {
-    return this.provider.isCoinbaseWallet || this.provider._state.initialized;
+  walletConnectSessionExists() {
+    // @@NOTE: Once expired the session is automatically removed on provider initialization.
+    return this.provider.session != null;
   }
 
   async getChainId() {
@@ -136,23 +150,30 @@ class EthereumWallet {
     }
   }
 
-  async requestAccounts() {
-    try {
-      var accounts = await this.provider.request({
-        method: "eth_requestAccounts",
-      });
+  async requestAccounts(walletConnectConnectionOpts) {
+    if (this.name == "WalletConnect") {
+      // @@BUG: Awaiting this line never returns for some reason.
+      this.provider.connect(walletConnectConnectionOpts);
       return {
-        accounts: accounts,
         error: null,
       };
-    } catch (error) {
-      return {
-        accounts: null,
-        error: {
-          code: error.code,
-          message: error.message,
-        },
-      };
+    } else {
+      try {
+        await this.provider.request({
+          method: "eth_requestAccounts",
+        });
+
+        return {
+          error: null,
+        };
+      } catch (error) {
+        return {
+          error: {
+            code: error.code,
+            message: error.message,
+          },
+        };
+      }
     }
   }
 
@@ -177,14 +198,18 @@ class EthereumWallet {
   async switchChain(chainParams) {
     var error = null;
     try {
+      // @@NOTE: In WalletConnect calling this when the chain exists simply changes the
+      // local chainId value ('chainChanged' gets fired), but no request is sent to the app,
+      // meaning, it stays on the old chain.
       await this.provider.request({
         method: "wallet_switchEthereumChain",
         params: [{ chainId: chainParams.id }],
       });
     } catch (switchError) {
       if (
-        (this.provider.isMetaMask && switchError.code === 4902) ||
-        (this.provider.isCoinbaseWallet && switchError.code === -32603)
+        (this.name == "Metamask" && switchError.code === 4902) ||
+        ((this.name == "CoinbaseWallet" || this.name == "WalletConnect") &&
+          switchError.code === -32603)
       ) {
         try {
           await this.provider.request({
@@ -221,6 +246,7 @@ class EthereumWallet {
     };
   }
 
+  // @@TODO: Provide asset params as function arg.
   async watchTruthserum() {
     try {
       var success = await this.provider.request({
@@ -298,12 +324,19 @@ class EthereumWallet {
     }
   }
 
-  removeAllListeners(event) {
-    this.provider.removeAllListeners(event);
+  // @@NOTE: Using removeListener instead of 'removeAllListeners' or 'off' since
+  // WC's provider doesn't support 'removeAllListeners' and MM doesn't support 'off'.
+  removeListener(event, handler) {
+    this.provider.removeListener(event, handler);
   }
 
   on(event, handler) {
     this.provider.on(event, handler);
+  }
+
+  // @@NOTE: Only used by WC.
+  once(event, handler) {
+    this.provider.once(event, handler);
   }
 }
 

@@ -28,27 +28,24 @@ class EthereumService {
   late final JsonRpcProvider l2ReadOnlyProvider;
   late final JsonRpcProvider l1Provider;
 
-  late final bool isAvailable;
-  late final bool multipleWalletsDetected;
-  final Completer walletSelected = Completer();
+  final walletSetup = Completer<String>();
+  final _walletConnectConnectionOpts = WalletConnectConnectionOpts(
+    chains: [1],
+    optionalChains: [901],
+  );
 
-  final StreamController<(int, bool)> _connectedChainChangedEventChannel =
-      StreamController<(int, bool)>();
+  final _connectedChainChangedEventChannel = StreamController<(int, bool)>();
   Stream<(int, bool)> get connectedChainChanged$ =>
       _connectedChainChangedEventChannel.stream;
 
-  final StreamController<String?> _connectedAccountChangedEventChannel =
-      StreamController<String?>();
+  final _connectedAccountChangedEventChannel = StreamController<String?>();
   Stream<String?> get connectedAccountChanged$ =>
       _connectedAccountChangedEventChannel.stream;
 
-  final StreamController<int> _l1BlockMinedEventChannel =
-      StreamController<int>();
+  final _l1BlockMinedEventChannel = StreamController<int>();
   Stream<int> get l1BlockMined$ => _l1BlockMinedEventChannel.stream;
 
   EthereumService(this._localStorage) : _ethereumWallet = EthereumWallet() {
-    isAvailable = _ethereumWallet.isInstalled();
-
     l1Provider = JsonRpcProvider('http://localhost:8545');
     l1Provider.removeAllListeners('block');
     l1Provider.onBlockMined((blockNumber) {
@@ -58,88 +55,91 @@ class EthereumService {
 
     l2ReadOnlyProvider = JsonRpcProvider('http://localhost:9545');
 
-    if (isAvailable) {
-      if (_ethereumWallet.count() > 1) {
-        multipleWalletsDetected = true;
-        String? walletName;
-        if ((walletName = _localStorage.getString('SelectedWallet')) != null) {
-          _ethereumWallet.select(walletName!);
-          _setup();
-          walletSelected.complete();
-        }
-
-        return;
-      }
-
-      multipleWalletsDetected = false;
-      _setup();
+    String? walletName;
+    if ((walletName = _localStorage.getString('SelectedWallet')) != null) {
+      _ethereumWallet.select(walletName!);
+      _setup(walletName);
     }
   }
 
-  void _setup() {
-    provider = Web3Provider(_ethereumWallet);
-
+  void _setup(String walletName) {
     if (!_ethereumWallet.isInitialized()) {
       html.window.location.reload();
     }
 
-    _ethereumWallet.removeAllListeners('chainChanged');
-    _ethereumWallet.removeAllListeners('accountsChanged');
+    provider = Web3Provider(_ethereumWallet);
 
-    _ethereumWallet.onChainChanged((chainId) {
-      print('Chain changed: $chainId');
-      if (_connectedChainId != chainId) {
+    _ethereumWallet.removeListener('chainChanged', _onChainChanged);
+    _ethereumWallet.removeListener('accountsChanged', _onAccountsChanged);
+
+    _ethereumWallet.onChainChanged(_onChainChanged);
+    _ethereumWallet.onAccountsChanged(_onAccountsChanged);
+
+    if (walletName != 'WalletConnect' ||
+        _ethereumWallet.walletConnectSessionExists()) {
+      _ethereumWallet.getChainId().then((chainId) {
+        print('Current chain: $chainId');
+        int? oldChainId = _connectedChainId;
         _connectedChainId = chainId;
         _connectedChainChangedEventChannel.add(
-          (_connectedChainId!, true),
+          (_connectedChainId!, oldChainId != null),
         );
-      }
-    });
+      });
 
-    _ethereumWallet.onAccountsChanged((accounts) {
-      accounts = accounts.map((a) => convertToEip55Address(a)).toList();
-      print('Accounts changed: $accounts');
-      var connectedAccount = accounts.isNotEmpty ? accounts.first : null;
-      if (_connectedAccount != connectedAccount) {
-        _connectedAccount = connectedAccount;
+      _ethereumWallet.getAccounts().then((accounts) {
+        accounts = accounts.map((a) => convertToEip55Address(a)).toList();
+        _connectedAccount = accounts.isNotEmpty ? accounts.first : null;
+        print('Current account: $_connectedAccount');
         _connectedAccountChangedEventChannel.add(_connectedAccount);
-      }
-    });
+      });
+    }
 
-    _ethereumWallet.getChainId().then((chainId) {
-      print('Current chain: $chainId');
+    walletSetup.complete(walletName);
+  }
+
+  void _onChainChanged(int chainId) {
+    if (_connectedChainId != chainId) {
+      print('Chain changed: $chainId');
+      int? oldChainId = _connectedChainId;
       _connectedChainId = chainId;
       _connectedChainChangedEventChannel.add(
-        (_connectedChainId!, false),
+        (_connectedChainId!, oldChainId != null),
       );
-    });
+    }
+  }
 
-    _ethereumWallet.getAccounts().then((accounts) {
-      accounts = accounts.map((a) => convertToEip55Address(a)).toList();
-      _connectedAccount = accounts.isNotEmpty ? accounts.first : null;
-      print('Current account: $_connectedAccount');
+  void _onAccountsChanged(List<String> accounts) {
+    accounts = accounts.map((a) => convertToEip55Address(a)).toList();
+    var connectedAccount = accounts.isNotEmpty ? accounts.first : null;
+    if (_connectedAccount != connectedAccount) {
+      print('Accounts changed: $accounts');
+      _connectedAccount = connectedAccount;
       _connectedAccountChangedEventChannel.add(_connectedAccount);
-    });
+    }
   }
 
   Future<int> getLatestL1BlockNumber() => l1Provider.getBlockNumber();
 
-  void selectWallet(String walletName) async {
+  Future selectWallet(String walletName) async {
+    assert(walletName == 'Metamask' ||
+        walletName == 'CoinbaseWallet' ||
+        walletName == 'WalletConnect');
+
+    // @@TODO: Try-catch selected wallet not available.
     _ethereumWallet.select(walletName);
     await _localStorage.setString('SelectedWallet', walletName);
-    _setup();
-    walletSelected.complete();
+    _setup(walletName);
   }
 
   Future<EthereumError?> switchEthereumChain() async {
-    if (!isAvailable) {
-      return EthereumError('Metamask not installed');
+    if (!walletSetup.isCompleted) {
+      return EthereumError('Wallet not selected');
     }
 
     var error = await _ethereumWallet.switchChain(
       validChainId,
       'Optimism Local',
-      'http://localhost:9545',
+      'https://3c39-49-166-47-41.ngrok.io',
     );
     if (error != null) {
       print('Switch chain error: [${error.code}] ${error.message}');
@@ -149,20 +149,32 @@ class EthereumService {
     return null;
   }
 
-  Future<EthereumError?> connectAccount() async {
-    if (!isAvailable) {
-      return EthereumError('Metamask not installed');
+  Future<Either<EthereumError, String?>> connectAccount() async {
+    if (!walletSetup.isCompleted) {
+      return Left(EthereumError('Wallet not selected'));
     }
 
-    var result = await _ethereumWallet.requestAccounts();
-    if (result.error != null) {
-      print(
-        'Request accounts error: [${result.error!.code}] ${result.error!.message}',
-      );
-      return EthereumError('Error requesting accounts');
+    var walletName = await walletSetup.future;
+    if (walletName == 'WalletConnect') {
+      var uriGenerated = Completer<String>();
+      _ethereumWallet.onDisplayUriOnce((uri) {
+        print('WalletConnect URI: $uri');
+        uriGenerated.complete(uri);
+      });
+
+      await _ethereumWallet.requestAccounts(_walletConnectConnectionOpts);
+
+      var uri = await uriGenerated.future;
+      return Right(uri);
     }
 
-    return null;
+    var error = await _ethereumWallet.requestAccounts();
+    if (error != null) {
+      print('Request accounts error: [${error.code}] ${error.message}');
+      return Left(EthereumError('Error requesting accounts'));
+    }
+
+    return const Right(null);
   }
 
   void watchTruthserum() async {
@@ -178,8 +190,8 @@ class EthereumService {
     thing.DecisionIm decision,
     String reason,
   ) async {
-    if (!isAvailable) {
-      return Left(EthereumError('Metamask not installed'));
+    if (!walletSetup.isCompleted) {
+      return Left(EthereumError('Wallet not selected'));
     }
 
     var connectedAccount = _connectedAccount;
@@ -241,8 +253,8 @@ class EthereumService {
     settlement.DecisionIm decision,
     String reason,
   ) async {
-    if (!isAvailable) {
-      return Left(EthereumError('Metamask not installed'));
+    if (!walletSetup.isCompleted) {
+      return Left(EthereumError('Wallet not selected'));
     }
 
     var connectedAccount = _connectedAccount;
@@ -302,8 +314,8 @@ class EthereumService {
     String account,
     String nonce,
   ) async {
-    if (!isAvailable) {
-      return Left(EthereumError('Metamask not installed'));
+    if (!walletSetup.isCompleted) {
+      return Left(EthereumError('Wallet not selected'));
     }
 
     var connectedAccount = _connectedAccount;

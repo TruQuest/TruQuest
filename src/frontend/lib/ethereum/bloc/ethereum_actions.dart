@@ -8,10 +8,10 @@ abstract class EthereumAction {
 abstract class EthereumActionAwaitable<T extends EthereumResultVm?>
     extends EthereumAction with AwaitableResult<T> {}
 
-class SelectWallet extends EthereumAction {
+class SelectWallet extends EthereumActionAwaitable<SelectWalletFailureVm?> {
   final String walletName;
 
-  const SelectWallet({required this.walletName});
+  SelectWallet({required this.walletName});
 }
 
 class SwitchEthereumChain extends EthereumAction {
@@ -19,7 +19,7 @@ class SwitchEthereumChain extends EthereumAction {
 }
 
 class ConnectEthereumAccount
-    extends EthereumActionAwaitable<ConnectEthereumAccountFailureVm?> {}
+    extends EthereumActionAwaitable<ConnectEthereumAccountSuccessVm?> {}
 
 class WatchTruthserum extends EthereumAction {
   const WatchTruthserum();

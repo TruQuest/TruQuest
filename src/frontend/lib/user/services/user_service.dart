@@ -26,24 +26,12 @@ class UserService {
     this._serverConnector,
     this._localStorage,
   ) {
-    if (!_ethereumService.isAvailable) {
-      _reloadUser(null);
-      return;
-    } else if (_ethereumService.multipleWalletsDetected &&
-        !_ethereumService.walletSelected.isCompleted) {
-      _reloadUser(null);
-      _ethereumService.walletSelected.future.then((_) {
-        _ethereumService.connectedAccountChanged$.listen(
-          (account) => _reloadUser(account),
-        );
-      });
-
-      return;
-    }
-
-    _ethereumService.connectedAccountChanged$.listen(
-      (account) => _reloadUser(account),
-    );
+    _reloadUser(null);
+    _ethereumService.walletSetup.future.then((_) {
+      _ethereumService.connectedAccountChanged$.listen(
+        (account) => _reloadUser(account),
+      );
+    });
   }
 
   void _reloadUser(String? account) {

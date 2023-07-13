@@ -56,16 +56,9 @@ class TruthserumContract {
   Contract? _contract;
 
   TruthserumContract(this._ethereumService) {
-    if (_ethereumService.isAvailable) {
-      if (!_ethereumService.multipleWalletsDetected ||
-          _ethereumService.walletSelected.isCompleted) {
-        _contract = Contract(_address, _abi, _ethereumService.provider);
-      } else {
-        _ethereumService.walletSelected.future.then((_) {
-          _contract = Contract(_address, _abi, _ethereumService.provider);
-        });
-      }
-    }
+    _ethereumService.walletSetup.future.then((_) {
+      _contract = Contract(_address, _abi, _ethereumService.provider);
+    });
   }
 
   Future<EthereumError?> approve(int amount) async {
@@ -108,11 +101,7 @@ class TruthserumContract {
       print('Approve usage txn mined!');
 
       return null;
-    } on ContractRequestError catch (e) {
-      print('Approve funds usage error: [${e.code}] ${e.message}');
-      return EthereumError('Error approving usage of funds');
-    } on ContractExecError catch (e) {
-      print('Approve funds usage error: [${e.code}] ${e.reason}');
+    } catch (_) {
       return EthereumError('Error approving usage of funds');
     }
   }

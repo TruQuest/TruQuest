@@ -14,9 +14,7 @@ class EthereumBloc extends Bloc<EthereumAction> {
   final TruthserumContract _truthserumContract;
   final TruQuestContract _truQuestContract;
 
-  bool get isAvailable => _ethereumService.isAvailable;
-  bool get multipleWalletsDetected => _ethereumService.multipleWalletsDetected;
-  bool get walletSelected => _ethereumService.walletSelected.isCompleted;
+  bool get walletSetup => _ethereumService.walletSetup.isCompleted;
 
   bool get connectedToValidChain =>
       _ethereumService.connectedChainId == _ethereumService.validChainId;
@@ -52,8 +50,9 @@ class EthereumBloc extends Bloc<EthereumAction> {
     });
   }
 
-  void _selectWallet(SelectWallet action) {
-    _ethereumService.selectWallet(action.walletName);
+  void _selectWallet(SelectWallet action) async {
+    await _ethereumService.selectWallet(action.walletName);
+    action.complete(null);
   }
 
   void _switchEthereumChain(SwitchEthereumChain action) async {
@@ -61,8 +60,12 @@ class EthereumBloc extends Bloc<EthereumAction> {
   }
 
   void _connectEthereumAccount(ConnectEthereumAccount action) async {
-    var error = await _ethereumService.connectAccount();
-    action.complete(error != null ? ConnectEthereumAccountFailureVm() : null);
+    var result = await _ethereumService.connectAccount();
+    action.complete(
+      result.isLeft
+          ? null
+          : ConnectEthereumAccountSuccessVm(walletConnectUri: result.right),
+    );
   }
 
   void _watchTruthserum(WatchTruthserum action) =>
@@ -70,7 +73,7 @@ class EthereumBloc extends Bloc<EthereumAction> {
 
   void _approveFundsUsage(ApproveFundsUsage action) async {
     var error = await _truthserumContract.approve(action.amount);
-    action.complete(error != null ? ApproveFundsUsageFailureVm() : null);
+    action.complete(error != null ? const ApproveFundsUsageFailureVm() : null);
   }
 
   void _depositFunds(DepositFunds action) async {

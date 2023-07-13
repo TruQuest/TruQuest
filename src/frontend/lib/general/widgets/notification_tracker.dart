@@ -153,10 +153,7 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
                     onTap: () {
                       if (notification.itemId == '') {
                         // client-side warning
-                        if (notification.itemUpdateCategory == 1) {
-                          // unsupported chain
-                          _ethereumBloc.dispatch(const SwitchEthereumChain());
-                        }
+                        _ethereumBloc.dispatch(const SwitchEthereumChain());
                         return;
                       }
 

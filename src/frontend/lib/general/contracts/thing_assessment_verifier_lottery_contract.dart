@@ -171,16 +171,9 @@ class ThingAssessmentVerifierLotteryContract {
       _ethereumService.l2ReadOnlyProvider,
     );
 
-    if (_ethereumService.isAvailable) {
-      if (!_ethereumService.multipleWalletsDetected ||
-          _ethereumService.walletSelected.isCompleted) {
-        _contract = Contract(_address, _abi, _ethereumService.provider);
-      } else {
-        _ethereumService.walletSelected.future.then((_) {
-          _contract = Contract(_address, _abi, _ethereumService.provider);
-        });
-      }
-    }
+    _ethereumService.walletSetup.future.then((_) {
+      _contract = Contract(_address, _abi, _ethereumService.provider);
+    });
   }
 
   Future<int> getLotteryDurationBlocks() =>
@@ -301,11 +294,7 @@ class ThingAssessmentVerifierLotteryContract {
       print('Claim txn mined!');
 
       return null;
-    } on ContractRequestError catch (e) {
-      print('Claim lottery spot error: [${e.code}] ${e.message}');
-      return EthereumError('Error claiming lottery spot');
-    } on ContractExecError catch (e) {
-      print('Claim lottery spot error: [${e.code}] ${e.reason}');
+    } catch (_) {
       return EthereumError('Error claiming lottery spot');
     }
   }
@@ -342,11 +331,7 @@ class ThingAssessmentVerifierLotteryContract {
       print('Join txn mined!');
 
       return null;
-    } on ContractRequestError catch (e) {
-      print('Join lottery error: [${e.code}] ${e.message}');
-      return EthereumError('Error joining lottery');
-    } on ContractExecError catch (e) {
-      print('Join lottery error: [${e.code}] ${e.reason}');
+    } catch (_) {
       return EthereumError('Error joining lottery');
     }
   }

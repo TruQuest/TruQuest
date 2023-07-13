@@ -21,7 +21,6 @@ class WalletSelectionButton extends StatelessWidgetX {
         var walletName = await showDialog<String>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Choose wallet'),
             actions: [
               TextButton(
                 child: const Text('Metamask'),
@@ -30,6 +29,10 @@ class WalletSelectionButton extends StatelessWidgetX {
               TextButton(
                 child: const Text('Coinbase Wallet'),
                 onPressed: () => Navigator.of(context).pop('CoinbaseWallet'),
+              ),
+              TextButton(
+                child: const Text('WalletConnect'),
+                onPressed: () => Navigator.of(context).pop('WalletConnect'),
               ),
             ],
           ),

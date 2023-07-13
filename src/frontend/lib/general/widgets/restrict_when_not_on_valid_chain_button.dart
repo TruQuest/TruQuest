@@ -37,43 +37,25 @@ class RestrictWhenNotOnValidChainButton extends StatelessWidgetX {
                         children: [
                           Row(
                             children: [
-                              _ethereumBloc.isAvailable
+                              _ethereumBloc.walletSetup
                                   ? const Icon(
                                       Icons.check_box,
                                       color: Colors.green,
                                     )
                                   : Text('$i)'),
                               const SizedBox(width: 6),
-                              const Text(
-                                'Install Metamask or Coinbase Wallet extension',
-                              ),
+                              const Text('Select a wallet'),
+                              if (!_ethereumBloc.walletSetup)
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 6),
+                                  child: WalletSelectionButton(),
+                                ),
                             ],
                           ),
-                          if (_ethereumBloc.multipleWalletsDetected)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Row(
-                                children: [
-                                  i++ > 0 && _ethereumBloc.walletSelected
-                                      ? const Icon(
-                                          Icons.check_box,
-                                          color: Colors.green,
-                                        )
-                                      : Text('$i)'),
-                                  const SizedBox(width: 6),
-                                  const Text('Select which wallet to use'),
-                                  if (!_ethereumBloc.walletSelected)
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 6),
-                                      child: WalletSelectionButton(),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          const SizedBox(height: 8),
+                          if (i++ > 0) const SizedBox(height: 8),
                           Row(
                             children: [
-                              Text('${++i})'),
+                              Text('$i)'),
                               const SizedBox(width: 6),
                               Text(
                                 'Connect the wallet to ${_ethereumBloc.validChainName}',

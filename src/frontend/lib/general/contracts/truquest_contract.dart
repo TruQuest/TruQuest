@@ -132,16 +132,9 @@ class TruQuestContract {
       _ethereumService.l2ReadOnlyProvider,
     );
 
-    if (_ethereumService.isAvailable) {
-      if (!_ethereumService.multipleWalletsDetected ||
-          _ethereumService.walletSelected.isCompleted) {
-        _contract = Contract(address, _abi, _ethereumService.provider);
-      } else {
-        _ethereumService.walletSelected.future.then((_) {
-          _contract = Contract(address, _abi, _ethereumService.provider);
-        });
-      }
-    }
+    _ethereumService.walletSetup.future.then((_) {
+      _contract = Contract(address, _abi, _ethereumService.provider);
+    });
   }
 
   Future<bool> checkThingAlreadyFunded(String thingId) async {
@@ -172,34 +165,27 @@ class TruQuestContract {
     var s = '0x' + signature.substring(64, 128);
     var v = hex.decode(signature.substring(128, 130)).first;
 
-    try {
-      var txnResponse = await contract.write(
-        'fundThing',
-        args: [
-          [thingIdHex],
-          v,
-          r,
-          s,
-        ],
-        override: TransactionOverride(
-          gasLimit: 100000, // 83397
-        ),
-      );
+    var txnResponse = await contract.write(
+      'fundThing',
+      args: [
+        [thingIdHex],
+        v,
+        r,
+        s,
+      ],
+      override: TransactionOverride(
+        gasLimit: 100000, // 83397
+      ),
+    );
 
-      await txnResponse.wait();
-      print('Fund txn mined!');
-    } on ContractRequestError catch (e) {
-      print('Fund thing error: [${e.code}] ${e.message}');
-    } on ContractExecError catch (e) {
-      print('Fund thing error: [${e.code}] ${e.reason}');
-    }
+    await txnResponse.wait();
+    print('Fund txn mined!');
   }
 
   Future<bool> checkThingAlreadyHasSettlementProposalUnderAssessment(
     String thingId,
   ) async {
     var thingIdHex = thingId.toSolInputFormat();
-
     return await _readOnlyContract.read<bool>(
       'checkThingAlreadyHasSettlementProposalUnderAssessment',
       args: [thingIdHex],
@@ -229,27 +215,21 @@ class TruQuestContract {
     var s = '0x' + signature.substring(64, 128);
     var v = hex.decode(signature.substring(128, 130)).first;
 
-    try {
-      var txnResponse = await contract.write(
-        'fundThingSettlementProposal',
-        args: [
-          [thingIdHex, proposalIdHex],
-          v,
-          r,
-          s,
-        ],
-        override: TransactionOverride(
-          gasLimit: 150000,
-        ),
-      );
+    var txnResponse = await contract.write(
+      'fundThingSettlementProposal',
+      args: [
+        [thingIdHex, proposalIdHex],
+        v,
+        r,
+        s,
+      ],
+      override: TransactionOverride(
+        gasLimit: 150000,
+      ),
+    );
 
-      await txnResponse.wait();
-      print('Fund txn mined!');
-    } on ContractRequestError catch (e) {
-      print('Fund proposal error: [${e.code}] ${e.message}');
-    } on ContractExecError catch (e) {
-      print('Fund proposal error: [${e.code}] ${e.reason}');
-    }
+    await txnResponse.wait();
+    print('Fund txn mined!');
   }
 
   Future<EthereumError?> depositFunds(int amount) async {
@@ -277,11 +257,7 @@ class TruQuestContract {
       print('Deposit funds txn mined!');
 
       return null;
-    } on ContractRequestError catch (e) {
-      print('Deposit funds error: [${e.code}] ${e.message}');
-      return EthereumError('Error depositing funds');
-    } on ContractExecError catch (e) {
-      print('Deposit funds error: [${e.code}] ${e.reason}');
+    } catch (_) {
       return EthereumError('Error depositing funds');
     }
   }

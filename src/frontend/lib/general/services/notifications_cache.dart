@@ -77,25 +77,9 @@ class NotificationsCache {
       }
     });
 
-    if (!ethereumService.isAvailable) {
-      _clientSideWarning = NotificationVm(
-        updateTimestamp: DateTime.now(),
-        itemType: WatchedItemTypeVm.subject,
-        itemId: '',
-        itemUpdateCategory: 0,
-        title: 'Please install Metamask or Coinbase wallet extension',
-        details: 'Reload the page after installation',
-      );
-    } else {
-      if (!ethereumService.multipleWalletsDetected ||
-          ethereumService.walletSelected.isCompleted) {
-        _listenForChainChanges(ethereumService);
-      } else {
-        ethereumService.walletSelected.future.then((_) {
-          _listenForChainChanges(ethereumService);
-        });
-      }
-    }
+    ethereumService.walletSetup.future.then((_) {
+      _listenForChainChanges(ethereumService);
+    });
 
     _userService.currentUserChanged$.listen((user) {
       _unreadNotifications = _usernameToUnreadNotifications.putIfAbsent(
@@ -121,7 +105,7 @@ class NotificationsCache {
           updateTimestamp: DateTime.now(),
           itemType: WatchedItemTypeVm.subject,
           itemId: '',
-          itemUpdateCategory: 1,
+          itemUpdateCategory: 0,
           title: 'You are on an unsupported chain',
           details: 'Click to switch',
         );
