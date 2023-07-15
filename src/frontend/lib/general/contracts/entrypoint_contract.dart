@@ -109,7 +109,7 @@ class EntryPointContract {
   late final Contract _readOnlyContract;
 
   EntryPointContract(this.address) {
-    var provider = JsonRpcProvider('https://goerli.optimism.io');
+    var provider = JsonRpcProvider('http://localhost:8545');
     _readOnlyContract = Contract(
       address,
       _abi,

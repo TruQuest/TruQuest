@@ -126,7 +126,7 @@ class ThingSubmissionVerifierLotteryContract {
     _readOnlyContract = Contract(
       _address,
       _abi,
-      _ethereumService.l2ReadOnlyProvider,
+      _ethereumService.provider,
     );
 
     _ethereumService.walletSetup.future.then((_) {
@@ -191,8 +191,8 @@ class ThingSubmissionVerifierLotteryContract {
       return EthereumError('No account connected');
     }
 
-    var signer = _ethereumService.provider.getSigner();
-    contract = contract.connect(signer);
+    // var signer = _ethereumService.provider.getSigner();
+    // contract = contract.connect(signer);
 
     var thingIdHex = thingId.toSolInputFormat();
     var userData = List<int>.generate(32, (_) => _random.nextInt(256));

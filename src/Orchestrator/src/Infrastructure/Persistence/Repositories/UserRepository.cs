@@ -26,8 +26,6 @@ internal class UserRepository : Repository<UserDm>, IUserRepository
         _userManager = userManager;
     }
 
-    public override ValueTask SaveChanges() => ValueTask.CompletedTask;
-
     public Task<UserDm?> FindById(string userId) => _userManager.FindByIdAsync(userId);
 
     public async Task<UserError?> Create(UserDm user)

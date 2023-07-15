@@ -36,14 +36,14 @@ public class Program
     {
         DotNetEnv.Env.TraversePath().Load();
 
-        var app = await CreateWebApplicationBuilder(args)
+        var app = CreateWebApplicationBuilder(args)
             .ConfigureServices()
             .Build()
-            .ConfigurePipeline()
-            .DeployContracts()
-                .ContinueWith(deployTask => deployTask.Result.RegisterDebeziumConnector()).Unwrap()
-                .ContinueWith(registerTask => registerTask.Result.StartKafkaBus()).Unwrap()
-                .ContinueWith(startBusTask => startBusTask.Result.DepositFunds()).Unwrap();
+            .ConfigurePipeline();
+        // .DeployContracts()
+        //     .ContinueWith(deployTask => deployTask.Result.RegisterDebeziumConnector()).Unwrap()
+        //     .ContinueWith(registerTask => registerTask.Result.StartKafkaBus()).Unwrap()
+        //     .ContinueWith(startBusTask => startBusTask.Result.DepositFunds()).Unwrap();
 
         app.Run();
     }
@@ -143,8 +143,8 @@ public static class WebApplicationBuilderExtension
         builder.Services.AddSingleton<IClientNotifier, ClientNotifier>();
         builder.Services.AddScoped<IConnectionIdProvider, ConnectionIdProvider>();
 
-        builder.Services.AddHostedService<ContractEventTracker>();
-        builder.Services.AddHostedService<BlockTracker>();
+        // builder.Services.AddHostedService<ContractEventTracker>();
+        // builder.Services.AddHostedService<BlockTracker>();
 
         return builder;
     }

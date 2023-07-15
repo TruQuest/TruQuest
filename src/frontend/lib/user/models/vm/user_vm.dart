@@ -1,27 +1,21 @@
-enum UserAccountState {
-  guest,
-  connectedNotLoggedIn,
-  connectedAndLoggedIn,
-}
-
 class UserVm {
-  final UserAccountState state;
-  final String? ethereumAccount;
+  final bool isGuest;
+  final String? walletAddress;
   final String? username;
 
   String? get id {
-    if (state != UserAccountState.connectedAndLoggedIn) {
+    if (isGuest) {
       return null;
     }
 
-    var account = ethereumAccount;
+    var account = walletAddress;
     account = account!.length == 42 ? account.substring(2, 42) : account;
     return account.toLowerCase();
   }
 
   UserVm({
-    required this.state,
-    this.ethereumAccount,
+    required this.isGuest,
+    this.walletAddress,
     this.username,
   });
 }

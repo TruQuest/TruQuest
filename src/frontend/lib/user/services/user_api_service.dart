@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 
+import '../models/im/add_email_command.dart';
+import '../models/im/confirm_email_command.dart';
 import '../models/im/sign_in_with_ethereum_command.dart';
 import '../models/rvm/sign_in_with_ethereum_rvm.dart';
 import '../models/im/mark_notifications_as_read_command.dart';
@@ -84,6 +86,38 @@ class UserApiService {
       );
 
       return SignInWithEthereumRvm.fromMap(response.data['data']);
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future addEmail(String email) async {
+    var accessToken = (await _serverConnector.latestConnection).$2;
+    try {
+      await _dio.post(
+        '/user/email',
+        options: Options(
+          headers: {'Authorization': 'Bearer $accessToken'},
+        ),
+        data: AddEmailCommand(email: email).toJson(),
+      );
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future confirmEmail(String confirmationToken) async {
+    var accessToken = (await _serverConnector.latestConnection).$2;
+    try {
+      await _dio.post(
+        '/user/email/confirm',
+        options: Options(
+          headers: {'Authorization': 'Bearer $accessToken'},
+        ),
+        data: ConfirmEmailCommand(
+          confirmationToken: confirmationToken,
+        ).toJson(),
+      );
     } on DioError catch (error) {
       throw _wrapError(error);
     }

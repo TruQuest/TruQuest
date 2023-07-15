@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:convert/convert.dart';
 
+import 'sign_in_stepper.dart';
 import '../../ethereum/models/im/user_operation.dart';
 import '../../ethereum/services/ethereum_api_service.dart';
 import '../../ethereum_js_interop.dart';
@@ -20,7 +21,7 @@ class _DummyState extends State<Dummy> {
   @override
   void initState() {
     super.initState();
-    foo();
+    // foo();
   }
 
   void foo() async {
@@ -63,9 +64,9 @@ class _DummyState extends State<Dummy> {
       ],
     );
 
-    var provider = JsonRpcProvider('https://goerli.optimism.io');
+    var provider = JsonRpcProvider('http://localhost:8545');
     var dummyContract = Contract(
-      '0x18a5eFe952c8f161EdaAd9f5Fc89A5B3d60186A3',
+      '0x19CFc85e3dffb66295695Bf48e06386CB1B5f320',
       dummyAbi,
       provider,
     );
@@ -104,7 +105,7 @@ class _DummyState extends State<Dummy> {
     callData = abi.encodeFunctionData(
       'execute',
       [
-        '0x18a5eFe952c8f161EdaAd9f5Fc89A5B3d60186A3',
+        '0x19CFc85e3dffb66295695Bf48e06386CB1B5f320',
         0,
         callData,
       ],
@@ -166,6 +167,20 @@ class _DummyState extends State<Dummy> {
     ''';
 
     var owner = '0x9C828E3ddD81A9512BBAB6CA1A245278BF0E45Da';
+    var walletFactoryAddress = '0x9406Cc6185a346906296840746125a0E44976454';
+
+    var walletFactoryContract = Contract(
+      walletFactoryAddress,
+      walletFactoryAbi,
+      provider,
+    );
+
+    var walletAddress = await walletFactoryContract.read<String>(
+      'getAddress',
+      args: [owner, 0],
+    );
+
+    print('Wallet Address: $walletAddress');
 
     abi = Abi(walletFactoryAbi);
     var initCode = abi.encodeFunctionData(
@@ -176,13 +191,10 @@ class _DummyState extends State<Dummy> {
       ],
     );
 
-    var walletFactoryAddress = '0x9406Cc6185a346906296840746125a0E44976454';
     initCode = walletFactoryAddress + initCode.substring(2);
     initCode = '0x';
 
     print('InitCode: $initCode');
-
-    var walletAddress = '0xAAf06D67859C2987C2Eb8558D5D3641F9CC3767f';
 
     var api = EthereumApiService();
 
@@ -204,7 +216,7 @@ class _DummyState extends State<Dummy> {
     // var maxPriorityFeeBid = BigInt.from(
     //   (maxPriorityFee * BigInt.from(4)) / BigInt.from(3),
     // );
-    // assert(maxPriorityFeeBid > maxPriorityFee);
+    // assert(maxPriorityFeeBid >= maxPriorityFee);
     // if (maxPriorityFeeBid < minPriorityFeeBid) {
     //   maxPriorityFeeBid = minPriorityFeeBid;
     // }
@@ -229,8 +241,8 @@ class _DummyState extends State<Dummy> {
       callGasLimit: BigInt.zero,
       verificationGasLimit: BigInt.zero,
       preVerificationGas: BigInt.zero,
-      maxFeePerGas: BigInt.zero,
-      maxPriorityFeePerGas: BigInt.zero,
+      maxFeePerGas: maxFeeBid,
+      maxPriorityFeePerGas: maxPriorityFeeBid,
       signature: dummySignature,
     );
 
@@ -238,11 +250,9 @@ class _DummyState extends State<Dummy> {
     print(fees!);
 
     userOp = userOp.copyWith(
-      callGasLimit: fees['callGasLimit'],
-      verificationGasLimit: fees['verificationGasLimit'],
-      preVerificationGas: fees['preVerificationGas'],
-      maxFeePerGas: maxFeeBid,
-      maxPriorityFeePerGas: maxPriorityFeeBid,
+      callGasLimit: fees['callGasLimit']! * BigInt.two,
+      verificationGasLimit: fees['verificationGasLimit']! * BigInt.two,
+      preVerificationGas: fees['preVerificationGas']! * BigInt.two,
     );
 
     var estimatedGasCost = (userOp.preVerificationGas +
@@ -274,6 +284,8 @@ class _DummyState extends State<Dummy> {
     userOp = userOp.copyWith(signature: signature.combined);
     print('UserOp:\n${userOp.toJson()}');
 
+    return;
+
     print('\n\nSending UserOp...');
 
     userOpHash = await api.sendUserOperation(userOp, entryPointAddress);
@@ -282,6 +294,18 @@ class _DummyState extends State<Dummy> {
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+      body: Center(
+        child: IconButton(
+          icon: Icon(Icons.add),
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (context) => SignInStepper(),
+            );
+          },
+        ),
+      ),
+    );
   }
 }

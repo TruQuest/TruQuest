@@ -24,28 +24,15 @@ class UserStatusTracker extends StatelessWidgetX {
         }
 
         var user = snapshot.data!.user;
-        if (user.state == UserAccountState.guest) {
+        if (user.isGuest) {
           return Tooltip(
-            message: 'Connect',
+            message: 'Sign-in',
             child: ConnectAccountButton(),
-          );
-        } else if (user.state == UserAccountState.connectedNotLoggedIn) {
-          return Tooltip(
-            message: 'Sign-in with Ethereum',
-            child: RestrictWhenNotOnValidChainButton(
-              child: IconButton(
-                icon: const Icon(
-                  Icons.door_sliding,
-                  color: Colors.white,
-                ),
-                onPressed: () => _userBloc.dispatch(const SignInWithEthereum()),
-              ),
-            ),
           );
         }
 
         return Tooltip(
-          message: user.ethereumAccount!,
+          message: user.walletAddress!,
           child: IconButton(
             icon: const Icon(
               Icons.account_box,

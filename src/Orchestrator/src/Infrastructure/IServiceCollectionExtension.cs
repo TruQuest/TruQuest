@@ -83,6 +83,8 @@ public static class IServiceCollectionExtension
         services.AddSingleton<Eip712TypedDataSigner>();
         services.AddSingleton<EthereumMessageSigner>();
         services.AddSingleton<ISigner, Signer>();
+        services.AddScoped<IConfirmationTokenProvider, ConfirmationTokenProvider>();
+        services.AddSingleton<IEmailSender, EmailSender>();
 
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

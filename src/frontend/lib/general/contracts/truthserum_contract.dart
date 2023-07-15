@@ -83,8 +83,8 @@ class TruthserumContract {
         return EthereumError('Not enough funds');
       }
 
-      var signer = _ethereumService.provider.getSigner();
-      contract = contract.connect(signer);
+      // var signer = _ethereumService.provider.getSigner();
+      // contract = contract.connect(signer);
 
       var txnResponse = await contract.write(
         'approve',

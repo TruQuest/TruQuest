@@ -124,7 +124,7 @@ class AcceptancePollContract {
     _readOnlyContract = Contract(
       _address,
       _abi,
-      _ethereumService.l2ReadOnlyProvider,
+      _ethereumService.provider,
     );
 
     _ethereumService.walletSetup.future.then((_) {
@@ -157,8 +157,8 @@ class AcceptancePollContract {
       return;
     }
 
-    var signer = _ethereumService.provider.getSigner();
-    contract = contract.connect(signer);
+    // var signer = _ethereumService.provider.getSigner();
+    // contract = contract.connect(signer);
 
     var thingIdHex = thingId.toSolInputFormat();
 

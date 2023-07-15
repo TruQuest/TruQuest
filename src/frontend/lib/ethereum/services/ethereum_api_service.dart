@@ -2,22 +2,28 @@ import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../models/im/user_operation.dart';
+import '../../ethereum_js_interop.dart';
 
 class EthereumApiService {
+  late final String _ethereumRpcUrl;
+  late final JsonRpcProvider provider;
   late final Dio _dio;
+  late final Dio _dioBundler;
 
   EthereumApiService() {
-    _dio = Dio(
-      BaseOptions(
-        baseUrl: 'https://opt-goerli.g.alchemy.com',
-      ),
+    _ethereumRpcUrl = dotenv.env['ETHEREUM_RPC_URL']!;
+    provider = JsonRpcProvider(_ethereumRpcUrl);
+
+    _dio = Dio(BaseOptions(baseUrl: _ethereumRpcUrl));
+    _dioBundler = Dio(
+      BaseOptions(baseUrl: dotenv.env['ERC4337_BUNDLER_BASE_URL']!),
     );
   }
 
   Future<BigInt?> getBaseFee() async {
     try {
       var response = await _dio.post(
-        '/v2/${dotenv.env['ALCHEMY_DUMMY_API_KEY']}',
+        '/',
         data: <String, dynamic>{
           'jsonrpc': '2.0',
           'method': 'eth_getBlockByNumber',
@@ -36,8 +42,8 @@ class EthereumApiService {
 
   Future<String?> getEntryPointAddress() async {
     try {
-      var response = await _dio.post(
-        '/v2/${dotenv.env['ALCHEMY_DUMMY_API_KEY']}',
+      var response = await _dioBundler.post(
+        '/rpc',
         data: <String, dynamic>{
           'jsonrpc': '2.0',
           'method': 'eth_supportedEntryPoints',
@@ -55,7 +61,7 @@ class EthereumApiService {
   Future<BigInt?> getMaxPriorityFee() async {
     try {
       var response = await _dio.post(
-        '/v2/${dotenv.env['ALCHEMY_DUMMY_API_KEY']}',
+        '/',
         data: <String, dynamic>{
           'jsonrpc': '2.0',
           'method': 'eth_maxPriorityFeePerGas',
@@ -77,8 +83,8 @@ class EthereumApiService {
     String entryPointAddress,
   ) async {
     try {
-      var response = await _dio.post(
-        '/v2/${dotenv.env['ALCHEMY_DUMMY_API_KEY']}',
+      var response = await _dioBundler.post(
+        '/rpc',
         data: <String, dynamic>{
           'jsonrpc': '2.0',
           'method': 'eth_estimateUserOperationGas',
@@ -109,8 +115,8 @@ class EthereumApiService {
     String entryPointAddress,
   ) async {
     try {
-      var response = await _dio.post(
-        '/v2/${dotenv.env['ALCHEMY_DUMMY_API_KEY']}',
+      var response = await _dioBundler.post(
+        '/rpc',
         data: <String, dynamic>{
           'jsonrpc': '2.0',
           'method': 'eth_sendUserOperation',

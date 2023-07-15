@@ -276,6 +276,53 @@ class Abi {
       _interface.encodeFunctionData(fragment, values);
 }
 
+@JS('ethers.Wallet.createRandom')
+external _EOA _createRandomWallet();
+
+@JS('ethers.Wallet.fromEncryptedJson')
+external dynamic _createWalletFromEncryptedJson(String json, String password);
+
+@JS('ethers.Wallet.fromMnemonic')
+external _EOA _createWalletFromMnemonic(String mnemonic);
+
+@JS('ethers.Wallet')
+class _EOA {
+  external String get address;
+  external String get privateKey;
+  external _Mnemonic get mnemonic;
+  external dynamic encrypt(String password);
+}
+
+class EOA {
+  final _EOA _eoa;
+
+  EOA._(this._eoa);
+
+  static EOA createRandom() => EOA._(_createRandomWallet());
+
+  static Future<EOA> fromEncryptedJson(String json, String password) async {
+    var wallet = await promiseToFuture<_EOA>(
+      _createWalletFromEncryptedJson(json, password),
+    );
+    return EOA._(wallet);
+  }
+
+  static EOA fromMnemonic(String mnemonic) =>
+      EOA._(_createWalletFromMnemonic(mnemonic));
+
+  String get address => convertToEip55Address(_eoa.address);
+  String get privateKey => _eoa.privateKey;
+  String get mnemonic => _eoa.mnemonic.phrase;
+
+  Future<String> encrypt(String password) =>
+      promiseToFuture<String>(_eoa.encrypt(password));
+}
+
+@JS('ethers.Wallet.Mnemonic')
+class _Mnemonic {
+  external String get phrase;
+}
+
 @JS('ethers.utils.keccak256')
 external String keccak256(Uint8List data);
 

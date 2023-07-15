@@ -75,7 +75,7 @@ class RestrictWhenUnauthorizedButton extends StatelessWidgetX {
                               if (i++ > 0) const SizedBox(height: 8),
                               Row(
                                 children: [
-                                  user?.ethereumAccount != null
+                                  user?.walletAddress != null
                                       ? const Icon(
                                           Icons.check_box,
                                           color: Colors.green,

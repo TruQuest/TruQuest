@@ -168,7 +168,7 @@ class ThingAssessmentVerifierLotteryContract {
     _readOnlyContract = Contract(
       _address,
       _abi,
-      _ethereumService.l2ReadOnlyProvider,
+      _ethereumService.provider,
     );
 
     _ethereumService.walletSetup.future.then((_) {
@@ -274,8 +274,8 @@ class ThingAssessmentVerifierLotteryContract {
       return EthereumError('No account connected');
     }
 
-    var signer = _ethereumService.provider.getSigner();
-    contract = contract.connect(signer);
+    // var signer = _ethereumService.provider.getSigner();
+    // contract = contract.connect(signer);
 
     var thingIdHex = thingId.toSolInputFormat(prefix: false);
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
@@ -308,8 +308,8 @@ class ThingAssessmentVerifierLotteryContract {
       return EthereumError('No account connected');
     }
 
-    var signer = _ethereumService.provider.getSigner();
-    contract = contract.connect(signer);
+    // var signer = _ethereumService.provider.getSigner();
+    // contract = contract.connect(signer);
 
     var thingIdHex = thingId.toSolInputFormat(prefix: false);
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);

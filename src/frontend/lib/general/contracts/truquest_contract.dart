@@ -129,7 +129,7 @@ class TruQuestContract {
     _readOnlyContract = Contract(
       address,
       _abi,
-      _ethereumService.l2ReadOnlyProvider,
+      _ethereumService.provider,
     );
 
     _ethereumService.walletSetup.future.then((_) {
@@ -155,9 +155,9 @@ class TruQuestContract {
       return;
     }
 
-    var signer =
-        _ethereumService.provider.getSigner(); // @@??: What if not connected ?
-    contract = contract.connect(signer);
+    // var signer =
+    //     _ethereumService.provider.getSigner(); // @@??: What if not connected ?
+    // contract = contract.connect(signer);
 
     var thingIdHex = thingId.toSolInputFormat();
     signature = signature.substring(2);
@@ -205,8 +205,8 @@ class TruQuestContract {
       return;
     }
 
-    var signer = _ethereumService.provider.getSigner();
-    contract = contract.connect(signer);
+    // var signer = _ethereumService.provider.getSigner();
+    // contract = contract.connect(signer);
 
     var thingIdHex = thingId.toSolInputFormat();
     var proposalIdHex = proposalId.toSolInputFormat();
@@ -241,8 +241,8 @@ class TruQuestContract {
       return EthereumError('No account connected');
     }
 
-    var signer = _ethereumService.provider.getSigner();
-    contract = contract.connect(signer);
+    // var signer = _ethereumService.provider.getSigner();
+    // contract = contract.connect(signer);
 
     try {
       var txnResponse = await contract.write(
