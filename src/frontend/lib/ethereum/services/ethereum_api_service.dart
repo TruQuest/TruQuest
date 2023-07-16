@@ -40,24 +40,6 @@ class EthereumApiService {
     }
   }
 
-  Future<String?> getEntryPointAddress() async {
-    try {
-      var response = await _dioBundler.post(
-        '/rpc',
-        data: <String, dynamic>{
-          'jsonrpc': '2.0',
-          'method': 'eth_supportedEntryPoints',
-          'id': 0,
-        },
-      );
-
-      return response.data['result'].first;
-    } on DioError catch (error) {
-      print(error);
-      return null;
-    }
-  }
-
   Future<BigInt?> getMaxPriorityFee() async {
     try {
       var response = await _dio.post(
@@ -72,6 +54,43 @@ class EthereumApiService {
 
       var fee = response.data['result'];
       return BigInt.parse(fee);
+    } on DioError catch (error) {
+      print(error);
+      return null;
+    }
+  }
+
+  Future<String?> getCode(String address) async {
+    try {
+      var response = await _dio.post(
+        '/',
+        data: <String, dynamic>{
+          'jsonrpc': '2.0',
+          'method': 'eth_getCode',
+          'params': [address, 'latest'],
+          'id': 0,
+        },
+      );
+
+      return response.data['result'] as String;
+    } on DioError catch (error) {
+      print(error);
+      return null;
+    }
+  }
+
+  Future<String?> getEntryPointAddress() async {
+    try {
+      var response = await _dioBundler.post(
+        '/rpc',
+        data: <String, dynamic>{
+          'jsonrpc': '2.0',
+          'method': 'eth_supportedEntryPoints',
+          'id': 0,
+        },
+      );
+
+      return response.data['result'].first;
     } on DioError catch (error) {
       print(error);
       return null;

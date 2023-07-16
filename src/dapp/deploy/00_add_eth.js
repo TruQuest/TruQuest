@@ -4,6 +4,25 @@ module.exports = async ({ getNamedAccounts, getChainId }) => {
   const accounts = await getNamedAccounts();
   const chainId = await getChainId();
 
+  var faucet = ethers.Wallet.fromMnemonic(
+    "test test test test test test test test test test test junk"
+  );
+  faucet = faucet.connect(ethers.provider);
+
+  // var address = accounts["deployer"];
+  var address = "0x48469b94EefB39a000617b2FFCd6EA6582f4aFBB";
+  console.log(address);
+  var txnResponse = await faucet.sendTransaction({
+    to: address,
+    value: ethers.utils.parseEther("0.1"),
+  });
+  await txnResponse.wait();
+
+  var balance = await ethers.provider.getBalance(address);
+  console.log(`Balance: ${balance}`);
+
+  return;
+
   if (chainId == 901) {
     console.log("We are on Optimism Local!");
     var faucet = new ethers.Wallet(

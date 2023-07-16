@@ -1,8 +1,11 @@
+import 'iaccount_contract.dart';
+import 'simple_account_contract.dart';
+import 'iaccount_factory_contract.dart';
 import '../../../ethereum_js_interop.dart';
 import '../../../ethereum/services/ethereum_api_service.dart';
 
-class SimpleAccountFactoryContract {
-  static const String address = '0x9406Cc6185a346906296840746125a0E44976454';
+class SimpleAccountFactoryContract implements IAccountFactoryContract {
+  static const String _address = '0x9406Cc6185a346906296840746125a0E44976454';
   static const String _abi = '''
     [
         {
@@ -55,16 +58,35 @@ class SimpleAccountFactoryContract {
         }
     ]''';
 
+  late final Abi _interface;
   late final Contract _contract;
 
+  @override
+  IAccountContract get accountContract => SimpleAccountContract.instance;
+
+  @override
+  String get dummySignatureForGasEstimation =>
+      '0xfffffffffffffffffffffffffffffff0000000000000000000000000000000007aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1c';
+
   SimpleAccountFactoryContract(EthereumApiService ethereumApiService) {
-    _contract = Contract(address, _abi, ethereumApiService.provider);
+    _interface = Abi(_abi);
+    _contract = Contract(_address, _abi, ethereumApiService.provider);
   }
 
+  @override
   Future<String> getAddress(String ownerAddress) async => convertToEip55Address(
         await _contract.read<String>(
           'getAddress',
           args: [ownerAddress, 0],
         ),
       );
+
+  @override
+  String getInitCode(String ownerAddress) {
+    return _address +
+        _interface.encodeFunctionData(
+          'createAccount',
+          [ownerAddress, 0],
+        ).substring(2);
+  }
 }

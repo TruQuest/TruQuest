@@ -5,6 +5,8 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const { deployer } = await getNamedAccounts();
   const chainId = await getChainId();
 
+  return;
+
   let truthserum = await ethers.getContract("Truthserum");
 
   await deploy("TruQuest", {

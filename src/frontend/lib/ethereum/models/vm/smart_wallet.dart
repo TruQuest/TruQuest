@@ -8,12 +8,10 @@ import '../../../ethereum_js_interop.dart';
 class SmartWallet {
   final EOA? owner;
   final String address;
-  bool deployed;
 
   SmartWallet({
     required this.owner,
     required this.address,
-    this.deployed = false,
   });
 
   static Future<SmartWallet> fromEncrypted(
@@ -25,15 +23,11 @@ class SmartWallet {
             ? await EOA.fromEncryptedJson(map['encryptedOwner'], password)
             : null,
         address: map['address'],
-        deployed: map['deployed'],
       );
-
-  void markAsDeployed() => deployed = true;
 
   Future<Map<String, dynamic>> toEncryptedJson(String password) async => {
         'encryptedOwner': await owner!.encrypt(password),
         'address': address,
-        'deployed': deployed,
       };
 
   String ownerSign(String message) {
@@ -41,6 +35,20 @@ class SmartWallet {
       Uint8List.fromList(hex.decode(owner!.privateKey.substring(2))),
     );
     var hash = hashMessage(Uint8List.fromList(utf8.encode(message)));
+
+    return pk
+        .signDigest(Uint8List.fromList(hex.decode(hash.substring(2))))
+        .combined;
+  }
+
+  String ownerSignDigest(String digest) {
+    if (digest.startsWith('0x')) digest = digest.substring(2);
+
+    var pk = SigningKey(
+      Uint8List.fromList(hex.decode(owner!.privateKey.substring(2))),
+    );
+    var hash = hashMessage(Uint8List.fromList(hex.decode(digest)));
+
     return pk
         .signDigest(Uint8List.fromList(hex.decode(hash.substring(2))))
         .combined;

@@ -12,8 +12,14 @@ class _$Injector extends Injector {
     final KiwiContainer container = KiwiContainer();
     container
       ..registerSingleton((c) => UserBloc(c<UserService>()))
-      ..registerSingleton((c) => UserService(c<SmartWalletService>(),
-          c<UserApiService>(), c<ServerConnector>(), c<LocalStorage>()))
+      ..registerSingleton((c) => UserService(
+          c<SmartWalletService>(),
+          c<UserApiService>(),
+          c<ServerConnector>(),
+          c<LocalStorage>(),
+          c<DummyContract>(),
+          c<EthereumApiService>(),
+          c<IEntryPointContract>()))
       ..registerSingleton((c) => EthereumBloc(
           c<EthereumService>(), c<TruthserumContract>(), c<TruQuestContract>()))
       ..registerSingleton((c) => EthereumService(c<LocalStorage>()))
@@ -63,10 +69,15 @@ class _$Injector extends Injector {
       ..registerSingleton((c) => GeneralApiService(c<ServerConnector>()))
       ..registerSingleton((c) => GeneralService(c<GeneralApiService>()))
       ..registerSingleton((c) => GeneralBloc(c<GeneralService>()))
-      ..registerSingleton(
+      ..registerSingleton<IEntryPointContract>(
+          (c) => EntryPointContract(c<EthereumApiService>()))
+      ..registerSingleton<IAccountFactoryContract>(
           (c) => SimpleAccountFactoryContract(c<EthereumApiService>()))
-      ..registerSingleton((c) => SmartWalletService(
-          c<LocalStorage>(), c<SimpleAccountFactoryContract>()))
-      ..registerSingleton((c) => EthereumApiService());
+      ..registerSingleton((c) => DummyContract(c<EthereumApiService>()))
+      ..registerSingleton((c) =>
+          SmartWalletService(c<LocalStorage>(), c<IAccountFactoryContract>()))
+      ..registerSingleton((c) => EthereumApiService())
+      ..registerFactory((c) => UserOperationBuilder(c<EthereumApiService>(),
+          c<IEntryPointContract>(), c<IAccountFactoryContract>()));
   }
 }

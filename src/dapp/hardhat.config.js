@@ -22,8 +22,8 @@ module.exports = {
       },
     },
     optimismLocal: {
-      url: "http://localhost:9545",
-      chainId: 901,
+      url: "http://localhost:8545",
+      chainId: 1337,
       accounts: {
         mnemonic:
           "atom traffic guard castle father vendor modify sauce rebuild true mixture van",

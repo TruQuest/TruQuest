@@ -1,10 +1,7 @@
-import 'dart:js_util';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import 'ethereum_js_interop.dart';
 import 'general/services/local_storage.dart';
 import 'general/widgets/dummy.dart';
 import 'widget_extensions.dart';

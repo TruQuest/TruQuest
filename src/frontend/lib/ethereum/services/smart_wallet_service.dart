@@ -1,22 +1,22 @@
 import 'dart:convert';
 
 import '../models/vm/smart_wallet.dart';
+import '../../general/contracts/erc4337/iaccount_factory_contract.dart';
 import '../../ethereum_js_interop.dart';
 import '../../general/services/local_storage.dart';
-import '../../general/contracts/erc4337/simple_account_factory_contract.dart';
 
 class SmartWalletService {
   final LocalStorage _localStorage;
-  final SimpleAccountFactoryContract _simpleAccountFactoryContract;
+  final IAccountFactoryContract accountFactoryContract;
 
   SmartWalletService(
     this._localStorage,
-    this._simpleAccountFactoryContract,
+    this.accountFactoryContract,
   );
 
   Future<SmartWallet> createOne() async {
     var owner = EOA.createRandom();
-    var address = await _simpleAccountFactoryContract.getAddress(owner.address);
+    var address = await accountFactoryContract.getAddress(owner.address);
     return SmartWallet(
       owner: owner,
       address: address,

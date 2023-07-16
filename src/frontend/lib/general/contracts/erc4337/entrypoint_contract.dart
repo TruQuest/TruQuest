@@ -1,7 +1,9 @@
-import '../../ethereum/models/im/user_operation.dart';
-import '../../ethereum_js_interop.dart';
+import 'ientrypoint_contract.dart';
+import '../../../ethereum/services/ethereum_api_service.dart';
+import '../../../ethereum/models/im/user_operation.dart';
+import '../../../ethereum_js_interop.dart';
 
-class EntryPointContract {
+class EntryPointContract implements IEntryPointContract {
   static const String _abi = '''[
     {
       "inputs": [
@@ -105,26 +107,27 @@ class EntryPointContract {
     }
   ]''';
 
-  final String address;
-  late final Contract _readOnlyContract;
+  late final Contract _contract;
 
-  EntryPointContract(this.address) {
-    var provider = JsonRpcProvider('http://localhost:8545');
-    _readOnlyContract = Contract(
+  @override
+  String get address => '0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789';
+
+  EntryPointContract(EthereumApiService ethereumApiService) {
+    _contract = Contract(
       address,
       _abi,
-      provider,
+      ethereumApiService.provider,
     );
   }
 
-  Future<BigInt> getNonce(String sender, int key) =>
-      _readOnlyContract.read<BigInt>(
+  @override
+  Future<BigInt> getNonce(String sender) => _contract.read<BigInt>(
         'getNonce',
-        args: [sender, key],
+        args: [sender, 0],
       );
 
-  Future<String> getUserOpHash(UserOperation userOp) =>
-      _readOnlyContract.read<String>(
+  @override
+  Future<String> getUserOpHash(UserOperation userOp) => _contract.read<String>(
         'getUserOpHash',
         args: [userOp.toList()],
       );

@@ -36,7 +36,6 @@ internal class SignInWithEthereumCommandHandler :
     IRequestHandler<SignInWithEthereumCommand, HandleResult<SignInWithEthereumResultVm>>
 {
     private static readonly Regex _walletAddressRegex = new Regex(@"\s(0x[a-fA-F0-9]{40})\s");
-    private static readonly Regex _ownerAddressRegex = new Regex(@"\sOwner: (0x[a-fA-F0-9]{40})\s");
     private static readonly Regex _nonceRegex = new Regex(@"\sNonce: (\d{6})\s");
 
     private readonly ILogger<SignInWithEthereumCommandHandler> _logger;
@@ -65,26 +64,11 @@ internal class SignInWithEthereumCommandHandler :
     )
     {
         var recoveredAddress = _signer.RecoverFromSiweMessage(command.Message, command.Signature);
-        var ownerAddress = _ownerAddressRegex.Match(command.Message).Groups[1].Value;
         var walletAddress = _walletAddressRegex.Match(command.Message).Groups[1].Value;
-        if (recoveredAddress.ToLower() != ownerAddress.ToLower())
-        {
-            _logger.LogWarning(
-                "Invalid signature.\nRecovered: {Recovered}\nOwner: {Owner}\nWallet: {Wallet}",
-                recoveredAddress,
-                ownerAddress,
-                walletAddress
-            );
-
-            return new()
-            {
-                Error = new UserError("Invalid signature")
-            };
-        }
 
         // @@TODO: Check wallet address.
 
-        _logger.LogInformation("Owner: {Owner}\nWallet: {Wallet}", ownerAddress, walletAddress);
+        _logger.LogInformation("Owner: {Owner}\nWallet: {Wallet}", recoveredAddress, walletAddress);
 
         var nonce = _nonceRegex.Match(command.Message).Groups[1].Value;
         if (!_totpProvider.VerifyTotp(walletAddress, nonce))

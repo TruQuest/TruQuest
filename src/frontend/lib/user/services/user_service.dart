@@ -2,6 +2,10 @@ import 'package:rxdart/rxdart.dart';
 
 import 'user_api_service.dart';
 import '../models/vm/user_vm.dart';
+import '../../general/contracts/erc4337/ientrypoint_contract.dart';
+import '../../ethereum/services/ethereum_api_service.dart';
+import '../../ethereum/models/im/user_operation.dart';
+import '../../general/contracts/dummy_contract.dart';
 import '../../ethereum/models/vm/smart_wallet.dart';
 import '../../ethereum/services/smart_wallet_service.dart';
 import '../../general/services/local_storage.dart';
@@ -12,6 +16,9 @@ class UserService {
   final UserApiService _userApiService;
   final ServerConnector _serverConnector;
   final LocalStorage _localStorage;
+  final DummyContract _dummyContract;
+  final EthereumApiService _ethereumApiService;
+  final IEntryPointContract _entryPointContract;
 
   SmartWallet? _wallet;
 
@@ -25,15 +32,19 @@ class UserService {
     this._userApiService,
     this._serverConnector,
     this._localStorage,
+    this._dummyContract,
+    this._ethereumApiService,
+    this._entryPointContract,
   ) {
     if (_localStorage.getString('SmartWallet') == null) {
       _reloadUser(null);
       return;
     }
 
-    _smartWalletService
-        .getFromLocalStorage(null)
-        .then((wallet) => _reloadUser(wallet.address));
+    _smartWalletService.getFromLocalStorage('password').then((wallet) {
+      _wallet = wallet;
+      _reloadUser(wallet.address);
+    });
   }
 
   void _reloadUser(String? walletAddress) {
@@ -89,7 +100,6 @@ class UserService {
         'URI: $uri\n'
         'Version: $version\n'
         'Chain ID: $chainId\n'
-        'Owner: ${_wallet!.owner!.address}\n'
         'Nonce: $nonce\n'
         'Issued At: $nowWithoutMicroseconds';
 
@@ -124,5 +134,20 @@ class UserService {
     }
 
     await _userApiService.confirmEmail(confirmationToken);
+  }
+
+  Future foo() async {
+    var userOp = await UserOperation.create()
+        .from(_wallet!)
+        .action(_dummyContract.setValue('asdasd;laksdl;'))
+        .signed();
+
+    print(userOp);
+
+    var userOpHash = await _ethereumApiService.sendUserOperation(
+      userOp,
+      _entryPointContract.address,
+    );
+    print('UserOp $userOpHash Sent!');
   }
 }
