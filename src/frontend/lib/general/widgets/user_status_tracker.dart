@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'account_list_dialog.dart';
-import 'sign_in_stepper.dart';
+import 'sign_in_dialog.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../../widget_extensions.dart';
 
@@ -32,7 +32,7 @@ class UserStatusTracker extends StatelessWidgetX {
               ),
               onPressed: () => showDialog(
                 context: context,
-                builder: (_) => SignInStepper(),
+                builder: (_) => SignInDialog(),
               ),
             ),
           );

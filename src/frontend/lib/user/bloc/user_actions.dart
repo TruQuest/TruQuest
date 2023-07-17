@@ -12,6 +12,13 @@ abstract class UserActionAwaitable<T extends UserResultVm?> extends UserAction
 class CreateSmartWallet
     extends UserActionAwaitable<CreateSmartWalletSuccessVm?> {}
 
+class CreateSmartWalletFromMnemonic
+    extends UserActionAwaitable<CreateSmartWalletFromMnemonicSuccessVm?> {
+  final String mnemonic;
+
+  CreateSmartWalletFromMnemonic({required this.mnemonic});
+}
+
 class EncryptAndSaveSmartWallet
     extends UserActionAwaitable<EncryptAndSaveSmartWalletSuccessVm?> {
   final SmartWallet wallet;

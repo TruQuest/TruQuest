@@ -16,6 +16,12 @@ class CreateSmartWalletSuccessVm extends UserResultVm {
   CreateSmartWalletSuccessVm({required this.wallet});
 }
 
+class CreateSmartWalletFromMnemonicSuccessVm extends UserResultVm {
+  final SmartWallet wallet;
+
+  CreateSmartWalletFromMnemonicSuccessVm({required this.wallet});
+}
+
 class EncryptAndSaveSmartWalletSuccessVm extends UserResultVm {}
 
 class SignInWithEthereumSuccessVm extends UserResultVm {}

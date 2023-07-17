@@ -26,6 +26,18 @@ class SmartWalletService {
     return wallet;
   }
 
+  Future<SmartWallet> createOneFromMnemonic(String mnemonic) async {
+    var owner = EOA.fromMnemonic(mnemonic);
+    var wallet = SmartWallet(owner);
+    int index = wallet.addOwnerAccount();
+    var walletAddress = await _accountFactoryContract.getAddress(
+      wallet.getOwnerAddress(index),
+    );
+    wallet.setOwnerWalletAddress(index, walletAddress);
+
+    return wallet;
+  }
+
   Future encryptAndSaveToLocalStorage(
     SmartWallet wallet,
     String password,

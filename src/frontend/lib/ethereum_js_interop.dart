@@ -285,9 +285,6 @@ external dynamic _createWalletFromEncryptedJson(String json, String password);
 @JS('ethers.Wallet.fromMnemonic')
 external _EOA _createWalletFromMnemonic(String mnemonic, [String? path]);
 
-@JS('ethers.utils.getAccountPath')
-external String getAccountPath(int index);
-
 @JS('ethers.Wallet')
 class _EOA {
   external String get address;

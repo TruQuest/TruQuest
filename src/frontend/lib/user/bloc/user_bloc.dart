@@ -22,6 +22,8 @@ class UserBloc extends Bloc<UserAction> {
     actionChannel.stream.listen((action) {
       if (action is CreateSmartWallet) {
         _createSmartWallet(action);
+      } else if (action is CreateSmartWalletFromMnemonic) {
+        _createSmartWalletFromMnemonic(action);
       } else if (action is EncryptAndSaveSmartWallet) {
         _encryptAndSaveSmartWallet(action);
       } else if (action is SignInWithEthereum) {
@@ -47,6 +49,15 @@ class UserBloc extends Bloc<UserAction> {
   void _createSmartWallet(CreateSmartWallet action) async {
     var wallet = await _userService.createSmartWallet();
     action.complete(CreateSmartWalletSuccessVm(wallet: wallet));
+  }
+
+  void _createSmartWalletFromMnemonic(
+    CreateSmartWalletFromMnemonic action,
+  ) async {
+    var wallet = await _userService.createSmartWalletFromMnemonic(
+      action.mnemonic,
+    );
+    action.complete(CreateSmartWalletFromMnemonicSuccessVm(wallet: wallet));
   }
 
   void _encryptAndSaveSmartWallet(EncryptAndSaveSmartWallet action) async {

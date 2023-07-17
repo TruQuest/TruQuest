@@ -67,6 +67,9 @@ class UserService {
 
   Future<SmartWallet> createSmartWallet() => _smartWalletService.createOne();
 
+  Future<SmartWallet> createSmartWalletFromMnemonic(String mnemonic) =>
+      _smartWalletService.createOneFromMnemonic(mnemonic);
+
   Future encryptSmartWalletAndSaveToLocalStorage(
     SmartWallet wallet,
     String password,

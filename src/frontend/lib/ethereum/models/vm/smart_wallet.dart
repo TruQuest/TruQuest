@@ -18,7 +18,7 @@ class SmartWallet {
       _ownerIndexToWalletAddress[_currentOwnerIndex]!;
 
   String get _currentPrivateKey => EOA
-      .fromMnemonic(_owner!.mnemonic, getAccountPath(_currentOwnerIndex))
+      .fromMnemonic(_owner!.mnemonic, "m/44'/60'/0'/0/$_currentOwnerIndex")
       .privateKey;
 
   List<String> get walletAddresses =>
@@ -46,8 +46,8 @@ class SmartWallet {
   int addOwnerAccount({bool switchToAdded = true}) {
     var index =
         ((_ownerIndexToAddress.keys.toList()..sort()).lastOrNull ?? -1) + 1;
-    var ownerAddress =
-        EOA.fromMnemonic(_owner!.mnemonic, getAccountPath(index)).address;
+    var path = "m/44'/60'/0'/0/$index";
+    var ownerAddress = EOA.fromMnemonic(_owner!.mnemonic, path).address;
     _ownerIndexToAddress[index] = ownerAddress;
     if (switchToAdded) {
       _currentOwnerIndex = index;

@@ -6,20 +6,20 @@ import '../../user/bloc/user_actions.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../../widget_extensions.dart';
 
-class SignInStepper extends StatefulWidget {
-  const SignInStepper({super.key});
+class SignInFromMnemonicDialog extends StatefulWidget {
+  const SignInFromMnemonicDialog({super.key});
 
   @override
-  State<SignInStepper> createState() => _SignInStepperState();
+  State<SignInFromMnemonicDialog> createState() =>
+      _SignInFromMnemonicDialogState();
 }
 
-class _SignInStepperState extends StateX<SignInStepper> {
+class _SignInFromMnemonicDialogState extends StateX<SignInFromMnemonicDialog> {
   late final _userBloc = use<UserBloc>();
 
+  final _mnemonicController = TextEditingController();
   final _passwordController1 = TextEditingController();
   final _passwordController2 = TextEditingController();
-  final _emailController = TextEditingController();
-  final _confirmationTokenController = TextEditingController();
 
   late int _currentStep;
   SmartWallet? _wallet;
@@ -33,35 +33,25 @@ class _SignInStepperState extends StateX<SignInStepper> {
     } else {
       _currentStep = 2;
     }
-
-    // @@NOTE: If user clicks Sign-in but then closes the dialog and opens it up again
-    // while the sign-in process is still in progress, he will be directed to the step = 2
-    // and won't receive an update when the process gets completed.
-    // This is fine though since signing-in multiple times is ok.
   }
 
   @override
   void dispose() {
     _wallet = null;
+    _mnemonicController.dispose();
     _passwordController1.dispose();
     _passwordController2.dispose();
-    _emailController.dispose();
-    _confirmationTokenController.dispose();
     super.dispose();
   }
 
   String _getButtonLabel(int step) {
     switch (step) {
       case 0:
-        return 'Reserve';
+        return 'Import';
       case 1:
         return 'Protect';
-      case 2:
-        return 'Sign-in';
-      case 3:
-        return 'Add';
       default:
-        return 'Confirm';
+        return 'Sign-in';
     }
   }
 
@@ -94,12 +84,15 @@ class _SignInStepperState extends StateX<SignInStepper> {
                     child: Text(_getButtonLabel(details.currentStep)),
                     onPressed: () async {
                       if (details.currentStep == 0) {
-                        var action = CreateSmartWallet();
+                        var action = CreateSmartWalletFromMnemonic(
+                          mnemonic: _mnemonicController.text,
+                        );
                         _userBloc.dispatch(action);
 
                         var success = await action.result;
                         if (success != null) {
                           _wallet = success.wallet;
+                          _mnemonicController.clear();
                           details.onStepContinue!();
                         }
                       } else if (details.currentStep == 1) {
@@ -115,29 +108,9 @@ class _SignInStepperState extends StateX<SignInStepper> {
                           _passwordController1.clear();
                           details.onStepContinue!();
                         }
-                      } else if (details.currentStep == 2) {
+                      } else {
                         var action = SignInWithEthereum(
                           password: _passwordController2.text,
-                        );
-                        _userBloc.dispatch(action);
-
-                        var success = await action.result;
-                        if (success != null) {
-                          _passwordController2.clear();
-                          details.onStepContinue!();
-                        }
-                      } else if (details.currentStep == 3) {
-                        var action = AddEmail(email: _emailController.text);
-                        _userBloc.dispatch(action);
-
-                        var success = await action.result;
-                        if (success != null) {
-                          _emailController.clear();
-                          details.onStepContinue!();
-                        }
-                      } else {
-                        var action = ConfirmEmail(
-                          confirmationToken: _confirmationTokenController.text,
                         );
                         _userBloc.dispatch(action);
 
@@ -154,19 +127,29 @@ class _SignInStepperState extends StateX<SignInStepper> {
                 steps: [
                   Step(
                     title: Text(
-                      'Reserve a smart wallet address',
+                      'Import a mnemonic',
                       style: GoogleFonts.philosopher(
                         color: const Color(0xffF8F9FA),
                         fontSize: 16,
                       ),
                     ),
                     content: Container(
-                      width: double.infinity,
+                      height: 100,
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: Text(
-                        _wallet == null ? '...' : _wallet!.currentWalletAddress,
-                        style: GoogleFonts.raleway(
-                          color: Colors.white,
+                      child: TextField(
+                        controller: _mnemonicController,
+                        expands: true,
+                        minLines: null,
+                        maxLines: null,
+                        decoration: const InputDecoration(
+                          hintText: 'Mnemonic',
+                          hintStyle: TextStyle(color: Colors.white70),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.white70),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.white),
+                          ),
                         ),
                       ),
                     ),
@@ -214,58 +197,6 @@ class _SignInStepperState extends StateX<SignInStepper> {
                         obscureText: true,
                         decoration: const InputDecoration(
                           hintText: 'Password',
-                          hintStyle: TextStyle(color: Colors.white70),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.white70),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    ),
-                    isActive: true,
-                  ),
-                  Step(
-                    title: Text(
-                      'Add recovery email (optional but recommended)',
-                      style: GoogleFonts.philosopher(
-                        color: const Color(0xffF8F9FA),
-                        fontSize: 16,
-                      ),
-                    ),
-                    content: Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: TextField(
-                        controller: _emailController,
-                        decoration: const InputDecoration(
-                          hintText: 'Email',
-                          hintStyle: TextStyle(color: Colors.white70),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.white70),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    ),
-                    isActive: true,
-                  ),
-                  Step(
-                    title: Text(
-                      'Confirm email ownership',
-                      style: GoogleFonts.philosopher(
-                        color: const Color(0xffF8F9FA),
-                        fontSize: 16,
-                      ),
-                    ),
-                    content: Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: TextField(
-                        controller: _confirmationTokenController,
-                        decoration: const InputDecoration(
-                          hintText: 'Confirmation token',
                           hintStyle: TextStyle(color: Colors.white70),
                           enabledBorder: UnderlineInputBorder(
                             borderSide: BorderSide(color: Colors.white70),
