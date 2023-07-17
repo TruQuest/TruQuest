@@ -3,7 +3,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'general/services/local_storage.dart';
-import 'general/widgets/dummy.dart';
 import 'widget_extensions.dart';
 import 'injector.dart';
 import 'general/pages/home_page.dart';
@@ -31,7 +30,7 @@ class App extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const Dummy(),
+      home: const HomePage(),
     );
   }
 }

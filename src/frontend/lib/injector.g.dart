@@ -12,14 +12,8 @@ class _$Injector extends Injector {
     final KiwiContainer container = KiwiContainer();
     container
       ..registerSingleton((c) => UserBloc(c<UserService>()))
-      ..registerSingleton((c) => UserService(
-          c<SmartWalletService>(),
-          c<UserApiService>(),
-          c<ServerConnector>(),
-          c<LocalStorage>(),
-          c<DummyContract>(),
-          c<EthereumApiService>(),
-          c<IEntryPointContract>()))
+      ..registerSingleton((c) => UserService(c<SmartWalletService>(),
+          c<UserApiService>(), c<ServerConnector>(), c<LocalStorage>()))
       ..registerSingleton((c) => EthereumBloc(
           c<EthereumService>(), c<TruthserumContract>(), c<TruQuestContract>()))
       ..registerSingleton((c) => EthereumService(c<LocalStorage>()))
@@ -29,6 +23,7 @@ class _$Injector extends Injector {
       ..registerSingleton((c) => ThingService(
           c<ThingApiService>(),
           c<UserService>(),
+          c<EthereumApiService>(),
           c<EthereumService>(),
           c<TruQuestContract>(),
           c<ThingSubmissionVerifierLotteryContract>(),
@@ -36,14 +31,14 @@ class _$Injector extends Injector {
       ..registerSingleton(
           (c) => ThingBloc(c<ToastMessenger>(), c<ThingService>()))
       ..registerFactory((c) => DocumentContext())
-      ..registerSingleton((c) => NotificationBloc(c<NotificationsCache>(),
-          c<ToastMessenger>(), c<ThingService>(), c<SettlementService>()))
+      ..registerSingleton(
+          (c) => NotificationBloc(c<NotificationsCache>(), c<ToastMessenger>()))
       ..registerSingleton((c) => SubjectBloc(c<SubjectService>()))
       ..registerSingleton((c) => SubjectService(c<SubjectApiService>()))
       ..registerSingleton((c) => SubjectApiService(c<ServerConnector>()))
       ..registerSingleton((c) => PageContext(c<LocalStorage>()))
       ..registerSingleton((c) => TruthserumContract(c<EthereumService>()))
-      ..registerSingleton((c) => TruQuestContract(c<EthereumService>()))
+      ..registerSingleton((c) => TruQuestContract(c<EthereumRpcProvider>()))
       ..registerSingleton(
           (c) => ThingSubmissionVerifierLotteryContract(c<EthereumService>()))
       ..registerSingleton((c) => AcceptancePollContract(c<EthereumService>()))
@@ -60,8 +55,8 @@ class _$Injector extends Injector {
       ..registerSingleton(
           (c) => ThingAssessmentVerifierLotteryContract(c<EthereumService>()))
       ..registerSingleton((c) => AssessmentPollContract(c<EthereumService>()))
-      ..registerSingleton((c) => NotificationsCache(c<UserService>(),
-          c<UserApiService>(), c<ServerConnector>(), c<EthereumService>()))
+      ..registerSingleton((c) => NotificationsCache(
+          c<UserService>(), c<UserApiService>(), c<ServerConnector>()))
       ..registerSingleton(
           (c) => SubscriptionManager(c<PageContext>(), c<ServerConnector>()))
       ..registerSingleton((c) => LocalStorage())
@@ -69,14 +64,15 @@ class _$Injector extends Injector {
       ..registerSingleton((c) => GeneralApiService(c<ServerConnector>()))
       ..registerSingleton((c) => GeneralService(c<GeneralApiService>()))
       ..registerSingleton((c) => GeneralBloc(c<GeneralService>()))
+      ..registerSingleton((c) => EthereumRpcProvider())
       ..registerSingleton<IEntryPointContract>(
-          (c) => EntryPointContract(c<EthereumApiService>()))
+          (c) => EntryPointContract(c<EthereumRpcProvider>()))
       ..registerSingleton<IAccountFactoryContract>(
-          (c) => SimpleAccountFactoryContract(c<EthereumApiService>()))
-      ..registerSingleton((c) => DummyContract(c<EthereumApiService>()))
+          (c) => SimpleAccountFactoryContract(c<EthereumRpcProvider>()))
+      ..registerSingleton((c) => DummyContract(c<EthereumRpcProvider>()))
       ..registerSingleton((c) =>
           SmartWalletService(c<LocalStorage>(), c<IAccountFactoryContract>()))
-      ..registerSingleton((c) => EthereumApiService())
+      ..registerSingleton((c) => EthereumApiService(c<IEntryPointContract>()))
       ..registerFactory((c) => UserOperationBuilder(c<EthereumApiService>(),
           c<IEntryPointContract>(), c<IAccountFactoryContract>()));
   }

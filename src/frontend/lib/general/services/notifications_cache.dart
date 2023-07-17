@@ -1,10 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/scheduler.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:universal_html/html.dart' as html;
 
-import '../../ethereum/services/ethereum_service.dart';
 import '../../user/services/user_service.dart';
 import '../../user/services/user_api_service.dart';
 import '../models/rvm/notification_vm.dart';
@@ -19,24 +16,19 @@ class NotificationsCache {
   Set<NotificationVm>? _unreadNotifications;
   String? _username;
 
-  final BehaviorSubject<int> _unreadNotificationsCountChannel =
-      BehaviorSubject<int>();
+  final _unreadNotificationsCountChannel = BehaviorSubject<int>();
   Stream<int> get unreadNotificationsCount$ =>
       _unreadNotificationsCountChannel.stream;
 
-  final BehaviorSubject<(List<NotificationVm>, String?)>
-      _unreadNotificationsChannel =
+  final _unreadNotificationsChannel =
       BehaviorSubject<(List<NotificationVm>, String?)>();
   Stream<(List<NotificationVm>, String?)> get unreadNotifications$ =>
       _unreadNotificationsChannel.stream;
-
-  NotificationVm? _clientSideWarning;
 
   NotificationsCache(
     this._userService,
     this._userApiService,
     ServerConnector serverConnector,
-    EthereumService ethereumService,
   ) {
     serverConnector.serverEvent$
         .where((event) => event.$1 == ServerEventType.notification)
@@ -77,42 +69,12 @@ class NotificationsCache {
       }
     });
 
-    ethereumService.walletSetup.future.then((_) {
-      _listenForChainChanges(ethereumService);
-    });
-
     _userService.currentUserChanged$.listen((user) {
       _unreadNotifications = _usernameToUnreadNotifications.putIfAbsent(
         user.username,
         () => {},
       );
       _username = user.username;
-      _notify();
-    });
-  }
-
-  void _listenForChainChanges(EthereumService ethereumService) {
-    ethereumService.connectedChainChanged$.listen((event) {
-      var (chainId, shouldReloadPage) = event;
-      if (shouldReloadPage) {
-        SchedulerBinding.instance.addPostFrameCallback(
-          (_) => html.window.location.reload(),
-        );
-      }
-
-      if (chainId != ethereumService.validChainId) {
-        _clientSideWarning = NotificationVm(
-          updateTimestamp: DateTime.now(),
-          itemType: WatchedItemTypeVm.subject,
-          itemId: '',
-          itemUpdateCategory: 0,
-          title: 'You are on an unsupported chain',
-          details: 'Click to switch',
-        );
-      } else {
-        _clientSideWarning = null;
-      }
-
       _notify();
     });
   }
@@ -124,18 +86,12 @@ class NotificationsCache {
           List<NotificationVm>.from(_unreadNotifications ?? {})
             ..sort(
               (n1, n2) => n2.updateTimestamp.compareTo(n1.updateTimestamp),
-            )
-            ..insertAll(
-              0,
-              _clientSideWarning != null ? [_clientSideWarning!] : [],
             ),
         ),
         _username,
       ),
     );
-    _unreadNotificationsCountChannel.add(
-      _clientSideWarning != null ? -1 : _unreadNotifications?.length ?? 0,
-    );
+    _unreadNotificationsCountChannel.add(_unreadNotifications?.length ?? 0);
   }
 
   void _onInitialRetrieve(

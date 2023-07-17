@@ -1,11 +1,8 @@
 import 'package:rxdart/rxdart.dart';
 
+import '../errors/wallet_locked_error.dart';
 import 'user_api_service.dart';
 import '../models/vm/user_vm.dart';
-import '../../general/contracts/erc4337/ientrypoint_contract.dart';
-import '../../ethereum/services/ethereum_api_service.dart';
-import '../../ethereum/models/im/user_operation.dart';
-import '../../general/contracts/dummy_contract.dart';
 import '../../ethereum/models/vm/smart_wallet.dart';
 import '../../ethereum/services/smart_wallet_service.dart';
 import '../../general/services/local_storage.dart';
@@ -16,55 +13,55 @@ class UserService {
   final UserApiService _userApiService;
   final ServerConnector _serverConnector;
   final LocalStorage _localStorage;
-  final DummyContract _dummyContract;
-  final EthereumApiService _ethereumApiService;
-  final IEntryPointContract _entryPointContract;
 
   SmartWallet? _wallet;
+  SmartWallet? get wallet => _wallet;
 
   final _currentUserChangedEventChannel = BehaviorSubject<UserVm>();
   Stream<UserVm> get currentUserChanged$ =>
       _currentUserChangedEventChannel.stream;
   UserVm? get latestCurrentUser => _currentUserChangedEventChannel.valueOrNull;
 
+  final _walletAddressesChannel = BehaviorSubject<List<String>>();
+  Stream<List<String>> get walletAddresses$ => _walletAddressesChannel.stream;
+
   UserService(
     this._smartWalletService,
     this._userApiService,
     this._serverConnector,
     this._localStorage,
-    this._dummyContract,
-    this._ethereumApiService,
-    this._entryPointContract,
   ) {
     if (_localStorage.getString('SmartWallet') == null) {
       _reloadUser(null);
       return;
     }
 
-    _smartWalletService.getFromLocalStorage('password').then((wallet) {
-      _wallet = wallet;
-      _reloadUser(wallet.address);
+    _smartWalletService.getFromLocalStorage(null).then((wallet) {
+      _reloadUser(wallet);
     });
   }
 
-  void _reloadUser(String? walletAddress) {
-    bool isGuest;
-    List<String>? userData;
+  void _reloadUser(SmartWallet? wallet) {
+    _wallet = wallet;
+    String? userId;
     String? username;
-    if (walletAddress == null ||
-        (userData = _localStorage.getStrings(walletAddress)) == null) {
-      isGuest = true;
+    List<String>? userData;
+    if (wallet == null ||
+        (userData = _localStorage.getStrings(wallet.currentWalletAddress)) ==
+            null) {
       _serverConnector.connectToHub(username, null);
     } else {
-      isGuest = false;
+      userId = wallet.currentWalletAddress.substring(2).toLowerCase();
       username = userData!.last;
+      _walletAddressesChannel.add(wallet.walletAddresses);
+
       _serverConnector.connectToHub(username, userData.first);
     }
 
     _currentUserChangedEventChannel.add(UserVm(
-      isGuest: isGuest,
-      walletAddress: walletAddress,
+      id: userId,
       username: username,
+      walletAddress: wallet?.currentWalletAddress,
     ));
   }
 
@@ -80,9 +77,14 @@ class UserService {
       );
 
   Future signInWithEthereum(String password) async {
-    _wallet = await _smartWalletService.getFromLocalStorage(password);
+    // @@NOTE: Always get the wallet from the encrypted, even if we
+    // have previously unlocked it.
+    // @@TODO: Handle invalid password.
+    var wallet = await _smartWalletService.getFromLocalStorage(password);
 
-    var nonce = await _userApiService.getNonceForSiwe(_wallet!.address);
+    var nonce = await _userApiService.getNonceForSiwe(
+      wallet.currentWalletAddress,
+    );
     var domain = 'truquest.io';
     var statement =
         'I accept the TruQuest Terms of Service: https://truquest.io/tos';
@@ -95,7 +97,7 @@ class UserService {
     var nowWithoutMicroseconds = now.substring(0, indexOfDot + 4) + 'Z';
     var message =
         '$domain wants you to sign in with your Ethereum ERC-4337 account:\n'
-        '${_wallet!.address}\n\n'
+        '${wallet.currentWalletAddress}\n\n'
         '$statement\n\n'
         'URI: $uri\n'
         'Version: $version\n'
@@ -103,7 +105,7 @@ class UserService {
         'Nonce: $nonce\n'
         'Issued At: $nowWithoutMicroseconds';
 
-    var signature = _wallet!.ownerSign(message);
+    var signature = wallet.ownerSign(message);
 
     var siweResult = await _userApiService.signInWithEthereum(
       message,
@@ -111,15 +113,15 @@ class UserService {
     );
 
     await _localStorage.setStrings(
-      _wallet!.address,
+      wallet.currentWalletAddress,
       [siweResult.token, siweResult.username],
     );
 
-    _reloadUser(_wallet!.address);
+    _reloadUser(wallet);
   }
 
   Future addEmail(String email) async {
-    if (_wallet == null) {
+    if (_wallet?.locked ?? true) {
       print('Smart Wallet not unlocked');
       return;
     }
@@ -128,7 +130,7 @@ class UserService {
   }
 
   Future confirmEmail(String confirmationToken) async {
-    if (_wallet == null) {
+    if (_wallet?.locked ?? true) {
       print('Smart Wallet not unlocked');
       return;
     }
@@ -136,18 +138,35 @@ class UserService {
     await _userApiService.confirmEmail(confirmationToken);
   }
 
-  Future foo() async {
-    var userOp = await UserOperation.create()
-        .from(_wallet!)
-        .action(_dummyContract.setValue('asdasd;laksdl;'))
-        .signed();
+  Future unlockWallet(String password) async {
+    // @@TODO: Handle invalid password.
+    var wallet = await _smartWalletService.getFromLocalStorage(password);
+    _reloadUser(wallet);
+  }
 
-    print(userOp);
+  Future<WalletLockedError?> addAccount() async {
+    var wallet = _wallet!;
+    if (wallet.locked) {
+      return WalletLockedError();
+    }
 
-    var userOpHash = await _ethereumApiService.sendUserOperation(
-      userOp,
-      _entryPointContract.address,
+    int index = wallet.addOwnerAccount(switchToAdded: false);
+    var walletAddress = await _smartWalletService.getWalletAddress(
+      wallet.getOwnerAddress(index),
     );
-    print('UserOp $userOpHash Sent!');
+    wallet.setOwnerWalletAddress(index, walletAddress);
+
+    await _smartWalletService.updateAccountListInLocalStorage(wallet);
+
+    _reloadUser(wallet);
+
+    return null;
+  }
+
+  Future switchAccount(String walletAddress) async {
+    var wallet = _wallet!;
+    wallet.switchCurrentToWalletsOwner(walletAddress);
+    await _smartWalletService.updateAccountListInLocalStorage(wallet);
+    _reloadUser(wallet);
   }
 }

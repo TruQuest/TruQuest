@@ -1,5 +1,5 @@
+import '../../ethereum/services/ethereum_rpc_provider.dart';
 import '../../ethereum_js_interop.dart';
-import '../../ethereum/services/ethereum_api_service.dart';
 
 class DummyContract {
   static const String _address = '0x19CFc85e3dffb66295695Bf48e06386CB1B5f320';
@@ -36,9 +36,9 @@ class DummyContract {
   late final Abi _interface;
   late final Contract _contract;
 
-  DummyContract(EthereumApiService ethereumApiService) {
+  DummyContract(EthereumRpcProvider ethereumRpcProvider) {
     _interface = Abi(_abi);
-    _contract = Contract(_address, _abi, ethereumApiService.provider);
+    _contract = Contract(_address, _abi, ethereumRpcProvider.provider);
   }
 
   Future<String> getValue() => _contract.read<String>('getValue');

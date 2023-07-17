@@ -2,19 +2,18 @@ import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../models/im/user_operation.dart';
-import '../../ethereum_js_interop.dart';
+import '../../general/contracts/erc4337/ientrypoint_contract.dart';
 
 class EthereumApiService {
-  late final String _ethereumRpcUrl;
-  late final JsonRpcProvider provider;
+  final String _entryPointAddress;
   late final Dio _dio;
   late final Dio _dioBundler;
 
-  EthereumApiService() {
-    _ethereumRpcUrl = dotenv.env['ETHEREUM_RPC_URL']!;
-    provider = JsonRpcProvider(_ethereumRpcUrl);
-
-    _dio = Dio(BaseOptions(baseUrl: _ethereumRpcUrl));
+  EthereumApiService(IEntryPointContract entryPointContract)
+      : _entryPointAddress = entryPointContract.address {
+    _dio = Dio(
+      BaseOptions(baseUrl: dotenv.env['ETHEREUM_RPC_URL']!),
+    );
     _dioBundler = Dio(
       BaseOptions(baseUrl: dotenv.env['ERC4337_BUNDLER_BASE_URL']!),
     );
@@ -79,27 +78,8 @@ class EthereumApiService {
     }
   }
 
-  Future<String?> getEntryPointAddress() async {
-    try {
-      var response = await _dioBundler.post(
-        '/rpc',
-        data: <String, dynamic>{
-          'jsonrpc': '2.0',
-          'method': 'eth_supportedEntryPoints',
-          'id': 0,
-        },
-      );
-
-      return response.data['result'].first;
-    } on DioError catch (error) {
-      print(error);
-      return null;
-    }
-  }
-
   Future<Map<String, BigInt>?> estimateUserOperationGas(
     UserOperation userOp,
-    String entryPointAddress,
   ) async {
     try {
       var response = await _dioBundler.post(
@@ -109,7 +89,7 @@ class EthereumApiService {
           'method': 'eth_estimateUserOperationGas',
           'params': [
             userOp.toJson(),
-            entryPointAddress,
+            _entryPointAddress,
           ],
           'id': 0,
         },
@@ -129,10 +109,7 @@ class EthereumApiService {
     }
   }
 
-  Future<String?> sendUserOperation(
-    UserOperation userOp,
-    String entryPointAddress,
-  ) async {
+  Future<String?> sendUserOperation(UserOperation userOp) async {
     try {
       var response = await _dioBundler.post(
         '/rpc',
@@ -141,7 +118,7 @@ class EthereumApiService {
           'method': 'eth_sendUserOperation',
           'params': [
             userOp.toJson(),
-            entryPointAddress,
+            _entryPointAddress,
           ],
           'id': 0,
         },

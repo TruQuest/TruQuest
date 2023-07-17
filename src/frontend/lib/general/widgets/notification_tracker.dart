@@ -8,8 +8,6 @@ import 'package:lottie/lottie.dart';
 import 'package:lottie/src/model/layer/layer.dart';
 import 'package:side_sheet/side_sheet.dart';
 
-import '../../ethereum/bloc/ethereum_bloc.dart';
-import '../../ethereum/bloc/ethereum_actions.dart';
 import '../contexts/page_context.dart';
 import '../bloc/notification_actions.dart';
 import '../bloc/notification_bloc.dart';
@@ -29,7 +27,6 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
   late final _notificationBloc = use<NotificationBloc>();
   // @@??: Should go through the bloc instead of exposing directly ?
   late final _notificationsCache = use<NotificationsCache>();
-  late final _ethereumBloc = use<EthereumBloc>();
   late final _pageContext = use<PageContext>();
 
   late final AnimationController _animationController;
@@ -151,12 +148,6 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
                   var notification = notifications[index];
                   return InkWell(
                     onTap: () {
-                      if (notification.itemId == '') {
-                        // client-side warning
-                        _ethereumBloc.dispatch(const SwitchEthereumChain());
-                        return;
-                      }
-
                       _notificationBloc.dispatch(Dismiss(
                         notifications: [notification],
                         username: username,
@@ -197,19 +188,18 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
                                 ],
                               ),
                             ),
-                            if (notification.itemId != '')
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.delete,
-                                  color: Colors.red,
-                                ),
-                                onPressed: () => _notificationBloc.dispatch(
-                                  Dismiss(
-                                    notifications: [notification],
-                                    username: username,
-                                  ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.delete,
+                                color: Colors.red,
+                              ),
+                              onPressed: () => _notificationBloc.dispatch(
+                                Dismiss(
+                                  notifications: [notification],
+                                  username: username,
                                 ),
                               ),
+                            ),
                           ],
                         ),
                       ),
@@ -255,24 +245,15 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
             return Positioned(
               top: 8,
               left: 36,
-              child: count == -1
+              child: count > 0
                   ? Text(
-                      '!',
-                      style: GoogleFonts.exo2(
+                      count.toString(),
+                      style: TextStyle(
                         color: Colors.red[800],
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
                       ),
                     )
-                  : count > 0
-                      ? Text(
-                          count.toString(),
-                          style: TextStyle(
-                            color: Colors.red[800],
-                            fontSize: 12,
-                          ),
-                        )
-                      : const SizedBox.shrink(),
+                  : const SizedBox.shrink(),
             );
           },
         ),

@@ -41,3 +41,17 @@ class ConfirmEmail extends UserActionAwaitable<ConfirmEmailSuccessVm?> {
 
   ConfirmEmail({required this.confirmationToken});
 }
+
+class UnlockWallet extends UserActionAwaitable<UnlockWalletSuccessVm?> {
+  final String password;
+
+  UnlockWallet({required this.password});
+}
+
+class AddAccount extends UserActionAwaitable<AddAccountFailureVm?> {}
+
+class SwitchAccount extends UserActionAwaitable<SwitchAccountSuccessVm> {
+  final String walletAddress;
+
+  SwitchAccount({required this.walletAddress});
+}

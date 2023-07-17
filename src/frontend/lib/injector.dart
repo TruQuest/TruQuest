@@ -1,5 +1,6 @@
 import 'package:kiwi/kiwi.dart';
 
+import 'ethereum/services/ethereum_rpc_provider.dart';
 import 'ethereum/models/im/user_operation.dart';
 import 'general/contracts/dummy_contract.dart';
 import 'general/contracts/erc4337/entrypoint_contract.dart';
@@ -74,6 +75,7 @@ abstract class Injector {
   @Register.singleton(GeneralApiService)
   @Register.singleton(GeneralService)
   @Register.singleton(GeneralBloc)
+  @Register.singleton(EthereumRpcProvider)
   @Register.singleton(
     IEntryPointContract,
     from: EntryPointContract,

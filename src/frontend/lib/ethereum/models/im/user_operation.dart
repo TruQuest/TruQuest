@@ -117,11 +117,11 @@ class UserOperationBuilder {
 
   UserOperationBuilder from(SmartWallet wallet) {
     _wallet = wallet;
-    _sender = wallet.address;
+    _sender = wallet.currentWalletAddress;
     _tasks.add(() async {
       var code = await _ethereumApiService.getCode(_sender);
       _initCode = code == '0x'
-          ? _accountFactoryContract.getInitCode(_wallet.owner!.address)
+          ? _accountFactoryContract.getInitCode(_wallet.currentOwnerAddress)
           : '0x';
     });
 
@@ -159,10 +159,7 @@ class UserOperationBuilder {
         signature: _accountFactoryContract.dummySignatureForGasEstimation,
       );
 
-      var fees = await _ethereumApiService.estimateUserOperationGas(
-        _userOp,
-        _entryPointContract.address,
-      );
+      var fees = await _ethereumApiService.estimateUserOperationGas(_userOp);
 
       _userOp = _userOp.copyWith(
         callGasLimit: fees!['callGasLimit']! * BigInt.two,

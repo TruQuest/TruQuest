@@ -27,7 +27,17 @@ class _SignInStepperState extends StateX<SignInStepper> {
   @override
   void initState() {
     super.initState();
-    _currentStep = 0;
+    var currentUser = _userBloc.latestCurrentUser!.user;
+    if (currentUser.walletAddress == null) {
+      _currentStep = 0;
+    } else {
+      _currentStep = 2;
+    }
+
+    // @@NOTE: If user clicks Sign-in but then closes the dialog and opens it up again
+    // while the sign-in process is still in progress, he will be directed to the step = 2
+    // and won't receive an update when the process gets completed.
+    // This is fine though since signing-in multiple times is ok.
   }
 
   @override
@@ -67,11 +77,10 @@ class _SignInStepperState extends StateX<SignInStepper> {
       ),
       child: SimpleDialog(
         backgroundColor: const Color(0xFF242423),
-        title: Text('Sign-in'),
         children: [
           SizedBox(
             width: 400,
-            height: 600,
+            height: 500,
             child: SingleChildScrollView(
               child: Stepper(
                 currentStep: _currentStep,
@@ -155,7 +164,7 @@ class _SignInStepperState extends StateX<SignInStepper> {
                       width: double.infinity,
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Text(
-                        _wallet == null ? '...' : _wallet!.address,
+                        _wallet == null ? '...' : _wallet!.currentWalletAddress,
                         style: GoogleFonts.raleway(
                           color: Colors.white,
                         ),

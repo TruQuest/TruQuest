@@ -283,7 +283,10 @@ external _EOA _createRandomWallet();
 external dynamic _createWalletFromEncryptedJson(String json, String password);
 
 @JS('ethers.Wallet.fromMnemonic')
-external _EOA _createWalletFromMnemonic(String mnemonic);
+external _EOA _createWalletFromMnemonic(String mnemonic, [String? path]);
+
+@JS('ethers.utils.getAccountPath')
+external String getAccountPath(int index);
 
 @JS('ethers.Wallet')
 class _EOA {
@@ -307,8 +310,8 @@ class EOA {
     return EOA._(wallet);
   }
 
-  static EOA fromMnemonic(String mnemonic) =>
-      EOA._(_createWalletFromMnemonic(mnemonic));
+  static EOA fromMnemonic(String mnemonic, [String? path]) =>
+      EOA._(_createWalletFromMnemonic(mnemonic, path));
 
   String get address => convertToEip55Address(_eoa.address);
   String get privateKey => _eoa.privateKey;

@@ -1,9 +1,8 @@
 import 'package:convert/convert.dart';
 
-import '../../ethereum/errors/ethereum_error.dart';
-import '../../ethereum/services/ethereum_service.dart';
-import '../../ethereum_js_interop.dart';
+import '../../ethereum/services/ethereum_rpc_provider.dart';
 import '../extensions/uuid_extension.dart';
+import '../../ethereum_js_interop.dart';
 
 class TruQuestContract {
   static const String address = '0x32D41E4e24F97ec7D52e3c43F8DbFe209CBd0e4c';
@@ -120,94 +119,58 @@ class TruQuestContract {
         }
       ]''';
 
-  final EthereumService _ethereumService;
+  late final Abi _interface;
+  late final Contract _contract;
 
-  Contract? _contract;
-  late final Contract _readOnlyContract;
-
-  TruQuestContract(this._ethereumService) {
-    _readOnlyContract = Contract(
-      address,
-      _abi,
-      _ethereumService.provider,
-    );
-
-    _ethereumService.walletSetup.future.then((_) {
-      _contract = Contract(address, _abi, _ethereumService.provider);
-    });
+  TruQuestContract(EthereumRpcProvider ethereumRpcProvider) {
+    _interface = Abi(_abi);
+    _contract = Contract(address, _abi, ethereumRpcProvider.provider);
   }
 
   Future<bool> checkThingAlreadyFunded(String thingId) async {
     var thingIdHex = thingId.toSolInputFormat();
-
-    return await _readOnlyContract.read<bool>(
+    return await _contract.read<bool>(
       'checkThingAlreadyFunded',
       args: [thingIdHex],
     );
   }
 
-  Future fundThing(String thingId, String signature) async {
-    var contract = _contract;
-    if (contract == null) {
-      return;
-    }
-    if (_ethereumService.connectedAccount == null) {
-      return;
-    }
-
-    // var signer =
-    //     _ethereumService.provider.getSigner(); // @@??: What if not connected ?
-    // contract = contract.connect(signer);
-
+  (String, String) fundThing(String thingId, String signature) {
     var thingIdHex = thingId.toSolInputFormat();
     signature = signature.substring(2);
     var r = '0x' + signature.substring(0, 64);
     var s = '0x' + signature.substring(64, 128);
     var v = hex.decode(signature.substring(128, 130)).first;
 
-    var txnResponse = await contract.write(
-      'fundThing',
-      args: [
-        [thingIdHex],
-        v,
-        r,
-        s,
-      ],
-      override: TransactionOverride(
-        gasLimit: 100000, // 83397
-      ),
+    return (
+      address,
+      _interface.encodeFunctionData(
+        'fundThing',
+        [
+          [thingIdHex],
+          v,
+          r,
+          s,
+        ],
+      )
     );
-
-    await txnResponse.wait();
-    print('Fund txn mined!');
   }
 
   Future<bool> checkThingAlreadyHasSettlementProposalUnderAssessment(
     String thingId,
   ) async {
     var thingIdHex = thingId.toSolInputFormat();
-    return await _readOnlyContract.read<bool>(
+    return await _contract.read<bool>(
       'checkThingAlreadyHasSettlementProposalUnderAssessment',
       args: [thingIdHex],
     );
   }
 
-  Future fundThingSettlementProposal(
+  (String, String) fundThingSettlementProposal(
     String thingId,
     String proposalId,
     String signature,
-  ) async {
-    var contract = _contract;
-    if (contract == null) {
-      return;
-    }
-    if (_ethereumService.connectedAccount == null) {
-      return;
-    }
-
-    // var signer = _ethereumService.provider.getSigner();
-    // contract = contract.connect(signer);
-
+  ) {
     var thingIdHex = thingId.toSolInputFormat();
     var proposalIdHex = proposalId.toSolInputFormat();
     signature = signature.substring(2);
@@ -215,50 +178,27 @@ class TruQuestContract {
     var s = '0x' + signature.substring(64, 128);
     var v = hex.decode(signature.substring(128, 130)).first;
 
-    var txnResponse = await contract.write(
-      'fundThingSettlementProposal',
-      args: [
-        [thingIdHex, proposalIdHex],
-        v,
-        r,
-        s,
-      ],
-      override: TransactionOverride(
-        gasLimit: 150000,
-      ),
+    return (
+      address,
+      _interface.encodeFunctionData(
+        'fundThingSettlementProposal',
+        [
+          [thingIdHex, proposalIdHex],
+          v,
+          r,
+          s,
+        ],
+      )
     );
-
-    await txnResponse.wait();
-    print('Fund txn mined!');
   }
 
-  Future<EthereumError?> depositFunds(int amount) async {
-    var contract = _contract;
-    if (contract == null) {
-      return EthereumError('Metamask not installed');
-    }
-    if (_ethereumService.connectedAccount == null) {
-      return EthereumError('No account connected');
-    }
-
-    // var signer = _ethereumService.provider.getSigner();
-    // contract = contract.connect(signer);
-
-    try {
-      var txnResponse = await contract.write(
+  (String, String) depositFunds(int amount) {
+    return (
+      address,
+      _interface.encodeFunctionData(
         'deposit',
-        args: [BigInt.from(amount)],
-        override: TransactionOverride(
-          gasLimit: 150000,
-        ),
-      );
-
-      await txnResponse.wait();
-      print('Deposit funds txn mined!');
-
-      return null;
-    } catch (_) {
-      return EthereumError('Error depositing funds');
-    }
+        [BigInt.from(amount)],
+      )
+    );
   }
 }

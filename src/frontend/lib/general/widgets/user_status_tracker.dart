@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'restrict_when_not_on_valid_chain_button.dart';
-import 'connect_account_button.dart';
-import '../../user/bloc/user_actions.dart';
+import 'account_list_dialog.dart';
+import 'sign_in_stepper.dart';
 import '../../user/bloc/user_bloc.dart';
-import '../../user/models/vm/user_vm.dart';
 import '../../widget_extensions.dart';
 
 // ignore: must_be_immutable
@@ -24,21 +22,33 @@ class UserStatusTracker extends StatelessWidgetX {
         }
 
         var user = snapshot.data!.user;
-        if (user.isGuest) {
+        if (user.id == null) {
           return Tooltip(
             message: 'Sign-in',
-            child: ConnectAccountButton(),
+            child: IconButton(
+              icon: const Icon(
+                Icons.wifi_tethering,
+                color: Colors.white,
+              ),
+              onPressed: () => showDialog(
+                context: context,
+                builder: (_) => SignInStepper(),
+              ),
+            ),
           );
         }
 
         return Tooltip(
-          message: user.walletAddress!,
+          message: user.id,
           child: IconButton(
             icon: const Icon(
               Icons.account_box,
               color: Colors.white,
             ),
-            onPressed: () {},
+            onPressed: () => showDialog(
+              context: context,
+              builder: (_) => AccountListDialog(),
+            ),
           ),
         );
       },

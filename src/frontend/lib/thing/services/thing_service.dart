@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:either_dart/either.dart';
 
+import '../../ethereum/models/im/user_operation.dart';
+import '../../ethereum/services/ethereum_api_service.dart';
 import '../../user/services/user_service.dart';
 import '../../general/models/rvm/verifier_lottery_participant_entry_vm.dart';
 import '../../ethereum/errors/ethereum_error.dart';
@@ -23,6 +25,7 @@ import 'thing_api_service.dart';
 class ThingService {
   final ThingApiService _thingApiService;
   final UserService _userService;
+  final EthereumApiService _ethereumApiService;
   final EthereumService _ethereumService;
   final TruQuestContract _truQuestContract;
   final ThingSubmissionVerifierLotteryContract
@@ -36,6 +39,7 @@ class ThingService {
   ThingService(
     this._thingApiService,
     this._userService,
+    this._ethereumApiService,
     this._ethereumService,
     this._truQuestContract,
     this._thingSubmissionVerifierLotteryContract,
@@ -78,7 +82,22 @@ class ThingService {
   }
 
   Future fundThing(String thingId, String signature) async {
-    await _truQuestContract.fundThing(thingId, signature);
+    var wallet = _userService.wallet;
+    if (wallet == null) {
+      print('Smart Wallet not unlocked');
+      return;
+    }
+
+    var userOp = await UserOperation.create()
+        .from(wallet)
+        .action(_truQuestContract.fundThing(thingId, signature))
+        .signed();
+
+    var userOpHash = await _ethereumApiService.sendUserOperation(userOp);
+
+    print('Fund thing: $userOpHash');
+
+    // @@TODO: Figure out what to wait for.
   }
 
   Future<(String?, int?, int, bool?, int)> getVerifierLotteryInfo(

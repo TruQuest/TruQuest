@@ -72,7 +72,7 @@ class _HomePageState extends StateX<HomePage> {
               toolbarHeight: 70,
               centerTitle: true,
               elevation: 0,
-              actions: [DepositFundsButton()],
+              // actions: [DepositFundsButton()],
             ),
             NavPanel(),
             StreamBuilder(

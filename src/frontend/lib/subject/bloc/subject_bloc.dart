@@ -11,16 +11,13 @@ import '../../general/bloc/bloc.dart';
 class SubjectBloc extends Bloc<SubjectAction> {
   final SubjectService _subjectService;
 
-  final StreamController<List<SubjectPreviewVm>> _subjectsChannel =
-      StreamController<List<SubjectPreviewVm>>.broadcast();
+  final _subjectsChannel = StreamController<List<SubjectPreviewVm>>.broadcast();
   Stream<List<SubjectPreviewVm>> get subjects$ => _subjectsChannel.stream;
 
-  final StreamController<SubjectVm> _subjectChannel =
-      StreamController<SubjectVm>.broadcast();
+  final _subjectChannel = StreamController<SubjectVm>.broadcast();
   Stream<SubjectVm> get subject$ => _subjectChannel.stream;
 
-  final StreamController<GetThingsListRvm> _thingsListChannel =
-      StreamController<GetThingsListRvm>.broadcast();
+  final _thingsListChannel = StreamController<GetThingsListRvm>.broadcast();
   Stream<GetThingsListRvm> get thingsList$ => _thingsListChannel.stream;
 
   SubjectBloc(this._subjectService) {

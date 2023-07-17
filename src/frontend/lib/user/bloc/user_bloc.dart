@@ -16,6 +16,8 @@ class UserBloc extends Bloc<UserAction> {
   LoadCurrentUserSuccessVm? get latestCurrentUser =>
       _currentUserChannel.valueOrNull;
 
+  Stream<List<String>> get walletAddresses$ => _userService.walletAddresses$;
+
   UserBloc(this._userService) {
     actionChannel.stream.listen((action) {
       if (action is CreateSmartWallet) {
@@ -28,6 +30,12 @@ class UserBloc extends Bloc<UserAction> {
         _addEmail(action);
       } else if (action is ConfirmEmail) {
         _confirmEmail(action);
+      } else if (action is UnlockWallet) {
+        _unlockWallet(action);
+      } else if (action is AddAccount) {
+        _addAccount(action);
+      } else if (action is SwitchAccount) {
+        _switchAccount(action);
       }
     });
 
@@ -62,5 +70,20 @@ class UserBloc extends Bloc<UserAction> {
   void _confirmEmail(ConfirmEmail action) async {
     await _userService.confirmEmail(action.confirmationToken);
     action.complete(ConfirmEmailSuccessVm());
+  }
+
+  void _unlockWallet(UnlockWallet action) async {
+    await _userService.unlockWallet(action.password);
+    action.complete(UnlockWalletSuccessVm());
+  }
+
+  void _addAccount(AddAccount action) async {
+    var error = await _userService.addAccount();
+    action.complete(error != null ? AddAccountFailureVm(error: error) : null);
+  }
+
+  void _switchAccount(SwitchAccount action) async {
+    await _userService.switchAccount(action.walletAddress);
+    action.complete(SwitchAccountSuccessVm());
   }
 }

@@ -1,5 +1,5 @@
+import '../../../ethereum/services/ethereum_rpc_provider.dart';
 import 'ientrypoint_contract.dart';
-import '../../../ethereum/services/ethereum_api_service.dart';
 import '../../../ethereum/models/im/user_operation.dart';
 import '../../../ethereum_js_interop.dart';
 
@@ -112,11 +112,11 @@ class EntryPointContract implements IEntryPointContract {
   @override
   String get address => '0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789';
 
-  EntryPointContract(EthereumApiService ethereumApiService) {
+  EntryPointContract(EthereumRpcProvider ethereumRpcProvider) {
     _contract = Contract(
       address,
       _abi,
-      ethereumApiService.provider,
+      ethereumRpcProvider.provider,
     );
   }
 

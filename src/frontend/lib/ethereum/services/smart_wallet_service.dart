@@ -7,20 +7,23 @@ import '../../general/services/local_storage.dart';
 
 class SmartWalletService {
   final LocalStorage _localStorage;
-  final IAccountFactoryContract accountFactoryContract;
+  final IAccountFactoryContract _accountFactoryContract;
 
   SmartWalletService(
     this._localStorage,
-    this.accountFactoryContract,
+    this._accountFactoryContract,
   );
 
   Future<SmartWallet> createOne() async {
     var owner = EOA.createRandom();
-    var address = await accountFactoryContract.getAddress(owner.address);
-    return SmartWallet(
-      owner: owner,
-      address: address,
+    var wallet = SmartWallet(owner);
+    int index = wallet.addOwnerAccount();
+    var walletAddress = await _accountFactoryContract.getAddress(
+      wallet.getOwnerAddress(index),
     );
+    wallet.setOwnerWalletAddress(index, walletAddress);
+
+    return wallet;
   }
 
   Future encryptAndSaveToLocalStorage(
@@ -28,12 +31,38 @@ class SmartWalletService {
     String password,
   ) async {
     // @@TODO: Check password requirements.
-    var encryptedWallet = await wallet.toEncryptedJson(password);
-    await _localStorage.setString('SmartWallet', jsonEncode(encryptedWallet));
+    var encryptedWalletJson = await wallet.toJson(password: password);
+    await _localStorage.setString(
+      'SmartWallet',
+      jsonEncode(encryptedWalletJson),
+    );
   }
 
   Future<SmartWallet> getFromLocalStorage(String? password) {
-    var encryptedWallet = jsonDecode(_localStorage.getString('SmartWallet')!);
-    return SmartWallet.fromEncrypted(encryptedWallet, password: password);
+    var encryptedWalletJson = jsonDecode(
+      _localStorage.getString('SmartWallet')!,
+    );
+    return SmartWallet.fromMap(encryptedWalletJson, password: password);
+  }
+
+  Future<String> getWalletAddress(String ownerAddress) =>
+      _accountFactoryContract.getAddress(ownerAddress);
+
+  Future updateAccountListInLocalStorage(SmartWallet wallet) async {
+    var encryptedWalletJson = jsonDecode(
+      _localStorage.getString('SmartWallet')!,
+    );
+    var walletJson = await wallet.toJson();
+
+    encryptedWalletJson['currentOwnerIndex'] = walletJson['currentOwnerIndex'];
+    encryptedWalletJson['ownerIndexToAddress'] =
+        walletJson['ownerIndexToAddress'];
+    encryptedWalletJson['ownerIndexToWalletAddress'] =
+        walletJson['ownerIndexToWalletAddress'];
+
+    await _localStorage.setString(
+      'SmartWallet',
+      jsonEncode(encryptedWalletJson),
+    );
   }
 }
