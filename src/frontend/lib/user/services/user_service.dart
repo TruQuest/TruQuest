@@ -53,8 +53,6 @@ class UserService {
     } else {
       userId = wallet.currentWalletAddress.substring(2).toLowerCase();
       username = userData!.last;
-      _walletAddressesChannel.add(wallet.walletAddresses);
-
       _serverConnector.connectToHub(username, userData.first);
     }
 
@@ -120,6 +118,8 @@ class UserService {
       [siweResult.token, siweResult.username],
     );
 
+    _walletAddressesChannel.add(wallet.walletAddresses);
+
     _reloadUser(wallet);
   }
 
@@ -161,7 +161,7 @@ class UserService {
 
     await _smartWalletService.updateAccountListInLocalStorage(wallet);
 
-    _reloadUser(wallet);
+    _walletAddressesChannel.add(wallet.walletAddresses);
 
     return null;
   }

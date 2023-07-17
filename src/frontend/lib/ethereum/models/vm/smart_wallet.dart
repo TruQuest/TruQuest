@@ -2,11 +2,13 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:convert/convert.dart';
+import 'package:cryptography/cryptography.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../../ethereum_js_interop.dart';
 
 class SmartWallet {
-  EOA? _owner;
+  _Mnemonic? _owner;
   late int _currentOwnerIndex;
   late final Map<int, String> _ownerIndexToAddress;
   late final Map<int, String> _ownerIndexToWalletAddress;
@@ -18,7 +20,7 @@ class SmartWallet {
       _ownerIndexToWalletAddress[_currentOwnerIndex]!;
 
   String get _currentPrivateKey => EOA
-      .fromMnemonic(_owner!.mnemonic, "m/44'/60'/0'/0/$_currentOwnerIndex")
+      .fromMnemonic(_owner!.phrase, "m/44'/60'/0'/0/$_currentOwnerIndex")
       .privateKey;
 
   List<String> get walletAddresses =>
@@ -29,7 +31,7 @@ class SmartWallet {
           .map((e) => e.value)
           .toList();
 
-  SmartWallet(this._owner) {
+  SmartWallet(String mnemonicPhrase) : _owner = _Mnemonic(mnemonicPhrase) {
     _ownerIndexToAddress = {};
     _ownerIndexToWalletAddress = {};
   }
@@ -47,7 +49,7 @@ class SmartWallet {
     var index =
         ((_ownerIndexToAddress.keys.toList()..sort()).lastOrNull ?? -1) + 1;
     var path = "m/44'/60'/0'/0/$index";
-    var ownerAddress = EOA.fromMnemonic(_owner!.mnemonic, path).address;
+    var ownerAddress = EOA.fromMnemonic(_owner!.phrase, path).address;
     _ownerIndexToAddress[index] = ownerAddress;
     if (switchToAdded) {
       _currentOwnerIndex = index;
@@ -74,7 +76,7 @@ class SmartWallet {
   }) async =>
       SmartWallet._(
         password != null
-            ? await EOA.fromEncryptedJson(map['encryptedOwner'], password)
+            ? await _Mnemonic.fromEncrypted(map['encryptedOwner'], password)
             : null,
         map['currentOwnerIndex'],
         Map.fromEntries(
@@ -135,5 +137,58 @@ class SmartWallet {
     return pk
         .signDigest(Uint8List.fromList(hex.decode(hash.substring(2))))
         .combined;
+  }
+}
+
+class _Mnemonic {
+  static final _macAlgo = Hmac.sha256();
+  // @@NOTE: Static fields with initializers are 'late' automatically.
+  static final _encryptionAlgo = AesCbc.with256bits(
+    macAlgorithm: _macAlgo,
+  );
+  static final _keyDerivationAlgo = Hkdf(
+    hmac: _macAlgo,
+    outputLength: _encryptionAlgo.secretKeyLength,
+  );
+  static final _nonce = utf8.encode(dotenv.env['HKDF_NONCE']!);
+
+  final String phrase;
+
+  _Mnemonic(this.phrase);
+
+  static Future<_Mnemonic> fromEncrypted(
+    String encryptedMnemonic,
+    String password,
+  ) async {
+    var key = await _keyDerivationAlgo.deriveKeyFromPassword(
+      password: password,
+      nonce: _nonce,
+    );
+
+    var encryptedMnemonicBox = SecretBox.fromConcatenation(
+      base64.decode(encryptedMnemonic),
+      nonceLength: _encryptionAlgo.nonceLength,
+      macLength: _macAlgo.macLength,
+    );
+
+    var phrase = await _encryptionAlgo.decryptString(
+      encryptedMnemonicBox,
+      secretKey: key,
+    );
+
+    return _Mnemonic(phrase);
+  }
+
+  Future<String> encrypt(String password) async {
+    var key = await _keyDerivationAlgo.deriveKeyFromPassword(
+      password: password,
+      nonce: _nonce,
+    );
+    var encryptedMnemonicBox = await _encryptionAlgo.encryptString(
+      phrase,
+      secretKey: key,
+    );
+
+    return base64.encode(encryptedMnemonicBox.concatenation());
   }
 }

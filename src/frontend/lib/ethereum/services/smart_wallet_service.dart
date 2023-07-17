@@ -16,7 +16,7 @@ class SmartWalletService {
 
   Future<SmartWallet> createOne() async {
     var owner = EOA.createRandom();
-    var wallet = SmartWallet(owner);
+    var wallet = SmartWallet(owner.mnemonic);
     int index = wallet.addOwnerAccount();
     var walletAddress = await _accountFactoryContract.getAddress(
       wallet.getOwnerAddress(index),
@@ -28,7 +28,7 @@ class SmartWalletService {
 
   Future<SmartWallet> createOneFromMnemonic(String mnemonic) async {
     var owner = EOA.fromMnemonic(mnemonic);
-    var wallet = SmartWallet(owner);
+    var wallet = SmartWallet(owner.mnemonic);
     int index = wallet.addOwnerAccount();
     var walletAddress = await _accountFactoryContract.getAddress(
       wallet.getOwnerAddress(index),
