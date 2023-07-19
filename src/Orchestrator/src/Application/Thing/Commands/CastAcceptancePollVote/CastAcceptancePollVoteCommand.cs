@@ -31,6 +31,7 @@ internal class CastAcceptancePollVoteCommandHandler :
 {
     private readonly ICurrentPrincipal _currentPrincipal;
     private readonly ISigner _signer;
+    private readonly IContractCaller _contractCaller;
     private readonly IFileStorage _fileStorage;
     private readonly IThingRepository _thingRepository;
     private readonly IAcceptancePollVoteRepository _voteRepository;
@@ -38,6 +39,7 @@ internal class CastAcceptancePollVoteCommandHandler :
     public CastAcceptancePollVoteCommandHandler(
         ICurrentPrincipal currentPrincipal,
         ISigner signer,
+        IContractCaller contractCaller,
         IFileStorage fileStorage,
         IThingRepository thingRepository,
         IAcceptancePollVoteRepository voteRepository
@@ -45,6 +47,7 @@ internal class CastAcceptancePollVoteCommandHandler :
     {
         _currentPrincipal = currentPrincipal;
         _signer = signer;
+        _contractCaller = contractCaller;
         _fileStorage = fileStorage;
         _thingRepository = thingRepository;
         _voteRepository = voteRepository;
@@ -66,16 +69,17 @@ internal class CastAcceptancePollVoteCommandHandler :
             };
         }
 
-        var result = _signer.RecoverFromNewAcceptancePollVoteMessage(command.Input, command.Signature);
-        if (result.IsError)
+        var recoveredAddress = _signer.RecoverFromNewAcceptancePollVoteMessage(command.Input, command.Signature);
+
+        var walletAddress = await _contractCaller.GetWalletAddressFor(recoveredAddress);
+        if (walletAddress.Substring(2).ToLower() != _currentPrincipal.Id)
         {
             return new()
             {
-                Error = result.Error
+                Error = new VoteError("Not the owner of the wallet")
             };
         }
 
-        // @@TODO: Check that result.Data == _currentPrincipal.Id
         // @@??: Check current block ?
 
         var castedAtUtc = DateTimeOffset
@@ -90,7 +94,10 @@ internal class CastAcceptancePollVoteCommandHandler :
         }
 
         var orchestratorSig = _signer.SignNewAcceptancePollVote(
-            command.Input, _currentPrincipal.Id!, command.Signature
+            command.Input,
+            walletAddress: walletAddress,
+            ownerAddress: recoveredAddress,
+            ownerSignature: command.Signature
         );
 
         var uploadResult = await _fileStorage.UploadJson(new
@@ -102,8 +109,9 @@ internal class CastAcceptancePollVoteCommandHandler :
                 Decision = command.Input.Decision.GetString(),
                 Reason = command.Input.Reason
             },
-            VoterId = _currentPrincipal.Id!, // @@TODO: EIP-55 encode
-            VoterSignature = command.Signature,
+            WalletAddress = walletAddress,
+            OwnerAddress = recoveredAddress,
+            OwnerSignature = command.Signature,
             OrchestratorSignature = orchestratorSig
         });
         if (uploadResult.IsError)

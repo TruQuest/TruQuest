@@ -1,5 +1,9 @@
 import 'package:rxdart/rxdart.dart';
 
+import '../../ethereum_js_interop.dart';
+import '../../ethereum/services/ethereum_api_service.dart';
+import '../../general/contracts/truquest_contract.dart';
+import '../../ethereum/models/im/user_operation.dart';
 import '../errors/wallet_locked_error.dart';
 import 'user_api_service.dart';
 import '../models/vm/user_vm.dart';
@@ -13,6 +17,8 @@ class UserService {
   final UserApiService _userApiService;
   final ServerConnector _serverConnector;
   final LocalStorage _localStorage;
+  final TruQuestContract _truQuestContract;
+  final EthereumApiService _ethereumApiService;
 
   SmartWallet? _wallet;
   SmartWallet? get wallet => _wallet;
@@ -30,6 +36,8 @@ class UserService {
     this._userApiService,
     this._serverConnector,
     this._localStorage,
+    this._truQuestContract,
+    this._ethereumApiService,
   ) {
     if (_localStorage.getString('SmartWallet') == null) {
       _reloadUser(null);
@@ -37,6 +45,7 @@ class UserService {
     }
 
     _smartWalletService.getFromLocalStorage(null).then((wallet) {
+      _walletAddressesChannel.add(wallet.walletAddresses);
       _reloadUser(wallet);
     });
   }
@@ -171,5 +180,76 @@ class UserService {
     wallet.switchCurrentToWalletsOwner(walletAddress);
     await _smartWalletService.updateAccountListInLocalStorage(wallet);
     _reloadUser(wallet);
+  }
+
+  Future depositFunds(int amount) async {
+    var abi = '''[
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          }
+        ],
+        "name": "balanceOf",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "spender",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "approve",
+        "outputs": [
+          {
+            "internalType": "bool",
+            "name": "",
+            "type": "bool"
+          }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      }
+    ]''';
+    var contract = Contract(
+      '0x19CFc85e3dffb66295695Bf48e06386CB1B5f320',
+      abi,
+      JsonRpcProvider('http://localhost:8545'),
+    );
+
+    var balance = await contract.read<BigInt>(
+      'balanceOf',
+      args: ['0x32D41E4e24F97ec7D52e3c43F8DbFe209CBd0e4c'],
+    );
+    print('**************** Balance: $balance');
+
+    // return;
+    var userOp = await UserOperation.create()
+        .from(_wallet!)
+        .action(_truQuestContract.depositFunds(amount))
+        .signed();
+
+    print('****************************');
+    print(userOp);
+
+    var userOpHash = await _ethereumApiService.sendUserOperation(userOp);
+    print('UserOp Hash: $userOpHash');
   }
 }

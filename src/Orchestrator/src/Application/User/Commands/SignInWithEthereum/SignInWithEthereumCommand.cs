@@ -43,13 +43,15 @@ internal class SignInWithEthereumCommandHandler :
     private readonly ITotpProvider _totpProvider;
     private readonly IUserRepository _userRepository;
     private readonly IAuthTokenProvider _authTokenProvider;
+    private readonly IContractCaller _contractCaller;
 
     public SignInWithEthereumCommandHandler(
         ILogger<SignInWithEthereumCommandHandler> logger,
         ISigner signer,
         ITotpProvider totpProvider,
         IUserRepository userRepository,
-        IAuthTokenProvider authTokenProvider
+        IAuthTokenProvider authTokenProvider,
+        IContractCaller contractCaller
     )
     {
         _logger = logger;
@@ -57,6 +59,7 @@ internal class SignInWithEthereumCommandHandler :
         _totpProvider = totpProvider;
         _userRepository = userRepository;
         _authTokenProvider = authTokenProvider;
+        _contractCaller = contractCaller;
     }
 
     public async Task<HandleResult<SignInWithEthereumResultVm>> Handle(
@@ -66,7 +69,14 @@ internal class SignInWithEthereumCommandHandler :
         var recoveredAddress = _signer.RecoverFromSiweMessage(command.Message, command.Signature);
         var walletAddress = _walletAddressRegex.Match(command.Message).Groups[1].Value;
 
-        // @@TODO: Check wallet address.
+        var walletAddressForOwner = await _contractCaller.GetWalletAddressFor(recoveredAddress);
+        if (walletAddress.ToLower() != walletAddressForOwner.ToLower())
+        {
+            return new()
+            {
+                Error = new UserError("Not the owner of the wallet")
+            };
+        }
 
         _logger.LogInformation("Owner: {Owner}\nWallet: {Wallet}", recoveredAddress, walletAddress);
 

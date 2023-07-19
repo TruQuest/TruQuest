@@ -95,6 +95,7 @@ internal class ContractEventListener : IContractEventListener
                 new EventLogProcessorHandler<ThingAssessmentVerifierLottery.ClaimedLotterySpotEvent>(WriteToChannel),
                 new EventLogProcessorHandler<ThingAssessmentVerifierLottery.JoinedLotteryEvent>(WriteToChannel),
                 new EventLogProcessorHandler<ThingAssessmentVerifierLottery.LotteryClosedWithSuccessEvent>(WriteToChannel),
+                // @@TODO: LotteryClosedInFailure
                 new EventLogProcessorHandler<AssessmentPoll.CastedVoteEvent>(WriteToChannel),
                 new EventLogProcessorHandler<AssessmentPoll.CastedVoteWithReasonEvent>(WriteToChannel),
                 new EventLogProcessorHandler<AssessmentPoll.PollFinalizedEvent>(WriteToChannel),

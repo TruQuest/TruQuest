@@ -10,11 +10,13 @@ namespace Application.Common.Interfaces;
 
 public interface ISigner
 {
-    Either<VoteError, string> RecoverFromNewAcceptancePollVoteMessage(NewAcceptancePollVoteIm input, string signature);
+    string RecoverFromNewAcceptancePollVoteMessage(NewAcceptancePollVoteIm input, string signature);
     Either<VoteError, string> RecoverFromNewAssessmentPollVoteMessage(NewAssessmentPollVoteIm input, string signature);
 
     string SignThing(Guid thingId);
-    string SignNewAcceptancePollVote(NewAcceptancePollVoteIm input, string voterId, string voterSignature);
+    string SignNewAcceptancePollVote(
+        NewAcceptancePollVoteIm input, string walletAddress, string ownerAddress, string ownerSignature
+    );
     string SignNewAssessmentPollVote(NewAssessmentPollVoteIm input, string voterId, string voterSignature);
     string SignAcceptancePollVoteAgg(
         Guid thingId,

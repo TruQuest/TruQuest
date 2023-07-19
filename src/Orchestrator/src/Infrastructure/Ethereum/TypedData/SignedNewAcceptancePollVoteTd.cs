@@ -1,14 +1,11 @@
-using Nethereum.ABI.FunctionEncoding.Attributes;
+using Application.Thing.Commands.CastAcceptancePollVote;
 
 namespace Infrastructure.Ethereum.TypedData;
 
-[Struct("SignedNewAcceptancePollVoteTd")]
 public class SignedNewAcceptancePollVoteTd
 {
-    [Parameter("tuple", "vote", 1, "NewAcceptancePollVoteTd")]
-    public NewAcceptancePollVoteTd Vote { get; init; }
-    [Parameter("string", "voterId", 2)]
-    public string VoterId { get; init; }
-    [Parameter("string", "voterSignature", 3)]
-    public string VoterSignature { get; init; }
+    public required NewAcceptancePollVoteIm Vote { get; init; }
+    public required string WalletAddress { get; init; }
+    public required string OwnerAddress { get; init; }
+    public required string OwnerSignature { get; init; }
 }

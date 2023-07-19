@@ -200,13 +200,13 @@ contract ThingAssessmentVerifierLottery {
 
     function connectToAcceptancePoll(
         address _acceptancePollAddress
-    ) external onlyTruQuest {
+    ) external onlyOrchestrator {
         s_acceptancePoll = AcceptancePoll(_acceptancePollAddress);
     }
 
     function connectToAssessmentPoll(
         address _assessmentPollAddress
-    ) external onlyTruQuest {
+    ) external onlyOrchestrator {
         s_assessmentPoll = AssessmentPoll(_assessmentPollAddress);
     }
 

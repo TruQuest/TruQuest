@@ -155,7 +155,7 @@ contract AssessmentPoll {
 
     function connectToThingAssessmentVerifierLottery(
         address _verifierLotteryAddress
-    ) external onlyTruQuest {
+    ) external onlyOrchestrator {
         s_verifierLottery = ThingAssessmentVerifierLottery(
             _verifierLotteryAddress
         );

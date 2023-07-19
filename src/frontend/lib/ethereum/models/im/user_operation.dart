@@ -162,9 +162,9 @@ class UserOperationBuilder {
       var fees = await _ethereumApiService.estimateUserOperationGas(_userOp);
 
       _userOp = _userOp.copyWith(
-        callGasLimit: fees!['callGasLimit']! * BigInt.two,
-        verificationGasLimit: fees['verificationGasLimit']! * BigInt.two,
-        preVerificationGas: fees['preVerificationGas']! * BigInt.two,
+        callGasLimit: fees!['callGasLimit']! * BigInt.from(4),
+        verificationGasLimit: fees['verificationGasLimit']! * BigInt.from(4),
+        preVerificationGas: fees['preVerificationGas']! * BigInt.from(4),
       );
     });
 
@@ -188,7 +188,7 @@ class UserOperationBuilder {
         maxPriorityFeeBid = minPriorityFeeBid;
       }
 
-      maxPriorityFeeBid = BigInt.zero;
+      // maxPriorityFeeBid = BigInt.zero;
       print(
         'Max priority fee bid: 0x${maxPriorityFeeBid.toRadixString(16)} WEI',
       );

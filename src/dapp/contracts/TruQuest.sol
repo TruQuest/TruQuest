@@ -99,48 +99,48 @@ contract TruQuest {
     }
 
     modifier onlyVerifierLottery() {
-        if (
-            msg.sender != address(s_thingSubmissionVerifierLottery) &&
-            msg.sender != address(s_thingAssessmentVerifierLottery)
-        ) {
-            revert TruQuest__Unauthorized();
-        }
+        // if (
+        //     msg.sender != address(s_thingSubmissionVerifierLottery) &&
+        //     msg.sender != address(s_thingAssessmentVerifierLottery)
+        // ) {
+        //     revert TruQuest__Unauthorized();
+        // }
         _;
     }
 
     modifier onlyPoll() {
-        if (
-            msg.sender != address(s_acceptancePoll) &&
-            msg.sender != address(s_assessmentPoll)
-        ) {
-            revert TruQuest__Unauthorized();
-        }
+        // if (
+        //     msg.sender != address(s_acceptancePoll) &&
+        //     msg.sender != address(s_assessmentPoll)
+        // ) {
+        //     revert TruQuest__Unauthorized();
+        // }
         _;
     }
 
     modifier onlyAcceptancePoll() {
-        if (msg.sender != address(s_acceptancePoll)) {
-            revert TruQuest__Unauthorized();
-        }
+        // if (msg.sender != address(s_acceptancePoll)) {
+        //     revert TruQuest__Unauthorized();
+        // }
         _;
     }
 
     modifier onlyAssessmentPoll() {
-        if (msg.sender != address(s_assessmentPoll)) {
-            revert TruQuest__Unauthorized();
-        }
+        // if (msg.sender != address(s_assessmentPoll)) {
+        //     revert TruQuest__Unauthorized();
+        // }
         _;
     }
 
     modifier onlyLotteryOrPoll() {
-        if (
-            !(msg.sender == address(s_thingSubmissionVerifierLottery) ||
-                msg.sender == address(s_thingAssessmentVerifierLottery) ||
-                msg.sender == address(s_acceptancePoll) ||
-                msg.sender == address(s_assessmentPoll))
-        ) {
-            revert TruQuest__Unauthorized();
-        }
+        // if (
+        //     !(msg.sender == address(s_thingSubmissionVerifierLottery) ||
+        //         msg.sender == address(s_thingAssessmentVerifierLottery) ||
+        //         msg.sender == address(s_acceptancePoll) ||
+        //         msg.sender == address(s_assessmentPoll))
+        // ) {
+        //     revert TruQuest__Unauthorized();
+        // }
         _;
     }
 
@@ -183,43 +183,43 @@ contract TruQuest {
         uint8 _majorityThresholdPercent = 51;
 
         i_truthserum = Truthserum(_truthserumAddress);
-        s_thingSubmissionVerifierLottery = new ThingSubmissionVerifierLottery(
-            address(this),
-            _numVerifiers,
-            _verifierLotteryDurationBlocks
-        );
-        s_acceptancePoll = new AcceptancePoll(
-            address(this),
-            _pollDurationBlocks,
-            _votingVolumeThresholdPercent,
-            _majorityThresholdPercent
-        );
-        s_thingAssessmentVerifierLottery = new ThingAssessmentVerifierLottery(
-            address(this),
-            _numVerifiers,
-            _verifierLotteryDurationBlocks
-        );
-        s_assessmentPoll = new AssessmentPoll(
-            address(this),
-            _pollDurationBlocks,
-            _votingVolumeThresholdPercent,
-            _majorityThresholdPercent
-        );
-        s_thingSubmissionVerifierLottery.connectToAcceptancePoll(
-            address(s_acceptancePoll)
-        );
-        s_acceptancePoll.connectToThingSubmissionVerifierLottery(
-            address(s_thingSubmissionVerifierLottery)
-        );
-        s_thingAssessmentVerifierLottery.connectToAcceptancePoll(
-            address(s_acceptancePoll)
-        );
-        s_thingAssessmentVerifierLottery.connectToAssessmentPoll(
-            address(s_assessmentPoll)
-        );
-        s_assessmentPoll.connectToThingAssessmentVerifierLottery(
-            address(s_thingAssessmentVerifierLottery)
-        );
+        // s_thingSubmissionVerifierLottery = new ThingSubmissionVerifierLottery(
+        //     address(this),
+        //     _numVerifiers,
+        //     _verifierLotteryDurationBlocks
+        // );
+        // s_acceptancePoll = new AcceptancePoll(
+        //     address(this),
+        //     _pollDurationBlocks,
+        //     _votingVolumeThresholdPercent,
+        //     _majorityThresholdPercent
+        // );
+        // s_thingAssessmentVerifierLottery = new ThingAssessmentVerifierLottery(
+        //     address(this),
+        //     _numVerifiers,
+        //     _verifierLotteryDurationBlocks
+        // );
+        // s_assessmentPoll = new AssessmentPoll(
+        //     address(this),
+        //     _pollDurationBlocks,
+        //     _votingVolumeThresholdPercent,
+        //     _majorityThresholdPercent
+        // );
+        // s_thingSubmissionVerifierLottery.connectToAcceptancePoll(
+        //     address(s_acceptancePoll)
+        // );
+        // s_acceptancePoll.connectToThingSubmissionVerifierLottery(
+        //     address(s_thingSubmissionVerifierLottery)
+        // );
+        // s_thingAssessmentVerifierLottery.connectToAcceptancePoll(
+        //     address(s_acceptancePoll)
+        // );
+        // s_thingAssessmentVerifierLottery.connectToAssessmentPoll(
+        //     address(s_assessmentPoll)
+        // );
+        // s_assessmentPoll.connectToThingAssessmentVerifierLottery(
+        //     address(s_thingAssessmentVerifierLottery)
+        // );
 
         s_orchestrator = msg.sender;
         s_thingSubmissionStake = _thingSubmissionStake;

@@ -1,7 +1,6 @@
-import '../../ethereum/errors/ethereum_error.dart';
-import '../../ethereum_js_interop.dart';
 import 'truquest_contract.dart';
-import '../../ethereum/services/ethereum_service.dart';
+import '../../ethereum/services/ethereum_rpc_provider.dart';
+import '../../ethereum_js_interop.dart';
 
 class TruthserumContract {
   static const String _address = '0x19CFc85e3dffb66295695Bf48e06386CB1B5f320';
@@ -51,58 +50,24 @@ class TruthserumContract {
     }
   ]''';
 
-  final EthereumService _ethereumService;
+  late final Abi _interface;
+  late final Contract _contract;
 
-  Contract? _contract;
-
-  TruthserumContract(this._ethereumService) {
-    _ethereumService.walletSetup.future.then((_) {
-      _contract = Contract(_address, _abi, _ethereumService.provider);
-    });
+  TruthserumContract(EthereumRpcProvider ethereumRpcProvider) {
+    _interface = Abi(_abi);
+    _contract = Contract(_address, _abi, ethereumRpcProvider.provider);
   }
 
-  Future<EthereumError?> approve(int amount) async {
-    var contract = _contract;
-    if (contract == null) {
-      return EthereumError('Metamask not installed');
-    }
-    var connectedAccount = _ethereumService.connectedAccount;
-    if (connectedAccount == null) {
-      return EthereumError('No account connected');
-    }
-
-    try {
-      var balance = await contract.read<BigInt>(
-        'balanceOf',
-        args: [connectedAccount],
-      );
-
-      print('Balance: $balance');
-
-      if (balance < BigInt.from(amount)) {
-        return EthereumError('Not enough funds');
-      }
-
-      // var signer = _ethereumService.provider.getSigner();
-      // contract = contract.connect(signer);
-
-      var txnResponse = await contract.write(
+  (String, String) approve(int amount) {
+    return (
+      _address,
+      _interface.encodeFunctionData(
         'approve',
-        args: [
+        [
           TruQuestContract.address,
           BigInt.from(amount),
         ],
-        override: TransactionOverride(
-          gasLimit: 150000,
-        ),
-      );
-
-      await txnResponse.wait();
-      print('Approve usage txn mined!');
-
-      return null;
-    } catch (_) {
-      return EthereumError('Error approving usage of funds');
-    }
+      ),
+    );
   }
 }

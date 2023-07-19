@@ -4,26 +4,47 @@ module.exports = async ({ getNamedAccounts, getChainId }) => {
   const accounts = await getNamedAccounts();
   const chainId = await getChainId();
 
-  var faucet = ethers.Wallet.fromMnemonic(
-    "test test test test test test test test test test test junk"
-  );
-  faucet = faucet.connect(ethers.provider);
+  if (chainId == 1337) {
+    console.log("We are on Ganache!");
 
-  // var address = accounts["deployer"];
-  var address = "0x48469b94EefB39a000617b2FFCd6EA6582f4aFBB";
-  console.log(address);
-  var txnResponse = await faucet.sendTransaction({
-    to: address,
-    value: ethers.utils.parseEther("0.1"),
-  });
-  await txnResponse.wait();
+    var faucet = ethers.Wallet.fromMnemonic(
+      "test test test test test test test test test test test junk"
+    );
+    faucet = faucet.connect(ethers.provider);
 
-  var balance = await ethers.provider.getBalance(address);
-  console.log(`Balance: ${balance}`);
+    var address = accounts["deployer"];
+    var txnResponse = await faucet.sendTransaction({
+      to: address,
+      value: ethers.utils.parseEther("0.1"),
+    });
+    await txnResponse.wait();
 
-  return;
+    var balance = await ethers.provider.getBalance(address);
+    console.log(`deployer balance: ${balance}`);
 
-  if (chainId == 901) {
+    var walletAddresses = [
+      "0x20FD69D46DC690ef926d209FF016398D6613F168",
+      "0x29b9B8924cD0c6eae70981f611f3A2a07AC61f16",
+      "0xFC2a6bE9D03eb0F4Db06EaBCac63be3f5002A09B",
+      "0x0aB37d130deD0a85fCf2d472ac7aef1650C3CaaE",
+      "0x881606962701F9483d1D5FAD45d48C27Ec9698E7",
+      "0xaB45E127Fd54B2302E0B1c76d0444b50E12D6d1B",
+      "0x297c19fb45f0a4022c6D7030f21696207e51B9B8",
+      "0x9914DADEe4De641Da1f124Fc6026535be249ECc8",
+    ];
+
+    for (var i = 0; i < walletAddresses.length; ++i) {
+      var address = walletAddresses[i];
+      var txnResponse = await faucet.sendTransaction({
+        to: address,
+        value: ethers.utils.parseEther("0.1"),
+      });
+      await txnResponse.wait();
+
+      var balance = await ethers.provider.getBalance(address);
+      console.log(`${address} balance: ${balance}`);
+    }
+  } else if (chainId == 901) {
     console.log("We are on Optimism Local!");
     var faucet = new ethers.Wallet(
       "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
@@ -60,7 +81,7 @@ module.exports = async ({ getNamedAccounts, getChainId }) => {
     balance = await ethers.provider.getBalance(address);
     console.log(`proposer balance: ${balance}`);
 
-    for (var i = 1; i <= 14; ++i) {
+    for (var i = 1; i <= 10; ++i) {
       var address = accounts["verifier" + i];
       var txnResponse = await faucet.sendTransaction({
         to: address,

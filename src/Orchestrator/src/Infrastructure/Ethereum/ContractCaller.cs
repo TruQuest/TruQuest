@@ -16,6 +16,7 @@ internal class ContractCaller : IContractCaller
     private readonly ILogger<ContractCaller> _logger;
     private readonly AccountProvider _accountProvider;
     private readonly Web3 _web3;
+    private readonly string _simpleAccountFactoryAddress;
     private readonly string _thingSubmissionVerifierLotteryAddress;
     private readonly string _acceptancePollAddress;
     private readonly string _thingAssessmentVerifierLotteryAddress;
@@ -33,11 +34,23 @@ internal class ContractCaller : IContractCaller
         var network = configuration["Ethereum:Network"]!;
         var orchestrator = _accountProvider.GetAccount("Orchestrator");
         _web3 = new Web3(orchestrator, configuration[$"Ethereum:Networks:{network}:URL"]);
+        _simpleAccountFactoryAddress = configuration[$"Ethereum:Contracts:{network}:SimpleAccountFactory:Address"]!;
         _thingSubmissionVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingSubmissionVerifierLottery:Address"]!;
         _acceptancePollAddress = configuration[$"Ethereum:Contracts:{network}:AcceptancePoll:Address"]!;
         _thingAssessmentVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingAssessmentVerifierLottery:Address"]!;
         _assessmentPollAddress = configuration[$"Ethereum:Contracts:{network}:AssessmentPoll:Address"]!;
     }
+
+    public Task<string> GetWalletAddressFor(string ownerAddress) => _web3.Eth
+        .GetContractQueryHandler<GetAddressMessage>()
+        .QueryAsync<string>(
+            _simpleAccountFactoryAddress,
+            new()
+            {
+                Owner = ownerAddress,
+                Salt = 0
+            }
+        );
 
     public Task<byte[]> ComputeHashForThingSubmissionVerifierLottery(byte[] data)
     {

@@ -1,13 +1,10 @@
 const { ethers } = require("hardhat");
 
-module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
+module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
-  const chainId = await getChainId();
 
-  return;
-
-  await deploy("Dummy", {
+  await deploy("Truthserum", {
     from: deployer,
     log: true,
     waitConfirmations: 1,

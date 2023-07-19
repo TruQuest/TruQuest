@@ -197,7 +197,7 @@ class TruQuestContract {
       address,
       _interface.encodeFunctionData(
         'deposit',
-        [BigInt.from(amount)],
+        [BigNumber.from(amount.toString())],
       )
     );
   }

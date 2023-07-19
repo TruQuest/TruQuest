@@ -140,7 +140,7 @@ contract AcceptancePoll {
 
     function connectToThingSubmissionVerifierLottery(
         address _verifierLotteryAddress
-    ) external onlyTruQuest {
+    ) external onlyOrchestrator {
         s_verifierLottery = ThingSubmissionVerifierLottery(
             _verifierLotteryAddress
         );

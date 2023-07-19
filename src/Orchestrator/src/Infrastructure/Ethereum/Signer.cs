@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 using Microsoft.Extensions.Configuration;
 
 using Nethereum.ABI.EIP712;
@@ -25,6 +27,7 @@ internal class Signer : ISigner
     private readonly DomainWithSalt _domain;
     private readonly EthECKey _orchestratorPrivateKey;
     private readonly string _orchestratorAddress;
+    private readonly JsonSerializerOptions _jsonSerializerOptions;
 
     public Signer(
         IConfiguration configuration,
@@ -51,6 +54,11 @@ internal class Signer : ISigner
         var orchestrator = accountProvider.GetAccount("Orchestrator");
         _orchestratorPrivateKey = new EthECKey(orchestrator.PrivateKey);
         _orchestratorAddress = orchestrator.Address;
+
+        _jsonSerializerOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
     }
 
     private TypedData<DomainWithSalt> _getTypedDataDefinition(params Type[] types)
@@ -65,22 +73,12 @@ internal class Signer : ISigner
         };
     }
 
-    public Either<VoteError, string> RecoverFromNewAcceptancePollVoteMessage(
+    public string RecoverFromNewAcceptancePollVoteMessage(
         NewAcceptancePollVoteIm input, string signature
-    )
-    {
-        var td = new NewAcceptancePollVoteTd
-        {
-            ThingId = input.ThingId.ToString(),
-            CastedAt = input.CastedAt,
-            Decision = input.Decision.GetString(),
-            Reason = input.Reason
-        };
-        var tdDefinition = _getTypedDataDefinition(typeof(NewAcceptancePollVoteTd));
-        var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
-
-        return address.Substring(2);
-    }
+    ) => _personalSigner.EncodeUTF8AndEcRecover(
+            JsonSerializer.Serialize(input, _jsonSerializerOptions),
+            signature
+        );
 
     public Either<VoteError, string> RecoverFromNewAssessmentPollVoteMessage(
         NewAssessmentPollVoteIm input, string signature
@@ -89,7 +87,7 @@ internal class Signer : ISigner
         var td = new NewAssessmentPollVoteTd
         {
             ThingId = input.ThingId.ToString(),
-            SettlementProposalId = input.SettlementProposalId.ToString(),
+            SettlementProposalId = input.SettlementProposalId!.Value.ToString(),
             CastedAt = input.CastedAt,
             Decision = input.Decision.GetString(),
             Reason = input.Reason
@@ -97,7 +95,7 @@ internal class Signer : ISigner
         var tdDefinition = _getTypedDataDefinition(typeof(NewAssessmentPollVoteTd));
         var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
 
-        return address.Substring(2);
+        return address;
     }
 
     public string SignThing(Guid thingId)
@@ -112,27 +110,23 @@ internal class Signer : ISigner
         return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);
     }
 
-    public string SignNewAcceptancePollVote(NewAcceptancePollVoteIm input, string voterId, string voterSignature)
+    public string SignNewAcceptancePollVote(
+        NewAcceptancePollVoteIm input, string walletAddress,
+        string ownerAddress, string ownerSignature
+    )
     {
         var td = new SignedNewAcceptancePollVoteTd
         {
-            Vote = new NewAcceptancePollVoteTd
-            {
-                ThingId = input.ThingId.ToString(),
-                CastedAt = input.CastedAt,
-                Decision = input.Decision.GetString(),
-                Reason = input.Reason
-            },
-            VoterId = voterId,
-            VoterSignature = voterSignature
+            Vote = input,
+            WalletAddress = walletAddress,
+            OwnerAddress = ownerAddress,
+            OwnerSignature = ownerSignature
         };
-        var tdDefinition = _getTypedDataDefinition(
-            typeof(SignedNewAcceptancePollVoteTd),
-            typeof(NewAcceptancePollVoteTd)
-        );
-        tdDefinition.SetMessage(td);
 
-        return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);
+        return _personalSigner.EncodeUTF8AndSign(
+            JsonSerializer.Serialize(td, _jsonSerializerOptions),
+            _orchestratorPrivateKey
+        );
     }
 
     public string SignNewAssessmentPollVote(NewAssessmentPollVoteIm input, string voterId, string voterSignature)
@@ -142,7 +136,7 @@ internal class Signer : ISigner
             Vote = new NewAssessmentPollVoteTd
             {
                 ThingId = input.ThingId.ToString(),
-                SettlementProposalId = input.SettlementProposalId.ToString(),
+                SettlementProposalId = input.SettlementProposalId!.Value.ToString(),
                 CastedAt = input.CastedAt,
                 Decision = input.Decision.GetString(),
                 Reason = input.Reason
@@ -168,7 +162,7 @@ internal class Signer : ISigner
     {
         var td = new SignedAcceptancePollVoteAggTd
         {
-            ThingId = thingId.ToString(),
+            ThingId = thingId,
             EndBlock = endBlock,
             OffChainVotes = offChainVotes
                 .Select(v => new OffChainAcceptancePollVoteTd
@@ -188,14 +182,11 @@ internal class Signer : ISigner
                 })
                 .ToList()
         };
-        var tdDefinition = _getTypedDataDefinition(
-            typeof(SignedAcceptancePollVoteAggTd),
-            typeof(OffChainAcceptancePollVoteTd),
-            typeof(OnChainAcceptancePollVoteTd)
-        );
-        tdDefinition.SetMessage(td);
 
-        return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);
+        return _personalSigner.EncodeUTF8AndSign(
+            JsonSerializer.Serialize(td, _jsonSerializerOptions),
+            _orchestratorPrivateKey
+        );
     }
 
     public string SignSettlementProposal(Guid thingId, Guid proposalId)

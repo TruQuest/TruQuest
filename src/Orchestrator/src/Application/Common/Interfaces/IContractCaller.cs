@@ -4,6 +4,7 @@ namespace Application.Common.Interfaces;
 
 public interface IContractCaller
 {
+    Task<string> GetWalletAddressFor(string ownerAddress);
     Task<byte[]> ComputeHashForThingSubmissionVerifierLottery(byte[] data);
     Task<long> InitThingSubmissionVerifierLottery(byte[] thingId, byte[] dataHash, byte[] userXorDataHash);
     Task<long> GetThingSubmissionVerifierLotteryInitBlock(byte[] thingId);
