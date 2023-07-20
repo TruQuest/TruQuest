@@ -39,3 +39,15 @@ class AddAccountFailureVm extends UserResultVm {
 }
 
 class SwitchAccountSuccessVm extends UserResultVm {}
+
+class ApproveFundsUsageFailureVm extends UserResultVm {
+  final Error error;
+
+  ApproveFundsUsageFailureVm({required this.error});
+}
+
+class DepositFundsFailureVm extends UserResultVm {
+  final Error error;
+
+  DepositFundsFailureVm({required this.error});
+}

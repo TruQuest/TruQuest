@@ -38,6 +38,10 @@ class UserBloc extends Bloc<UserAction> {
         _addAccount(action);
       } else if (action is SwitchAccount) {
         _switchAccount(action);
+      } else if (action is ApproveFundsUsage) {
+        _approveFundsUsage(action);
+      } else if (action is DepositFunds) {
+        _depositFunds(action);
       }
     });
 
@@ -96,5 +100,12 @@ class UserBloc extends Bloc<UserAction> {
   void _switchAccount(SwitchAccount action) async {
     await _userService.switchAccount(action.walletAddress);
     action.complete(SwitchAccountSuccessVm());
+  }
+
+  void _approveFundsUsage(ApproveFundsUsage action) async {}
+
+  void _depositFunds(DepositFunds action) async {
+    var error = await _userService.depositFunds(action.amount);
+    action.complete(error != null ? DepositFundsFailureVm(error: error) : null);
   }
 }

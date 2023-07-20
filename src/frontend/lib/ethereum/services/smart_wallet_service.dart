@@ -9,6 +9,9 @@ class SmartWalletService {
   final LocalStorage _localStorage;
   final IAccountFactoryContract _accountFactoryContract;
 
+  SmartWallet? _wallet;
+  SmartWallet? get wallet => _wallet;
+
   SmartWalletService(
     this._localStorage,
     this._accountFactoryContract,
@@ -48,13 +51,19 @@ class SmartWalletService {
       'SmartWallet',
       jsonEncode(encryptedWalletJson),
     );
+    _wallet = wallet..lock();
   }
 
-  Future<SmartWallet> getFromLocalStorage(String? password) {
+  Future<SmartWallet> getFromLocalStorage(String? password) async {
     var encryptedWalletJson = jsonDecode(
       _localStorage.getString('SmartWallet')!,
     );
-    return SmartWallet.fromMap(encryptedWalletJson, password: password);
+    _wallet = await SmartWallet.fromMap(
+      encryptedWalletJson,
+      password: password,
+    );
+
+    return _wallet!;
   }
 
   Future<String> getWalletAddress(String ownerAddress) =>

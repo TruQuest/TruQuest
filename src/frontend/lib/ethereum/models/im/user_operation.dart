@@ -22,6 +22,9 @@ class UserOperation {
   final String paymasterAndData;
   final String signature;
 
+  BigInt get totalProvisionedGas =>
+      callGasLimit + verificationGasLimit + preVerificationGas;
+
   UserOperation({
     required this.sender,
     required this.nonce,
@@ -54,7 +57,7 @@ class UserOperation {
       };
 
   @override
-  String toString() => jsonEncode(toJson());
+  String toString() => JsonEncoder.withIndent('  ').convert(toJson());
 
   List<dynamic> toList() => [
         sender,
@@ -107,6 +110,10 @@ class UserOperationBuilder {
 
   late UserOperation _userOp;
 
+  double _preVerificationGasMultiplier = 1;
+  double _verificationGasLimitMultiplier = 1;
+  double _callGasLimitMultiplier = 1;
+
   final List<Future Function()> _tasks = [];
 
   UserOperationBuilder(
@@ -143,6 +150,18 @@ class UserOperationBuilder {
     return this;
   }
 
+  UserOperationBuilder withEstimatedGasLimitsMultipliers({
+    double preVerificationGasMultiplier = 1,
+    double verificationGasLimitMultiplier = 1,
+    double callGasLimitMultiplier = 1,
+  }) {
+    _preVerificationGasMultiplier = preVerificationGasMultiplier;
+    _verificationGasLimitMultiplier = verificationGasLimitMultiplier;
+    _callGasLimitMultiplier = callGasLimitMultiplier;
+
+    return this;
+  }
+
   UserOperationBuilder _withEstimatedGasLimits() {
     _tasks.add(() async {
       _userOp = UserOperation(
@@ -160,11 +179,30 @@ class UserOperationBuilder {
       );
 
       var fees = await _ethereumApiService.estimateUserOperationGas(_userOp);
+      var (preVerificationGas, verificationGasLimit, callGasLimit) = fees!;
+
+      print('PreVerificationGas: $preVerificationGas');
+      preVerificationGas = BigInt.from(
+        preVerificationGas.toDouble() * _preVerificationGasMultiplier,
+      );
+      print('PreVerificationGas [Provisioned]: $preVerificationGas');
+
+      print('VerificationGasLimit: $verificationGasLimit');
+      verificationGasLimit = BigInt.from(
+        verificationGasLimit.toDouble() * _verificationGasLimitMultiplier,
+      );
+      print('VerificationGasLimit [Provisioned]: $verificationGasLimit');
+
+      print('CallGasLimit: $callGasLimit');
+      callGasLimit = BigInt.from(
+        callGasLimit.toDouble() * _callGasLimitMultiplier,
+      );
+      print('CallGasLimit [Provisioned]: $callGasLimit');
 
       _userOp = _userOp.copyWith(
-        callGasLimit: fees!['callGasLimit']! * BigInt.from(4),
-        verificationGasLimit: fees['verificationGasLimit']! * BigInt.from(4),
-        preVerificationGas: fees['preVerificationGas']! * BigInt.from(4),
+        callGasLimit: callGasLimit,
+        verificationGasLimit: verificationGasLimit,
+        preVerificationGas: preVerificationGas,
       );
     });
 
@@ -206,7 +244,6 @@ class UserOperationBuilder {
               _userOp.callGasLimit) *
           _userOp.maxFeePerGas;
 
-      print('Estimated gas cost: $estimatedGasCost WEI');
       print(
         'Estimated gas cost: ${formatUnits(BigNumber.from(estimatedGasCost.toString()))} ETH',
       );

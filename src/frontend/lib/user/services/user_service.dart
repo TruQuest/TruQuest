@@ -1,9 +1,7 @@
 import 'package:rxdart/rxdart.dart';
 
-import '../../ethereum_js_interop.dart';
-import '../../ethereum/services/ethereum_api_service.dart';
+import '../../ethereum/services/user_operation_service.dart';
 import '../../general/contracts/truquest_contract.dart';
-import '../../ethereum/models/im/user_operation.dart';
 import '../errors/wallet_locked_error.dart';
 import 'user_api_service.dart';
 import '../models/vm/user_vm.dart';
@@ -11,17 +9,15 @@ import '../../ethereum/models/vm/smart_wallet.dart';
 import '../../ethereum/services/smart_wallet_service.dart';
 import '../../general/services/local_storage.dart';
 import '../../general/services/server_connector.dart';
+import '../../general/errors/error.dart';
 
 class UserService {
   final SmartWalletService _smartWalletService;
   final UserApiService _userApiService;
   final ServerConnector _serverConnector;
   final LocalStorage _localStorage;
+  final UserOperationService _userOperationService;
   final TruQuestContract _truQuestContract;
-  final EthereumApiService _ethereumApiService;
-
-  SmartWallet? _wallet;
-  SmartWallet? get wallet => _wallet;
 
   final _currentUserChangedEventChannel = BehaviorSubject<UserVm>();
   Stream<UserVm> get currentUserChanged$ =>
@@ -36,8 +32,8 @@ class UserService {
     this._userApiService,
     this._serverConnector,
     this._localStorage,
+    this._userOperationService,
     this._truQuestContract,
-    this._ethereumApiService,
   ) {
     if (_localStorage.getString('SmartWallet') == null) {
       _reloadUser(null);
@@ -46,21 +42,19 @@ class UserService {
 
     _smartWalletService.getFromLocalStorage(null).then((wallet) {
       _walletAddressesChannel.add(wallet.walletAddresses);
-      _reloadUser(wallet);
+      _reloadUser(wallet.currentWalletAddress);
     });
   }
 
-  void _reloadUser(SmartWallet? wallet) {
-    _wallet = wallet;
+  void _reloadUser(String? currentWalletAddress) {
     String? userId;
     String? username;
     List<String>? userData;
-    if (wallet == null ||
-        (userData = _localStorage.getStrings(wallet.currentWalletAddress)) ==
-            null) {
+    if (currentWalletAddress == null ||
+        (userData = _localStorage.getStrings(currentWalletAddress)) == null) {
       _serverConnector.connectToHub(username, null);
     } else {
-      userId = wallet.currentWalletAddress.substring(2).toLowerCase();
+      userId = currentWalletAddress.substring(2).toLowerCase();
       username = userData!.last;
       _serverConnector.connectToHub(username, userData.first);
     }
@@ -68,7 +62,7 @@ class UserService {
     _currentUserChangedEventChannel.add(UserVm(
       id: userId,
       username: username,
-      walletAddress: wallet?.currentWalletAddress,
+      walletAddress: currentWalletAddress,
     ));
   }
 
@@ -91,10 +85,9 @@ class UserService {
     // have previously unlocked it.
     // @@TODO: Handle invalid password.
     var wallet = await _smartWalletService.getFromLocalStorage(password);
+    var currentWalletAddress = wallet.currentWalletAddress;
 
-    var nonce = await _userApiService.getNonceForSiwe(
-      wallet.currentWalletAddress,
-    );
+    var nonce = await _userApiService.getNonceForSiwe(currentWalletAddress);
     var domain = 'truquest.io';
     var statement =
         'I accept the TruQuest Terms of Service: https://truquest.io/tos';
@@ -107,7 +100,7 @@ class UserService {
     var nowWithoutMicroseconds = now.substring(0, indexOfDot + 4) + 'Z';
     var message =
         '$domain wants you to sign in with your Ethereum ERC-4337 account:\n'
-        '${wallet.currentWalletAddress}\n\n'
+        '$currentWalletAddress\n\n'
         '$statement\n\n'
         'URI: $uri\n'
         'Version: $version\n'
@@ -123,17 +116,18 @@ class UserService {
     );
 
     await _localStorage.setStrings(
-      wallet.currentWalletAddress,
+      currentWalletAddress,
       [siweResult.token, siweResult.username],
     );
 
     _walletAddressesChannel.add(wallet.walletAddresses);
 
-    _reloadUser(wallet);
+    _reloadUser(currentWalletAddress);
   }
 
   Future addEmail(String email) async {
-    if (_wallet?.locked ?? true) {
+    var wallet = _smartWalletService.wallet;
+    if (wallet?.locked ?? true) {
       print('Smart Wallet not unlocked');
       return;
     }
@@ -142,7 +136,8 @@ class UserService {
   }
 
   Future confirmEmail(String confirmationToken) async {
-    if (_wallet?.locked ?? true) {
+    var wallet = _smartWalletService.wallet;
+    if (wallet?.locked ?? true) {
       print('Smart Wallet not unlocked');
       return;
     }
@@ -152,12 +147,11 @@ class UserService {
 
   Future unlockWallet(String password) async {
     // @@TODO: Handle invalid password.
-    var wallet = await _smartWalletService.getFromLocalStorage(password);
-    _reloadUser(wallet);
+    await _smartWalletService.getFromLocalStorage(password);
   }
 
   Future<WalletLockedError?> addAccount() async {
-    var wallet = _wallet!;
+    var wallet = _smartWalletService.wallet!;
     if (wallet.locked) {
       return WalletLockedError();
     }
@@ -176,80 +170,22 @@ class UserService {
   }
 
   Future switchAccount(String walletAddress) async {
-    var wallet = _wallet!;
+    var wallet = _smartWalletService.wallet!;
     wallet.switchCurrentToWalletsOwner(walletAddress);
     await _smartWalletService.updateAccountListInLocalStorage(wallet);
-    _reloadUser(wallet);
+    _reloadUser(wallet.currentWalletAddress);
   }
 
-  Future depositFunds(int amount) async {
-    var abi = '''[
-      {
-        "inputs": [
-          {
-            "internalType": "address",
-            "name": "account",
-            "type": "address"
-          }
-        ],
-        "name": "balanceOf",
-        "outputs": [
-          {
-            "internalType": "uint256",
-            "name": "",
-            "type": "uint256"
-          }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          {
-            "internalType": "address",
-            "name": "spender",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount",
-            "type": "uint256"
-          }
-        ],
-        "name": "approve",
-        "outputs": [
-          {
-            "internalType": "bool",
-            "name": "",
-            "type": "bool"
-          }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      }
-    ]''';
-    var contract = Contract(
-      '0x19CFc85e3dffb66295695Bf48e06386CB1B5f320',
-      abi,
-      JsonRpcProvider('http://localhost:8545'),
+  Future<Error?> depositFunds(int amount) async {
+    var wallet = _smartWalletService.wallet!;
+    if (wallet.locked) {
+      return WalletLockedError();
+    }
+
+    return await _userOperationService.send(
+      from: wallet,
+      target: TruQuestContract.address,
+      action: _truQuestContract.depositFunds(amount),
     );
-
-    var balance = await contract.read<BigInt>(
-      'balanceOf',
-      args: ['0x32D41E4e24F97ec7D52e3c43F8DbFe209CBd0e4c'],
-    );
-    print('**************** Balance: $balance');
-
-    // return;
-    var userOp = await UserOperation.create()
-        .from(_wallet!)
-        .action(_truQuestContract.depositFunds(amount))
-        .signed();
-
-    print('****************************');
-    print(userOp);
-
-    var userOpHash = await _ethereumApiService.sendUserOperation(userOp);
-    print('UserOp Hash: $userOpHash');
   }
 }

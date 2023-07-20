@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../ethereum/bloc/ethereum_actions.dart';
-import '../../ethereum/bloc/ethereum_bloc.dart';
+import '../../user/errors/wallet_locked_error.dart';
+import '../../user/bloc/user_actions.dart';
+import '../../user/bloc/user_bloc.dart';
 import 'swipe_button.dart';
 import '../../widget_extensions.dart';
+import 'unlock_wallet_dialog.dart';
 
 class DepositStepper extends StatefulWidget {
   const DepositStepper({super.key});
@@ -14,7 +16,7 @@ class DepositStepper extends StatefulWidget {
 }
 
 class _DepositStepperState extends StateX<DepositStepper> {
-  late final _ethereumBloc = use<EthereumBloc>();
+  late final _userBloc = use<UserBloc>();
 
   final _approveController = TextEditingController();
   final _depositController = TextEditingController();
@@ -58,7 +60,7 @@ class _DepositStepperState extends StateX<DepositStepper> {
               var action = ApproveFundsUsage(
                 amount: int.parse(_approveController.text),
               );
-              _ethereumBloc.dispatch(action);
+              _userBloc.dispatch(action);
 
               var failure = await action.result;
               if (failure == null) {
@@ -68,11 +70,29 @@ class _DepositStepperState extends StateX<DepositStepper> {
               return failure == null;
             }
 
-            _ethereumBloc.dispatch(
-              DepositFunds(amount: int.parse(_depositController.text)),
-            );
+            var amountToDeposit = int.parse(_depositController.text);
+            var action = DepositFunds(amount: amountToDeposit);
+            _userBloc.dispatch(action);
 
-            return true;
+            var failure = await action.result;
+            if (failure != null && failure.error is WalletLockedError) {
+              if (context.mounted) {
+                var unlocked = await showDialog<bool>(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) => UnlockWalletDialog(),
+                );
+
+                if (unlocked != null && unlocked) {
+                  action = DepositFunds(amount: amountToDeposit);
+                  _userBloc.dispatch(action);
+
+                  failure = await action.result;
+                }
+              }
+            }
+
+            return failure == null;
           },
         ),
         onStepContinue: () => setState(() => _currentStep = 1),

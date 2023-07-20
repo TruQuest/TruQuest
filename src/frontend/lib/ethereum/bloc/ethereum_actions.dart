@@ -24,16 +24,3 @@ class ConnectEthereumAccount
 class WatchTruthserum extends EthereumAction {
   const WatchTruthserum();
 }
-
-class ApproveFundsUsage
-    extends EthereumActionAwaitable<ApproveFundsUsageFailureVm?> {
-  final int amount;
-
-  ApproveFundsUsage({required this.amount});
-}
-
-class DepositFunds extends EthereumAction {
-  final int amount;
-
-  const DepositFunds({required this.amount});
-}

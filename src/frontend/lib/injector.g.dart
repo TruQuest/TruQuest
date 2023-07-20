@@ -17,18 +17,18 @@ class _$Injector extends Injector {
           c<UserApiService>(),
           c<ServerConnector>(),
           c<LocalStorage>(),
-          c<TruQuestContract>(),
-          c<EthereumApiService>()))
-      ..registerSingleton((c) => EthereumBloc(c<UserService>()))
+          c<UserOperationService>(),
+          c<TruQuestContract>()))
+      ..registerSingleton((c) => EthereumBloc())
       ..registerSingleton((c) => EthereumService(c<LocalStorage>()))
       ..registerSingleton((c) => ServerConnector())
       ..registerSingleton((c) => UserApiService(c<ServerConnector>()))
       ..registerSingleton((c) => ThingApiService(c<ServerConnector>()))
       ..registerSingleton((c) => ThingService(
           c<ThingApiService>(),
-          c<UserService>(),
+          c<SmartWalletService>(),
+          c<EthereumRpcProvider>(),
           c<EthereumApiService>(),
-          c<EthereumService>(),
           c<TruQuestContract>(),
           c<ThingSubmissionVerifierLotteryContract>(),
           c<AcceptancePollContract>()))
@@ -43,9 +43,10 @@ class _$Injector extends Injector {
       ..registerSingleton((c) => PageContext(c<LocalStorage>()))
       ..registerSingleton((c) => TruthserumContract(c<EthereumRpcProvider>()))
       ..registerSingleton((c) => TruQuestContract(c<EthereumRpcProvider>()))
+      ..registerSingleton((c) =>
+          ThingSubmissionVerifierLotteryContract(c<EthereumRpcProvider>()))
       ..registerSingleton(
-          (c) => ThingSubmissionVerifierLotteryContract(c<EthereumService>()))
-      ..registerSingleton((c) => AcceptancePollContract(c<EthereumService>()))
+          (c) => AcceptancePollContract(c<EthereumRpcProvider>()))
       ..registerSingleton((c) => SettlementBloc(c<SettlementService>()))
       ..registerSingleton((c) => SettlementService(
           c<UserService>(),
@@ -78,6 +79,7 @@ class _$Injector extends Injector {
           SmartWalletService(c<LocalStorage>(), c<IAccountFactoryContract>()))
       ..registerSingleton((c) => EthereumApiService(c<IEntryPointContract>()))
       ..registerFactory((c) => UserOperationBuilder(c<EthereumApiService>(),
-          c<IEntryPointContract>(), c<IAccountFactoryContract>()));
+          c<IEntryPointContract>(), c<IAccountFactoryContract>()))
+      ..registerSingleton((c) => UserOperationService(c<EthereumApiService>()));
   }
 }

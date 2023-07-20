@@ -11,7 +11,3 @@ class ConnectEthereumAccountSuccessVm extends EthereumResultVm {
 
   const ConnectEthereumAccountSuccessVm({required this.walletConnectUri});
 }
-
-class ApproveFundsUsageFailureVm extends EthereumResultVm {
-  const ApproveFundsUsageFailureVm();
-}

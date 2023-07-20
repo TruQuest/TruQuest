@@ -1,6 +1,9 @@
 import 'package:dio/dio.dart';
+import 'package:either_dart/either.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import '../errors/user_operation_error.dart';
+import '../models/vm/get_user_operation_receipt_rvm.dart';
 import '../models/im/user_operation.dart';
 import '../../general/contracts/erc4337/ientrypoint_contract.dart';
 
@@ -78,7 +81,7 @@ class EthereumApiService {
     }
   }
 
-  Future<Map<String, BigInt>?> estimateUserOperationGas(
+  Future<(BigInt, BigInt, BigInt)?> estimateUserOperationGas(
     UserOperation userOp,
   ) async {
     try {
@@ -98,18 +101,20 @@ class EthereumApiService {
       // @@TODO: Check error, which is reported as 200 JSON.
 
       var result = response.data['result'];
-      return {
-        'preVerificationGas': BigInt.parse(result['preVerificationGas']),
-        'verificationGasLimit': BigInt.parse(result['verificationGasLimit']),
-        'callGasLimit': BigInt.parse(result['callGasLimit']),
-      };
+      return (
+        BigInt.parse(result['preVerificationGas']),
+        BigInt.parse(result['verificationGasLimit']),
+        BigInt.parse(result['callGasLimit']),
+      );
     } on DioError catch (error) {
       print(error);
       return null;
     }
   }
 
-  Future<String?> sendUserOperation(UserOperation userOp) async {
+  Future<Either<UserOperationError, String>> sendUserOperation(
+    UserOperation userOp,
+  ) async {
     try {
       var response = await _dioBundler.post(
         '/rpc',
@@ -124,7 +129,36 @@ class EthereumApiService {
         },
       );
 
-      return response.data['result'] as String;
+      if (response.data.containsKey('error')) {
+        return Left(UserOperationError.fromMap(response.data['error']));
+      }
+
+      return Right(response.data['result'] as String);
+    } on DioError catch (error) {
+      print(error);
+      return Left(UserOperationError(error.toString()));
+    }
+  }
+
+  Future<GetUserOperationReceiptRvm?> getUserOperationReceipt(
+    String userOpHash,
+  ) async {
+    try {
+      var response = await _dioBundler.post(
+        '/rpc',
+        data: <String, dynamic>{
+          'jsonrpc': '2.0',
+          'method': 'eth_getUserOperationReceipt',
+          'params': [userOpHash],
+          'id': 0,
+        },
+      );
+
+      if (response.data['result'] == null) {
+        return null;
+      }
+
+      return GetUserOperationReceiptRvm.fromMap(response.data['result']);
     } on DioError catch (error) {
       print(error);
       return null;
