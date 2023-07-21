@@ -1,7 +1,6 @@
 import 'dart:async';
 
-import 'package:rxdart/rxdart.dart';
-
+import '../models/vm/user_vm.dart';
 import 'user_actions.dart';
 import 'user_result_vm.dart';
 import '../services/user_service.dart';
@@ -10,12 +9,8 @@ import '../../general/bloc/bloc.dart';
 class UserBloc extends Bloc<UserAction> {
   final UserService _userService;
 
-  final _currentUserChannel = BehaviorSubject<LoadCurrentUserSuccessVm>();
-  Stream<LoadCurrentUserSuccessVm> get currentUser$ =>
-      _currentUserChannel.stream;
-  LoadCurrentUserSuccessVm? get latestCurrentUser =>
-      _currentUserChannel.valueOrNull;
-
+  Stream<UserVm> get currentUser$ => _userService.currentUserChanged$;
+  UserVm? get latestCurrentUser => _userService.latestCurrentUser;
   Stream<List<String>> get walletAddresses$ => _userService.walletAddresses$;
 
   UserBloc(this._userService) {
@@ -43,10 +38,6 @@ class UserBloc extends Bloc<UserAction> {
       } else if (action is DepositFunds) {
         _depositFunds(action);
       }
-    });
-
-    _userService.currentUserChanged$.listen((user) {
-      _currentUserChannel.add(LoadCurrentUserSuccessVm(user: user));
     });
   }
 

@@ -16,25 +16,21 @@ class ThingBloc extends Bloc<ThingAction> {
   final ToastMessenger _toastMessenger;
   final ThingService _thingService;
 
-  final StreamController<GetThingResultVm> _thingChannel =
-      StreamController<GetThingResultVm>.broadcast();
+  final _thingChannel = StreamController<GetThingResultVm>.broadcast();
   Stream<GetThingResultVm> get thing$ => _thingChannel.stream;
 
-  final StreamController<GetVerifierLotteryInfoSuccessVm>
-      _verifierLotteryInfoChannel =
+  final _verifierLotteryInfoChannel =
       StreamController<GetVerifierLotteryInfoSuccessVm>.broadcast();
   Stream<GetVerifierLotteryInfoSuccessVm> get verifierLotteryInfo$ =>
       _verifierLotteryInfoChannel.stream;
 
-  final StreamController<GetVerifierLotteryParticipantsSuccessVm>
-      _verifierLotteryParticipantsChannel =
+  final _verifierLotteryParticipantsChannel =
       StreamController<GetVerifierLotteryParticipantsSuccessVm>.broadcast();
   Stream<GetVerifierLotteryParticipantsSuccessVm>
       get verifierLotteryParticipants$ =>
           _verifierLotteryParticipantsChannel.stream;
 
-  final StreamController<GetVerifiersRvm> _verifiersChannel =
-      StreamController<GetVerifiersRvm>.broadcast();
+  final _verifiersChannel = StreamController<GetVerifiersRvm>.broadcast();
   Stream<GetVerifiersRvm> get verifiers$ => _verifiersChannel.stream;
 
   final StreamController<GetSettlementProposalsListRvm> _proposalsListChannel =
@@ -120,8 +116,9 @@ class ThingBloc extends Bloc<ThingAction> {
 
     var getThingResult = result.right;
     if (getThingResult.thing.state == ThingStateVm.awaitingFunding) {
-      bool thingFunded =
-          await _thingService.checkThingAlreadyFunded(action.thingId);
+      bool thingFunded = await _thingService.checkThingAlreadyFunded(
+        action.thingId,
+      );
       getThingResult = GetThingRvm(
         thing: getThingResult.thing.copyWith(
           fundedAwaitingConfirmation: thingFunded,
@@ -139,8 +136,11 @@ class ThingBloc extends Bloc<ThingAction> {
   }
 
   void _fundThing(FundThing action) async {
-    await _thingService.fundThing(action.thing.id, action.signature);
-    action.complete(null);
+    var error = await _thingService.fundThing(
+      action.thing.id,
+      action.signature,
+    );
+    action.complete(error != null ? FundThingFailureVm(error: error) : null);
   }
 
   void _refreshVerifierLotteryInfo(String thingId) async {
@@ -151,7 +151,6 @@ class ThingBloc extends Bloc<ThingAction> {
         initBlock: info.$2,
         durationBlocks: info.$3,
         alreadyJoined: info.$4,
-        latestL1BlockNumber: info.$5,
       ),
     );
   }
@@ -162,8 +161,13 @@ class ThingBloc extends Bloc<ThingAction> {
 
   void _joinLottery(JoinLottery action) async {
     var error = await _thingService.joinLottery(action.thingId);
-    action.complete(error != null ? JoinLotteryFailureVm() : null);
+    if (error != null) {
+      action.complete(JoinLotteryFailureVm(error: error));
+      return;
+    }
+
     _refreshVerifierLotteryInfo(action.thingId);
+    action.complete(null);
   }
 
   void _getVerifierLotteryParticipants(
@@ -185,28 +189,31 @@ class ThingBloc extends Bloc<ThingAction> {
         initBlock: info.$2,
         durationBlocks: info.$3,
         userIndexInThingVerifiersArray: info.$4,
-        latestL1BlockNumber: info.$5,
       ),
     );
   }
 
   void _castVoteOffChain(CastVoteOffChain action) async {
-    await _thingService.castVoteOffChain(
+    var error = await _thingService.castVoteOffChain(
       action.thingId,
       action.decision,
       action.reason,
     );
-    action.complete(CastVoteResultVm());
+    action.complete(
+      error != null ? CastVoteOffChainFailureVm(error: error) : null,
+    );
   }
 
   void _castVoteOnChain(CastVoteOnChain action) async {
-    await _thingService.castVoteOnChain(
+    var error = await _thingService.castVoteOnChain(
       action.thingId,
       action.userIndexInThingVerifiersArray,
       action.decision,
       action.reason,
     );
-    action.complete(CastVoteResultVm());
+    action.complete(
+      error != null ? CastVoteOnChainFailureVm(error: error) : null,
+    );
   }
 
   void _getVerifiers(GetVerifiers action) async {

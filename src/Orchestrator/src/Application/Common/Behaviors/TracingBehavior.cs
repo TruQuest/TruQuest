@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+
 using MediatR;
 using OpenTelemetry.Trace;
 
@@ -11,6 +13,13 @@ public class TracingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
     where TRequest : IRequest<TResponse>
     where TResponse : HandleResult, new()
 {
+    private readonly ILogger<TracingBehavior<TRequest, TResponse>> _logger;
+
+    public TracingBehavior(ILogger<TracingBehavior<TRequest, TResponse>> logger)
+    {
+        _logger = logger;
+    }
+
     public async Task<TResponse> Handle(
         TRequest request,
         RequestHandlerDelegate<TResponse> next,
@@ -24,7 +33,9 @@ public class TracingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
         }
         catch (Exception e)
         {
+            _logger.LogWarning(e, e.Message);
             span.RecordException(e);
+
             return new TResponse
             {
                 Error = new ServerError(e.Message)

@@ -51,7 +51,7 @@ class ConnectAccountButton extends StatelessWidgetX {
         ),
         Positioned.fill(
           child: IgnorePointer(
-            ignoring: _ethereumBloc.walletSetup,
+            ignoring: false,
             child: GestureDetector(
               onTap: () async {
                 var walletName = await showDialog<String>(

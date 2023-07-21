@@ -34,7 +34,7 @@ class _LotteryState extends StateX<Lottery> {
   void initState() {
     super.initState();
 
-    _currentUserId = _userBloc.latestCurrentUser?.user.id;
+    _currentUserId = _userBloc.latestCurrentUser?.id;
 
     _settlementBloc.dispatch(
       GetVerifierLotteryParticipants(
@@ -53,7 +53,7 @@ class _LotteryState extends StateX<Lottery> {
   @override
   void didUpdateWidget(covariant Lottery oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _currentUserId = _userBloc.latestCurrentUser?.user.id;
+    _currentUserId = _userBloc.latestCurrentUser?.id;
     _settlementBloc.dispatch(
       GetVerifierLotteryInfo(
         thingId: widget.proposal.thingId,

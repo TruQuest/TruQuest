@@ -19,7 +19,7 @@ class RestrictWhenNotOnValidChainButton extends StatelessWidgetX {
         child,
         Positioned.fill(
           child: IgnorePointer(
-            ignoring: _ethereumBloc.connectedToValidChain,
+            ignoring: false,
             child: GestureDetector(
               onTap: () => showDialog(
                 context: context,
@@ -27,7 +27,7 @@ class RestrictWhenNotOnValidChainButton extends StatelessWidgetX {
                   int i = 1;
                   return AlertDialog(
                     title: Text(
-                      'You are not connected to ${_ethereumBloc.validChainName}',
+                      'You are not connected to',
                     ),
                     content: SizedBox(
                       width: 500,
@@ -37,7 +37,7 @@ class RestrictWhenNotOnValidChainButton extends StatelessWidgetX {
                         children: [
                           Row(
                             children: [
-                              _ethereumBloc.walletSetup
+                              false
                                   ? const Icon(
                                       Icons.check_box,
                                       color: Colors.green,
@@ -45,7 +45,7 @@ class RestrictWhenNotOnValidChainButton extends StatelessWidgetX {
                                   : Text('$i)'),
                               const SizedBox(width: 6),
                               const Text('Select a wallet'),
-                              if (!_ethereumBloc.walletSetup)
+                              if (true)
                                 Padding(
                                   padding: const EdgeInsets.only(left: 6),
                                   child: WalletSelectionButton(),
@@ -58,7 +58,7 @@ class RestrictWhenNotOnValidChainButton extends StatelessWidgetX {
                               Text('$i)'),
                               const SizedBox(width: 6),
                               Text(
-                                'Connect the wallet to ${_ethereumBloc.validChainName}',
+                                'Connect the wallet to',
                               ),
                             ],
                           ),

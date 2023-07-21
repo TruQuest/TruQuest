@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../utils/utils.dart';
 import '../../user/errors/wallet_locked_error.dart';
 import '../../user/bloc/user_actions.dart';
 import '../../user/bloc/user_bloc.dart';
 import 'swipe_button.dart';
 import '../../widget_extensions.dart';
-import 'unlock_wallet_dialog.dart';
 
 class DepositStepper extends StatefulWidget {
   const DepositStepper({super.key});
@@ -77,16 +77,9 @@ class _DepositStepperState extends StateX<DepositStepper> {
             var failure = await action.result;
             if (failure != null && failure.error is WalletLockedError) {
               if (context.mounted) {
-                var unlocked = await showDialog<bool>(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (_) => UnlockWalletDialog(),
-                );
-
-                if (unlocked != null && unlocked) {
-                  action = DepositFunds(amount: amountToDeposit);
+                var unlocked = await showUnlockWalletDialog(context);
+                if (unlocked) {
                   _userBloc.dispatch(action);
-
                   failure = await action.result;
                 }
               }

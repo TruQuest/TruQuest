@@ -36,7 +36,7 @@ class _PollState extends StateX<Poll> {
   void initState() {
     super.initState();
 
-    _currentUserId = _userBloc.latestCurrentUser?.user.id;
+    _currentUserId = _userBloc.latestCurrentUser?.id;
 
     _settlementBloc.dispatch(GetVerifiers(proposalId: widget.proposal.id));
 
@@ -50,7 +50,7 @@ class _PollState extends StateX<Poll> {
   @override
   void didUpdateWidget(covariant Poll oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _currentUserId = _userBloc.latestCurrentUser?.user.id;
+    _currentUserId = _userBloc.latestCurrentUser?.id;
     _getInfoAction = GetAssessmentPollInfo(
       thingId: widget.proposal.thingId,
       proposalId: widget.proposal.id,

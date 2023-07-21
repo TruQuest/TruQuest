@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
+import '../../user/models/vm/user_vm.dart';
 import '../widgets/thing_preview_block.dart';
 import '../widgets/status_stepper_block.dart';
 import '../../general/widgets/arc_banner_image.dart';
@@ -43,7 +44,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
   late final _userBloc = use<UserBloc>();
   late final _settlementBloc = use<SettlementBloc>();
 
-  late final StreamSubscription<LoadCurrentUserSuccessVm> _currentUser$$;
+  late final StreamSubscription<UserVm> _currentUser$$;
 
   final List<Color> _tabColors = const [
     Color(0xFF242423),

@@ -4,23 +4,30 @@ module.exports = async ({ getNamedAccounts, getChainId }) => {
   const accounts = await getNamedAccounts();
   const chainId = await getChainId();
 
-  if (chainId == 1337) {
+  if (chainId == 1337 || chainId == 31337) {
     console.log("We are on Ganache!");
 
-    var faucet = ethers.Wallet.fromMnemonic(
-      "test test test test test test test test test test test junk"
-    );
-    faucet = faucet.connect(ethers.provider);
+    // var faucet = ethers.Wallet.fromMnemonic(
+    //   "test test test test test test test test test test test junk"
+    // );
+    // faucet = faucet.connect(ethers.provider);
 
-    var address = accounts["deployer"];
-    var txnResponse = await faucet.sendTransaction({
-      to: address,
-      value: ethers.utils.parseEther("0.1"),
-    });
-    await txnResponse.wait();
+    // var bal = await ethers.provider.getBalance(faucet.address);
+    // console.log(bal);
 
-    var balance = await ethers.provider.getBalance(address);
-    console.log(`deployer balance: ${balance}`);
+    // console.log(faucet);
+
+    // var address = accounts["deployer"];
+    // var txnResponse = await faucet.sendTransaction({
+    //   to: address,
+    //   value: ethers.utils.parseEther("1"),
+    // });
+    // await txnResponse.wait();
+
+    // var balance = await ethers.provider.getBalance(address);
+    // console.log(`${deployer} balance: ${balance}`);
+
+    var deployer = ethers.provider.getSigner(accounts["deployer"]);
 
     var walletAddresses = [
       "0x20FD69D46DC690ef926d209FF016398D6613F168",
@@ -35,9 +42,9 @@ module.exports = async ({ getNamedAccounts, getChainId }) => {
 
     for (var i = 0; i < walletAddresses.length; ++i) {
       var address = walletAddresses[i];
-      var txnResponse = await faucet.sendTransaction({
+      var txnResponse = await deployer.sendTransaction({
         to: address,
-        value: ethers.utils.parseEther("0.1"),
+        value: ethers.utils.parseEther("1"),
       });
       await txnResponse.wait();
 

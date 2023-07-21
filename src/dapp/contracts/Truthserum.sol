@@ -9,7 +9,7 @@ contract Truthserum is ERC20 {
 
         _transfer(
             msg.sender,
-            0x32D41E4e24F97ec7D52e3c43F8DbFe209CBd0e4c,
+            0xDF8DB8D4CeBC202cc4f5F064E08049C5228fC237,
             20000
         );
 
@@ -28,7 +28,7 @@ contract Truthserum is ERC20 {
             _transfer(msg.sender, senders[i], 1000);
             _approve(
                 senders[i],
-                0x32D41E4e24F97ec7D52e3c43F8DbFe209CBd0e4c,
+                0xDF8DB8D4CeBC202cc4f5F064E08049C5228fC237,
                 500
             );
         }

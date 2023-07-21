@@ -92,7 +92,8 @@ class GetAcceptancePollInfo
   GetAcceptancePollInfo({required this.thingId});
 }
 
-class CastVoteOffChain extends ThingActionAwaitable<CastVoteResultVm> {
+class CastVoteOffChain
+    extends ThingActionAwaitable<CastVoteOffChainFailureVm?> {
   final String thingId;
   final DecisionIm decision;
   final String reason;
@@ -104,7 +105,7 @@ class CastVoteOffChain extends ThingActionAwaitable<CastVoteResultVm> {
   });
 }
 
-class CastVoteOnChain extends ThingActionAwaitable<CastVoteResultVm> {
+class CastVoteOnChain extends ThingActionAwaitable<CastVoteOnChainFailureVm?> {
   final String thingId;
   final int userIndexInThingVerifiersArray;
   final DecisionIm decision;

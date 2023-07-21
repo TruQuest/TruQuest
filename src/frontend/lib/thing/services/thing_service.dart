@@ -1,18 +1,20 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:either_dart/either.dart';
 
-import '../../ethereum/models/im/user_operation.dart';
-import '../../ethereum/services/ethereum_api_service.dart';
 import '../../user/services/user_service.dart';
+import '../../ethereum/services/user_operation_service.dart';
+import '../../ethereum/services/ethereum_rpc_provider.dart';
+import '../../ethereum/services/smart_wallet_service.dart';
+import '../models/im/new_acceptance_poll_vote_im.dart';
+import '../../user/errors/wallet_locked_error.dart';
 import '../../general/models/rvm/verifier_lottery_participant_entry_vm.dart';
-import '../../ethereum/errors/ethereum_error.dart';
 import '../errors/thing_error.dart';
 import '../models/rvm/get_settlement_proposals_list_rvm.dart';
 import '../models/rvm/get_verifiers_rvm.dart';
 import '../../general/extensions/datetime_extension.dart';
 import '../../general/contracts/acceptance_poll_contract.dart';
-import '../../ethereum/services/ethereum_service.dart';
 import '../../general/contracts/thing_submission_verifier_lottery_contract.dart';
 import '../models/im/decision_im.dart';
 import '../models/rvm/get_thing_rvm.dart';
@@ -21,12 +23,14 @@ import '../../general/contexts/document_context.dart';
 import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
 import '../models/rvm/submit_new_thing_rvm.dart';
 import 'thing_api_service.dart';
+import '../../general/errors/error.dart';
 
 class ThingService {
   final ThingApiService _thingApiService;
+  final SmartWalletService _smartWalletService;
   final UserService _userService;
-  final EthereumApiService _ethereumApiService;
-  final EthereumService _ethereumService;
+  final EthereumRpcProvider _ethereumRpcProvider;
+  final UserOperationService _userOperationService;
   final TruQuestContract _truQuestContract;
   final ThingSubmissionVerifierLotteryContract
       _thingSubmissionVerifierLotteryContract;
@@ -38,9 +42,10 @@ class ThingService {
 
   ThingService(
     this._thingApiService,
+    this._smartWalletService,
     this._userService,
-    this._ethereumApiService,
-    this._ethereumService,
+    this._ethereumRpcProvider,
+    this._userOperationService,
     this._truQuestContract,
     this._thingSubmissionVerifierLotteryContract,
     this._acceptancePollContract,
@@ -72,63 +77,72 @@ class ThingService {
     }
   }
 
-  Future<bool> checkThingAlreadyFunded(String thingId) {
-    return _truQuestContract.checkThingAlreadyFunded(thingId);
-  }
+  Future<bool> checkThingAlreadyFunded(String thingId) =>
+      _truQuestContract.checkThingAlreadyFunded(thingId);
 
   Future<SubmitNewThingRvm> submitNewThing(String thingId) async {
     var result = await _thingApiService.submitNewThing(thingId);
     return result;
   }
 
-  Future fundThing(String thingId, String signature) async {
-    var wallet = _userService.wallet;
-    if (wallet == null) {
-      print('Smart Wallet not unlocked');
-      return;
+  Future<Error?> fundThing(String thingId, String signature) async {
+    var wallet = _smartWalletService.wallet!;
+    if (wallet.locked) {
+      return WalletLockedError();
     }
 
-    var userOp = await UserOperation.create()
-        .from(wallet)
-        .action(_truQuestContract.fundThing(thingId, signature))
-        .signed();
+    print('**************** Fund thing ****************');
 
-    var userOpHash = await _ethereumApiService.sendUserOperation(userOp);
-
-    print('Fund thing: $userOpHash');
-
-    // @@TODO: Figure out what to wait for.
+    return await _userOperationService.send(
+      from: wallet,
+      target: TruQuestContract.address,
+      action: _truQuestContract.fundThing(thingId, signature),
+    );
   }
 
-  Future<(String?, int?, int, bool?, int)> getVerifierLotteryInfo(
+  Future<(String?, int?, int, bool?)> getVerifierLotteryInfo(
     String thingId,
   ) async {
     var currentUserId = _userService.latestCurrentUser?.id;
+    var currentWalletAddress = _userService.latestCurrentUser?.walletAddress;
+
     int? initBlock = await _thingSubmissionVerifierLotteryContract
         .getLotteryInitBlock(thingId);
-    if (initBlock == 0) {
-      initBlock = null;
-    }
+
     int durationBlocks = await _thingSubmissionVerifierLotteryContract
         .getLotteryDurationBlocks();
-    bool? alreadyJoined = await _thingSubmissionVerifierLotteryContract
-        .checkAlreadyJoinedLottery(thingId);
-    int latestL1BlockNumber = await _ethereumService.getLatestL1BlockNumber();
+
+    // @@NOTE: If user has a wallet but is not signed-in, then checking is
+    // kind of pointless since the join button would be hidden anyway, but whatever.
+    bool? alreadyJoined = currentWalletAddress != null
+        ? await _thingSubmissionVerifierLotteryContract
+            .checkAlreadyJoinedLottery(
+            thingId,
+            currentWalletAddress,
+          )
+        : null;
 
     return (
       currentUserId,
       initBlock,
       durationBlocks,
       alreadyJoined,
-      latestL1BlockNumber,
     );
   }
 
-  Future<EthereumError?> joinLottery(String thingId) async {
-    var error = await _thingSubmissionVerifierLotteryContract.joinLottery(
-      thingId,
+  Future<Error?> joinLottery(String thingId) async {
+    var wallet = _smartWalletService.wallet!;
+    if (wallet.locked) {
+      return WalletLockedError();
+    }
+
+    print('******************** Join Lottery ********************');
+
+    return await _userOperationService.send(
+      from: wallet,
+      target: ThingSubmissionVerifierLotteryContract.address,
+      action: _thingSubmissionVerifierLotteryContract.joinLottery(thingId),
     );
-    return error;
   }
 
   Future<GetVerifierLotteryParticipantsRvm> getVerifierLotteryParticipants(
@@ -174,67 +188,81 @@ class ThingService {
     return result;
   }
 
-  Future<(String?, int?, int, int, int)> getAcceptancePollInfo(
+  Future<(String?, int?, int, int)> getAcceptancePollInfo(
     String thingId,
   ) async {
     var currentUserId = _userService.latestCurrentUser?.id;
+    var currentWalletAddress = _userService.latestCurrentUser?.walletAddress;
+
     int? initBlock = await _acceptancePollContract.getPollInitBlock(thingId);
-    if (initBlock == 0) {
-      initBlock = null;
-    }
     int durationBlocks = await _acceptancePollContract.getPollDurationBlocks();
-    int thingVerifiersArrayIndex =
-        await _acceptancePollContract.getUserIndexAmongThingVerifiers(thingId);
-    int latestBlockNumber = await _ethereumService.getLatestL1BlockNumber();
+
+    int thingVerifiersArrayIndex = currentWalletAddress != null
+        ? await _acceptancePollContract.getUserIndexAmongThingVerifiers(
+            thingId,
+            currentWalletAddress,
+          )
+        : -1;
 
     return (
       currentUserId,
       initBlock,
       durationBlocks,
       thingVerifiersArrayIndex,
-      latestBlockNumber,
     );
   }
 
-  Future castVoteOffChain(
+  Future<Error?> castVoteOffChain(
     String thingId,
     DecisionIm decision,
     String reason,
   ) async {
-    var castedAt = DateTime.now().getString();
-    var result = await _ethereumService.signThingAcceptancePollVote(
-      thingId,
-      castedAt,
-      decision,
-      reason,
-    );
-    if (result.isLeft) {
-      print(result.left);
-      return;
+    var wallet = _smartWalletService.wallet!;
+    if (wallet.locked) {
+      return WalletLockedError();
     }
 
-    var ipfsCid = await _thingApiService.castThingAcceptancePollVote(
-      thingId,
-      castedAt,
-      decision,
-      reason,
-      result.right,
+    var vote = NewAcceptancePollVoteIm(
+      thingId: thingId,
+      castedAt: DateTime.now().getString(),
+      decision: decision,
+      reason: reason,
     );
 
-    print('Vote cid: $ipfsCid');
+    var signature = wallet.ownerSign(jsonEncode(vote.toJsonForSigning()));
+
+    var ipfsCid = await _thingApiService.castThingAcceptancePollVote(
+      vote,
+      signature,
+    );
+
+    print('**************** Vote cid: $ipfsCid ****************');
+
+    return null;
   }
 
-  Future castVoteOnChain(
+  Future<Error?> castVoteOnChain(
     String thingId,
     int userIndexInThingVerifiersArray,
     DecisionIm decision,
     String reason,
   ) async {
-    await _acceptancePollContract.castVote(
-      thingId,
-      userIndexInThingVerifiersArray,
-      decision,
-      reason,
+    var wallet = _smartWalletService.wallet!;
+    if (wallet.locked) {
+      return WalletLockedError();
+    }
+
+    print('********************** Cast Vote **********************');
+
+    return await _userOperationService.send(
+      from: wallet,
+      target: AcceptancePollContract.address,
+      action: _acceptancePollContract.castVote(
+        thingId,
+        userIndexInThingVerifiersArray,
+        decision,
+        reason,
+      ),
     );
   }
 

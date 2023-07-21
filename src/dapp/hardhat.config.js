@@ -8,10 +8,22 @@ require("dotenv").config();
 
 module.exports = {
   solidity: "0.8.17",
-  defaultNetwork: "ganache",
+  defaultNetwork: "localhost",
   networks: {
+    hardhat: {
+      chainId: 31337,
+      accounts: {
+        mnemonic:
+          "atom traffic guard castle father vendor modify sauce rebuild true mixture van",
+      },
+    },
     localhost: {
       url: "http://localhost:8545",
+      chainId: 31337,
+      accounts: {
+        mnemonic:
+          "atom traffic guard castle father vendor modify sauce rebuild true mixture van",
+      },
     },
     ganache: {
       url: "http://localhost:8545",

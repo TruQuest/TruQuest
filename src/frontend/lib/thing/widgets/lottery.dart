@@ -34,7 +34,7 @@ class _LotteryState extends StateX<Lottery> {
   void initState() {
     super.initState();
 
-    _currentUserId = _userBloc.latestCurrentUser?.user.id;
+    _currentUserId = _userBloc.latestCurrentUser?.id;
 
     _thingBloc.dispatch(
       GetVerifierLotteryParticipants(thingId: widget.thing.id),
@@ -45,7 +45,7 @@ class _LotteryState extends StateX<Lottery> {
   @override
   void didUpdateWidget(covariant Lottery oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _currentUserId = _userBloc.latestCurrentUser?.user.id;
+    _currentUserId = _userBloc.latestCurrentUser?.id;
     _thingBloc.dispatch(GetVerifierLotteryInfo(thingId: widget.thing.id));
   }
 
@@ -86,7 +86,7 @@ class _LotteryState extends StateX<Lottery> {
 
               return StreamBuilder(
                 stream: _ethereumBloc.latestL1BlockNumber$,
-                initialData: info.latestL1BlockNumber,
+                initialData: _ethereumBloc.latestL1BlockNumber,
                 builder: (context, snapshot) {
                   var latestBlockNumber = snapshot.data!.toDouble();
                   var startBlock = info.initBlock?.abs().toDouble() ?? 0;

@@ -21,7 +21,7 @@ class UserStatusTracker extends StatelessWidgetX {
           return const SizedBox.shrink();
         }
 
-        var user = snapshot.data!.user;
+        var user = snapshot.data!;
         if (user.id == null) {
           return Tooltip(
             message: 'Sign-in',

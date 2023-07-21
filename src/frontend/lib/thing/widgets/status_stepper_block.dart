@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../general/utils/utils.dart';
 import '../../general/contexts/document_view_context.dart';
 import '../../general/widgets/swipe_button.dart';
 import '../../user/bloc/user_bloc.dart';
+import '../../user/errors/wallet_locked_error.dart';
 import '../bloc/thing_actions.dart';
 import '../bloc/thing_bloc.dart';
 import '../bloc/thing_result_vm.dart';
@@ -24,7 +26,7 @@ class StatusStepperBlock extends StatelessWidgetX {
   StatusStepperBlock({super.key});
 
   void _setup() {
-    _currentUserId = _userBloc.latestCurrentUser?.user.id;
+    _currentUserId = _userBloc.latestCurrentUser?.id;
     _thing = _documentViewContext.thing!;
     if (_thing.state.index <=
         ThingStateVm.fundedAndVerifierLotteryInitiated.index) {
@@ -245,7 +247,17 @@ class StatusStepperBlock extends StatelessWidgetX {
                 );
                 _thingBloc.dispatch(action);
 
-                FundThingFailureVm? failure = await action.result;
+                var failure = await action.result;
+                if (failure != null && failure.error is WalletLockedError) {
+                  if (context.mounted) {
+                    var unlocked = await showUnlockWalletDialog(context);
+                    if (unlocked) {
+                      _thingBloc.dispatch(action);
+                      failure = await action.result;
+                    }
+                  }
+                }
+
                 return failure == null;
               },
             );

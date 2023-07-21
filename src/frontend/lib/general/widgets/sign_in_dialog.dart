@@ -26,7 +26,7 @@ class _SignInDialogState extends StateX<SignInDialog> {
   @override
   void initState() {
     super.initState();
-    var currentUser = _userBloc.latestCurrentUser!.user;
+    var currentUser = _userBloc.latestCurrentUser!;
     if (currentUser.walletAddress == null) {
       _currentStep = 0;
     } else {

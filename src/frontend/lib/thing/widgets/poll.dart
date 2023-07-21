@@ -36,7 +36,7 @@ class _PollState extends StateX<Poll> {
   void initState() {
     super.initState();
 
-    _currentUserId = _userBloc.latestCurrentUser?.user.id;
+    _currentUserId = _userBloc.latestCurrentUser?.id;
 
     _thingBloc.dispatch(GetVerifiers(thingId: widget.thing.id));
     _getInfoAction = GetAcceptancePollInfo(thingId: widget.thing.id);
@@ -46,7 +46,7 @@ class _PollState extends StateX<Poll> {
   @override
   void didUpdateWidget(covariant Poll oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _currentUserId = _userBloc.latestCurrentUser?.user.id;
+    _currentUserId = _userBloc.latestCurrentUser?.id;
     _getInfoAction = GetAcceptancePollInfo(thingId: widget.thing.id);
     _thingBloc.dispatch(_getInfoAction);
   }
@@ -89,7 +89,7 @@ class _PollState extends StateX<Poll> {
 
               return StreamBuilder(
                 stream: _ethereumBloc.latestL1BlockNumber$,
-                initialData: info.latestL1BlockNumber,
+                initialData: _ethereumBloc.latestL1BlockNumber,
                 builder: (context, snapshot) {
                   var latestBlockNumber = snapshot.data!.toDouble();
                   var startBlock = info.initBlock?.abs().toDouble() ?? 0;

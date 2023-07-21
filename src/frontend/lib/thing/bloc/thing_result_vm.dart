@@ -1,5 +1,6 @@
 import '../models/rvm/get_thing_rvm.dart';
 import '../../general/models/rvm/verifier_lottery_participant_entry_vm.dart';
+import '../../general/errors/error.dart';
 
 abstract class ThingResultVm {}
 
@@ -21,20 +22,22 @@ class GetThingFailureVm extends GetThingResultVm {
 
 class SubmitNewThingFailureVm extends ThingResultVm {}
 
-class FundThingFailureVm extends ThingResultVm {}
+class FundThingFailureVm extends ThingResultVm {
+  final Error error;
+
+  FundThingFailureVm({required this.error});
+}
 
 class GetVerifierLotteryInfoSuccessVm extends ThingResultVm {
   final String? userId;
   final int? initBlock;
   final int durationBlocks;
-  final int latestL1BlockNumber;
   final bool? alreadyJoined;
 
   GetVerifierLotteryInfoSuccessVm({
     required this.userId,
     required this.initBlock,
     required this.durationBlocks,
-    required this.latestL1BlockNumber,
     required this.alreadyJoined,
   });
 }
@@ -50,17 +53,29 @@ class GetAcceptancePollInfoSuccessVm extends ThingResultVm {
   final int? initBlock;
   final int durationBlocks;
   final int userIndexInThingVerifiersArray;
-  final int latestL1BlockNumber;
 
   GetAcceptancePollInfoSuccessVm({
     required this.userId,
     required this.initBlock,
     required this.durationBlocks,
     required this.userIndexInThingVerifiersArray,
-    required this.latestL1BlockNumber,
   });
 }
 
-class JoinLotteryFailureVm extends ThingResultVm {}
+class JoinLotteryFailureVm extends ThingResultVm {
+  final Error error;
 
-class CastVoteResultVm extends ThingResultVm {}
+  JoinLotteryFailureVm({required this.error});
+}
+
+class CastVoteOffChainFailureVm extends ThingResultVm {
+  final Error error;
+
+  CastVoteOffChainFailureVm({required this.error});
+}
+
+class CastVoteOnChainFailureVm extends ThingResultVm {
+  final Error error;
+
+  CastVoteOnChainFailureVm({required this.error});
+}

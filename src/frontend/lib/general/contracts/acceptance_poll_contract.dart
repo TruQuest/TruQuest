@@ -1,10 +1,10 @@
+import '../../ethereum/services/ethereum_rpc_provider.dart';
 import '../../ethereum_js_interop.dart';
 import '../../thing/models/im/decision_im.dart';
-import '../../ethereum/services/ethereum_service.dart';
 import '../extensions/uuid_extension.dart';
 
 class AcceptancePollContract {
-  static const String _address = '0x8094C98F3b0d431aDc7eaf2041fC06F8a36369e6';
+  static const String address = '0x4f35007a7D680f15134085d0D3e5634EeA782acd';
   static const String _abi = '''[
     {
       "inputs": [],
@@ -115,97 +115,64 @@ class AcceptancePollContract {
     }
   ]''';
 
-  final EthereumService _ethereumService;
+  late final Abi _interface;
+  late final Contract _contract;
 
-  Contract? _contract;
-  late final Contract _readOnlyContract;
-
-  AcceptancePollContract(this._ethereumService) {
-    _readOnlyContract = Contract(
-      _address,
+  AcceptancePollContract(EthereumRpcProvider ethereumRpcProvider) {
+    _interface = Abi(_abi);
+    _contract = Contract(
+      address,
       _abi,
-      _ethereumService.provider,
+      ethereumRpcProvider.provider,
     );
-
-    _ethereumService.walletSetup.future.then((_) {
-      _contract = Contract(_address, _abi, _ethereumService.provider);
-    });
   }
 
   Future<int> getPollDurationBlocks() =>
-      _readOnlyContract.read<int>('getPollDurationBlocks');
+      _contract.read<int>('getPollDurationBlocks');
 
-  Future<int> getPollInitBlock(String thingId) async {
-    return (await _readOnlyContract.read<BigInt>(
+  Future<int?> getPollInitBlock(String thingId) async {
+    var initBlock = await _contract.read<BigInt>(
       'getPollInitBlock',
       args: [thingId.toSolInputFormat()],
-    ))
-        .toInt();
+    );
+    return initBlock != BigInt.zero ? initBlock.toInt() : null;
   }
 
-  Future castVote(
+  String castVote(
     String thingId,
     int userIndexInThingVerifiersArray,
     DecisionIm decision,
     String reason,
-  ) async {
-    var contract = _contract;
-    if (contract == null) {
-      return;
-    }
-    if (_ethereumService.connectedAccount == null) {
-      return;
-    }
-
-    // var signer = _ethereumService.provider.getSigner();
-    // contract = contract.connect(signer);
-
+  ) {
     var thingIdHex = thingId.toSolInputFormat();
-
-    TransactionResponse txnResponse;
-    if (reason.isEmpty) {
-      txnResponse = await contract.write(
-        'castVote',
-        args: [
-          thingIdHex,
-          userIndexInThingVerifiersArray,
-          decision.index,
-        ],
-      );
-    } else {
-      txnResponse = await contract.write(
-        'castVoteWithReason',
-        args: [
-          thingIdHex,
-          userIndexInThingVerifiersArray,
-          decision.index,
-          reason,
-        ],
-      );
-    }
-
-    await txnResponse.wait();
-    print('Cast vote txn mined!');
+    return reason.isEmpty
+        ? _interface.encodeFunctionData(
+            'castVote',
+            [
+              thingIdHex,
+              userIndexInThingVerifiersArray,
+              decision.index,
+            ],
+          )
+        : _interface.encodeFunctionData(
+            'castVoteWithReason',
+            [
+              thingIdHex,
+              userIndexInThingVerifiersArray,
+              decision.index,
+              reason,
+            ],
+          );
   }
 
-  Future<int> getUserIndexAmongThingVerifiers(String thingId) async {
-    var contract = _contract;
-    if (contract == null) {
-      return -1;
-    }
-    if (_ethereumService.connectedAccount == null) {
-      return -1;
-    }
-
-    var thingIdHex = thingId.toSolInputFormat();
-
-    return (await contract.read<BigInt>(
+  Future<int> getUserIndexAmongThingVerifiers(
+    String thingId,
+    String walletAddress,
+  ) async {
+    var index = await _contract.read<BigInt>(
       'getUserIndexAmongThingVerifiers',
-      args: [
-        thingIdHex,
-        _ethereumService.connectedAccount,
-      ],
-    ))
-        .toInt();
+      args: [thingId.toSolInputFormat(), walletAddress],
+    );
+    return index.toInt();
   }
 }

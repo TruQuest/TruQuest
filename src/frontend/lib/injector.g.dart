@@ -19,7 +19,7 @@ class _$Injector extends Injector {
           c<LocalStorage>(),
           c<UserOperationService>(),
           c<TruQuestContract>()))
-      ..registerSingleton((c) => EthereumBloc())
+      ..registerSingleton((c) => EthereumBloc(c<EthereumRpcProvider>()))
       ..registerSingleton((c) => EthereumService(c<LocalStorage>()))
       ..registerSingleton((c) => ServerConnector())
       ..registerSingleton((c) => UserApiService(c<ServerConnector>()))
@@ -27,16 +27,17 @@ class _$Injector extends Injector {
       ..registerSingleton((c) => ThingService(
           c<ThingApiService>(),
           c<SmartWalletService>(),
+          c<UserService>(),
           c<EthereumRpcProvider>(),
-          c<EthereumApiService>(),
+          c<UserOperationService>(),
           c<TruQuestContract>(),
           c<ThingSubmissionVerifierLotteryContract>(),
           c<AcceptancePollContract>()))
       ..registerSingleton(
           (c) => ThingBloc(c<ToastMessenger>(), c<ThingService>()))
       ..registerFactory((c) => DocumentContext())
-      ..registerSingleton(
-          (c) => NotificationBloc(c<NotificationsCache>(), c<ToastMessenger>()))
+      ..registerSingleton((c) => NotificationBloc(
+          c<NotificationsCache>(), c<ToastMessenger>(), c<ThingService>()))
       ..registerSingleton((c) => SubjectBloc(c<SubjectService>()))
       ..registerSingleton((c) => SubjectService(c<SubjectApiService>()))
       ..registerSingleton((c) => SubjectApiService(c<ServerConnector>()))

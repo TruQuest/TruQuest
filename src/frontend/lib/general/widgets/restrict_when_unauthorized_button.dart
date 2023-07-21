@@ -23,10 +23,9 @@ class RestrictWhenUnauthorizedButton extends StatelessWidgetX {
           child: StreamBuilder(
             stream: _userBloc.currentUser$,
             builder: (context, snapshot) {
-              var user = snapshot.data?.user;
+              var user = snapshot.data;
               return IgnorePointer(
-                ignoring:
-                    user?.id != null && _ethereumBloc.connectedToValidChain,
+                ignoring: user?.id != null && false,
                 child: GestureDetector(
                   onTap: () => showDialog(
                     context: context,
@@ -42,7 +41,7 @@ class RestrictWhenUnauthorizedButton extends StatelessWidgetX {
                             children: [
                               Row(
                                 children: [
-                                  _ethereumBloc.walletSetup
+                                  false
                                       ? const Icon(
                                           Icons.check_box,
                                           color: Colors.green,
@@ -50,7 +49,7 @@ class RestrictWhenUnauthorizedButton extends StatelessWidgetX {
                                       : Text('$i)'),
                                   const SizedBox(width: 6),
                                   const Text('Select a wallet'),
-                                  if (!_ethereumBloc.walletSetup)
+                                  if (true)
                                     Padding(
                                       padding: const EdgeInsets.only(left: 6),
                                       child: WalletSelectionButton(),
@@ -60,7 +59,7 @@ class RestrictWhenUnauthorizedButton extends StatelessWidgetX {
                               if (i++ > 0) const SizedBox(height: 8),
                               Row(
                                 children: [
-                                  _ethereumBloc.connectedToValidChain
+                                  false
                                       ? const Icon(
                                           Icons.check_box,
                                           color: Colors.green,
@@ -68,7 +67,7 @@ class RestrictWhenUnauthorizedButton extends StatelessWidgetX {
                                       : Text('$i)'),
                                   const SizedBox(width: 6),
                                   Text(
-                                    'Connect the wallet to ${_ethereumBloc.validChainName}',
+                                    'Connect the wallet to',
                                   ),
                                 ],
                               ),

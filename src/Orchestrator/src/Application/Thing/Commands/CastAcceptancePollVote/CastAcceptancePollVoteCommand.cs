@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+
 using MediatR;
 using FluentValidation;
 
@@ -29,6 +31,7 @@ internal class Validator : AbstractValidator<CastAcceptancePollVoteCommand>
 internal class CastAcceptancePollVoteCommandHandler :
     IRequestHandler<CastAcceptancePollVoteCommand, HandleResult<string>>
 {
+    private readonly ILogger<CastAcceptancePollVoteCommandHandler> _logger;
     private readonly ICurrentPrincipal _currentPrincipal;
     private readonly ISigner _signer;
     private readonly IContractCaller _contractCaller;
@@ -37,6 +40,7 @@ internal class CastAcceptancePollVoteCommandHandler :
     private readonly IAcceptancePollVoteRepository _voteRepository;
 
     public CastAcceptancePollVoteCommandHandler(
+        ILogger<CastAcceptancePollVoteCommandHandler> logger,
         ICurrentPrincipal currentPrincipal,
         ISigner signer,
         IContractCaller contractCaller,
@@ -45,6 +49,7 @@ internal class CastAcceptancePollVoteCommandHandler :
         IAcceptancePollVoteRepository voteRepository
     )
     {
+        _logger = logger;
         _currentPrincipal = currentPrincipal;
         _signer = signer;
         _contractCaller = contractCaller;

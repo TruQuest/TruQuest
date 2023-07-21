@@ -44,18 +44,20 @@ class EthereumApiService {
 
   Future<BigInt?> getMaxPriorityFee() async {
     try {
-      var response = await _dio.post(
-        '/',
-        data: <String, dynamic>{
-          'jsonrpc': '2.0',
-          'method': 'eth_maxPriorityFeePerGas',
-          'params': [],
-          'id': 0,
-        },
-      );
+      return BigInt.zero;
 
-      var fee = response.data['result'];
-      return BigInt.parse(fee);
+      // var response = await _dio.post(
+      //   '/',
+      //   data: <String, dynamic>{
+      //     'jsonrpc': '2.0',
+      //     'method': 'eth_maxPriorityFeePerGas',
+      //     'params': [],
+      //     'id': 0,
+      //   },
+      // );
+
+      // var fee = response.data['result'];
+      // return BigInt.parse(fee);
     } on DioError catch (error) {
       print(error);
       return null;

@@ -78,6 +78,7 @@ class ThingApiService {
             } else if (error['type'] == 'Vote') {
               return VoteError(error['errors'].values.first.first);
             }
+            // @@TODO: Handle ServerError.
             break;
           case 401:
             var errorMessage =
@@ -186,25 +187,18 @@ class ThingApiService {
   }
 
   Future<String> castThingAcceptancePollVote(
-    String thingId,
-    String castedAt,
-    DecisionIm decision,
-    String reason,
+    NewAcceptancePollVoteIm vote,
     String signature,
   ) async {
     var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.post(
-        '/things/$thingId/vote',
+        '/things/${vote.thingId}/vote',
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
         ),
         data: CastAcceptancePollVoteCommand(
-          input: NewAcceptancePollVoteIm(
-            castedAt: castedAt,
-            decision: decision,
-            reason: reason,
-          ),
+          input: vote,
           signature: signature,
         ).toJson(),
       );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import 'ethereum/services/ethereum_rpc_provider.dart';
 import 'general/services/local_storage.dart';
 import 'widget_extensions.dart';
 import 'injector.dart';
@@ -14,6 +15,9 @@ Future main() async {
 
   var localStorage = resolveDependency<LocalStorage>();
   await localStorage.init();
+
+  var ethereumRpcProvider = resolveDependency<EthereumRpcProvider>();
+  await ethereumRpcProvider.init();
 
   runApp(const App());
 }

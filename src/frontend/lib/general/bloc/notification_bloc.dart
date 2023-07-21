@@ -13,7 +13,7 @@ import 'bloc.dart';
 class NotificationBloc extends Bloc<NotificationAction> {
   final NotificationsCache _notificationsCache;
   final ToastMessenger _toastMessenger;
-  // final ThingService _thingService;
+  final ThingService _thingService;
   // final SettlementService _settlementService;
 
   final BehaviorSubject<Stream<int>?> _progress$Channel =
@@ -27,7 +27,7 @@ class NotificationBloc extends Bloc<NotificationAction> {
   NotificationBloc(
     this._notificationsCache,
     this._toastMessenger,
-    // this._thingService,
+    this._thingService,
     // this._settlementService,
   ) {
     actionChannel.stream.listen((action) {
@@ -36,18 +36,18 @@ class NotificationBloc extends Bloc<NotificationAction> {
       }
     });
 
-    // _thingService.progress$$.listen((progress$) {
-    //   _progress$Channel.add(progress$);
-    //   progress$.listen(null, onDone: () {
-    //     Future.delayed(const Duration(seconds: 2)).then(
-    //       (_) {
-    //         if (_progress$Channel.value == progress$) {
-    //           _progress$Channel.add(null);
-    //         }
-    //       },
-    //     );
-    //   });
-    // });
+    _thingService.progress$$.listen((progress$) {
+      _progress$Channel.add(progress$);
+      progress$.listen(null, onDone: () {
+        Future.delayed(const Duration(seconds: 2)).then(
+          (_) {
+            if (_progress$Channel.value == progress$) {
+              _progress$Channel.add(null);
+            }
+          },
+        );
+      });
+    });
 
     // _settlementService.progress$$.listen((progress$) {
     //   _progress$Channel.add(progress$);

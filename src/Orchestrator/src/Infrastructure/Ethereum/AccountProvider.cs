@@ -27,5 +27,9 @@ public class AccountProvider
 
     public Account GetAccount(string name) => _wallet.GetAccount(_accountNameToIndex[name]);
 
-    public string LookupNameByAddress(string address) => _addressToAccountName[address.RemoveHexPrefix().ToLower()];
+    public string? LookupNameByAddress(string address)
+    {
+        _addressToAccountName.TryGetValue(address, out string? name);
+        return name;
+    }
 }

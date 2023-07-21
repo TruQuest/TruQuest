@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 
-import 'unlock_wallet_dialog.dart';
+import '../utils/utils.dart';
 import '../../user/bloc/user_actions.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../../user/errors/wallet_locked_error.dart';
@@ -14,7 +14,7 @@ class AccountListDialog extends StatelessWidgetX {
   late final String? _currentWalletAddress;
 
   AccountListDialog({super.key}) {
-    _currentWalletAddress = _userBloc.latestCurrentUser?.user.walletAddress;
+    _currentWalletAddress = _userBloc.latestCurrentUser?.walletAddress;
   }
 
   @override
@@ -94,16 +94,9 @@ class AccountListDialog extends StatelessWidgetX {
                       if (failure != null &&
                           failure.error is WalletLockedError) {
                         if (context.mounted) {
-                          var unlocked = await showDialog<bool>(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (_) => UnlockWalletDialog(),
-                          );
-
-                          if (unlocked != null && unlocked) {
-                            action = AddAccount();
+                          var unlocked = await showUnlockWalletDialog(context);
+                          if (unlocked) {
                             _userBloc.dispatch(action);
-
                             failure = await action.result;
                           }
                         }

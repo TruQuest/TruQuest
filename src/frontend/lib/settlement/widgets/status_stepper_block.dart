@@ -23,7 +23,7 @@ class StatusStepperBlock extends StatelessWidgetX {
   StatusStepperBlock({super.key});
 
   void _setup() {
-    _currentUserId = _userBloc.latestCurrentUser?.user.id;
+    _currentUserId = _userBloc.latestCurrentUser?.id;
     _proposal = _documentViewContext.proposal!;
     if (_proposal.state.index <=
         SettlementProposalStateVm.fundedAndVerifierLotteryInitiated.index) {

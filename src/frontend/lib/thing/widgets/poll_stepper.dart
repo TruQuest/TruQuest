@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../general/utils/utils.dart';
+import '../../user/errors/wallet_locked_error.dart';
 import '../bloc/thing_actions.dart';
 import '../bloc/thing_result_vm.dart';
 import '../../general/widgets/vote_dialog.dart';
@@ -33,12 +35,8 @@ class _PollStepperState extends StateX<PollStepper> {
 
   int _currentStep = 0;
 
-  bool _checkButtonShouldBeEnabled() {
-    var info = widget.info;
-    return info.initBlock != null &&
-        widget.currentBlock < widget.endBlock &&
-        info.userIndexInThingVerifiersArray >= 0;
-  }
+  bool _checkButtonShouldBeEnabled() =>
+      widget.info.initBlock != null && widget.currentBlock < widget.endBlock;
 
   @override
   Widget buildX(BuildContext context) {
@@ -50,11 +48,10 @@ class _PollStepperState extends StateX<PollStepper> {
               secondary: const Color(0xffF8F9FA),
             ),
       ),
-      // @@BUG: When widget.info.userId is null a part of the line connecting two steps
-      // is moved to the right fsr.
       child: Stepper(
         currentStep: _currentStep,
-        controlsBuilder: (context, details) => widget.info.userId != null
+        controlsBuilder: (context, details) => widget.info.userId != null &&
+                widget.info.userIndexInThingVerifiersArray >= 0
             ? SwipeButton(
                 // @@NOTE: Without the key flutter would just reuse the same state object for all steps.
                 key: ValueKey('${widget.info.userId} ${details.currentStep}'),
@@ -72,23 +69,51 @@ class _PollStepperState extends StateX<PollStepper> {
                       ],
                       getDisplayString: (decision) => decision.getString(),
                       onVote: (decision, reason) async {
-                        ThingActionAwaitable<CastVoteResultVm> action =
-                            details.currentStep == 0
-                                ? CastVoteOffChain(
-                                    thingId: widget.thing.id,
-                                    decision: decision,
-                                    reason: reason,
-                                  )
-                                : CastVoteOnChain(
-                                    thingId: widget.thing.id,
-                                    userIndexInThingVerifiersArray: widget
-                                        .info.userIndexInThingVerifiersArray,
-                                    decision: decision,
-                                    reason: reason,
-                                  );
+                        if (details.currentStep == 0) {
+                          var action = CastVoteOffChain(
+                            thingId: widget.thing.id,
+                            decision: decision,
+                            reason: reason,
+                          );
+                          _thingBloc.dispatch(action);
 
-                        _thingBloc.dispatch(action);
-                        await action.result;
+                          var failure = await action.result;
+                          if (failure != null &&
+                              failure.error is WalletLockedError) {
+                            if (context.mounted) {
+                              var unlocked = await showUnlockWalletDialog(
+                                context,
+                              );
+                              if (unlocked) {
+                                _thingBloc.dispatch(action);
+                                failure = await action.result;
+                              }
+                            }
+                          }
+                        } else {
+                          var action = CastVoteOnChain(
+                            thingId: widget.thing.id,
+                            userIndexInThingVerifiersArray:
+                                widget.info.userIndexInThingVerifiersArray,
+                            decision: decision,
+                            reason: reason,
+                          );
+                          _thingBloc.dispatch(action);
+
+                          var failure = await action.result;
+                          if (failure != null &&
+                              failure.error is WalletLockedError) {
+                            if (context.mounted) {
+                              var unlocked = await showUnlockWalletDialog(
+                                context,
+                              );
+                              if (unlocked) {
+                                _thingBloc.dispatch(action);
+                                failure = await action.result;
+                              }
+                            }
+                          }
+                        }
                       },
                     ),
                   );
@@ -110,7 +135,8 @@ class _PollStepperState extends StateX<PollStepper> {
                 fontSize: 16,
               ),
             ),
-            content: Padding(
+            content: Container(
+              width: double.infinity,
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(
                 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
@@ -130,7 +156,8 @@ class _PollStepperState extends StateX<PollStepper> {
                 fontSize: 16,
               ),
             ),
-            content: Padding(
+            content: Container(
+              width: double.infinity,
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(
                 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',

@@ -93,7 +93,7 @@ class UserService {
         'I accept the TruQuest Terms of Service: https://truquest.io/tos';
     var uri = 'https://truquest.io/';
     var version = 1;
-    var chainId = 1337;
+    var chainId = 31337;
 
     var now = DateTime.now().toUtc().toIso8601String();
     int indexOfDot = now.indexOf('.');
@@ -181,6 +181,8 @@ class UserService {
     if (wallet.locked) {
       return WalletLockedError();
     }
+
+    print('**************** Deposit funds ****************');
 
     return await _userOperationService.send(
       from: wallet,

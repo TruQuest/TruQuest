@@ -5,7 +5,7 @@ import '../extensions/uuid_extension.dart';
 import '../../ethereum_js_interop.dart';
 
 class TruQuestContract {
-  static const String address = '0x32D41E4e24F97ec7D52e3c43F8DbFe209CBd0e4c';
+  static const String address = '0xDF8DB8D4CeBC202cc4f5F064E08049C5228fC237';
   static const String _abi = '''[
         {
           "inputs": [
@@ -127,46 +127,38 @@ class TruQuestContract {
     _contract = Contract(address, _abi, ethereumRpcProvider.provider);
   }
 
-  Future<bool> checkThingAlreadyFunded(String thingId) async {
-    var thingIdHex = thingId.toSolInputFormat();
-    return await _contract.read<bool>(
-      'checkThingAlreadyFunded',
-      args: [thingIdHex],
-    );
-  }
+  Future<bool> checkThingAlreadyFunded(String thingId) => _contract.read<bool>(
+        'checkThingAlreadyFunded',
+        args: [thingId.toSolInputFormat()],
+      );
 
-  (String, String) fundThing(String thingId, String signature) {
+  String fundThing(String thingId, String signature) {
     var thingIdHex = thingId.toSolInputFormat();
     signature = signature.substring(2);
     var r = '0x' + signature.substring(0, 64);
     var s = '0x' + signature.substring(64, 128);
     var v = hex.decode(signature.substring(128, 130)).first;
 
-    return (
-      address,
-      _interface.encodeFunctionData(
-        'fundThing',
-        [
-          [thingIdHex],
-          v,
-          r,
-          s,
-        ],
-      )
+    return _interface.encodeFunctionData(
+      'fundThing',
+      [
+        [thingIdHex],
+        v,
+        r,
+        s,
+      ],
     );
   }
 
   Future<bool> checkThingAlreadyHasSettlementProposalUnderAssessment(
     String thingId,
-  ) async {
-    var thingIdHex = thingId.toSolInputFormat();
-    return await _contract.read<bool>(
-      'checkThingAlreadyHasSettlementProposalUnderAssessment',
-      args: [thingIdHex],
-    );
-  }
+  ) =>
+      _contract.read<bool>(
+        'checkThingAlreadyHasSettlementProposalUnderAssessment',
+        args: [thingId.toSolInputFormat()],
+      );
 
-  (String, String) fundThingSettlementProposal(
+  String fundThingSettlementProposal(
     String thingId,
     String proposalId,
     String signature,
@@ -178,17 +170,14 @@ class TruQuestContract {
     var s = '0x' + signature.substring(64, 128);
     var v = hex.decode(signature.substring(128, 130)).first;
 
-    return (
-      address,
-      _interface.encodeFunctionData(
-        'fundThingSettlementProposal',
-        [
-          [thingIdHex, proposalIdHex],
-          v,
-          r,
-          s,
-        ],
-      )
+    return _interface.encodeFunctionData(
+      'fundThingSettlementProposal',
+      [
+        [thingIdHex, proposalIdHex],
+        v,
+        r,
+        s,
+      ],
     );
   }
 

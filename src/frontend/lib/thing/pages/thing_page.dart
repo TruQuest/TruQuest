@@ -15,9 +15,9 @@ import '../../general/widgets/tab_container.dart';
 import '../../settlement/bloc/settlement_actions.dart';
 import '../../settlement/bloc/settlement_bloc.dart';
 import '../../settlement/widgets/verdict_selection_block.dart';
+import '../../user/models/vm/user_vm.dart';
 import '../widgets/status_stepper_block.dart';
 import '../bloc/thing_result_vm.dart';
-import '../../user/bloc/user_result_vm.dart';
 import '../../general/widgets/watch_button.dart';
 import '../../subject/widgets/avatar_with_reputation_gauge.dart';
 import '../../user/bloc/user_bloc.dart';
@@ -54,9 +54,9 @@ class _ThingPageState extends StateX<ThingPage> {
   late final _pageContext = use<PageContext>();
   late final _userBloc = use<UserBloc>();
   late final _thingBloc = use<ThingBloc>();
-  late final _settlementBloc = use<SettlementBloc>();
+  // late final _settlementBloc = use<SettlementBloc>();
 
-  late final StreamSubscription<LoadCurrentUserSuccessVm> _currentUser$$;
+  late final StreamSubscription<UserVm> _currentUser$$;
 
   final List<Color> _tabColors = const [
     Color(0xFF242423),
@@ -376,7 +376,7 @@ class _ThingPageState extends StateX<ThingPage> {
                                     documentContext,
                                   ),
                                 );
-                                _settlementBloc.dispatch(action);
+                                // _settlementBloc.dispatch(action);
 
                                 var failure = await action.result;
                                 if (failure != null) {
