@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../ethereum/models/vm/smart_wallet.dart';
 import '../../user/bloc/user_actions.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../../widget_extensions.dart';
@@ -22,7 +21,6 @@ class _SignInFromMnemonicDialogState extends StateX<SignInFromMnemonicDialog> {
   final _passwordController2 = TextEditingController();
 
   late int _currentStep;
-  SmartWallet? _wallet;
 
   @override
   void initState() {
@@ -37,7 +35,6 @@ class _SignInFromMnemonicDialogState extends StateX<SignInFromMnemonicDialog> {
 
   @override
   void dispose() {
-    _wallet = null;
     _mnemonicController.dispose();
     _passwordController1.dispose();
     _passwordController2.dispose();
@@ -49,7 +46,7 @@ class _SignInFromMnemonicDialogState extends StateX<SignInFromMnemonicDialog> {
       case 0:
         return 'Import';
       case 1:
-        return 'Protect';
+        return 'Create';
       default:
         return 'Sign-in';
     }
@@ -84,27 +81,17 @@ class _SignInFromMnemonicDialogState extends StateX<SignInFromMnemonicDialog> {
                     child: Text(_getButtonLabel(details.currentStep)),
                     onPressed: () async {
                       if (details.currentStep == 0) {
-                        var action = CreateSmartWalletFromMnemonic(
-                          mnemonic: _mnemonicController.text,
-                        );
-                        _userBloc.dispatch(action);
-
-                        var success = await action.result;
-                        if (success != null) {
-                          _wallet = success.wallet;
-                          _mnemonicController.clear();
-                          details.onStepContinue!();
-                        }
+                        details.onStepContinue!();
                       } else if (details.currentStep == 1) {
-                        var action = EncryptAndSaveSmartWallet(
-                          wallet: _wallet!,
+                        var action = CreateAndSaveEncryptedSmartWallet(
+                          mnemonic: _mnemonicController.text,
                           password: _passwordController1.text,
                         );
                         _userBloc.dispatch(action);
 
                         var success = await action.result;
                         if (success != null) {
-                          _wallet = null;
+                          _mnemonicController.clear();
                           _passwordController1.clear();
                           details.onStepContinue!();
                         }
@@ -127,7 +114,7 @@ class _SignInFromMnemonicDialogState extends StateX<SignInFromMnemonicDialog> {
                 steps: [
                   Step(
                     title: Text(
-                      'Import a mnemonic',
+                      'Import a secret phrase',
                       style: GoogleFonts.philosopher(
                         color: const Color(0xffF8F9FA),
                         fontSize: 16,
@@ -157,7 +144,7 @@ class _SignInFromMnemonicDialogState extends StateX<SignInFromMnemonicDialog> {
                   ),
                   Step(
                     title: Text(
-                      'Password-protect the access to the smart wallet',
+                      'Create a smart wallet from the phrase and a password',
                       style: GoogleFonts.philosopher(
                         color: const Color(0xffF8F9FA),
                         fontSize: 16,

@@ -15,12 +15,10 @@ class UserBloc extends Bloc<UserAction> {
 
   UserBloc(this._userService) {
     actionChannel.stream.listen((action) {
-      if (action is CreateSmartWallet) {
-        _createSmartWallet(action);
-      } else if (action is CreateSmartWalletFromMnemonic) {
-        _createSmartWalletFromMnemonic(action);
-      } else if (action is EncryptAndSaveSmartWallet) {
-        _encryptAndSaveSmartWallet(action);
+      if (action is GenerateMnemonic) {
+        _generateMnemonic(action);
+      } else if (action is CreateAndSaveEncryptedSmartWallet) {
+        _createAndSaveEncryptedSmartWallet(action);
       } else if (action is SignInWithEthereum) {
         _signInWithEthereum(action);
       } else if (action is AddEmail) {
@@ -41,26 +39,19 @@ class UserBloc extends Bloc<UserAction> {
     });
   }
 
-  void _createSmartWallet(CreateSmartWallet action) async {
-    var wallet = await _userService.createSmartWallet();
-    action.complete(CreateSmartWalletSuccessVm(wallet: wallet));
+  void _generateMnemonic(GenerateMnemonic action) async {
+    var mnemonic = _userService.generateMnemonic();
+    action.complete(GenerateMnemonicSuccessVm(mnemonic: mnemonic));
   }
 
-  void _createSmartWalletFromMnemonic(
-    CreateSmartWalletFromMnemonic action,
+  void _createAndSaveEncryptedSmartWallet(
+    CreateAndSaveEncryptedSmartWallet action,
   ) async {
-    var wallet = await _userService.createSmartWalletFromMnemonic(
+    await _userService.createAndSaveEncryptedSmartWallet(
       action.mnemonic,
-    );
-    action.complete(CreateSmartWalletFromMnemonicSuccessVm(wallet: wallet));
-  }
-
-  void _encryptAndSaveSmartWallet(EncryptAndSaveSmartWallet action) async {
-    await _userService.encryptSmartWalletAndSaveToLocalStorage(
-      action.wallet,
       action.password,
     );
-    action.complete(EncryptAndSaveSmartWalletSuccessVm());
+    action.complete(CreateAndSaveEncryptedSmartWalletSuccessVm());
   }
 
   void _signInWithEthereum(SignInWithEthereum action) async {

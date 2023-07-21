@@ -1,5 +1,4 @@
 import 'user_result_vm.dart';
-import '../../ethereum/models/vm/smart_wallet.dart';
 import '../../general/bloc/mixins.dart';
 
 abstract class UserAction {
@@ -9,23 +8,16 @@ abstract class UserAction {
 abstract class UserActionAwaitable<T extends UserResultVm?> extends UserAction
     with AwaitableResult<T> {}
 
-class CreateSmartWallet
-    extends UserActionAwaitable<CreateSmartWalletSuccessVm?> {}
+class GenerateMnemonic
+    extends UserActionAwaitable<GenerateMnemonicSuccessVm?> {}
 
-class CreateSmartWalletFromMnemonic
-    extends UserActionAwaitable<CreateSmartWalletFromMnemonicSuccessVm?> {
+class CreateAndSaveEncryptedSmartWallet
+    extends UserActionAwaitable<CreateAndSaveEncryptedSmartWalletSuccessVm?> {
   final String mnemonic;
-
-  CreateSmartWalletFromMnemonic({required this.mnemonic});
-}
-
-class EncryptAndSaveSmartWallet
-    extends UserActionAwaitable<EncryptAndSaveSmartWalletSuccessVm?> {
-  final SmartWallet wallet;
   final String password;
 
-  EncryptAndSaveSmartWallet({
-    required this.wallet,
+  CreateAndSaveEncryptedSmartWallet({
+    required this.mnemonic,
     required this.password,
   });
 }

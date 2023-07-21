@@ -17,35 +17,20 @@ class SmartWalletService {
     this._accountFactoryContract,
   );
 
-  Future<SmartWallet> createOne() async {
-    var owner = EOA.createRandom();
-    var wallet = SmartWallet(owner.mnemonic);
-    int index = wallet.addOwnerAccount();
-    var walletAddress = await _accountFactoryContract.getAddress(
-      wallet.getOwnerAddress(index),
-    );
-    wallet.setOwnerWalletAddress(index, walletAddress);
+  String generateMnemonic() => Wallet.createRandom().mnemonic;
 
-    return wallet;
-  }
-
-  Future<SmartWallet> createOneFromMnemonic(String mnemonic) async {
-    var owner = EOA.fromMnemonic(mnemonic);
-    var wallet = SmartWallet(owner.mnemonic);
-    int index = wallet.addOwnerAccount();
-    var walletAddress = await _accountFactoryContract.getAddress(
-      wallet.getOwnerAddress(index),
-    );
-    wallet.setOwnerWalletAddress(index, walletAddress);
-
-    return wallet;
-  }
-
-  Future encryptAndSaveToLocalStorage(
-    SmartWallet wallet,
+  Future createAndSaveEncryptedSmartWallet(
+    String mnemonic,
     String password,
   ) async {
     // @@TODO: Check password requirements.
+    var wallet = SmartWallet(mnemonic, password);
+    int index = wallet.addOwnerAccount();
+    var walletAddress = await _accountFactoryContract.getAddress(
+      wallet.getOwnerAddress(index),
+    );
+    wallet.setOwnerWalletAddress(index, walletAddress);
+
     var encryptedWalletJson = await wallet.toJson(password: password);
     await _localStorage.setString(
       'SmartWallet',

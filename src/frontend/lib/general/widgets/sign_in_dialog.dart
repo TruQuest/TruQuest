@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'sign_in_from_mnemonic_dialog.dart';
-import '../../ethereum/models/vm/smart_wallet.dart';
 import '../../user/bloc/user_actions.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../../widget_extensions.dart';
@@ -21,7 +20,7 @@ class _SignInDialogState extends StateX<SignInDialog> {
   final _passwordController2 = TextEditingController();
 
   late int _currentStep;
-  SmartWallet? _wallet;
+  String? _mnemonic;
 
   @override
   void initState() {
@@ -41,7 +40,7 @@ class _SignInDialogState extends StateX<SignInDialog> {
 
   @override
   void dispose() {
-    _wallet = null;
+    _mnemonic = null;
     _passwordController1.dispose();
     _passwordController2.dispose();
     super.dispose();
@@ -50,9 +49,9 @@ class _SignInDialogState extends StateX<SignInDialog> {
   String _getButtonLabel(int step) {
     switch (step) {
       case 0:
-        return 'Reserve';
+        return 'Generate';
       case 1:
-        return 'Protect';
+        return 'Create';
       default:
         return 'Sign-in';
     }
@@ -91,24 +90,24 @@ class _SignInDialogState extends StateX<SignInDialog> {
                           child: Text(_getButtonLabel(details.currentStep)),
                           onPressed: () async {
                             if (details.currentStep == 0) {
-                              var action = CreateSmartWallet();
+                              var action = GenerateMnemonic();
                               _userBloc.dispatch(action);
 
                               var success = await action.result;
                               if (success != null) {
-                                _wallet = success.wallet;
+                                _mnemonic = success.mnemonic;
                                 details.onStepContinue!();
                               }
                             } else if (details.currentStep == 1) {
-                              var action = EncryptAndSaveSmartWallet(
-                                wallet: _wallet!,
+                              var action = CreateAndSaveEncryptedSmartWallet(
+                                mnemonic: _mnemonic!,
                                 password: _passwordController1.text,
                               );
                               _userBloc.dispatch(action);
 
                               var success = await action.result;
                               if (success != null) {
-                                _wallet = null;
+                                _mnemonic = null;
                                 _passwordController1.clear();
                                 details.onStepContinue!();
                               }
@@ -131,7 +130,7 @@ class _SignInDialogState extends StateX<SignInDialog> {
                       steps: [
                         Step(
                           title: Text(
-                            'Reserve a smart wallet address',
+                            'Generate a secret phrase',
                             style: GoogleFonts.philosopher(
                               color: const Color(0xffF8F9FA),
                               fontSize: 16,
@@ -141,9 +140,7 @@ class _SignInDialogState extends StateX<SignInDialog> {
                             width: double.infinity,
                             padding: const EdgeInsets.only(bottom: 12),
                             child: Text(
-                              _wallet == null
-                                  ? '...'
-                                  : _wallet!.currentWalletAddress,
+                              '...',
                               style: GoogleFonts.raleway(
                                 color: Colors.white,
                               ),
@@ -153,7 +150,7 @@ class _SignInDialogState extends StateX<SignInDialog> {
                         ),
                         Step(
                           title: Text(
-                            'Password-protect the access to the smart wallet',
+                            'Create a smart wallet from the phrase and a password',
                             style: GoogleFonts.philosopher(
                               color: const Color(0xffF8F9FA),
                               fontSize: 16,
@@ -214,7 +211,7 @@ class _SignInDialogState extends StateX<SignInDialog> {
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.black,
                   ),
-                  child: Text('Import a mnemonic instead'),
+                  child: Text('Use an existing secret phrase instead'),
                   onPressed: () {
                     Navigator.of(context).pop();
                     showDialog(

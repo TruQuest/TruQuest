@@ -277,48 +277,51 @@ class Abi {
 }
 
 @JS('ethers.Wallet.createRandom')
-external _EOA _createRandomWallet();
-
-@JS('ethers.Wallet.fromEncryptedJson')
-external dynamic _createWalletFromEncryptedJson(String json, String password);
-
-@JS('ethers.Wallet.fromMnemonic')
-external _EOA _createWalletFromMnemonic(String mnemonic, [String? path]);
+external _Wallet _createRandomWallet();
 
 @JS('ethers.Wallet')
-class _EOA {
-  external String get address;
-  external String get privateKey;
+class _Wallet {
   external _Mnemonic get mnemonic;
-  external dynamic encrypt(String password);
 }
 
-class EOA {
-  final _EOA _eoa;
+class Wallet {
+  final _Wallet _wallet;
 
-  EOA._(this._eoa);
+  String get mnemonic => _wallet.mnemonic.phrase;
 
-  static EOA createRandom() => EOA._(_createRandomWallet());
+  Wallet._(this._wallet);
 
-  static Future<EOA> fromEncryptedJson(String json, String password) async {
-    var wallet = await promiseToFuture<_EOA>(
-      _createWalletFromEncryptedJson(json, password),
-    );
-    return EOA._(wallet);
-  }
-
-  static EOA fromMnemonic(String mnemonic, [String? path]) =>
-      EOA._(_createWalletFromMnemonic(mnemonic, path));
-
-  String get address => convertToEip55Address(_eoa.address);
-  String get privateKey => _eoa.privateKey;
-  String get mnemonic => _eoa.mnemonic.phrase;
-
-  Future<String> encrypt(String password) =>
-      promiseToFuture<String>(_eoa.encrypt(password));
+  static Wallet createRandom() => Wallet._(_createRandomWallet());
 }
 
-@JS('ethers.Wallet.Mnemonic')
+@JS('ethers.utils.HDNode.fromMnemonic')
+external _HDNode _createHDNodeFromMnemonic(String phrase, String password);
+
+@JS('ethers.utils.HDNode')
+class _HDNode {
+  external String get address;
+  external String privateKey;
+  external _Mnemonic get mnemonic;
+
+  external _HDNode derivePath(String path);
+}
+
+class HDNode {
+  final _HDNode _hdNode;
+
+  HDNode._(this._hdNode);
+
+  static HDNode fromMnemonic(String phrase, String password) =>
+      HDNode._(_createHDNodeFromMnemonic(phrase, password));
+
+  String get address => convertToEip55Address(_hdNode.address);
+  String get privateKey => _hdNode.privateKey;
+  String get mnemonic => _hdNode.mnemonic.phrase;
+
+  HDNode derivePath(String path) => HDNode._(_hdNode.derivePath(path));
+}
+
+@JS('ethers.Mnemonic')
 class _Mnemonic {
   external String get phrase;
 }

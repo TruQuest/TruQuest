@@ -3,10 +3,10 @@ import '../../general/errors/error.dart';
 
 abstract class UserResultVm {}
 
-class CreateSmartWalletSuccessVm extends UserResultVm {
-  final SmartWallet wallet;
+class GenerateMnemonicSuccessVm extends UserResultVm {
+  final String mnemonic;
 
-  CreateSmartWalletSuccessVm({required this.wallet});
+  GenerateMnemonicSuccessVm({required this.mnemonic});
 }
 
 class CreateSmartWalletFromMnemonicSuccessVm extends UserResultVm {
@@ -15,7 +15,7 @@ class CreateSmartWalletFromMnemonicSuccessVm extends UserResultVm {
   CreateSmartWalletFromMnemonicSuccessVm({required this.wallet});
 }
 
-class EncryptAndSaveSmartWalletSuccessVm extends UserResultVm {}
+class CreateAndSaveEncryptedSmartWalletSuccessVm extends UserResultVm {}
 
 class SignInWithEthereumSuccessVm extends UserResultVm {}
 
