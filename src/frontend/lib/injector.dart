@@ -1,12 +1,12 @@
 import 'package:kiwi/kiwi.dart';
 
+import 'ethereum/services/third_party_wallet_service.dart';
 import 'ethereum/services/user_operation_service.dart';
 import 'ethereum/services/ethereum_rpc_provider.dart';
-import 'ethereum/models/im/user_operation.dart';
 import 'general/contracts/dummy_contract.dart';
 import 'general/contracts/erc4337/entrypoint_contract.dart';
 import 'ethereum/services/ethereum_api_service.dart';
-import 'ethereum/services/smart_wallet_service.dart';
+import 'ethereum/services/local_wallet_service.dart';
 import 'general/contracts/erc4337/iaccount_factory_contract.dart';
 import 'general/contracts/erc4337/ientrypoint_contract.dart';
 import 'general/contracts/erc4337/simple_account_factory_contract.dart';
@@ -86,10 +86,10 @@ abstract class Injector {
     from: SimpleAccountFactoryContract,
   )
   @Register.singleton(DummyContract)
-  @Register.singleton(SmartWalletService)
+  @Register.singleton(LocalWalletService)
   @Register.singleton(EthereumApiService)
-  @Register.factory(UserOperationBuilder)
   @Register.singleton(UserOperationService)
+  @Register.singleton(ThirdPartyWalletService)
   void configure();
 }
 

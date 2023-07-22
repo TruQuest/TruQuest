@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 
-import '../vm/smart_wallet.dart';
+import '../../../user/errors/wallet_locked_error.dart';
+import '../../services/iwallet_service.dart';
 import '../../services/ethereum_api_service.dart';
 import '../../../ethereum_js_interop.dart';
 import '../../../widget_extensions.dart';
@@ -97,11 +98,11 @@ class UserOperation {
 }
 
 class UserOperationBuilder {
+  final IWalletService _walletService;
   final EthereumApiService _ethereumApiService;
   final IEntryPointContract _entryPointContract;
   final IAccountFactoryContract _accountFactoryContract;
 
-  late final SmartWallet _wallet;
   late final String _sender;
   late final BigInt _nonce;
   late final String _initCode;
@@ -117,22 +118,23 @@ class UserOperationBuilder {
   final List<Future Function()> _tasks = [];
 
   UserOperationBuilder(
+    this._walletService,
     this._ethereumApiService,
     this._entryPointContract,
     this._accountFactoryContract,
-  );
+  ) {
+    // @@NOTE: Only relevant for LocalWalletService. ThirdParty always returns true.
+    if (!_walletService.isUnlocked) throw WalletLockedError();
 
-  UserOperationBuilder from(SmartWallet wallet) {
-    _wallet = wallet;
-    _sender = wallet.currentWalletAddress;
+    _sender = _walletService.currentWalletAddress!;
     _tasks.add(() async {
       var code = await _ethereumApiService.getCode(_sender);
       _initCode = code == '0x'
-          ? _accountFactoryContract.getInitCode(_wallet.currentOwnerAddress)
+          ? _accountFactoryContract.getInitCode(
+              _walletService.currentOwnerAddress!,
+            )
           : '0x';
     });
-
-    return this;
   }
 
   UserOperationBuilder _withCurrentNonce() {
@@ -258,7 +260,7 @@ class UserOperationBuilder {
     _tasks.add(() async {
       var userOpHash = await _entryPointContract.getUserOpHash(_userOp);
       _userOp = _userOp.copyWith(
-        signature: _wallet.ownerSignDigest(userOpHash),
+        signature: await _walletService.personalSignDigest(userOpHash),
       );
     });
 

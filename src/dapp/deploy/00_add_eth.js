@@ -30,6 +30,15 @@ module.exports = async ({ getNamedAccounts, getChainId }) => {
     var deployer = ethers.provider.getSigner(accounts["deployer"]);
 
     var walletAddresses = [
+      "0x20FD69D46DC690ef926d209FF016398D6613F168",
+      "0x29b9B8924cD0c6eae70981f611f3A2a07AC61f16",
+      "0xFC2a6bE9D03eb0F4Db06EaBCac63be3f5002A09B",
+      "0x0aB37d130deD0a85fCf2d472ac7aef1650C3CaaE",
+      "0x881606962701F9483d1D5FAD45d48C27Ec9698E7",
+      "0xaB45E127Fd54B2302E0B1c76d0444b50E12D6d1B",
+      "0x297c19fb45f0a4022c6D7030f21696207e51B9B8",
+      "0x9914DADEe4De641Da1f124Fc6026535be249ECc8",
+
       "0x69c2ac462AeeD245Fd1A92C789A5d6ccf94b05B7",
       "0xd5938750a90d2B1529bE082dF1030882DEF5dBab",
       "0x334A60c06D394Eef6970A0A6679DDbE767972FeD",

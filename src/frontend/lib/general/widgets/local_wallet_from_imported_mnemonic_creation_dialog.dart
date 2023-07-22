@@ -5,51 +5,28 @@ import '../../user/bloc/user_actions.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../../widget_extensions.dart';
 
-class SignInFromMnemonicDialog extends StatefulWidget {
-  const SignInFromMnemonicDialog({super.key});
+class LocalWalletFromImportedMnemonicCreationDialog extends StatefulWidget {
+  const LocalWalletFromImportedMnemonicCreationDialog({super.key});
 
   @override
-  State<SignInFromMnemonicDialog> createState() =>
-      _SignInFromMnemonicDialogState();
+  State<LocalWalletFromImportedMnemonicCreationDialog> createState() =>
+      _LocalWalletFromImportedMnemonicCreationDialogState();
 }
 
-class _SignInFromMnemonicDialogState extends StateX<SignInFromMnemonicDialog> {
+class _LocalWalletFromImportedMnemonicCreationDialogState
+    extends StateX<LocalWalletFromImportedMnemonicCreationDialog> {
   late final _userBloc = use<UserBloc>();
 
   final _mnemonicController = TextEditingController();
-  final _passwordController1 = TextEditingController();
-  final _passwordController2 = TextEditingController();
+  final _passwordController = TextEditingController();
 
-  late int _currentStep;
-
-  @override
-  void initState() {
-    super.initState();
-    var currentUser = _userBloc.latestCurrentUser!;
-    if (currentUser.walletAddress == null) {
-      _currentStep = 0;
-    } else {
-      _currentStep = 2;
-    }
-  }
+  int _currentStep = 0;
 
   @override
   void dispose() {
     _mnemonicController.dispose();
-    _passwordController1.dispose();
-    _passwordController2.dispose();
+    _passwordController.dispose();
     super.dispose();
-  }
-
-  String _getButtonLabel(int step) {
-    switch (step) {
-      case 0:
-        return 'Import';
-      case 1:
-        return 'Create';
-      default:
-        return 'Sign-in';
-    }
   }
 
   @override
@@ -67,7 +44,7 @@ class _SignInFromMnemonicDialogState extends StateX<SignInFromMnemonicDialog> {
         children: [
           SizedBox(
             width: 400,
-            height: 500,
+            height: 400,
             child: SingleChildScrollView(
               child: Stepper(
                 currentStep: _currentStep,
@@ -78,26 +55,14 @@ class _SignInFromMnemonicDialogState extends StateX<SignInFromMnemonicDialog> {
                       backgroundColor: const Color(0xFF242423),
                       foregroundColor: Colors.white,
                     ),
-                    child: Text(_getButtonLabel(details.currentStep)),
+                    child: Text(details.currentStep == 0 ? 'Import' : 'Create'),
                     onPressed: () async {
                       if (details.currentStep == 0) {
                         details.onStepContinue!();
-                      } else if (details.currentStep == 1) {
-                        var action = CreateAndSaveEncryptedSmartWallet(
-                          mnemonic: _mnemonicController.text,
-                          password: _passwordController1.text,
-                        );
-                        _userBloc.dispatch(action);
-
-                        var success = await action.result;
-                        if (success != null) {
-                          _mnemonicController.clear();
-                          _passwordController1.clear();
-                          details.onStepContinue!();
-                        }
                       } else {
-                        var action = SignInWithEthereum(
-                          password: _passwordController2.text,
+                        var action = CreateAndSaveEncryptedLocalWallet(
+                          mnemonic: _mnemonicController.text,
+                          password: _passwordController.text,
                         );
                         _userBloc.dispatch(action);
 
@@ -144,7 +109,7 @@ class _SignInFromMnemonicDialogState extends StateX<SignInFromMnemonicDialog> {
                   ),
                   Step(
                     title: Text(
-                      'Create a smart wallet from the phrase and a password',
+                      'Create a wallet from the phrase and a password',
                       style: GoogleFonts.philosopher(
                         color: const Color(0xffF8F9FA),
                         fontSize: 16,
@@ -153,34 +118,7 @@ class _SignInFromMnemonicDialogState extends StateX<SignInFromMnemonicDialog> {
                     content: Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: TextField(
-                        controller: _passwordController1,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          hintText: 'Password',
-                          hintStyle: TextStyle(color: Colors.white70),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.white70),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    ),
-                    isActive: true,
-                  ),
-                  Step(
-                    title: Text(
-                      'Sign-in',
-                      style: GoogleFonts.philosopher(
-                        color: const Color(0xffF8F9FA),
-                        fontSize: 16,
-                      ),
-                    ),
-                    content: Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: TextField(
-                        controller: _passwordController2,
+                        controller: _passwordController,
                         obscureText: true,
                         decoration: const InputDecoration(
                           hintText: 'Password',

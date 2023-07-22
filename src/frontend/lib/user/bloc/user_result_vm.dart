@@ -1,7 +1,12 @@
-import '../../ethereum/models/vm/smart_wallet.dart';
 import '../../general/errors/error.dart';
 
 abstract class UserResultVm {}
+
+class SelectThirdPartyWalletSuccessVm extends UserResultVm {
+  final bool shouldRequestAccounts;
+
+  SelectThirdPartyWalletSuccessVm({required this.shouldRequestAccounts});
+}
 
 class GenerateMnemonicSuccessVm extends UserResultVm {
   final String mnemonic;
@@ -9,15 +14,13 @@ class GenerateMnemonicSuccessVm extends UserResultVm {
   GenerateMnemonicSuccessVm({required this.mnemonic});
 }
 
-class CreateSmartWalletFromMnemonicSuccessVm extends UserResultVm {
-  final SmartWallet wallet;
+class CreateAndSaveEncryptedLocalWalletSuccessVm extends UserResultVm {}
 
-  CreateSmartWalletFromMnemonicSuccessVm({required this.wallet});
+class SignInWithEthereumFailureVm extends UserResultVm {
+  final Error error;
+
+  SignInWithEthereumFailureVm({required this.error});
 }
-
-class CreateAndSaveEncryptedSmartWalletSuccessVm extends UserResultVm {}
-
-class SignInWithEthereumSuccessVm extends UserResultVm {}
 
 class AddEmailSuccessVm extends UserResultVm {}
 

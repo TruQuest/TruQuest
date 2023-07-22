@@ -1,49 +1,91 @@
+import 'dart:async';
+
 import 'package:rxdart/rxdart.dart';
 
+import '../../ethereum/services/iwallet_service.dart';
+import '../../ethereum/services/third_party_wallet_service.dart';
 import '../../ethereum/services/user_operation_service.dart';
 import '../../general/contracts/truquest_contract.dart';
-import '../errors/wallet_locked_error.dart';
+import '../../widget_extensions.dart';
 import 'user_api_service.dart';
 import '../models/vm/user_vm.dart';
-import '../../ethereum/models/vm/smart_wallet.dart';
-import '../../ethereum/services/smart_wallet_service.dart';
+import '../../ethereum/services/local_wallet_service.dart';
 import '../../general/services/local_storage.dart';
 import '../../general/services/server_connector.dart';
 import '../../general/errors/error.dart';
 
 class UserService {
-  final SmartWalletService _smartWalletService;
+  final LocalWalletService _localWalletService;
+  final ThirdPartyWalletService _thirdPartyWalletService;
   final UserApiService _userApiService;
   final ServerConnector _serverConnector;
   final LocalStorage _localStorage;
   final UserOperationService _userOperationService;
   final TruQuestContract _truQuestContract;
 
+  late final IWalletService _walletService;
+  String? _selectedWalletName;
+  String? get selectedWalletName => _selectedWalletName;
+
   final _currentUserChangedEventChannel = BehaviorSubject<UserVm>();
   Stream<UserVm> get currentUserChanged$ =>
       _currentUserChangedEventChannel.stream;
   UserVm? get latestCurrentUser => _currentUserChangedEventChannel.valueOrNull;
 
-  final _walletAddressesChannel = BehaviorSubject<List<String>>();
-  Stream<List<String>> get walletAddresses$ => _walletAddressesChannel.stream;
-
   UserService(
-    this._smartWalletService,
+    this._localWalletService,
+    this._thirdPartyWalletService,
     this._userApiService,
     this._serverConnector,
     this._localStorage,
     this._userOperationService,
     this._truQuestContract,
   ) {
-    if (_localStorage.getString('SmartWallet') == null) {
+    var selectedWallet = _localStorage.getString('SelectedWallet');
+    if (selectedWallet == null) {
       _reloadUser(null);
       return;
     }
 
-    _smartWalletService.getFromLocalStorage(null).then((wallet) {
-      _walletAddressesChannel.add(wallet.walletAddresses);
-      _reloadUser(wallet.currentWalletAddress);
-    });
+    if (selectedWallet == 'Local') {
+      _setupLocalWallet();
+    } else {
+      _setupThirdPartyWallet(selectedWallet);
+    }
+  }
+
+  void _setupLocalWallet() async {
+    await _localWalletService.setup();
+    _walletService = _localWalletService;
+    _selectedWalletName = 'Local';
+
+    registerUserOperationBuilder(_localWalletService);
+
+    _walletService.currentWalletAddressChanged$.listen(
+      (currentWalletAddress) => _reloadUser(currentWalletAddress),
+    );
+  }
+
+  Future<bool> _setupThirdPartyWallet(String walletName) async {
+    _thirdPartyWalletService.setup(walletName);
+    _walletService = _thirdPartyWalletService;
+    _selectedWalletName = walletName;
+
+    registerUserOperationBuilder(_thirdPartyWalletService);
+
+    var initialWalletAddressRetrieved = Completer<String?>();
+
+    _walletService.currentWalletAddressChanged$.listen(
+      (currentWalletAddress) {
+        if (!initialWalletAddressRetrieved.isCompleted) {
+          initialWalletAddressRetrieved.complete(currentWalletAddress);
+        }
+
+        _reloadUser(currentWalletAddress);
+      },
+    );
+
+    return await initialWalletAddressRetrieved.future == null;
   }
 
   void _reloadUser(String? currentWalletAddress) {
@@ -66,23 +108,31 @@ class UserService {
     ));
   }
 
-  String generateMnemonic() => _smartWalletService.generateMnemonic();
-
-  Future createAndSaveEncryptedSmartWallet(
+  Future createAndSaveEncryptedLocalWallet(
     String mnemonic,
     String password,
-  ) =>
-      _smartWalletService.createAndSaveEncryptedSmartWallet(
-        mnemonic,
-        password,
-      );
+  ) async {
+    await _localWalletService.createAndSaveEncryptedWallet(
+      mnemonic,
+      password,
+    );
+    await _localStorage.setString('SelectedWallet', 'Local');
+    _setupLocalWallet();
+  }
 
-  Future signInWithEthereum(String password) async {
-    // @@NOTE: Always get the wallet from the encrypted, even if we
-    // have previously unlocked it.
-    // @@TODO: Handle invalid password.
-    var wallet = await _smartWalletService.getFromLocalStorage(password);
-    var currentWalletAddress = wallet.currentWalletAddress;
+  Future<bool> selectThirdPartyWallet(String walletName) async {
+    // @@NOTE: First save the value and THEN setup, so that if a reload
+    // is needed (talking to you, Metamask), the selected wallet is picked up
+    // on reload.
+    await _localStorage.setString('SelectedWallet', walletName);
+    bool shouldRequestAccounts = await _setupThirdPartyWallet(walletName);
+    return shouldRequestAccounts;
+  }
+
+  Future connectAccount() => _thirdPartyWalletService.connectAccount();
+
+  Future signInWithEthereum() async {
+    var currentWalletAddress = _walletService.currentWalletAddress!;
 
     var nonce = await _userApiService.getNonceForSiwe(currentWalletAddress);
     var domain = 'truquest.io';
@@ -105,7 +155,7 @@ class UserService {
         'Nonce: $nonce\n'
         'Issued At: $nowWithoutMicroseconds';
 
-    var signature = wallet.ownerSign(message);
+    var signature = await _walletService.personalSign(message);
 
     var siweResult = await _userApiService.signInWithEthereum(
       message,
@@ -117,72 +167,32 @@ class UserService {
       [siweResult.token, siweResult.username],
     );
 
-    _walletAddressesChannel.add(wallet.walletAddresses);
-
     _reloadUser(currentWalletAddress);
   }
 
   Future addEmail(String email) async {
-    var wallet = _smartWalletService.wallet;
-    if (wallet?.locked ?? true) {
-      print('Smart Wallet not unlocked');
-      return;
-    }
+    // var wallet = _localWalletService.wallet;
+    // if (wallet?.locked ?? true) {
+    //   print('Smart Wallet not unlocked');
+    //   return;
+    // }
 
-    await _userApiService.addEmail(email);
+    // await _userApiService.addEmail(email);
   }
 
   Future confirmEmail(String confirmationToken) async {
-    var wallet = _smartWalletService.wallet;
-    if (wallet?.locked ?? true) {
-      print('Smart Wallet not unlocked');
-      return;
-    }
+    // var wallet = _localWalletService.wallet;
+    // if (wallet?.locked ?? true) {
+    //   print('Smart Wallet not unlocked');
+    //   return;
+    // }
 
-    await _userApiService.confirmEmail(confirmationToken);
+    // await _userApiService.confirmEmail(confirmationToken);
   }
 
-  Future unlockWallet(String password) async {
-    // @@TODO: Handle invalid password.
-    await _smartWalletService.getFromLocalStorage(password);
-  }
-
-  Future<WalletLockedError?> addAccount() async {
-    var wallet = _smartWalletService.wallet!;
-    if (wallet.locked) {
-      return WalletLockedError();
-    }
-
-    int index = wallet.addOwnerAccount(switchToAdded: false);
-    var walletAddress = await _smartWalletService.getWalletAddress(
-      wallet.getOwnerAddress(index),
-    );
-    wallet.setOwnerWalletAddress(index, walletAddress);
-
-    await _smartWalletService.updateAccountListInLocalStorage(wallet);
-
-    _walletAddressesChannel.add(wallet.walletAddresses);
-
-    return null;
-  }
-
-  Future switchAccount(String walletAddress) async {
-    var wallet = _smartWalletService.wallet!;
-    wallet.switchCurrentToWalletsOwner(walletAddress);
-    await _smartWalletService.updateAccountListInLocalStorage(wallet);
-    _reloadUser(wallet.currentWalletAddress);
-  }
-
-  Future<Error?> depositFunds(int amount) async {
-    var wallet = _smartWalletService.wallet!;
-    if (wallet.locked) {
-      return WalletLockedError();
-    }
-
+  Future depositFunds(int amount) async {
     print('**************** Deposit funds ****************');
-
-    return await _userOperationService.send(
-      from: wallet,
+    await _userOperationService.send(
       target: TruQuestContract.address,
       action: _truQuestContract.depositFunds(amount),
     );

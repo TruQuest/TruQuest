@@ -6,7 +6,7 @@ import 'package:either_dart/either.dart';
 import '../../user/services/user_service.dart';
 import '../../ethereum/services/user_operation_service.dart';
 import '../../ethereum/services/ethereum_rpc_provider.dart';
-import '../../ethereum/services/smart_wallet_service.dart';
+import '../../ethereum/services/local_wallet_service.dart';
 import '../models/im/new_acceptance_poll_vote_im.dart';
 import '../../user/errors/wallet_locked_error.dart';
 import '../../general/models/rvm/verifier_lottery_participant_entry_vm.dart';
@@ -27,7 +27,7 @@ import '../../general/errors/error.dart';
 
 class ThingService {
   final ThingApiService _thingApiService;
-  final SmartWalletService _smartWalletService;
+  final LocalWalletService _localWalletService;
   final UserService _userService;
   final EthereumRpcProvider _ethereumRpcProvider;
   final UserOperationService _userOperationService;
@@ -42,7 +42,7 @@ class ThingService {
 
   ThingService(
     this._thingApiService,
-    this._smartWalletService,
+    this._localWalletService,
     this._userService,
     this._ethereumRpcProvider,
     this._userOperationService,
@@ -86,18 +86,18 @@ class ThingService {
   }
 
   Future<Error?> fundThing(String thingId, String signature) async {
-    var wallet = _smartWalletService.wallet!;
-    if (wallet.locked) {
-      return WalletLockedError();
-    }
+    // var wallet = _smartWalletService.wallet!;
+    // if (wallet.locked) {
+    //   return WalletLockedError();
+    // }
 
-    print('**************** Fund thing ****************');
+    // print('**************** Fund thing ****************');
 
-    return await _userOperationService.send(
-      from: wallet,
-      target: TruQuestContract.address,
-      action: _truQuestContract.fundThing(thingId, signature),
-    );
+    // return await _userOperationService.send(
+    //   from: wallet,
+    //   target: TruQuestContract.address,
+    //   action: _truQuestContract.fundThing(thingId, signature),
+    // );
   }
 
   Future<(String?, int?, int, bool?)> getVerifierLotteryInfo(
@@ -131,18 +131,18 @@ class ThingService {
   }
 
   Future<Error?> joinLottery(String thingId) async {
-    var wallet = _smartWalletService.wallet!;
-    if (wallet.locked) {
-      return WalletLockedError();
-    }
+    // var wallet = _smartWalletService.wallet!;
+    // if (wallet.locked) {
+    //   return WalletLockedError();
+    // }
 
-    print('******************** Join Lottery ********************');
+    // print('******************** Join Lottery ********************');
 
-    return await _userOperationService.send(
-      from: wallet,
-      target: ThingSubmissionVerifierLotteryContract.address,
-      action: _thingSubmissionVerifierLotteryContract.joinLottery(thingId),
-    );
+    // return await _userOperationService.send(
+    //   from: wallet,
+    //   target: ThingSubmissionVerifierLotteryContract.address,
+    //   action: _thingSubmissionVerifierLotteryContract.joinLottery(thingId),
+    // );
   }
 
   Future<GetVerifierLotteryParticipantsRvm> getVerifierLotteryParticipants(
@@ -217,26 +217,26 @@ class ThingService {
     DecisionIm decision,
     String reason,
   ) async {
-    var wallet = _smartWalletService.wallet!;
-    if (wallet.locked) {
-      return WalletLockedError();
-    }
+    // var wallet = _smartWalletService.wallet!;
+    // if (wallet.locked) {
+    //   return WalletLockedError();
+    // }
 
-    var vote = NewAcceptancePollVoteIm(
-      thingId: thingId,
-      castedAt: DateTime.now().getString(),
-      decision: decision,
-      reason: reason,
-    );
+    // var vote = NewAcceptancePollVoteIm(
+    //   thingId: thingId,
+    //   castedAt: DateTime.now().getString(),
+    //   decision: decision,
+    //   reason: reason,
+    // );
 
-    var signature = wallet.ownerSign(jsonEncode(vote.toJsonForSigning()));
+    // var signature = wallet.ownerSign(jsonEncode(vote.toJsonForSigning()));
 
-    var ipfsCid = await _thingApiService.castThingAcceptancePollVote(
-      vote,
-      signature,
-    );
+    // var ipfsCid = await _thingApiService.castThingAcceptancePollVote(
+    //   vote,
+    //   signature,
+    // );
 
-    print('**************** Vote cid: $ipfsCid ****************');
+    // print('**************** Vote cid: $ipfsCid ****************');
 
     return null;
   }
@@ -247,23 +247,23 @@ class ThingService {
     DecisionIm decision,
     String reason,
   ) async {
-    var wallet = _smartWalletService.wallet!;
-    if (wallet.locked) {
-      return WalletLockedError();
-    }
+    // var wallet = _smartWalletService.wallet!;
+    // if (wallet.locked) {
+    //   return WalletLockedError();
+    // }
 
-    print('********************** Cast Vote **********************');
+    // print('********************** Cast Vote **********************');
 
-    return await _userOperationService.send(
-      from: wallet,
-      target: AcceptancePollContract.address,
-      action: _acceptancePollContract.castVote(
-        thingId,
-        userIndexInThingVerifiersArray,
-        decision,
-        reason,
-      ),
-    );
+    // return await _userOperationService.send(
+    //   from: wallet,
+    //   target: AcceptancePollContract.address,
+    //   action: _acceptancePollContract.castVote(
+    //     thingId,
+    //     userIndexInThingVerifiersArray,
+    //     decision,
+    //     reason,
+    //   ),
+    // );
   }
 
   Future<GetVerifiersRvm> getVerifiers(String thingId) async {

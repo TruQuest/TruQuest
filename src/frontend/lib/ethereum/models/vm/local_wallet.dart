@@ -5,9 +5,10 @@ import 'package:convert/convert.dart';
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import '../../../user/errors/wallet_locked_error.dart';
 import '../../../ethereum_js_interop.dart';
 
-class SmartWallet {
+class LocalWallet {
   HDNode? _owner;
   late int _currentOwnerIndex;
   late final Map<int, String> _ownerIndexToAddress;
@@ -30,13 +31,13 @@ class SmartWallet {
           .map((e) => e.value)
           .toList();
 
-  SmartWallet(String mnemonic, String password)
+  LocalWallet(String mnemonic, String password)
       : _owner = HDNode.fromMnemonic(mnemonic, password) {
     _ownerIndexToAddress = {};
     _ownerIndexToWalletAddress = {};
   }
 
-  SmartWallet._(
+  LocalWallet._(
     this._owner,
     this._currentOwnerIndex,
     this._ownerIndexToAddress,
@@ -46,6 +47,8 @@ class SmartWallet {
   void lock() => _owner = null;
 
   int addOwnerAccount({bool switchToAdded = true}) {
+    if (locked) throw WalletLockedError();
+
     var index =
         ((_ownerIndexToAddress.keys.toList()..sort()).lastOrNull ?? -1) + 1;
     var path = "m/44'/60'/0'/0/$index";
@@ -70,11 +73,11 @@ class SmartWallet {
     _currentOwnerIndex = index;
   }
 
-  static Future<SmartWallet> fromMap(
+  static Future<LocalWallet> fromMap(
     Map<String, dynamic> map, {
     String? password,
   }) async =>
-      SmartWallet._(
+      LocalWallet._(
         password != null
             ? HDNode.fromMnemonic(
                 await _decryptMnemonic(map['encryptedOwner'], password),
@@ -120,6 +123,8 @@ class SmartWallet {
       };
 
   String ownerSign(String message) {
+    if (locked) throw WalletLockedError();
+
     var pk = SigningKey(
       Uint8List.fromList(hex.decode(_currentPrivateKey.substring(2))),
     );
@@ -131,6 +136,11 @@ class SmartWallet {
   }
 
   String ownerSignDigest(String digest) {
+    // @@NOTE: In theory, this one should never fire since we check that
+    // the wallet is unlocked during UserOperationBuilder instantiation and
+    // the method is not called from anywhere else, but just in case...
+    if (locked) throw WalletLockedError();
+
     if (digest.startsWith('0x')) digest = digest.substring(2);
 
     var pk = SigningKey(

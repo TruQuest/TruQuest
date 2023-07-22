@@ -1,60 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'sign_in_from_mnemonic_dialog.dart';
+import 'local_wallet_from_imported_mnemonic_creation_dialog.dart';
 import '../../user/bloc/user_actions.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../../widget_extensions.dart';
 
-class SignInDialog extends StatefulWidget {
-  const SignInDialog({super.key});
+class LocalWalletCreationDialog extends StatefulWidget {
+  const LocalWalletCreationDialog({super.key});
 
   @override
-  State<SignInDialog> createState() => _SignInDialogState();
+  State<LocalWalletCreationDialog> createState() =>
+      _LocalWalletCreationDialogState();
 }
 
-class _SignInDialogState extends StateX<SignInDialog> {
+class _LocalWalletCreationDialogState
+    extends StateX<LocalWalletCreationDialog> {
   late final _userBloc = use<UserBloc>();
 
-  final _passwordController1 = TextEditingController();
-  final _passwordController2 = TextEditingController();
+  final _passwordController = TextEditingController();
 
-  late int _currentStep;
+  int _currentStep = 0;
   String? _mnemonic;
-
-  @override
-  void initState() {
-    super.initState();
-    var currentUser = _userBloc.latestCurrentUser!;
-    if (currentUser.walletAddress == null) {
-      _currentStep = 0;
-    } else {
-      _currentStep = 2;
-    }
-
-    // @@NOTE: If user clicks Sign-in but then closes the dialog and opens it up again
-    // while the sign-in process is still in progress, he will be directed to the step = 2
-    // and won't receive an update when the process gets completed.
-    // This is fine though since signing-in multiple times is ok.
-  }
 
   @override
   void dispose() {
     _mnemonic = null;
-    _passwordController1.dispose();
-    _passwordController2.dispose();
+    _passwordController.dispose();
     super.dispose();
-  }
-
-  String _getButtonLabel(int step) {
-    switch (step) {
-      case 0:
-        return 'Generate';
-      case 1:
-        return 'Create';
-      default:
-        return 'Sign-in';
-    }
   }
 
   @override
@@ -72,7 +45,7 @@ class _SignInDialogState extends StateX<SignInDialog> {
         children: [
           SizedBox(
             width: 400,
-            height: 400,
+            height: 300,
             child: Column(
               children: [
                 Expanded(
@@ -87,7 +60,9 @@ class _SignInDialogState extends StateX<SignInDialog> {
                             backgroundColor: const Color(0xFF242423),
                             foregroundColor: Colors.white,
                           ),
-                          child: Text(_getButtonLabel(details.currentStep)),
+                          child: Text(
+                            details.currentStep == 0 ? 'Generate' : 'Create',
+                          ),
                           onPressed: () async {
                             if (details.currentStep == 0) {
                               var action = GenerateMnemonic();
@@ -98,22 +73,10 @@ class _SignInDialogState extends StateX<SignInDialog> {
                                 _mnemonic = success.mnemonic;
                                 details.onStepContinue!();
                               }
-                            } else if (details.currentStep == 1) {
-                              var action = CreateAndSaveEncryptedSmartWallet(
-                                mnemonic: _mnemonic!,
-                                password: _passwordController1.text,
-                              );
-                              _userBloc.dispatch(action);
-
-                              var success = await action.result;
-                              if (success != null) {
-                                _mnemonic = null;
-                                _passwordController1.clear();
-                                details.onStepContinue!();
-                              }
                             } else {
-                              var action = SignInWithEthereum(
-                                password: _passwordController2.text,
+                              var action = CreateAndSaveEncryptedLocalWallet(
+                                mnemonic: _mnemonic!,
+                                password: _passwordController.text,
                               );
                               _userBloc.dispatch(action);
 
@@ -130,7 +93,7 @@ class _SignInDialogState extends StateX<SignInDialog> {
                       steps: [
                         Step(
                           title: Text(
-                            'Generate a secret phrase',
+                            'Generate a random secret phrase',
                             style: GoogleFonts.philosopher(
                               color: const Color(0xffF8F9FA),
                               fontSize: 16,
@@ -150,7 +113,7 @@ class _SignInDialogState extends StateX<SignInDialog> {
                         ),
                         Step(
                           title: Text(
-                            'Create a smart wallet from the phrase and a password',
+                            'Create a wallet from the phrase and a password',
                             style: GoogleFonts.philosopher(
                               color: const Color(0xffF8F9FA),
                               fontSize: 16,
@@ -159,34 +122,7 @@ class _SignInDialogState extends StateX<SignInDialog> {
                           content: Padding(
                             padding: const EdgeInsets.only(bottom: 12),
                             child: TextField(
-                              controller: _passwordController1,
-                              obscureText: true,
-                              decoration: const InputDecoration(
-                                hintText: 'Password',
-                                hintStyle: TextStyle(color: Colors.white70),
-                                enabledBorder: UnderlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.white70),
-                                ),
-                                focusedBorder: UnderlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.white),
-                                ),
-                              ),
-                            ),
-                          ),
-                          isActive: true,
-                        ),
-                        Step(
-                          title: Text(
-                            'Sign-in',
-                            style: GoogleFonts.philosopher(
-                              color: const Color(0xffF8F9FA),
-                              fontSize: 16,
-                            ),
-                          ),
-                          content: Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: TextField(
-                              controller: _passwordController2,
+                              controller: _passwordController,
                               obscureText: true,
                               decoration: const InputDecoration(
                                 hintText: 'Password',
@@ -216,7 +152,8 @@ class _SignInDialogState extends StateX<SignInDialog> {
                     Navigator.of(context).pop();
                     showDialog(
                       context: context,
-                      builder: (_) => SignInFromMnemonicDialog(),
+                      builder: (_) =>
+                          LocalWalletFromImportedMnemonicCreationDialog(),
                     );
                   },
                 ),

@@ -1,5 +1,4 @@
 import 'ethereum_api_service.dart';
-import '../models/vm/smart_wallet.dart';
 import '../errors/user_operation_error.dart';
 import '../models/im/user_operation.dart';
 import '../models/vm/get_user_operation_receipt_rvm.dart';
@@ -9,8 +8,7 @@ class UserOperationService {
 
   UserOperationService(this._ethereumApiService);
 
-  Future<UserOperationError?> send({
-    required SmartWallet from,
+  Future send({
     required String target,
     required String action,
     int confirmations = 1,
@@ -19,20 +17,18 @@ class UserOperationService {
     UserOperation userOp;
     UserOperationError? error;
     String? userOpHash;
-    double preVerificationGasMultiplier = 1,
-        verificationGasLimitMultiplier = 1,
-        callGasLimitMultiplier = 3;
+    double preVerificationGasMultiplier = 1.1,
+        verificationGasLimitMultiplier = 1.5,
+        callGasLimitMultiplier = 3.0;
 
     do {
       error = null;
 
       userOp = await UserOperation.create()
-          .from(from)
           .withEstimatedGasLimitsMultipliers(
-            preVerificationGasMultiplier: preVerificationGasMultiplier,
-            verificationGasLimitMultiplier: verificationGasLimitMultiplier,
-            callGasLimitMultiplier: callGasLimitMultiplier,
-          )
+              preVerificationGasMultiplier: preVerificationGasMultiplier,
+              verificationGasLimitMultiplier: verificationGasLimitMultiplier,
+              callGasLimitMultiplier: callGasLimitMultiplier)
           .action((target, action)).signed();
 
       print('UserOp[$attempts]:\n$userOp');
@@ -59,7 +55,7 @@ class UserOperationService {
     );
 
     if (error != null) {
-      return error;
+      throw error;
     }
 
     print('UserOp Hash: $userOpHash');
@@ -80,9 +76,7 @@ class UserOperationService {
       print(
         'UserOp Execution Failed. Reason: ${receipt.reason ?? 'Unspecified'}',
       );
-      return UserOperationError(receipt.reason);
+      throw UserOperationError(receipt.reason);
     }
-
-    return null;
   }
 }

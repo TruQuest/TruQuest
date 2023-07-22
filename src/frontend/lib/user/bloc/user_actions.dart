@@ -8,26 +8,31 @@ abstract class UserAction {
 abstract class UserActionAwaitable<T extends UserResultVm?> extends UserAction
     with AwaitableResult<T> {}
 
+class SelectThirdPartyWallet
+    extends UserActionAwaitable<SelectThirdPartyWalletSuccessVm> {
+  final String walletName;
+
+  SelectThirdPartyWallet({required this.walletName});
+}
+
+class ConnectAccount extends UserAction {}
+
 class GenerateMnemonic
     extends UserActionAwaitable<GenerateMnemonicSuccessVm?> {}
 
-class CreateAndSaveEncryptedSmartWallet
-    extends UserActionAwaitable<CreateAndSaveEncryptedSmartWalletSuccessVm?> {
+class CreateAndSaveEncryptedLocalWallet
+    extends UserActionAwaitable<CreateAndSaveEncryptedLocalWalletSuccessVm?> {
   final String mnemonic;
   final String password;
 
-  CreateAndSaveEncryptedSmartWallet({
+  CreateAndSaveEncryptedLocalWallet({
     required this.mnemonic,
     required this.password,
   });
 }
 
 class SignInWithEthereum
-    extends UserActionAwaitable<SignInWithEthereumSuccessVm?> {
-  final String password;
-
-  SignInWithEthereum({required this.password});
-}
+    extends UserActionAwaitable<SignInWithEthereumFailureVm?> {}
 
 class AddEmail extends UserActionAwaitable<AddEmailSuccessVm?> {
   final String email;
