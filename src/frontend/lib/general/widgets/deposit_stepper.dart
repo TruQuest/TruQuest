@@ -18,22 +18,10 @@ class DepositStepper extends StatefulWidget {
 class _DepositStepperState extends StateX<DepositStepper> {
   late final _userBloc = use<UserBloc>();
 
-  final _approveController = TextEditingController();
   final _depositController = TextEditingController();
-
-  int _currentStep = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _approveController.addListener(() {
-      _depositController.text = _approveController.text;
-    });
-  }
 
   @override
   void dispose() {
-    _approveController.dispose();
     _depositController.dispose();
     super.dispose();
   }
@@ -49,29 +37,15 @@ class _DepositStepperState extends StateX<DepositStepper> {
             ),
       ),
       child: Stepper(
-        currentStep: _currentStep,
+        currentStep: 0,
         controlsBuilder: (context, details) => SwipeButton(
-          key: ValueKey(details.currentStep),
-          text: 'Swipe to ${details.currentStep == 0 ? 'approve' : 'deposit'}',
+          text: 'Swipe to deposit',
           enabled: true,
           swiped: false,
           onCompletedSwipe: () async {
-            if (details.currentStep == 0) {
-              var action = ApproveFundsUsage(
-                amount: int.parse(_approveController.text),
-              );
-              _userBloc.dispatch(action);
-
-              var failure = await action.result;
-              if (failure == null) {
-                details.onStepContinue!();
-              }
-
-              return failure == null;
-            }
-
-            var amountToDeposit = int.parse(_depositController.text);
-            var action = DepositFunds(amount: amountToDeposit);
+            var action = DepositFunds(
+              amount: int.parse(_depositController.text),
+            );
             _userBloc.dispatch(action);
 
             var failure = await action.result;
@@ -88,42 +62,8 @@ class _DepositStepperState extends StateX<DepositStepper> {
             return failure == null;
           },
         ),
-        onStepContinue: () => setState(() => _currentStep = 1),
-        onStepTapped: (step) => setState(() => _currentStep = step),
         steps: [
-          Step(
-            title: Text(
-              'Approve',
-              style: GoogleFonts.philosopher(
-                color: const Color(0xffF8F9FA),
-                fontSize: 16,
-              ),
-            ),
-            subtitle: Text(
-              'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
-              style: GoogleFonts.raleway(
-                color: Colors.white,
-              ),
-            ),
-            content: Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: TextField(
-                controller: _approveController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  hintText: 'Amount',
-                  hintStyle: TextStyle(color: Colors.white70),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white70),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                ),
-              ),
-            ),
-            isActive: true,
-          ),
+          // @@TODO: Allow specifying units (drops?).
           Step(
             title: Text(
               'Deposit',

@@ -15,7 +15,7 @@ class SelectThirdPartyWallet
   SelectThirdPartyWallet({required this.walletName});
 }
 
-class ConnectAccount extends UserAction {}
+class ConnectAccount extends UserActionAwaitable<ConnectAccountSuccessVm?> {}
 
 class GenerateMnemonic
     extends UserActionAwaitable<GenerateMnemonicSuccessVm?> {}
@@ -58,13 +58,6 @@ class SwitchAccount extends UserActionAwaitable<SwitchAccountSuccessVm> {
   final String walletAddress;
 
   SwitchAccount({required this.walletAddress});
-}
-
-class ApproveFundsUsage
-    extends UserActionAwaitable<ApproveFundsUsageFailureVm?> {
-  final int amount;
-
-  ApproveFundsUsage({required this.amount});
 }
 
 class DepositFunds extends UserActionAwaitable<DepositFundsFailureVm?> {

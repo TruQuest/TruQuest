@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../utils/utils.dart';
-import '../../user/errors/wallet_locked_error.dart';
+import 'sign_in_button.dart';
+import 'qr_code_dialog.dart';
 import 'local_wallet_creation_dialog.dart';
 import '../../user/bloc/user_actions.dart';
 import 'account_list_dialog.dart';
@@ -34,9 +34,22 @@ class UserStatusTracker extends StatelessWidgetX {
                     Icons.wifi_tethering,
                     color: Colors.white,
                   ),
-                  onPressed: () {
-                    if (!_userBloc.localWalletSelected) {
-                      _userBloc.dispatch(ConnectAccount());
+                  onPressed: () async {
+                    if (_userBloc.localWalletSelected) return;
+
+                    var action = ConnectAccount();
+                    _userBloc.dispatch(action);
+
+                    var success = await action.result;
+                    if (success?.walletConnectUri != null) {
+                      if (context.mounted) {
+                        showDialog(
+                          context: context,
+                          builder: (_) => QrCodeDialog(
+                            uri: success!.walletConnectUri!,
+                          ),
+                        );
+                      }
                     }
                   },
                 ),
@@ -94,7 +107,20 @@ class UserStatusTracker extends StatelessWidgetX {
 
                         var success = await action.result;
                         if (success.shouldRequestAccounts) {
-                          _userBloc.dispatch(ConnectAccount());
+                          var action = ConnectAccount();
+                          _userBloc.dispatch(action);
+
+                          var success = await action.result;
+                          if (success?.walletConnectUri != null) {
+                            if (context.mounted) {
+                              showDialog(
+                                context: context,
+                                builder: (_) => QrCodeDialog(
+                                  uri: success!.walletConnectUri!,
+                                ),
+                              );
+                            }
+                          }
                         }
                       },
                     ),
@@ -106,27 +132,7 @@ class UserStatusTracker extends StatelessWidgetX {
         } else if (user.id == null) {
           return Tooltip(
             message: 'Sign-in',
-            child: IconButton(
-              icon: const Icon(
-                Icons.door_sliding,
-                color: Colors.white,
-              ),
-              onPressed: () async {
-                var action = SignInWithEthereum();
-                _userBloc.dispatch(action);
-
-                var failure = await action.result;
-                if (failure != null && failure.error is WalletLockedError) {
-                  if (context.mounted) {
-                    var unlocked = await showUnlockWalletDialog(context);
-                    if (unlocked) {
-                      _userBloc.dispatch(action);
-                      // failure = await action.result;
-                    }
-                  }
-                }
-              },
-            ),
+            child: SignInButton(),
           );
         }
 

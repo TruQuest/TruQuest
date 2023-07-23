@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../../ethereum/services/third_party_wallet_service.dart';
 import '../errors/wallet_locked_error.dart';
 import '../../ethereum/services/local_wallet_service.dart';
 import '../models/vm/user_vm.dart';
@@ -11,6 +12,7 @@ import '../../general/bloc/bloc.dart';
 class UserBloc extends Bloc<UserAction> {
   final UserService _userService;
   final LocalWalletService _localWalletService;
+  final ThirdPartyWalletService _thirdPartyWalletService;
 
   Stream<UserVm> get currentUser$ => _userService.currentUserChanged$;
   UserVm? get latestCurrentUser => _userService.latestCurrentUser;
@@ -24,6 +26,7 @@ class UserBloc extends Bloc<UserAction> {
   UserBloc(
     this._userService,
     this._localWalletService,
+    this._thirdPartyWalletService,
   ) {
     actionChannel.stream.listen((action) {
       if (action is SelectThirdPartyWallet) {
@@ -46,8 +49,6 @@ class UserBloc extends Bloc<UserAction> {
         _addAccount(action);
       } else if (action is SwitchAccount) {
         _switchAccount(action);
-      } else if (action is ApproveFundsUsage) {
-        _approveFundsUsage(action);
       } else if (action is DepositFunds) {
         _depositFunds(action);
       }
@@ -66,7 +67,12 @@ class UserBloc extends Bloc<UserAction> {
   }
 
   void _connectAccount(ConnectAccount action) async {
-    await _userService.connectAccount();
+    var result = await _thirdPartyWalletService.connectAccount();
+    action.complete(
+      result.isRight
+          ? ConnectAccountSuccessVm(walletConnectUri: result.right)
+          : null,
+    );
   }
 
   void _generateMnemonic(GenerateMnemonic action) async {
@@ -121,8 +127,6 @@ class UserBloc extends Bloc<UserAction> {
     await _localWalletService.switchAccount(action.walletAddress);
     action.complete(SwitchAccountSuccessVm());
   }
-
-  void _approveFundsUsage(ApproveFundsUsage action) async {}
 
   void _depositFunds(DepositFunds action) async {
     try {

@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:convert/convert.dart';
 import 'package:either_dart/either.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:universal_html/html.dart' as html;
 
@@ -18,6 +19,19 @@ class ThirdPartyWalletService implements IWalletService {
   String? _connectedAccount;
 
   final walletSetup = Completer<String>();
+
+  late final _walletConnectProviderOpts = WalletConnectProviderOpts(
+    projectId: dotenv.env['WALLET_CONNECT_PROJECT_ID']!,
+    chains: [1],
+    showQrModal: false,
+    methods: [
+      'personal_sign', // Checked in MM, works.
+      'wallet_watchAsset',
+      "wallet_scanQRCode",
+    ],
+    events: ['accountsChanged'],
+  );
+
   final _walletConnectConnectionOpts = WalletConnectConnectionOpts(
     chains: [1],
   );
@@ -31,6 +45,10 @@ class ThirdPartyWalletService implements IWalletService {
         _currentWalletAddress = connectedAccount != null
             ? await _accountFactoryContract.getAddress(connectedAccount)
             : null;
+
+        print(
+          '*************** $_connectedAccount: $_currentWalletAddress ***************',
+        );
 
         return _currentWalletAddress;
       });
@@ -49,9 +67,12 @@ class ThirdPartyWalletService implements IWalletService {
   ThirdPartyWalletService(this._accountFactoryContract)
       : _ethereumWallet = EthereumWallet();
 
-  void setup(String walletName) {
+  Future<bool> setup(String walletName) async {
     // @@TODO: Try-catch selected wallet not available.
-    _ethereumWallet.select(walletName);
+    await _ethereumWallet.select(
+      walletName,
+      walletName == 'WalletConnect' ? _walletConnectProviderOpts : null,
+    );
 
     if (!_ethereumWallet.isInitialized()) {
       html.window.location.reload();
@@ -60,16 +81,14 @@ class ThirdPartyWalletService implements IWalletService {
     _ethereumWallet.removeListener('accountsChanged', _onAccountsChanged);
     _ethereumWallet.onAccountsChanged(_onAccountsChanged);
 
-    if (walletName != 'WalletConnect' ||
-        _ethereumWallet.walletConnectSessionExists()) {
-      _ethereumWallet.getAccounts().then((accounts) {
-        accounts = accounts.map((a) => convertToEip55Address(a)).toList();
-        var connectedAccount = accounts.firstOrNull;
-        _connectedAccountChangedEventChannel.add(connectedAccount);
-      });
-    }
+    var accounts = await _ethereumWallet.getAccounts();
+    accounts = accounts.map((a) => convertToEip55Address(a)).toList();
+    var connectedAccount = accounts.firstOrNull;
+    _connectedAccountChangedEventChannel.add(connectedAccount);
 
     walletSetup.complete(walletName);
+
+    return connectedAccount != null;
   }
 
   void _onAccountsChanged(List<String> accounts) {
@@ -81,15 +100,11 @@ class ThirdPartyWalletService implements IWalletService {
   }
 
   Future<Either<EthereumError, String?>> connectAccount() async {
-    if (!walletSetup.isCompleted) {
-      return Left(EthereumError('Wallet not selected'));
-    }
-
     var walletName = await walletSetup.future;
     if (walletName == 'WalletConnect') {
       var uriGenerated = Completer<String>();
       _ethereumWallet.onDisplayUriOnce((uri) {
-        print('WalletConnect URI: $uri');
+        print('************* WalletConnect URI: $uri *************');
         uriGenerated.complete(uri);
       });
 

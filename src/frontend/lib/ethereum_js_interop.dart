@@ -18,13 +18,6 @@ class EthereumWalletError {
 
 @JS()
 @anonymous
-class EthereumChainIdResult {
-  external String? get chainId;
-  external EthereumWalletError? get error;
-}
-
-@JS()
-@anonymous
 class EthereumRequestAccountsResult {
   external EthereumWalletError? get error;
 }
@@ -34,26 +27,6 @@ class EthereumRequestAccountsResult {
 class EthereumAccountsResult {
   external List<dynamic>? get accounts;
   external EthereumWalletError? get error;
-}
-
-@JS()
-@anonymous
-class EthereumSwitchChainResult {
-  external EthereumWalletError? get error;
-}
-
-@JS()
-@anonymous
-class EthereumChainParams {
-  external factory EthereumChainParams({
-    String id,
-    String name,
-    String rpcUrl,
-  });
-
-  external String get id;
-  external String get name;
-  external String get rpcUrl;
 }
 
 @JS()
@@ -71,18 +44,16 @@ class EthereumSignResult {
 
 @JS('EthereumWallet')
 class _EthereumWallet {
-  external void select(String walletName);
-  external dynamic instance();
+  external dynamic select(
+    String walletName, [
+    WalletConnectProviderOpts? walletConnectProviderOpts,
+  ]);
   external bool isInitialized();
-  external bool walletConnectSessionExists();
-  external dynamic getChainId();
   external dynamic requestAccounts([
     WalletConnectConnectionOpts? walletConnectConnectionOpts,
   ]);
   external dynamic getAccounts();
-  external dynamic switchChain(EthereumChainParams chainParams);
   external dynamic watchTruthserum();
-  external dynamic signTypedData(String account, String data);
   external dynamic personalSign(String account, String data);
   external void removeListener(String event, Function handler);
   external void on(String event, Function handler);
@@ -94,19 +65,15 @@ class EthereumWallet {
 
   EthereumWallet() : _ethereumWallet = _EthereumWallet();
 
-  void select(String walletName) => _ethereumWallet.select(walletName);
-  dynamic _instance() => _ethereumWallet.instance();
-  bool isInitialized() => _ethereumWallet.isInitialized();
-  bool walletConnectSessionExists() =>
-      _ethereumWallet.walletConnectSessionExists();
+  Future select(
+    String walletName, [
+    WalletConnectProviderOpts? walletConnectProviderOpts,
+  ]) =>
+      promiseToFuture(
+        _ethereumWallet.select(walletName, walletConnectProviderOpts),
+      );
 
-  Future<int> getChainId() async {
-    var result = await promiseToFuture<EthereumChainIdResult>(
-      _ethereumWallet.getChainId(),
-    );
-    // when starts with 0x defaults to radix = 16
-    return int.parse(result.chainId!);
-  }
+  bool isInitialized() => _ethereumWallet.isInitialized();
 
   Future<EthereumWalletError?> requestAccounts([
     WalletConnectConnectionOpts? walletConnectConnectionOpts,
@@ -124,35 +91,12 @@ class EthereumWallet {
     return result.accounts!.cast<String>();
   }
 
-  Future<EthereumWalletError?> switchChain(
-    int chainId,
-    String chainName,
-    String chainRpcUrl,
-  ) async {
-    var result = await promiseToFuture<EthereumSwitchChainResult>(
-      _ethereumWallet.switchChain(
-        EthereumChainParams(
-          id: '0x' + chainId.toRadixString(16),
-          name: chainName,
-          rpcUrl: chainRpcUrl,
-        ),
-      ),
-    );
-
-    return result.error;
-  }
-
   Future<EthereumWalletError?> watchTruthserum() async {
     var result = await promiseToFuture<EthereumWatchTruthserumResult>(
       _ethereumWallet.watchTruthserum(),
     );
     return result.error;
   }
-
-  Future<EthereumSignResult> signTypedData(String account, String data) =>
-      promiseToFuture<EthereumSignResult>(
-        _ethereumWallet.signTypedData(account, data),
-      );
 
   Future<EthereumSignResult> personalSign(String account, String data) =>
       promiseToFuture<EthereumSignResult>(
@@ -213,24 +157,6 @@ abstract class Provider {
 
   Future<int> getBlockNumber() =>
       promiseToFuture<int>(_provider.getBlockNumber());
-}
-
-@JS('ethers.providers.Web3Provider')
-class _Web3Provider extends _Provider {
-  external _Web3Provider(dynamic ethereum);
-  external _Signer getSigner();
-}
-
-class Web3Provider extends Provider {
-  // ignore: annotate_overrides,overridden_fields
-  late final _Web3Provider _provider;
-
-  Web3Provider(EthereumWallet ethereumWallet)
-      : super(_Web3Provider(ethereumWallet._instance())) {
-    _provider = super._provider as _Web3Provider;
-  }
-
-  Signer getSigner() => Signer(_provider.getSigner());
 }
 
 @JS('ethers.providers.JsonRpcProvider')
@@ -597,9 +523,6 @@ external String convertToEip55Address(String address);
 external String _stringify(dynamic obj);
 
 dynamic _dartify(dynamic jsObject) => json.decode(_stringify(jsObject));
-
-@JS('initWalletConnectProvider')
-external dynamic initWalletConnectProvider(WalletConnectProviderOpts opts);
 
 @JS()
 @anonymous

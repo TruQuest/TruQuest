@@ -152,6 +152,13 @@ class UserOperationBuilder {
     return this;
   }
 
+  UserOperationBuilder actions(List<(String, String)> targetAndCallDataList) {
+    _callData = _accountFactoryContract.accountContract.executeBatch(
+      targetAndCallDataList,
+    );
+    return this;
+  }
+
   UserOperationBuilder withEstimatedGasLimitsMultipliers({
     double preVerificationGasMultiplier = 1,
     double verificationGasLimitMultiplier = 1,

@@ -5,7 +5,7 @@ import '../extensions/uuid_extension.dart';
 import '../../ethereum_js_interop.dart';
 
 class TruQuestContract {
-  static const String address = '0xDF8DB8D4CeBC202cc4f5F064E08049C5228fC237';
+  static const String address = '0x3CD0E37bA3804cb84c2B0061978147011C18eAd3';
   static const String _abi = '''[
         {
           "inputs": [

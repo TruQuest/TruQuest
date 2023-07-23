@@ -16,16 +16,16 @@ class ImageResult {
   external String get mimeType;
 }
 
-@JS()
-@anonymous
-class PaletteResult {
-  external List<ColorResult> colors;
-}
+// @JS()
+// @anonymous
+// class PaletteResult {
+//   external List<ColorResult> colors;
+// }
 
-@JS()
-@anonymous
-class ColorResult {
-  external int get red;
-  external int get green;
-  external int get blue;
-}
+// @JS()
+// @anonymous
+// class ColorResult {
+//   external int get red;
+//   external int get green;
+//   external int get blue;
+// }

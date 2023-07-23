@@ -27,6 +27,24 @@ class SimpleAccountContract implements IAccountContract {
             "outputs": [],
             "stateMutability": "nonpayable",
             "type": "function"
+        },
+        {
+            "inputs": [
+              {
+                "internalType": "address[]",
+                "name": "dest",
+                "type": "address[]"
+              },
+              {
+                "internalType": "bytes[]",
+                "name": "func",
+                "type": "bytes[]"
+              }
+            ],
+            "name": "executeBatch",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
         }
     ]''';
 
@@ -45,6 +63,17 @@ class SimpleAccountContract implements IAccountContract {
         target,
         0,
         callData,
+      ],
+    );
+  }
+
+  @override
+  String executeBatch(List<(String, String)> targetAndCallDataList) {
+    return _interface.encodeFunctionData(
+      'executeBatch',
+      [
+        targetAndCallDataList.map((e) => e.$1).toList(),
+        targetAndCallDataList.map((e) => e.$2).toList(),
       ],
     );
   }

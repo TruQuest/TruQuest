@@ -46,34 +46,28 @@ async function fetchAndResizeImage(url) {
   return { buffer: buffer, mimeType: blob.type };
 }
 
-async function getImagePalette(url) {
-  var promise = new Promise((resolve, _) => {
-    var image = new Image();
-    image.crossOrigin = "Anonymous";
-    image.src = url;
+// async function getImagePalette(url) {
+//   var promise = new Promise((resolve, _) => {
+//     var image = new Image();
+//     image.crossOrigin = "Anonymous";
+//     image.src = url;
 
-    image.onload = (_) => {
-      console.log("Image loaded!");
-      var colorThief = new ColorThief();
-      var palette = colorThief.getPalette(image);
-      resolve(palette);
-    };
-  });
+//     image.onload = (_) => {
+//       console.log("Image loaded!");
+//       var colorThief = new ColorThief();
+//       var palette = colorThief.getPalette(image);
+//       resolve(palette);
+//     };
+//   });
 
-  var palette = await promise;
-  var colors = [];
-  palette.forEach((color) => {
-    colors.push({ red: color[0], green: color[1], blue: color[2] });
-  });
+//   var palette = await promise;
+//   var colors = [];
+//   palette.forEach((color) => {
+//     colors.push({ red: color[0], green: color[1], blue: color[2] });
+//   });
 
-  return { colors: colors };
-}
-
-async function initWalletConnectProvider(walletConnectProviderOpts) {
-  window.truquest_walletConnectProvider = await window[
-    "@walletconnect/ethereum-provider"
-  ].EthereumProvider.init(walletConnectProviderOpts);
-}
+//   return { colors: colors };
+// }
 
 class EthereumWallet {
   provider;
@@ -84,10 +78,12 @@ class EthereumWallet {
     this.name = null;
   }
 
-  select(walletName) {
+  async select(walletName, walletConnectProviderOpts) {
     // @@TODO: Check with both MM and CB installed and with only one wallet installed.
     if (walletName == "WalletConnect") {
-      this.provider = window.truquest_walletConnectProvider;
+      this.provider = await window[
+        "@walletconnect/ethereum-provider"
+      ].EthereumProvider.init(walletConnectProviderOpts);
     } else if (typeof ethereum !== "undefined") {
       if (ethereum.providers?.length) {
         for (var i = 0; i < ethereum.providers.length; ++i) {
@@ -119,35 +115,8 @@ class EthereumWallet {
     throw new Error(`${walletName} not available`);
   }
 
-  instance() {
-    return this.provider;
-  }
-
   isInitialized() {
     return this.name != "Metamask" || this.provider._state.initialized;
-  }
-
-  walletConnectSessionExists() {
-    // @@NOTE: Once expired the session is automatically removed on provider initialization.
-    return this.provider.session != null;
-  }
-
-  async getChainId() {
-    try {
-      var chainId = await this.provider.request({ method: "eth_chainId" });
-      return {
-        chainId: chainId,
-        error: null,
-      };
-    } catch (error) {
-      return {
-        chainId: null,
-        error: {
-          code: error.code,
-          message: error.message,
-        },
-      };
-    }
   }
 
   async requestAccounts(walletConnectConnectionOpts) {
@@ -178,6 +147,14 @@ class EthereumWallet {
   }
 
   async getAccounts() {
+    // @@NOTE: Once expired the session is automatically removed on provider initialization.
+    if (this.name == "WalletConnect" && this.provider.session == null) {
+      return {
+        accounts: [],
+        error: null,
+      };
+    }
+
     try {
       var accounts = await this.provider.request({ method: "eth_accounts" });
       return {
@@ -193,57 +170,6 @@ class EthereumWallet {
         },
       };
     }
-  }
-
-  async switchChain(chainParams) {
-    var error = null;
-    try {
-      // @@NOTE: In WalletConnect calling this when the chain exists simply changes the
-      // local chainId value ('chainChanged' gets fired), but no request is sent to the app,
-      // meaning, it stays on the old chain.
-      await this.provider.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: chainParams.id }],
-      });
-    } catch (switchError) {
-      if (
-        (this.name == "Metamask" && switchError.code === 4902) ||
-        ((this.name == "CoinbaseWallet" || this.name == "WalletConnect") &&
-          switchError.code === -32603)
-      ) {
-        try {
-          await this.provider.request({
-            method: "wallet_addEthereumChain",
-            params: [
-              {
-                chainId: chainParams.id,
-                chainName: chainParams.name,
-                rpcUrls: [chainParams.rpcUrl],
-                nativeCurrency: {
-                  name: "Ether",
-                  symbol: "ETH",
-                  decimals: 18,
-                },
-              },
-            ],
-          });
-        } catch (addError) {
-          error = addError;
-        }
-      } else {
-        error = switchError;
-      }
-    }
-
-    return {
-      error:
-        error != null
-          ? {
-              code: error.code,
-              message: error.message,
-            }
-          : null,
-    };
   }
 
   // @@TODO: Provide asset params as function arg.
@@ -272,28 +198,6 @@ class EthereumWallet {
       };
     } catch (error) {
       return {
-        error: {
-          code: error.code,
-          message: error.message,
-        },
-      };
-    }
-  }
-
-  async signTypedData(account, data) {
-    try {
-      var signature = await this.provider.request({
-        method: "eth_signTypedData_v4",
-        params: [account, data],
-      });
-
-      return {
-        signature: signature,
-        error: null,
-      };
-    } catch (error) {
-      return {
-        signature: null,
         error: {
           code: error.code,
           message: error.message,

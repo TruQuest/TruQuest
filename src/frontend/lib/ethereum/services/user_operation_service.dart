@@ -8,28 +8,38 @@ class UserOperationService {
 
   UserOperationService(this._ethereumApiService);
 
-  Future send({
-    required String target,
-    required String action,
+  Future sendBatch({
+    required List<(String, String)> actions,
     int confirmations = 1,
   }) async {
+    if (actions.isEmpty) throw UserOperationError('No actions specified');
+
     int attempts = 5;
     UserOperation userOp;
     UserOperationError? error;
     String? userOpHash;
     double preVerificationGasMultiplier = 1.1,
         verificationGasLimitMultiplier = 1.5,
-        callGasLimitMultiplier = 3.0;
+        callGasLimitMultiplier = actions.length * 3.0;
 
     do {
       error = null;
 
-      userOp = await UserOperation.create()
+      var userOpBuilder = UserOperation.create()
           .withEstimatedGasLimitsMultipliers(
               preVerificationGasMultiplier: preVerificationGasMultiplier,
               verificationGasLimitMultiplier: verificationGasLimitMultiplier,
-              callGasLimitMultiplier: callGasLimitMultiplier)
-          .action((target, action)).signed();
+              callGasLimitMultiplier: callGasLimitMultiplier);
+
+      if (actions.length == 1) {
+        userOpBuilder = userOpBuilder.action(
+          (actions.first.$1, actions.first.$2),
+        );
+      } else {
+        userOpBuilder = userOpBuilder.actions(actions);
+      }
+
+      userOp = await userOpBuilder.signed();
 
       print('UserOp[$attempts]:\n$userOp');
 
@@ -79,4 +89,14 @@ class UserOperationService {
       throw UserOperationError(receipt.reason);
     }
   }
+
+  Future send({
+    required String target,
+    required String action,
+    int confirmations = 1,
+  }) =>
+      sendBatch(
+        actions: [(target, action)],
+        confirmations: confirmations,
+      );
 }

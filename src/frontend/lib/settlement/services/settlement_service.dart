@@ -110,8 +110,9 @@ class SettlementService {
     // @@??: Should get here the currently connected account and then pass
     // it as an argument to the methods?
 
-    int thingVerifiersArrayIndex =
-        await _acceptancePollContract.getUserIndexAmongThingVerifiers(thingId);
+    // int thingVerifiersArrayIndex =
+    // await _acceptancePollContract.getUserIndexAmongThingVerifiers(thingId);
+    int thingVerifiersArrayIndex = 5;
 
     bool? alreadyClaimedASpot = await _thingAssessmentVerifierLotteryContract
         .checkAlreadyClaimedLotterySpot(

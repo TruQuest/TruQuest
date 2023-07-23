@@ -24,7 +24,7 @@ class EthereumService {
   String? get connectedAccount => _connectedAccount;
 
   final EthereumWallet _ethereumWallet;
-  late final Web3Provider provider;
+  // late final Web3Provider provider;
   late final JsonRpcProvider l2ReadOnlyProvider;
   late final JsonRpcProvider l1Provider;
 
@@ -67,7 +67,7 @@ class EthereumService {
       html.window.location.reload();
     }
 
-    provider = Web3Provider(_ethereumWallet);
+    // provider = Web3Provider(_ethereumWallet);
 
     _ethereumWallet.removeListener('chainChanged', _onChainChanged);
     _ethereumWallet.removeListener('accountsChanged', _onAccountsChanged);
@@ -75,24 +75,24 @@ class EthereumService {
     _ethereumWallet.onChainChanged(_onChainChanged);
     _ethereumWallet.onAccountsChanged(_onAccountsChanged);
 
-    if (walletName != 'WalletConnect' ||
-        _ethereumWallet.walletConnectSessionExists()) {
-      _ethereumWallet.getChainId().then((chainId) {
-        print('Current chain: $chainId');
-        int? oldChainId = _connectedChainId;
-        _connectedChainId = chainId;
-        _connectedChainChangedEventChannel.add(
-          (_connectedChainId!, oldChainId != null),
-        );
-      });
+    // if (walletName != 'WalletConnect' ||
+    //     _ethereumWallet.walletConnectSessionExists()) {
+    //   _ethereumWallet.getChainId().then((chainId) {
+    //     print('Current chain: $chainId');
+    //     int? oldChainId = _connectedChainId;
+    //     _connectedChainId = chainId;
+    //     _connectedChainChangedEventChannel.add(
+    //       (_connectedChainId!, oldChainId != null),
+    //     );
+    //   });
 
-      _ethereumWallet.getAccounts().then((accounts) {
-        accounts = accounts.map((a) => convertToEip55Address(a)).toList();
-        _connectedAccount = accounts.isNotEmpty ? accounts.first : null;
-        print('Current account: $_connectedAccount');
-        _connectedAccountChangedEventChannel.add(_connectedAccount);
-      });
-    }
+    //   _ethereumWallet.getAccounts().then((accounts) {
+    //     accounts = accounts.map((a) => convertToEip55Address(a)).toList();
+    //     _connectedAccount = accounts.isNotEmpty ? accounts.first : null;
+    //     print('Current account: $_connectedAccount');
+    //     _connectedAccountChangedEventChannel.add(_connectedAccount);
+    //   });
+    // }
 
     walletSetup.complete(walletName);
   }
@@ -136,15 +136,15 @@ class EthereumService {
       return EthereumError('Wallet not selected');
     }
 
-    var error = await _ethereumWallet.switchChain(
-      validChainId,
-      'Optimism Local',
-      'https://3c39-49-166-47-41.ngrok.io',
-    );
-    if (error != null) {
-      print('Switch chain error: [${error.code}] ${error.message}');
-      return EthereumError('Error trying to switch chain');
-    }
+    // var error = await _ethereumWallet.switchChain(
+    //   validChainId,
+    //   'Optimism Local',
+    //   'https://3c39-49-166-47-41.ngrok.io',
+    // );
+    // if (error != null) {
+    //   print('Switch chain error: [${error.code}] ${error.message}');
+    //   return EthereumError('Error trying to switch chain');
+    // }
 
     return null;
   }
@@ -234,15 +234,15 @@ class EthereumService {
 
     var data = jsonEncode(map);
 
-    var result = await _ethereumWallet.signTypedData(connectedAccount, data);
-    if (result.error != null) {
-      print(
-        'Sign message error: [${result.error!.code}] ${result.error!.message}',
-      );
-      return Left(EthereumError('Error signing message'));
-    }
+    // var result = await _ethereumWallet.signTypedData(connectedAccount, data);
+    // if (result.error != null) {
+    //   print(
+    //     'Sign message error: [${result.error!.code}] ${result.error!.message}',
+    //   );
+    //   return Left(EthereumError('Error signing message'));
+    // }
 
-    return Right(result.signature!);
+    return Right('');
   }
 
   Future<Either<EthereumError, String>>
@@ -299,15 +299,15 @@ class EthereumService {
 
     var data = jsonEncode(map);
 
-    var result = await _ethereumWallet.signTypedData(connectedAccount, data);
-    if (result.error != null) {
-      print(
-        'Sign message error: [${result.error!.code}] ${result.error!.message}',
-      );
-      return Left(EthereumError('Error signing message'));
-    }
+    // var result = await _ethereumWallet.signTypedData(connectedAccount, data);
+    // if (result.error != null) {
+    //   print(
+    //     'Sign message error: [${result.error!.code}] ${result.error!.message}',
+    //   );
+    //   return Left(EthereumError('Error signing message'));
+    // }
 
-    return Right(result.signature!);
+    return Right('');
   }
 
   Future<Either<EthereumError, (String, String)>> signSiweMessage(

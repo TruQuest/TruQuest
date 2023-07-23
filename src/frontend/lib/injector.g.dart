@@ -11,8 +11,8 @@ class _$Injector extends Injector {
   void configure() {
     final KiwiContainer container = KiwiContainer();
     container
-      ..registerSingleton(
-          (c) => UserBloc(c<UserService>(), c<LocalWalletService>()))
+      ..registerSingleton((c) => UserBloc(c<UserService>(),
+          c<LocalWalletService>(), c<ThirdPartyWalletService>()))
       ..registerSingleton((c) => UserService(
           c<LocalWalletService>(),
           c<ThirdPartyWalletService>(),
@@ -20,7 +20,8 @@ class _$Injector extends Injector {
           c<ServerConnector>(),
           c<LocalStorage>(),
           c<UserOperationService>(),
-          c<TruQuestContract>()))
+          c<TruQuestContract>(),
+          c<TruthserumContract>()))
       ..registerSingleton((c) => EthereumBloc(c<EthereumRpcProvider>()))
       ..registerSingleton((c) => EthereumService(c<LocalStorage>()))
       ..registerSingleton((c) => ServerConnector())

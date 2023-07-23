@@ -3,7 +3,7 @@ import '../../ethereum/services/ethereum_rpc_provider.dart';
 import '../../ethereum_js_interop.dart';
 
 class TruthserumContract {
-  static const String _address = '0x19CFc85e3dffb66295695Bf48e06386CB1B5f320';
+  static const String address = '0x10460A3DB94faEf76918269981541b60B4f6e1a5';
   static const String _abi = '''[
     {
       "inputs": [
@@ -55,19 +55,21 @@ class TruthserumContract {
 
   TruthserumContract(EthereumRpcProvider ethereumRpcProvider) {
     _interface = Abi(_abi);
-    _contract = Contract(_address, _abi, ethereumRpcProvider.provider);
+    _contract = Contract(address, _abi, ethereumRpcProvider.provider);
   }
 
-  (String, String) approve(int amount) {
-    return (
-      _address,
-      _interface.encodeFunctionData(
-        'approve',
-        [
-          TruQuestContract.address,
-          BigInt.from(amount),
-        ],
-      ),
+  Future<int> balanceOf(String address) async {
+    var balance = await _contract.read<BigInt>('balanceOf', args: [address]);
+    return balance.toInt();
+  }
+
+  String approve(int amount) {
+    return _interface.encodeFunctionData(
+      'approve',
+      [
+        TruQuestContract.address,
+        BigNumber.from(amount.toString()),
+      ],
     );
   }
 }

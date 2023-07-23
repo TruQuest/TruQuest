@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:rxdart/rxdart.dart';
 
+import '../../ethereum/errors/user_operation_error.dart';
+import '../../general/contracts/truthserum_contract.dart';
 import '../../ethereum/services/iwallet_service.dart';
 import '../../ethereum/services/third_party_wallet_service.dart';
 import '../../ethereum/services/user_operation_service.dart';
@@ -12,7 +14,6 @@ import '../models/vm/user_vm.dart';
 import '../../ethereum/services/local_wallet_service.dart';
 import '../../general/services/local_storage.dart';
 import '../../general/services/server_connector.dart';
-import '../../general/errors/error.dart';
 
 class UserService {
   final LocalWalletService _localWalletService;
@@ -22,6 +23,7 @@ class UserService {
   final LocalStorage _localStorage;
   final UserOperationService _userOperationService;
   final TruQuestContract _truQuestContract;
+  final TruthserumContract _truthserumContract;
 
   late final IWalletService _walletService;
   String? _selectedWalletName;
@@ -40,6 +42,7 @@ class UserService {
     this._localStorage,
     this._userOperationService,
     this._truQuestContract,
+    this._truthserumContract,
   ) {
     var selectedWallet = _localStorage.getString('SelectedWallet');
     if (selectedWallet == null) {
@@ -67,25 +70,19 @@ class UserService {
   }
 
   Future<bool> _setupThirdPartyWallet(String walletName) async {
-    _thirdPartyWalletService.setup(walletName);
+    bool hasConnectedAccount = await _thirdPartyWalletService.setup(
+      walletName,
+    );
     _walletService = _thirdPartyWalletService;
     _selectedWalletName = walletName;
 
     registerUserOperationBuilder(_thirdPartyWalletService);
 
-    var initialWalletAddressRetrieved = Completer<String?>();
-
     _walletService.currentWalletAddressChanged$.listen(
-      (currentWalletAddress) {
-        if (!initialWalletAddressRetrieved.isCompleted) {
-          initialWalletAddressRetrieved.complete(currentWalletAddress);
-        }
-
-        _reloadUser(currentWalletAddress);
-      },
+      (currentWalletAddress) => _reloadUser(currentWalletAddress),
     );
 
-    return await initialWalletAddressRetrieved.future == null;
+    return !hasConnectedAccount;
   }
 
   void _reloadUser(String? currentWalletAddress) {
@@ -128,8 +125,6 @@ class UserService {
     bool shouldRequestAccounts = await _setupThirdPartyWallet(walletName);
     return shouldRequestAccounts;
   }
-
-  Future connectAccount() => _thirdPartyWalletService.connectAccount();
 
   Future signInWithEthereum() async {
     var currentWalletAddress = _walletService.currentWalletAddress!;
@@ -192,9 +187,20 @@ class UserService {
 
   Future depositFunds(int amount) async {
     print('**************** Deposit funds ****************');
-    await _userOperationService.send(
-      target: TruQuestContract.address,
-      action: _truQuestContract.depositFunds(amount),
+
+    int balance = await _truthserumContract.balanceOf(
+      _walletService.currentWalletAddress!,
+    );
+    print('**************** Balance: $balance drops ****************');
+    if (balance < amount) {
+      throw UserOperationError('Not enough funds');
+    }
+
+    await await _userOperationService.sendBatch(
+      actions: [
+        (TruthserumContract.address, _truthserumContract.approve(amount)),
+        (TruQuestContract.address, _truQuestContract.depositFunds(amount)),
+      ],
     );
   }
 }

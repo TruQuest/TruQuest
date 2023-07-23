@@ -8,7 +8,7 @@ import '../../ethereum_js_interop.dart';
 import '../extensions/uuid_extension.dart';
 
 class ThingAssessmentVerifierLotteryContract {
-  static const String _address = '0x5075a5F27c933F1e2eeB4AD5329B79EF454F619f';
+  static const String _address = '0x6331aEDe36EFF61e9F765168A0d03AE120FD6a40';
   static const String _abi = '''[
     {
       "inputs": [],
@@ -168,11 +168,11 @@ class ThingAssessmentVerifierLotteryContract {
     _readOnlyContract = Contract(
       _address,
       _abi,
-      _ethereumService.provider,
+      null,
     );
 
     _ethereumService.walletSetup.future.then((_) {
-      _contract = Contract(_address, _abi, _ethereumService.provider);
+      _contract = Contract(_address, _abi, null);
     });
   }
 

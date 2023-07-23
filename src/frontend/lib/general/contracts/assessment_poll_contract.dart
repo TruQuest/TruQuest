@@ -4,7 +4,7 @@ import '../../settlement/models/im/decision_im.dart';
 import '../extensions/uuid_extension.dart';
 
 class AssessmentPollContract {
-  static const String _address = '0x9E9642eD983aD7E5c4eDdb6c287DB05C96Ef45f8';
+  static const String _address = '0xae236a5CFb50AaeE3060Eb17451436d953519B82';
   static const String _abi = '''[
     {
       "inputs": [
@@ -124,11 +124,12 @@ class AssessmentPollContract {
     _readOnlyContract = Contract(
       _address,
       _abi,
-      _ethereumService.provider,
+      null,
+      // _ethereumService.provider,
     );
 
     _ethereumService.walletSetup.future.then((_) {
-      _contract = Contract(_address, _abi, _ethereumService.provider);
+      _contract = Contract(_address, _abi, null);
     });
   }
 
