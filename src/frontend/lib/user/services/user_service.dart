@@ -196,7 +196,7 @@ class UserService {
       throw UserOperationError('Not enough funds');
     }
 
-    await await _userOperationService.sendBatch(
+    await _userOperationService.sendBatch(
       actions: [
         (TruthserumContract.address, _truthserumContract.approve(amount)),
         (TruQuestContract.address, _truQuestContract.depositFunds(amount)),

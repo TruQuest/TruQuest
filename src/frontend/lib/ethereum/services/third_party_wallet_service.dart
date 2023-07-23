@@ -81,6 +81,9 @@ class ThirdPartyWalletService implements IWalletService {
     _ethereumWallet.removeListener('accountsChanged', _onAccountsChanged);
     _ethereumWallet.onAccountsChanged(_onAccountsChanged);
 
+    // @@NOTE: WalletConnect: when we request accounts on startup, it always
+    // returns the one with which we initially connected, even if we switched
+    // to another account in the previous session.
     var accounts = await _ethereumWallet.getAccounts();
     accounts = accounts.map((a) => convertToEip55Address(a)).toList();
     var connectedAccount = accounts.firstOrNull;

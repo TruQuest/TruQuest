@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'restrict_when_unauthorized_button.dart';
+
 class WatchButton extends StatefulWidget {
   final bool markedAsWatched;
   final void Function(bool markedAsWatched) onPressed;
@@ -31,18 +33,20 @@ class _WatchButtonState extends State<WatchButton> {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      icon: Icon(
-        Icons.remove_red_eye,
-        color: _markedAsWatched ? Colors.deepOrange[300] : Colors.grey,
-      ),
-      onPressed: () {
-        setState(() {
-          _markedAsWatched = !_markedAsWatched;
-        });
+    return RestrictWhenUnauthorizedButton(
+      child: IconButton(
+        icon: Icon(
+          Icons.remove_red_eye,
+          color: _markedAsWatched ? Colors.deepOrange[300] : Colors.grey,
+        ),
+        onPressed: () {
+          setState(() {
+            _markedAsWatched = !_markedAsWatched;
+          });
 
-        widget.onPressed(_markedAsWatched);
-      },
+          widget.onPressed(_markedAsWatched);
+        },
+      ),
     );
   }
 }

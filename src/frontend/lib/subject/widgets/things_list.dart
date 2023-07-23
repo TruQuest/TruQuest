@@ -4,6 +4,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
 
+import '../../general/widgets/restrict_when_unauthorized_button.dart';
 import '../../thing/bloc/thing_actions.dart';
 import '../../thing/bloc/thing_bloc.dart';
 import '../../general/contexts/page_context.dart';
@@ -94,74 +95,76 @@ class _ThingsListState extends StateX<ThingsList> {
                       onPressed: () {},
                     ),
                     const SizedBox(width: 12),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xffF8F9FA),
-                        foregroundColor: const Color(0xFF242423),
-                        elevation: 10,
-                      ),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add'),
-                      onPressed: () {
-                        var documentContext = DocumentContext();
-                        documentContext.subjectId = widget.subjectId;
+                    RestrictWhenUnauthorizedButton(
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xffF8F9FA),
+                          foregroundColor: const Color(0xFF242423),
+                          elevation: 10,
+                        ),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add'),
+                        onPressed: () {
+                          var documentContext = DocumentContext();
+                          documentContext.subjectId = widget.subjectId;
 
-                        var btnController = RoundedLoadingButtonController();
+                          var btnController = RoundedLoadingButtonController();
 
-                        showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (context) => ScopeX(
-                            useInstances: [documentContext],
-                            child: DocumentComposer(
-                              title: 'New promise',
-                              nameFieldLabel: 'Title',
-                              submitButton: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                ),
-                                child: RoundedLoadingButton(
-                                  child: const Text('Prepare draft'),
-                                  controller: btnController,
-                                  onPressed: () async {
-                                    var action = CreateNewThingDraft(
-                                      documentContext:
-                                          DocumentContext.fromEditable(
-                                        documentContext,
-                                      ),
-                                    );
-                                    _thingBloc.dispatch(action);
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (context) => ScopeX(
+                              useInstances: [documentContext],
+                              child: DocumentComposer(
+                                title: 'New promise',
+                                nameFieldLabel: 'Title',
+                                submitButton: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  child: RoundedLoadingButton(
+                                    child: const Text('Prepare draft'),
+                                    controller: btnController,
+                                    onPressed: () async {
+                                      var action = CreateNewThingDraft(
+                                        documentContext:
+                                            DocumentContext.fromEditable(
+                                          documentContext,
+                                        ),
+                                      );
+                                      _thingBloc.dispatch(action);
 
-                                    var failure = await action.result;
-                                    if (failure != null) {
-                                      btnController.error();
+                                      var failure = await action.result;
+                                      if (failure != null) {
+                                        btnController.error();
+                                        await Future.delayed(
+                                          const Duration(milliseconds: 1500),
+                                        );
+                                        btnController.reset();
+
+                                        return;
+                                      }
+
+                                      btnController.success();
                                       await Future.delayed(
                                         const Duration(milliseconds: 1500),
                                       );
-                                      btnController.reset();
-
-                                      return;
-                                    }
-
-                                    btnController.success();
-                                    await Future.delayed(
-                                      const Duration(milliseconds: 1500),
-                                    );
-                                    if (context.mounted) {
-                                      Navigator.of(context).pop();
-                                    }
-                                  },
+                                      if (context.mounted) {
+                                        Navigator.of(context).pop();
+                                      }
+                                    },
+                                  ),
                                 ),
+                                sideBlocks: const [
+                                  ImageBlockWithCrop(cropCircle: false),
+                                  TagsBlock(),
+                                  EvidenceBlock(),
+                                ],
                               ),
-                              sideBlocks: const [
-                                ImageBlockWithCrop(cropCircle: false),
-                                TagsBlock(),
-                                EvidenceBlock(),
-                              ],
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
                   ],
                 ),

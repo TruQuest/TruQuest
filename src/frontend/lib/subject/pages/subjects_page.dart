@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
+import '../../general/widgets/restrict_when_unauthorized_button.dart';
 import '../../general/contexts/document_context.dart';
 import '../widgets/clipped_avatar_container.dart';
 import '../widgets/avatar_with_reputation_gauge.dart';
@@ -112,77 +113,79 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
                       onPressed: () {},
                     ),
                     const SizedBox(width: 12),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xffF8F9FA),
-                        foregroundColor: const Color(0xFF242423),
-                        elevation: 10,
-                      ),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add'),
-                      onPressed: () async {
-                        var documentContext = DocumentContext();
-                        var btnController = RoundedLoadingButtonController();
+                    RestrictWhenUnauthorizedButton(
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xffF8F9FA),
+                          foregroundColor: const Color(0xFF242423),
+                          elevation: 10,
+                        ),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add'),
+                        onPressed: () async {
+                          var documentContext = DocumentContext();
+                          var btnController = RoundedLoadingButtonController();
 
-                        var subjectId = await showDialog<String>(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (context) => ScopeX(
-                            useInstances: [documentContext],
-                            child: DocumentComposer(
-                              title: 'New subject',
-                              nameFieldLabel: 'Name',
-                              submitButton: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                ),
-                                child: RoundedLoadingButton(
-                                  child: const Text('Submit'),
-                                  controller: btnController,
-                                  onPressed: () async {
-                                    var action = AddNewSubject(
-                                      documentContext:
-                                          DocumentContext.fromEditable(
-                                        documentContext,
-                                      ),
-                                    );
+                          var subjectId = await showDialog<String>(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (context) => ScopeX(
+                              useInstances: [documentContext],
+                              child: DocumentComposer(
+                                title: 'New subject',
+                                nameFieldLabel: 'Name',
+                                submitButton: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  child: RoundedLoadingButton(
+                                    child: const Text('Submit'),
+                                    controller: btnController,
+                                    onPressed: () async {
+                                      var action = AddNewSubject(
+                                        documentContext:
+                                            DocumentContext.fromEditable(
+                                          documentContext,
+                                        ),
+                                      );
 
-                                    var success = await action.result;
-                                    if (success == null) {
-                                      btnController.error();
+                                      var success = await action.result;
+                                      if (success == null) {
+                                        btnController.error();
+                                        await Future.delayed(
+                                          const Duration(milliseconds: 1500),
+                                        );
+                                        btnController.reset();
+
+                                        return;
+                                      }
+
+                                      btnController.success();
                                       await Future.delayed(
                                         const Duration(milliseconds: 1500),
                                       );
-                                      btnController.reset();
-
-                                      return;
-                                    }
-
-                                    btnController.success();
-                                    await Future.delayed(
-                                      const Duration(milliseconds: 1500),
-                                    );
-                                    if (context.mounted) {
-                                      Navigator.of(context).pop(
-                                        success.subjectId,
-                                      );
-                                    }
-                                  },
+                                      if (context.mounted) {
+                                        Navigator.of(context).pop(
+                                          success.subjectId,
+                                        );
+                                      }
+                                    },
+                                  ),
                                 ),
+                                sideBlocks: const [
+                                  TypeSelectorBlock(),
+                                  ImageBlockWithCrop(cropCircle: true),
+                                  TagsBlock(),
+                                ],
                               ),
-                              sideBlocks: const [
-                                TypeSelectorBlock(),
-                                ImageBlockWithCrop(cropCircle: true),
-                                TagsBlock(),
-                              ],
                             ),
-                          ),
-                        );
+                          );
 
-                        if (subjectId != null) {
-                          _pageContext.goto('/subjects/$subjectId');
-                        }
-                      },
+                          if (subjectId != null) {
+                            _pageContext.goto('/subjects/$subjectId');
+                          }
+                        },
+                      ),
                     ),
                   ],
                 ),
