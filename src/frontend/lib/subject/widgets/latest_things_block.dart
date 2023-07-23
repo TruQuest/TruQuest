@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../general/contexts/page_context.dart';
@@ -50,8 +51,7 @@ class LatestThingsBlock extends StatelessWidgetX {
               aspectRatio: 0.95,
               child: thing != null
                   ? Image.network(
-                      'http://localhost:8080/ipfs/' +
-                          thing.croppedImageIpfsCid!,
+                      '${dotenv.env['IPFS_GATEWAY_URL']}/${thing.croppedImageIpfsCid!}',
                       fit: BoxFit.cover,
                     )
                   : Container(

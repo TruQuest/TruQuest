@@ -114,6 +114,7 @@ class LotteryParticipantsTable extends StatelessWidget {
                 right: 0,
                 child: Center(
                   child: IconButton(
+                    // @@TODO: Loading animation.
                     icon: const Icon(Icons.refresh),
                     onPressed: onRefresh,
                   ),

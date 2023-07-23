@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked_card_carousel/stacked_card_carousel.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -58,7 +59,7 @@ class _EvidenceViewBlockState extends StateX<EvidenceViewBlock> {
               child: Column(
                 children: [
                   Image.network(
-                    'http://localhost:8080/ipfs/' + e.previewImageIpfsCid,
+                    '${dotenv.env['IPFS_GATEWAY_URL']}/${e.previewImageIpfsCid}',
                     width: double.infinity,
                   ),
                   const SizedBox(height: 8),
@@ -75,7 +76,9 @@ class _EvidenceViewBlockState extends StateX<EvidenceViewBlock> {
                   ElevatedButton.icon(
                     onPressed: () async {
                       await launchUrl(
-                        Uri.parse('http://localhost:8080/ipfs/' + e.ipfsCid),
+                        Uri.parse(
+                          '${dotenv.env['IPFS_GATEWAY_URL']}/${e.ipfsCid}',
+                        ),
                       );
                     },
                     style: ElevatedButton.styleFrom(

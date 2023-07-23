@@ -1,20 +1,11 @@
-using Nethereum.ABI.FunctionEncoding.Attributes;
-
 namespace Infrastructure.Ethereum.TypedData;
 
-[Struct("OnChainAssessmentPollVoteTd")]
 public class OnChainAssessmentPollVoteTd
 {
-    [Parameter("int64", "blockNumber", 1)]
-    public long BlockNumber { get; init; }
-    [Parameter("int32", "txnIndex", 2)]
-    public int TxnIndex { get; init; }
-    [Parameter("int64", "l1BlockNumber", 3)]
-    public long L1BlockNumber { get; init; }
-    [Parameter("address", "userId", 4)]
-    public string UserId { get; init; }
-    [Parameter("string", "decision", 5)]
-    public string Decision { get; init; }
-    [Parameter("string", "reason", 6)]
-    public string Reason { get; init; }
+    public required long BlockNumber { get; init; }
+    public required int TxnIndex { get; init; }
+    public required long L1BlockNumber { get; init; }
+    public required string UserId { get; init; }
+    public required string Decision { get; init; }
+    public required string Reason { get; init; }
 }

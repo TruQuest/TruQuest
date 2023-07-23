@@ -1,3 +1,5 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import '../../../ethereum/services/ethereum_rpc_provider.dart';
 import 'iaccount_contract.dart';
 import 'simple_account_contract.dart';
@@ -5,7 +7,7 @@ import 'iaccount_factory_contract.dart';
 import '../../../ethereum_js_interop.dart';
 
 class SimpleAccountFactoryContract implements IAccountFactoryContract {
-  static const String _address = '0x9406Cc6185a346906296840746125a0E44976454';
+  static final String _address = dotenv.env['SimpleAccountFactoryAddress']!;
   static const String _abi = '''
     [
         {

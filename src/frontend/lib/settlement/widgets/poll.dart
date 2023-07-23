@@ -94,7 +94,7 @@ class _PollState extends StateX<Poll> {
 
               return StreamBuilder(
                 stream: _ethereumBloc.latestL1BlockNumber$,
-                initialData: info.latestL1BlockNumber,
+                initialData: _ethereumBloc.latestL1BlockNumber,
                 builder: (context, snapshot) {
                   var latestBlockNumber = snapshot.data!.toDouble();
                   var startBlock = info.initBlock?.abs().toDouble() ?? 0;

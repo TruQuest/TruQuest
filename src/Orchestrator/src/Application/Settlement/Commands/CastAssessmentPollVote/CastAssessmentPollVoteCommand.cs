@@ -30,6 +30,7 @@ internal class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssess
 {
     private readonly ICurrentPrincipal _currentPrincipal;
     private readonly ISigner _signer;
+    private readonly IContractCaller _contractCaller;
     private readonly IFileStorage _fileStorage;
     private readonly ISettlementProposalRepository _settlementProposalRepository;
     private readonly IAssessmentPollVoteRepository _voteRepository;
@@ -37,6 +38,7 @@ internal class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssess
     public CastAssessmentPollVoteCommandHandler(
         ICurrentPrincipal currentPrincipal,
         ISigner signer,
+        IContractCaller contractCaller,
         IFileStorage fileStorage,
         ISettlementProposalRepository settlementProposalRepository,
         IAssessmentPollVoteRepository voteRepository
@@ -44,6 +46,7 @@ internal class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssess
     {
         _currentPrincipal = currentPrincipal;
         _signer = signer;
+        _contractCaller = contractCaller;
         _fileStorage = fileStorage;
         _settlementProposalRepository = settlementProposalRepository;
         _voteRepository = voteRepository;
@@ -67,16 +70,17 @@ internal class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssess
             };
         }
 
-        var result = _signer.RecoverFromNewAssessmentPollVoteMessage(command.Input, command.Signature);
-        if (result.IsError)
+        var recoveredAddress = _signer.RecoverFromNewAssessmentPollVoteMessage(command.Input, command.Signature);
+
+        var walletAddress = await _contractCaller.GetWalletAddressFor(recoveredAddress);
+        if (walletAddress.Substring(2).ToLower() != _currentPrincipal.Id)
         {
             return new()
             {
-                Error = result.Error
+                Error = new VoteError("Not the owner of the wallet")
             };
         }
 
-        // @@TODO: Check that result.Data == _currentPrincipal.Id
         // @@??: Check current block ?
 
         var castedAtUtc = DateTimeOffset
@@ -91,7 +95,10 @@ internal class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssess
         }
 
         var orchestratorSig = _signer.SignNewAssessmentPollVote(
-            command.Input, _currentPrincipal.Id!, command.Signature
+            command.Input,
+            walletAddress: walletAddress,
+            ownerAddress: recoveredAddress,
+            ownerSignature: command.Signature
         );
 
         var uploadResult = await _fileStorage.UploadJson(new
@@ -104,8 +111,9 @@ internal class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssess
                 Decision = command.Input.Decision.GetString(),
                 Reason = command.Input.Reason
             },
-            VoterId = _currentPrincipal.Id!, // @@TODO: EIP-55 encode
-            VoterSignature = command.Signature,
+            WalletAddress = walletAddress,
+            OwnerAddress = recoveredAddress,
+            OwnerSignature = command.Signature,
             OrchestratorSignature = orchestratorSig
         });
         if (uploadResult.IsError)

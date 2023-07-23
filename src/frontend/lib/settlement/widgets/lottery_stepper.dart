@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../general/utils/utils.dart';
+import '../../user/errors/wallet_locked_error.dart';
 import '../models/rvm/settlement_proposal_vm.dart';
 import '../../general/widgets/swipe_button.dart';
 import '../../widget_extensions.dart';
@@ -31,8 +33,7 @@ class LotteryStepper extends StatelessWidgetX {
       !info.alreadyJoined! &&
       info.alreadyClaimedASpot != null &&
       !info.alreadyClaimedASpot! &&
-      currentBlock < endBlock &&
-      (step == 0 || info.userIndexInThingVerifiersArray >= 0);
+      currentBlock < endBlock;
 
   bool _checkButtonShouldBeSwiped(int step) =>
       step == -1 &&
@@ -53,27 +54,39 @@ class LotteryStepper extends StatelessWidgetX {
       child: Column(
         children: [
           Stepper(
-            controlsBuilder: (context, details) =>
-                info.userId != null && !proposal.isSubmitter(info.userId)
-                    ? SwipeButton(
-                        key: ValueKey(info.userId),
-                        text: 'Slide to claim',
-                        enabled: _checkButtonShouldBeEnabled(-1),
-                        swiped: _checkButtonShouldBeSwiped(-1),
-                        onCompletedSwipe: () async {
-                          var action = ClaimLotterySpot(
-                            thingId: proposal.thingId,
-                            proposalId: proposal.id,
-                            userIndexInThingVerifiersArray:
-                                info.userIndexInThingVerifiersArray,
-                          );
-                          _settlementBloc.dispatch(action);
+            controlsBuilder: (context, details) => info.userId != null &&
+                    !proposal.isSubmitter(info.userId) &&
+                    info.userIndexInThingVerifiersArray >= 0
+                ? SwipeButton(
+                    key: ValueKey(info.userId),
+                    text: 'Slide to claim',
+                    enabled: _checkButtonShouldBeEnabled(-1),
+                    swiped: _checkButtonShouldBeSwiped(-1),
+                    onCompletedSwipe: () async {
+                      var action = ClaimLotterySpot(
+                        thingId: proposal.thingId,
+                        proposalId: proposal.id,
+                        userIndexInThingVerifiersArray:
+                            info.userIndexInThingVerifiersArray,
+                      );
+                      _settlementBloc.dispatch(action);
 
-                          var failure = await action.result;
-                          return failure == null;
-                        },
-                      )
-                    : const SizedBox.shrink(),
+                      var failure = await action.result;
+                      if (failure != null &&
+                          failure.error is WalletLockedError) {
+                        if (context.mounted) {
+                          var unlocked = await showUnlockWalletDialog(context);
+                          if (unlocked) {
+                            _settlementBloc.dispatch(action);
+                            failure = await action.result;
+                          }
+                        }
+                      }
+
+                      return failure == null;
+                    },
+                  )
+                : const SizedBox.shrink(),
             steps: [
               Step(
                 title: Text(
@@ -119,6 +132,18 @@ class LotteryStepper extends StatelessWidgetX {
                           _settlementBloc.dispatch(action);
 
                           var failure = await action.result;
+                          if (failure != null &&
+                              failure.error is WalletLockedError) {
+                            if (context.mounted) {
+                              var unlocked =
+                                  await showUnlockWalletDialog(context);
+                              if (unlocked) {
+                                _settlementBloc.dispatch(action);
+                                failure = await action.result;
+                              }
+                            }
+                          }
+
                           return failure == null;
                         },
                       )

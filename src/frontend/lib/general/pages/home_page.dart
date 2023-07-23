@@ -66,7 +66,7 @@ class _HomePageState extends StateX<HomePage> {
                 fromNarrowToWide: true,
               ),
               title: Image.asset(
-                'assets/images/logo1.png',
+                'assets/images/logo.png',
                 height: 60,
               ),
               toolbarHeight: 70,

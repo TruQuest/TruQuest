@@ -1,3 +1,5 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import '../../../ethereum/services/ethereum_rpc_provider.dart';
 import 'ientrypoint_contract.dart';
 import '../../../ethereum/models/im/user_operation.dart';
@@ -109,8 +111,9 @@ class EntryPointContract implements IEntryPointContract {
 
   late final Contract _contract;
 
+  late final String _address = dotenv.env['EntryPointAddress']!;
   @override
-  String get address => '0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789';
+  String get address => _address;
 
   EntryPointContract(EthereumRpcProvider ethereumRpcProvider) {
     _contract = Contract(

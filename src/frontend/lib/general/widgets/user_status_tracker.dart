@@ -28,7 +28,7 @@ class UserStatusTracker extends StatelessWidgetX {
             child: ConnectAccountButton(),
           );
         } else if (user.id == null) {
-          return Tooltip(
+          return const Tooltip(
             message: 'Sign-in',
             child: SignInButton(),
           );

@@ -28,5 +28,5 @@ class GetUserOperationReceiptRvm {
       };
 
   @override
-  String toString() => JsonEncoder.withIndent('  ').convert(toJson());
+  String toString() => const JsonEncoder.withIndent('  ').convert(toJson());
 }

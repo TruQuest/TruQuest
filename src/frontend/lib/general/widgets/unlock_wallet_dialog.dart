@@ -28,7 +28,7 @@ class _UnlockWalletDialogState extends StateX<UnlockWalletDialog> {
   Widget buildX(BuildContext context) {
     return AlertDialog(
       backgroundColor: const Color(0xFF242423),
-      title: Text(
+      title: const Text(
         'Unlock the wallet',
         style: TextStyle(
           color: Colors.white,
@@ -40,7 +40,7 @@ class _UnlockWalletDialogState extends StateX<UnlockWalletDialog> {
         child: TextField(
           controller: _passwordController,
           obscureText: true,
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.white,
           ),
           decoration: const InputDecoration(
@@ -61,7 +61,7 @@ class _UnlockWalletDialogState extends StateX<UnlockWalletDialog> {
           color: Colors.white,
           valueColor: Colors.black,
           successColor: Colors.white,
-          child: Text(
+          child: const Text(
             'Unlock',
             style: TextStyle(
               color: Colors.black,
@@ -78,7 +78,7 @@ class _UnlockWalletDialogState extends StateX<UnlockWalletDialog> {
               _buttonController.error();
             }
 
-            await Future.delayed(Duration(seconds: 1));
+            await Future.delayed(const Duration(seconds: 1));
             if (context.mounted) {
               Navigator.of(context).pop(success != null);
             }

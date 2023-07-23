@@ -46,9 +46,11 @@ class _SignInButtonState extends StateX<SignInButton> {
               setState(() => _inProgress = false);
             },
           )
-        : SizedBox.square(
-            dimension: 18,
-            child: CircularProgressIndicator(color: Colors.white),
+        : Container(
+            width: 26,
+            height: 16,
+            padding: const EdgeInsets.only(right: 10),
+            child: const CircularProgressIndicator(color: Colors.white),
           );
   }
 }

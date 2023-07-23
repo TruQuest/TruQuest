@@ -54,7 +54,7 @@ class _ThingPageState extends StateX<ThingPage> {
   late final _pageContext = use<PageContext>();
   late final _userBloc = use<UserBloc>();
   late final _thingBloc = use<ThingBloc>();
-  // late final _settlementBloc = use<SettlementBloc>();
+  late final _settlementBloc = use<SettlementBloc>();
 
   late final StreamSubscription<UserVm> _currentUser$$;
 
@@ -390,7 +390,7 @@ class _ThingPageState extends StateX<ThingPage> {
                                     documentContext,
                                   ),
                                 );
-                                // _settlementBloc.dispatch(action);
+                                _settlementBloc.dispatch(action);
 
                                 var failure = await action.result;
                                 if (failure != null) {

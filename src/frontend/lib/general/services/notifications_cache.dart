@@ -12,7 +12,7 @@ class NotificationsCache {
   final UserService _userService;
   final UserApiService _userApiService;
 
-  final Map<String?, Set<NotificationVm>> _usernameToUnreadNotifications = {};
+  final _usernameToUnreadNotifications = <String?, Set<NotificationVm>>{};
   Set<NotificationVm>? _unreadNotifications;
   String? _username;
 
@@ -133,7 +133,6 @@ class NotificationsCache {
   }
 
   Future remove(List<NotificationVm> notifications, String? username) async {
-    notifications = notifications.where((n) => n.itemId != '').toList();
     var usersUnreadNotifications = _usernameToUnreadNotifications[username]!;
     usersUnreadNotifications.removeAll(notifications);
     _notify();
@@ -141,18 +140,13 @@ class NotificationsCache {
     if (username != null) {
       var latestNotificationsPerItemAndCategory = <String, NotificationVm>{};
       for (var notification in notifications) {
-        if (!latestNotificationsPerItemAndCategory.containsKey(
+        latestNotificationsPerItemAndCategory.update(
           notification.key,
-        )) {
-          latestNotificationsPerItemAndCategory[notification.key] =
-              notification;
-        } else if (notification.updateTimestamp.isAfter(
-          latestNotificationsPerItemAndCategory[notification.key]!
-              .updateTimestamp,
-        )) {
-          latestNotificationsPerItemAndCategory[notification.key] =
-              notification;
-        }
+          (n) => notification.updateTimestamp.isAfter(n.updateTimestamp)
+              ? notification
+              : n,
+          ifAbsent: () => notification,
+        );
       }
 
       // @@NOTE: Updates from watched items could be mixed in with ephemeral notifications,

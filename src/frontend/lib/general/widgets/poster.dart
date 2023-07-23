@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Poster extends StatelessWidget {
   static const posterAspectRatio = 16 / 9;
@@ -21,7 +22,7 @@ class Poster extends StatelessWidget {
       elevation: 10,
       clipBehavior: Clip.antiAlias,
       child: Image.network(
-        'http://localhost:8080/ipfs/' + imageIpfsCid,
+        '${dotenv.env['IPFS_GATEWAY_URL']}/$imageIpfsCid',
         width: width,
         height: height,
         fit: BoxFit.cover,

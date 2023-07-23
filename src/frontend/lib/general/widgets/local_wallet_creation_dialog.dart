@@ -147,13 +147,13 @@ class _LocalWalletCreationDialogState
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.black,
                   ),
-                  child: Text('Use an existing secret phrase instead'),
+                  child: const Text('Use an existing secret phrase instead'),
                   onPressed: () {
                     Navigator.of(context).pop();
                     showDialog(
                       context: context,
                       builder: (_) =>
-                          LocalWalletFromImportedMnemonicCreationDialog(),
+                          const LocalWalletFromImportedMnemonicCreationDialog(),
                     );
                   },
                 ),

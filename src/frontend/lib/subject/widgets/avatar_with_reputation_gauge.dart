@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
@@ -131,7 +132,7 @@ class AvatarWithReputationGauge extends StatelessWidget {
           ),
           clipBehavior: Clip.antiAlias,
           child: Image.network(
-            'http://localhost:8080/ipfs/' + subjectAvatarIpfsCid,
+            '${dotenv.env['IPFS_GATEWAY_URL']}/$subjectAvatarIpfsCid',
             fit: BoxFit.cover,
           ),
         ),

@@ -30,7 +30,6 @@ class SubjectService {
 
   Future<SubjectVm> getSubject(String subjectId) async {
     var subject = await _subjectApiService.getSubject(subjectId);
-    print('SubjectId: ${subject.id}');
     return subject;
   }
 

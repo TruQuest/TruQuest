@@ -1,13 +1,15 @@
 import 'dart:math';
 
 import 'package:convert/convert.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../ethereum/services/ethereum_rpc_provider.dart';
 import '../../ethereum_js_interop.dart';
 import '../extensions/uuid_extension.dart';
 
 class ThingSubmissionVerifierLotteryContract {
-  static const String address = '0xC1C9E1d2aC4CBf0c7d8DcFa1d500D472a61f02f3';
+  static final String address =
+      dotenv.env['ThingSubmissionVerifierLotteryAddress']!;
   static const String _abi = '''[
     {
       "inputs": [

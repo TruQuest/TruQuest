@@ -97,7 +97,8 @@ class GetAssessmentPollInfo
   });
 }
 
-class CastVoteOffChain extends SettlementActionAwaitable<CastVoteResultVm> {
+class CastVoteOffChain
+    extends SettlementActionAwaitable<CastVoteOffChainFailureVm?> {
   final String thingId;
   final String proposalId;
   final DecisionIm decision;
@@ -111,7 +112,8 @@ class CastVoteOffChain extends SettlementActionAwaitable<CastVoteResultVm> {
   });
 }
 
-class CastVoteOnChain extends SettlementActionAwaitable<CastVoteResultVm> {
+class CastVoteOnChain
+    extends SettlementActionAwaitable<CastVoteOnChainFailureVm?> {
   final String thingId;
   final String proposalId;
   final int userIndexInProposalVerifiersArray;

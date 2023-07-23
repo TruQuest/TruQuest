@@ -1,9 +1,11 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import 'truquest_contract.dart';
 import '../../ethereum/services/ethereum_rpc_provider.dart';
 import '../../ethereum_js_interop.dart';
 
 class TruthserumContract {
-  static const String address = '0x10460A3DB94faEf76918269981541b60B4f6e1a5';
+  static final String address = dotenv.env['TruthserumAddress']!;
   static const String _abi = '''[
     {
       "inputs": [

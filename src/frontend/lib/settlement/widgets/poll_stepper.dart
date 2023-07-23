@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../general/utils/utils.dart';
+import '../../user/errors/wallet_locked_error.dart';
 import '../bloc/settlement_bloc.dart';
 import '../models/rvm/settlement_proposal_vm.dart';
 import '../../general/widgets/vote_dialog.dart';
@@ -33,12 +35,8 @@ class _PollStepperState extends StateX<PollStepper> {
 
   int _currentStep = 0;
 
-  bool _checkButtonShouldBeEnabled() {
-    var info = widget.info;
-    return info.initBlock != null &&
-        widget.currentBlock < widget.endBlock &&
-        info.userIndexInProposalVerifiersArray >= 0;
-  }
+  bool _checkButtonShouldBeEnabled() =>
+      widget.info.initBlock != null && widget.currentBlock < widget.endBlock;
 
   @override
   Widget buildX(BuildContext context) {
@@ -52,7 +50,8 @@ class _PollStepperState extends StateX<PollStepper> {
       ),
       child: Stepper(
         currentStep: _currentStep,
-        controlsBuilder: (context, details) => widget.info.userId != null
+        controlsBuilder: (context, details) => widget.info.userId != null &&
+                widget.info.userIndexInProposalVerifiersArray >= 0
             ? SwipeButton(
                 key: ValueKey('${widget.info.userId} ${details.currentStep}'),
                 text: 'Slide to vote',
@@ -69,25 +68,53 @@ class _PollStepperState extends StateX<PollStepper> {
                       ],
                       getDisplayString: (decision) => decision.getString(),
                       onVote: (decision, reason) async {
-                        SettlementActionAwaitable<CastVoteResultVm> action =
-                            details.currentStep == 0
-                                ? CastVoteOffChain(
-                                    thingId: widget.proposal.thingId,
-                                    proposalId: widget.proposal.id,
-                                    decision: decision,
-                                    reason: reason,
-                                  )
-                                : CastVoteOnChain(
-                                    thingId: widget.proposal.thingId,
-                                    proposalId: widget.proposal.id,
-                                    userIndexInProposalVerifiersArray: widget
-                                        .info.userIndexInProposalVerifiersArray,
-                                    decision: decision,
-                                    reason: reason,
-                                  );
+                        if (details.currentStep == 0) {
+                          var action = CastVoteOffChain(
+                            thingId: widget.proposal.thingId,
+                            proposalId: widget.proposal.id,
+                            decision: decision,
+                            reason: reason,
+                          );
+                          _settlementBloc.dispatch(action);
 
-                        _settlementBloc.dispatch(action);
-                        await action.result;
+                          var failure = await action.result;
+                          if (failure != null &&
+                              failure.error is WalletLockedError) {
+                            if (context.mounted) {
+                              var unlocked = await showUnlockWalletDialog(
+                                context,
+                              );
+                              if (unlocked) {
+                                _settlementBloc.dispatch(action);
+                                failure = await action.result;
+                              }
+                            }
+                          }
+                        } else {
+                          var action = CastVoteOnChain(
+                            thingId: widget.proposal.thingId,
+                            proposalId: widget.proposal.id,
+                            userIndexInProposalVerifiersArray:
+                                widget.info.userIndexInProposalVerifiersArray,
+                            decision: decision,
+                            reason: reason,
+                          );
+                          _settlementBloc.dispatch(action);
+
+                          var failure = await action.result;
+                          if (failure != null &&
+                              failure.error is WalletLockedError) {
+                            if (context.mounted) {
+                              var unlocked = await showUnlockWalletDialog(
+                                context,
+                              );
+                              if (unlocked) {
+                                _settlementBloc.dispatch(action);
+                                failure = await action.result;
+                              }
+                            }
+                          }
+                        }
                       },
                     ),
                   );
@@ -96,9 +123,7 @@ class _PollStepperState extends StateX<PollStepper> {
                 },
               )
             : const SizedBox.shrink(),
-        onStepTapped: (value) => setState(() {
-          _currentStep = value;
-        }),
+        onStepTapped: (value) => setState(() => _currentStep = value),
         steps: [
           Step(
             state: StepState.editing,
@@ -109,7 +134,8 @@ class _PollStepperState extends StateX<PollStepper> {
                 fontSize: 16,
               ),
             ),
-            content: Padding(
+            content: Container(
+              width: double.infinity,
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(
                 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
@@ -129,7 +155,8 @@ class _PollStepperState extends StateX<PollStepper> {
                 fontSize: 16,
               ),
             ),
-            content: Padding(
+            content: Container(
+              width: double.infinity,
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(
                 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',

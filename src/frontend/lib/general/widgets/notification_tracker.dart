@@ -11,7 +11,6 @@ import 'package:side_sheet/side_sheet.dart';
 import '../contexts/page_context.dart';
 import '../bloc/notification_actions.dart';
 import '../bloc/notification_bloc.dart';
-import '../services/notifications_cache.dart';
 import '../../widget_extensions.dart';
 import 'clipped_rect.dart';
 
@@ -25,8 +24,6 @@ class NotificationTracker extends StatefulWidget {
 class _NotificationTrackerState extends StateX<NotificationTracker>
     with SingleTickerProviderStateMixin {
   late final _notificationBloc = use<NotificationBloc>();
-  // @@??: Should go through the bloc instead of exposing directly ?
-  late final _notificationsCache = use<NotificationsCache>();
   late final _pageContext = use<PageContext>();
 
   late final AnimationController _animationController;
@@ -43,45 +40,47 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
       duration: const Duration(seconds: 1),
     );
 
-    AssetLottie('assets/icons/bell.json').load().then((composition) {
-      var oldLayer = composition.layers[1];
-      composition.layers[1] = Layer(
-        shapes: oldLayer.shapes,
-        composition: oldLayer.composition,
-        name: oldLayer.name,
-        id: oldLayer.id,
-        layerType: oldLayer.layerType,
-        parentId: oldLayer.parentId,
-        refId: oldLayer.refId,
-        masks: oldLayer.masks,
-        transform: oldLayer.transform,
-        solidWidth: oldLayer.solidWidth,
-        solidHeight: oldLayer.solidHeight,
-        solidColor: const Color.fromARGB(255, 208, 53, 76),
-        timeStretch: oldLayer.timeStretch,
-        startFrame: oldLayer.startFrame,
-        preCompWidth: oldLayer.preCompWidth,
-        preCompHeight: oldLayer.preCompHeight,
-        text: oldLayer.text,
-        textProperties: oldLayer.textProperties,
-        inOutKeyframes: oldLayer.inOutKeyframes,
-        matteType: oldLayer.matteType,
-        timeRemapping: oldLayer.timeRemapping,
-        isHidden: oldLayer.isHidden,
-        blurEffect: oldLayer.blurEffect,
-        dropShadowEffect: oldLayer.dropShadowEffect,
-      );
+    AssetLottie('assets/icons/bell.json').load().then(
+      (composition) {
+        var oldLayer = composition.layers[1];
+        composition.layers[1] = Layer(
+          shapes: oldLayer.shapes,
+          composition: oldLayer.composition,
+          name: oldLayer.name,
+          id: oldLayer.id,
+          layerType: oldLayer.layerType,
+          parentId: oldLayer.parentId,
+          refId: oldLayer.refId,
+          masks: oldLayer.masks,
+          transform: oldLayer.transform,
+          solidWidth: oldLayer.solidWidth,
+          solidHeight: oldLayer.solidHeight,
+          solidColor: const Color.fromARGB(255, 208, 53, 76),
+          timeStretch: oldLayer.timeStretch,
+          startFrame: oldLayer.startFrame,
+          preCompWidth: oldLayer.preCompWidth,
+          preCompHeight: oldLayer.preCompHeight,
+          text: oldLayer.text,
+          textProperties: oldLayer.textProperties,
+          inOutKeyframes: oldLayer.inOutKeyframes,
+          matteType: oldLayer.matteType,
+          timeRemapping: oldLayer.timeRemapping,
+          isHidden: oldLayer.isHidden,
+          blurEffect: oldLayer.blurEffect,
+          dropShadowEffect: oldLayer.dropShadowEffect,
+        );
 
-      setState(() {
-        _composition = composition;
-      });
+        setState(() {
+          _composition = composition;
+        });
 
-      _unreadNotificationsCount$$ =
-          _notificationsCache.unreadNotificationsCount$.listen((_) {
-        _animationController.reset();
-        _animationController.forward();
-      });
-    });
+        _unreadNotificationsCount$$ =
+            _notificationBloc.unreadNotificationsCount$.listen((_) {
+          _animationController.reset();
+          _animationController.forward();
+        });
+      },
+    );
   }
 
   @override
@@ -93,7 +92,7 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
 
   Widget _buildNotificationPanel() {
     return StreamBuilder(
-      stream: _notificationsCache.unreadNotifications$,
+      stream: _notificationBloc.unreadNotifications$,
       builder: (context, snapshot) {
         if (snapshot.data == null || snapshot.data!.$1.isEmpty) {
           return const Center(
@@ -238,7 +237,7 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
             ),
           ),
         StreamBuilder(
-          stream: _notificationsCache.unreadNotificationsCount$,
+          stream: _notificationBloc.unreadNotificationsCount$,
           initialData: 0,
           builder: (context, snapshot) {
             var count = snapshot.data!;

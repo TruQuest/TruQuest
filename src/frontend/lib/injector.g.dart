@@ -23,15 +23,12 @@ class _$Injector extends Injector {
           c<TruQuestContract>(),
           c<TruthserumContract>()))
       ..registerSingleton((c) => EthereumBloc(c<EthereumRpcProvider>()))
-      ..registerSingleton((c) => EthereumService(c<LocalStorage>()))
       ..registerSingleton((c) => ServerConnector())
       ..registerSingleton((c) => UserApiService(c<ServerConnector>()))
       ..registerSingleton((c) => ThingApiService(c<ServerConnector>()))
       ..registerSingleton((c) => ThingService(
           c<ThingApiService>(),
-          c<LocalWalletService>(),
           c<UserService>(),
-          c<EthereumRpcProvider>(),
           c<UserOperationService>(),
           c<TruQuestContract>(),
           c<ThingSubmissionVerifierLotteryContract>(),
@@ -39,8 +36,8 @@ class _$Injector extends Injector {
       ..registerSingleton(
           (c) => ThingBloc(c<ToastMessenger>(), c<ThingService>()))
       ..registerFactory((c) => DocumentContext())
-      ..registerSingleton((c) => NotificationBloc(
-          c<NotificationsCache>(), c<ToastMessenger>(), c<ThingService>()))
+      ..registerSingleton((c) => NotificationBloc(c<NotificationsCache>(),
+          c<ToastMessenger>(), c<ThingService>(), c<SettlementService>()))
       ..registerSingleton((c) => SubjectBloc(c<SubjectService>()))
       ..registerSingleton((c) => SubjectService(c<SubjectApiService>()))
       ..registerSingleton((c) => SubjectApiService(c<ServerConnector>()))
@@ -53,17 +50,18 @@ class _$Injector extends Injector {
           (c) => AcceptancePollContract(c<EthereumRpcProvider>()))
       ..registerSingleton((c) => SettlementBloc(c<SettlementService>()))
       ..registerSingleton((c) => SettlementService(
-          c<UserService>(),
-          c<TruQuestContract>(),
           c<SettlementApiService>(),
-          c<EthereumService>(),
+          c<UserService>(),
+          c<UserOperationService>(),
+          c<TruQuestContract>(),
           c<AcceptancePollContract>(),
           c<ThingAssessmentVerifierLotteryContract>(),
           c<AssessmentPollContract>()))
       ..registerSingleton((c) => SettlementApiService(c<ServerConnector>()))
+      ..registerSingleton((c) =>
+          ThingAssessmentVerifierLotteryContract(c<EthereumRpcProvider>()))
       ..registerSingleton(
-          (c) => ThingAssessmentVerifierLotteryContract(c<EthereumService>()))
-      ..registerSingleton((c) => AssessmentPollContract(c<EthereumService>()))
+          (c) => AssessmentPollContract(c<EthereumRpcProvider>()))
       ..registerSingleton((c) => NotificationsCache(
           c<UserService>(), c<UserApiService>(), c<ServerConnector>()))
       ..registerSingleton(

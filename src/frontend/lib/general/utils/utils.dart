@@ -13,7 +13,7 @@ extension BigIntExtension on BigInt {
 Future<bool> showUnlockWalletDialog(BuildContext context) async {
   var unlocked = await showDialog<bool>(
     context: context,
-    builder: (_) => UnlockWalletDialog(),
+    builder: (_) => const UnlockWalletDialog(),
   );
 
   return unlocked != null && unlocked;

@@ -113,6 +113,7 @@ class VerifiersTable extends StatelessWidget {
                 bottom: 0,
                 right: 0,
                 child: Center(
+                  // @@TODO: Loading animation.
                   child: IconButton(
                     icon: const Icon(Icons.refresh),
                     onPressed: onRefresh,

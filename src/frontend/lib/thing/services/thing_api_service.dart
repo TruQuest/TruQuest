@@ -8,7 +8,6 @@ import '../models/rvm/get_settlement_proposals_list_rvm.dart';
 import '../models/rvm/get_verifiers_rvm.dart';
 import '../../general/errors/vote_error.dart';
 import '../models/im/cast_acceptance_poll_vote_command.dart';
-import '../models/im/decision_im.dart';
 import '../models/im/new_acceptance_poll_vote_im.dart';
 import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
 import '../models/rvm/get_thing_rvm.dart';

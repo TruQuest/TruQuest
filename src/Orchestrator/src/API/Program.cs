@@ -221,10 +221,24 @@ public static class WebApplicationBuilderExtension
         };
         process.Start();
 
+        var network = app.Configuration["Ethereum:Network"]!;
+
         string? line;
         while ((line = await process.StandardOutput.ReadLineAsync()) != null)
         {
-            app.Logger.LogInformation(line);
+            if (line.StartsWith("deploying"))
+            {
+                var lineSplit = line.Split(' ');
+                var contractName = lineSplit[1].Substring(1, lineSplit[1].Length - 2);
+                var contractAddress = lineSplit[lineSplit.Length - 4];
+                app.Configuration[$"Ethereum:Contracts:{network}:{contractName}:Address"] = contractAddress;
+
+                app.Logger.LogInformation("Contract {ContractName}: {ContractAddress}", contractName, contractAddress);
+            }
+            else
+            {
+                app.Logger.LogInformation(line);
+            }
         }
 
         await process.WaitForExitAsync();

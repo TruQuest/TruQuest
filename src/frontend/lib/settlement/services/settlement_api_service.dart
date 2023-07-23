@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 
 import '../models/im/cast_assessment_poll_vote_command.dart';
-import '../models/im/decision_im.dart';
 import '../models/im/new_assessment_poll_vote_im.dart';
 import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
 import '../models/rvm/get_settlement_proposal_rvm.dart';
@@ -192,27 +191,18 @@ class SettlementApiService {
   }
 
   Future<String> castThingSettlementProposalAssessmentPollVote(
-    String thingId,
-    String proposalId,
-    String castedAt,
-    DecisionIm decision,
-    String reason,
+    NewAssessmentPollVoteIm vote,
     String signature,
   ) async {
     var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.post(
-        '/proposals/$proposalId/vote',
+        '/proposals/${vote.proposalId}/vote',
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
         ),
         data: CastAssessmentPollVoteCommand(
-          input: NewAssessmentPollVoteIm(
-            thingId: thingId,
-            castedAt: castedAt,
-            decision: decision,
-            reason: reason,
-          ),
+          input: vote,
           signature: signature,
         ).toJson(),
       );

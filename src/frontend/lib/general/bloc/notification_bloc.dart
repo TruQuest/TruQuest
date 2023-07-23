@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
 
+import '../models/rvm/notification_vm.dart';
 import '../services/toast_messenger.dart';
 import '../services/notifications_cache.dart';
 import 'notification_actions.dart';
@@ -14,7 +15,7 @@ class NotificationBloc extends Bloc<NotificationAction> {
   final NotificationsCache _notificationsCache;
   final ToastMessenger _toastMessenger;
   final ThingService _thingService;
-  // final SettlementService _settlementService;
+  final SettlementService _settlementService;
 
   final BehaviorSubject<Stream<int>?> _progress$Channel =
       BehaviorSubject<Stream<int>?>();
@@ -24,11 +25,17 @@ class NotificationBloc extends Bloc<NotificationAction> {
       StreamController<Widget>.broadcast();
   Stream<Widget> get toast$ => _toastChannel.stream;
 
+  Stream<int> get unreadNotificationsCount$ =>
+      _notificationsCache.unreadNotificationsCount$;
+
+  Stream<(List<NotificationVm>, String?)> get unreadNotifications$ =>
+      _notificationsCache.unreadNotifications$;
+
   NotificationBloc(
     this._notificationsCache,
     this._toastMessenger,
     this._thingService,
-    // this._settlementService,
+    this._settlementService,
   ) {
     actionChannel.stream.listen((action) {
       if (action is Dismiss) {
@@ -49,18 +56,18 @@ class NotificationBloc extends Bloc<NotificationAction> {
       });
     });
 
-    // _settlementService.progress$$.listen((progress$) {
-    //   _progress$Channel.add(progress$);
-    //   progress$.listen(null, onDone: () {
-    //     Future.delayed(const Duration(seconds: 2)).then(
-    //       (_) {
-    //         if (_progress$Channel.value == progress$) {
-    //           _progress$Channel.add(null);
-    //         }
-    //       },
-    //     );
-    //   });
-    // });
+    _settlementService.progress$$.listen((progress$) {
+      _progress$Channel.add(progress$);
+      progress$.listen(null, onDone: () {
+        Future.delayed(const Duration(seconds: 2)).then(
+          (_) {
+            if (_progress$Channel.value == progress$) {
+              _progress$Channel.add(null);
+            }
+          },
+        );
+      });
+    });
 
     _toastMessenger.toast$.listen((toast) => _toastChannel.add(toast));
   }

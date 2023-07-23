@@ -78,7 +78,7 @@ class ConnectAccountButton extends StatelessWidgetX {
                   if (context.mounted) {
                     showDialog(
                       context: context,
-                      builder: (_) => LocalWalletCreationDialog(),
+                      builder: (_) => const LocalWalletCreationDialog(),
                     );
                   }
 

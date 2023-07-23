@@ -165,6 +165,9 @@ class UserService {
     _reloadUser(currentWalletAddress);
   }
 
+  FutureOr<String> personalSign(String message) =>
+      _walletService.personalSign(message);
+
   Future addEmail(String email) async {
     // var wallet = _localWalletService.wallet;
     // if (wallet?.locked ?? true) {

@@ -129,8 +129,7 @@ class _ThingsListState extends StateX<ThingsList> {
                                       var action = CreateNewThingDraft(
                                         documentContext:
                                             DocumentContext.fromEditable(
-                                          documentContext,
-                                        ),
+                                                documentContext),
                                       );
                                       _thingBloc.dispatch(action);
 

@@ -12,7 +12,6 @@ import '../../general/widgets/poster.dart';
 import '../../general/widgets/tab_container.dart';
 import '../../general/widgets/watch_button.dart';
 import '../../user/bloc/user_bloc.dart';
-import '../../user/bloc/user_result_vm.dart';
 import '../models/rvm/get_settlement_proposal_rvm.dart';
 import '../models/rvm/settlement_proposal_vm.dart';
 import '../widgets/lottery.dart';

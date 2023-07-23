@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../user/errors/wallet_locked_error.dart';
 import '../../general/services/toast_messenger.dart';
 import '../models/rvm/get_settlement_proposals_list_rvm.dart';
 import '../models/rvm/get_verifiers_rvm.dart';
@@ -33,7 +34,7 @@ class ThingBloc extends Bloc<ThingAction> {
   final _verifiersChannel = StreamController<GetVerifiersRvm>.broadcast();
   Stream<GetVerifiersRvm> get verifiers$ => _verifiersChannel.stream;
 
-  final StreamController<GetSettlementProposalsListRvm> _proposalsListChannel =
+  final _proposalsListChannel =
       StreamController<GetSettlementProposalsListRvm>.broadcast();
   Stream<GetSettlementProposalsListRvm> get proposalsList$ =>
       _proposalsListChannel.stream;
@@ -136,11 +137,12 @@ class ThingBloc extends Bloc<ThingAction> {
   }
 
   void _fundThing(FundThing action) async {
-    var error = await _thingService.fundThing(
-      action.thing.id,
-      action.signature,
-    );
-    action.complete(error != null ? FundThingFailureVm(error: error) : null);
+    try {
+      await _thingService.fundThing(action.thing.id, action.signature);
+      action.complete(null);
+    } on WalletLockedError catch (error) {
+      action.complete(FundThingFailureVm(error: error));
+    }
   }
 
   void _refreshVerifierLotteryInfo(String thingId) async {
@@ -160,14 +162,13 @@ class ThingBloc extends Bloc<ThingAction> {
   }
 
   void _joinLottery(JoinLottery action) async {
-    var error = await _thingService.joinLottery(action.thingId);
-    if (error != null) {
+    try {
+      await _thingService.joinLottery(action.thingId);
+      _refreshVerifierLotteryInfo(action.thingId);
+      action.complete(null);
+    } on WalletLockedError catch (error) {
       action.complete(JoinLotteryFailureVm(error: error));
-      return;
     }
-
-    _refreshVerifierLotteryInfo(action.thingId);
-    action.complete(null);
   }
 
   void _getVerifierLotteryParticipants(
@@ -194,26 +195,30 @@ class ThingBloc extends Bloc<ThingAction> {
   }
 
   void _castVoteOffChain(CastVoteOffChain action) async {
-    var error = await _thingService.castVoteOffChain(
-      action.thingId,
-      action.decision,
-      action.reason,
-    );
-    action.complete(
-      error != null ? CastVoteOffChainFailureVm(error: error) : null,
-    );
+    try {
+      await _thingService.castVoteOffChain(
+        action.thingId,
+        action.decision,
+        action.reason,
+      );
+      action.complete(null);
+    } on WalletLockedError catch (error) {
+      action.complete(CastVoteOffChainFailureVm(error: error));
+    }
   }
 
   void _castVoteOnChain(CastVoteOnChain action) async {
-    var error = await _thingService.castVoteOnChain(
-      action.thingId,
-      action.userIndexInThingVerifiersArray,
-      action.decision,
-      action.reason,
-    );
-    action.complete(
-      error != null ? CastVoteOnChainFailureVm(error: error) : null,
-    );
+    try {
+      await _thingService.castVoteOnChain(
+        action.thingId,
+        action.userIndexInThingVerifiersArray,
+        action.decision,
+        action.reason,
+      );
+      action.complete(null);
+    } on WalletLockedError catch (error) {
+      action.complete(CastVoteOnChainFailureVm(error: error));
+    }
   }
 
   void _getVerifiers(GetVerifiers action) async {

@@ -14,7 +14,6 @@ class NewAcceptancePollVoteIm {
   });
 
   Map<String, dynamic> toJson() => {
-        'thingId': thingId,
         'castedAt': castedAt,
         'decision': decision.index,
         'reason': reason,

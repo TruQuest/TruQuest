@@ -1,14 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
 
+import '../../ethereum/services/user_operation_service.dart';
+import '../models/im/new_assessment_poll_vote_im.dart';
 import '../../user/services/user_service.dart';
 import '../../general/contracts/acceptance_poll_contract.dart';
-import '../../ethereum/errors/ethereum_error.dart';
 import '../../general/extensions/datetime_extension.dart';
 import '../../general/models/rvm/verifier_lottery_participant_entry_vm.dart';
 import '../models/im/decision_im.dart';
 import '../../general/contracts/assessment_poll_contract.dart';
 import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
-import '../../ethereum/services/ethereum_service.dart';
 import '../../general/contracts/thing_assessment_verifier_lottery_contract.dart';
 import '../../general/contracts/truquest_contract.dart';
 import '../models/rvm/get_settlement_proposal_rvm.dart';
@@ -17,10 +18,10 @@ import '../models/rvm/get_verifiers_rvm.dart';
 import 'settlement_api_service.dart';
 
 class SettlementService {
-  final UserService _userService;
-  final TruQuestContract _truQuestContract;
   final SettlementApiService _settlementApiService;
-  final EthereumService _ethereumService;
+  final UserService _userService;
+  final UserOperationService _userOperationService;
+  final TruQuestContract _truQuestContract;
   final AcceptancePollContract _acceptancePollContract;
   final ThingAssessmentVerifierLotteryContract
       _thingAssessmentVerifierLotteryContract;
@@ -31,10 +32,10 @@ class SettlementService {
   Stream<Stream<int>> get progress$$ => _progress$Channel.stream;
 
   SettlementService(
-    this._userService,
-    this._truQuestContract,
     this._settlementApiService,
-    this._ethereumService,
+    this._userService,
+    this._userOperationService,
+    this._truQuestContract,
     this._acceptancePollContract,
     this._thingAssessmentVerifierLotteryContract,
     this._assessmentPollContract,
@@ -68,10 +69,10 @@ class SettlementService {
 
   Future<bool> checkThingAlreadyHasSettlementProposalUnderAssessment(
     String thingId,
-  ) {
-    return _truQuestContract
-        .checkThingAlreadyHasSettlementProposalUnderAssessment(thingId);
-  }
+  ) =>
+      _truQuestContract.checkThingAlreadyHasSettlementProposalUnderAssessment(
+        thingId,
+      );
 
   Future submitNewSettlementProposal(String proposalId) async {
     await _settlementApiService.submitNewSettlementProposal(
@@ -84,49 +85,54 @@ class SettlementService {
     String proposalId,
     String signature,
   ) async {
-    await _truQuestContract.fundThingSettlementProposal(
-      thingId,
-      proposalId,
-      signature,
+    print('**************** Fund Proposal ****************');
+    await _userOperationService.send(
+      target: TruQuestContract.address,
+      action: _truQuestContract.fundThingSettlementProposal(
+        thingId,
+        proposalId,
+        signature,
+      ),
     );
   }
 
-  Future<(String?, int?, int, int, bool?, bool?, int)> getVerifierLotteryInfo(
+  Future<(String?, int?, int, int, bool?, bool?)> getVerifierLotteryInfo(
     String thingId,
     String proposalId,
   ) async {
     var currentUserId = _userService.latestCurrentUser?.id;
-    int? initBlock =
-        await _thingAssessmentVerifierLotteryContract.getLotteryInitBlock(
-      thingId,
-      proposalId,
-    );
-    if (initBlock == 0) {
-      initBlock = null;
-    }
+    var currentWalletAddress = _userService.latestCurrentUser?.walletAddress;
+
+    int? initBlock = await _thingAssessmentVerifierLotteryContract
+        .getLotteryInitBlock(thingId, proposalId);
+
     int durationBlocks = await _thingAssessmentVerifierLotteryContract
         .getLotteryDurationBlocks();
 
-    // @@??: Should get here the currently connected account and then pass
-    // it as an argument to the methods?
+    int thingVerifiersArrayIndex = currentWalletAddress != null
+        ? await _acceptancePollContract.getUserIndexAmongThingVerifiers(
+            thingId,
+            currentWalletAddress,
+          )
+        : -1;
 
-    // int thingVerifiersArrayIndex =
-    // await _acceptancePollContract.getUserIndexAmongThingVerifiers(thingId);
-    int thingVerifiersArrayIndex = 5;
+    bool? alreadyClaimedASpot = currentWalletAddress != null
+        ? await _thingAssessmentVerifierLotteryContract
+            .checkAlreadyClaimedLotterySpot(
+            thingId,
+            proposalId,
+            currentWalletAddress,
+          )
+        : null;
 
-    bool? alreadyClaimedASpot = await _thingAssessmentVerifierLotteryContract
-        .checkAlreadyClaimedLotterySpot(
-      thingId,
-      proposalId,
-    );
-
-    bool? alreadyJoined =
-        await _thingAssessmentVerifierLotteryContract.checkAlreadyJoinedLottery(
-      thingId,
-      proposalId,
-    );
-
-    int latestBlockNumber = await _ethereumService.getLatestL1BlockNumber();
+    bool? alreadyJoined = currentWalletAddress != null
+        ? await _thingAssessmentVerifierLotteryContract
+            .checkAlreadyJoinedLottery(
+            thingId,
+            proposalId,
+            currentWalletAddress,
+          )
+        : null;
 
     return (
       currentUserId,
@@ -135,29 +141,34 @@ class SettlementService {
       thingVerifiersArrayIndex,
       alreadyClaimedASpot,
       alreadyJoined,
-      latestBlockNumber,
     );
   }
 
-  Future<EthereumError?> claimLotterySpot(
+  Future claimLotterySpot(
     String thingId,
     String proposalId,
     int userIndexInThingVerifiersArray,
   ) async {
-    var error = await _thingAssessmentVerifierLotteryContract.claimLotterySpot(
-      thingId,
-      proposalId,
-      userIndexInThingVerifiersArray,
+    print('**************** Claim Lottery Spot ****************');
+    await _userOperationService.send(
+      target: ThingAssessmentVerifierLotteryContract.address,
+      action: _thingAssessmentVerifierLotteryContract.claimLotterySpot(
+        thingId,
+        proposalId,
+        userIndexInThingVerifiersArray,
+      ),
     );
-    return error;
   }
 
-  Future<EthereumError?> joinLottery(String thingId, String proposalId) async {
-    var error = await _thingAssessmentVerifierLotteryContract.joinLottery(
-      thingId,
-      proposalId,
+  Future joinLottery(String thingId, String proposalId) async {
+    print('**************** Join Lottery ****************');
+    await _userOperationService.send(
+      target: ThingAssessmentVerifierLotteryContract.address,
+      action: _thingAssessmentVerifierLotteryContract.joinLottery(
+        thingId,
+        proposalId,
+      ),
     );
-    return error;
   }
 
   Future<GetVerifierLotteryParticipantsRvm> getVerifierLotteryParticipants(
@@ -170,9 +181,7 @@ class SettlementService {
 
     var (lotteryInitBlock, dataHash, userXorDataHash) =
         await _thingAssessmentVerifierLotteryContract.getOrchestratorCommitment(
-      thingId,
-      proposalId,
-    );
+            thingId, proposalId);
 
     var entries = result.entries;
     if (entries.isEmpty || !entries.first.isOrchestrator) {
@@ -208,32 +217,33 @@ class SettlementService {
     return result;
   }
 
-  Future<(String?, int?, int, int, int)> getAssessmentPollInfo(
+  Future<(String?, int?, int, int)> getAssessmentPollInfo(
     String thingId,
     String proposalId,
   ) async {
     var currentUserId = _userService.latestCurrentUser?.id;
+    var currentWalletAddress = _userService.latestCurrentUser?.walletAddress;
+
     int? initBlock = await _assessmentPollContract.getPollInitBlock(
       thingId,
       proposalId,
     );
-    if (initBlock == 0) {
-      initBlock = null;
-    }
+
     int durationBlocks = await _assessmentPollContract.getPollDurationBlocks();
-    int proposalVerifiersArrayIndex =
-        await _assessmentPollContract.getUserIndexAmongProposalVerifiers(
-      thingId,
-      proposalId,
-    );
-    int latestBlockNumber = await _ethereumService.getLatestL1BlockNumber();
+
+    int proposalVerifiersArrayIndex = currentWalletAddress != null
+        ? await _assessmentPollContract.getUserIndexAmongProposalVerifiers(
+            thingId,
+            proposalId,
+            currentWalletAddress,
+          )
+        : -1;
 
     return (
       currentUserId,
       initBlock,
       durationBlocks,
       proposalVerifiersArrayIndex,
-      latestBlockNumber,
     );
   }
 
@@ -243,31 +253,22 @@ class SettlementService {
     DecisionIm decision,
     String reason,
   ) async {
-    var castedAt = DateTime.now().getString();
-    var result =
-        await _ethereumService.signThingSettlementProposalAssessmentPollVote(
-      thingId,
-      proposalId,
-      castedAt,
-      decision,
-      reason,
+    var vote = NewAssessmentPollVoteIm(
+      thingId: thingId,
+      proposalId: proposalId,
+      castedAt: DateTime.now().getString(),
+      decision: decision,
+      reason: reason,
     );
-    if (result.isLeft) {
-      print(result.left);
-      return;
-    }
+
+    var signature = await _userService.personalSign(
+      jsonEncode(vote.toJsonForSigning()),
+    );
 
     var ipfsCid = await _settlementApiService
-        .castThingSettlementProposalAssessmentPollVote(
-      thingId,
-      proposalId,
-      castedAt,
-      decision,
-      reason,
-      result.right,
-    );
+        .castThingSettlementProposalAssessmentPollVote(vote, signature);
 
-    print('Vote cid: $ipfsCid');
+    print('**************** Vote cid: $ipfsCid ****************');
   }
 
   Future castVoteOnChain(
@@ -277,12 +278,16 @@ class SettlementService {
     DecisionIm decision,
     String reason,
   ) async {
-    await _assessmentPollContract.castVote(
-      thingId,
-      proposalId,
-      userIndexInProposalVerifiersArray,
-      decision,
-      reason,
+    print('**************** Cast Vote ****************');
+    await _userOperationService.send(
+      target: AssessmentPollContract.address,
+      action: _assessmentPollContract.castVote(
+        thingId,
+        proposalId,
+        userIndexInProposalVerifiersArray,
+        decision,
+        reason,
+      ),
     );
   }
 

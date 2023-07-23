@@ -1,17 +1,22 @@
+import '../../general/errors/error.dart';
+
 abstract class SettlementResultVm {}
 
 class CreateNewSettlementProposalDraftFailureVm extends SettlementResultVm {}
 
 class SubmitNewSettlementProposalFailureVm extends SettlementResultVm {}
 
-class FundSettlementProposalFailureVm extends SettlementResultVm {}
+class FundSettlementProposalFailureVm extends SettlementResultVm {
+  final Error error;
+
+  FundSettlementProposalFailureVm({required this.error});
+}
 
 class GetVerifierLotteryInfoSuccessVm extends SettlementResultVm {
   final String? userId;
   final int? initBlock;
   final int durationBlocks;
   final int userIndexInThingVerifiersArray;
-  final int latestL1BlockNumber;
   final bool? alreadyClaimedASpot;
   final bool? alreadyJoined;
 
@@ -20,7 +25,6 @@ class GetVerifierLotteryInfoSuccessVm extends SettlementResultVm {
     required this.initBlock,
     required this.durationBlocks,
     required this.userIndexInThingVerifiersArray,
-    required this.latestL1BlockNumber,
     required this.alreadyClaimedASpot,
     required this.alreadyJoined,
   });
@@ -31,19 +35,35 @@ class GetAssessmentPollInfoSuccessVm extends SettlementResultVm {
   final int? initBlock;
   final int durationBlocks;
   final int userIndexInProposalVerifiersArray;
-  final int latestL1BlockNumber;
 
   GetAssessmentPollInfoSuccessVm({
     required this.userId,
     required this.initBlock,
     required this.durationBlocks,
     required this.userIndexInProposalVerifiersArray,
-    required this.latestL1BlockNumber,
   });
 }
 
-class ClaimLotterySpotFailureVm extends SettlementResultVm {}
+class ClaimLotterySpotFailureVm extends SettlementResultVm {
+  final Error error;
 
-class JoinLotteryFailureVm extends SettlementResultVm {}
+  ClaimLotterySpotFailureVm({required this.error});
+}
 
-class CastVoteResultVm extends SettlementResultVm {}
+class JoinLotteryFailureVm extends SettlementResultVm {
+  final Error error;
+
+  JoinLotteryFailureVm({required this.error});
+}
+
+class CastVoteOffChainFailureVm extends SettlementResultVm {
+  final Error error;
+
+  CastVoteOffChainFailureVm({required this.error});
+}
+
+class CastVoteOnChainFailureVm extends SettlementResultVm {
+  final Error error;
+
+  CastVoteOnChainFailureVm({required this.error});
+}

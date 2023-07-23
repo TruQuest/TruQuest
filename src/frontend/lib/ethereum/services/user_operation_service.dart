@@ -72,7 +72,7 @@ class UserOperationService {
 
     GetUserOperationReceiptRvm? receipt;
     do {
-      await Future.delayed(Duration(seconds: 2));
+      await Future.delayed(const Duration(seconds: 2));
 
       receipt = await _ethereumApiService.getUserOperationReceipt(
         userOpHash!,

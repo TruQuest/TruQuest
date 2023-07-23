@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ClippedImage extends StatelessWidget {
   final String imageIpfsCid;
@@ -30,7 +31,7 @@ class ClippedImage extends StatelessWidget {
         ),
         clipBehavior: Clip.antiAlias,
         child: Image.network(
-          'http://localhost:8080/ipfs/' + imageIpfsCid,
+          '${dotenv.env['IPFS_GATEWAY_URL']}/$imageIpfsCid',
           fit: BoxFit.cover,
         ),
       ),

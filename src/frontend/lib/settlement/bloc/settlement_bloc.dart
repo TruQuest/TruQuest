@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../../user/errors/wallet_locked_error.dart';
 import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
 import '../models/rvm/get_verifiers_rvm.dart';
 import '../models/rvm/settlement_proposal_state_vm.dart';
@@ -12,24 +13,21 @@ import '../services/settlement_service.dart';
 class SettlementBloc extends Bloc<SettlementAction> {
   final SettlementService _settlementService;
 
-  final StreamController<GetSettlementProposalRvm> _proposalChannel =
+  final _proposalChannel =
       StreamController<GetSettlementProposalRvm>.broadcast();
   Stream<GetSettlementProposalRvm> get proposal$ => _proposalChannel.stream;
 
-  final StreamController<GetVerifierLotteryInfoSuccessVm>
-      _verifierLotteryInfoChannel =
+  final _verifierLotteryInfoChannel =
       StreamController<GetVerifierLotteryInfoSuccessVm>.broadcast();
   Stream<GetVerifierLotteryInfoSuccessVm> get verifierLotteryInfo$ =>
       _verifierLotteryInfoChannel.stream;
 
-  final StreamController<GetVerifierLotteryParticipantsRvm>
-      _verifierLotteryParticipantsChannel =
+  final _verifierLotteryParticipantsChannel =
       StreamController<GetVerifierLotteryParticipantsRvm>.broadcast();
   Stream<GetVerifierLotteryParticipantsRvm> get verifierLotteryParticipants$ =>
       _verifierLotteryParticipantsChannel.stream;
 
-  final StreamController<GetVerifiersRvm> _verifiersChannel =
-      StreamController<GetVerifiersRvm>.broadcast();
+  final _verifiersChannel = StreamController<GetVerifiersRvm>.broadcast();
   Stream<GetVerifiersRvm> get verifiers$ => _verifiersChannel.stream;
 
   SettlementBloc(this._settlementService) {
@@ -97,12 +95,16 @@ class SettlementBloc extends Bloc<SettlementAction> {
   }
 
   void _fundSettlementProposal(FundSettlementProposal action) async {
-    await _settlementService.fundSettlementProposal(
-      action.thingId,
-      action.proposalId,
-      action.signature,
-    );
-    action.complete(null);
+    try {
+      await _settlementService.fundSettlementProposal(
+        action.thingId,
+        action.proposalId,
+        action.signature,
+      );
+      action.complete(null);
+    } on WalletLockedError catch (error) {
+      action.complete(FundSettlementProposalFailureVm(error: error));
+    }
   }
 
   void _refreshVerifierLotteryInfo(
@@ -121,7 +123,6 @@ class SettlementBloc extends Bloc<SettlementAction> {
         userIndexInThingVerifiersArray: info.$4,
         alreadyClaimedASpot: info.$5,
         alreadyJoined: info.$6,
-        latestL1BlockNumber: info.$7,
       ),
     );
   }
@@ -131,28 +132,36 @@ class SettlementBloc extends Bloc<SettlementAction> {
   }
 
   void _claimLotterySpot(ClaimLotterySpot action) async {
-    var error = await _settlementService.claimLotterySpot(
-      action.thingId,
-      action.proposalId,
-      action.userIndexInThingVerifiersArray,
-    );
-    action.complete(error != null ? ClaimLotterySpotFailureVm() : null);
-    _refreshVerifierLotteryInfo(
-      action.thingId,
-      action.proposalId,
-    );
+    try {
+      await _settlementService.claimLotterySpot(
+        action.thingId,
+        action.proposalId,
+        action.userIndexInThingVerifiersArray,
+      );
+      _refreshVerifierLotteryInfo(
+        action.thingId,
+        action.proposalId,
+      );
+      action.complete(null);
+    } on WalletLockedError catch (error) {
+      action.complete(ClaimLotterySpotFailureVm(error: error));
+    }
   }
 
   void _joinLottery(JoinLottery action) async {
-    var error = await _settlementService.joinLottery(
-      action.thingId,
-      action.proposalId,
-    );
-    action.complete(error != null ? JoinLotteryFailureVm() : null);
-    _refreshVerifierLotteryInfo(
-      action.thingId,
-      action.proposalId,
-    );
+    try {
+      await _settlementService.joinLottery(
+        action.thingId,
+        action.proposalId,
+      );
+      _refreshVerifierLotteryInfo(
+        action.thingId,
+        action.proposalId,
+      );
+      action.complete(null);
+    } on WalletLockedError catch (error) {
+      action.complete(JoinLotteryFailureVm(error: error));
+    }
   }
 
   void _getVerifierLotteryParticipants(
@@ -176,30 +185,37 @@ class SettlementBloc extends Bloc<SettlementAction> {
         initBlock: info.$2,
         durationBlocks: info.$3,
         userIndexInProposalVerifiersArray: info.$4,
-        latestL1BlockNumber: info.$5,
       ),
     );
   }
 
   void _castVoteOffChain(CastVoteOffChain action) async {
-    await _settlementService.castVoteOffChain(
-      action.thingId,
-      action.proposalId,
-      action.decision,
-      action.reason,
-    );
-    action.complete(CastVoteResultVm());
+    try {
+      await _settlementService.castVoteOffChain(
+        action.thingId,
+        action.proposalId,
+        action.decision,
+        action.reason,
+      );
+      action.complete(null);
+    } on WalletLockedError catch (error) {
+      action.complete(CastVoteOffChainFailureVm(error: error));
+    }
   }
 
   void _castVoteOnChain(CastVoteOnChain action) async {
-    await _settlementService.castVoteOnChain(
-      action.thingId,
-      action.proposalId,
-      action.userIndexInProposalVerifiersArray,
-      action.decision,
-      action.reason,
-    );
-    action.complete(CastVoteResultVm());
+    try {
+      await _settlementService.castVoteOnChain(
+        action.thingId,
+        action.proposalId,
+        action.userIndexInProposalVerifiersArray,
+        action.decision,
+        action.reason,
+      );
+      action.complete(null);
+    } on WalletLockedError catch (error) {
+      action.complete(CastVoteOnChainFailureVm(error: error));
+    }
   }
 
   void _getVerifiers(GetVerifiers action) async {

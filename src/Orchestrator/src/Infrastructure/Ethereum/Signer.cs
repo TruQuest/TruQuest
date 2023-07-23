@@ -8,8 +8,6 @@ using Nethereum.Hex.HexConvertors.Extensions;
 using Nethereum.Signer.EIP712;
 using Nethereum.Signer;
 
-using Domain.Errors;
-using Domain.Results;
 using Domain.Aggregates.Events;
 using Domain.Aggregates;
 using Application.Common.Interfaces;
@@ -82,23 +80,12 @@ internal class Signer : ISigner
             signature
         );
 
-    public Either<VoteError, string> RecoverFromNewAssessmentPollVoteMessage(
+    public string RecoverFromNewAssessmentPollVoteMessage(
         NewAssessmentPollVoteIm input, string signature
-    )
-    {
-        var td = new NewAssessmentPollVoteTd
-        {
-            ThingId = input.ThingId.ToString(),
-            SettlementProposalId = input.SettlementProposalId!.Value.ToString(),
-            CastedAt = input.CastedAt,
-            Decision = input.Decision.GetString(),
-            Reason = input.Reason
-        };
-        var tdDefinition = _getTypedDataDefinition(typeof(NewAssessmentPollVoteTd));
-        var address = _eip712Signer.RecoverFromSignatureV4(td, tdDefinition, signature);
-
-        return address;
-    }
+    ) => _personalSigner.EncodeUTF8AndEcRecover(
+            JsonSerializer.Serialize(input, _jsonSerializerOptions),
+            signature
+        );
 
     public string SignThing(Guid thingId)
     {
@@ -131,28 +118,23 @@ internal class Signer : ISigner
         );
     }
 
-    public string SignNewAssessmentPollVote(NewAssessmentPollVoteIm input, string voterId, string voterSignature)
+    public string SignNewAssessmentPollVote(
+        NewAssessmentPollVoteIm input, string walletAddress,
+        string ownerAddress, string ownerSignature
+    )
     {
         var td = new SignedNewAssessmentPollVoteTd
         {
-            Vote = new NewAssessmentPollVoteTd
-            {
-                ThingId = input.ThingId.ToString(),
-                SettlementProposalId = input.SettlementProposalId!.Value.ToString(),
-                CastedAt = input.CastedAt,
-                Decision = input.Decision.GetString(),
-                Reason = input.Reason
-            },
-            VoterId = voterId,
-            VoterSignature = voterSignature
+            Vote = input,
+            WalletAddress = walletAddress,
+            OwnerAddress = ownerAddress,
+            OwnerSignature = ownerSignature
         };
-        var tdDefinition = _getTypedDataDefinition(
-            typeof(SignedNewAssessmentPollVoteTd),
-            typeof(NewAssessmentPollVoteTd)
-        );
-        tdDefinition.SetMessage(td);
 
-        return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);
+        return _personalSigner.EncodeUTF8AndSign(
+            JsonSerializer.Serialize(td, _jsonSerializerOptions),
+            _orchestratorPrivateKey
+        );
     }
 
     public string SignAcceptancePollVoteAgg(
@@ -212,8 +194,8 @@ internal class Signer : ISigner
     {
         var td = new SignedAssessmentPollVoteAggTd
         {
-            ThingId = thingId.ToString(),
-            SettlementProposalId = proposalId.ToString(),
+            ThingId = thingId,
+            SettlementProposalId = proposalId,
             EndBlock = endBlock,
             OffChainVotes = offChainVotes
                 .Select(v => new OffChainAssessmentPollVoteTd
@@ -227,20 +209,17 @@ internal class Signer : ISigner
                     BlockNumber = v.BlockNumber,
                     TxnIndex = v.TxnIndex,
                     L1BlockNumber = v.L1BlockNumber,
-                    UserId = v.UserId,
+                    UserId = v.UserId, // @@TODO: EIP-55 encode
                     Decision = v.Decision.GetString(),
                     Reason = v.Reason ?? string.Empty
                 })
                 .ToList()
         };
-        var tdDefinition = _getTypedDataDefinition(
-            typeof(SignedAssessmentPollVoteAggTd),
-            typeof(OffChainAssessmentPollVoteTd),
-            typeof(OnChainAssessmentPollVoteTd)
-        );
-        tdDefinition.SetMessage(td);
 
-        return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);
+        return _personalSigner.EncodeUTF8AndSign(
+            JsonSerializer.Serialize(td, _jsonSerializerOptions),
+            _orchestratorPrivateKey
+        );
     }
 
     public bool CheckIsOrchestrator(String address) =>

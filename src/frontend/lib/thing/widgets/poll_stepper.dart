@@ -122,9 +122,7 @@ class _PollStepperState extends StateX<PollStepper> {
                 },
               )
             : const SizedBox.shrink(),
-        onStepTapped: (value) => setState(() {
-          _currentStep = value;
-        }),
+        onStepTapped: (value) => setState(() => _currentStep = value),
         steps: [
           Step(
             state: StepState.editing,

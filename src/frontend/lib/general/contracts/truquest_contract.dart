@@ -1,11 +1,12 @@
 import 'package:convert/convert.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../ethereum/services/ethereum_rpc_provider.dart';
 import '../extensions/uuid_extension.dart';
 import '../../ethereum_js_interop.dart';
 
 class TruQuestContract {
-  static const String address = '0x3CD0E37bA3804cb84c2B0061978147011C18eAd3';
+  static final String address = dotenv.env['TruQuestAddress']!;
   static const String _abi = '''[
         {
           "inputs": [

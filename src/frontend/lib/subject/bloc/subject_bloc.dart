@@ -36,7 +36,6 @@ class SubjectBloc extends Bloc<SubjectAction> {
 
   void _addNewSubject(AddNewSubject action) async {
     var subjectId = await _subjectService.addNewSubject(action.documentContext);
-    print('SubjectId: $subjectId');
     action.complete(AddNewSubjectSuccessResult(subjectId: subjectId));
   }
 

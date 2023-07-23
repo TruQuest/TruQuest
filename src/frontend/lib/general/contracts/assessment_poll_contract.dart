@@ -1,10 +1,12 @@
-import '../../ethereum/services/ethereum_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+import '../../ethereum/services/ethereum_rpc_provider.dart';
 import '../../ethereum_js_interop.dart';
 import '../../settlement/models/im/decision_im.dart';
 import '../extensions/uuid_extension.dart';
 
 class AssessmentPollContract {
-  static const String _address = '0xae236a5CFb50AaeE3060Eb17451436d953519B82';
+  static final String address = dotenv.env['AssessmentPollAddress']!;
   static const String _abi = '''[
     {
       "inputs": [
@@ -115,110 +117,82 @@ class AssessmentPollContract {
     }
   ]''';
 
-  final EthereumService _ethereumService;
+  late final Abi _interface;
+  late final Contract _contract;
 
-  Contract? _contract;
-  late final Contract _readOnlyContract;
-
-  AssessmentPollContract(this._ethereumService) {
-    _readOnlyContract = Contract(
-      _address,
+  AssessmentPollContract(EthereumRpcProvider ethereumRpcProvider) {
+    _interface = Abi(_abi);
+    _contract = Contract(
+      address,
       _abi,
-      null,
-      // _ethereumService.provider,
+      ethereumRpcProvider.provider,
     );
-
-    _ethereumService.walletSetup.future.then((_) {
-      _contract = Contract(_address, _abi, null);
-    });
   }
 
   Future<int> getPollDurationBlocks() =>
-      _readOnlyContract.read<int>('getPollDurationBlocks');
+      _contract.read<int>('getPollDurationBlocks');
 
-  Future<int> getPollInitBlock(String thingId, String proposalId) async {
+  Future<int?> getPollInitBlock(String thingId, String proposalId) async {
     var thingIdHex = thingId.toSolInputFormat(prefix: false);
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    return (await _readOnlyContract.read<BigInt>(
+    var block = await _contract.read<BigInt>(
       'getPollInitBlock',
       args: [thingProposalIdHex],
-    ))
-        .toInt();
+    );
+
+    return block != BigInt.zero ? block.toInt() : null;
   }
 
   Future<int> getUserIndexAmongProposalVerifiers(
     String thingId,
     String proposalId,
+    String walletAddress,
   ) async {
-    var contract = _contract;
-    if (contract == null) {
-      return -1;
-    }
-    if (_ethereumService.connectedAccount == null) {
-      return -1;
-    }
-
     var thingIdHex = thingId.toSolInputFormat(prefix: false);
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    return (await contract.read<BigInt>(
+    var index = await _contract.read<BigInt>(
       'getUserIndexAmongProposalVerifiers',
       args: [
         thingProposalIdHex,
-        _ethereumService.connectedAccount,
+        walletAddress,
       ],
-    ))
-        .toInt();
+    );
+
+    return index.toInt();
   }
 
-  Future castVote(
+  String castVote(
     String thingId,
     String proposalId,
     int userIndexInProposalVerifiersArray,
     DecisionIm decision,
     String reason,
-  ) async {
-    var contract = _contract;
-    if (contract == null) {
-      return;
-    }
-    if (_ethereumService.connectedAccount == null) {
-      return;
-    }
-
-    // var signer = _ethereumService.provider.getSigner();
-    // contract = contract.connect(signer);
-
+  ) {
     var thingIdHex = thingId.toSolInputFormat(prefix: false);
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    TransactionResponse txnResponse;
-    if (reason.isEmpty) {
-      txnResponse = await contract.write(
-        'castVote',
-        args: [
-          thingProposalIdHex,
-          userIndexInProposalVerifiersArray,
-          decision.index,
-        ],
-      );
-    } else {
-      txnResponse = await contract.write(
-        'castVoteWithReason',
-        args: [
-          thingProposalIdHex,
-          userIndexInProposalVerifiersArray,
-          decision.index,
-          reason,
-        ],
-      );
-    }
-
-    await txnResponse.wait();
-    print('Cast vote txn mined!');
+    return reason.isEmpty
+        ? _interface.encodeFunctionData(
+            'castVote',
+            [
+              thingProposalIdHex,
+              userIndexInProposalVerifiersArray,
+              decision.index,
+            ],
+          )
+        : _interface.encodeFunctionData(
+            'castVoteWithReason',
+            [
+              thingProposalIdHex,
+              userIndexInProposalVerifiersArray,
+              decision.index,
+              reason,
+            ],
+          );
   }
 }

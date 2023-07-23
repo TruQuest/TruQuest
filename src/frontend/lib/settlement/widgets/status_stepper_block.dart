@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../general/utils/utils.dart';
 import '../../user/bloc/user_bloc.dart';
+import '../../user/errors/wallet_locked_error.dart';
 import '../bloc/settlement_actions.dart';
 import '../models/rvm/settlement_proposal_state_vm.dart';
 import '../models/rvm/settlement_proposal_vm.dart';
@@ -231,6 +233,16 @@ class StatusStepperBlock extends StatelessWidgetX {
                 _settlementBloc.dispatch(action);
 
                 var failure = await action.result;
+                if (failure != null && failure.error is WalletLockedError) {
+                  if (context.mounted) {
+                    var unlocked = await showUnlockWalletDialog(context);
+                    if (unlocked) {
+                      _settlementBloc.dispatch(action);
+                      failure = await action.result;
+                    }
+                  }
+                }
+
                 return failure == null;
               },
             );

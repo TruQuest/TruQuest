@@ -21,7 +21,7 @@ class AccountListDialog extends StatelessWidgetX {
   Widget buildX(BuildContext context) {
     return SimpleDialog(
       backgroundColor: const Color(0xFF242423),
-      title: Text(
+      title: const Text(
         'Wallet accounts',
         style: TextStyle(
           color: Colors.white,
@@ -29,13 +29,13 @@ class AccountListDialog extends StatelessWidgetX {
       ),
       children: [
         SizedBox(
-          width: 300,
+          width: 400,
           height: 400,
           child: StreamBuilder(
             stream: _userBloc.walletAddresses$,
             builder: (context, snapshot) {
               if (snapshot.data == null) {
-                return Center(
+                return const Center(
                   child: CircularProgressIndicator(),
                 );
               }
@@ -47,17 +47,17 @@ class AccountListDialog extends StatelessWidgetX {
                     (address) => ListTile(
                       title: AutoSizeText(
                         address,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                         ),
                       ),
                       trailing: _currentWalletAddress == address
-                          ? Icon(
+                          ? const Icon(
                               Icons.check_box_outlined,
                               color: Colors.white,
                             )
                           : IconButton(
-                              icon: Icon(
+                              icon: const Icon(
                                 Icons.check_box_outline_blank_outlined,
                                 color: Colors.white,
                               ),
@@ -76,13 +76,13 @@ class AccountListDialog extends StatelessWidgetX {
                     ),
                   ),
                   ListTile(
-                    title: Text(
+                    title: const Text(
                       'Add account',
                       style: TextStyle(
                         color: Colors.white,
                       ),
                     ),
-                    trailing: Icon(
+                    trailing: const Icon(
                       Icons.add,
                       color: Colors.white,
                     ),

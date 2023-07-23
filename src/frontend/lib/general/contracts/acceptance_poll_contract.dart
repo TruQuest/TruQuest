@@ -1,10 +1,12 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import '../../ethereum/services/ethereum_rpc_provider.dart';
 import '../../ethereum_js_interop.dart';
 import '../../thing/models/im/decision_im.dart';
 import '../extensions/uuid_extension.dart';
 
 class AcceptancePollContract {
-  static const String address = '0x4f35007a7D680f15134085d0D3e5634EeA782acd';
+  static final String address = dotenv.env['AcceptancePollAddress']!;
   static const String _abi = '''[
     {
       "inputs": [],
