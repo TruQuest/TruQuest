@@ -47,9 +47,3 @@ class ApproveFundsUsageFailureVm extends UserResultVm {
 
   ApproveFundsUsageFailureVm({required this.error});
 }
-
-class DepositFundsFailureVm extends UserResultVm {
-  final Error error;
-
-  DepositFundsFailureVm({required this.error});
-}

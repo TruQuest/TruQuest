@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 
+import '../../../user/services/user_service.dart';
 import '../../../user/errors/wallet_locked_error.dart';
-import '../../services/iwallet_service.dart';
 import '../../services/ethereum_api_service.dart';
 import '../../../ethereum_js_interop.dart';
 import '../../../widget_extensions.dart';
@@ -26,6 +26,8 @@ class UserOperation {
   BigInt get totalProvisionedGas =>
       callGasLimit + verificationGasLimit + preVerificationGas;
 
+  late final UserOperationBuilder builder;
+
   UserOperation({
     required this.sender,
     required this.nonce,
@@ -42,6 +44,17 @@ class UserOperation {
 
   static UserOperationBuilder create() =>
       resolveDependency<UserOperationBuilder>();
+
+  static UserOperationBuilder createFrom(UserOperation userOp) =>
+      UserOperationBuilder._(
+        userOp.builder._userService,
+        userOp.builder._ethereumApiService,
+        userOp.builder._entryPointContract,
+        userOp.builder._accountFactoryContract,
+        userOp.builder._sender,
+        userOp.builder._initCode,
+        userOp.builder._callData,
+      );
 
   Map<String, dynamic> toJson() => {
         'sender': sender,
@@ -98,7 +111,7 @@ class UserOperation {
 }
 
 class UserOperationBuilder {
-  final IWalletService _walletService;
+  final UserService _userService;
   final EthereumApiService _ethereumApiService;
   final IEntryPointContract _entryPointContract;
   final IAccountFactoryContract _accountFactoryContract;
@@ -112,30 +125,43 @@ class UserOperationBuilder {
   late UserOperation _userOp;
 
   double _preVerificationGasMultiplier = 1;
+  double get preVerificationGasMultiplier => _preVerificationGasMultiplier;
   double _verificationGasLimitMultiplier = 1;
+  double get verificationGasLimitMultiplier => _verificationGasLimitMultiplier;
   double _callGasLimitMultiplier = 1;
+  double get callGasLimitMultiplier => _callGasLimitMultiplier;
 
   final List<Future Function()> _tasks = [];
 
   UserOperationBuilder(
-    this._walletService,
+    this._userService,
     this._ethereumApiService,
     this._entryPointContract,
     this._accountFactoryContract,
   ) {
     // @@NOTE: Only relevant for LocalWalletService. ThirdParty always returns true.
-    if (!_walletService.isUnlocked) throw WalletLockedError();
+    if (!_userService.walletUnlocked) throw WalletLockedError();
 
-    _sender = _walletService.currentWalletAddress!;
+    _sender = _userService.currentWalletAddress;
     _tasks.add(() async {
       var code = await _ethereumApiService.getCode(_sender);
       _initCode = code == '0x'
           ? _accountFactoryContract.getInitCode(
-              _walletService.currentOwnerAddress!,
+              _userService.currentOwnerAddress,
             )
           : '0x';
     });
   }
+
+  UserOperationBuilder._(
+    this._userService,
+    this._ethereumApiService,
+    this._entryPointContract,
+    this._accountFactoryContract,
+    this._sender,
+    this._initCode,
+    this._callData,
+  );
 
   UserOperationBuilder _withCurrentNonce() {
     _tasks.add(() async {
@@ -261,13 +287,25 @@ class UserOperationBuilder {
     return this;
   }
 
+  Future<UserOperation> unsigned() async {
+    _withCurrentNonce()._withEstimatedGasLimits()._withCurrentGasPrice();
+
+    for (var task in _tasks) {
+      await task();
+    }
+
+    _userOp.builder = this;
+
+    return _userOp;
+  }
+
   Future<UserOperation> signed() async {
     _withCurrentNonce()._withEstimatedGasLimits()._withCurrentGasPrice();
 
     _tasks.add(() async {
       var userOpHash = await _entryPointContract.getUserOpHash(_userOp);
       _userOp = _userOp.copyWith(
-        signature: await _walletService.personalSignDigest(userOpHash),
+        signature: await _userService.personalSignDigest(userOpHash),
       );
     });
 

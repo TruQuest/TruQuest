@@ -82,6 +82,11 @@ class _$Injector extends Injector {
       ..registerSingleton((c) => EthereumApiService(c<IEntryPointContract>()))
       ..registerSingleton((c) => UserOperationService(c<EthereumApiService>()))
       ..registerSingleton(
-          (c) => ThirdPartyWalletService(c<IAccountFactoryContract>()));
+          (c) => ThirdPartyWalletService(c<IAccountFactoryContract>()))
+      ..registerFactory((c) => UserOperationBuilder(
+          c<UserService>(),
+          c<EthereumApiService>(),
+          c<IEntryPointContract>(),
+          c<IAccountFactoryContract>()));
   }
 }

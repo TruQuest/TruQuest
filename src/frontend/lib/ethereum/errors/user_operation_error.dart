@@ -9,7 +9,7 @@ class UserOperationError extends Error {
       code == -32500 &&
       message == 'account validation failed: AA40 over verificationGasLimit';
 
-  UserOperationError(String? reason)
+  const UserOperationError(String? reason)
       : code = null,
         super(reason ?? 'Unspecified reason');
 

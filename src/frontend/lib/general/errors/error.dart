@@ -1,7 +1,7 @@
 class Error {
   final String message;
 
-  Error(this.message);
+  const Error(this.message);
 
   @override
   String toString() => message;

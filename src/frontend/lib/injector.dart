@@ -1,5 +1,6 @@
 import 'package:kiwi/kiwi.dart';
 
+import 'ethereum/models/im/user_operation.dart';
 import 'ethereum/services/third_party_wallet_service.dart';
 import 'ethereum/services/user_operation_service.dart';
 import 'ethereum/services/ethereum_rpc_provider.dart';
@@ -88,6 +89,7 @@ abstract class Injector {
   @Register.singleton(EthereumApiService)
   @Register.singleton(UserOperationService)
   @Register.singleton(ThirdPartyWalletService)
+  @Register.factory(UserOperationBuilder)
   void configure();
 }
 

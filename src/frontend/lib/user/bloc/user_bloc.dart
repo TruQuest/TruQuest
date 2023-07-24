@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../../ethereum/services/third_party_wallet_service.dart';
+import '../../general/contexts/multi_stage_operation_context.dart';
 import '../errors/wallet_locked_error.dart';
 import '../../ethereum/services/local_wallet_service.dart';
 import '../models/vm/user_vm.dart';
@@ -49,8 +50,6 @@ class UserBloc extends Bloc<UserAction> {
         _addAccount(action);
       } else if (action is SwitchAccount) {
         _switchAccount(action);
-      } else if (action is DepositFunds) {
-        _depositFunds(action);
       }
     });
   }
@@ -128,12 +127,10 @@ class UserBloc extends Bloc<UserAction> {
     action.complete(SwitchAccountSuccessVm());
   }
 
-  void _depositFunds(DepositFunds action) async {
-    try {
-      await _userService.depositFunds(action.amount);
-      action.complete(null);
-    } on WalletLockedError catch (error) {
-      action.complete(DepositFundsFailureVm(error: error));
-    }
+  Stream<Object> depositFunds(
+    int amount,
+    MultiStageOperationContext ctx,
+  ) async* {
+    yield* _userService.depositFunds(amount, ctx);
   }
 }

@@ -2,13 +2,14 @@ import 'dart:async';
 
 import 'package:rxdart/rxdart.dart';
 
-import '../../ethereum/errors/user_operation_error.dart';
+import '../../general/errors/insufficient_balance_error.dart';
+import '../errors/wallet_locked_error.dart';
+import '../../general/contexts/multi_stage_operation_context.dart';
 import '../../general/contracts/truthserum_contract.dart';
 import '../../ethereum/services/iwallet_service.dart';
 import '../../ethereum/services/third_party_wallet_service.dart';
 import '../../ethereum/services/user_operation_service.dart';
 import '../../general/contracts/truquest_contract.dart';
-import '../../widget_extensions.dart';
 import 'user_api_service.dart';
 import '../models/vm/user_vm.dart';
 import '../../ethereum/services/local_wallet_service.dart';
@@ -33,6 +34,10 @@ class UserService {
   Stream<UserVm> get currentUserChanged$ =>
       _currentUserChangedEventChannel.stream;
   UserVm? get latestCurrentUser => _currentUserChangedEventChannel.valueOrNull;
+
+  bool get walletUnlocked => _walletService.isUnlocked;
+  String get currentWalletAddress => _walletService.currentWalletAddress!;
+  String get currentOwnerAddress => _walletService.currentOwnerAddress!;
 
   UserService(
     this._localWalletService,
@@ -62,8 +67,6 @@ class UserService {
     _walletService = _localWalletService;
     _selectedWalletName = 'Local';
 
-    registerUserOperationBuilder(_localWalletService);
-
     _walletService.currentWalletAddressChanged$.listen(
       (currentWalletAddress) => _reloadUser(currentWalletAddress),
     );
@@ -75,8 +78,6 @@ class UserService {
     );
     _walletService = _thirdPartyWalletService;
     _selectedWalletName = walletName;
-
-    registerUserOperationBuilder(_thirdPartyWalletService);
 
     _walletService.currentWalletAddressChanged$.listen(
       (currentWalletAddress) => _reloadUser(currentWalletAddress),
@@ -168,6 +169,9 @@ class UserService {
   FutureOr<String> personalSign(String message) =>
       _walletService.personalSign(message);
 
+  FutureOr<String> personalSignDigest(String digest) =>
+      _walletService.personalSignDigest(digest);
+
   Future addEmail(String email) async {
     // var wallet = _localWalletService.wallet;
     // if (wallet?.locked ?? true) {
@@ -188,22 +192,45 @@ class UserService {
     // await _userApiService.confirmEmail(confirmationToken);
   }
 
-  Future depositFunds(int amount) async {
+  Stream<Object> depositFunds(
+    int amount,
+    MultiStageOperationContext ctx,
+  ) async* {
     print('**************** Deposit funds ****************');
+
+    if (!_walletService.isUnlocked) {
+      yield const WalletLockedError();
+
+      bool unlocked = await ctx.unlockWalletTask.future;
+      if (!unlocked) {
+        return;
+      }
+    }
 
     int balance = await _truthserumContract.balanceOf(
       _walletService.currentWalletAddress!,
     );
     print('**************** Balance: $balance drops ****************');
     if (balance < amount) {
-      throw UserOperationError('Not enough funds');
+      yield const InsufficientBalanceError();
+      return;
     }
 
-    await _userOperationService.sendBatch(
+    yield _userOperationService.prepareUserOpStream(
       actions: [
         (TruthserumContract.address, _truthserumContract.approve(amount)),
         (TruQuestContract.address, _truQuestContract.depositFunds(amount)),
       ],
     );
+
+    var userOp = await ctx.approveUserOpTask.future;
+    if (userOp == null) {
+      return;
+    }
+
+    var error = await _userOperationService.sendUserOp(userOp);
+    if (error != null) {
+      yield error;
+    }
   }
 }

@@ -59,9 +59,3 @@ class SwitchAccount extends UserActionAwaitable<SwitchAccountSuccessVm> {
 
   SwitchAccount({required this.walletAddress});
 }
-
-class DepositFunds extends UserActionAwaitable<DepositFundsFailureVm?> {
-  final int amount;
-
-  DepositFunds({required this.amount});
-}

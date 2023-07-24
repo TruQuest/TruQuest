@@ -1,25 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:kiwi/kiwi.dart';
 
-import 'ethereum/models/im/user_operation.dart';
-import 'ethereum/services/ethereum_api_service.dart';
-import 'ethereum/services/iwallet_service.dart';
-import 'general/contracts/erc4337/iaccount_factory_contract.dart';
-import 'general/contracts/erc4337/ientrypoint_contract.dart';
-
 T resolveDependency<T>() => KiwiContainer().resolve<T>();
-
-void registerUserOperationBuilder(IWalletService walletService) {
-  KiwiContainer().registerInstance(walletService);
-  KiwiContainer().registerFactory(
-    (c) => UserOperationBuilder(
-      c<IWalletService>(),
-      c<EthereumApiService>(),
-      c<IEntryPointContract>(),
-      c<IAccountFactoryContract>(),
-    ),
-  );
-}
 
 abstract class IDisposable {
   void dispose();
