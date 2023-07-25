@@ -25,6 +25,7 @@ class UserBloc extends Bloc<UserAction> {
   bool get localWalletSelected => _userService.selectedWalletName == 'Local';
 
   UserBloc(
+    super._toastMessenger,
     this._userService,
     this._localWalletService,
     this._thirdPartyWalletService,
@@ -50,6 +51,20 @@ class UserBloc extends Bloc<UserAction> {
     });
   }
 
+  @override
+  Stream<Object> handleMultiStage(
+    UserAction action,
+    MultiStageOperationContext ctx,
+  ) {
+    if (action is ConnectAccount) {
+      return _connectAccount(action, ctx);
+    } else if (action is DepositFunds) {
+      return _depositFunds(action, ctx);
+    }
+
+    throw UnimplementedError();
+  }
+
   void _selectThirdPartyWallet(SelectThirdPartyWallet action) async {
     bool shouldRequestAccounts = await _userService.selectThirdPartyWallet(
       action.walletName,
@@ -61,7 +76,10 @@ class UserBloc extends Bloc<UserAction> {
     );
   }
 
-  Stream<Object> connectAccount(MultiStageOperationContext ctx) async* {
+  Stream<Object> _connectAccount(
+    ConnectAccount action,
+    MultiStageOperationContext ctx,
+  ) async* {
     yield* _thirdPartyWalletService.connectAccount(ctx);
   }
 
@@ -113,10 +131,10 @@ class UserBloc extends Bloc<UserAction> {
     action.complete(SwitchAccountSuccessVm());
   }
 
-  Stream<Object> depositFunds(
-    int amount,
+  Stream<Object> _depositFunds(
+    DepositFunds action,
     MultiStageOperationContext ctx,
   ) async* {
-    yield* _userService.depositFunds(amount, ctx);
+    yield* _userService.depositFunds(action.amount, ctx);
   }
 }

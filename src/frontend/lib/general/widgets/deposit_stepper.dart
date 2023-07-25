@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../user/bloc/user_actions.dart';
 import '../utils/utils.dart';
 import '../../user/bloc/user_bloc.dart';
 import 'swipe_button.dart';
@@ -43,8 +44,8 @@ class _DepositStepperState extends StateX<DepositStepper> {
           onCompletedSwipe: () async {
             bool success = await multiStageAction(
               context,
-              (ctx) => _userBloc.depositFunds(
-                int.parse(_depositController.text),
+              (ctx) => _userBloc.executeMultiStage(
+                DepositFunds(amount: int.parse(_depositController.text)),
                 ctx,
               ),
             );

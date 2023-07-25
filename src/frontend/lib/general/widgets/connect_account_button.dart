@@ -25,7 +25,10 @@ class ConnectAccountButton extends StatelessWidgetX {
             if (!_userBloc.localWalletSelected) {
               multiStageOffChainAction(
                 context,
-                (ctx) => _userBloc.connectAccount(ctx),
+                (ctx) => _userBloc.executeMultiStage(
+                  const ConnectAccount(),
+                  ctx,
+                ),
               );
             }
           },
@@ -85,7 +88,10 @@ class ConnectAccountButton extends StatelessWidgetX {
                   // ignore: use_build_context_synchronously
                   multiStageOffChainAction(
                     context,
-                    (ctx) => _userBloc.connectAccount(ctx),
+                    (ctx) => _userBloc.executeMultiStage(
+                      const ConnectAccount(),
+                      ctx,
+                    ),
                   );
                 }
               },

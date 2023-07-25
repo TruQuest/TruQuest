@@ -1,7 +1,8 @@
+import '../../general/bloc/actions.dart';
 import 'user_result_vm.dart';
 import '../../general/bloc/mixins.dart';
 
-abstract class UserAction {
+abstract class UserAction extends Action {
   const UserAction();
 }
 
@@ -13,6 +14,10 @@ class SelectThirdPartyWallet
   final String walletName;
 
   SelectThirdPartyWallet({required this.walletName});
+}
+
+class ConnectAccount extends UserAction {
+  const ConnectAccount();
 }
 
 class GenerateMnemonic
@@ -53,4 +58,24 @@ class SwitchAccount extends UserActionAwaitable<SwitchAccountSuccessVm> {
   final String walletAddress;
 
   SwitchAccount({required this.walletAddress});
+}
+
+class DepositFunds extends UserAction {
+  final int amount;
+
+  @override
+  bool get mustValidate => true;
+
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (amount <= 0) {
+      errors ??= [];
+      errors.add('Amount must be bigger than 0');
+    }
+
+    return errors;
+  }
+
+  const DepositFunds({required this.amount});
 }

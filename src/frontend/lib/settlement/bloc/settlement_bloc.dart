@@ -31,7 +31,7 @@ class SettlementBloc extends Bloc<SettlementAction> {
   final _verifiersChannel = StreamController<GetVerifiersRvm>.broadcast();
   Stream<GetVerifiersRvm> get verifiers$ => _verifiersChannel.stream;
 
-  SettlementBloc(this._settlementService) {
+  SettlementBloc(super._toastMessenger, this._settlementService) {
     actionChannel.stream.listen((action) {
       if (action is CreateNewSettlementProposalDraft) {
         _createNewSettlementProposalDraft(action);

@@ -6,7 +6,7 @@ import '../services/general_service.dart';
 class GeneralBloc extends Bloc<GeneralAction> {
   final GeneralService _generalService;
 
-  GeneralBloc(this._generalService) {
+  GeneralBloc(super._toastMessenger, this._generalService) {
     actionChannel.stream.listen((action) {
       if (action is GetTags) {
         _getTags(action);

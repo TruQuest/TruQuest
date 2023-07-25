@@ -1,12 +1,10 @@
+import '../../general/bloc/actions.dart';
 import '../models/rvm/thing_vm.dart';
 import '../../general/bloc/mixins.dart';
 import 'thing_result_vm.dart';
 import '../../general/contexts/document_context.dart';
 
-abstract class ThingAction {
-  bool get mustValidate => false;
-  List<String>? validate() => null;
-
+abstract class ThingAction extends Action {
   const ThingAction();
 }
 

@@ -1,7 +1,8 @@
+import 'actions.dart';
 import 'general_result_vm.dart';
 import 'mixins.dart';
 
-abstract class GeneralAction {
+abstract class GeneralAction extends Action {
   const GeneralAction();
 }
 

@@ -142,15 +142,17 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
                                     child: const Text('Submit'),
                                     controller: btnController,
                                     onPressed: () async {
-                                      var action = AddNewSubject(
-                                        documentContext:
-                                            DocumentContext.fromEditable(
-                                          documentContext,
+                                      var subjectId =
+                                          await _subjectBloc.execute(
+                                        AddNewSubject(
+                                          documentContext:
+                                              DocumentContext.fromEditable(
+                                            documentContext,
+                                          ),
                                         ),
                                       );
 
-                                      var success = await action.result;
-                                      if (success == null) {
+                                      if (subjectId == null) {
                                         btnController.error();
                                         await Future.delayed(
                                           const Duration(milliseconds: 1500),
@@ -166,7 +168,7 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
                                       );
                                       if (context.mounted) {
                                         Navigator.of(context).pop(
-                                          success.subjectId,
+                                          subjectId as String,
                                         );
                                       }
                                     },

@@ -1,8 +1,9 @@
+import '../../general/bloc/actions.dart';
 import '../../general/bloc/mixins.dart';
 import 'settlement_result_vm.dart';
 import '../../general/contexts/document_context.dart';
 
-abstract class SettlementAction {
+abstract class SettlementAction extends Action {
   const SettlementAction();
 }
 

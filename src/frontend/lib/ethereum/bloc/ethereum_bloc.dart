@@ -11,5 +11,5 @@ class EthereumBloc extends Bloc<EthereumAction> {
       _ethereumRpcProvider.latestL1BlockNumber$;
   int get latestL1BlockNumber => _ethereumRpcProvider.latestL1BlockNumber;
 
-  EthereumBloc(this._ethereumRpcProvider);
+  EthereumBloc(super._toastMessenger, this._ethereumRpcProvider);
 }

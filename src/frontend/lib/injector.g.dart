@@ -11,7 +11,7 @@ class _$Injector extends Injector {
   void configure() {
     final KiwiContainer container = KiwiContainer();
     container
-      ..registerSingleton((c) => UserBloc(c<UserService>(),
+      ..registerSingleton((c) => UserBloc(c<ToastMessenger>(), c<UserService>(),
           c<LocalWalletService>(), c<ThirdPartyWalletService>()))
       ..registerSingleton((c) => UserService(
           c<LocalWalletService>(),
@@ -22,7 +22,8 @@ class _$Injector extends Injector {
           c<UserOperationService>(),
           c<TruQuestContract>(),
           c<TruthserumContract>()))
-      ..registerSingleton((c) => EthereumBloc(c<EthereumRpcProvider>()))
+      ..registerSingleton(
+          (c) => EthereumBloc(c<ToastMessenger>(), c<EthereumRpcProvider>()))
       ..registerSingleton((c) => ServerConnector())
       ..registerSingleton((c) => UserApiService(c<ServerConnector>()))
       ..registerSingleton((c) => ThingApiService(c<ServerConnector>()))
@@ -38,7 +39,8 @@ class _$Injector extends Injector {
       ..registerFactory((c) => DocumentContext())
       ..registerSingleton((c) => NotificationBloc(c<NotificationsCache>(),
           c<ToastMessenger>(), c<ThingService>(), c<SettlementService>()))
-      ..registerSingleton((c) => SubjectBloc(c<SubjectService>()))
+      ..registerSingleton(
+          (c) => SubjectBloc(c<ToastMessenger>(), c<SubjectService>()))
       ..registerSingleton((c) => SubjectService(c<SubjectApiService>()))
       ..registerSingleton((c) => SubjectApiService(c<ServerConnector>()))
       ..registerSingleton((c) => PageContext(c<LocalStorage>()))
@@ -48,7 +50,8 @@ class _$Injector extends Injector {
           ThingSubmissionVerifierLotteryContract(c<EthereumRpcProvider>()))
       ..registerSingleton(
           (c) => AcceptancePollContract(c<EthereumRpcProvider>()))
-      ..registerSingleton((c) => SettlementBloc(c<SettlementService>()))
+      ..registerSingleton(
+          (c) => SettlementBloc(c<ToastMessenger>(), c<SettlementService>()))
       ..registerSingleton((c) => SettlementService(
           c<SettlementApiService>(),
           c<UserService>(),
@@ -70,7 +73,8 @@ class _$Injector extends Injector {
       ..registerSingleton((c) => ToastMessenger())
       ..registerSingleton((c) => GeneralApiService(c<ServerConnector>()))
       ..registerSingleton((c) => GeneralService(c<GeneralApiService>()))
-      ..registerSingleton((c) => GeneralBloc(c<GeneralService>()))
+      ..registerSingleton(
+          (c) => GeneralBloc(c<ToastMessenger>(), c<GeneralService>()))
       ..registerSingleton((c) => EthereumRpcProvider())
       ..registerSingleton<IEntryPointContract>(
           (c) => EntryPointContract(c<EthereumRpcProvider>()))

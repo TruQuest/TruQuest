@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:bot_toast/bot_toast.dart';
 
+import '../errors/validation_error.dart';
 import '../../ethereum/models/vm/wallet_connect_uri_vm.dart';
 import '../../ethereum/errors/wallet_action_declined_error.dart';
 import '../../ethereum/errors/user_operation_error.dart';
@@ -45,7 +46,9 @@ Future<bool> multiStageAction(
   var proceededTilTheEndWithNoErrors = true;
   var ctx = MultiStageOperationContext();
   await for (var stageResult in action(ctx)) {
-    if (stageResult is WalletLockedError) {
+    if (stageResult is ValidationError) {
+      proceededTilTheEndWithNoErrors = false;
+    } else if (stageResult is WalletLockedError) {
       bool unlocked = false;
       if (context.mounted) {
         unlocked = await showUnlockWalletDialog(context);
@@ -82,7 +85,9 @@ Future<bool> multiStageOffChainAction(
   var proceededTilTheEndWithNoErrors = true;
   var ctx = MultiStageOperationContext();
   await for (var stageResult in action(ctx)) {
-    if (stageResult is WalletLockedError) {
+    if (stageResult is ValidationError) {
+      proceededTilTheEndWithNoErrors = false;
+    } else if (stageResult is WalletLockedError) {
       bool unlocked = false;
       if (context.mounted) {
         unlocked = await showUnlockWalletDialog(context);

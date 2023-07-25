@@ -1,7 +1,8 @@
+import '../../general/bloc/actions.dart';
 import '../../general/bloc/mixins.dart';
 import 'ethereum_result_vm.dart';
 
-abstract class EthereumAction {
+abstract class EthereumAction extends Action {
   const EthereumAction();
 }
 

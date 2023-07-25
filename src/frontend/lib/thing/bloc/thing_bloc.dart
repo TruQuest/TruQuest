@@ -2,7 +2,6 @@ import 'dart:async';
 
 import '../models/im/decision_im.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
-import '../../general/services/toast_messenger.dart';
 import '../models/rvm/get_settlement_proposals_list_rvm.dart';
 import '../models/rvm/get_verifiers_rvm.dart';
 import '../models/rvm/thing_state_vm.dart';
@@ -13,7 +12,6 @@ import '../services/thing_service.dart';
 import 'thing_actions.dart';
 
 class ThingBloc extends Bloc<ThingAction> {
-  final ToastMessenger _toastMessenger;
   final ThingService _thingService;
 
   final _thingChannel = StreamController<GetThingResultVm>.broadcast();
@@ -38,18 +36,10 @@ class ThingBloc extends Bloc<ThingAction> {
   Stream<GetSettlementProposalsListRvm> get proposalsList$ =>
       _proposalsListChannel.stream;
 
-  ThingBloc(this._toastMessenger, this._thingService) {
+  ThingBloc(super._toastMessenger, this._thingService) {
     actionChannel.stream.listen((action) {
-      List<String>? validationErrors;
-      if (action.mustValidate) {
-        validationErrors = action.validate();
-        if (validationErrors != null) {
-          _toastMessenger.add('• ' + validationErrors.join('\n• '));
-        }
-      }
-
       if (action is CreateNewThingDraft) {
-        _createNewThingDraft(action, validationErrors);
+        _createNewThingDraft(action);
       } else if (action is GetThing) {
         _getThing(action);
       } else if (action is SubmitNewThing) {
@@ -70,15 +60,7 @@ class ThingBloc extends Bloc<ThingAction> {
     });
   }
 
-  void _createNewThingDraft(
-    CreateNewThingDraft action,
-    List<String>? validationErrors,
-  ) async {
-    if (validationErrors != null) {
-      action.complete(CreateNewThingDraftFailureVm());
-      return;
-    }
-
+  void _createNewThingDraft(CreateNewThingDraft action) async {
     await _thingService.createNewThingDraft(action.documentContext);
     action.complete(null);
   }

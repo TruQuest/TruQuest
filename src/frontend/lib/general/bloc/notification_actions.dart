@@ -1,6 +1,7 @@
 import '../models/rvm/notification_vm.dart';
+import 'actions.dart';
 
-abstract class NotificationAction {
+abstract class NotificationAction extends Action {
   const NotificationAction();
 }
 

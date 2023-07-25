@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:rxdart/rxdart.dart';
 
-import '../models/rvm/notification_vm.dart';
 import '../services/toast_messenger.dart';
+import '../models/rvm/notification_vm.dart';
 import '../services/notifications_cache.dart';
 import 'notification_actions.dart';
 import '../../settlement/services/settlement_service.dart';
@@ -12,7 +12,6 @@ import 'bloc.dart';
 
 class NotificationBloc extends Bloc<NotificationAction> {
   final NotificationsCache _notificationsCache;
-  final ToastMessenger _toastMessenger;
   final ThingService _thingService;
   final SettlementService _settlementService;
 
@@ -30,10 +29,10 @@ class NotificationBloc extends Bloc<NotificationAction> {
 
   NotificationBloc(
     this._notificationsCache,
-    this._toastMessenger,
+    ToastMessenger toastMessenger,
     this._thingService,
     this._settlementService,
-  ) {
+  ) : super(toastMessenger) {
     actionChannel.stream.listen((action) {
       if (action is Dismiss) {
         _dismiss(action);
@@ -66,7 +65,7 @@ class NotificationBloc extends Bloc<NotificationAction> {
       });
     });
 
-    _toastMessenger.toast$.listen((toast) => _toastChannel.add(toast));
+    toastMessenger.toast$.listen((toast) => _toastChannel.add(toast));
   }
 
   void _dismiss(Dismiss action) async {
