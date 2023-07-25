@@ -103,14 +103,7 @@ internal class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssess
 
         var uploadResult = await _fileStorage.UploadJson(new
         {
-            Vote = new
-            {
-                ThingId = command.Input.ThingId,
-                SettlementProposalId = command.Input.SettlementProposalId,
-                CastedAt = command.Input.CastedAt,
-                Decision = command.Input.Decision.GetString(),
-                Reason = command.Input.Reason
-            },
+            Vote = command.Input.ToMessageForSigning(),
             WalletAddress = walletAddress,
             OwnerAddress = recoveredAddress,
             OwnerSignature = command.Signature,

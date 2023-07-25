@@ -1,6 +1,5 @@
 import '../models/rvm/get_thing_rvm.dart';
 import '../../general/models/rvm/verifier_lottery_participant_entry_vm.dart';
-import '../../general/errors/error.dart';
 
 abstract class ThingResultVm {}
 
@@ -21,12 +20,6 @@ class GetThingFailureVm extends GetThingResultVm {
 }
 
 class SubmitNewThingFailureVm extends ThingResultVm {}
-
-class FundThingFailureVm extends ThingResultVm {
-  final Error error;
-
-  FundThingFailureVm({required this.error});
-}
 
 class GetVerifierLotteryInfoSuccessVm extends ThingResultVm {
   final String? userId;
@@ -60,22 +53,4 @@ class GetAcceptancePollInfoSuccessVm extends ThingResultVm {
     required this.durationBlocks,
     required this.userIndexInThingVerifiersArray,
   });
-}
-
-class JoinLotteryFailureVm extends ThingResultVm {
-  final Error error;
-
-  JoinLotteryFailureVm({required this.error});
-}
-
-class CastVoteOffChainFailureVm extends ThingResultVm {
-  final Error error;
-
-  CastVoteOffChainFailureVm({required this.error});
-}
-
-class CastVoteOnChainFailureVm extends ThingResultVm {
-  final Error error;
-
-  CastVoteOnChainFailureVm({required this.error});
 }

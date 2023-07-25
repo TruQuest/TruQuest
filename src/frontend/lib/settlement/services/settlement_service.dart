@@ -1,7 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 
+import '../../ethereum/errors/wallet_action_declined_error.dart';
+import '../../general/contexts/multi_stage_operation_context.dart';
 import '../../ethereum/services/user_operation_service.dart';
+import '../../user/errors/wallet_locked_error.dart';
 import '../models/im/new_assessment_poll_vote_im.dart';
 import '../../user/services/user_service.dart';
 import '../../general/contracts/acceptance_poll_contract.dart';
@@ -80,20 +82,55 @@ class SettlementService {
     );
   }
 
-  Future fundSettlementProposal(
+  Stream<Object> fundSettlementProposal(
     String thingId,
     String proposalId,
     String signature,
-  ) async {
+    MultiStageOperationContext ctx,
+  ) async* {
     print('**************** Fund Proposal ****************');
-    await _userOperationService.send(
-      target: TruQuestContract.address,
-      action: _truQuestContract.fundThingSettlementProposal(
-        thingId,
-        proposalId,
-        signature,
-      ),
+
+    if (!_userService.walletUnlocked) {
+      yield const WalletLockedError();
+
+      bool unlocked = await ctx.unlockWalletTask.future;
+      if (!unlocked) {
+        return;
+      }
+    }
+
+    // @@TODO!!: Check balance!
+    // int balance = await _truthserumContract.balanceOf(
+    //   _walletService.currentWalletAddress!,
+    // );
+    // print('**************** Balance: $balance drops ****************');
+    // if (balance < amount) {
+    //   yield const InsufficientBalanceError();
+    //   return;
+    // }
+
+    yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
+      actions: [
+        (
+          TruQuestContract.address,
+          _truQuestContract.fundThingSettlementProposal(
+            thingId,
+            proposalId,
+            signature,
+          )
+        ),
+      ],
     );
+
+    var userOp = await ctx.approveUserOpTask.future;
+    if (userOp == null) {
+      return;
+    }
+
+    var error = await _userOperationService.sendUserOp(userOp);
+    if (error != null) {
+      yield error;
+    }
   }
 
   Future<(String?, int?, int, int, bool?, bool?)> getVerifierLotteryInfo(
@@ -144,31 +181,104 @@ class SettlementService {
     );
   }
 
-  Future claimLotterySpot(
+  Stream<Object> claimLotterySpot(
     String thingId,
     String proposalId,
     int userIndexInThingVerifiersArray,
-  ) async {
+    MultiStageOperationContext ctx,
+  ) async* {
     print('**************** Claim Lottery Spot ****************');
-    await _userOperationService.send(
-      target: ThingAssessmentVerifierLotteryContract.address,
-      action: _thingAssessmentVerifierLotteryContract.claimLotterySpot(
-        thingId,
-        proposalId,
-        userIndexInThingVerifiersArray,
-      ),
+
+    if (!_userService.walletUnlocked) {
+      yield const WalletLockedError();
+
+      bool unlocked = await ctx.unlockWalletTask.future;
+      if (!unlocked) {
+        return;
+      }
+    }
+
+    // @@TODO!!: Check balance!
+    // int balance = await _truthserumContract.balanceOf(
+    //   _walletService.currentWalletAddress!,
+    // );
+    // print('**************** Balance: $balance drops ****************');
+    // if (balance < amount) {
+    //   yield const InsufficientBalanceError();
+    //   return;
+    // }
+
+    yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
+      actions: [
+        (
+          ThingAssessmentVerifierLotteryContract.address,
+          _thingAssessmentVerifierLotteryContract.claimLotterySpot(
+            thingId,
+            proposalId,
+            userIndexInThingVerifiersArray,
+          )
+        ),
+      ],
     );
+
+    var userOp = await ctx.approveUserOpTask.future;
+    if (userOp == null) {
+      return;
+    }
+
+    var error = await _userOperationService.sendUserOp(userOp);
+    if (error != null) {
+      yield error;
+    }
   }
 
-  Future joinLottery(String thingId, String proposalId) async {
+  Stream<Object> joinLottery(
+    String thingId,
+    String proposalId,
+    MultiStageOperationContext ctx,
+  ) async* {
     print('**************** Join Lottery ****************');
-    await _userOperationService.send(
-      target: ThingAssessmentVerifierLotteryContract.address,
-      action: _thingAssessmentVerifierLotteryContract.joinLottery(
-        thingId,
-        proposalId,
-      ),
+
+    if (!_userService.walletUnlocked) {
+      yield const WalletLockedError();
+
+      bool unlocked = await ctx.unlockWalletTask.future;
+      if (!unlocked) {
+        return;
+      }
+    }
+
+    // @@TODO!!: Check balance!
+    // int balance = await _truthserumContract.balanceOf(
+    //   _walletService.currentWalletAddress!,
+    // );
+    // print('**************** Balance: $balance drops ****************');
+    // if (balance < amount) {
+    //   yield const InsufficientBalanceError();
+    //   return;
+    // }
+
+    yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
+      actions: [
+        (
+          ThingAssessmentVerifierLotteryContract.address,
+          _thingAssessmentVerifierLotteryContract.joinLottery(
+            thingId,
+            proposalId,
+          )
+        ),
+      ],
     );
+
+    var userOp = await ctx.approveUserOpTask.future;
+    if (userOp == null) {
+      return;
+    }
+
+    var error = await _userOperationService.sendUserOp(userOp);
+    if (error != null) {
+      yield error;
+    }
   }
 
   Future<GetVerifierLotteryParticipantsRvm> getVerifierLotteryParticipants(
@@ -247,12 +357,15 @@ class SettlementService {
     );
   }
 
-  Future castVoteOffChain(
+  Stream<Object> castVoteOffChain(
     String thingId,
     String proposalId,
     DecisionIm decision,
     String reason,
-  ) async {
+    MultiStageOperationContext ctx,
+  ) async* {
+    print('**************** Cast Vote Off-chain ****************');
+
     var vote = NewAssessmentPollVoteIm(
       thingId: thingId,
       proposalId: proposalId,
@@ -261,9 +374,25 @@ class SettlementService {
       reason: reason,
     );
 
-    var signature = await _userService.personalSign(
-      jsonEncode(vote.toJsonForSigning()),
-    );
+    if (!_userService.walletUnlocked) {
+      yield const WalletLockedError();
+
+      bool unlocked = await ctx.unlockWalletTask.future;
+      if (!unlocked) {
+        return;
+      }
+    }
+
+    String signature;
+    try {
+      signature = await _userService.personalSign(
+        vote.toMessageForSigning(),
+      );
+    } on WalletActionDeclinedError catch (error) {
+      print(error.message);
+      yield error;
+      return;
+    }
 
     var ipfsCid = await _settlementApiService
         .castThingSettlementProposalAssessmentPollVote(vote, signature);
@@ -271,24 +400,49 @@ class SettlementService {
     print('**************** Vote cid: $ipfsCid ****************');
   }
 
-  Future castVoteOnChain(
+  Stream<Object> castVoteOnChain(
     String thingId,
     String proposalId,
     int userIndexInProposalVerifiersArray,
     DecisionIm decision,
     String reason,
-  ) async {
-    print('**************** Cast Vote ****************');
-    await _userOperationService.send(
-      target: AssessmentPollContract.address,
-      action: _assessmentPollContract.castVote(
-        thingId,
-        proposalId,
-        userIndexInProposalVerifiersArray,
-        decision,
-        reason,
-      ),
+    MultiStageOperationContext ctx,
+  ) async* {
+    print('**************** Cast Vote On-chain ****************');
+
+    if (!_userService.walletUnlocked) {
+      yield const WalletLockedError();
+
+      bool unlocked = await ctx.unlockWalletTask.future;
+      if (!unlocked) {
+        return;
+      }
+    }
+
+    yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
+      actions: [
+        (
+          AssessmentPollContract.address,
+          _assessmentPollContract.castVote(
+            thingId,
+            proposalId,
+            userIndexInProposalVerifiersArray,
+            decision,
+            reason,
+          )
+        ),
+      ],
     );
+
+    var userOp = await ctx.approveUserOpTask.future;
+    if (userOp == null) {
+      return;
+    }
+
+    var error = await _userOperationService.sendUserOp(userOp);
+    if (error != null) {
+      yield error;
+    }
   }
 
   Future<GetVerifiersRvm> getVerifiers(String proposalId) async {

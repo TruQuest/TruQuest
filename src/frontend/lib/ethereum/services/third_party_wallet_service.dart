@@ -7,6 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:universal_html/html.dart' as html;
 
+import '../errors/wallet_action_declined_error.dart';
 import '../../general/contracts/erc4337/iaccount_factory_contract.dart';
 import 'iwallet_service.dart';
 import '../errors/ethereum_error.dart';
@@ -143,7 +144,7 @@ class ThirdPartyWalletService implements IWalletService {
       print(
         'Personal sign message error: [${result.error!.code}] ${result.error!.message}',
       );
-      throw 'Alala';
+      throw WalletActionDeclinedError();
     }
 
     return result.signature!;
@@ -159,7 +160,7 @@ class ThirdPartyWalletService implements IWalletService {
       print(
         'Personal sign message error: [${result.error!.code}] ${result.error!.message}',
       );
-      throw 'Alala';
+      throw WalletActionDeclinedError();
     }
 
     return result.signature!;

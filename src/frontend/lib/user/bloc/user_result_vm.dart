@@ -22,12 +22,6 @@ class GenerateMnemonicSuccessVm extends UserResultVm {
 
 class CreateAndSaveEncryptedLocalWalletSuccessVm extends UserResultVm {}
 
-class SignInWithEthereumFailureVm extends UserResultVm {
-  final Error error;
-
-  SignInWithEthereumFailureVm({required this.error});
-}
-
 class AddEmailSuccessVm extends UserResultVm {}
 
 class ConfirmEmailSuccessVm extends UserResultVm {}

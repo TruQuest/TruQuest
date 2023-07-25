@@ -19,10 +19,8 @@ class NewAcceptancePollVoteIm {
         'reason': reason,
       };
 
-  Map<String, dynamic> toJsonForSigning() => {
-        'thingId': thingId,
-        'castedAt': castedAt,
-        'decision': decision.getString(),
-        'reason': reason,
-      };
+  String toMessageForSigning() => 'Promise Id: $thingId\n'
+      'Casted At: $castedAt\n'
+      'Decision: ${decision.getString()}\n'
+      'Reason: ${reason.isNotEmpty ? reason : '(Not Specified)'}';
 }

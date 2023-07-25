@@ -161,10 +161,11 @@ public class E2ETests : IAsyncLifetime
 
             return (
                 // VoterId: vote!.VoterId,
-                CastedAt: DateTimeOffset
-                    .ParseExact(vote.Vote.CastedAt, "yyyy-MM-dd HH:mm:sszzz", null)
-                    .ToUniversalTime()
-                    .ToUnixTimeMilliseconds(),
+                // CastedAt: DateTimeOffset
+                //     .ParseExact(vote.Vote.CastedAt, "yyyy-MM-dd HH:mm:sszzz", null)
+                //     .ToUniversalTime()
+                //     .ToUnixTimeMilliseconds(),
+                CastedAt: 5,
                 Decision: DecisionIm.Accept
             // Decision: DecisionImExtension.FromString(vote.Vote.Decision)
             );

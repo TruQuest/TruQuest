@@ -31,9 +31,6 @@ class CreateAndSaveEncryptedLocalWallet
   });
 }
 
-class SignInWithEthereum
-    extends UserActionAwaitable<SignInWithEthereumFailureVm?> {}
-
 class AddEmail extends UserActionAwaitable<AddEmailSuccessVm?> {
   final String email;
 

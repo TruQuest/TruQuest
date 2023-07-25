@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../general/utils/utils.dart';
-import '../../user/errors/wallet_locked_error.dart';
 import '../models/rvm/settlement_proposal_vm.dart';
 import '../../general/widgets/swipe_button.dart';
 import '../../widget_extensions.dart';
-import '../bloc/settlement_actions.dart';
 import '../bloc/settlement_bloc.dart';
 import '../bloc/settlement_result_vm.dart';
 
@@ -63,27 +61,17 @@ class LotteryStepper extends StatelessWidgetX {
                     enabled: _checkButtonShouldBeEnabled(-1),
                     swiped: _checkButtonShouldBeSwiped(-1),
                     onCompletedSwipe: () async {
-                      var action = ClaimLotterySpot(
-                        thingId: proposal.thingId,
-                        proposalId: proposal.id,
-                        userIndexInThingVerifiersArray:
-                            info.userIndexInThingVerifiersArray,
+                      bool success = await multiStageAction(
+                        context,
+                        (ctx) => _settlementBloc.claimLotterySpot(
+                          proposal.thingId,
+                          proposal.id,
+                          info.userIndexInThingVerifiersArray,
+                          ctx,
+                        ),
                       );
-                      _settlementBloc.dispatch(action);
 
-                      var failure = await action.result;
-                      if (failure != null &&
-                          failure.error is WalletLockedError) {
-                        if (context.mounted) {
-                          var unlocked = await showUnlockWalletDialog(context);
-                          if (unlocked) {
-                            _settlementBloc.dispatch(action);
-                            failure = await action.result;
-                          }
-                        }
-                      }
-
-                      return failure == null;
+                      return success;
                     },
                   )
                 : const SizedBox.shrink(),
@@ -125,26 +113,16 @@ class LotteryStepper extends StatelessWidgetX {
                         enabled: _checkButtonShouldBeEnabled(0),
                         swiped: _checkButtonShouldBeSwiped(0),
                         onCompletedSwipe: () async {
-                          var action = JoinLottery(
-                            thingId: proposal.thingId,
-                            proposalId: proposal.id,
+                          bool success = await multiStageAction(
+                            context,
+                            (ctx) => _settlementBloc.joinLottery(
+                              proposal.thingId,
+                              proposal.id,
+                              ctx,
+                            ),
                           );
-                          _settlementBloc.dispatch(action);
 
-                          var failure = await action.result;
-                          if (failure != null &&
-                              failure.error is WalletLockedError) {
-                            if (context.mounted) {
-                              var unlocked =
-                                  await showUnlockWalletDialog(context);
-                              if (unlocked) {
-                                _settlementBloc.dispatch(action);
-                                failure = await action.result;
-                              }
-                            }
-                          }
-
-                          return failure == null;
+                          return success;
                         },
                       )
                     : const SizedBox.shrink(),

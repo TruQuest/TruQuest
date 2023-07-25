@@ -1,4 +1,3 @@
-import '../models/im/decision_im.dart';
 import '../models/rvm/thing_vm.dart';
 import '../../general/bloc/mixins.dart';
 import 'thing_result_vm.dart';
@@ -60,23 +59,10 @@ class SubmitNewThing extends ThingActionAwaitable<SubmitNewThingFailureVm?> {
   SubmitNewThing({required this.thing});
 }
 
-class FundThing extends ThingActionAwaitable<FundThingFailureVm?> {
-  final ThingVm thing;
-  final String signature;
-
-  FundThing({required this.thing, required this.signature});
-}
-
 class GetVerifierLotteryInfo extends ThingAction {
   final String thingId;
 
   const GetVerifierLotteryInfo({required this.thingId});
-}
-
-class JoinLottery extends ThingActionAwaitable<JoinLotteryFailureVm?> {
-  final String thingId;
-
-  JoinLottery({required this.thingId});
 }
 
 class GetVerifierLotteryParticipants extends ThingAction {
@@ -90,33 +76,6 @@ class GetAcceptancePollInfo
   final String thingId;
 
   GetAcceptancePollInfo({required this.thingId});
-}
-
-class CastVoteOffChain
-    extends ThingActionAwaitable<CastVoteOffChainFailureVm?> {
-  final String thingId;
-  final DecisionIm decision;
-  final String reason;
-
-  CastVoteOffChain({
-    required this.thingId,
-    required this.decision,
-    required this.reason,
-  });
-}
-
-class CastVoteOnChain extends ThingActionAwaitable<CastVoteOnChainFailureVm?> {
-  final String thingId;
-  final int userIndexInThingVerifiersArray;
-  final DecisionIm decision;
-  final String reason;
-
-  CastVoteOnChain({
-    required this.thingId,
-    required this.userIndexInThingVerifiersArray,
-    required this.decision,
-    required this.reason,
-  });
 }
 
 class GetVerifiers extends ThingAction {

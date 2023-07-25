@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import '../../user/errors/wallet_locked_error.dart';
+import '../models/im/decision_im.dart';
+import '../../general/contexts/multi_stage_operation_context.dart';
 import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
 import '../models/rvm/get_verifiers_rvm.dart';
 import '../models/rvm/settlement_proposal_state_vm.dart';
@@ -38,22 +39,12 @@ class SettlementBloc extends Bloc<SettlementAction> {
         _getSettlementProposal(action);
       } else if (action is SubmitNewSettlementProposal) {
         _submitNewSettlementProposal(action);
-      } else if (action is FundSettlementProposal) {
-        _fundSettlementProposal(action);
       } else if (action is GetVerifierLotteryInfo) {
         _getVerifierLotteryInfo(action);
-      } else if (action is ClaimLotterySpot) {
-        _claimLotterySpot(action);
-      } else if (action is JoinLottery) {
-        _joinLottery(action);
       } else if (action is GetVerifierLotteryParticipants) {
         _getVerifierLotteryParticipants(action);
       } else if (action is GetAssessmentPollInfo) {
         _getAssessmentPollInfo(action);
-      } else if (action is CastVoteOffChain) {
-        _castVoteOffChain(action);
-      } else if (action is CastVoteOnChain) {
-        _castVoteOnChain(action);
       } else if (action is GetVerifiers) {
         _getVerifiers(action);
       }
@@ -94,17 +85,18 @@ class SettlementBloc extends Bloc<SettlementAction> {
     action.complete(null);
   }
 
-  void _fundSettlementProposal(FundSettlementProposal action) async {
-    try {
-      await _settlementService.fundSettlementProposal(
-        action.thingId,
-        action.proposalId,
-        action.signature,
-      );
-      action.complete(null);
-    } on WalletLockedError catch (error) {
-      action.complete(FundSettlementProposalFailureVm(error: error));
-    }
+  Stream<Object> fundSettlementProposal(
+    String thingId,
+    String proposalId,
+    String signature,
+    MultiStageOperationContext ctx,
+  ) async* {
+    yield* _settlementService.fundSettlementProposal(
+      thingId,
+      proposalId,
+      signature,
+      ctx,
+    );
   }
 
   void _refreshVerifierLotteryInfo(
@@ -131,37 +123,30 @@ class SettlementBloc extends Bloc<SettlementAction> {
     _refreshVerifierLotteryInfo(action.thingId, action.proposalId);
   }
 
-  void _claimLotterySpot(ClaimLotterySpot action) async {
-    try {
-      await _settlementService.claimLotterySpot(
-        action.thingId,
-        action.proposalId,
-        action.userIndexInThingVerifiersArray,
-      );
-      _refreshVerifierLotteryInfo(
-        action.thingId,
-        action.proposalId,
-      );
-      action.complete(null);
-    } on WalletLockedError catch (error) {
-      action.complete(ClaimLotterySpotFailureVm(error: error));
-    }
+  Stream<Object> claimLotterySpot(
+    String thingId,
+    String proposalId,
+    int userIndexInThingVerifiersArray,
+    MultiStageOperationContext ctx,
+  ) async* {
+    yield* _settlementService.claimLotterySpot(
+      thingId,
+      proposalId,
+      userIndexInThingVerifiersArray,
+      ctx,
+    );
   }
 
-  void _joinLottery(JoinLottery action) async {
-    try {
-      await _settlementService.joinLottery(
-        action.thingId,
-        action.proposalId,
-      );
-      _refreshVerifierLotteryInfo(
-        action.thingId,
-        action.proposalId,
-      );
-      action.complete(null);
-    } on WalletLockedError catch (error) {
-      action.complete(JoinLotteryFailureVm(error: error));
-    }
+  Stream<Object> joinLottery(
+    String thingId,
+    String proposalId,
+    MultiStageOperationContext ctx,
+  ) async* {
+    yield* _settlementService.joinLottery(
+      thingId,
+      proposalId,
+      ctx,
+    );
   }
 
   void _getVerifierLotteryParticipants(
@@ -189,33 +174,38 @@ class SettlementBloc extends Bloc<SettlementAction> {
     );
   }
 
-  void _castVoteOffChain(CastVoteOffChain action) async {
-    try {
-      await _settlementService.castVoteOffChain(
-        action.thingId,
-        action.proposalId,
-        action.decision,
-        action.reason,
-      );
-      action.complete(null);
-    } on WalletLockedError catch (error) {
-      action.complete(CastVoteOffChainFailureVm(error: error));
-    }
+  Stream<Object> castVoteOffChain(
+    String thingId,
+    String proposalId,
+    DecisionIm decision,
+    String reason,
+    MultiStageOperationContext ctx,
+  ) async* {
+    yield* _settlementService.castVoteOffChain(
+      thingId,
+      proposalId,
+      decision,
+      reason,
+      ctx,
+    );
   }
 
-  void _castVoteOnChain(CastVoteOnChain action) async {
-    try {
-      await _settlementService.castVoteOnChain(
-        action.thingId,
-        action.proposalId,
-        action.userIndexInProposalVerifiersArray,
-        action.decision,
-        action.reason,
-      );
-      action.complete(null);
-    } on WalletLockedError catch (error) {
-      action.complete(CastVoteOnChainFailureVm(error: error));
-    }
+  Stream<Object> castVoteOnChain(
+    String thingId,
+    String proposalId,
+    int userIndexInProposalVerifiersArray,
+    DecisionIm decision,
+    String reason,
+    MultiStageOperationContext ctx,
+  ) async* {
+    yield* _settlementService.castVoteOnChain(
+      thingId,
+      proposalId,
+      userIndexInProposalVerifiersArray,
+      decision,
+      reason,
+      ctx,
+    );
   }
 
   void _getVerifiers(GetVerifiers action) async {

@@ -5,7 +5,6 @@ import '../../general/utils/utils.dart';
 import '../../general/contexts/document_view_context.dart';
 import '../../general/widgets/swipe_button.dart';
 import '../../user/bloc/user_bloc.dart';
-import '../../user/errors/wallet_locked_error.dart';
 import '../bloc/thing_actions.dart';
 import '../bloc/thing_bloc.dart';
 import '../bloc/thing_result_vm.dart';
@@ -241,24 +240,17 @@ class StatusStepperBlock extends StatelessWidgetX {
                   return failure == null;
                 }
 
-                var action = FundThing(
-                  thing: _thing,
-                  signature: _documentViewContext.signature!,
+                // ignore: use_build_context_synchronously
+                bool success = await multiStageAction(
+                  context,
+                  (ctx) => _thingBloc.fundThing(
+                    _thing.id,
+                    _documentViewContext.signature!,
+                    ctx,
+                  ),
                 );
-                _thingBloc.dispatch(action);
 
-                var failure = await action.result;
-                if (failure != null && failure.error is WalletLockedError) {
-                  if (context.mounted) {
-                    var unlocked = await showUnlockWalletDialog(context);
-                    if (unlocked) {
-                      _thingBloc.dispatch(action);
-                      failure = await action.result;
-                    }
-                  }
-                }
-
-                return failure == null;
+                return success;
               },
             );
           }

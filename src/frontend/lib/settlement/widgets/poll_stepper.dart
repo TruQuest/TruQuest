@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../general/utils/utils.dart';
-import '../../user/errors/wallet_locked_error.dart';
 import '../bloc/settlement_bloc.dart';
 import '../models/rvm/settlement_proposal_vm.dart';
 import '../../general/widgets/vote_dialog.dart';
 import '../../widget_extensions.dart';
-import '../bloc/settlement_actions.dart';
 import '../bloc/settlement_result_vm.dart';
 import '../models/im/decision_im.dart';
 import '../../general/widgets/swipe_button.dart';
@@ -69,51 +67,28 @@ class _PollStepperState extends StateX<PollStepper> {
                       getDisplayString: (decision) => decision.getString(),
                       onVote: (decision, reason) async {
                         if (details.currentStep == 0) {
-                          var action = CastVoteOffChain(
-                            thingId: widget.proposal.thingId,
-                            proposalId: widget.proposal.id,
-                            decision: decision,
-                            reason: reason,
+                          await multiStageOffChainAction(
+                            context,
+                            (ctx) => _settlementBloc.castVoteOffChain(
+                              widget.proposal.thingId,
+                              widget.proposal.id,
+                              decision,
+                              reason,
+                              ctx,
+                            ),
                           );
-                          _settlementBloc.dispatch(action);
-
-                          var failure = await action.result;
-                          if (failure != null &&
-                              failure.error is WalletLockedError) {
-                            if (context.mounted) {
-                              var unlocked = await showUnlockWalletDialog(
-                                context,
-                              );
-                              if (unlocked) {
-                                _settlementBloc.dispatch(action);
-                                failure = await action.result;
-                              }
-                            }
-                          }
                         } else {
-                          var action = CastVoteOnChain(
-                            thingId: widget.proposal.thingId,
-                            proposalId: widget.proposal.id,
-                            userIndexInProposalVerifiersArray:
-                                widget.info.userIndexInProposalVerifiersArray,
-                            decision: decision,
-                            reason: reason,
+                          await multiStageAction(
+                            context,
+                            (ctx) => _settlementBloc.castVoteOnChain(
+                              widget.proposal.thingId,
+                              widget.proposal.id,
+                              widget.info.userIndexInProposalVerifiersArray,
+                              decision,
+                              reason,
+                              ctx,
+                            ),
                           );
-                          _settlementBloc.dispatch(action);
-
-                          var failure = await action.result;
-                          if (failure != null &&
-                              failure.error is WalletLockedError) {
-                            if (context.mounted) {
-                              var unlocked = await showUnlockWalletDialog(
-                                context,
-                              );
-                              if (unlocked) {
-                                _settlementBloc.dispatch(action);
-                                failure = await action.result;
-                              }
-                            }
-                          }
                         }
                       },
                     ),

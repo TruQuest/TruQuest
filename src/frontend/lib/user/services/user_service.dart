@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:rxdart/rxdart.dart';
 
+import '../../ethereum/errors/wallet_action_declined_error.dart';
 import '../../general/errors/insufficient_balance_error.dart';
 import '../errors/wallet_locked_error.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
@@ -127,7 +128,16 @@ class UserService {
     return shouldRequestAccounts;
   }
 
-  Future signInWithEthereum() async {
+  Stream<Object> signInWithEthereum(MultiStageOperationContext ctx) async* {
+    if (!walletUnlocked) {
+      yield const WalletLockedError();
+
+      bool unlocked = await ctx.unlockWalletTask.future;
+      if (!unlocked) {
+        return;
+      }
+    }
+
     var currentWalletAddress = _walletService.currentWalletAddress!;
 
     var nonce = await _userApiService.getNonceForSiwe(currentWalletAddress);
@@ -151,7 +161,14 @@ class UserService {
         'Nonce: $nonce\n'
         'Issued At: $nowWithoutMicroseconds';
 
-    var signature = await _walletService.personalSign(message);
+    String signature;
+    try {
+      signature = await _walletService.personalSign(message);
+    } on WalletActionDeclinedError catch (error) {
+      print(error.message);
+      yield error;
+      return;
+    }
 
     var siweResult = await _userApiService.signInWithEthereum(
       message,
@@ -198,7 +215,7 @@ class UserService {
   ) async* {
     print('**************** Deposit funds ****************');
 
-    if (!_walletService.isUnlocked) {
+    if (!walletUnlocked) {
       yield const WalletLockedError();
 
       bool unlocked = await ctx.unlockWalletTask.future;
@@ -207,16 +224,14 @@ class UserService {
       }
     }
 
-    int balance = await _truthserumContract.balanceOf(
-      _walletService.currentWalletAddress!,
-    );
+    int balance = await _truthserumContract.balanceOf(currentWalletAddress);
     print('**************** Balance: $balance drops ****************');
     if (balance < amount) {
       yield const InsufficientBalanceError();
       return;
     }
 
-    yield _userOperationService.prepareUserOpStream(
+    yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [
         (TruthserumContract.address, _truthserumContract.approve(amount)),
         (TruQuestContract.address, _truQuestContract.depositFunds(amount)),

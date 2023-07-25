@@ -1,8 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:either_dart/either.dart';
 
+import '../../ethereum/errors/wallet_action_declined_error.dart';
+import '../../general/contexts/multi_stage_operation_context.dart';
+import '../../user/errors/wallet_locked_error.dart';
 import '../../user/services/user_service.dart';
 import '../../ethereum/services/user_operation_service.dart';
 import '../models/im/new_acceptance_poll_vote_im.dart';
@@ -77,12 +79,50 @@ class ThingService {
     return result;
   }
 
-  Future fundThing(String thingId, String signature) async {
+  Stream<Object> fundThing(
+    String thingId,
+    String signature,
+    MultiStageOperationContext ctx,
+  ) async* {
     print('**************** Fund thing ****************');
-    await _userOperationService.send(
-      target: TruQuestContract.address,
-      action: _truQuestContract.fundThing(thingId, signature),
+
+    if (!_userService.walletUnlocked) {
+      yield const WalletLockedError();
+
+      bool unlocked = await ctx.unlockWalletTask.future;
+      if (!unlocked) {
+        return;
+      }
+    }
+
+    // @@TODO!!: Check balance!
+    // int balance = await _truthserumContract.balanceOf(
+    //   _walletService.currentWalletAddress!,
+    // );
+    // print('**************** Balance: $balance drops ****************');
+    // if (balance < amount) {
+    //   yield const InsufficientBalanceError();
+    //   return;
+    // }
+
+    yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
+      actions: [
+        (
+          TruQuestContract.address,
+          _truQuestContract.fundThing(thingId, signature)
+        ),
+      ],
     );
+
+    var userOp = await ctx.approveUserOpTask.future;
+    if (userOp == null) {
+      return;
+    }
+
+    var error = await _userOperationService.sendUserOp(userOp);
+    if (error != null) {
+      yield error;
+    }
   }
 
   Future<(String?, int?, int, bool?)> getVerifierLotteryInfo(
@@ -115,12 +155,49 @@ class ThingService {
     );
   }
 
-  Future joinLottery(String thingId) async {
+  Stream<Object> joinLottery(
+    String thingId,
+    MultiStageOperationContext ctx,
+  ) async* {
     print('******************** Join Lottery ********************');
-    await _userOperationService.send(
-      target: ThingSubmissionVerifierLotteryContract.address,
-      action: _thingSubmissionVerifierLotteryContract.joinLottery(thingId),
+
+    if (!_userService.walletUnlocked) {
+      yield const WalletLockedError();
+
+      bool unlocked = await ctx.unlockWalletTask.future;
+      if (!unlocked) {
+        return;
+      }
+    }
+
+    // @@TODO!!: Check balance!
+    // int balance = await _truthserumContract.balanceOf(
+    //   _walletService.currentWalletAddress!,
+    // );
+    // print('**************** Balance: $balance drops ****************');
+    // if (balance < amount) {
+    //   yield const InsufficientBalanceError();
+    //   return;
+    // }
+
+    yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
+      actions: [
+        (
+          ThingSubmissionVerifierLotteryContract.address,
+          _thingSubmissionVerifierLotteryContract.joinLottery(thingId)
+        ),
+      ],
     );
+
+    var userOp = await ctx.approveUserOpTask.future;
+    if (userOp == null) {
+      return;
+    }
+
+    var error = await _userOperationService.sendUserOp(userOp);
+    if (error != null) {
+      yield error;
+    }
   }
 
   Future<GetVerifierLotteryParticipantsRvm> getVerifierLotteryParticipants(
@@ -190,11 +267,14 @@ class ThingService {
     );
   }
 
-  Future castVoteOffChain(
+  Stream<Object> castVoteOffChain(
     String thingId,
     DecisionIm decision,
     String reason,
-  ) async {
+    MultiStageOperationContext ctx,
+  ) async* {
+    print('********************** Cast Vote Off-chain **********************');
+
     var vote = NewAcceptancePollVoteIm(
       thingId: thingId,
       castedAt: DateTime.now().getString(),
@@ -202,9 +282,25 @@ class ThingService {
       reason: reason,
     );
 
-    var signature = await _userService.personalSign(
-      jsonEncode(vote.toJsonForSigning()),
-    );
+    if (!_userService.walletUnlocked) {
+      yield const WalletLockedError();
+
+      bool unlocked = await ctx.unlockWalletTask.future;
+      if (!unlocked) {
+        return;
+      }
+    }
+
+    String signature;
+    try {
+      signature = await _userService.personalSign(
+        vote.toMessageForSigning(),
+      );
+    } on WalletActionDeclinedError catch (error) {
+      print(error.message);
+      yield error;
+      return;
+    }
 
     var ipfsCid = await _thingApiService.castThingAcceptancePollVote(
       vote,
@@ -214,22 +310,47 @@ class ThingService {
     print('**************** Vote cid: $ipfsCid ****************');
   }
 
-  Future castVoteOnChain(
+  Stream<Object> castVoteOnChain(
     String thingId,
     int userIndexInThingVerifiersArray,
     DecisionIm decision,
     String reason,
-  ) async {
-    print('********************** Cast Vote **********************');
-    await _userOperationService.send(
-      target: AcceptancePollContract.address,
-      action: _acceptancePollContract.castVote(
-        thingId,
-        userIndexInThingVerifiersArray,
-        decision,
-        reason,
-      ),
+    MultiStageOperationContext ctx,
+  ) async* {
+    print('********************** Cast Vote On-chain **********************');
+
+    if (!_userService.walletUnlocked) {
+      yield const WalletLockedError();
+
+      bool unlocked = await ctx.unlockWalletTask.future;
+      if (!unlocked) {
+        return;
+      }
+    }
+
+    yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
+      actions: [
+        (
+          AcceptancePollContract.address,
+          _acceptancePollContract.castVote(
+            thingId,
+            userIndexInThingVerifiersArray,
+            decision,
+            reason,
+          )
+        ),
+      ],
     );
+
+    var userOp = await ctx.approveUserOpTask.future;
+    if (userOp == null) {
+      return;
+    }
+
+    var error = await _userOperationService.sendUserOp(userOp);
+    if (error != null) {
+      yield error;
+    }
   }
 
   Future<GetVerifiersRvm> getVerifiers(String thingId) async {

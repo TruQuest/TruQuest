@@ -76,14 +76,14 @@ internal class Signer : ISigner
     public string RecoverFromNewAcceptancePollVoteMessage(
         NewAcceptancePollVoteIm input, string signature
     ) => _personalSigner.EncodeUTF8AndEcRecover(
-            JsonSerializer.Serialize(input, _jsonSerializerOptions),
+            input.ToMessageForSigning(),
             signature
         );
 
     public string RecoverFromNewAssessmentPollVoteMessage(
         NewAssessmentPollVoteIm input, string signature
     ) => _personalSigner.EncodeUTF8AndEcRecover(
-            JsonSerializer.Serialize(input, _jsonSerializerOptions),
+            input.ToMessageForSigning(),
             signature
         );
 
@@ -106,7 +106,7 @@ internal class Signer : ISigner
     {
         var td = new SignedNewAcceptancePollVoteTd
         {
-            Vote = input,
+            Vote = input.ToMessageForSigning(),
             WalletAddress = walletAddress,
             OwnerAddress = ownerAddress,
             OwnerSignature = ownerSignature
@@ -125,7 +125,7 @@ internal class Signer : ISigner
     {
         var td = new SignedNewAssessmentPollVoteTd
         {
-            Vote = input,
+            Vote = input.ToMessageForSigning(),
             WalletAddress = walletAddress,
             OwnerAddress = ownerAddress,
             OwnerSignature = ownerSignature

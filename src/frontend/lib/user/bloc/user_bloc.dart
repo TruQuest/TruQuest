@@ -38,8 +38,6 @@ class UserBloc extends Bloc<UserAction> {
         _generateMnemonic(action);
       } else if (action is CreateAndSaveEncryptedLocalWallet) {
         _createAndSaveEncryptedLocalWallet(action);
-      } else if (action is SignInWithEthereum) {
-        _signInWithEthereum(action);
       } else if (action is AddEmail) {
         _addEmail(action);
       } else if (action is ConfirmEmail) {
@@ -89,13 +87,8 @@ class UserBloc extends Bloc<UserAction> {
     action.complete(CreateAndSaveEncryptedLocalWalletSuccessVm());
   }
 
-  void _signInWithEthereum(SignInWithEthereum action) async {
-    try {
-      await _userService.signInWithEthereum();
-      action.complete(null);
-    } on WalletLockedError catch (error) {
-      action.complete(SignInWithEthereumFailureVm(error: error));
-    }
+  Stream<Object> signInWithEthereum(MultiStageOperationContext ctx) async* {
+    yield* _userService.signInWithEthereum(ctx);
   }
 
   void _addEmail(AddEmail action) async {

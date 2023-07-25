@@ -1,5 +1,4 @@
 import '../../general/bloc/mixins.dart';
-import '../models/im/decision_im.dart';
 import 'settlement_result_vm.dart';
 import '../../general/contexts/document_context.dart';
 
@@ -30,47 +29,11 @@ class SubmitNewSettlementProposal
   SubmitNewSettlementProposal({required this.proposalId});
 }
 
-class FundSettlementProposal
-    extends SettlementActionAwaitable<FundSettlementProposalFailureVm?> {
-  final String thingId;
-  final String proposalId;
-  final String signature;
-
-  FundSettlementProposal({
-    required this.thingId,
-    required this.proposalId,
-    required this.signature,
-  });
-}
-
 class GetVerifierLotteryInfo extends SettlementAction {
   final String thingId;
   final String proposalId;
 
   const GetVerifierLotteryInfo({
-    required this.thingId,
-    required this.proposalId,
-  });
-}
-
-class ClaimLotterySpot
-    extends SettlementActionAwaitable<ClaimLotterySpotFailureVm?> {
-  final String thingId;
-  final String proposalId;
-  final int userIndexInThingVerifiersArray;
-
-  ClaimLotterySpot({
-    required this.thingId,
-    required this.proposalId,
-    required this.userIndexInThingVerifiersArray,
-  });
-}
-
-class JoinLottery extends SettlementActionAwaitable<JoinLotteryFailureVm?> {
-  final String thingId;
-  final String proposalId;
-
-  JoinLottery({
     required this.thingId,
     required this.proposalId,
   });
@@ -94,38 +57,6 @@ class GetAssessmentPollInfo
   GetAssessmentPollInfo({
     required this.thingId,
     required this.proposalId,
-  });
-}
-
-class CastVoteOffChain
-    extends SettlementActionAwaitable<CastVoteOffChainFailureVm?> {
-  final String thingId;
-  final String proposalId;
-  final DecisionIm decision;
-  final String reason;
-
-  CastVoteOffChain({
-    required this.thingId,
-    required this.proposalId,
-    required this.decision,
-    required this.reason,
-  });
-}
-
-class CastVoteOnChain
-    extends SettlementActionAwaitable<CastVoteOnChainFailureVm?> {
-  final String thingId;
-  final String proposalId;
-  final int userIndexInProposalVerifiersArray;
-  final DecisionIm decision;
-  final String reason;
-
-  CastVoteOnChain({
-    required this.thingId,
-    required this.proposalId,
-    required this.userIndexInProposalVerifiersArray,
-    required this.decision,
-    required this.reason,
   });
 }
 

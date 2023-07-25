@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../errors/insufficient_balance_error.dart';
-import '../../ethereum/errors/user_operation_error.dart';
-import '../../ethereum/models/im/user_operation.dart';
-import '../contexts/multi_stage_operation_context.dart';
 import '../utils/utils.dart';
-import '../../user/errors/wallet_locked_error.dart';
 import '../../user/bloc/user_bloc.dart';
 import 'swipe_button.dart';
 import '../../widget_extensions.dart';
@@ -46,31 +41,15 @@ class _DepositStepperState extends StateX<DepositStepper> {
           enabled: true,
           swiped: false,
           onCompletedSwipe: () async {
-            var ctx = MultiStageOperationContext();
-            await for (var stageResult in _userBloc.depositFunds(
-              int.parse(_depositController.text),
-              ctx,
-            )) {
-              if (stageResult is WalletLockedError) {
-                bool unlocked = false;
-                if (context.mounted) {
-                  unlocked = await showUnlockWalletDialog(context);
-                }
-                ctx.unlockWalletTask.complete(unlocked);
-              } else if (stageResult is InsufficientBalanceError) {
-                // ...
-              } else if (stageResult is Stream<UserOperation>) {
-                UserOperation? userOp;
-                if (context.mounted) {
-                  userOp = await showUserOpDialog(context, stageResult);
-                }
-                ctx.approveUserOpTask.complete(userOp);
-              } else if (stageResult is UserOperationError) {
-                // ...
-              }
-            }
+            bool success = await multiStageAction(
+              context,
+              (ctx) => _userBloc.depositFunds(
+                int.parse(_depositController.text),
+                ctx,
+              ),
+            );
 
-            return false;
+            return success;
           },
         ),
         steps: [

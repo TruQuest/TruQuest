@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../errors/wallet_action_declined_error.dart';
 import 'ethereum_api_service.dart';
 import '../errors/user_operation_error.dart';
 import '../models/im/user_operation.dart';
@@ -10,7 +11,7 @@ class UserOperationService {
 
   UserOperationService(this._ethereumApiService);
 
-  Stream<UserOperation> prepareUserOpStream({
+  Stream<UserOperation> prepareOneWithRealTimeFeeUpdates({
     required List<(String, String)> actions,
   }) {
     var canceled = Completer();
@@ -91,13 +92,18 @@ class UserOperationService {
     do {
       error = null;
 
-      userOp = await UserOperation.createFrom(userOp)
-          .withEstimatedGasLimitsMultipliers(
-            preVerificationGasMultiplier: preVerificationGasMultiplier,
-            verificationGasLimitMultiplier: verificationGasLimitMultiplier,
-            callGasLimitMultiplier: callGasLimitMultiplier,
-          )
-          .signed();
+      try {
+        userOp = await UserOperation.createFrom(userOp)
+            .withEstimatedGasLimitsMultipliers(
+              preVerificationGasMultiplier: preVerificationGasMultiplier,
+              verificationGasLimitMultiplier: verificationGasLimitMultiplier,
+              callGasLimitMultiplier: callGasLimitMultiplier,
+            )
+            .signed();
+      } on WalletActionDeclinedError catch (error) {
+        print(error.message);
+        return UserOperationError(error.message);
+      }
 
       print('UserOp[$attempts]:\n$userOp');
 
