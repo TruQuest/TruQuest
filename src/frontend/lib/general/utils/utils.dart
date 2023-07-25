@@ -1,13 +1,16 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:bot_toast/bot_toast.dart';
 
+import '../../ethereum/models/vm/wallet_connect_uri_vm.dart';
 import '../../ethereum/errors/wallet_action_declined_error.dart';
 import '../../ethereum/errors/user_operation_error.dart';
 import '../../ethereum/models/im/user_operation.dart';
 import '../../user/errors/wallet_locked_error.dart';
 import '../contexts/multi_stage_operation_context.dart';
 import '../errors/insufficient_balance_error.dart';
+import '../widgets/qr_code_dialog.dart';
 import '../widgets/unlock_wallet_dialog.dart';
 import '../widgets/user_operation_dialog.dart';
 
@@ -52,19 +55,7 @@ Future<bool> multiStageAction(
         proceededTilTheEndWithNoErrors = false;
       }
     } else if (stageResult is InsufficientBalanceError) {
-      // @@TODO!!: Replace MaterialBanner with smth else.
-      var messenger = ScaffoldMessenger.of(context);
-      messenger.showMaterialBanner(
-        MaterialBanner(
-          content: Text('Insufficient TRU balance'),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.minimize),
-              onPressed: () => messenger.hideCurrentMaterialBanner(),
-            ),
-          ],
-        ),
-      );
+      BotToast.showText(text: stageResult.message);
       proceededTilTheEndWithNoErrors = false;
     } else if (stageResult is Stream<UserOperation>) {
       UserOperation? userOp;
@@ -76,18 +67,7 @@ Future<bool> multiStageAction(
         proceededTilTheEndWithNoErrors = false;
       }
     } else if (stageResult is UserOperationError) {
-      var messenger = ScaffoldMessenger.of(context);
-      messenger.showMaterialBanner(
-        MaterialBanner(
-          content: Text(stageResult.message),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.minimize),
-              onPressed: () => messenger.hideCurrentMaterialBanner(),
-            ),
-          ],
-        ),
-      );
+      BotToast.showText(text: stageResult.message);
       proceededTilTheEndWithNoErrors = false;
     }
   }
@@ -112,19 +92,13 @@ Future<bool> multiStageOffChainAction(
         proceededTilTheEndWithNoErrors = false;
       }
     } else if (stageResult is WalletActionDeclinedError) {
-      var messenger = ScaffoldMessenger.of(context);
-      messenger.showMaterialBanner(
-        MaterialBanner(
-          content: Text(stageResult.message),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.minimize),
-              onPressed: () => messenger.hideCurrentMaterialBanner(),
-            ),
-          ],
-        ),
-      );
+      BotToast.showText(text: stageResult.message);
       proceededTilTheEndWithNoErrors = false;
+    } else if (stageResult is WalletConnectUriVm) {
+      showDialog(
+        context: context,
+        builder: (_) => QrCodeDialog(uri: stageResult.uri),
+      );
     }
   }
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'qr_code_dialog.dart';
+import '../utils/utils.dart';
 import '../../user/bloc/user_actions.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../../widget_extensions.dart';
@@ -21,22 +21,12 @@ class ConnectAccountButton extends StatelessWidgetX {
             Icons.wifi_tethering,
             color: Colors.white,
           ),
-          onPressed: () async {
-            if (_userBloc.localWalletSelected) return;
-
-            var action = ConnectAccount();
-            _userBloc.dispatch(action);
-
-            var success = await action.result;
-            if (success?.walletConnectUri != null) {
-              if (context.mounted) {
-                showDialog(
-                  context: context,
-                  builder: (_) => QrCodeDialog(
-                    uri: success!.walletConnectUri!,
-                  ),
-                );
-              }
+          onPressed: () {
+            if (!_userBloc.localWalletSelected) {
+              multiStageOffChainAction(
+                context,
+                (ctx) => _userBloc.connectAccount(ctx),
+              );
             }
           },
         ),
@@ -92,20 +82,11 @@ class ConnectAccountButton extends StatelessWidgetX {
 
                 var success = await action.result;
                 if (success.shouldRequestAccounts) {
-                  var action = ConnectAccount();
-                  _userBloc.dispatch(action);
-
-                  var success = await action.result;
-                  if (success?.walletConnectUri != null) {
-                    if (context.mounted) {
-                      showDialog(
-                        context: context,
-                        builder: (_) => QrCodeDialog(
-                          uri: success!.walletConnectUri!,
-                        ),
-                      );
-                    }
-                  }
+                  // ignore: use_build_context_synchronously
+                  multiStageOffChainAction(
+                    context,
+                    (ctx) => _userBloc.connectAccount(ctx),
+                  );
                 }
               },
             ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:bot_toast/bot_toast.dart';
 
 import '../widgets/fixed_width.dart';
 import '../widgets/deposit_funds_button.dart';
@@ -26,8 +26,6 @@ class _HomePageState extends StateX<HomePage> {
   late final _pageContext = use<PageContext>();
   late final _notificationBloc = use<NotificationBloc>();
 
-  late final FToast _fToast;
-
   @override
   void initState() {
     super.initState();
@@ -35,13 +33,10 @@ class _HomePageState extends StateX<HomePage> {
     _subscriptionManager.init();
     _pageContext.init();
 
-    _fToast = FToast();
-    _fToast.init(context);
     _notificationBloc.toast$.listen(
-      (toast) => _fToast.showToast(
-        child: toast,
-        gravity: ToastGravity.BOTTOM_RIGHT,
-        toastDuration: const Duration(seconds: 10),
+      (message) => BotToast.showSimpleNotification(
+        title: message,
+        duration: Duration(seconds: 5),
       ),
     );
   }

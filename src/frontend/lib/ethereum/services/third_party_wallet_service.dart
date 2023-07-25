@@ -2,15 +2,15 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:convert/convert.dart';
-import 'package:either_dart/either.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:universal_html/html.dart' as html;
 
+import '../models/vm/wallet_connect_uri_vm.dart';
+import '../../general/contexts/multi_stage_operation_context.dart';
 import '../errors/wallet_action_declined_error.dart';
 import '../../general/contracts/erc4337/iaccount_factory_contract.dart';
 import 'iwallet_service.dart';
-import '../errors/ethereum_error.dart';
 import '../../ethereum_js_interop.dart';
 
 class ThirdPartyWalletService implements IWalletService {
@@ -103,7 +103,7 @@ class ThirdPartyWalletService implements IWalletService {
     }
   }
 
-  Future<Either<EthereumError, String?>> connectAccount() async {
+  Stream<Object> connectAccount(MultiStageOperationContext ctx) async* {
     var walletName = await walletSetup.future;
     if (walletName == 'WalletConnect') {
       var uriGenerated = Completer<String>();
@@ -115,16 +115,15 @@ class ThirdPartyWalletService implements IWalletService {
       await _ethereumWallet.requestAccounts(_walletConnectConnectionOpts);
 
       var uri = await uriGenerated.future;
-      return Right(uri);
+      yield WalletConnectUriVm(uri: uri);
+      return;
     }
 
     var error = await _ethereumWallet.requestAccounts();
     if (error != null) {
       print('Request accounts error: [${error.code}] ${error.message}');
-      return Left(EthereumError('Error requesting accounts'));
+      yield WalletActionDeclinedError();
     }
-
-    return const Right(null);
   }
 
   void watchTruthserum() async {

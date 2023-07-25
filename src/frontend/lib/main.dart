@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:bot_toast/bot_toast.dart';
 
 import 'ethereum/services/ethereum_rpc_provider.dart';
 import 'general/services/local_storage.dart';
@@ -34,6 +35,8 @@ class App extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
+      builder: BotToastInit(),
+      navigatorObservers: [BotToastNavigatorObserver()],
       home: const HomePage(),
     );
   }

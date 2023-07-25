@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
 
 import '../models/rvm/notification_vm.dart';
@@ -17,13 +16,11 @@ class NotificationBloc extends Bloc<NotificationAction> {
   final ThingService _thingService;
   final SettlementService _settlementService;
 
-  final BehaviorSubject<Stream<int>?> _progress$Channel =
-      BehaviorSubject<Stream<int>?>();
+  final _progress$Channel = BehaviorSubject<Stream<int>?>();
   Stream<Stream<int>?> get progress$$ => _progress$Channel.stream;
 
-  final StreamController<Widget> _toastChannel =
-      StreamController<Widget>.broadcast();
-  Stream<Widget> get toast$ => _toastChannel.stream;
+  final _toastChannel = StreamController<String>.broadcast();
+  Stream<String> get toast$ => _toastChannel.stream;
 
   Stream<int> get unreadNotificationsCount$ =>
       _notificationsCache.unreadNotificationsCount$;

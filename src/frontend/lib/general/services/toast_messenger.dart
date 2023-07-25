@@ -1,10 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-
 class ToastMessenger {
-  final StreamController<Widget> _toastChannel = StreamController<Widget>();
-  Stream<Widget> get toast$ => _toastChannel.stream;
+  final _toastChannel = StreamController<String>();
+  Stream<String> get toast$ => _toastChannel.stream;
 
-  void add(Widget toast) => _toastChannel.add(toast);
+  void add(String toast) => _toastChannel.add(toast);
 }

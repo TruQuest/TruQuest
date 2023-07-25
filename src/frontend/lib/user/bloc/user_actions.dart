@@ -15,8 +15,6 @@ class SelectThirdPartyWallet
   SelectThirdPartyWallet({required this.walletName});
 }
 
-class ConnectAccount extends UserActionAwaitable<ConnectAccountSuccessVm?> {}
-
 class GenerateMnemonic
     extends UserActionAwaitable<GenerateMnemonicSuccessVm?> {}
 

@@ -27,20 +27,20 @@ class CreateNewThingDraft
     List<String>? errors;
     if (documentContext.subjectId == null) {
       errors ??= [];
-      errors.add('• Subject Id is not set');
+      errors.add('Subject Id is not set');
     }
     if (documentContext.nameOrTitle == null ||
         documentContext.nameOrTitle!.length < 3) {
       errors ??= [];
-      errors.add('• Title should be at least 3 characters long');
+      errors.add('Title should be at least 3 characters long');
     }
     if (documentContext.details!.isEmpty) {
       errors ??= [];
-      errors.add('• Details are not specified');
+      errors.add('Details are not specified');
     }
     if (documentContext.evidence.isEmpty) {
       errors ??= [];
-      errors.add('• Must provide evidence');
+      errors.add('Must provide evidence');
     }
 
     return errors;

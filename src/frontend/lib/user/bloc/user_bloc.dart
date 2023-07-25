@@ -32,8 +32,6 @@ class UserBloc extends Bloc<UserAction> {
     actionChannel.stream.listen((action) {
       if (action is SelectThirdPartyWallet) {
         _selectThirdPartyWallet(action);
-      } else if (action is ConnectAccount) {
-        _connectAccount(action);
       } else if (action is GenerateMnemonic) {
         _generateMnemonic(action);
       } else if (action is CreateAndSaveEncryptedLocalWallet) {
@@ -63,13 +61,8 @@ class UserBloc extends Bloc<UserAction> {
     );
   }
 
-  void _connectAccount(ConnectAccount action) async {
-    var result = await _thirdPartyWalletService.connectAccount();
-    action.complete(
-      result.isRight
-          ? ConnectAccountSuccessVm(walletConnectUri: result.right)
-          : null,
-    );
+  Stream<Object> connectAccount(MultiStageOperationContext ctx) async* {
+    yield* _thirdPartyWalletService.connectAccount(ctx);
   }
 
   void _generateMnemonic(GenerateMnemonic action) async {

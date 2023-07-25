@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-
 import '../models/im/decision_im.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
 import '../../general/services/toast_messenger.dart';
@@ -46,23 +44,7 @@ class ThingBloc extends Bloc<ThingAction> {
       if (action.mustValidate) {
         validationErrors = action.validate();
         if (validationErrors != null) {
-          _toastMessenger.add(
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: validationErrors
-                    .map(
-                      (error) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Text(error),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
-          );
+          _toastMessenger.add('• ' + validationErrors.join('\n• '));
         }
       }
 

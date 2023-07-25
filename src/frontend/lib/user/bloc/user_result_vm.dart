@@ -8,12 +8,6 @@ class SelectThirdPartyWalletSuccessVm extends UserResultVm {
   SelectThirdPartyWalletSuccessVm({required this.shouldRequestAccounts});
 }
 
-class ConnectAccountSuccessVm extends UserResultVm {
-  final String? walletConnectUri;
-
-  ConnectAccountSuccessVm({required this.walletConnectUri});
-}
-
 class GenerateMnemonicSuccessVm extends UserResultVm {
   final String mnemonic;
 
