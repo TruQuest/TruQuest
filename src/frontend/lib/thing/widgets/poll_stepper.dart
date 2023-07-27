@@ -34,25 +34,29 @@ class _PollStepperState extends StateX<PollStepper> {
 
   int _currentStep = 0;
 
+  @override
+  void didUpdateWidget(covariant PollStepper oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.info.userId != oldWidget.info.userId) {
+      _currentStep = 0;
+    }
+  }
+
   bool _checkButtonShouldBeEnabled() => widget.info.initBlock != null && widget.currentBlock < widget.endBlock;
 
   @override
   Widget buildX(BuildContext context) {
     return Theme(
-      data: ThemeData(
-        brightness: Brightness.dark,
-        colorScheme: Theme.of(context).colorScheme.copyWith(
-              brightness: Brightness.dark,
-              secondary: const Color(0xffF8F9FA),
-            ),
-      ),
+      data: getThemeDataForSteppers(context),
       child: Stepper(
         currentStep: _currentStep,
         controlsBuilder: (context, details) =>
             widget.info.userId != null && widget.info.userIndexInThingVerifiersArray >= 0
                 ? SwipeButton(
                     // @@NOTE: Without the key flutter would just reuse the same state object for all steps.
-                    key: ValueKey('${widget.info.userId} ${details.currentStep}'),
+                    key: ValueKey(
+                      '${details.currentStep}::${widget.info.userId}::${widget.currentBlock < widget.endBlock}',
+                    ),
                     text: 'Slide to vote',
                     enabled: _checkButtonShouldBeEnabled(),
                     swiped: false,

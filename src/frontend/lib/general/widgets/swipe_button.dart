@@ -69,8 +69,7 @@ class _SwipeButton extends StatefulWidget {
   State<_SwipeButton> createState() => _SwipeButtonState();
 }
 
-class _SwipeButtonState extends State<_SwipeButton>
-    with TickerProviderStateMixin {
+class _SwipeButtonState extends State<_SwipeButton> with TickerProviderStateMixin {
   late AnimationController swipeAnimationController;
   late AnimationController expandAnimationController;
 
@@ -191,17 +190,13 @@ class _SwipeButtonState extends State<_SwipeButton>
       builder: (context, child) {
         return Transform(
           transform: Matrix4.identity()
-            ..translate(swipeAnimationController.value *
-                (constraints.maxWidth - widget.height)),
+            ..translate(swipeAnimationController.value * (constraints.maxWidth - widget.height)),
           child: Container(
             padding: widget.thumbPadding,
             child: GestureDetector(
-              onHorizontalDragStart:
-                  widget.enabled ? _onHorizontalDragStart : null,
-              onHorizontalDragUpdate: widget.enabled
-                  ? (details) =>
-                      _onHorizontalDragUpdate(details, constraints.maxWidth)
-                  : null,
+              onHorizontalDragStart: widget.enabled ? _onHorizontalDragStart : null,
+              onHorizontalDragUpdate:
+                  widget.enabled ? (details) => _onHorizontalDragUpdate(details, constraints.maxWidth) : null,
               onHorizontalDragEnd: widget.enabled ? _onHorizontalDragEnd : null,
               child: Material(
                 elevation: elevationThumb,
@@ -213,15 +208,13 @@ class _SwipeButtonState extends State<_SwipeButton>
                   builder: (context, child) {
                     return SizedBox(
                       width: widget.height +
-                          (expandAnimationController.value *
-                              (constraints.maxWidth - widget.height)) -
+                          (expandAnimationController.value * (constraints.maxWidth - widget.height)) -
                           widget.thumbPadding.horizontal,
                       height: widget.height - widget.thumbPadding.vertical,
                       child: widget.thumb ??
                           Icon(
                             Icons.arrow_forward,
-                            color: widget.activeTrackColor ??
-                                widget.inactiveTrackColor,
+                            color: widget.activeTrackColor ?? widget.inactiveTrackColor,
                           ),
                     );
                   },
@@ -245,8 +238,7 @@ class _SwipeButtonState extends State<_SwipeButton>
     switch (widget._swipeButtonType) {
       case _SwipeButtonType.swipe:
         if (!swiped && widget.enabled) {
-          swipeAnimationController.value +=
-              details.primaryDelta! / (width - widget.height);
+          swipeAnimationController.value += details.primaryDelta! / (width - widget.height);
           if (swipeAnimationController.value == 1) {
             setState(() {
               swiped = true;
@@ -257,8 +249,7 @@ class _SwipeButtonState extends State<_SwipeButton>
         break;
       case _SwipeButtonType.expand:
         if (!swiped && widget.enabled) {
-          expandAnimationController.value +=
-              details.primaryDelta! / (width - widget.height);
+          expandAnimationController.value += details.primaryDelta! / (width - widget.height);
           if (expandAnimationController.value == 1) {
             setState(() {
               swiped = true;
@@ -335,10 +326,15 @@ class SwipeButtonState extends StateX<SwipeButton> {
         });
 
         if (!await widget.onCompletedSwipe()) {
-          setState(() {
-            _enabled = true;
-            _swiped = false;
-          });
+          // @@NOTE: Situation: User swiped the join lottery button but, while the action handling was still in progress,
+          // the lottery expired, which led to the button's key changing and therefore to a new state object being created
+          // and this one being disposed of.
+          if (mounted) {
+            setState(() {
+              _enabled = true;
+              _swiped = false;
+            });
+          }
         }
       },
     );

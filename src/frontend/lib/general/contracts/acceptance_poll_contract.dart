@@ -3,7 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../ethereum/services/ethereum_rpc_provider.dart';
 import '../../ethereum_js_interop.dart';
 import '../../thing/models/im/decision_im.dart';
-import '../extensions/uuid_extension.dart';
+import '../utils/utils.dart';
 
 class AcceptancePollContract {
   static final String address = dotenv.env['AcceptancePollAddress']!;
@@ -129,8 +129,7 @@ class AcceptancePollContract {
     );
   }
 
-  Future<int> getPollDurationBlocks() =>
-      _contract.read<int>('getPollDurationBlocks');
+  Future<int> getPollDurationBlocks() => _contract.read<int>('getPollDurationBlocks');
 
   Future<int?> getPollInitBlock(String thingId) async {
     var initBlock = await _contract.read<BigInt>(

@@ -34,17 +34,17 @@ class LotteryStepper extends StatelessWidgetX {
   @override
   Widget buildX(BuildContext context) {
     return Theme(
-      data: ThemeData(
-        brightness: Brightness.dark,
-        colorScheme: Theme.of(context).colorScheme.copyWith(
-              brightness: Brightness.dark,
-              secondary: const Color(0xffF8F9FA),
-            ),
-      ),
+      data: getThemeDataForSteppers(context),
       child: Stepper(
         controlsBuilder: (context, details) => info.userId != null && !thing.isSubmitter(info.userId)
             ? SwipeButton(
-                key: ValueKey(info.userId),
+                // @@NOTE: We want the button to:
+                // - Update 'enabled' and 'swiped' to the values corresponding to the new user on user change.
+                // - Not change 'enabled' and 'swiped' when an action is in progress (e.g. new block gets mined while
+                //   we wait for a user to sign an operation), since we want it to remain disabled and swiped until the action
+                //   is complete.
+                // - Get disabled once the lottery is over.
+                key: ValueKey('${info.userId}::${currentBlock < endBlock}::${info.alreadyJoined}'),
                 text: 'Slide to join',
                 enabled: _checkButtonShouldBeEnabled(),
                 swiped: _checkButtonShouldBeSwiped(),

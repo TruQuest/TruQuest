@@ -12,7 +12,7 @@ import '../../general/models/rvm/verifier_lottery_participant_entry_vm.dart';
 import '../errors/thing_error.dart';
 import '../models/rvm/get_settlement_proposals_list_rvm.dart';
 import '../models/rvm/get_verifiers_rvm.dart';
-import '../../general/extensions/datetime_extension.dart';
+import '../../general/utils/utils.dart';
 import '../../general/contracts/acceptance_poll_contract.dart';
 import '../../general/contracts/thing_submission_verifier_lottery_contract.dart';
 import '../models/im/decision_im.dart';

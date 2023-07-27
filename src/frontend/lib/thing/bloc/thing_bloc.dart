@@ -117,8 +117,8 @@ class ThingBloc extends Bloc<ThingAction> {
   Stream<Object> _fundThing(FundThing action, MultiStageOperationContext ctx) =>
       _thingService.fundThing(action.thingId, action.signature, ctx);
 
-  void _refreshVerifierLotteryInfo(String thingId) async {
-    var info = await _thingService.getVerifierLotteryInfo(thingId);
+  void _getVerifierLotteryInfo(GetVerifierLotteryInfo action) async {
+    var info = await _thingService.getVerifierLotteryInfo(action.thingId);
     _verifierLotteryInfoChannel.add(
       VerifierLotteryInfoVm(
         userId: info.$1,
@@ -127,10 +127,6 @@ class ThingBloc extends Bloc<ThingAction> {
         alreadyJoined: info.$4,
       ),
     );
-  }
-
-  void _getVerifierLotteryInfo(GetVerifierLotteryInfo action) {
-    _refreshVerifierLotteryInfo(action.thingId);
   }
 
   Stream<Object> _joinLottery(JoinLottery action, MultiStageOperationContext ctx) =>

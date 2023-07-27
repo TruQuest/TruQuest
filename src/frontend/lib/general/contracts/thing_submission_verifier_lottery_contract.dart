@@ -5,11 +5,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../ethereum/services/ethereum_rpc_provider.dart';
 import '../../ethereum_js_interop.dart';
-import '../extensions/uuid_extension.dart';
+import '../utils/utils.dart';
 
 class ThingSubmissionVerifierLotteryContract {
-  static final String address =
-      dotenv.env['ThingSubmissionVerifierLotteryAddress']!;
+  static final String address = dotenv.env['ThingSubmissionVerifierLotteryAddress']!;
   static const String _abi = '''[
     {
       "inputs": [
@@ -140,15 +139,10 @@ class ThingSubmissionVerifierLotteryContract {
       args: [thingId.toSolInputFormat()],
     );
 
-    return (
-      (result[0] as BigInt).toInt(),
-      result[1] as String,
-      result[2] as String
-    );
+    return ((result[0] as BigInt).toInt(), result[1] as String, result[2] as String);
   }
 
-  Future<int> getLotteryDurationBlocks() =>
-      _contract.read<int>('getLotteryDurationBlocks');
+  Future<int> getLotteryDurationBlocks() => _contract.read<int>('getLotteryDurationBlocks');
 
   Future<int?> getLotteryInitBlock(String thingId) async {
     var initBlock = await _contract.read<BigInt>(

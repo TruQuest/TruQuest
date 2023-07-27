@@ -5,11 +5,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../ethereum/services/ethereum_rpc_provider.dart';
 import '../../ethereum_js_interop.dart';
-import '../extensions/uuid_extension.dart';
+import '../utils/utils.dart';
 
 class ThingAssessmentVerifierLotteryContract {
-  static final String address =
-      dotenv.env['ThingAssessmentVerifierLotteryAddress']!;
+  static final String address = dotenv.env['ThingAssessmentVerifierLotteryAddress']!;
   static const String _abi = '''[
     {
       "inputs": [],
@@ -174,8 +173,7 @@ class ThingAssessmentVerifierLotteryContract {
     );
   }
 
-  Future<int> getLotteryDurationBlocks() =>
-      _contract.read<int>('getLotteryDurationBlocks');
+  Future<int> getLotteryDurationBlocks() => _contract.read<int>('getLotteryDurationBlocks');
 
   Future<int?> getLotteryInitBlock(String thingId, String proposalId) async {
     var thingIdHex = thingId.toSolInputFormat(prefix: false);
@@ -203,11 +201,7 @@ class ThingAssessmentVerifierLotteryContract {
       args: [thingProposalIdHex],
     );
 
-    return (
-      (result[0] as BigInt).toInt(),
-      result[1] as String,
-      result[2] as String
-    );
+    return ((result[0] as BigInt).toInt(), result[1] as String, result[2] as String);
   }
 
   Future<bool> checkAlreadyClaimedLotterySpot(

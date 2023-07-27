@@ -173,13 +173,7 @@ class StatusStepperBlock extends StatelessWidgetX {
   Widget buildX(BuildContext context) {
     _setup();
     return Theme(
-      data: ThemeData(
-        brightness: Brightness.dark,
-        colorScheme: Theme.of(context).colorScheme.copyWith(
-              brightness: Brightness.dark,
-              secondary: const Color(0xffF8F9FA),
-            ),
-      ),
+      data: getThemeDataForSteppers(context),
       child: Stepper(
         currentStep: _currentStep,
         controlsBuilder: (context, details) {

@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:convert/convert.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 import '../errors/validation_error.dart';
@@ -28,7 +30,68 @@ extension BoolExtension on bool? {
 
 extension StringExtension on String {
   bool get isValidUuid => Uuid.isValidUUID(fromString: this);
+
+  String toSolInputFormat({bool prefix = true}) {
+    var thingIdBytes = Uuid.parse(this, validate: false);
+    int b0 = thingIdBytes[0];
+    int b1 = thingIdBytes[1];
+    int b2 = thingIdBytes[2];
+    int b3 = thingIdBytes[3];
+    thingIdBytes[0] = b3;
+    thingIdBytes[1] = b2;
+    thingIdBytes[2] = b1;
+    thingIdBytes[3] = b0;
+
+    int b4 = thingIdBytes[4];
+    int b5 = thingIdBytes[5];
+    thingIdBytes[4] = b5;
+    thingIdBytes[5] = b4;
+
+    int b6 = thingIdBytes[6];
+    int b7 = thingIdBytes[7];
+    thingIdBytes[6] = b7;
+    thingIdBytes[7] = b6;
+
+    return (prefix ? '0x' : '') + hex.encode(thingIdBytes);
+  }
 }
+
+extension DateTimeExtension on DateTime {
+  String getString() {
+    var s = DateFormat('yyyy-MM-dd HH:mm:ss').format(this);
+    Duration offset = timeZoneOffset;
+    int hours = offset.inHours > 0 ? offset.inHours : 1;
+
+    if (!offset.isNegative) {
+      s += '+' +
+          offset.inHours.toString().padLeft(2, '0') +
+          ':' +
+          (offset.inMinutes % (hours * 60)).toString().padLeft(2, '0');
+    } else {
+      s += '-' +
+          (-offset.inHours).toString().padLeft(2, '0') +
+          ':' +
+          (offset.inMinutes % (hours * 60)).toString().padLeft(2, '0');
+    }
+
+    return s;
+  }
+}
+
+extension IterableExtension<E> on Iterable<E> {
+  Iterable<T> mapIndexed<T>(T Function(E e, int i) f) {
+    var i = 0;
+    return map((e) => f(e, i++));
+  }
+}
+
+ThemeData getThemeDataForSteppers(BuildContext context) => ThemeData(
+      brightness: Brightness.dark,
+      colorScheme: Theme.of(context).colorScheme.copyWith(
+            brightness: Brightness.dark,
+            secondary: const Color(0xffF8F9FA),
+          ),
+    );
 
 Future<bool> _showUnlockWalletDialog(BuildContext context) async {
   var unlocked = await showDialog<bool>(

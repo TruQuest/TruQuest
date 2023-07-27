@@ -41,20 +41,14 @@ class LotteryStepper extends StatelessWidgetX {
   @override
   Widget buildX(BuildContext context) {
     return Theme(
-      data: ThemeData(
-        brightness: Brightness.dark,
-        colorScheme: Theme.of(context).colorScheme.copyWith(
-              brightness: Brightness.dark,
-              secondary: const Color(0xffF8F9FA),
-            ),
-      ),
+      data: getThemeDataForSteppers(context),
       child: Column(
         children: [
           Stepper(
             controlsBuilder: (context, details) =>
                 info.userId != null && !proposal.isSubmitter(info.userId) && info.userIndexInThingVerifiersArray >= 0
                     ? SwipeButton(
-                        key: ValueKey(info.userId),
+                        key: ValueKey('${info.userId}::${currentBlock < endBlock}::${info.alreadyClaimedASpot}'),
                         text: 'Slide to claim',
                         enabled: _checkButtonShouldBeEnabled(-1),
                         swiped: _checkButtonShouldBeSwiped(-1),
@@ -107,7 +101,7 @@ class LotteryStepper extends StatelessWidgetX {
           Stepper(
             controlsBuilder: (context, details) => info.userId != null && !proposal.isSubmitter(info.userId)
                 ? SwipeButton(
-                    key: ValueKey(info.userId),
+                    key: ValueKey('${info.userId}::${currentBlock < endBlock}::${info.alreadyJoined}'),
                     text: 'Slide to join',
                     enabled: _checkButtonShouldBeEnabled(0),
                     swiped: _checkButtonShouldBeSwiped(0),

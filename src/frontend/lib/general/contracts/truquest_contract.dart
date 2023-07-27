@@ -2,7 +2,7 @@ import 'package:convert/convert.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../ethereum/services/ethereum_rpc_provider.dart';
-import '../extensions/uuid_extension.dart';
+import '../utils/utils.dart';
 import '../../ethereum_js_interop.dart';
 
 class TruQuestContract {

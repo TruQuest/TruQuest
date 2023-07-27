@@ -3,7 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../ethereum/services/ethereum_rpc_provider.dart';
 import '../../ethereum_js_interop.dart';
 import '../../settlement/models/im/decision_im.dart';
-import '../extensions/uuid_extension.dart';
+import '../utils/utils.dart';
 
 class AssessmentPollContract {
   static final String address = dotenv.env['AssessmentPollAddress']!;
@@ -129,8 +129,7 @@ class AssessmentPollContract {
     );
   }
 
-  Future<int> getPollDurationBlocks() =>
-      _contract.read<int>('getPollDurationBlocks');
+  Future<int> getPollDurationBlocks() => _contract.read<int>('getPollDurationBlocks');
 
   Future<int?> getPollInitBlock(String thingId, String proposalId) async {
     var thingIdHex = thingId.toSolInputFormat(prefix: false);

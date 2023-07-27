@@ -118,13 +118,10 @@ class SettlementBloc extends Bloc<SettlementAction> {
         ctx,
       );
 
-  void _refreshVerifierLotteryInfo(
-    String thingId,
-    String proposalId,
-  ) async {
+  void _getVerifierLotteryInfo(GetVerifierLotteryInfo action) async {
     var info = await _settlementService.getVerifierLotteryInfo(
-      thingId,
-      proposalId,
+      action.thingId,
+      action.proposalId,
     );
     _verifierLotteryInfoChannel.add(
       VerifierLotteryInfoVm(
@@ -136,10 +133,6 @@ class SettlementBloc extends Bloc<SettlementAction> {
         alreadyJoined: info.$6,
       ),
     );
-  }
-
-  void _getVerifierLotteryInfo(GetVerifierLotteryInfo action) {
-    _refreshVerifierLotteryInfo(action.thingId, action.proposalId);
   }
 
   Stream<Object> _claimLotterySpot(ClaimLotterySpot action, MultiStageOperationContext ctx) =>

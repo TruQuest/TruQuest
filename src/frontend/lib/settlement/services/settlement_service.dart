@@ -7,7 +7,7 @@ import '../../user/errors/wallet_locked_error.dart';
 import '../models/im/new_assessment_poll_vote_im.dart';
 import '../../user/services/user_service.dart';
 import '../../general/contracts/acceptance_poll_contract.dart';
-import '../../general/extensions/datetime_extension.dart';
+import '../../general/utils/utils.dart';
 import '../../general/models/rvm/verifier_lottery_participant_entry_vm.dart';
 import '../models/im/decision_im.dart';
 import '../../general/contracts/assessment_poll_contract.dart';
