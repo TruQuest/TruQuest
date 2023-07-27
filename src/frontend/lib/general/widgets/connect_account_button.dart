@@ -23,7 +23,7 @@ class ConnectAccountButton extends StatelessWidgetX {
           ),
           onPressed: () {
             if (!_userBloc.localWalletSelected) {
-              multiStageOffChainAction(
+              multiStageOffChainFlow(
                 context,
                 (ctx) => _userBloc.executeMultiStage(
                   const ConnectAccount(),
@@ -53,13 +53,11 @@ class ConnectAccountButton extends StatelessWidgetX {
                       ),
                       TextButton(
                         child: const Text('Coinbase Wallet'),
-                        onPressed: () =>
-                            Navigator.of(context).pop('CoinbaseWallet'),
+                        onPressed: () => Navigator.of(context).pop('CoinbaseWallet'),
                       ),
                       TextButton(
                         child: const Text('WalletConnect'),
-                        onPressed: () =>
-                            Navigator.of(context).pop('WalletConnect'),
+                        onPressed: () => Navigator.of(context).pop('WalletConnect'),
                       ),
                     ],
                   ),
@@ -78,15 +76,13 @@ class ConnectAccountButton extends StatelessWidgetX {
                   return;
                 }
 
-                var action = SelectThirdPartyWallet(
-                  walletName: walletName,
+                var shouldRequestAccounts = await _userBloc.execute<bool>(
+                  SelectThirdPartyWallet(walletName: walletName),
                 );
-                _userBloc.dispatch(action);
 
-                var success = await action.result;
-                if (success.shouldRequestAccounts) {
+                if (shouldRequestAccounts.isTrue) {
                   // ignore: use_build_context_synchronously
-                  multiStageOffChainAction(
+                  multiStageOffChainFlow(
                     context,
                     (ctx) => _userBloc.executeMultiStage(
                       const ConnectAccount(),

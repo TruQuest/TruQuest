@@ -13,7 +13,7 @@ class UserOperationDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('User Operation'),
+      title: const Text('User Operation'),
       content: SizedBox(
         width: 400,
         height: 600,
@@ -21,7 +21,7 @@ class UserOperationDialog extends StatelessWidget {
           stream: stream,
           builder: (context, snapshot) {
             if (snapshot.data == null) {
-              return Center(
+              return const Center(
                 child: CircularProgressIndicator(),
               );
             }
@@ -40,7 +40,7 @@ class UserOperationDialog extends StatelessWidget {
       ),
       actions: [
         TextButton(
-          child: Text('Ok'),
+          child: const Text('Ok'),
           onPressed: () => Navigator.of(context).pop(_userOp),
         ),
       ],

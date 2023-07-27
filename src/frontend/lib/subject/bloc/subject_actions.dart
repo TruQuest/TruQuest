@@ -1,20 +1,13 @@
+import '../../general/utils/utils.dart';
 import '../../general/contexts/document_context.dart';
 import '../../general/bloc/actions.dart';
-import '../../general/bloc/mixins.dart';
-import 'subject_result_vm.dart';
 
 abstract class SubjectAction extends Action {
   const SubjectAction();
 }
 
-abstract class SubjectActionAwaitable<T extends SubjectResultVm?>
-    extends SubjectAction with AwaitableResult<T> {}
-
 class AddNewSubject extends SubjectAction {
   final DocumentContext documentContext;
-
-  @override
-  bool get mustValidate => true;
 
   @override
   List<String>? validate() {
@@ -23,8 +16,7 @@ class AddNewSubject extends SubjectAction {
       errors ??= [];
       errors.add('Type must be specified');
     }
-    if (documentContext.nameOrTitle == null ||
-        documentContext.nameOrTitle!.length < 3) {
+    if (documentContext.nameOrTitle == null || documentContext.nameOrTitle!.length < 3) {
       errors ??= [];
       errors.add('Name should be at least 3 characters long');
     }
@@ -37,7 +29,7 @@ class AddNewSubject extends SubjectAction {
     return errors;
   }
 
-  AddNewSubject({required this.documentContext});
+  const AddNewSubject({required this.documentContext});
 }
 
 class GetSubjects extends SubjectAction {
@@ -47,11 +39,33 @@ class GetSubjects extends SubjectAction {
 class GetSubject extends SubjectAction {
   final String subjectId;
 
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (!subjectId.isValidUuid) {
+      errors ??= [];
+      errors.add('Invalid Subject Id');
+    }
+
+    return errors;
+  }
+
   const GetSubject({required this.subjectId});
 }
 
 class GetThingsList extends SubjectAction {
   final String subjectId;
+
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (!subjectId.isValidUuid) {
+      errors ??= [];
+      errors.add('Invalid Subject Id');
+    }
+
+    return errors;
+  }
 
   const GetThingsList({required this.subjectId});
 }

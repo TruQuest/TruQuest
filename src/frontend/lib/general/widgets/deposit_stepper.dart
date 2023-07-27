@@ -42,7 +42,7 @@ class _DepositStepperState extends StateX<DepositStepper> {
           enabled: true,
           swiped: false,
           onCompletedSwipe: () async {
-            bool success = await multiStageAction(
+            bool success = await multiStageFlow(
               context,
               (ctx) => _userBloc.executeMultiStage(
                 DepositFunds(amount: int.parse(_depositController.text)),

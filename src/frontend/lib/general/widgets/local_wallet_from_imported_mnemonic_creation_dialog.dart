@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../utils/utils.dart';
 import '../../user/bloc/user_actions.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../../widget_extensions.dart';
@@ -60,17 +61,15 @@ class _LocalWalletFromImportedMnemonicCreationDialogState
                       if (details.currentStep == 0) {
                         details.onStepContinue!();
                       } else {
-                        var action = CreateAndSaveEncryptedLocalWallet(
-                          mnemonic: _mnemonicController.text,
-                          password: _passwordController.text,
+                        var success = await _userBloc.execute<bool>(
+                          CreateAndSaveEncryptedLocalWallet(
+                            mnemonic: _mnemonicController.text,
+                            password: _passwordController.text,
+                          ),
                         );
-                        _userBloc.dispatch(action);
 
-                        var success = await action.result;
-                        if (success != null) {
-                          if (context.mounted) {
-                            Navigator.of(context).pop();
-                          }
+                        if (success.isTrue) {
+                          if (context.mounted) Navigator.of(context).pop();
                         }
                       }
                     },

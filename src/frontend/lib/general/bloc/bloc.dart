@@ -6,48 +6,48 @@ import '../services/toast_messenger.dart';
 import '../contexts/multi_stage_operation_context.dart';
 
 abstract class Bloc<TAction extends Action> {
-  final ToastMessenger _toastMessenger;
+  final ToastMessenger toastMessenger;
 
   final actionChannel = StreamController<TAction>();
 
-  Bloc(this._toastMessenger);
+  Bloc(this.toastMessenger);
 
   void dispatch(TAction action) {
     List<String>? validationErrors;
-    if (action.mustValidate && (validationErrors = action.validate()) != null) {
-      _toastMessenger.add('• ' + validationErrors!.join('\n• '));
+    if ((validationErrors = action.validate()) != null) {
+      toastMessenger.add('• ' + validationErrors!.join('\n• '));
       return;
     }
 
     actionChannel.add(action);
   }
 
-  Future<Object?> execute(TAction action) {
+  Future<TResult?> execute<TResult>(TAction action) async {
     List<String>? validationErrors;
-    if (action.mustValidate && (validationErrors = action.validate()) != null) {
-      _toastMessenger.add('• ' + validationErrors!.join('\n• '));
-      return Future.value(null);
+    if ((validationErrors = action.validate()) != null) {
+      toastMessenger.add('• ' + validationErrors!.join('\n• '));
+      return null;
     }
 
-    return handle(action);
+    return await handleExecute(action) as TResult;
   }
 
-  Future<Object?> handle(TAction action) => throw UnimplementedError();
+  Future<Object?> handleExecute(TAction action) => throw UnimplementedError();
 
   Stream<Object> executeMultiStage(
     TAction action,
     MultiStageOperationContext ctx,
   ) {
     List<String>? validationErrors;
-    if (action.mustValidate && (validationErrors = action.validate()) != null) {
-      _toastMessenger.add('• ' + validationErrors!.join('\n• '));
+    if ((validationErrors = action.validate()) != null) {
+      toastMessenger.add('• ' + validationErrors!.join('\n• '));
       return Stream<Object>.value(const ValidationError());
     }
 
-    return handleMultiStage(action, ctx);
+    return handleMultiStageExecute(action, ctx);
   }
 
-  Stream<Object> handleMultiStage(
+  Stream<Object> handleMultiStageExecute(
     TAction action,
     MultiStageOperationContext ctx,
   ) =>

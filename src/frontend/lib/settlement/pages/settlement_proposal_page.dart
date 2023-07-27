@@ -45,7 +45,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
 
   late final StreamSubscription<UserVm> _currentUser$$;
 
-  final List<Color> _tabColors = const [
+  final _tabColors = const [
     Color(0xFF242423),
     Color(0xFF413C69),
     Color(0xFF32407B),
@@ -86,16 +86,14 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
       )
     ];
 
-    if (state.index >=
-        SettlementProposalStateVm.fundedAndVerifierLotteryInitiated.index) {
+    if (state.index >= SettlementProposalStateVm.fundedAndVerifierLotteryInitiated.index) {
       items.add(
         const Icon(
           Icons.people,
           color: Colors.white,
         ),
       );
-      if (state.index >=
-          SettlementProposalStateVm.verifiersSelectedAndPollInitiated.index) {
+      if (state.index >= SettlementProposalStateVm.verifiersSelectedAndPollInitiated.index) {
         items.add(
           const Icon(
             Icons.poll_outlined,
@@ -135,11 +133,9 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
       ),
     ];
 
-    if (state.index >=
-        SettlementProposalStateVm.fundedAndVerifierLotteryInitiated.index) {
+    if (state.index >= SettlementProposalStateVm.fundedAndVerifierLotteryInitiated.index) {
       items.add(Lottery(proposal: proposal));
-      if (state.index >=
-          SettlementProposalStateVm.verifiersSelectedAndPollInitiated.index) {
+      if (state.index >= SettlementProposalStateVm.verifiersSelectedAndPollInitiated.index) {
         items.add(Poll(proposal: proposal));
       }
     }
@@ -181,8 +177,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
                 ),
               ),
               const SizedBox(width: 16),
-              if (proposal.state.index >=
-                  SettlementProposalStateVm.awaitingFunding.index)
+              if (proposal.state.index >= SettlementProposalStateVm.awaitingFunding.index)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -250,8 +245,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
             tabs: tabs,
             children: _buildTabContents(vm),
           ),
-          if (vm.proposal.state.index >=
-              SettlementProposalStateVm.declined.index)
+          if (vm.proposal.state.index >= SettlementProposalStateVm.declined.index)
             Positioned(
               top: 30,
               left: 24,
@@ -261,9 +255,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                   child: Text(
-                    vm.proposal.state == SettlementProposalStateVm.accepted
-                        ? 'Accepted'
-                        : 'Declined',
+                    vm.proposal.state == SettlementProposalStateVm.accepted ? 'Accepted' : 'Declined',
                     style: GoogleFonts.righteous(
                       color: Colors.white,
                       fontSize: 20,
@@ -288,8 +280,6 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
             child: Center(child: CircularProgressIndicator()),
           );
         }
-
-        // @@TODO: Handle failure.
 
         var vm = snapshot.data!;
 

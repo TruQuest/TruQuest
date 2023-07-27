@@ -40,14 +40,13 @@ class UserApiService {
           case 400:
             var error = dioError.response!.data['error'];
             if (error['type'] == 'Validation') {
-              return ValidationError();
+              return const ValidationError();
             } else if (error['type'] == 'User') {
               return UserError(error['errors'].values.first.first);
             }
             break;
           case 401:
-            var errorMessage =
-                dioError.response!.data['error']['errors'].values.first.first;
+            var errorMessage = dioError.response!.data['error']['errors'].values.first.first;
             // if (errorMessage.contains('token expired at')) {
             //   return AuthenticationTokenExpiredError();
             // }

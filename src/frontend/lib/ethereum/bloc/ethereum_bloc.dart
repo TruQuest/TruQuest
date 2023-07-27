@@ -7,9 +7,8 @@ import '../../general/bloc/bloc.dart';
 class EthereumBloc extends Bloc<EthereumAction> {
   final EthereumRpcProvider _ethereumRpcProvider;
 
-  Stream<int> get latestL1BlockNumber$ =>
-      _ethereumRpcProvider.latestL1BlockNumber$;
+  Stream<int> get latestL1BlockNumber$ => _ethereumRpcProvider.latestL1BlockNumber$;
   int get latestL1BlockNumber => _ethereumRpcProvider.latestL1BlockNumber;
 
-  EthereumBloc(super._toastMessenger, this._ethereumRpcProvider);
+  EthereumBloc(super.toastMessenger, this._ethereumRpcProvider);
 }

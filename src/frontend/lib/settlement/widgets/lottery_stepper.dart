@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../bloc/settlement_actions.dart';
 import '../../general/utils/utils.dart';
 import '../models/rvm/settlement_proposal_vm.dart';
 import '../../general/widgets/swipe_button.dart';
 import '../../widget_extensions.dart';
 import '../bloc/settlement_bloc.dart';
-import '../bloc/settlement_result_vm.dart';
+import '../models/rvm/verifier_lottery_info_vm.dart';
 
 // ignore: must_be_immutable
 class LotteryStepper extends StatelessWidgetX {
   late final _settlementBloc = use<SettlementBloc>();
 
   final SettlementProposalVm proposal;
-  final GetVerifierLotteryInfoSuccessVm info;
+  final VerifierLotteryInfoVm info;
   final int currentBlock;
   final int endBlock;
 
@@ -34,9 +35,7 @@ class LotteryStepper extends StatelessWidgetX {
       currentBlock < endBlock;
 
   bool _checkButtonShouldBeSwiped(int step) =>
-      step == -1 &&
-          info.alreadyClaimedASpot != null &&
-          info.alreadyClaimedASpot! ||
+      step == -1 && info.alreadyClaimedASpot != null && info.alreadyClaimedASpot! ||
       info.alreadyJoined != null && info.alreadyJoined!;
 
   @override
@@ -52,29 +51,30 @@ class LotteryStepper extends StatelessWidgetX {
       child: Column(
         children: [
           Stepper(
-            controlsBuilder: (context, details) => info.userId != null &&
-                    !proposal.isSubmitter(info.userId) &&
-                    info.userIndexInThingVerifiersArray >= 0
-                ? SwipeButton(
-                    key: ValueKey(info.userId),
-                    text: 'Slide to claim',
-                    enabled: _checkButtonShouldBeEnabled(-1),
-                    swiped: _checkButtonShouldBeSwiped(-1),
-                    onCompletedSwipe: () async {
-                      bool success = await multiStageAction(
-                        context,
-                        (ctx) => _settlementBloc.claimLotterySpot(
-                          proposal.thingId,
-                          proposal.id,
-                          info.userIndexInThingVerifiersArray,
-                          ctx,
-                        ),
-                      );
+            controlsBuilder: (context, details) =>
+                info.userId != null && !proposal.isSubmitter(info.userId) && info.userIndexInThingVerifiersArray >= 0
+                    ? SwipeButton(
+                        key: ValueKey(info.userId),
+                        text: 'Slide to claim',
+                        enabled: _checkButtonShouldBeEnabled(-1),
+                        swiped: _checkButtonShouldBeSwiped(-1),
+                        onCompletedSwipe: () async {
+                          bool success = await multiStageFlow(
+                            context,
+                            (ctx) => _settlementBloc.executeMultiStage(
+                              ClaimLotterySpot(
+                                thingId: proposal.thingId,
+                                proposalId: proposal.id,
+                                userIndexInThingVerifiersArray: info.userIndexInThingVerifiersArray,
+                              ),
+                              ctx,
+                            ),
+                          );
 
-                      return success;
-                    },
-                  )
-                : const SizedBox.shrink(),
+                          return success;
+                        },
+                      )
+                    : const SizedBox.shrink(),
             steps: [
               Step(
                 title: Text(
@@ -105,27 +105,28 @@ class LotteryStepper extends StatelessWidgetX {
           ),
           const SizedBox(height: 6),
           Stepper(
-            controlsBuilder: (context, details) =>
-                info.userId != null && !proposal.isSubmitter(info.userId)
-                    ? SwipeButton(
-                        key: ValueKey(info.userId),
-                        text: 'Slide to join',
-                        enabled: _checkButtonShouldBeEnabled(0),
-                        swiped: _checkButtonShouldBeSwiped(0),
-                        onCompletedSwipe: () async {
-                          bool success = await multiStageAction(
-                            context,
-                            (ctx) => _settlementBloc.joinLottery(
-                              proposal.thingId,
-                              proposal.id,
-                              ctx,
-                            ),
-                          );
+            controlsBuilder: (context, details) => info.userId != null && !proposal.isSubmitter(info.userId)
+                ? SwipeButton(
+                    key: ValueKey(info.userId),
+                    text: 'Slide to join',
+                    enabled: _checkButtonShouldBeEnabled(0),
+                    swiped: _checkButtonShouldBeSwiped(0),
+                    onCompletedSwipe: () async {
+                      bool success = await multiStageFlow(
+                        context,
+                        (ctx) => _settlementBloc.executeMultiStage(
+                          JoinLottery(
+                            thingId: proposal.thingId,
+                            proposalId: proposal.id,
+                          ),
+                          ctx,
+                        ),
+                      );
 
-                          return success;
-                        },
-                      )
-                    : const SizedBox.shrink(),
+                      return success;
+                    },
+                  )
+                : const SizedBox.shrink(),
             steps: [
               Step(
                 title: Text(

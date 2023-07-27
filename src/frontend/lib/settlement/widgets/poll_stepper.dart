@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../bloc/settlement_actions.dart';
 import '../../general/utils/utils.dart';
 import '../bloc/settlement_bloc.dart';
+import '../models/rvm/assessment_poll_info_vm.dart';
 import '../models/rvm/settlement_proposal_vm.dart';
 import '../../general/widgets/vote_dialog.dart';
 import '../../widget_extensions.dart';
-import '../bloc/settlement_result_vm.dart';
 import '../models/im/decision_im.dart';
 import '../../general/widgets/swipe_button.dart';
 
 class PollStepper extends StatefulWidget {
   final SettlementProposalVm proposal;
-  final GetAssessmentPollInfoSuccessVm info;
+  final AssessmentPollInfoVm info;
   final int currentBlock;
   final int endBlock;
 
@@ -33,8 +34,7 @@ class _PollStepperState extends StateX<PollStepper> {
 
   int _currentStep = 0;
 
-  bool _checkButtonShouldBeEnabled() =>
-      widget.info.initBlock != null && widget.currentBlock < widget.endBlock;
+  bool _checkButtonShouldBeEnabled() => widget.info.initBlock != null && widget.currentBlock < widget.endBlock;
 
   @override
   Widget buildX(BuildContext context) {
@@ -48,56 +48,60 @@ class _PollStepperState extends StateX<PollStepper> {
       ),
       child: Stepper(
         currentStep: _currentStep,
-        controlsBuilder: (context, details) => widget.info.userId != null &&
-                widget.info.userIndexInProposalVerifiersArray >= 0
-            ? SwipeButton(
-                key: ValueKey('${widget.info.userId} ${details.currentStep}'),
-                text: 'Slide to vote',
-                enabled: _checkButtonShouldBeEnabled(),
-                swiped: false,
-                onCompletedSwipe: () async {
-                  await showDialog(
-                    context: context,
-                    builder: (_) => VoteDialog<DecisionIm>(
-                      decisions: const [
-                        DecisionIm.accept,
-                        DecisionIm.softDecline,
-                        DecisionIm.hardDecline,
-                      ],
-                      getDisplayString: (decision) => decision.getString(),
-                      onVote: (decision, reason) async {
-                        if (details.currentStep == 0) {
-                          await multiStageOffChainAction(
-                            context,
-                            (ctx) => _settlementBloc.castVoteOffChain(
-                              widget.proposal.thingId,
-                              widget.proposal.id,
-                              decision,
-                              reason,
-                              ctx,
-                            ),
-                          );
-                        } else {
-                          await multiStageAction(
-                            context,
-                            (ctx) => _settlementBloc.castVoteOnChain(
-                              widget.proposal.thingId,
-                              widget.proposal.id,
-                              widget.info.userIndexInProposalVerifiersArray,
-                              decision,
-                              reason,
-                              ctx,
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  );
+        controlsBuilder: (context, details) =>
+            widget.info.userId != null && widget.info.userIndexInProposalVerifiersArray >= 0
+                ? SwipeButton(
+                    key: ValueKey('${widget.info.userId} ${details.currentStep}'),
+                    text: 'Slide to vote',
+                    enabled: _checkButtonShouldBeEnabled(),
+                    swiped: false,
+                    onCompletedSwipe: () async {
+                      await showDialog(
+                        context: context,
+                        builder: (_) => VoteDialog<DecisionIm>(
+                          decisions: const [
+                            DecisionIm.accept,
+                            DecisionIm.softDecline,
+                            DecisionIm.hardDecline,
+                          ],
+                          getDisplayString: (decision) => decision.getString(),
+                          onVote: (decision, reason) async {
+                            if (details.currentStep == 0) {
+                              await multiStageOffChainFlow(
+                                context,
+                                (ctx) => _settlementBloc.executeMultiStage(
+                                  CastVoteOffChain(
+                                    thingId: widget.proposal.thingId,
+                                    proposalId: widget.proposal.id,
+                                    decision: decision,
+                                    reason: reason,
+                                  ),
+                                  ctx,
+                                ),
+                              );
+                            } else {
+                              await multiStageFlow(
+                                context,
+                                (ctx) => _settlementBloc.executeMultiStage(
+                                  CastVoteOnChain(
+                                    thingId: widget.proposal.thingId,
+                                    proposalId: widget.proposal.id,
+                                    userIndexInProposalVerifiersArray: widget.info.userIndexInProposalVerifiersArray,
+                                    decision: decision,
+                                    reason: reason,
+                                  ),
+                                  ctx,
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      );
 
-                  return false;
-                },
-              )
-            : const SizedBox.shrink(),
+                      return false;
+                    },
+                  )
+                : const SizedBox.shrink(),
         onStepTapped: (value) => setState(() => _currentStep = value),
         steps: [
           Step(

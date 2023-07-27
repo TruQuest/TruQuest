@@ -28,12 +28,10 @@ class ThingService {
   final UserService _userService;
   final UserOperationService _userOperationService;
   final TruQuestContract _truQuestContract;
-  final ThingSubmissionVerifierLotteryContract
-      _thingSubmissionVerifierLotteryContract;
+  final ThingSubmissionVerifierLotteryContract _thingSubmissionVerifierLotteryContract;
   final AcceptancePollContract _acceptancePollContract;
 
-  final StreamController<Stream<int>> _progress$Channel =
-      StreamController<Stream<int>>();
+  final _progress$Channel = StreamController<Stream<int>>();
   Stream<Stream<int>> get progress$$ => _progress$Channel.stream;
 
   ThingService(
@@ -71,8 +69,7 @@ class ThingService {
     }
   }
 
-  Future<bool> checkThingAlreadyFunded(String thingId) =>
-      _truQuestContract.checkThingAlreadyFunded(thingId);
+  Future<bool> checkThingAlreadyFunded(String thingId) => _truQuestContract.checkThingAlreadyFunded(thingId);
 
   Future<SubmitNewThingRvm> submitNewThing(String thingId) async {
     var result = await _thingApiService.submitNewThing(thingId);
@@ -107,10 +104,7 @@ class ThingService {
 
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [
-        (
-          TruQuestContract.address,
-          _truQuestContract.fundThing(thingId, signature)
-        ),
+        (TruQuestContract.address, _truQuestContract.fundThing(thingId, signature)),
       ],
     );
 
@@ -131,17 +125,14 @@ class ThingService {
     var currentUserId = _userService.latestCurrentUser?.id;
     var currentWalletAddress = _userService.latestCurrentUser?.walletAddress;
 
-    int? initBlock = await _thingSubmissionVerifierLotteryContract
-        .getLotteryInitBlock(thingId);
+    int? initBlock = await _thingSubmissionVerifierLotteryContract.getLotteryInitBlock(thingId);
 
-    int durationBlocks = await _thingSubmissionVerifierLotteryContract
-        .getLotteryDurationBlocks();
+    int durationBlocks = await _thingSubmissionVerifierLotteryContract.getLotteryDurationBlocks();
 
     // @@NOTE: If user has a wallet but is not signed-in, then checking is
     // kind of pointless since the join button would be hidden anyway, but whatever.
     bool? alreadyJoined = currentWalletAddress != null
-        ? await _thingSubmissionVerifierLotteryContract
-            .checkAlreadyJoinedLottery(
+        ? await _thingSubmissionVerifierLotteryContract.checkAlreadyJoinedLottery(
             thingId,
             currentWalletAddress,
           )
@@ -182,10 +173,7 @@ class ThingService {
 
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [
-        (
-          ThingSubmissionVerifierLotteryContract.address,
-          _thingSubmissionVerifierLotteryContract.joinLottery(thingId)
-        ),
+        (ThingSubmissionVerifierLotteryContract.address, _thingSubmissionVerifierLotteryContract.joinLottery(thingId)),
       ],
     );
 
@@ -206,8 +194,7 @@ class ThingService {
     var result = await _thingApiService.getVerifierLotteryParticipants(thingId);
 
     var (lotteryInitBlock, dataHash, userXorDataHash) =
-        await _thingSubmissionVerifierLotteryContract
-            .getOrchestratorCommitment(thingId);
+        await _thingSubmissionVerifierLotteryContract.getOrchestratorCommitment(thingId);
 
     var entries = result.entries;
     if (entries.isEmpty || !entries.first.isOrchestrator) {

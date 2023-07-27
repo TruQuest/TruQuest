@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
+import '../models/rvm/assessment_poll_info_vm.dart';
 import '../../general/widgets/block_countdown.dart';
 import '../../general/widgets/verifiers_table.dart';
 import '../models/rvm/settlement_proposal_vm.dart';
@@ -30,7 +31,7 @@ class _PollState extends StateX<Poll> {
 
   String? _currentUserId;
 
-  late GetAssessmentPollInfo _getInfoAction;
+  late Future<AssessmentPollInfoVm?> _assessmentPollInfoFuture;
 
   @override
   void initState() {
@@ -39,23 +40,24 @@ class _PollState extends StateX<Poll> {
     _currentUserId = _userBloc.latestCurrentUser?.id;
 
     _settlementBloc.dispatch(GetVerifiers(proposalId: widget.proposal.id));
-
-    _getInfoAction = GetAssessmentPollInfo(
-      thingId: widget.proposal.thingId,
-      proposalId: widget.proposal.id,
+    _assessmentPollInfoFuture = _settlementBloc.execute<AssessmentPollInfoVm>(
+      GetAssessmentPollInfo(
+        thingId: widget.proposal.thingId,
+        proposalId: widget.proposal.id,
+      ),
     );
-    _settlementBloc.dispatch(_getInfoAction);
   }
 
   @override
   void didUpdateWidget(covariant Poll oldWidget) {
     super.didUpdateWidget(oldWidget);
     _currentUserId = _userBloc.latestCurrentUser?.id;
-    _getInfoAction = GetAssessmentPollInfo(
-      thingId: widget.proposal.thingId,
-      proposalId: widget.proposal.id,
+    _assessmentPollInfoFuture = _settlementBloc.execute<AssessmentPollInfoVm>(
+      GetAssessmentPollInfo(
+        thingId: widget.proposal.thingId,
+        proposalId: widget.proposal.id,
+      ),
     );
-    _settlementBloc.dispatch(_getInfoAction);
   }
 
   @override
@@ -70,7 +72,7 @@ class _PollState extends StateX<Poll> {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              var verifiers = snapshot.data!.verifiers;
+              var verifiers = snapshot.data!;
 
               return VerifiersTable(
                 verifiers: verifiers,
@@ -84,7 +86,7 @@ class _PollState extends StateX<Poll> {
         ),
         Expanded(
           child: FutureBuilder(
-            future: _getInfoAction.result,
+            future: _assessmentPollInfoFuture,
             builder: (context, snapshot) {
               if (snapshot.data == null) {
                 return const Center(child: CircularProgressIndicator());
@@ -139,10 +141,7 @@ class _PollState extends StateX<Poll> {
                               ),
                               innerWidget: (_) => const SizedBox.shrink(),
                             ),
-                            if (info.initBlock != null)
-                              BlockCountdown(
-                                blocksLeft: (endBlock - currentBlock).toInt(),
-                              ),
+                            if (info.initBlock != null) BlockCountdown(blocksLeft: (endBlock - currentBlock).toInt()),
                             Positioned(
                               bottom: 20,
                               left: 0,

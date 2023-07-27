@@ -1,70 +1,100 @@
 import '../../general/bloc/actions.dart';
-import 'user_result_vm.dart';
-import '../../general/bloc/mixins.dart';
 
 abstract class UserAction extends Action {
   const UserAction();
 }
 
-abstract class UserActionAwaitable<T extends UserResultVm?> extends UserAction
-    with AwaitableResult<T> {}
-
-class SelectThirdPartyWallet
-    extends UserActionAwaitable<SelectThirdPartyWalletSuccessVm> {
+class SelectThirdPartyWallet extends UserAction {
   final String walletName;
 
-  SelectThirdPartyWallet({required this.walletName});
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (!(walletName == 'Metamask' || walletName == 'CoinbaseWallet' || walletName == 'WalletConnect')) {
+      errors ??= [];
+      errors.add('Unsupported wallet');
+    }
+
+    return errors;
+  }
+
+  const SelectThirdPartyWallet({required this.walletName});
 }
 
 class ConnectAccount extends UserAction {
   const ConnectAccount();
 }
 
-class GenerateMnemonic
-    extends UserActionAwaitable<GenerateMnemonicSuccessVm?> {}
+class GenerateMnemonic extends UserAction {
+  const GenerateMnemonic();
+}
 
-class CreateAndSaveEncryptedLocalWallet
-    extends UserActionAwaitable<CreateAndSaveEncryptedLocalWalletSuccessVm?> {
+class CreateAndSaveEncryptedLocalWallet extends UserAction {
   final String mnemonic;
   final String password;
 
-  CreateAndSaveEncryptedLocalWallet({
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (mnemonic.split(' ').length != 12) {
+      errors ??= [];
+      errors.add('Mnemonic must be exactly 12 words long');
+    }
+    if (password.length < 8) {
+      errors ??= [];
+      errors.add('Password must be at least 8 characters long');
+    }
+
+    return errors;
+  }
+
+  const CreateAndSaveEncryptedLocalWallet({
     required this.mnemonic,
     required this.password,
   });
 }
 
-class AddEmail extends UserActionAwaitable<AddEmailSuccessVm?> {
+class SignInWithEthereum extends UserAction {
+  const SignInWithEthereum();
+}
+
+class AddEmail extends UserAction {
   final String email;
 
-  AddEmail({required this.email});
+  const AddEmail({required this.email});
 }
 
-class ConfirmEmail extends UserActionAwaitable<ConfirmEmailSuccessVm?> {
+class ConfirmEmail extends UserAction {
   final String confirmationToken;
 
-  ConfirmEmail({required this.confirmationToken});
+  const ConfirmEmail({required this.confirmationToken});
 }
 
-class UnlockWallet extends UserActionAwaitable<UnlockWalletSuccessVm?> {
+class UnlockWallet extends UserAction {
   final String password;
 
-  UnlockWallet({required this.password});
+  const UnlockWallet({required this.password});
 }
 
-class AddAccount extends UserActionAwaitable<AddAccountFailureVm?> {}
+class AddAccount extends UserAction {
+  const AddAccount();
+}
 
-class SwitchAccount extends UserActionAwaitable<SwitchAccountSuccessVm> {
+class SwitchAccount extends UserAction {
   final String walletAddress;
 
-  SwitchAccount({required this.walletAddress});
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    // @@TODO
+    return errors;
+  }
+
+  const SwitchAccount({required this.walletAddress});
 }
 
 class DepositFunds extends UserAction {
   final int amount;
-
-  @override
-  bool get mustValidate => true;
 
   @override
   List<String>? validate() {

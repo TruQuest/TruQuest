@@ -34,12 +34,9 @@ class ThingApiService {
   final Map<String, StreamController<int>> _thingIdToProgressChannel = {};
 
   ThingApiService(this._serverConnector) : _dio = _serverConnector.dio {
-    _serverConnector.serverEvent$
-        .where((event) => event.$1 == ServerEventType.thing)
-        .listen(
+    _serverConnector.serverEvent$.where((event) => event.$1 == ServerEventType.thing).listen(
       (event) {
-        var (thingEventType, thingId, data) =
-            event.$2 as (ThingEventType, String, Object);
+        var (thingEventType, thingId, data) = event.$2 as (ThingEventType, String, Object);
         if (thingEventType == ThingEventType.draftCreationProgress) {
           var percent = data as int;
           if (_thingIdToProgressChannel.containsKey(thingId)) {
@@ -69,7 +66,7 @@ class ThingApiService {
           case 400:
             var error = dioError.response!.data['error'];
             if (error['type'] == 'Validation') {
-              return ValidationError();
+              return const ValidationError();
             } else if (error['type'] == 'File') {
               return FileError(error['errors'].values.first.first);
             } else if (error['type'] == 'Thing') {
@@ -80,8 +77,7 @@ class ThingApiService {
             // @@TODO: Handle ServerError.
             break;
           case 401:
-            var errorMessage =
-                dioError.response!.data['error']['errors'].values.first.first;
+            var errorMessage = dioError.response!.data['error']['errors'].values.first.first;
             return InvalidAuthenticationTokenError(errorMessage);
           case 403:
             return ForbiddenError();

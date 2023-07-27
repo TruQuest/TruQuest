@@ -43,9 +43,8 @@ class ThirdPartyWalletService implements IWalletService {
   Stream<String?> get currentWalletAddressChanged$ =>
       _connectedAccountChangedEventChannel.asyncMap((connectedAccount) async {
         _connectedAccount = connectedAccount;
-        _currentWalletAddress = connectedAccount != null
-            ? await _accountFactoryContract.getAddress(connectedAccount)
-            : null;
+        _currentWalletAddress =
+            connectedAccount != null ? await _accountFactoryContract.getAddress(connectedAccount) : null;
 
         print(
           '*************** $_connectedAccount: $_currentWalletAddress ***************',
@@ -65,8 +64,7 @@ class ThirdPartyWalletService implements IWalletService {
   @override
   bool get isUnlocked => true;
 
-  ThirdPartyWalletService(this._accountFactoryContract)
-      : _ethereumWallet = EthereumWallet();
+  ThirdPartyWalletService(this._accountFactoryContract) : _ethereumWallet = EthereumWallet();
 
   Future<bool> setup(String walletName) async {
     // @@TODO: Try-catch selected wallet not available.
@@ -122,7 +120,7 @@ class ThirdPartyWalletService implements IWalletService {
     var error = await _ethereumWallet.requestAccounts();
     if (error != null) {
       print('Request accounts error: [${error.code}] ${error.message}');
-      yield WalletActionDeclinedError();
+      yield const WalletActionDeclinedError();
     }
   }
 
@@ -143,7 +141,7 @@ class ThirdPartyWalletService implements IWalletService {
       print(
         'Personal sign message error: [${result.error!.code}] ${result.error!.message}',
       );
-      throw WalletActionDeclinedError();
+      throw const WalletActionDeclinedError();
     }
 
     return result.signature!;
@@ -159,7 +157,7 @@ class ThirdPartyWalletService implements IWalletService {
       print(
         'Personal sign message error: [${result.error!.code}] ${result.error!.message}',
       );
-      throw WalletActionDeclinedError();
+      throw const WalletActionDeclinedError();
     }
 
     return result.signature!;

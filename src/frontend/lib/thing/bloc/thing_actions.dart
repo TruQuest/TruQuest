@@ -1,24 +1,14 @@
+import '../../general/utils/utils.dart';
 import '../../general/bloc/actions.dart';
-import '../models/rvm/thing_vm.dart';
-import '../../general/bloc/mixins.dart';
-import 'thing_result_vm.dart';
 import '../../general/contexts/document_context.dart';
+import '../models/im/decision_im.dart';
 
 abstract class ThingAction extends Action {
   const ThingAction();
 }
 
-abstract class ThingActionAwaitable<T extends ThingResultVm?>
-    extends ThingAction with AwaitableResult<T> {}
-
-class CreateNewThingDraft
-    extends ThingActionAwaitable<CreateNewThingDraftFailureVm?> {
+class CreateNewThingDraft extends ThingAction {
   final DocumentContext documentContext;
-
-  CreateNewThingDraft({required this.documentContext});
-
-  @override
-  bool get mustValidate => true;
 
   @override
   List<String>? validate() {
@@ -27,8 +17,7 @@ class CreateNewThingDraft
       errors ??= [];
       errors.add('Subject Id is not set');
     }
-    if (documentContext.nameOrTitle == null ||
-        documentContext.nameOrTitle!.length < 3) {
+    if (documentContext.nameOrTitle == null || documentContext.nameOrTitle!.length < 3) {
       errors ??= [];
       errors.add('Title should be at least 3 characters long');
     }
@@ -43,22 +32,79 @@ class CreateNewThingDraft
 
     return errors;
   }
+
+  const CreateNewThingDraft({required this.documentContext});
 }
 
 class GetThing extends ThingAction {
   final String thingId;
 
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (!thingId.isValidUuid) {
+      errors ??= [];
+      errors.add('Invalid Promise Id');
+    }
+
+    return errors;
+  }
+
   const GetThing({required this.thingId});
 }
 
-class SubmitNewThing extends ThingActionAwaitable<SubmitNewThingFailureVm?> {
-  final ThingVm thing;
+class SubmitNewThing extends ThingAction {
+  final String thingId;
 
-  SubmitNewThing({required this.thing});
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (!thingId.isValidUuid) {
+      errors ??= [];
+      errors.add('Invalid Promise Id');
+    }
+
+    return errors;
+  }
+
+  const SubmitNewThing({required this.thingId});
+}
+
+class FundThing extends ThingAction {
+  final String thingId;
+  final String signature;
+
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (!thingId.isValidUuid) {
+      errors ??= [];
+      errors.add('Invalid Promise Id');
+    }
+    if (signature.isEmpty) {
+      errors ??= [];
+      errors.add('Invalid signature');
+    }
+
+    return errors;
+  }
+
+  const FundThing({required this.thingId, required this.signature});
 }
 
 class GetVerifierLotteryInfo extends ThingAction {
   final String thingId;
+
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (!thingId.isValidUuid) {
+      errors ??= [];
+      errors.add('Invalid Promise Id');
+    }
+
+    return errors;
+  }
 
   const GetVerifierLotteryInfo({required this.thingId});
 }
@@ -66,24 +112,110 @@ class GetVerifierLotteryInfo extends ThingAction {
 class GetVerifierLotteryParticipants extends ThingAction {
   final String thingId;
 
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (!thingId.isValidUuid) {
+      errors ??= [];
+      errors.add('Invalid Promise Id');
+    }
+
+    return errors;
+  }
+
   const GetVerifierLotteryParticipants({required this.thingId});
 }
 
-class GetAcceptancePollInfo
-    extends ThingActionAwaitable<GetAcceptancePollInfoSuccessVm> {
+class JoinLottery extends ThingAction {
   final String thingId;
 
-  GetAcceptancePollInfo({required this.thingId});
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (!thingId.isValidUuid) {
+      errors ??= [];
+      errors.add('Invalid Promise Id');
+    }
+
+    return errors;
+  }
+
+  const JoinLottery({required this.thingId});
+}
+
+class GetAcceptancePollInfo extends ThingAction {
+  final String thingId;
+
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (!thingId.isValidUuid) {
+      errors ??= [];
+      errors.add('Invalid Promise Id');
+    }
+
+    return errors;
+  }
+
+  const GetAcceptancePollInfo({required this.thingId});
 }
 
 class GetVerifiers extends ThingAction {
   final String thingId;
 
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (!thingId.isValidUuid) {
+      errors ??= [];
+      errors.add('Invalid Promise Id');
+    }
+
+    return errors;
+  }
+
   const GetVerifiers({required this.thingId});
+}
+
+class CastVoteOffChain extends ThingAction {
+  final String thingId;
+  final DecisionIm decision;
+  final String reason;
+
+  const CastVoteOffChain({
+    required this.thingId,
+    required this.decision,
+    required this.reason,
+  });
+}
+
+class CastVoteOnChain extends ThingAction {
+  final String thingId;
+  final int userIndexInThingVerifiersArray;
+  final DecisionIm decision;
+  final String reason;
+
+  const CastVoteOnChain({
+    required this.thingId,
+    required this.userIndexInThingVerifiersArray,
+    required this.decision,
+    required this.reason,
+  });
 }
 
 class GetSettlementProposalsList extends ThingAction {
   final String thingId;
+
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (!thingId.isValidUuid) {
+      errors ??= [];
+      errors.add('Invalid Promise Id');
+    }
+
+    return errors;
+  }
 
   const GetSettlementProposalsList({required this.thingId});
 }

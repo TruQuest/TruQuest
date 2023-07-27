@@ -61,14 +61,12 @@ class _LotteryState extends StateX<Lottery> {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              var entries = snapshot.data!.entries;
+              var entries = snapshot.data!;
               return LotteryParticipantsTable(
                 entries: entries,
                 currentUserId: _currentUserId,
                 onRefresh: () => _thingBloc.dispatch(
-                  GetVerifierLotteryParticipants(
-                    thingId: widget.thing.id,
-                  ),
+                  GetVerifierLotteryParticipants(thingId: widget.thing.id),
                 ),
               );
             },
@@ -131,10 +129,7 @@ class _LotteryState extends StateX<Lottery> {
                               ),
                               innerWidget: (_) => const SizedBox.shrink(),
                             ),
-                            if (info.initBlock != null)
-                              BlockCountdown(
-                                blocksLeft: (endBlock - currentBlock).toInt(),
-                              ),
+                            if (info.initBlock != null) BlockCountdown(blocksLeft: (endBlock - currentBlock).toInt()),
                             Positioned(
                               bottom: 20,
                               left: 0,

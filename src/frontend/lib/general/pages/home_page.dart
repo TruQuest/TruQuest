@@ -36,7 +36,7 @@ class _HomePageState extends StateX<HomePage> {
     _notificationBloc.toast$.listen(
       (message) => BotToast.showSimpleNotification(
         title: message,
-        duration: Duration(seconds: 5),
+        duration: const Duration(seconds: 5),
       ),
     );
   }
@@ -105,17 +105,13 @@ class _HomePageState extends StateX<HomePage> {
                                 actions: [
                                   TextButton(
                                     child: const Text('Ok'),
-                                    onPressed: () {
-                                      Navigator.of(context).pop(true);
-                                    },
+                                    onPressed: () => Navigator.of(context).pop(true),
                                   ),
                                 ],
                               ),
                             );
 
-                            if (shouldGo != null &&
-                                shouldGo &&
-                                route.isNotEmpty) {
+                            if (shouldGo != null && shouldGo && route.isNotEmpty) {
                               _pageContext.goto(route);
                             }
                           },

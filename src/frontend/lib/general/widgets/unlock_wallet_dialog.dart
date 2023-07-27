@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
 
+import '../utils/utils.dart';
 import '../../user/bloc/user_actions.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../../widget_extensions.dart';
@@ -68,20 +69,18 @@ class _UnlockWalletDialogState extends StateX<UnlockWalletDialog> {
             ),
           ),
           onPressed: () async {
-            var action = UnlockWallet(password: _passwordController.text);
-            _userBloc.dispatch(action);
+            var unlocked = await _userBloc.execute<bool>(
+              UnlockWallet(password: _passwordController.text),
+            );
 
-            var success = await action.result;
-            if (success != null) {
+            if (unlocked.isTrue) {
               _buttonController.success();
             } else {
               _buttonController.error();
             }
 
             await Future.delayed(const Duration(seconds: 1));
-            if (context.mounted) {
-              Navigator.of(context).pop(success != null);
-            }
+            if (context.mounted) Navigator.of(context).pop(unlocked);
           },
         ),
       ],

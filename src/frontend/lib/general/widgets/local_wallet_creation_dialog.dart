@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../utils/utils.dart';
 import 'local_wallet_from_imported_mnemonic_creation_dialog.dart';
 import '../../user/bloc/user_actions.dart';
 import '../../user/bloc/user_bloc.dart';
@@ -10,12 +11,10 @@ class LocalWalletCreationDialog extends StatefulWidget {
   const LocalWalletCreationDialog({super.key});
 
   @override
-  State<LocalWalletCreationDialog> createState() =>
-      _LocalWalletCreationDialogState();
+  State<LocalWalletCreationDialog> createState() => _LocalWalletCreationDialogState();
 }
 
-class _LocalWalletCreationDialogState
-    extends StateX<LocalWalletCreationDialog> {
+class _LocalWalletCreationDialogState extends StateX<LocalWalletCreationDialog> {
   late final _userBloc = use<UserBloc>();
 
   final _passwordController = TextEditingController();
@@ -65,26 +64,20 @@ class _LocalWalletCreationDialogState
                           ),
                           onPressed: () async {
                             if (details.currentStep == 0) {
-                              var action = GenerateMnemonic();
-                              _userBloc.dispatch(action);
-
-                              var success = await action.result;
-                              if (success != null) {
-                                _mnemonic = success.mnemonic;
-                                details.onStepContinue!();
-                              }
-                            } else {
-                              var action = CreateAndSaveEncryptedLocalWallet(
-                                mnemonic: _mnemonic!,
-                                password: _passwordController.text,
+                              _mnemonic = await _userBloc.execute<String>(
+                                const GenerateMnemonic(),
                               );
-                              _userBloc.dispatch(action);
+                              details.onStepContinue!();
+                            } else {
+                              var success = await _userBloc.execute<bool>(
+                                CreateAndSaveEncryptedLocalWallet(
+                                  mnemonic: _mnemonic!,
+                                  password: _passwordController.text,
+                                ),
+                              );
 
-                              var success = await action.result;
-                              if (success != null) {
-                                if (context.mounted) {
-                                  Navigator.of(context).pop();
-                                }
+                              if (success.isTrue) {
+                                if (context.mounted) Navigator.of(context).pop();
                               }
                             }
                           },
@@ -152,8 +145,7 @@ class _LocalWalletCreationDialogState
                     Navigator.of(context).pop();
                     showDialog(
                       context: context,
-                      builder: (_) =>
-                          const LocalWalletFromImportedMnemonicCreationDialog(),
+                      builder: (_) => const LocalWalletFromImportedMnemonicCreationDialog(),
                     );
                   },
                 ),

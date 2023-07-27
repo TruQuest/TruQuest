@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
+import '../../general/utils/utils.dart';
 import '../../general/widgets/restrict_when_unauthorized_button.dart';
 import '../../general/contexts/document_context.dart';
 import '../../general/contexts/page_context.dart';
@@ -17,7 +18,6 @@ import '../../settlement/bloc/settlement_bloc.dart';
 import '../../settlement/widgets/verdict_selection_block.dart';
 import '../../user/models/vm/user_vm.dart';
 import '../widgets/status_stepper_block.dart';
-import '../bloc/thing_result_vm.dart';
 import '../../general/widgets/watch_button.dart';
 import '../../subject/widgets/avatar_with_reputation_gauge.dart';
 import '../../user/bloc/user_bloc.dart';
@@ -58,7 +58,7 @@ class _ThingPageState extends StateX<ThingPage> {
 
   late final StreamSubscription<UserVm> _currentUser$$;
 
-  final List<Color> _tabColors = const [
+  final _tabColors = const [
     Color(0xFF242423),
     Color(0xFF413C69),
     Color(0xFF32407B),
@@ -143,9 +143,7 @@ class _ThingPageState extends StateX<ThingPage> {
                   children: [
                     const SizedBox(height: 10),
                     InkWell(
-                      onTap: () => _pageContext.goto(
-                        '/subjects/${thing.subjectId}',
-                      ),
+                      onTap: () => _pageContext.goto('/subjects/${thing.subjectId}'),
                       child: AvatarWithReputationGauge(
                         subjectId: thing.subjectId,
                         subjectAvatarIpfsCid: thing.subjectCroppedImageIpfsCid,
@@ -385,31 +383,23 @@ class _ThingPageState extends StateX<ThingPage> {
                               child: const Text('Prepare draft'),
                               controller: btnController,
                               onPressed: () async {
-                                var action = CreateNewSettlementProposalDraft(
-                                  documentContext: DocumentContext.fromEditable(
-                                    documentContext,
+                                var success = await _settlementBloc.execute<bool>(
+                                  CreateNewSettlementProposalDraft(
+                                    documentContext: DocumentContext.fromEditable(documentContext),
                                   ),
                                 );
-                                _settlementBloc.dispatch(action);
 
-                                var failure = await action.result;
-                                if (failure != null) {
+                                if (!success.isTrue) {
                                   btnController.error();
-                                  await Future.delayed(
-                                    const Duration(milliseconds: 1500),
-                                  );
+                                  await Future.delayed(const Duration(milliseconds: 1500));
                                   btnController.reset();
 
                                   return;
                                 }
 
                                 btnController.success();
-                                await Future.delayed(
-                                  const Duration(milliseconds: 1500),
-                                );
-                                if (context.mounted) {
-                                  Navigator.of(context).pop();
-                                }
+                                await Future.delayed(const Duration(milliseconds: 1500));
+                                if (context.mounted) Navigator.of(context).pop();
                               },
                             ),
                           ),
@@ -486,22 +476,14 @@ class _ThingPageState extends StateX<ThingPage> {
         }
 
         var vm = snapshot.data!;
-        if (vm is GetThingFailureVm) {
-          return SliverFillRemaining(
-            hasScrollBody: false,
-            child: Center(child: Text(vm.message)),
-          );
-        }
-
-        vm as GetThingSuccessVm;
 
         return MultiSliver(
           children: [
-            SliverToBoxAdapter(child: _buildHeader(vm.result.thing)),
+            SliverToBoxAdapter(child: _buildHeader(vm.thing)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(top: 30),
-                child: _buildBody(vm.result),
+                child: _buildBody(vm),
               ),
             ),
           ],

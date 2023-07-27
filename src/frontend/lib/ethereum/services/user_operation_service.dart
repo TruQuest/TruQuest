@@ -18,8 +18,7 @@ class UserOperationService {
     var channel = StreamController<UserOperation>(
       onCancel: () => canceled.complete(),
     );
-    channel.onListen = () =>
-        _keepRefreshingUserOpUntilCanceled(actions, channel.sink, canceled);
+    channel.onListen = () => _keepRefreshingUserOpUntilCanceled(actions, channel.sink, canceled);
 
     return channel.stream;
   }
@@ -40,7 +39,7 @@ class UserOperationService {
 
       sink.add(userOp);
 
-      await Future.delayed(Duration(seconds: 10)); // @@TODO: Config.
+      await Future.delayed(const Duration(seconds: 10)); // @@TODO: Config.
     }
   }
 
@@ -53,11 +52,11 @@ class UserOperationService {
         verificationGasLimitMultiplier = 1.5,
         callGasLimitMultiplier = actions.length * 3.0;
 
-    var userOpBuilder = UserOperation.create()
-        .withEstimatedGasLimitsMultipliers(
-            preVerificationGasMultiplier: preVerificationGasMultiplier,
-            verificationGasLimitMultiplier: verificationGasLimitMultiplier,
-            callGasLimitMultiplier: callGasLimitMultiplier);
+    var userOpBuilder = UserOperation.create().withEstimatedGasLimitsMultipliers(
+      preVerificationGasMultiplier: preVerificationGasMultiplier,
+      verificationGasLimitMultiplier: verificationGasLimitMultiplier,
+      callGasLimitMultiplier: callGasLimitMultiplier,
+    );
 
     if (actions.length == 1) {
       userOpBuilder = userOpBuilder.action(
@@ -83,10 +82,8 @@ class UserOperationService {
     int attempts = 5;
     UserOperationError? error;
     String? userOpHash;
-    double preVerificationGasMultiplier =
-        userOp.builder.preVerificationGasMultiplier;
-    double verificationGasLimitMultiplier =
-        userOp.builder.verificationGasLimitMultiplier;
+    double preVerificationGasMultiplier = userOp.builder.preVerificationGasMultiplier;
+    double verificationGasLimitMultiplier = userOp.builder.verificationGasLimitMultiplier;
     double callGasLimitMultiplier = userOp.builder.callGasLimitMultiplier;
 
     do {
@@ -124,8 +121,7 @@ class UserOperationService {
     } while (userOpHash == null && --attempts > 0);
 
     assert(
-      userOpHash != null && error == null ||
-          userOpHash == null && error != null,
+      userOpHash != null && error == null || userOpHash == null && error != null,
     );
 
     if (error != null) {
@@ -160,7 +156,7 @@ class UserOperationService {
     required List<(String, String)> actions,
     int confirmations = 1,
   }) async {
-    if (actions.isEmpty) throw UserOperationError('No actions specified');
+    if (actions.isEmpty) throw const UserOperationError('No actions specified');
 
     int attempts = 5;
     UserOperation userOp;
@@ -173,11 +169,11 @@ class UserOperationService {
     do {
       error = null;
 
-      var userOpBuilder = UserOperation.create()
-          .withEstimatedGasLimitsMultipliers(
-              preVerificationGasMultiplier: preVerificationGasMultiplier,
-              verificationGasLimitMultiplier: verificationGasLimitMultiplier,
-              callGasLimitMultiplier: callGasLimitMultiplier);
+      var userOpBuilder = UserOperation.create().withEstimatedGasLimitsMultipliers(
+        preVerificationGasMultiplier: preVerificationGasMultiplier,
+        verificationGasLimitMultiplier: verificationGasLimitMultiplier,
+        callGasLimitMultiplier: callGasLimitMultiplier,
+      );
 
       if (actions.length == 1) {
         userOpBuilder = userOpBuilder.action(
@@ -208,8 +204,7 @@ class UserOperationService {
     } while (userOpHash == null && --attempts > 0);
 
     assert(
-      userOpHash != null && error == null ||
-          userOpHash == null && error != null,
+      userOpHash != null && error == null || userOpHash == null && error != null,
     );
 
     if (error != null) {

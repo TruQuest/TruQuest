@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
+import '../models/rvm/acceptance_poll_info_vm.dart';
 import '../../general/widgets/verifiers_table.dart';
 import '../../general/widgets/block_countdown.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';
@@ -30,7 +31,7 @@ class _PollState extends StateX<Poll> {
 
   String? _currentUserId;
 
-  late GetAcceptancePollInfo _getInfoAction;
+  late Future<AcceptancePollInfoVm?> _acceptancePollInfoFuture;
 
   @override
   void initState() {
@@ -39,16 +40,18 @@ class _PollState extends StateX<Poll> {
     _currentUserId = _userBloc.latestCurrentUser?.id;
 
     _thingBloc.dispatch(GetVerifiers(thingId: widget.thing.id));
-    _getInfoAction = GetAcceptancePollInfo(thingId: widget.thing.id);
-    _thingBloc.dispatch(_getInfoAction);
+    _acceptancePollInfoFuture = _thingBloc.execute<AcceptancePollInfoVm>(
+      GetAcceptancePollInfo(thingId: widget.thing.id),
+    );
   }
 
   @override
   void didUpdateWidget(covariant Poll oldWidget) {
     super.didUpdateWidget(oldWidget);
     _currentUserId = _userBloc.latestCurrentUser?.id;
-    _getInfoAction = GetAcceptancePollInfo(thingId: widget.thing.id);
-    _thingBloc.dispatch(_getInfoAction);
+    _acceptancePollInfoFuture = _thingBloc.execute<AcceptancePollInfoVm>(
+      GetAcceptancePollInfo(thingId: widget.thing.id),
+    );
   }
 
   @override
@@ -63,7 +66,7 @@ class _PollState extends StateX<Poll> {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              var verifiers = snapshot.data!.verifiers;
+              var verifiers = snapshot.data!;
 
               return VerifiersTable(
                 verifiers: verifiers,
@@ -79,7 +82,7 @@ class _PollState extends StateX<Poll> {
           // @@??: Should switch to StreamBuilder to avoid snapshot.data becoming null momentarily
           // when switching accounts?
           child: FutureBuilder(
-            future: _getInfoAction.result,
+            future: _acceptancePollInfoFuture,
             builder: (context, snapshot) {
               if (snapshot.data == null) {
                 return const Center(child: CircularProgressIndicator());
@@ -134,10 +137,7 @@ class _PollState extends StateX<Poll> {
                               ),
                               innerWidget: (_) => const SizedBox.shrink(),
                             ),
-                            if (info.initBlock != null)
-                              BlockCountdown(
-                                blocksLeft: (endBlock - currentBlock).toInt(),
-                              ),
+                            if (info.initBlock != null) BlockCountdown(blocksLeft: (endBlock - currentBlock).toInt()),
                             Positioned(
                               bottom: 20,
                               left: 0,

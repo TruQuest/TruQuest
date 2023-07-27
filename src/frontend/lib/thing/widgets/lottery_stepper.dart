@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../bloc/thing_actions.dart';
 import '../../general/utils/utils.dart';
-import '../bloc/thing_result_vm.dart';
 import '../bloc/thing_bloc.dart';
 import '../models/rvm/thing_vm.dart';
 import '../../general/widgets/swipe_button.dart';
 import '../../widget_extensions.dart';
+import '../models/rvm/verifier_lottery_info_vm.dart';
 
 // ignore: must_be_immutable
 class LotteryStepper extends StatelessWidgetX {
   late final _thingBloc = use<ThingBloc>();
 
   final ThingVm thing;
-  final GetVerifierLotteryInfoSuccessVm info;
+  final VerifierLotteryInfoVm info;
   final int currentBlock;
   final int endBlock;
 
@@ -26,13 +27,9 @@ class LotteryStepper extends StatelessWidgetX {
   });
 
   bool _checkButtonShouldBeEnabled() =>
-      info.initBlock != null &&
-      info.alreadyJoined != null &&
-      !info.alreadyJoined! &&
-      currentBlock < endBlock;
+      info.initBlock != null && info.alreadyJoined != null && !info.alreadyJoined! && currentBlock < endBlock;
 
-  bool _checkButtonShouldBeSwiped() =>
-      info.alreadyJoined != null && info.alreadyJoined!;
+  bool _checkButtonShouldBeSwiped() => info.alreadyJoined != null && info.alreadyJoined!;
 
   @override
   Widget buildX(BuildContext context) {
@@ -45,23 +42,25 @@ class LotteryStepper extends StatelessWidgetX {
             ),
       ),
       child: Stepper(
-        controlsBuilder: (context, details) =>
-            info.userId != null && !thing.isSubmitter(info.userId)
-                ? SwipeButton(
-                    key: ValueKey(info.userId),
-                    text: 'Slide to join',
-                    enabled: _checkButtonShouldBeEnabled(),
-                    swiped: _checkButtonShouldBeSwiped(),
-                    onCompletedSwipe: () async {
-                      bool success = await multiStageAction(
-                        context,
-                        (ctx) => _thingBloc.joinLottery(thing.id, ctx),
-                      );
+        controlsBuilder: (context, details) => info.userId != null && !thing.isSubmitter(info.userId)
+            ? SwipeButton(
+                key: ValueKey(info.userId),
+                text: 'Slide to join',
+                enabled: _checkButtonShouldBeEnabled(),
+                swiped: _checkButtonShouldBeSwiped(),
+                onCompletedSwipe: () async {
+                  bool success = await multiStageFlow(
+                    context,
+                    (ctx) => _thingBloc.executeMultiStage(
+                      JoinLottery(thingId: thing.id),
+                      ctx,
+                    ),
+                  );
 
-                      return success;
-                    },
-                  )
-                : const SizedBox.shrink(),
+                  return success;
+                },
+              )
+            : const SizedBox.shrink(),
         steps: [
           Step(
             title: Text(

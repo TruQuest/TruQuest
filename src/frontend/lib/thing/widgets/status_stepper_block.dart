@@ -7,7 +7,6 @@ import '../../general/widgets/swipe_button.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../bloc/thing_actions.dart';
 import '../bloc/thing_bloc.dart';
-import '../bloc/thing_result_vm.dart';
 import '../models/rvm/thing_state_vm.dart';
 import '../models/rvm/thing_vm.dart';
 import '../../widget_extensions.dart';
@@ -27,8 +26,7 @@ class StatusStepperBlock extends StatelessWidgetX {
   void _setup() {
     _currentUserId = _userBloc.latestCurrentUser?.id;
     _thing = _documentViewContext.thing!;
-    if (_thing.state.index <=
-        ThingStateVm.fundedAndVerifierLotteryInitiated.index) {
+    if (_thing.state.index <= ThingStateVm.fundedAndVerifierLotteryInitiated.index) {
       _currentStep = _thing.state.index + 1;
     } else if (_thing.state == ThingStateVm.verifierLotteryFailed ||
         _thing.state == ThingStateVm.verifiersSelectedAndPollInitiated) {
@@ -43,8 +41,7 @@ class StatusStepperBlock extends StatelessWidgetX {
   }
 
   List<Step> _buildFinalSteps() {
-    if (_thing.state.index <=
-        ThingStateVm.fundedAndVerifierLotteryInitiated.index) {
+    if (_thing.state.index <= ThingStateVm.fundedAndVerifierLotteryInitiated.index) {
       return [];
     } else if (_thing.state == ThingStateVm.verifierLotteryFailed) {
       return [
@@ -94,8 +91,7 @@ class StatusStepperBlock extends StatelessWidgetX {
 
     if (_thing.state == ThingStateVm.verifiersSelectedAndPollInitiated) {
       return steps;
-    } else if (_thing.state == ThingStateVm.awaitingSettlement ||
-        _thing.state == ThingStateVm.settled) {
+    } else if (_thing.state == ThingStateVm.awaitingSettlement || _thing.state == ThingStateVm.settled) {
       return [
         ...steps,
         Step(
@@ -191,17 +187,13 @@ class StatusStepperBlock extends StatelessWidgetX {
 
   bool _checkShouldBeEnabled(int step) =>
       (step == 0 || step == 1) && _thing.state == ThingStateVm.draft ||
-      step == 2 &&
-          _thing.state == ThingStateVm.awaitingFunding &&
-          !_thing.fundedAwaitingConfirmation!;
+      step == 2 && _thing.state == ThingStateVm.awaitingFunding && !_thing.fundedAwaitingConfirmation!;
 
   bool _checkShouldBeSwiped(int step) =>
-      (step == 0 || step == 1) &&
-          _thing.state.index > ThingStateVm.draft.index ||
+      (step == 0 || step == 1) && _thing.state.index > ThingStateVm.draft.index ||
       step == 2 &&
           (_thing.state.index > ThingStateVm.awaitingFunding.index ||
-              _thing.state == ThingStateVm.awaitingFunding &&
-                  _thing.fundedAwaitingConfirmation!);
+              _thing.state == ThingStateVm.awaitingFunding && _thing.fundedAwaitingConfirmation!);
 
   @override
   Widget buildX(BuildContext context) {
@@ -221,31 +213,27 @@ class StatusStepperBlock extends StatelessWidgetX {
           if (_thing.isSubmitter(_currentUserId) && step <= 2) {
             return SwipeButton(
               key: ValueKey(step),
-              text:
-                  'Swipe to ${step == 0 ? 'edit' : step == 1 ? 'submit' : 'fund'}',
+              text: 'Swipe to ${step == 0 ? 'edit' : step == 1 ? 'submit' : 'fund'}',
               enabled: _checkShouldBeEnabled(step),
               swiped: _checkShouldBeSwiped(step),
               onCompletedSwipe: () async {
                 if (step == 0) {
                   return true;
                 } else if (step == 1) {
-                  var action = SubmitNewThing(thing: _thing);
-                  _thingBloc.dispatch(action);
-
-                  SubmitNewThingFailureVm? failure = await action.result;
-                  if (failure == null) {
-                    _thingBloc.dispatch(GetThing(thingId: _thing.id));
-                  }
-
-                  return failure == null;
+                  var success = await _thingBloc.execute<bool>(
+                    SubmitNewThing(thingId: _thing.id),
+                  );
+                  return success.isTrue;
                 }
 
                 // ignore: use_build_context_synchronously
-                bool success = await multiStageAction(
+                bool success = await multiStageFlow(
                   context,
-                  (ctx) => _thingBloc.fundThing(
-                    _thing.id,
-                    _documentViewContext.signature!,
+                  (ctx) => _thingBloc.executeMultiStage(
+                    FundThing(
+                      thingId: _thing.id,
+                      signature: _documentViewContext.signature!,
+                    ),
                     ctx,
                   ),
                 );
@@ -279,9 +267,7 @@ class StatusStepperBlock extends StatelessWidgetX {
           ),
           Step(
             title: Text(
-              _thing.isSubmitter(_currentUserId)
-                  ? 'Submit'
-                  : 'Awaiting submission',
+              _thing.isSubmitter(_currentUserId) ? 'Submit' : 'Awaiting submission',
               style: GoogleFonts.philosopher(
                 color: const Color(0xffF8F9FA),
                 fontSize: 16,

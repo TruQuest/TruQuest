@@ -5,7 +5,6 @@ import 'package:convert/convert.dart';
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import '../../../user/errors/wallet_locked_error.dart';
 import '../../../ethereum_js_interop.dart';
 
 class LocalWallet {
@@ -47,8 +46,6 @@ class LocalWallet {
   void lock() => _owner = null;
 
   int addOwnerAccount({bool switchToAdded = true}) {
-    if (locked) throw WalletLockedError();
-
     var index =
         ((_ownerIndexToAddress.keys.toList()..sort()).lastOrNull ?? -1) + 1;
     var path = "m/44'/60'/0'/0/$index";
@@ -123,8 +120,6 @@ class LocalWallet {
       };
 
   String ownerSign(String message) {
-    if (locked) throw WalletLockedError();
-
     var pk = SigningKey(
       Uint8List.fromList(hex.decode(_currentPrivateKey.substring(2))),
     );
@@ -136,11 +131,6 @@ class LocalWallet {
   }
 
   String ownerSignDigest(String digest) {
-    // @@NOTE: In theory, this one should never fire since we check that
-    // the wallet is unlocked during UserOperationBuilder instantiation and
-    // the method is not called from anywhere else, but just in case...
-    if (locked) throw WalletLockedError();
-
     if (digest.startsWith('0x')) digest = digest.substring(2);
 
     var pk = SigningKey(
@@ -155,7 +145,7 @@ class LocalWallet {
 }
 
 final _macAlgo = Hmac.sha256();
-// @@NOTE: Global and static fields with initializers are 'late' automatically.
+// @@NOTE: Globals and static fields with initializers are 'late' automatically.
 final _encryptionAlgo = AesCbc.with256bits(
   macAlgorithm: _macAlgo,
 );

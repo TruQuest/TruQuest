@@ -26,27 +26,20 @@ class StatusStepperBlock extends StatelessWidgetX {
   void _setup() {
     _currentUserId = _userBloc.latestCurrentUser?.id;
     _proposal = _documentViewContext.proposal!;
-    if (_proposal.state.index <=
-        SettlementProposalStateVm.fundedAndVerifierLotteryInitiated.index) {
+    if (_proposal.state.index <= SettlementProposalStateVm.fundedAndVerifierLotteryInitiated.index) {
       _currentStep = _proposal.state.index + 1;
-    } else if (_proposal.state ==
-            SettlementProposalStateVm.verifierLotteryFailed ||
-        _proposal.state ==
-            SettlementProposalStateVm.verifiersSelectedAndPollInitiated) {
-      _currentStep =
-          SettlementProposalStateVm.fundedAndVerifierLotteryInitiated.index + 2;
+    } else if (_proposal.state == SettlementProposalStateVm.verifierLotteryFailed ||
+        _proposal.state == SettlementProposalStateVm.verifiersSelectedAndPollInitiated) {
+      _currentStep = SettlementProposalStateVm.fundedAndVerifierLotteryInitiated.index + 2;
     } else {
-      _currentStep =
-          SettlementProposalStateVm.fundedAndVerifierLotteryInitiated.index + 3;
+      _currentStep = SettlementProposalStateVm.fundedAndVerifierLotteryInitiated.index + 3;
     }
   }
 
   List<Step> _buildFinalSteps() {
-    if (_proposal.state.index <=
-        SettlementProposalStateVm.fundedAndVerifierLotteryInitiated.index) {
+    if (_proposal.state.index <= SettlementProposalStateVm.fundedAndVerifierLotteryInitiated.index) {
       return [];
-    } else if (_proposal.state ==
-        SettlementProposalStateVm.verifierLotteryFailed) {
+    } else if (_proposal.state == SettlementProposalStateVm.verifierLotteryFailed) {
       return [
         Step(
           title: Text(
@@ -92,8 +85,7 @@ class StatusStepperBlock extends StatelessWidgetX {
       ),
     ];
 
-    if (_proposal.state ==
-        SettlementProposalStateVm.verifiersSelectedAndPollInitiated) {
+    if (_proposal.state == SettlementProposalStateVm.verifiersSelectedAndPollInitiated) {
       return steps;
     } else if (_proposal.state == SettlementProposalStateVm.accepted) {
       return [
@@ -168,20 +160,14 @@ class StatusStepperBlock extends StatelessWidgetX {
   }
 
   bool _checkShouldBeEnabled(int step) =>
-      (step == 0 || step == 1) &&
-          _proposal.state == SettlementProposalStateVm.draft ||
-      step == 2 &&
-          _proposal.state == SettlementProposalStateVm.awaitingFunding &&
-          _proposal.canBeFunded!;
+      (step == 0 || step == 1) && _proposal.state == SettlementProposalStateVm.draft ||
+      step == 2 && _proposal.state == SettlementProposalStateVm.awaitingFunding && _proposal.canBeFunded!;
 
   bool _checkShouldBeSwiped(int step) =>
-      (step == 0 || step == 1) &&
-          _proposal.state.index > SettlementProposalStateVm.draft.index ||
+      (step == 0 || step == 1) && _proposal.state.index > SettlementProposalStateVm.draft.index ||
       step == 2 &&
-          (_proposal.state.index >
-                  SettlementProposalStateVm.awaitingFunding.index ||
-              _proposal.state == SettlementProposalStateVm.awaitingFunding &&
-                  !_proposal.canBeFunded!);
+          (_proposal.state.index > SettlementProposalStateVm.awaitingFunding.index ||
+              _proposal.state == SettlementProposalStateVm.awaitingFunding && !_proposal.canBeFunded!);
 
   @override
   Widget buildX(BuildContext context) {
@@ -201,36 +187,28 @@ class StatusStepperBlock extends StatelessWidgetX {
           if (_proposal.isSubmitter(_currentUserId) && step <= 2) {
             return SwipeButton(
               key: ValueKey(step),
-              text:
-                  'Swipe to ${step == 0 ? 'edit' : step == 1 ? 'submit' : 'fund'}',
+              text: 'Swipe to ${step == 0 ? 'edit' : step == 1 ? 'submit' : 'fund'}',
               enabled: _checkShouldBeEnabled(step),
               swiped: _checkShouldBeSwiped(step),
               onCompletedSwipe: () async {
                 if (step == 0) {
                   return true;
                 } else if (step == 1) {
-                  var action = SubmitNewSettlementProposal(
-                    proposalId: _proposal.id,
+                  var success = await _settlementBloc.execute<bool>(
+                    SubmitNewSettlementProposal(proposalId: _proposal.id),
                   );
-                  _settlementBloc.dispatch(action);
-
-                  var failure = await action.result;
-                  if (failure == null) {
-                    _settlementBloc.dispatch(
-                      GetSettlementProposal(proposalId: _proposal.id),
-                    );
-                  }
-
-                  return failure == null;
+                  return success.isTrue;
                 }
 
                 // ignore: use_build_context_synchronously
-                bool success = await multiStageAction(
+                bool success = await multiStageFlow(
                   context,
-                  (ctx) => _settlementBloc.fundSettlementProposal(
-                    _proposal.thingId,
-                    _proposal.id,
-                    _documentViewContext.signature!,
+                  (ctx) => _settlementBloc.executeMultiStage(
+                    FundSettlementProposal(
+                      thingId: _proposal.thingId,
+                      proposalId: _proposal.id,
+                      signature: _documentViewContext.signature!,
+                    ),
                     ctx,
                   ),
                 );
@@ -264,9 +242,7 @@ class StatusStepperBlock extends StatelessWidgetX {
           ),
           Step(
             title: Text(
-              _proposal.isSubmitter(_currentUserId)
-                  ? 'Submit'
-                  : 'Awaiting submission',
+              _proposal.isSubmitter(_currentUserId) ? 'Submit' : 'Awaiting submission',
               style: GoogleFonts.philosopher(
                 color: const Color(0xffF8F9FA),
                 fontSize: 16,
@@ -285,9 +261,7 @@ class StatusStepperBlock extends StatelessWidgetX {
           ),
           Step(
             title: Text(
-              _proposal.isSubmitter(_currentUserId)
-                  ? 'Fund'
-                  : 'Awaiting funding',
+              _proposal.isSubmitter(_currentUserId) ? 'Fund' : 'Awaiting funding',
               style: GoogleFonts.philosopher(
                 color: const Color(0xffF8F9FA),
                 fontSize: 16,

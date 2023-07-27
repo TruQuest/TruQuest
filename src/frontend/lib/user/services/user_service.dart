@@ -63,7 +63,7 @@ class UserService {
     }
   }
 
-  void _setupLocalWallet() async {
+  Future _setupLocalWallet() async {
     await _localWalletService.setup();
     _walletService = _localWalletService;
     _selectedWalletName = 'Local';
@@ -116,7 +116,7 @@ class UserService {
       password,
     );
     await _localStorage.setString('SelectedWallet', 'Local');
-    _setupLocalWallet();
+    await _setupLocalWallet();
   }
 
   Future<bool> selectThirdPartyWallet(String walletName) async {

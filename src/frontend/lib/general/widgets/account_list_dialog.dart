@@ -4,7 +4,6 @@ import 'package:auto_size_text/auto_size_text.dart';
 import '../utils/utils.dart';
 import '../../user/bloc/user_actions.dart';
 import '../../user/bloc/user_bloc.dart';
-import '../../user/errors/wallet_locked_error.dart';
 import '../../widget_extensions.dart';
 
 // ignore: must_be_immutable
@@ -62,15 +61,8 @@ class AccountListDialog extends StatelessWidgetX {
                                 color: Colors.white,
                               ),
                               onPressed: () async {
-                                var action = SwitchAccount(
-                                  walletAddress: address,
-                                );
-                                _userBloc.dispatch(action);
-
-                                await action.result;
-                                if (context.mounted) {
-                                  Navigator.of(context).pop();
-                                }
+                                await _userBloc.execute(SwitchAccount(walletAddress: address));
+                                if (context.mounted) Navigator.of(context).pop();
                               },
                             ),
                     ),
@@ -86,22 +78,13 @@ class AccountListDialog extends StatelessWidgetX {
                       Icons.add,
                       color: Colors.white,
                     ),
-                    onTap: () async {
-                      var action = AddAccount();
-                      _userBloc.dispatch(action);
-
-                      var failure = await action.result;
-                      if (failure != null &&
-                          failure.error is WalletLockedError) {
-                        if (context.mounted) {
-                          var unlocked = await showUnlockWalletDialog(context);
-                          if (unlocked) {
-                            _userBloc.dispatch(action);
-                            failure = await action.result;
-                          }
-                        }
-                      }
-                    },
+                    onTap: () => multiStageOffChainFlow(
+                      context,
+                      (ctx) => _userBloc.executeMultiStage(
+                        const AddAccount(),
+                        ctx,
+                      ),
+                    ),
                   ),
                 ],
               );

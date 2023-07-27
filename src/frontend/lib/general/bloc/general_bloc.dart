@@ -1,21 +1,21 @@
+import '../models/rvm/tag_vm.dart';
 import 'bloc.dart';
 import 'general_actions.dart';
-import 'general_result_vm.dart';
 import '../services/general_service.dart';
 
 class GeneralBloc extends Bloc<GeneralAction> {
   final GeneralService _generalService;
 
-  GeneralBloc(super._toastMessenger, this._generalService) {
-    actionChannel.stream.listen((action) {
-      if (action is GetTags) {
-        _getTags(action);
-      }
-    });
+  GeneralBloc(super.toastMessenger, this._generalService);
+
+  @override
+  Future<Object?> handleExecute(GeneralAction action) {
+    if (action is GetTags) {
+      return _getTags(action);
+    }
+
+    throw UnimplementedError();
   }
 
-  void _getTags(GetTags action) async {
-    var tags = await _generalService.getTags();
-    action.complete(GetTagsSuccessVm(tags: tags));
-  }
+  Future<List<TagVm>> _getTags(GetTags action) => _generalService.getTags();
 }

@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:uuid/uuid.dart';
 
 import '../errors/validation_error.dart';
 import '../../ethereum/models/vm/wallet_connect_uri_vm.dart';
@@ -21,16 +22,24 @@ extension BigIntExtension on BigInt {
   String toHex() => '0x' + toRadixString(16);
 }
 
-Future<bool> showUnlockWalletDialog(BuildContext context) async {
+extension BoolExtension on bool? {
+  bool get isTrue => this ?? false;
+}
+
+extension StringExtension on String {
+  bool get isValidUuid => Uuid.isValidUUID(fromString: this);
+}
+
+Future<bool> _showUnlockWalletDialog(BuildContext context) async {
   var unlocked = await showDialog<bool>(
     context: context,
     builder: (_) => const UnlockWalletDialog(),
   );
 
-  return unlocked != null && unlocked;
+  return unlocked.isTrue;
 }
 
-Future<UserOperation?> showUserOpDialog(
+Future<UserOperation?> _showUserOpDialog(
   BuildContext context,
   Stream<UserOperation> stream,
 ) =>
@@ -39,7 +48,7 @@ Future<UserOperation?> showUserOpDialog(
       builder: (_) => UserOperationDialog(stream: stream),
     );
 
-Future<bool> multiStageAction(
+Future<bool> multiStageFlow(
   BuildContext context,
   Stream<Object> Function(MultiStageOperationContext ctx) action,
 ) async {
@@ -51,25 +60,27 @@ Future<bool> multiStageAction(
     } else if (stageResult is WalletLockedError) {
       bool unlocked = false;
       if (context.mounted) {
-        unlocked = await showUnlockWalletDialog(context);
+        unlocked = await _showUnlockWalletDialog(context);
       }
       ctx.unlockWalletTask.complete(unlocked);
       if (!unlocked) {
         proceededTilTheEndWithNoErrors = false;
       }
     } else if (stageResult is InsufficientBalanceError) {
+      // @@TODO: Get rid of BotToast here. Show all messages through ToastMessenger.
       BotToast.showText(text: stageResult.message);
       proceededTilTheEndWithNoErrors = false;
     } else if (stageResult is Stream<UserOperation>) {
       UserOperation? userOp;
       if (context.mounted) {
-        userOp = await showUserOpDialog(context, stageResult);
+        userOp = await _showUserOpDialog(context, stageResult);
       }
       ctx.approveUserOpTask.complete(userOp);
       if (userOp == null) {
         proceededTilTheEndWithNoErrors = false;
       }
     } else if (stageResult is UserOperationError) {
+      // @@NOTE: WalletActionDeclinedError is wrapped into this.
       BotToast.showText(text: stageResult.message);
       proceededTilTheEndWithNoErrors = false;
     }
@@ -78,7 +89,7 @@ Future<bool> multiStageAction(
   return proceededTilTheEndWithNoErrors;
 }
 
-Future<bool> multiStageOffChainAction(
+Future<bool> multiStageOffChainFlow(
   BuildContext context,
   Stream<Object> Function(MultiStageOperationContext ctx) action,
 ) async {
@@ -90,7 +101,7 @@ Future<bool> multiStageOffChainAction(
     } else if (stageResult is WalletLockedError) {
       bool unlocked = false;
       if (context.mounted) {
-        unlocked = await showUnlockWalletDialog(context);
+        unlocked = await _showUnlockWalletDialog(context);
       }
       ctx.unlockWalletTask.complete(unlocked);
       if (!unlocked) {

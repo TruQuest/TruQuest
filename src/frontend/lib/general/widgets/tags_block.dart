@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
 
+import '../models/rvm/tag_vm.dart';
 import '../bloc/general_bloc.dart';
 import '../bloc/general_actions.dart';
-import '../bloc/general_result_vm.dart';
 import '../contexts/document_context.dart';
 import '../../widget_extensions.dart';
 import '../models/im/tag_im.dart';
@@ -19,26 +19,23 @@ class _TagsBlockState extends StateX<TagsBlock> {
   late final _generalBloc = use<GeneralBloc>();
   late final _documentContext = useScoped<DocumentContext>();
 
-  late final Future<GetTagsSuccessVm> _tagsLoaded;
+  late final Future<List<TagVm>?> _tagsFuture;
 
   @override
   void initState() {
     super.initState();
-    var action = GetTags();
-    _generalBloc.dispatch(action);
-    _tagsLoaded = action.result;
+    _tagsFuture = _generalBloc.execute<List<TagVm>>(const GetTags());
   }
 
   @override
   Widget buildX(BuildContext context) {
     return FutureBuilder(
-      future: _tagsLoaded,
+      future: _tagsFuture,
       builder: (context, snapshot) {
         List<MultiSelectItem<int>>? items;
-        if (snapshot.data != null) {
-          items = snapshot.data!.tags
-              .map((t) => MultiSelectItem(t.id, t.name))
-              .toList();
+        var tags = snapshot.data;
+        if (tags != null) {
+          items = tags.map((t) => MultiSelectItem(t.id, t.name)).toList();
         }
 
         return Container(

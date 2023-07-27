@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import '../../../user/services/user_service.dart';
-import '../../../user/errors/wallet_locked_error.dart';
 import '../../services/ethereum_api_service.dart';
 import '../../../ethereum_js_interop.dart';
 import '../../../widget_extensions.dart';
@@ -139,9 +138,6 @@ class UserOperationBuilder {
     this._entryPointContract,
     this._accountFactoryContract,
   ) {
-    // @@NOTE: Only relevant for LocalWalletService. ThirdParty always returns true.
-    if (!_userService.walletUnlocked) throw WalletLockedError();
-
     _sender = _userService.currentWalletAddress;
     _tasks.add(() async {
       var code = await _ethereumApiService.getCode(_sender);

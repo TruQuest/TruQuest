@@ -41,7 +41,7 @@ class SubjectApiService {
           case 400:
             var error = dioError.response!.data['error'];
             if (error['type'] == 'Validation') {
-              return ValidationError();
+              return const ValidationError();
             } else if (error['type'] == 'File') {
               return FileError(error['errors'].values.first.first);
             } else if (error['type'] == 'Subject') {
@@ -49,8 +49,7 @@ class SubjectApiService {
             }
             break;
           case 401:
-            var errorMessage =
-                dioError.response!.data['error']['errors'].values.first.first;
+            var errorMessage = dioError.response!.data['error']['errors'].values.first.first;
             return InvalidAuthenticationTokenError(errorMessage);
           case 403:
             return ForbiddenError();
@@ -103,8 +102,7 @@ class SubjectApiService {
     try {
       var response = await _dio.get('/subjects');
       return List.unmodifiable(
-        (response.data['data'] as List<dynamic>)
-            .map((map) => SubjectPreviewVm.fromMap(map)),
+        (response.data['data'] as List<dynamic>).map((map) => SubjectPreviewVm.fromMap(map)),
       );
     } on DioError catch (error) {
       throw _wrapError(error);

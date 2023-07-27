@@ -32,12 +32,9 @@ class SettlementApiService {
   final Map<String, StreamController<int>> _proposalIdToProgressChannel = {};
 
   SettlementApiService(this._serverConnector) : _dio = _serverConnector.dio {
-    _serverConnector.serverEvent$
-        .where((event) => event.$1 == ServerEventType.settlement)
-        .listen(
+    _serverConnector.serverEvent$.where((event) => event.$1 == ServerEventType.settlement).listen(
       (event) {
-        var (settlementEventType, proposalId, data) =
-            event.$2 as (SettlementEventType, String, Object);
+        var (settlementEventType, proposalId, data) = event.$2 as (SettlementEventType, String, Object);
         if (settlementEventType == SettlementEventType.draftCreationProgress) {
           var percent = data as int;
           if (_proposalIdToProgressChannel.containsKey(proposalId)) {
@@ -67,7 +64,7 @@ class SettlementApiService {
           case 400:
             var error = dioError.response!.data['error'];
             if (error['type'] == 'Validation') {
-              return ValidationError();
+              return const ValidationError();
             } else if (error['type'] == 'File') {
               return FileError(error['errors'].values.first.first);
             } else if (error['type'] == 'Settlement') {
@@ -77,8 +74,7 @@ class SettlementApiService {
             }
             break;
           case 401:
-            var errorMessage =
-                dioError.response!.data['error']['errors'].values.first.first;
+            var errorMessage = dioError.response!.data['error']['errors'].values.first.first;
             return InvalidAuthenticationTokenError(errorMessage);
           case 403:
             return ForbiddenError();
@@ -112,8 +108,7 @@ class SettlementApiService {
         imageBytes: imageBytes,
         croppedImageExt: croppedImageBytes != null ? 'png' : null,
         croppedImageBytes: croppedImageBytes,
-        evidence:
-            evidence.map((url) => SupportingEvidenceIm(url: url)).toList(),
+        evidence: evidence.map((url) => SupportingEvidenceIm(url: url)).toList(),
       );
 
       var response = await _dio.post(

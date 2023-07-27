@@ -47,7 +47,7 @@ class SubscriptionManager {
   Error _wrapHubException(Exception ex) {
     var errorMessage = ex.toString();
     if (errorMessage.contains('[ValidationError]')) {
-      return ValidationError();
+      return const ValidationError();
     }
 
     print(ex);

@@ -142,35 +142,23 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
                                     child: const Text('Submit'),
                                     controller: btnController,
                                     onPressed: () async {
-                                      var subjectId =
-                                          await _subjectBloc.execute(
+                                      var subjectId = await _subjectBloc.execute<String>(
                                         AddNewSubject(
-                                          documentContext:
-                                              DocumentContext.fromEditable(
-                                            documentContext,
-                                          ),
+                                          documentContext: DocumentContext.fromEditable(documentContext),
                                         ),
                                       );
 
                                       if (subjectId == null) {
                                         btnController.error();
-                                        await Future.delayed(
-                                          const Duration(milliseconds: 1500),
-                                        );
+                                        await Future.delayed(const Duration(milliseconds: 1500));
                                         btnController.reset();
 
                                         return;
                                       }
 
                                       btnController.success();
-                                      await Future.delayed(
-                                        const Duration(milliseconds: 1500),
-                                      );
-                                      if (context.mounted) {
-                                        Navigator.of(context).pop(
-                                          subjectId as String,
-                                        );
-                                      }
+                                      await Future.delayed(const Duration(milliseconds: 1500));
+                                      if (context.mounted) Navigator.of(context).pop(subjectId);
                                     },
                                   ),
                                 ),
@@ -211,9 +199,7 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
                       children: [
                         Card(
                           margin: EdgeInsets.zero,
-                          color: blackOnWhite
-                              ? const Color(0xffF8F9FA)
-                              : const Color(0xFF242423),
+                          color: blackOnWhite ? const Color(0xffF8F9FA) : const Color(0xFF242423),
                           elevation: 15,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -227,17 +213,13 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
                                 children: [
                                   Expanded(
                                     child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         AutoSizeText(
                                           subject.name,
                                           style: GoogleFonts.philosopher(
-                                            color: blackOnWhite
-                                                ? const Color(0xFF242423)
-                                                : const Color(0xffF8F9FA),
+                                            color: blackOnWhite ? const Color(0xFF242423) : const Color(0xffF8F9FA),
                                             fontSize: 22,
                                           ),
                                           maxLines: 1,
@@ -250,18 +232,15 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
                                               TextSpan(
                                                 text: 'Settled promises: ',
                                                 style: GoogleFonts.raleway(
-                                                  color: blackOnWhite
-                                                      ? const Color(0xFF242423)
-                                                      : const Color(0xffF8F9FA),
+                                                  color:
+                                                      blackOnWhite ? const Color(0xFF242423) : const Color(0xffF8F9FA),
                                                 ),
                                               ),
                                               TextSpan(
-                                                text: subject.settledThingsCount
-                                                    .toString(),
+                                                text: subject.settledThingsCount.toString(),
                                                 style: GoogleFonts.righteous(
-                                                  color: blackOnWhite
-                                                      ? const Color(0xFF242423)
-                                                      : const Color(0xffF8F9FA),
+                                                  color:
+                                                      blackOnWhite ? const Color(0xFF242423) : const Color(0xffF8F9FA),
                                                 ),
                                               ),
                                             ],
@@ -275,17 +254,13 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
                                               .map(
                                                 (tag) => Chip(
                                                   label: Text(tag.name),
-                                                  labelStyle:
-                                                      GoogleFonts.righteous(
+                                                  labelStyle: GoogleFonts.righteous(
                                                     color: blackOnWhite
-                                                        ? const Color(
-                                                            0xffF8F9FA)
-                                                        : const Color(
-                                                            0xFF242423),
+                                                        ? const Color(0xffF8F9FA)
+                                                        : const Color(0xFF242423),
                                                   ),
-                                                  backgroundColor: blackOnWhite
-                                                      ? const Color(0xFF242423)
-                                                      : const Color(0xffF8F9FA),
+                                                  backgroundColor:
+                                                      blackOnWhite ? const Color(0xFF242423) : const Color(0xffF8F9FA),
                                                 ),
                                               )
                                               .toList(),
@@ -295,9 +270,7 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
                                   ),
                                   const SizedBox(width: 16),
                                   InkWell(
-                                    onTap: () => _pageContext.goto(
-                                      '/subjects/${subject.id}',
-                                    ),
+                                    onTap: () => _pageContext.goto('/subjects/${subject.id}'),
                                     borderRadius: const BorderRadius.only(
                                       topRight: Radius.circular(12),
                                       bottomRight: Radius.circular(12),
@@ -306,9 +279,7 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
                                       width: 42,
                                       height: double.infinity,
                                       decoration: BoxDecoration(
-                                        color: blackOnWhite
-                                            ? const Color(0xFF242423)
-                                            : const Color(0xffF8F9FA),
+                                        color: blackOnWhite ? const Color(0xFF242423) : const Color(0xffF8F9FA),
                                         borderRadius: const BorderRadius.only(
                                           topRight: Radius.circular(12),
                                           bottomRight: Radius.circular(12),
@@ -317,9 +288,7 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
                                       alignment: Alignment.center,
                                       child: Icon(
                                         Icons.arrow_forward_ios_rounded,
-                                        color: blackOnWhite
-                                            ? const Color(0xffF8F9FA)
-                                            : const Color(0xFF242423),
+                                        color: blackOnWhite ? const Color(0xffF8F9FA) : const Color(0xFF242423),
                                       ),
                                     ),
                                   ),
@@ -334,28 +303,20 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
                             subjectAvatarIpfsCid: subject.croppedImageIpfsCid,
                             value: subject.avgScore.toDouble(),
                             size: AvatarSize.small,
-                            color: blackOnWhite
-                                ? const Color(0xffF8F9FA)
-                                : const Color(0xFF242423),
+                            color: blackOnWhite ? const Color(0xffF8F9FA) : const Color(0xFF242423),
                           ),
-                          color: blackOnWhite
-                              ? const Color(0xFF242423)
-                              : const Color(0xffF8F9FA),
+                          color: blackOnWhite ? const Color(0xFF242423) : const Color(0xffF8F9FA),
                           fromNarrowToWide: (index ~/ 2) % 2 == 0,
                         ),
                         CornerBanner(
                           position: Alignment.topLeft,
                           size: 50,
                           cornerRadius: 12,
-                          color: blackOnWhite
-                              ? const Color(0xffF8F9FA)
-                              : const Color(0xFF242423),
+                          color: blackOnWhite ? const Color(0xffF8F9FA) : const Color(0xFF242423),
                           child: Icon(
                             subject.typeIcon,
                             size: 18,
-                            color: blackOnWhite
-                                ? const Color(0xFF242423)
-                                : const Color(0xffF8F9FA),
+                            color: blackOnWhite ? const Color(0xFF242423) : const Color(0xffF8F9FA),
                           ),
                         )
                       ],

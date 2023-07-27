@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../user/bloc/user_actions.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../../widget_extensions.dart';
 import '../utils/utils.dart';
@@ -27,9 +28,12 @@ class _SignInButtonState extends StateX<SignInButton> {
             onPressed: () async {
               setState(() => _inProgress = true);
 
-              await multiStageOffChainAction(
+              await multiStageOffChainFlow(
                 context,
-                (ctx) => _userBloc.signInWithEthereum(ctx),
+                (ctx) => _userBloc.executeMultiStage(
+                  const SignInWithEthereum(),
+                  ctx,
+                ),
               );
 
               setState(() => _inProgress = false);

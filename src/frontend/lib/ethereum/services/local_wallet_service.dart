@@ -3,6 +3,8 @@ import 'dart:convert';
 
 import 'package:rxdart/rxdart.dart';
 
+import '../../general/contexts/multi_stage_operation_context.dart';
+import '../../user/errors/wallet_locked_error.dart';
 import 'iwallet_service.dart';
 import '../models/vm/local_wallet.dart';
 import '../../general/contracts/erc4337/iaccount_factory_contract.dart';
@@ -21,8 +23,7 @@ class LocalWalletService implements IWalletService {
   final _currentWalletAddressChangedEventChannel = BehaviorSubject<String>();
 
   @override
-  Stream<String?> get currentWalletAddressChanged$ =>
-      _currentWalletAddressChangedEventChannel.stream;
+  Stream<String?> get currentWalletAddressChanged$ => _currentWalletAddressChangedEventChannel.stream;
 
   @override
   String? get currentWalletAddress => _wallet?.currentWalletAddress;
@@ -66,8 +67,7 @@ class LocalWalletService implements IWalletService {
     );
   }
 
-  Future<String> _getWalletAddress(String ownerAddress) =>
-      _accountFactoryContract.getAddress(ownerAddress);
+  Future<String> _getWalletAddress(String ownerAddress) => _accountFactoryContract.getAddress(ownerAddress);
 
   Future unlockWallet(String password) async {
     var encryptedWalletJson = jsonDecode(
@@ -80,7 +80,16 @@ class LocalWalletService implements IWalletService {
     );
   }
 
-  Future addAccount() async {
+  Stream<Object> addAccount(MultiStageOperationContext ctx) async* {
+    if (_wallet!.locked) {
+      yield const WalletLockedError();
+
+      bool unlocked = await ctx.unlockWalletTask.future;
+      if (!unlocked) {
+        return;
+      }
+    }
+
     int index = _wallet!.addOwnerAccount(switchToAdded: false);
     var walletAddress = await _getWalletAddress(
       _wallet!.getOwnerAddress(index),
@@ -104,10 +113,8 @@ class LocalWalletService implements IWalletService {
     var walletJson = await _wallet!.toJson();
 
     encryptedWalletJson['currentOwnerIndex'] = walletJson['currentOwnerIndex'];
-    encryptedWalletJson['ownerIndexToAddress'] =
-        walletJson['ownerIndexToAddress'];
-    encryptedWalletJson['ownerIndexToWalletAddress'] =
-        walletJson['ownerIndexToWalletAddress'];
+    encryptedWalletJson['ownerIndexToAddress'] = walletJson['ownerIndexToAddress'];
+    encryptedWalletJson['ownerIndexToWalletAddress'] = walletJson['ownerIndexToWalletAddress'];
 
     await _localStorage.setString(
       'LocalWallet',
@@ -119,8 +126,7 @@ class LocalWalletService implements IWalletService {
   FutureOr<String> personalSign(String message) => _wallet!.ownerSign(message);
 
   @override
-  FutureOr<String> personalSignDigest(String digest) =>
-      _wallet!.ownerSignDigest(digest);
+  FutureOr<String> personalSignDigest(String digest) => _wallet!.ownerSignDigest(digest);
 
   Future revealSecretPhrase() async {
     /*

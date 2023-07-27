@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
 
+import '../../general/utils/utils.dart';
 import '../../general/contexts/page_context.dart';
 import '../../settlement/bloc/settlement_bloc.dart';
 import '../../settlement/models/rvm/verdict_vm.dart';
@@ -23,8 +24,7 @@ class SettlementProposalsList extends StatefulWidget {
   const SettlementProposalsList({super.key, required this.thingId});
 
   @override
-  State<SettlementProposalsList> createState() =>
-      _SettlementProposalsListState();
+  State<SettlementProposalsList> createState() => _SettlementProposalsListState();
 }
 
 class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
@@ -49,7 +49,7 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
           return const Center(child: CircularProgressIndicator());
         }
 
-        var proposals = snapshot.data!.proposals;
+        var proposals = snapshot.data!;
         if (proposals.isEmpty) {
           return Center(
             child: IconButton(
@@ -73,24 +73,20 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
                           child: const Text('Prepare draft'),
                           controller: btnController,
                           onPressed: () async {
-                            var action = CreateNewSettlementProposalDraft(
-                              documentContext: DocumentContext.fromEditable(
-                                documentContext,
+                            var success = await _settlementBloc.execute<bool>(
+                              CreateNewSettlementProposalDraft(
+                                documentContext: DocumentContext.fromEditable(documentContext),
                               ),
                             );
-                            _settlementBloc.dispatch(action);
 
-                            var failure = await action.result;
-                            if (failure != null) {
+                            if (!success.isTrue) {
                               btnController.error();
                               return;
                             }
 
                             btnController.success();
                             await Future.delayed(const Duration(seconds: 2));
-                            if (context.mounted) {
-                              Navigator.of(context).pop();
-                            }
+                            if (context.mounted) Navigator.of(context).pop();
                           },
                         ),
                       ),
@@ -133,26 +129,20 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
                               child: const Text('Prepare draft'),
                               controller: btnController,
                               onPressed: () async {
-                                var action = CreateNewSettlementProposalDraft(
-                                  documentContext: DocumentContext.fromEditable(
-                                    documentContext,
+                                var success = await _settlementBloc.execute<bool>(
+                                  CreateNewSettlementProposalDraft(
+                                    documentContext: DocumentContext.fromEditable(documentContext),
                                   ),
                                 );
-                                _settlementBloc.dispatch(action);
 
-                                var failure = await action.result;
-                                if (failure != null) {
+                                if (!success.isTrue) {
                                   btnController.error();
                                   return;
                                 }
 
                                 btnController.success();
-                                await Future.delayed(
-                                  const Duration(seconds: 2),
-                                );
-                                if (context.mounted) {
-                                  Navigator.of(context).pop();
-                                }
+                                await Future.delayed(const Duration(seconds: 2));
+                                if (context.mounted) Navigator.of(context).pop();
                               },
                             ),
                           ),

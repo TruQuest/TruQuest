@@ -25,12 +25,10 @@ class SettlementService {
   final UserOperationService _userOperationService;
   final TruQuestContract _truQuestContract;
   final AcceptancePollContract _acceptancePollContract;
-  final ThingAssessmentVerifierLotteryContract
-      _thingAssessmentVerifierLotteryContract;
+  final ThingAssessmentVerifierLotteryContract _thingAssessmentVerifierLotteryContract;
   final AssessmentPollContract _assessmentPollContract;
 
-  final StreamController<Stream<int>> _progress$Channel =
-      StreamController<Stream<int>>();
+  final _progress$Channel = StreamController<Stream<int>>();
   Stream<Stream<int>> get progress$$ => _progress$Channel.stream;
 
   SettlementService(
@@ -46,8 +44,7 @@ class SettlementService {
   Future createNewSettlementProposalDraft(
     DocumentContext documentContext,
   ) async {
-    var progress$ =
-        await _settlementApiService.createNewSettlementProposalDraft(
+    var progress$ = await _settlementApiService.createNewSettlementProposalDraft(
       documentContext.thingId!,
       documentContext.nameOrTitle!,
       documentContext.verdict!,
@@ -140,11 +137,9 @@ class SettlementService {
     var currentUserId = _userService.latestCurrentUser?.id;
     var currentWalletAddress = _userService.latestCurrentUser?.walletAddress;
 
-    int? initBlock = await _thingAssessmentVerifierLotteryContract
-        .getLotteryInitBlock(thingId, proposalId);
+    int? initBlock = await _thingAssessmentVerifierLotteryContract.getLotteryInitBlock(thingId, proposalId);
 
-    int durationBlocks = await _thingAssessmentVerifierLotteryContract
-        .getLotteryDurationBlocks();
+    int durationBlocks = await _thingAssessmentVerifierLotteryContract.getLotteryDurationBlocks();
 
     int thingVerifiersArrayIndex = currentWalletAddress != null
         ? await _acceptancePollContract.getUserIndexAmongThingVerifiers(
@@ -154,8 +149,7 @@ class SettlementService {
         : -1;
 
     bool? alreadyClaimedASpot = currentWalletAddress != null
-        ? await _thingAssessmentVerifierLotteryContract
-            .checkAlreadyClaimedLotterySpot(
+        ? await _thingAssessmentVerifierLotteryContract.checkAlreadyClaimedLotterySpot(
             thingId,
             proposalId,
             currentWalletAddress,
@@ -163,8 +157,7 @@ class SettlementService {
         : null;
 
     bool? alreadyJoined = currentWalletAddress != null
-        ? await _thingAssessmentVerifierLotteryContract
-            .checkAlreadyJoinedLottery(
+        ? await _thingAssessmentVerifierLotteryContract.checkAlreadyJoinedLottery(
             thingId,
             proposalId,
             currentWalletAddress,
@@ -290,8 +283,7 @@ class SettlementService {
     );
 
     var (lotteryInitBlock, dataHash, userXorDataHash) =
-        await _thingAssessmentVerifierLotteryContract.getOrchestratorCommitment(
-            thingId, proposalId);
+        await _thingAssessmentVerifierLotteryContract.getOrchestratorCommitment(thingId, proposalId);
 
     var entries = result.entries;
     if (entries.isEmpty || !entries.first.isOrchestrator) {
@@ -394,8 +386,7 @@ class SettlementService {
       return;
     }
 
-    var ipfsCid = await _settlementApiService
-        .castThingSettlementProposalAssessmentPollVote(vote, signature);
+    var ipfsCid = await _settlementApiService.castThingSettlementProposalAssessmentPollVote(vote, signature);
 
     print('**************** Vote cid: $ipfsCid ****************');
   }

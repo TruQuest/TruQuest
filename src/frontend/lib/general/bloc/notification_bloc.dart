@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:rxdart/rxdart.dart';
 
-import '../services/toast_messenger.dart';
 import '../models/rvm/notification_vm.dart';
 import '../services/notifications_cache.dart';
 import 'notification_actions.dart';
@@ -21,18 +20,16 @@ class NotificationBloc extends Bloc<NotificationAction> {
   final _toastChannel = StreamController<String>.broadcast();
   Stream<String> get toast$ => _toastChannel.stream;
 
-  Stream<int> get unreadNotificationsCount$ =>
-      _notificationsCache.unreadNotificationsCount$;
+  Stream<int> get unreadNotificationsCount$ => _notificationsCache.unreadNotificationsCount$;
 
-  Stream<(List<NotificationVm>, String?)> get unreadNotifications$ =>
-      _notificationsCache.unreadNotifications$;
+  Stream<(List<NotificationVm>, String?)> get unreadNotifications$ => _notificationsCache.unreadNotifications$;
 
   NotificationBloc(
     this._notificationsCache,
-    ToastMessenger toastMessenger,
+    super.toastMessenger,
     this._thingService,
     this._settlementService,
-  ) : super(toastMessenger) {
+  ) {
     actionChannel.stream.listen((action) {
       if (action is Dismiss) {
         _dismiss(action);
