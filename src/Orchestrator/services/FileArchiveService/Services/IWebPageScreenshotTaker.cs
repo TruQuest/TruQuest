@@ -2,5 +2,5 @@ namespace Services;
 
 internal interface IWebPageScreenshotTaker
 {
-    Task<List<string>> Take(IEnumerable<string> filePaths);
+    Task<List<string>?> Take(IEnumerable<string> urls);
 }

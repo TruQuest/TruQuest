@@ -14,10 +14,10 @@
         <PackageReference Include="KafkaFlow.Serializer" Version="2.2.13" />
         <PackageReference Include="KafkaFlow.TypedHandler" Version="2.2.13" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
-        <PackageReference Include="Microsoft.Playwright" Version="1.28.0" />
         <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.5.1" />
         <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.5.1" />
         <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol.Logs" Version="1.5.0-rc.1" />
         <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.5.1" />
+        <PackageReference Include="SixLabors.ImageSharp" Version="3.0.1" />
     </ItemGroup>
 </Project>

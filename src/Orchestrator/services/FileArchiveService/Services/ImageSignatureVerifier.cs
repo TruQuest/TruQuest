@@ -6,6 +6,7 @@ internal class ImageSignatureVerifier : IImageSignatureVerifier
 
     public bool Verify(byte[] content, string fileExt)
     {
+        // @@TODO!!
         return true;
     }
 }

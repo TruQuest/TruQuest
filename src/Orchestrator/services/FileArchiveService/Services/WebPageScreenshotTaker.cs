@@ -1,35 +1,67 @@
-using Microsoft.Playwright;
-
 namespace Services;
 
 internal class WebPageScreenshotTaker : IWebPageScreenshotTaker
 {
-    public async Task<List<string>> Take(IEnumerable<string> filePaths)
+    private readonly ILogger<WebPageScreenshotTaker> _logger;
+    private readonly IImageSaver _imageSaver;
+
+    private readonly string _apiFlashUrl;
+    private readonly string _apiFlashAccessKey;
+
+    public WebPageScreenshotTaker(
+        IConfiguration configuration,
+        ILogger<WebPageScreenshotTaker> logger,
+        IImageSaver imageSaver
+    )
     {
-        using var playwright = await Playwright.CreateAsync();
-        await using var browser = await playwright.Chromium.LaunchAsync(new()
-        {
-            ExecutablePath = "/usr/bin/google-chrome",
-            Headless = true
-        });
+        _logger = logger;
+        _imageSaver = imageSaver;
 
-        var previewImageFilePaths = new List<string>(filePaths.Count());
-        var page = await browser.NewPageAsync();
-        foreach (var filePath in filePaths)
-        {
-            await page.GotoAsync("file://" + filePath);
+        _apiFlashUrl = configuration["ApiFlash:Url"]!;
+        _apiFlashAccessKey = configuration["ApiFlash:AccessKey"]!;
+    }
 
-            var previewImageFilePath = filePath.Substring(0, filePath.Length - 4) + "jpg";
-            await page.ScreenshotAsync(new()
+    public async Task<List<string>?> Take(IEnumerable<string> urls)
+    {
+        var fullUrls = new List<string>(urls.Count());
+        foreach (var url in urls)
+        {
+            var @params = new Dictionary<string, string>
             {
-                Path = previewImageFilePath,
-                FullPage = false,
-                Timeout = 5000
-            });
+                {"access_key", _apiFlashAccessKey},
+                {"url", url},
+                {"full_page", "true"},
+                {"quality", "100"},
+                {"scroll_page", "true"},
+                {"no_cookie_banners", "true"},
+                {"no_ads", "true"},
+                {"no_tracking", "true"}
+            };
 
-            previewImageFilePaths.Add(previewImageFilePath);
+            var queryString = await new FormUrlEncodedContent(@params).ReadAsStringAsync();
+            fullUrls.Add($"{_apiFlashUrl}?{queryString}");
         }
 
-        return previewImageFilePaths;
+        var tasks = fullUrls.Select(url => _imageSaver.SaveLocalCopy(url, isWebPageScreenshot: true));
+
+        List<string>? filePaths = null;
+        try
+        {
+            filePaths = (await Task.WhenAll(tasks)).ToList();
+        }
+        catch (Exception e)
+        {
+            _logger.LogWarning(e, "Error taking webpage screenshots");
+            foreach (var task in tasks)
+            {
+                if (task.Status == TaskStatus.RanToCompletion)
+                {
+                    var filePath = await task;
+                    File.Delete(filePath);
+                }
+            }
+        }
+
+        return filePaths;
     }
 }

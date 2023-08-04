@@ -58,10 +58,9 @@ IHost host = Host.CreateDefaultBuilder(args)
                     })
             );
 
+        var mimeTypes = configuration["Files:Images:AcceptableMimeTypes"]!.Split(',');
         services.AddHttpClient("image", (sp, client) =>
         {
-            var configuration = sp.GetRequiredService<IConfiguration>();
-            var mimeTypes = configuration["Files:Images:AcceptableMimeTypes"]!.Split(',');
             foreach (var mimeType in mimeTypes)
             {
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(mimeType));
@@ -70,13 +69,12 @@ IHost host = Host.CreateDefaultBuilder(args)
 
         services.AddHttpClient("ipfs", (sp, client) =>
         {
-            var configuration = sp.GetRequiredService<IConfiguration>();
             client.BaseAddress = new Uri(configuration["IPFS:Host"]!);
         });
 
         services.AddSingleton<IImageSignatureVerifier, ImageSignatureVerifier>();
         services.AddSingleton<IImageSaver, ImageSaver>();
-        services.AddSingleton<IWebPageSaver, WebPageSaver>();
+        services.AddSingleton<IImageCropper, ImageCropper>();
         services.AddSingleton<IWebPageScreenshotTaker, WebPageScreenshotTaker>();
         services.AddSingleton<IFileStorage, FileStorage>();
         services.AddSingleton<IFileArchiver, FileArchiver>();

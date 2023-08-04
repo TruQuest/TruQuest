@@ -13,8 +13,7 @@ internal class FileArchiver : IFileArchiver
     {
         ImageUrl,
         WebPageUrl,
-        ImagePath,
-        WebPagePath
+        ImagePath
     }
 
     private class ArchiveTask
@@ -30,21 +29,21 @@ internal class FileArchiver : IFileArchiver
 
     private readonly ILogger<FileArchiver> _logger;
     private readonly IImageSaver _imageSaver;
-    private readonly IWebPageSaver _webPageSaver;
+    private readonly IImageCropper _imageCropper;
     private readonly IWebPageScreenshotTaker _webPageScreenshotTaker;
     private readonly IFileStorage _fileStorage;
 
     public FileArchiver(
         ILogger<FileArchiver> logger,
         IImageSaver imageSaver,
-        IWebPageSaver webPageSaver,
+        IImageCropper imageCropper,
         IWebPageScreenshotTaker webPageScreenshotTaker,
         IFileStorage fileStorage
     )
     {
         _logger = logger;
         _imageSaver = imageSaver;
-        _webPageSaver = webPageSaver;
+        _imageCropper = imageCropper;
         _webPageScreenshotTaker = webPageScreenshotTaker;
         _fileStorage = fileStorage;
     }
@@ -110,12 +109,8 @@ internal class FileArchiver : IFileArchiver
                         {
                             Object = input,
                             BackingProp = prop.DeclaringType!.GetProperty(pathAttr.BackingField)!,
-                            ExtraBackingProp = pathAttr is WebPagePathAttribute webAttr ?
-                                prop.DeclaringType.GetProperty(webAttr.ExtraBackingField)! :
-                                null,
-                            AttachmentType = pathAttr is ImagePathAttribute ?
-                                AttachmentType.ImagePath :
-                                AttachmentType.WebPagePath,
+                            ExtraBackingProp = null,
+                            AttachmentType = AttachmentType.ImagePath,
                             Uri = path
                         });
                     }
@@ -129,7 +124,7 @@ internal class FileArchiver : IFileArchiver
         foreach (var task in archiveTasks)
         {
             task.BackingProp.SetValue(task.Object, task.IpfsCid);
-            if (task.AttachmentType is AttachmentType.WebPageUrl or AttachmentType.WebPagePath)
+            if (task.AttachmentType is AttachmentType.WebPageUrl)
             {
                 task.ExtraBackingProp!.SetValue(task.Object, task.ExtraIpfsCid);
             }
@@ -219,63 +214,68 @@ internal class FileArchiver : IFileArchiver
 
             if (webPagesToArchive.Any())
             {
-                List<string> htmlFilePaths;
-                try
+                List<string>? webPageScreenshotFilePaths = await _webPageScreenshotTaker.Take(webPagesToArchive);
+                if (webPageScreenshotFilePaths == null)
                 {
-                    htmlFilePaths = await _webPageSaver.SaveLocalCopies(webPagesToArchive);
-                }
-                catch (Exception e)
-                {
-                    _logger.LogWarning(e, "Error saving webpages to local drive");
-                    return new Error("Error saving webpages to local drive");
+                    return new Error("Error taking webpage screenshots");
                 }
 
                 progress?.Report(75);
 
-                List<string> previewImageFilePaths;
+                var cropImageTasks = webPageScreenshotFilePaths
+                    .Select(path => _imageCropper.Crop(path))
+                    .ToList(); // @@??: Semaphore?
+
+                string[] previewImageFilePaths;
                 try
                 {
-                    previewImageFilePaths = await _webPageScreenshotTaker.Take(htmlFilePaths);
+                    previewImageFilePaths = await Task.WhenAll(cropImageTasks);
                 }
                 catch (Exception e)
                 {
-                    _logger.LogWarning(e, "Error taking webpage screenshots");
-                    var outputFilesDir = Path.GetDirectoryName(htmlFilePaths.First())!;
-                    Directory.Delete(outputFilesDir, recursive: true);
+                    _logger.LogWarning(e, "Error cropping webpage screenshots");
+                    for (int j = 0; j < cropImageTasks.Count; ++j)
+                    {
+                        var filePath = webPageScreenshotFilePaths[j];
+                        File.Delete(filePath);
+                        File.Delete($"{Path.GetDirectoryName(filePath)}/{Path.GetFileNameWithoutExtension(filePath)}-cropped.jpeg");
+                    }
 
-                    return new Error("Error taking webpage screenshots");
+                    return new Error("Error cropping webpage screenshots");
                 }
 
-                Debug.Assert(htmlFilePaths.Count == previewImageFilePaths.Count);
+                Debug.Assert(webPageScreenshotFilePaths.Count == previewImageFilePaths.Length);
 
                 progress?.Report(85);
 
                 try
                 {
-                    ipfsCids = await _fileStorage.Upload(htmlFilePaths.Concat(previewImageFilePaths));
+                    ipfsCids = await _fileStorage.Upload(webPageScreenshotFilePaths.Concat(previewImageFilePaths));
                 }
                 catch (Exception e)
                 {
-                    _logger.LogWarning(e, "Error adding webpages to ipfs");
+                    _logger.LogWarning(e, "Error adding webpage image files to ipfs");
 
-                    var outputFilesDir = Path.GetDirectoryName(htmlFilePaths.First())!;
-                    Directory.Delete(outputFilesDir, recursive: true);
+                    foreach (var filePath in webPageScreenshotFilePaths.Concat(previewImageFilePaths))
+                    {
+                        File.Delete(filePath);
+                    }
 
-                    return new Error("Error adding webpages to ipfs");
+                    return new Error("Error adding webpage image files to ipfs");
                 }
 
-                var htmlIpfsCids = ipfsCids.Take(ipfsCids.Count / 2).ToList();
+                var webPageScreenshotIpfsCids = ipfsCids.Take(ipfsCids.Count / 2).ToList();
                 var previewImageIpfsCids = ipfsCids.TakeLast(ipfsCids.Count / 2).ToList();
 
-                Debug.Assert(htmlIpfsCids.Count == previewImageIpfsCids.Count);
+                Debug.Assert(webPageScreenshotIpfsCids.Count == previewImageIpfsCids.Count);
                 Debug.Assert(
-                    htmlIpfsCids.Count == archiveTasks.Where(t => t.AttachmentType == AttachmentType.WebPageUrl).Count()
+                    webPageScreenshotIpfsCids.Count == archiveTasks.Where(t => t.AttachmentType == AttachmentType.WebPageUrl).Count()
                 );
 
                 i = 0;
                 foreach (var archiveWebPageTask in archiveTasks.Where(t => t.AttachmentType == AttachmentType.WebPageUrl))
                 {
-                    archiveWebPageTask.IpfsCid = htmlIpfsCids[i];
+                    archiveWebPageTask.IpfsCid = webPageScreenshotIpfsCids[i];
                     archiveWebPageTask.ExtraIpfsCid = previewImageIpfsCids[i++];
                 }
             }

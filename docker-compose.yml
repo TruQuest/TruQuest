@@ -102,12 +102,15 @@ services:
       - jaeger
 
   file-archive:
-    image: file-archive:latest
+    image: file-archive-new:latest
     build:
       context: src/Orchestrator/services/FileArchiveService
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      ASPNETCORE_ENVIRONMENT: Development
+      ApiFlash__AccessKey: ${ApiFlash__AccessKey}
     volumes:
       - './src/Orchestrator/services/FileArchiveService/user_files:/user_files'
-      - './src/Orchestrator/services/FileArchiveService/output:/singlefile/output'
       - './src/Orchestrator/services/FileArchiveService/images:/images'
     networks:
       - truquest
