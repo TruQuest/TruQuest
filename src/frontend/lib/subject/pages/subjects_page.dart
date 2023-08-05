@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
@@ -7,6 +6,7 @@ import 'package:sliver_tools/sliver_tools.dart';
 
 import '../../general/widgets/restrict_when_unauthorized_button.dart';
 import '../../general/contexts/document_context.dart';
+import '../../general/widgets/wallet_info_card.dart';
 import '../widgets/clipped_avatar_container.dart';
 import '../widgets/avatar_with_reputation_gauge.dart';
 import '../../general/widgets/corner_banner.dart';
@@ -65,117 +65,89 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(25, 24, 25, 0),
-                child: Row(
+                child: Column(
                   children: [
-                    Container(
-                      color: Colors.black,
-                      width: 385,
-                      padding: const EdgeInsets.all(8),
-                      child: DefaultTextStyle(
-                        style: GoogleFonts.righteous(
-                          fontSize: 24,
-                          color: Colors.white,
+                    WalletInfoCard(),
+                    SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF242423),
+                            foregroundColor: const Color(0xffF8F9FA),
+                            elevation: 10,
+                          ),
+                          icon: const Icon(Icons.search),
+                          label: const Text('Search'),
+                          onPressed: () {},
                         ),
-                        child: Row(
-                          children: [
-                            const Text('> '),
-                            AnimatedTextKit(
-                              repeatForever: true,
-                              pause: const Duration(seconds: 2),
-                              animatedTexts: [
-                                TypewriterAnimatedText(
-                                  'Basically, a promise tracker',
-                                  speed: const Duration(milliseconds: 70),
-                                ),
-                                TypewriterAnimatedText(
-                                  'Blockchain never forgets',
-                                  speed: const Duration(milliseconds: 70),
-                                ),
-                                TypewriterAnimatedText(
-                                  'if (promiseKept) reputation++;',
-                                  speed: const Duration(milliseconds: 70),
-                                ),
-                              ],
+                        const SizedBox(width: 12),
+                        RestrictWhenUnauthorizedButton(
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xffF8F9FA),
+                              foregroundColor: const Color(0xFF242423),
+                              elevation: 10,
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF242423),
-                        foregroundColor: const Color(0xffF8F9FA),
-                        elevation: 10,
-                      ),
-                      icon: const Icon(Icons.search),
-                      label: const Text('Search'),
-                      onPressed: () {},
-                    ),
-                    const SizedBox(width: 12),
-                    RestrictWhenUnauthorizedButton(
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xffF8F9FA),
-                          foregroundColor: const Color(0xFF242423),
-                          elevation: 10,
-                        ),
-                        icon: const Icon(Icons.add),
-                        label: const Text('Add'),
-                        onPressed: () async {
-                          var documentContext = DocumentContext();
-                          var btnController = RoundedLoadingButtonController();
+                            icon: const Icon(Icons.add),
+                            label: const Text('Add'),
+                            onPressed: () async {
+                              var documentContext = DocumentContext();
+                              var btnController = RoundedLoadingButtonController();
 
-                          var subjectId = await showDialog<String>(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (context) => ScopeX(
-                              useInstances: [documentContext],
-                              child: DocumentComposer(
-                                title: 'New subject',
-                                nameFieldLabel: 'Name',
-                                submitButton: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                  ),
-                                  child: RoundedLoadingButton(
-                                    child: const Text('Submit'),
-                                    controller: btnController,
-                                    onPressed: () async {
-                                      var subjectId = await _subjectBloc.execute<String>(
-                                        AddNewSubject(
-                                          documentContext: DocumentContext.fromEditable(documentContext),
-                                        ),
-                                      );
+                              var subjectId = await showDialog<String>(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (context) => ScopeX(
+                                  useInstances: [documentContext],
+                                  child: DocumentComposer(
+                                    title: 'New subject',
+                                    nameFieldLabel: 'Name',
+                                    submitButton: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                      ),
+                                      child: RoundedLoadingButton(
+                                        child: const Text('Submit'),
+                                        controller: btnController,
+                                        onPressed: () async {
+                                          var subjectId = await _subjectBloc.execute<String>(
+                                            AddNewSubject(
+                                              documentContext: DocumentContext.fromEditable(documentContext),
+                                            ),
+                                          );
 
-                                      if (subjectId == null) {
-                                        btnController.error();
-                                        await Future.delayed(const Duration(milliseconds: 1500));
-                                        btnController.reset();
+                                          if (subjectId == null) {
+                                            btnController.error();
+                                            await Future.delayed(const Duration(milliseconds: 1500));
+                                            btnController.reset();
 
-                                        return;
-                                      }
+                                            return;
+                                          }
 
-                                      btnController.success();
-                                      await Future.delayed(const Duration(milliseconds: 1500));
-                                      if (context.mounted) Navigator.of(context).pop(subjectId);
-                                    },
+                                          btnController.success();
+                                          await Future.delayed(const Duration(milliseconds: 1500));
+                                          if (context.mounted) Navigator.of(context).pop(subjectId);
+                                        },
+                                      ),
+                                    ),
+                                    sideBlocks: const [
+                                      TypeSelectorBlock(),
+                                      ImageBlockWithCrop(cropCircle: true),
+                                      TagsBlock(),
+                                    ],
                                   ),
                                 ),
-                                sideBlocks: const [
-                                  TypeSelectorBlock(),
-                                  ImageBlockWithCrop(cropCircle: true),
-                                  TagsBlock(),
-                                ],
-                              ),
-                            ),
-                          );
+                              );
 
-                          if (subjectId != null) {
-                            _pageContext.goto('/subjects/$subjectId');
-                          }
-                        },
-                      ),
+                              if (subjectId != null) {
+                                _pageContext.goto('/subjects/$subjectId');
+                              }
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
