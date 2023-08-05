@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:rxdart/rxdart.dart';
 
+import '../../ethereum/services/ethereum_api_service.dart';
+import '../models/vm/smart_wallet_info_vm.dart';
 import '../../ethereum/errors/wallet_action_declined_error.dart';
 import '../../general/errors/insufficient_balance_error.dart';
 import '../errors/wallet_locked_error.dart';
@@ -26,19 +28,22 @@ class UserService {
   final UserOperationService _userOperationService;
   final TruQuestContract _truQuestContract;
   final TruthserumContract _truthserumContract;
+  final EthereumApiService _ethereumApiService;
 
   late final IWalletService _walletService;
   String? _selectedWalletName;
   String? get selectedWalletName => _selectedWalletName;
 
   final _currentUserChangedEventChannel = BehaviorSubject<UserVm>();
-  Stream<UserVm> get currentUserChanged$ =>
-      _currentUserChangedEventChannel.stream;
+  Stream<UserVm> get currentUserChanged$ => _currentUserChangedEventChannel.stream;
   UserVm? get latestCurrentUser => _currentUserChangedEventChannel.valueOrNull;
 
   bool get walletUnlocked => _walletService.isUnlocked;
   String get currentWalletAddress => _walletService.currentWalletAddress!;
   String get currentOwnerAddress => _walletService.currentOwnerAddress!;
+
+  final _smartWalletInfoChannel = BehaviorSubject<SmartWalletInfoVm>();
+  Stream<SmartWalletInfoVm> get smartWalletInfo$ => _smartWalletInfoChannel.stream;
 
   UserService(
     this._localWalletService,
@@ -49,10 +54,11 @@ class UserService {
     this._userOperationService,
     this._truQuestContract,
     this._truthserumContract,
+    this._ethereumApiService,
   ) {
     var selectedWallet = _localStorage.getString('SelectedWallet');
     if (selectedWallet == null) {
-      _reloadUser(null);
+      _reloadUser(null, null);
       return;
     }
 
@@ -69,7 +75,10 @@ class UserService {
     _selectedWalletName = 'Local';
 
     _walletService.currentWalletAddressChanged$.listen(
-      (currentWalletAddress) => _reloadUser(currentWalletAddress),
+      (ownerAndWalletAddresses) => _reloadUser(
+        ownerAndWalletAddresses.$1,
+        ownerAndWalletAddresses.$2,
+      ),
     );
   }
 
@@ -81,18 +90,20 @@ class UserService {
     _selectedWalletName = walletName;
 
     _walletService.currentWalletAddressChanged$.listen(
-      (currentWalletAddress) => _reloadUser(currentWalletAddress),
+      (ownerAndWalletAddresses) => _reloadUser(
+        ownerAndWalletAddresses.$1,
+        ownerAndWalletAddresses.$2,
+      ),
     );
 
     return !hasConnectedAccount;
   }
 
-  void _reloadUser(String? currentWalletAddress) {
+  void _reloadUser(String? currentOwnerAddress, String? currentWalletAddress) {
     String? userId;
     String? username;
     List<String>? userData;
-    if (currentWalletAddress == null ||
-        (userData = _localStorage.getStrings(currentWalletAddress)) == null) {
+    if (currentWalletAddress == null || (userData = _localStorage.getStrings(currentWalletAddress)) == null) {
       _serverConnector.connectToHub(username, null);
     } else {
       userId = currentWalletAddress.substring(2).toLowerCase();
@@ -105,6 +116,8 @@ class UserService {
       username: username,
       walletAddress: currentWalletAddress,
     ));
+
+    _refreshSmartWalletInfo(currentOwnerAddress, currentWalletAddress);
   }
 
   Future createAndSaveEncryptedLocalWallet(
@@ -138,26 +151,23 @@ class UserService {
       }
     }
 
-    var currentWalletAddress = _walletService.currentWalletAddress!;
+    var currentOwnerAddress = this.currentOwnerAddress;
+    var currentWalletAddress = this.currentWalletAddress;
 
     var nonce = await _userApiService.getNonceForSiwe(currentWalletAddress);
     var domain = 'truquest.io';
-    var statement =
-        'I accept the TruQuest Terms of Service: https://truquest.io/tos';
+    var statement = 'I accept the TruQuest Terms of Service: https://truquest.io/tos';
     var uri = 'https://truquest.io/';
     var version = 1;
-    var chainId = 31337;
 
     var now = DateTime.now().toUtc().toIso8601String();
     int indexOfDot = now.indexOf('.');
     var nowWithoutMicroseconds = now.substring(0, indexOfDot + 4) + 'Z';
-    var message =
-        '$domain wants you to sign in with your Ethereum ERC-4337 account:\n'
+    var message = '$domain wants you to sign in with your Ethereum ERC-4337 account:\n'
         '$currentWalletAddress\n\n'
         '$statement\n\n'
         'URI: $uri\n'
         'Version: $version\n'
-        'Chain ID: $chainId\n'
         'Nonce: $nonce\n'
         'Issued At: $nowWithoutMicroseconds';
 
@@ -180,14 +190,12 @@ class UserService {
       [siweResult.token, siweResult.username],
     );
 
-    _reloadUser(currentWalletAddress);
+    _reloadUser(currentOwnerAddress, currentWalletAddress);
   }
 
-  FutureOr<String> personalSign(String message) =>
-      _walletService.personalSign(message);
+  FutureOr<String> personalSign(String message) => _walletService.personalSign(message);
 
-  FutureOr<String> personalSignDigest(String digest) =>
-      _walletService.personalSignDigest(digest);
+  FutureOr<String> personalSignDigest(String digest) => _walletService.personalSignDigest(digest);
 
   Future addEmail(String email) async {
     // var wallet = _localWalletService.wallet;
@@ -209,6 +217,33 @@ class UserService {
     // await _userApiService.confirmEmail(confirmationToken);
   }
 
+  void _refreshSmartWalletInfo(String? walletOwnerAddress, String? walletAddress) async {
+    if (walletAddress == null) {
+      var info = SmartWalletInfoVm.placeholder();
+      _smartWalletInfoChannel.add(info);
+      return;
+    }
+
+    // @@TODO: Make requests concurrently.
+    String? walletCode = await _ethereumApiService.getCode(walletAddress);
+    BigInt? ethBalance = await _ethereumApiService.getBalance(walletAddress);
+    BigInt truBalance = await _truthserumContract.balanceOf(walletAddress);
+    BigInt deposited = await _truQuestContract.balanceOf(walletAddress);
+    BigInt staked = await _truQuestContract.stakedBalanceOf(walletAddress);
+
+    var info = SmartWalletInfoVm(
+      walletOwnerAddress,
+      walletAddress,
+      walletCode != null && walletCode != '0x',
+      ethBalance,
+      truBalance,
+      deposited,
+      staked,
+    );
+
+    _smartWalletInfoChannel.add(info);
+  }
+
   Stream<Object> depositFunds(
     int amount,
     MultiStageOperationContext ctx,
@@ -224,9 +259,9 @@ class UserService {
       }
     }
 
-    int balance = await _truthserumContract.balanceOf(currentWalletAddress);
+    BigInt balance = await _truthserumContract.balanceOf(currentWalletAddress);
     print('**************** Balance: $balance drops ****************');
-    if (balance < amount) {
+    if (balance < BigInt.from(amount)) {
       yield const InsufficientBalanceError();
       return;
     }
@@ -247,5 +282,7 @@ class UserService {
     if (error != null) {
       yield error;
     }
+
+    _refreshSmartWalletInfo(currentOwnerAddress, currentWalletAddress);
   }
 }

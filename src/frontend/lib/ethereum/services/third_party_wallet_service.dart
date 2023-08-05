@@ -40,7 +40,7 @@ class ThirdPartyWalletService implements IWalletService {
   final _connectedAccountChangedEventChannel = BehaviorSubject<String?>();
 
   @override
-  Stream<String?> get currentWalletAddressChanged$ =>
+  Stream<(String?, String?)> get currentWalletAddressChanged$ =>
       _connectedAccountChangedEventChannel.asyncMap((connectedAccount) async {
         _connectedAccount = connectedAccount;
         _currentWalletAddress =
@@ -50,7 +50,7 @@ class ThirdPartyWalletService implements IWalletService {
           '*************** $_connectedAccount: $_currentWalletAddress ***************',
         );
 
-        return _currentWalletAddress;
+        return (_connectedAccount, _currentWalletAddress);
       });
 
   String? _currentWalletAddress;

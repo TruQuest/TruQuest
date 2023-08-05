@@ -61,8 +61,8 @@ contract TruQuest {
     uint256 private s_thingSettlementProposalAcceptedReward;
     uint256 private s_thingSettlementProposalRejectedPenalty;
 
-    mapping(address => uint256) private s_balanceOf;
-    mapping(address => uint256) private s_stakedBalanceOf;
+    mapping(address => uint256) public s_balanceOf;
+    mapping(address => uint256) public s_stakedBalanceOf;
 
     mapping(bytes16 => address) public s_thingSubmitter;
 

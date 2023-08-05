@@ -11,6 +11,44 @@ class TruQuestContract {
         {
           "inputs": [
             {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "name": "s_balanceOf",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "name": "s_stakedBalanceOf",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
               "internalType": "uint256",
               "name": "_amount",
               "type": "uint256"
@@ -127,6 +165,10 @@ class TruQuestContract {
     _interface = Abi(_abi);
     _contract = Contract(address, _abi, ethereumRpcProvider.provider);
   }
+
+  Future<BigInt> balanceOf(String address) => _contract.read<BigInt>('s_balanceOf', args: [address]);
+
+  Future<BigInt> stakedBalanceOf(String address) => _contract.read<BigInt>('s_stakedBalanceOf', args: [address]);
 
   Future<bool> checkThingAlreadyFunded(String thingId) => _contract.read<bool>(
         'checkThingAlreadyFunded',

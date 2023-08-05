@@ -21,7 +21,8 @@ class _$Injector extends Injector {
           c<LocalStorage>(),
           c<UserOperationService>(),
           c<TruQuestContract>(),
-          c<TruthserumContract>()))
+          c<TruthserumContract>(),
+          c<EthereumApiService>()))
       ..registerSingleton(
           (c) => EthereumBloc(c<ToastMessenger>(), c<EthereumRpcProvider>()))
       ..registerSingleton((c) => ServerConnector())

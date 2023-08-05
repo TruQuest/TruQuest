@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../models/vm/smart_wallet_info_vm.dart';
 import '../../ethereum/services/third_party_wallet_service.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
 import '../../ethereum/services/local_wallet_service.dart';
@@ -20,6 +21,8 @@ class UserBloc extends Bloc<UserAction> {
 
   bool get walletSelected => _userService.selectedWalletName != null;
   bool get localWalletSelected => _userService.selectedWalletName == 'Local';
+
+  Stream<SmartWalletInfoVm> get smartWalletInfo$ => _userService.smartWalletInfo$;
 
   UserBloc(
     super.toastMessenger,

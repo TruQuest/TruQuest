@@ -60,10 +60,7 @@ class TruthserumContract {
     _contract = Contract(address, _abi, ethereumRpcProvider.provider);
   }
 
-  Future<int> balanceOf(String address) async {
-    var balance = await _contract.read<BigInt>('balanceOf', args: [address]);
-    return balance.toInt();
-  }
+  Future<BigInt> balanceOf(String address) => _contract.read<BigInt>('balanceOf', args: [address]);
 
   String approve(int amount) {
     return _interface.encodeFunctionData(

@@ -20,10 +20,10 @@ class LocalWalletService implements IWalletService {
   final _walletAddressesChannel = BehaviorSubject<List<String>>();
   Stream<List<String>> get walletAddresses$ => _walletAddressesChannel.stream;
 
-  final _currentWalletAddressChangedEventChannel = BehaviorSubject<String>();
+  final _currentWalletAddressChangedEventChannel = BehaviorSubject<(String?, String?)>();
 
   @override
-  Stream<String?> get currentWalletAddressChanged$ => _currentWalletAddressChangedEventChannel.stream;
+  Stream<(String?, String?)> get currentWalletAddressChanged$ => _currentWalletAddressChangedEventChannel.stream;
 
   @override
   String? get currentWalletAddress => _wallet?.currentWalletAddress;
@@ -40,11 +40,11 @@ class LocalWalletService implements IWalletService {
   );
 
   Future setup() async {
-    var encryptedWalletJson = jsonDecode(
-      _localStorage.getString('LocalWallet')!,
-    );
+    var encryptedWalletJson = jsonDecode(_localStorage.getString('LocalWallet')!);
     _wallet = await LocalWallet.fromMap(encryptedWalletJson);
-    _currentWalletAddressChangedEventChannel.add(_wallet!.currentWalletAddress);
+    _currentWalletAddressChangedEventChannel.add(
+      (_wallet!.currentOwnerAddress, _wallet!.currentWalletAddress),
+    );
     _walletAddressesChannel.add(_wallet!.walletAddresses);
   }
 
@@ -70,9 +70,7 @@ class LocalWalletService implements IWalletService {
   Future<String> _getWalletAddress(String ownerAddress) => _accountFactoryContract.getAddress(ownerAddress);
 
   Future unlockWallet(String password) async {
-    var encryptedWalletJson = jsonDecode(
-      _localStorage.getString('LocalWallet')!,
-    );
+    var encryptedWalletJson = jsonDecode(_localStorage.getString('LocalWallet')!);
     // @@TODO: Handle invalid password.
     _wallet = await LocalWallet.fromMap(
       encryptedWalletJson,
@@ -103,7 +101,9 @@ class LocalWalletService implements IWalletService {
   Future switchAccount(String walletAddress) async {
     _wallet!.switchCurrentToWalletsOwner(walletAddress);
     await _updateAccountListInLocalStorage();
-    _currentWalletAddressChangedEventChannel.add(_wallet!.currentWalletAddress);
+    _currentWalletAddressChangedEventChannel.add(
+      (_wallet!.currentOwnerAddress, _wallet!.currentWalletAddress),
+    );
   }
 
   Future _updateAccountListInLocalStorage() async {

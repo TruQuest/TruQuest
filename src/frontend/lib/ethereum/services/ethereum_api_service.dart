@@ -12,8 +12,7 @@ class EthereumApiService {
   late final Dio _dio;
   late final Dio _dioBundler;
 
-  EthereumApiService(IEntryPointContract entryPointContract)
-      : _entryPointAddress = entryPointContract.address {
+  EthereumApiService(IEntryPointContract entryPointContract) : _entryPointAddress = entryPointContract.address {
     _dio = Dio(
       BaseOptions(baseUrl: dotenv.env['ETHEREUM_RPC_URL']!),
     );
@@ -77,6 +76,25 @@ class EthereumApiService {
       );
 
       return response.data['result'] as String;
+    } on DioError catch (error) {
+      print(error);
+      return null;
+    }
+  }
+
+  Future<BigInt?> getBalance(String address) async {
+    try {
+      var response = await _dio.post(
+        '/',
+        data: <String, dynamic>{
+          'jsonrpc': '2.0',
+          'method': 'eth_getBalance',
+          'params': [address, 'latest'],
+          'id': 0,
+        },
+      );
+
+      return BigInt.parse(response.data['result'] as String);
     } on DioError catch (error) {
       print(error);
       return null;
