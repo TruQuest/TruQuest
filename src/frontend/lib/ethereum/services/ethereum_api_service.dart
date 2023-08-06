@@ -110,10 +110,7 @@ class EthereumApiService {
         data: <String, dynamic>{
           'jsonrpc': '2.0',
           'method': 'eth_estimateUserOperationGas',
-          'params': [
-            userOp.toJson(),
-            _entryPointAddress,
-          ],
+          'params': [userOp.toJson(), _entryPointAddress],
           'id': 0,
         },
       );
@@ -141,10 +138,7 @@ class EthereumApiService {
         data: <String, dynamic>{
           'jsonrpc': '2.0',
           'method': 'eth_sendUserOperation',
-          'params': [
-            userOp.toJson(),
-            _entryPointAddress,
-          ],
+          'params': [userOp.toJson(), _entryPointAddress],
           'id': 0,
         },
       );

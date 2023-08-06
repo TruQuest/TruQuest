@@ -1,10 +1,15 @@
 using System.Numerics;
 
+using Application.Ethereum.Models.IM;
+
 namespace Application.Common.Interfaces;
 
 public interface IContractCaller
 {
     Task<string> GetWalletAddressFor(string ownerAddress);
+    Task<BigInteger> GetWalletNonce(string walletAddress);
+    Task<byte[]> GetUserOperationHash(UserOperation userOp);
+
     Task<byte[]> ComputeHashForThingSubmissionVerifierLottery(byte[] data);
     Task<long> InitThingSubmissionVerifierLottery(byte[] thingId, byte[] dataHash, byte[] userXorDataHash);
     Task<long> GetThingSubmissionVerifierLotteryInitBlock(byte[] thingId);

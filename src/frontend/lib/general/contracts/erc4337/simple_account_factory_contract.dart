@@ -77,18 +77,10 @@ class SimpleAccountFactoryContract implements IAccountFactoryContract {
 
   @override
   Future<String> getAddress(String ownerAddress) async => convertToEip55Address(
-        await _contract.read<String>(
-          'getAddress',
-          args: [ownerAddress, 0],
-        ),
+        await _contract.read<String>('getAddress', args: [ownerAddress, 0]),
       );
 
   @override
-  String getInitCode(String ownerAddress) {
-    return _address +
-        _interface.encodeFunctionData(
-          'createAccount',
-          [ownerAddress, 0],
-        ).substring(2);
-  }
+  String getInitCode(String ownerAddress) =>
+      _address + _interface.encodeFunctionData('createAccount', [ownerAddress, 0]).substring(2);
 }

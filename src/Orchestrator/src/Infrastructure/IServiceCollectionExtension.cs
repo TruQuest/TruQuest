@@ -30,6 +30,7 @@ using Infrastructure.Persistence.Repositories.Events;
 using Infrastructure.Kafka;
 using Infrastructure.Kafka.Messages;
 using Infrastructure.Persistence.Queryables;
+using Infrastructure.Ethereum.ERC4337;
 
 namespace Infrastructure;
 
@@ -163,7 +164,6 @@ public static class IServiceCollectionExtension
 
         services.AddHttpClient("ipfs", (sp, client) =>
         {
-            var configuration = sp.GetRequiredService<IConfiguration>();
             client.BaseAddress = new Uri(configuration["IPFS:Host"]!);
         });
         services.AddSingleton<IFileStorage, FileStorage>();
@@ -212,8 +212,17 @@ public static class IServiceCollectionExtension
             services.AddSingleton<IBlockListener, OptimismL1BlockListener>();
         }
         services.AddSingleton<IL1BlockchainQueryable, L1BlockchainQueryable>();
+        services.AddSingleton<IL2BlockchainQueryable, L2BlockchainQueryable>();
         services.AddSingleton<IContractStorageQueryable, ContractStorageQueryable>();
         services.AddSingleton<IEthereumAddressFormatter, EthereumAddressFormatter>();
+        services.AddSingleton<AbiEncoder>();
+        services.AddSingleton<BundlerApi>();
+        services.AddTransient<UserOperationBuilder>();
+
+        services.AddHttpClient("bundler", (sp, client) =>
+        {
+            client.BaseAddress = new Uri(configuration[$"Ethereum:Bundler:{network}:URL"]!);
+        });
 
         services.AddSingleton<IRequestDispatcher, RequestDispatcher>();
 

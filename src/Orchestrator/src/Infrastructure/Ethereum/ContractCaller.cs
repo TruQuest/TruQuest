@@ -6,8 +6,11 @@ using Microsoft.Extensions.Configuration;
 using Nethereum.Web3;
 
 using Application.Common.Interfaces;
+using Application.Common.Misc;
+using Application.Ethereum.Models.IM;
 
 using Infrastructure.Ethereum.Messages;
+using Infrastructure.Ethereum.TypedData;
 
 namespace Infrastructure.Ethereum;
 
@@ -16,6 +19,7 @@ internal class ContractCaller : IContractCaller
     private readonly ILogger<ContractCaller> _logger;
     private readonly AccountProvider _accountProvider;
     private readonly Web3 _web3;
+    private readonly string _entryPointAddress;
     private readonly string _simpleAccountFactoryAddress;
     private readonly string _thingSubmissionVerifierLotteryAddress;
     private readonly string _acceptancePollAddress;
@@ -34,6 +38,7 @@ internal class ContractCaller : IContractCaller
         var network = configuration["Ethereum:Network"]!;
         var orchestrator = _accountProvider.GetAccount("Orchestrator");
         _web3 = new Web3(orchestrator, configuration[$"Ethereum:Networks:{network}:URL"]);
+        _entryPointAddress = configuration[$"Ethereum:Contracts:{network}:EntryPoint:Address"]!;
         _simpleAccountFactoryAddress = configuration[$"Ethereum:Contracts:{network}:SimpleAccountFactory:Address"]!;
         _thingSubmissionVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingSubmissionVerifierLottery:Address"]!;
         _acceptancePollAddress = configuration[$"Ethereum:Contracts:{network}:AcceptancePoll:Address"]!;
@@ -49,6 +54,40 @@ internal class ContractCaller : IContractCaller
             {
                 Owner = ownerAddress,
                 Salt = 0
+            }
+        );
+
+    public Task<BigInteger> GetWalletNonce(string walletAddress) => _web3.Eth
+        .GetContractQueryHandler<GetNonceMessage>()
+        .QueryAsync<BigInteger>(
+            _entryPointAddress,
+            new()
+            {
+                Sender = walletAddress,
+                Key = 0
+            }
+        );
+
+    public Task<byte[]> GetUserOperationHash(UserOperation userOp) => _web3.Eth
+        .GetContractQueryHandler<GetUserOpHashMessage>()
+        .QueryAsync<byte[]>(
+            _entryPointAddress,
+            new()
+            {
+                UserOp = new UserOperationTd
+                {
+                    Sender = userOp.Sender,
+                    Nonce = userOp.Nonce,
+                    InitCode = userOp.InitCode.HexToByteArray(),
+                    CallData = userOp.CallData.HexToByteArray(),
+                    CallGasLimit = userOp.CallGasLimit,
+                    VerificationGasLimit = userOp.VerificationGasLimit,
+                    PreVerificationGas = userOp.PreVerificationGas,
+                    MaxFeePerGas = userOp.MaxFeePerGas,
+                    MaxPriorityFeePerGas = userOp.MaxPriorityFeePerGas,
+                    PaymasterAndData = userOp.PaymasterAndData.HexToByteArray(),
+                    Signature = userOp.Signature.HexToByteArray()
+                }
             }
         );
 

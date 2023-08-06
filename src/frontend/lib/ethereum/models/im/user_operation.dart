@@ -22,8 +22,7 @@ class UserOperation {
   final String paymasterAndData;
   final String signature;
 
-  BigInt get totalProvisionedGas =>
-      callGasLimit + verificationGasLimit + preVerificationGas;
+  BigInt get totalProvisionedGas => callGasLimit + verificationGasLimit + preVerificationGas;
 
   late final UserOperationBuilder builder;
 
@@ -41,11 +40,9 @@ class UserOperation {
     required this.signature,
   });
 
-  static UserOperationBuilder create() =>
-      resolveDependency<UserOperationBuilder>();
+  static UserOperationBuilder create() => resolveDependency<UserOperationBuilder>();
 
-  static UserOperationBuilder createFrom(UserOperation userOp) =>
-      UserOperationBuilder._(
+  static UserOperationBuilder createFrom(UserOperation userOp) => UserOperationBuilder._(
         userOp.builder._userService,
         userOp.builder._ethereumApiService,
         userOp.builder._entryPointContract,
@@ -141,11 +138,7 @@ class UserOperationBuilder {
     _sender = _userService.currentWalletAddress;
     _tasks.add(() async {
       var code = await _ethereumApiService.getCode(_sender);
-      _initCode = code == '0x'
-          ? _accountFactoryContract.getInitCode(
-              _userService.currentOwnerAddress,
-            )
-          : '0x';
+      _initCode = code == '0x' ? _accountFactoryContract.getInitCode(_userService.currentOwnerAddress) : '0x';
     });
   }
 
@@ -270,10 +263,8 @@ class UserOperationBuilder {
         maxPriorityFeePerGas: maxPriorityFeeBid,
       );
 
-      var estimatedGasCost = (_userOp.preVerificationGas +
-              _userOp.verificationGasLimit +
-              _userOp.callGasLimit) *
-          _userOp.maxFeePerGas;
+      var estimatedGasCost =
+          (_userOp.preVerificationGas + _userOp.verificationGasLimit + _userOp.callGasLimit) * _userOp.maxFeePerGas;
 
       print(
         'Estimated gas cost: ${formatUnits(BigNumber.from(estimatedGasCost.toString()))} ETH',
