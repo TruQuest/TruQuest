@@ -129,6 +129,8 @@ class UserOperationBuilder {
 
   final List<Future Function()> _tasks = [];
 
+  late final BigInt estimatedGasCost;
+
   UserOperationBuilder(
     this._userService,
     this._ethereumApiService,
@@ -251,9 +253,7 @@ class UserOperationBuilder {
       }
 
       // maxPriorityFeeBid = BigInt.zero;
-      print(
-        'Max priority fee bid: 0x${maxPriorityFeeBid.toRadixString(16)} WEI',
-      );
+      print('Max priority fee bid: 0x${maxPriorityFeeBid.toRadixString(16)} WEI');
 
       var maxFeeBid = baseFee * BigInt.two + maxPriorityFeeBid;
       print('Max fee bid: 0x${maxFeeBid.toRadixString(16)} WEI');
@@ -263,12 +263,9 @@ class UserOperationBuilder {
         maxPriorityFeePerGas: maxPriorityFeeBid,
       );
 
-      var estimatedGasCost =
-          (_userOp.preVerificationGas + _userOp.verificationGasLimit + _userOp.callGasLimit) * _userOp.maxFeePerGas;
+      estimatedGasCost = _userOp.totalProvisionedGas * _userOp.maxFeePerGas;
 
-      print(
-        'Estimated gas cost: ${formatUnits(BigNumber.from(estimatedGasCost.toString()))} ETH',
-      );
+      print('Estimated gas cost: ${formatUnits(BigNumber.from(estimatedGasCost.toString()))} ETH');
     });
 
     return this;

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../errors/wallet_action_declined_error.dart';
+import '../models/vm/user_operation_vm.dart';
 import 'ethereum_api_service.dart';
 import '../errors/user_operation_error.dart';
 import '../models/im/user_operation.dart';
@@ -11,33 +12,55 @@ class UserOperationService {
 
   UserOperationService(this._ethereumApiService);
 
-  Stream<UserOperation> prepareOneWithRealTimeFeeUpdates({
+  Stream<UserOperationVm> prepareOneWithRealTimeFeeUpdates({
     required List<(String, String)> actions,
+    String functionSignature = '',
+    String description = '',
+    BigInt? stakeSize,
   }) {
     var canceled = Completer();
-    var channel = StreamController<UserOperation>(
+    var channel = StreamController<UserOperationVm>(
       onCancel: () => canceled.complete(),
     );
-    channel.onListen = () => _keepRefreshingUserOpUntilCanceled(actions, channel.sink, canceled);
+    channel.onListen = () => _keepRefreshingUserOpUntilCanceled(
+          actions,
+          description,
+          functionSignature,
+          stakeSize,
+          channel.sink,
+          canceled,
+        );
 
     return channel.stream;
   }
 
   void _keepRefreshingUserOpUntilCanceled(
     List<(String, String)> actions,
-    Sink<UserOperation> sink,
+    String description,
+    String functionSignature,
+    BigInt? stakeSize,
+    Sink<UserOperationVm> sink,
     Completer canceled,
   ) async {
     while (!canceled.isCompleted) {
-      var userOp = await createUnsignedFromBatch(
-        actions: actions,
-      );
+      var userOp = await createUnsignedFromBatch(actions: actions);
 
       if (canceled.isCompleted) {
         break;
       }
 
-      sink.add(userOp);
+      sink.add(
+        UserOperationVm(
+          userOp,
+          userOp.sender,
+          functionSignature,
+          description,
+          stakeSize,
+          userOp.totalProvisionedGas,
+          userOp.builder.estimatedGasCost,
+          false,
+        ),
+      );
 
       await Future.delayed(const Duration(seconds: 10)); // @@TODO: Config.
     }
@@ -59,9 +82,7 @@ class UserOperationService {
     );
 
     if (actions.length == 1) {
-      userOpBuilder = userOpBuilder.action(
-        (actions.first.$1, actions.first.$2),
-      );
+      userOpBuilder = userOpBuilder.action((actions.first.$1, actions.first.$2));
     } else {
       userOpBuilder = userOpBuilder.actions(actions);
     }

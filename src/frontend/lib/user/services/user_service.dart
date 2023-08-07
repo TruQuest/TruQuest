@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:rxdart/rxdart.dart';
 
 import '../../ethereum/services/ethereum_api_service.dart';
+import '../../general/utils/utils.dart';
 import '../models/vm/smart_wallet_info_vm.dart';
 import '../../ethereum/errors/wallet_action_declined_error.dart';
 import '../../general/errors/insufficient_balance_error.dart';
@@ -271,6 +272,12 @@ class UserService {
         (TruthserumContract.address, _truthserumContract.approve(amount)),
         (TruQuestContract.address, _truQuestContract.depositFunds(amount)),
       ],
+      functionSignature: 'Truthserum.approve(TruQuest, ${getMinLengthAmount(BigInt.from(amount))} TRU)\n'
+          'TruQuest.deposit(${getMinLengthAmount(BigInt.from(amount))} TRU)',
+      description: 'Approve TruQuest to use ${getMinLengthAmount(BigInt.from(amount))} TRU from your wallet, '
+          'and then use the approval to deposit the specified amount to TruQuest for later use. '
+          'Could be withdrawn back to the wallet at any time.',
+      stakeSize: BigInt.from(amount),
     );
 
     var userOp = await ctx.approveUserOpTask.future;

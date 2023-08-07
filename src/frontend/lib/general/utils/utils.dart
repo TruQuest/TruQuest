@@ -6,6 +6,8 @@ import 'package:convert/convert.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../ethereum/models/vm/user_operation_vm.dart';
+import '../../ethereum_js_interop.dart';
 import '../errors/validation_error.dart';
 import '../../ethereum/models/vm/wallet_connect_uri_vm.dart';
 import '../../ethereum/errors/wallet_action_declined_error.dart';
@@ -22,6 +24,17 @@ double degreesToRadians(double degrees) => (pi / 180) * degrees;
 
 extension BigIntExtension on BigInt {
   String toHex() => '0x' + toRadixString(16);
+
+  String toStringWithSpaces() {
+    var s = toString().split('').reversed.toList(); // works fine since string contains only digits
+    var spaceCount = (s.length - 1) ~/ 3;
+    for (int i = 0; i < spaceCount; ++i) {
+      var index = (i + 1) * 3 + i;
+      s.insert(index, ' ');
+    }
+
+    return s.reversed.join();
+  }
 }
 
 extension BoolExtension on bool? {
@@ -85,6 +98,36 @@ extension IterableExtension<E> on Iterable<E> {
   }
 }
 
+String getFixedLengthAmount(BigInt amount, [int length = 3]) {
+  var balanceString = formatUnits(BigNumber.from(amount.toString()));
+  var balanceStringSplit = balanceString.split('.');
+  var decimals = balanceStringSplit.length == 1 ? ''.padRight(length, '0') : '';
+  if (decimals == '') {
+    decimals = balanceStringSplit.last;
+    if (decimals.length < length) {
+      decimals = decimals.padRight(length, '0');
+    } else if (decimals.length > length) {
+      decimals = decimals.substring(0, length);
+    }
+  }
+
+  return '${balanceStringSplit.first}.$decimals';
+}
+
+String getMinLengthAmount(BigInt amount, [int length = 3]) {
+  var balanceString = formatUnits(BigNumber.from(amount.toString()));
+  var balanceStringSplit = balanceString.split('.');
+  var decimals = balanceStringSplit.length == 1 ? ''.padRight(length, '0') : '';
+  if (decimals == '') {
+    decimals = balanceStringSplit.last;
+    if (decimals.length < length) {
+      decimals = decimals.padRight(length, '0');
+    }
+  }
+
+  return '${balanceStringSplit.first}.$decimals';
+}
+
 ThemeData getThemeDataForSteppers(BuildContext context) => ThemeData(
       brightness: Brightness.dark,
       colorScheme: Theme.of(context).colorScheme.copyWith(
@@ -104,7 +147,7 @@ Future<bool> _showUnlockWalletDialog(BuildContext context) async {
 
 Future<UserOperation?> _showUserOpDialog(
   BuildContext context,
-  Stream<UserOperation> stream,
+  Stream<UserOperationVm> stream,
 ) =>
     showDialog<UserOperation?>(
       context: context,
@@ -133,7 +176,7 @@ Future<bool> multiStageFlow(
       // @@TODO: Get rid of BotToast here. Show all messages through ToastMessenger.
       BotToast.showText(text: stageResult.message);
       proceededTilTheEndWithNoErrors = false;
-    } else if (stageResult is Stream<UserOperation>) {
+    } else if (stageResult is Stream<UserOperationVm>) {
       UserOperation? userOp;
       if (context.mounted) {
         userOp = await _showUserOpDialog(context, stageResult);

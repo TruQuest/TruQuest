@@ -1,4 +1,4 @@
-import '../../../ethereum_js_interop.dart';
+import '../../../general/utils/utils.dart';
 
 class SmartWalletInfoVm {
   final String? _ownerAddress;
@@ -52,37 +52,7 @@ class SmartWalletInfoVm {
 
   bool get deployed => _deployed ?? false;
 
-  String _getFixedLengthBalance(BigInt balance) {
-    var balanceString = formatUnits(BigNumber.from(balance.toString()));
-    var balanceStringSplit = balanceString.split('.');
-    var decimals = balanceStringSplit.length == 1 ? '000' : '';
-    if (decimals == '') {
-      decimals = balanceStringSplit.last;
-      if (decimals.length < 3) {
-        decimals = decimals.padRight(3, '0');
-      } else if (decimals.length > 3) {
-        decimals = decimals.substring(0, 3);
-      }
-    }
-
-    return '${balanceStringSplit.first}.$decimals';
-  }
-
-  String _getMinLengthBalance(BigInt balance) {
-    var balanceString = formatUnits(BigNumber.from(balance.toString()));
-    var balanceStringSplit = balanceString.split('.');
-    var decimals = balanceStringSplit.length == 1 ? '000' : '';
-    if (decimals == '') {
-      decimals = balanceStringSplit.last;
-      if (decimals.length < 3) {
-        decimals = decimals.padRight(3, '0');
-      }
-    }
-
-    return '${balanceStringSplit.first}.$decimals';
-  }
-
-  String get ethBalance => '${_getMinLengthBalance(_ethBalance!)} ETH';
+  String get ethBalance => '${getMinLengthAmount(_ethBalance!)} ETH';
 
   String get ethBalanceShort {
     var balance = _ethBalance;
@@ -90,10 +60,10 @@ class SmartWalletInfoVm {
       return '0 ETH';
     }
 
-    return '${_getFixedLengthBalance(balance)} ETH';
+    return '${getFixedLengthAmount(balance)} ETH';
   }
 
-  String get truBalance => '${_getMinLengthBalance(_truBalance!)} TRU';
+  String get truBalance => '${getMinLengthAmount(_truBalance!)} TRU';
 
   String get truBalanceShort {
     var balance = _truBalance;
@@ -101,16 +71,16 @@ class SmartWalletInfoVm {
       return '0 TRU';
     }
 
-    return '${_getFixedLengthBalance(balance)} TRU';
+    return '${getFixedLengthAmount(balance)} TRU';
   }
 
-  String get depositedSlashStaked => '${_getMinLengthBalance(_deposited!)} / ${_getMinLengthBalance(_staked!)} TRU';
+  String get depositedSlashStaked => '${getMinLengthAmount(_deposited!)} / ${getMinLengthAmount(_staked!)} TRU';
 
   String get depositedSlashStakedShort {
     var deposited = _deposited;
     if (deposited == null) {
       return 'N/A';
     }
-    return '${_getFixedLengthBalance(_deposited!)} / ${_getFixedLengthBalance(_staked!)} TRU';
+    return '${getFixedLengthAmount(_deposited!)} / ${getFixedLengthAmount(_staked!)} TRU';
   }
 }

@@ -227,10 +227,8 @@ class TruQuestContract {
     );
   }
 
-  String depositFunds(int amount) {
-    return _interface.encodeFunctionData(
-      'deposit',
-      [BigNumber.from(amount.toString())],
-    );
-  }
+  String depositFunds(int amount) => _interface.encodeFunctionData(
+        'deposit',
+        [BigNumber.from(amount.toString())],
+      );
 }
