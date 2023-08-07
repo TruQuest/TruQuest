@@ -160,7 +160,7 @@ internal class Signer : ISigner
                     BlockNumber = v.BlockNumber,
                     TxnIndex = v.TxnIndex,
                     L1BlockNumber = v.L1BlockNumber,
-                    UserId = v.UserId, // @@TODO: EIP-55 encode
+                    UserId = v.UserId,
                     Decision = v.Decision.GetString(),
                     Reason = v.Reason ?? string.Empty
                 })

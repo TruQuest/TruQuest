@@ -16,6 +16,18 @@ public class NewAcceptancePollVoteIm
         $"Casted At: {CastedAt}\n" +
         $"Decision: {Decision.GetString()}\n" +
         $"Reason: {(Reason.Length != 0 ? Reason : "(Not Specified)")}";
+
+    public static NewAcceptancePollVoteIm FromMessageForSigning(string message)
+    {
+        var messageSplit = message.Split('\n');
+        return new()
+        {
+            ThingId = Guid.Parse(messageSplit[0].Split(' ').Last()),
+            CastedAt = messageSplit[1].Split(' ', 3).Last(),
+            Decision = DecisionImExtension.FromString(messageSplit[2].Split(' ', 2).Last()),
+            Reason = messageSplit[3].Split(' ', 2).Last()
+        };
+    }
 }
 
 internal class NewAcceptancePollVoteImValidator : AbstractValidator<NewAcceptancePollVoteIm>

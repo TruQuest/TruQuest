@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
-pragma abicoder v2;
 
 import "@ganache/console.log/console.sol";
 
@@ -328,9 +327,7 @@ contract TruQuest {
         return getAvailableFunds(_user) >= s_verifierStake;
     }
 
-    function _hashThing(
-        ThingTd calldata _thing
-    ) private view returns (bytes32) {
+    function _hashThing(ThingTd memory _thing) private view returns (bytes32) {
         return
             keccak256(
                 abi.encodePacked(
@@ -342,7 +339,7 @@ contract TruQuest {
     }
 
     function _verifyOrchestratorSignatureForThing(
-        ThingTd calldata _thing,
+        ThingTd memory _thing,
         uint8 _v,
         bytes32 _r,
         bytes32 _s
@@ -357,25 +354,26 @@ contract TruQuest {
     }
 
     function fundThing(
-        ThingTd calldata _thing,
+        bytes16 _thingId,
         uint8 _v,
         bytes32 _r,
         bytes32 _s
     )
         public
-        onlyWhenNotFunded(_thing.id)
+        onlyWhenNotFunded(_thingId)
         whenHasAtLeast(s_thingSubmissionStake)
     {
-        if (!_verifyOrchestratorSignatureForThing(_thing, _v, _r, _s)) {
+        ThingTd memory thing = ThingTd(_thingId);
+        if (!_verifyOrchestratorSignatureForThing(thing, _v, _r, _s)) {
             revert TruQuest__InvalidSignature();
         }
         _stake(msg.sender, s_thingSubmissionStake);
-        s_thingSubmitter[_thing.id] = msg.sender;
-        emit ThingFunded(_thing.id, msg.sender, s_thingSubmissionStake);
+        s_thingSubmitter[_thingId] = msg.sender;
+        emit ThingFunded(_thingId, msg.sender, s_thingSubmissionStake);
     }
 
     function _hashSettlementProposal(
-        SettlementProposalTd calldata _settlementProposal
+        SettlementProposalTd memory _settlementProposal
     ) private view returns (bytes32) {
         return
             keccak256(
@@ -394,7 +392,7 @@ contract TruQuest {
     }
 
     function _verifyOrchestratorSignatureForSettlementProposal(
-        SettlementProposalTd calldata _settlementProposal,
+        SettlementProposalTd memory _settlementProposal,
         uint8 _v,
         bytes32 _r,
         bytes32 _s
@@ -411,18 +409,23 @@ contract TruQuest {
     }
 
     function fundThingSettlementProposal(
-        SettlementProposalTd calldata _settlementProposal,
+        bytes16 _thingId,
+        bytes16 _proposalId,
         uint8 _v,
         bytes32 _r,
         bytes32 _s
     )
         public
-        onlyWhenNoProposalUnderAssessmentFor(_settlementProposal.thingId)
+        onlyWhenNoProposalUnderAssessmentFor(_thingId)
         whenHasAtLeast(s_thingSettlementProposalStake)
     {
+        SettlementProposalTd memory proposal = SettlementProposalTd(
+            _thingId,
+            _proposalId
+        );
         if (
             !_verifyOrchestratorSignatureForSettlementProposal(
-                _settlementProposal,
+                proposal,
                 _v,
                 _r,
                 _s
@@ -432,13 +435,14 @@ contract TruQuest {
         }
 
         _stake(msg.sender, s_thingSettlementProposalStake);
-        s_thingIdToSettlementProposal[
-            _settlementProposal.thingId
-        ] = SettlementProposal(_settlementProposal.id, msg.sender);
+        s_thingIdToSettlementProposal[_thingId] = SettlementProposal(
+            _proposalId,
+            msg.sender
+        );
 
         emit ThingSettlementProposalFunded(
-            _settlementProposal.thingId,
-            _settlementProposal.id,
+            _thingId,
+            _proposalId,
             msg.sender,
             s_thingSettlementProposalStake
         );

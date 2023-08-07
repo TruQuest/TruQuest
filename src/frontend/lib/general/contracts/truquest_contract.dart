@@ -81,18 +81,60 @@ class TruQuestContract {
         {
           "inputs": [
             {
-              "components": [
-                {"internalType": "bytes16", "name": "id", "type": "bytes16"}
-              ],
-              "internalType": "struct TruQuest.ThingTd",
-              "name": "_thing",
-              "type": "tuple"
+              "internalType": "bytes16",
+              "name": "_thingId",
+              "type": "bytes16"
             },
-            {"internalType": "uint8", "name": "_v", "type": "uint8"},
-            {"internalType": "bytes32", "name": "_r", "type": "bytes32"},
-            {"internalType": "bytes32", "name": "_s", "type": "bytes32"}
+            {
+              "internalType": "uint8",
+              "name": "_v",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "_r",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "_s",
+              "type": "bytes32"
+            }
           ],
           "name": "fundThing",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes16",
+              "name": "_thingId",
+              "type": "bytes16"
+            },
+            {
+              "internalType": "bytes16",
+              "name": "_proposalId",
+              "type": "bytes16"
+            },
+            {
+              "internalType": "uint8",
+              "name": "_v",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "_r",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "_s",
+              "type": "bytes32"
+            }
+          ],
+          "name": "fundThingSettlementProposal",
           "outputs": [],
           "stateMutability": "nonpayable",
           "type": "function"
@@ -114,46 +156,6 @@ class TruQuestContract {
             }
           ],
           "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "components": [
-                {
-                  "internalType": "bytes16",
-                  "name": "thingId",
-                  "type": "bytes16"
-                },
-                {
-                  "internalType": "bytes16",
-                  "name": "id",
-                  "type": "bytes16"
-                }
-              ],
-              "internalType": "struct TruQuest.SettlementProposalTd",
-              "name": "_settlementProposal",
-              "type": "tuple"
-            },
-            {
-              "internalType": "uint8",
-              "name": "_v",
-              "type": "uint8"
-            },
-            {
-              "internalType": "bytes32",
-              "name": "_r",
-              "type": "bytes32"
-            },
-            {
-              "internalType": "bytes32",
-              "name": "_s",
-              "type": "bytes32"
-            }
-          ],
-          "name": "fundThingSettlementProposal",
-          "outputs": [],
-          "stateMutability": "nonpayable",
           "type": "function"
         }
       ]''';
@@ -185,7 +187,7 @@ class TruQuestContract {
     return _interface.encodeFunctionData(
       'fundThing',
       [
-        [thingIdHex],
+        thingIdHex,
         v,
         r,
         s,
@@ -216,7 +218,8 @@ class TruQuestContract {
     return _interface.encodeFunctionData(
       'fundThingSettlementProposal',
       [
-        [thingIdHex, proposalIdHex],
+        thingIdHex,
+        proposalIdHex,
         v,
         r,
         s,

@@ -82,7 +82,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
                     v.BlockNumber,
                     v.TxnIndex,
                     v.L1BlockNumber,
-                    v.UserId, // @@TODO: EIP-55 encode
+                    v.UserId,
                     Decision = v.Decision.GetString(),
                     Reason = v.Reason ?? string.Empty
                 }),

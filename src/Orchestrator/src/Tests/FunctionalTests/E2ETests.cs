@@ -89,40 +89,41 @@ public class E2ETests : IAsyncLifetime
         await _sut.StartHostedService<ContractEventTracker>();
 
         var network = _sut.GetConfigurationValue<string>("Ethereum:Network");
+        var rpcUrl = _sut.GetConfigurationValue<string>($"Ethereum:Networks:{network}:URL");
 
         _truQuestContract = ContractFinder.Create()
             .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
             .WithName("TruQuest")
             .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:TruQuest:Address"))
-            .OnNetwork(_sut.GetConfigurationValue<string>($"Ethereum:Networks:{network}:URL"))
+            .OnNetwork(rpcUrl)
             .Find();
 
         _thingSubmissionVerifierLotteryContract = ContractFinder.Create()
             .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
             .WithName("ThingSubmissionVerifierLottery")
             .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:ThingSubmissionVerifierLottery:Address"))
-            .OnNetwork(_sut.GetConfigurationValue<string>($"Ethereum:Networks:{network}:URL"))
+            .OnNetwork(rpcUrl)
             .Find();
 
         _acceptancePollContract = ContractFinder.Create()
             .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
             .WithName("AcceptancePoll")
             .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:AcceptancePoll:Address"))
-            .OnNetwork(_sut.GetConfigurationValue<string>($"Ethereum:Networks:{network}:URL"))
+            .OnNetwork(rpcUrl)
             .Find();
 
         _thingAssessmentVerifierLotteryContract = ContractFinder.Create()
             .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
             .WithName("ThingAssessmentVerifierLottery")
             .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:ThingAssessmentVerifierLottery:Address"))
-            .OnNetwork(_sut.GetConfigurationValue<string>($"Ethereum:Networks:{network}:URL"))
+            .OnNetwork(rpcUrl)
             .Find();
 
         _assessmentPollContract = ContractFinder.Create()
             .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
             .WithName("AssessmentPoll")
             .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:AssessmentPoll:Address"))
-            .OnNetwork(_sut.GetConfigurationValue<string>($"Ethereum:Networks:{network}:URL"))
+            .OnNetwork(rpcUrl)
             .Find();
     }
 
@@ -154,20 +155,20 @@ public class E2ETests : IAsyncLifetime
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, $"/ipfs/{v.IpfsCid}");
             using var response = await client.SendAsync(request);
-            var vote = await JsonSerializer.DeserializeAsync<SignedNewAcceptancePollVoteTd>(
+            var signedVote = await JsonSerializer.DeserializeAsync<SignedNewAcceptancePollVoteTd>(
                 await response.Content.ReadAsStreamAsync(),
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
             );
 
+            var vote = NewAcceptancePollVoteIm.FromMessageForSigning(signedVote!.Vote);
+
             return (
-                // VoterId: vote!.VoterId,
-                // CastedAt: DateTimeOffset
-                //     .ParseExact(vote.Vote.CastedAt, "yyyy-MM-dd HH:mm:sszzz", null)
-                //     .ToUniversalTime()
-                //     .ToUnixTimeMilliseconds(),
-                CastedAt: 5,
-                Decision: DecisionIm.Accept
-            // Decision: DecisionImExtension.FromString(vote.Vote.Decision)
+                VoterId: signedVote.WalletAddress.Substring(2).ToLower(),
+                CastedAt: DateTimeOffset
+                    .ParseExact(vote.CastedAt, "yyyy-MM-dd HH:mm:sszzz", null)
+                    .ToUniversalTime()
+                    .ToUnixTimeMilliseconds(),
+                Decision: vote.Decision
             );
         }));
 
@@ -199,7 +200,7 @@ public class E2ETests : IAsyncLifetime
         {
             accountedVotes.Add(new()
             {
-                VoterId = "",
+                VoterId = offChainVote.VoterId,
                 VoteDecision = (AccountedVote.Decision)offChainVote.Decision
             });
         }
@@ -213,11 +214,12 @@ public class E2ETests : IAsyncLifetime
         IEnumerable<string> PenalizedVerifiers
     )> _calculatePollResult(byte[] thingIdBytes, HashSet<AccountedVote> accountedVotes)
     {
-        var verifiers = (await _sut.ExecWithService<IContractCaller, IEnumerable<String>>(
-            contractCaller => contractCaller.GetVerifiersForThing(thingIdBytes)
-        ))
-        .Select(v => v.Substring(2).ToLower())
-        .ToList();
+        var verifiers =
+            (await _sut.ExecWithService<IContractCaller, IEnumerable<String>>(
+                contractCaller => contractCaller.GetVerifiersForThing(thingIdBytes)
+            ))
+            .Select(v => v.Substring(2).ToLower())
+            .ToList();
 
         var notVotedVerifiers = verifiers
             .Where(verifierId => accountedVotes.SingleOrDefault(v => v.VoterId == verifierId) == null)
@@ -298,7 +300,7 @@ public class E2ETests : IAsyncLifetime
     {
         var network = _sut.GetConfigurationValue<string>("Ethereum:Network");
 
-        var submitterAddress = _sut.AccountProvider.GetAccount("Submitter").Address.Substring(2).ToLower();
+        var submitterAddress = await _sut.ContractCaller.GetWalletAddressFor("Submitter");
 
         Guid subjectId;
         using (var request = _sut.PrepareHttpRequestForFileUpload(
@@ -309,7 +311,7 @@ public class E2ETests : IAsyncLifetime
             ("tags", "1|2|3")
         ))
         {
-            _sut.RunAs(userId: submitterAddress, username: submitterAddress.Substring(0, 20));
+            _sut.RunAs(userId: submitterAddress.Substring(2).ToLower(), username: submitterAddress);
 
             var subjectResult = await _sut.SendRequest(new AddNewSubjectCommand
             {
@@ -371,7 +373,7 @@ public class E2ETests : IAsyncLifetime
             lotteryInitializedTcs.SetResult();
         };
 
-        await _sut.ContractCaller.FundThing(thingIdBytes, thingSubmitResult.Data!.Signature);
+        await _sut.ContractCaller.FundThingAs("Submitter", thingIdBytes, thingSubmitResult.Data!.Signature);
 
         var submitterBalance = await _sut.ContractCaller.GetAvailableFunds("Submitter");
         submitterBalance.Should().Be(submitterInitialBalance - thingSubmissionStake);
@@ -383,7 +385,7 @@ public class E2ETests : IAsyncLifetime
             .Key(new SolBytes16(thingIdBytes))
             .GetValue<SolAddress>();
 
-        submitter.Value.ToLower().Should().Be(submitterAddress);
+        submitter.Value.ToLower().Should().Be(submitterAddress.Substring(2).ToLower());
 
         await lotteryInitializedTcs.Task;
 
@@ -396,7 +398,7 @@ public class E2ETests : IAsyncLifetime
 
         Debug.WriteLine($"************ Verifier stake: {verifierStake} ************");
 
-        var verifierCount = 10;
+        var verifierCount = 6;
 
         var cde = new AsyncCountdownEvent(verifierCount);
         _eventBroadcaster.JoinedThingSubmissionVerifierLottery += delegate
@@ -410,12 +412,17 @@ public class E2ETests : IAsyncLifetime
             thingLotteryClosedTcs.SetResult(@event.Event);
         };
 
-        var verifiersLotteryData = new List<(string AccountName, long InitialBalance, byte[] UserData, long? Nonce)>();
+        var verifiersLotteryData = new List<(
+            string AccountName,
+            string WalletAddress,
+            long InitialBalance,
+            byte[] UserData,
+            long? Nonce
+        )>();
 
         for (int i = 1; i <= verifierCount; ++i)
         {
             var verifierAccountName = $"Verifier{i}";
-            var verifier = _sut.AccountProvider.GetAccount(verifierAccountName);
 
             var userData = RandomNumberGenerator.GetBytes(32);
 
@@ -425,9 +432,11 @@ public class E2ETests : IAsyncLifetime
 
             var verifierBalance = await _sut.ContractCaller.GetAvailableFunds(verifierAccountName);
 
+            var walletAddress = await _sut.ContractCaller.GetWalletAddressFor(verifierAccountName);
+
             verifierBalance.Should().Be(verifierInitialBalance - verifierStake);
 
-            verifiersLotteryData.Add((verifierAccountName, verifierInitialBalance, userData, null));
+            verifiersLotteryData.Add((verifierAccountName, walletAddress, verifierInitialBalance, userData, null));
         }
 
         await cde.WaitAsync();
@@ -482,7 +491,6 @@ public class E2ETests : IAsyncLifetime
             .Take(requiredVerifierCount)
             .ToList();
 
-        await _sut.BlockchainManipulator.Mine(1);
         // giving time to add verifiers, change the thing's state, and create an acceptance poll closing task;
         // or to archive the thing
         await Task.Delay(TimeSpan.FromSeconds(10));
@@ -501,26 +509,32 @@ public class E2ETests : IAsyncLifetime
 
         for (int i = 0; i < verifierCount; ++i)
         {
-            var verifier = await _acceptancePollContract
-                .WalkStorage()
-                .Field("s_thingVerifiers")
-                .AsMapping()
-                .Key(new SolBytes16(thingIdBytes))
-                .AsArrayOf<SolAddress>()
-                .Index(i)
-                .GetValue<SolAddress>();
+            var verifierAddress = (
+                await _acceptancePollContract
+                    .WalkStorage()
+                    .Field("s_thingVerifiers")
+                    .AsMapping()
+                    .Key(new SolBytes16(thingIdBytes))
+                    .AsArrayOf<SolAddress>()
+                    .Index(i)
+                    .GetValue<SolAddress>()
+            ).Value;
 
-            var verifierAccountName = _sut.AccountProvider.LookupNameByAddress(verifier.Value);
+            var verifierAccountName = verifiersLotteryData
+                .Single(d => d.WalletAddress.Substring(2).ToLower() == verifierAddress.ToLower())
+                .AccountName;
 
             var winnerData = winnersLotteryData.SingleOrDefault(v => v.AccountName == verifierAccountName);
             winnerData.Should().NotBeNull();
+
+            verifierAddress = winnerData.WalletAddress;
 
             var verifierBalance = await _sut.ContractCaller.GetAvailableFunds(verifierAccountName);
             verifierBalance.Should().Be(winnerData.InitialBalance - verifierStake);
 
             thingSubmissionVerifierAccountNames.Add(verifierAccountName);
 
-            _sut.RunAs(userId: verifier.Value.ToLower(), username: verifier.Value.ToLower().Substring(0, 20));
+            _sut.RunAs(userId: verifierAddress.Substring(2).ToLower(), username: verifierAddress);
 
             var voteInput = new NewAcceptancePollVoteIm
             {
@@ -559,8 +573,6 @@ public class E2ETests : IAsyncLifetime
         await _sut.BlockchainManipulator.Mine(pollDurationBlocks.Value + 10);
 
         await pollFinalizedTcs.Task;
-
-        await _sut.BlockchainManipulator.Mine(1);
 
         await Task.Delay(TimeSpan.FromSeconds(10)); // giving time to update the thing's state and ipfs cid
 
@@ -634,19 +646,19 @@ public class E2ETests : IAsyncLifetime
 
         (pollResult.RewardedVerifiers.Count() + pollResult.PenalizedVerifiers.Count()).Should().Be(verifierCount);
 
-        foreach (var verifier in pollResult.RewardedVerifiers)
+        foreach (var verifierId in pollResult.RewardedVerifiers)
         {
-            var verifierAccountName = _sut.AccountProvider.LookupNameByAddress(verifier);
-            var initialBalance = winnersLotteryData.Single(w => w.AccountName == verifierAccountName).InitialBalance;
-            var verifierBalance = await _sut.ContractCaller.GetAvailableFunds(verifierAccountName);
+            var winnerData = winnersLotteryData.Single(w => w.WalletAddress.Substring(2).ToLower() == verifierId);
+            var initialBalance = winnerData.InitialBalance;
+            var verifierBalance = await _sut.ContractCaller.GetAvailableFunds(winnerData.AccountName);
             verifierBalance.Should().Be(initialBalance + verifierReward);
         }
 
-        foreach (var verifier in pollResult.PenalizedVerifiers)
+        foreach (var verifierId in pollResult.PenalizedVerifiers)
         {
-            var verifierAccountName = _sut.AccountProvider.LookupNameByAddress(verifier);
-            var initialBalance = winnersLotteryData.Single(w => w.AccountName == verifierAccountName).InitialBalance;
-            var verifierBalance = await _sut.ContractCaller.GetAvailableFunds(verifierAccountName);
+            var winnerData = winnersLotteryData.Single(w => w.WalletAddress.Substring(2).ToLower() == verifierId);
+            var initialBalance = winnerData.InitialBalance;
+            var verifierBalance = await _sut.ContractCaller.GetAvailableFunds(winnerData.AccountName);
             verifierBalance.Should().Be(initialBalance - verifierPenalty);
         }
 
@@ -656,7 +668,7 @@ public class E2ETests : IAsyncLifetime
             draftCreatedTcs.SetResult();
         };
 
-        var proposerAddress = _sut.AccountProvider.GetAccount("Proposer").Address.Substring(2).ToLower();
+        var proposerAddress = await _sut.ContractCaller.GetWalletAddressFor("Proposer");
 
         Guid proposalId;
         using (var request = _sut.PrepareHttpRequestForFileUpload(
@@ -668,7 +680,7 @@ public class E2ETests : IAsyncLifetime
             ("evidence", "https://facebook.com")
         ))
         {
-            _sut.RunAs(userId: proposerAddress, username: proposerAddress.Substring(0, 20));
+            _sut.RunAs(userId: proposerAddress.Substring(2).ToLower(), username: proposerAddress);
 
             var proposalDraftResult = await _sut.SendRequest(new CreateNewSettlementProposalDraftCommand
             {
@@ -693,8 +705,8 @@ public class E2ETests : IAsyncLifetime
 
         var proposalIdBytes = proposalId.ToByteArray();
 
-        await _sut.ContractCaller.FundThingSettlementProposal(
-            thingIdBytes, proposalIdBytes, proposalSubmitResult.Data!.Signature
+        await _sut.ContractCaller.FundThingSettlementProposalAs(
+            "Proposer", thingIdBytes, proposalIdBytes, proposalSubmitResult.Data!.Signature
         );
 
         var proposer = await _truQuestContract
@@ -706,9 +718,11 @@ public class E2ETests : IAsyncLifetime
             .Field("submitter")
             .GetValue<SolAddress>();
 
-        proposer.Value.ToLower().Should().Be(proposerAddress);
+        proposer.Value.ToLower().Should().Be(proposerAddress.Substring(2).ToLower());
 
         await lotteryInitializedTcs.Task;
+
+        verifierCount = 6;
 
         cde = new AsyncCountdownEvent(verifierCount);
         _eventBroadcaster.ClaimedProposalAssessmentVerifierLotterySpot += delegate
@@ -726,12 +740,14 @@ public class E2ETests : IAsyncLifetime
             proposalLotteryClosedTcs.SetResult(@event.Event);
         };
 
+        var proposalVerifiersLotteryData = new List<(string AccountName, string WalletAddress)>();
+
         var thingProposalIdBytes = thingIdBytes.Concat(proposalIdBytes).ToArray();
 
         for (int i = 1; i <= verifierCount; ++i)
         {
             var verifierAccountName = $"Verifier{i}";
-            var verifier = _sut.AccountProvider.GetAccount(verifierAccountName);
+            var walletAddress = await _sut.ContractCaller.GetWalletAddressFor(verifierAccountName);
 
             if (thingSubmissionVerifierAccountNames.Contains(verifierAccountName))
             {
@@ -749,6 +765,8 @@ public class E2ETests : IAsyncLifetime
                     verifierAccountName, thingProposalIdBytes, userData
                 );
             }
+
+            proposalVerifiersLotteryData.Add((verifierAccountName, walletAddress));
         }
 
         await cde.WaitAsync();
@@ -775,7 +793,6 @@ public class E2ETests : IAsyncLifetime
 
         nonce.Should().Be(proposalLotteryClosedWithSuccessEvent.Nonce);
 
-        await _sut.BlockchainManipulator.Mine(1);
         // giving time to add verifiers, change the proposal's state, and create an assessment poll closing task
         await Task.Delay(TimeSpan.FromSeconds(10));
 
@@ -807,16 +824,20 @@ public class E2ETests : IAsyncLifetime
 
         for (int i = 0; i < verifierCount; ++i)
         {
-            var verifier = await _assessmentPollContract
-                .WalkStorage()
-                .Field("s_proposalVerifiers")
-                .AsMapping()
-                .Key(new SolBytes32(thingProposalIdBytes))
-                .AsArrayOf<SolAddress>()
-                .Index(i)
-                .GetValue<SolAddress>();
+            var verifierAddress = (
+                await _assessmentPollContract
+                    .WalkStorage()
+                    .Field("s_proposalVerifiers")
+                    .AsMapping()
+                    .Key(new SolBytes32(thingProposalIdBytes))
+                    .AsArrayOf<SolAddress>()
+                    .Index(i)
+                    .GetValue<SolAddress>()
+            ).Value;
 
-            var verifierAccountName = _sut.AccountProvider.LookupNameByAddress(verifier.Value);
+            var verifierAccountName = proposalVerifiersLotteryData
+                .Single(d => d.WalletAddress.Substring(2).ToLower() == verifierAddress.ToLower())
+                .AccountName;
 
             await _sut.ContractCaller.CastAssessmentPollVoteAs(
                 verifierAccountName, thingProposalIdBytes, (ushort)i, Vote.Accept
@@ -833,8 +854,6 @@ public class E2ETests : IAsyncLifetime
         await _sut.BlockchainManipulator.Mine(pollDurationBlocks.Value);
 
         await pollFinalizedTcs.Task;
-
-        await _sut.BlockchainManipulator.Mine(1);
 
         await Task.Delay(TimeSpan.FromSeconds(10)); // giving time to update the proposal and thing's states and the like
     }

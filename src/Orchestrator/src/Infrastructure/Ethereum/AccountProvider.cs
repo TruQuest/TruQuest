@@ -29,7 +29,7 @@ public class AccountProvider
 
     public string? LookupNameByAddress(string address)
     {
-        _addressToAccountName.TryGetValue(address, out string? name);
+        _addressToAccountName.TryGetValue(address.ToLower(), out string? name);
         return name;
     }
 }
