@@ -64,7 +64,7 @@ internal class UserOperationBuilder
         _simpleAccountFactoryAddress = configuration[$"Ethereum:Contracts:{network}:SimpleAccountFactory:Address"]!;
     }
 
-    UserOperationBuilder From(Account account)
+    public UserOperationBuilder From(Account account)
     {
         _owner = account;
         _tasks.Add(async () =>
@@ -89,7 +89,7 @@ internal class UserOperationBuilder
         return this;
     }
 
-    UserOperationBuilder _withCurrentNonce()
+    private UserOperationBuilder _withCurrentNonce()
     {
         _tasks.Add(async () =>
         {
@@ -98,7 +98,7 @@ internal class UserOperationBuilder
         return this;
     }
 
-    UserOperationBuilder Action(string targetAddress, FunctionMessage message)
+    public UserOperationBuilder Action(string targetAddress, FunctionMessage message)
     {
         _callData = _abiEncoder.EncodeFunctionData(new ExecuteMessage
         {
@@ -109,7 +109,7 @@ internal class UserOperationBuilder
         return this;
     }
 
-    UserOperationBuilder Actions(List<(string TargetAddress, FunctionMessage Message)> targetAndMessageList)
+    public UserOperationBuilder Actions(List<(string TargetAddress, FunctionMessage Message)> targetAndMessageList)
     {
         _callData = _abiEncoder.EncodeFunctionData(new ExecuteBatchMessage
         {
@@ -121,7 +121,7 @@ internal class UserOperationBuilder
         return this;
     }
 
-    UserOperationBuilder WithEstimatedGasLimitsMultipliers(
+    public UserOperationBuilder WithEstimatedGasLimitsMultipliers(
         float preVerificationGasMultiplier = 1,
         float verificationGasLimitMultiplier = 1,
         float callGasLimitMultiplier = 1
@@ -134,7 +134,7 @@ internal class UserOperationBuilder
         return this;
     }
 
-    UserOperationBuilder _withEstimatedGasLimits()
+    private UserOperationBuilder _withEstimatedGasLimits()
     {
         _tasks.Add(async () =>
         {
@@ -179,7 +179,7 @@ internal class UserOperationBuilder
         return this;
     }
 
-    UserOperationBuilder _withCurrentGasPrice()
+    private UserOperationBuilder _withCurrentGasPrice()
     {
         _tasks.Add(async () =>
         {

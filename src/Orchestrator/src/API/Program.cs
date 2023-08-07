@@ -42,8 +42,8 @@ public class Program
             .ConfigurePipeline()
             .DeployContracts()
                 .ContinueWith(deployTask => deployTask.Result.RegisterDebeziumConnector()).Unwrap()
-                .ContinueWith(registerTask => registerTask.Result.StartKafkaBus()).Unwrap();
-        // .ContinueWith(startBusTask => startBusTask.Result.DepositFunds()).Unwrap();
+                .ContinueWith(registerTask => registerTask.Result.StartKafkaBus()).Unwrap()
+                .ContinueWith(startBusTask => startBusTask.Result.DepositFunds()).Unwrap();
 
         app.Run();
     }
@@ -288,15 +288,15 @@ public static class WebApplicationBuilderExtension
             "Verifier4",
             "Verifier5",
             "Verifier6",
-            "Verifier7",
-            "Verifier8",
-            "Verifier9",
-            "Verifier10",
+            // "Verifier7",
+            // "Verifier8",
+            // "Verifier9",
+            // "Verifier10",
         };
 
-        var web3Orchestrator = new Web3(accountProvider.GetAccount("Orchestrator"), rpcUrl);
+        var web3 = new Web3(accountProvider.GetAccount("Orchestrator"), rpcUrl);
 
-        var txnDispatcher = web3Orchestrator.Eth.GetContractTransactionHandler<TransferMessage>();
+        var txnDispatcher = web3.Eth.GetContractTransactionHandler<TransferMessage>();
         var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
             truthserumAddress,
             new()
@@ -308,35 +308,22 @@ public static class WebApplicationBuilderExtension
 
         if (network == "Ganache")
         {
-            await web3Orchestrator.Client.SendRequestAsync(new RpcRequest(Guid.NewGuid().ToString(), "evm_mine"));
+            await web3.Client.SendRequestAsync(new RpcRequest(Guid.NewGuid().ToString(), "evm_mine"));
         }
+
+        var userOperationService = app.Services.GetRequiredService<UserOperationService>();
+        var contractCaller = app.Services.GetRequiredService<IContractCaller>();
 
         foreach (var user in users)
         {
+            var account = accountProvider.GetAccount(user);
+
             txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
                 truthserumAddress,
                 new()
                 {
-                    To = accountProvider.GetAccount(user).Address,
+                    To = await contractCaller.GetWalletAddressFor(account.Address),
                     Amount = 1000
-                }
-            );
-
-            if (network == "Ganache")
-            {
-                await web3Orchestrator.Client.SendRequestAsync(new RpcRequest(Guid.NewGuid().ToString(), "evm_mine"));
-            }
-
-            var account = accountProvider.GetAccount(user);
-            var web3 = new Web3(account, rpcUrl);
-
-            var approveTxnDispatcher = web3.Eth.GetContractTransactionHandler<ApproveMessage>();
-            var approveTxnReceipt = await approveTxnDispatcher.SendRequestAndWaitForReceiptAsync(
-                truthserumAddress,
-                new()
-                {
-                    Spender = truQuestAddress,
-                    Amount = 500
                 }
             );
 
@@ -345,12 +332,25 @@ public static class WebApplicationBuilderExtension
                 await web3.Client.SendRequestAsync(new RpcRequest(Guid.NewGuid().ToString(), "evm_mine"));
             }
 
-            var depositTxnDispatcher = web3.Eth.GetContractTransactionHandler<DepositMessage>();
-            var depositTxnReceipt = await depositTxnDispatcher.SendRequestAndWaitForReceiptAsync(
-                truQuestAddress,
-                new()
+            await userOperationService.SendBatch(
+                owner: account,
+                actions: new()
                 {
-                    Amount = 500
+                    (
+                        truthserumAddress,
+                        new ApproveMessage
+                        {
+                            Spender = truQuestAddress,
+                            Amount = 500
+                        }
+                    ),
+                    (
+                        truQuestAddress,
+                        new DepositMessage
+                        {
+                            Amount = 500
+                        }
+                    )
                 }
             );
 

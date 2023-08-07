@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Infrastructure.Ethereum.ERC4337;
 
-internal class GetUserOperationReceiptVm
+public class GetUserOperationReceiptVm
 {
     [JsonConverter(typeof(LongConverter))]
     public required long Nonce { get; init; }
@@ -13,11 +13,20 @@ internal class GetUserOperationReceiptVm
     [JsonConverter(typeof(LongConverter))]
     public required long ActualGasUsed { get; init; }
     public required bool Success { get; init; }
-    public required String? Reason { get; init; }
+    public String? Reason { get; init; }
     public required UserOperationReceipt Receipt { get; init; }
+
+    public override string ToString() => JsonSerializer.Serialize(
+        this,
+        new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        }
+    );
 }
 
-internal class UserOperationReceipt
+public class UserOperationReceipt
 {
     public required string BlockHash { get; init; }
     [JsonConverter(typeof(LongConverter))]
@@ -33,5 +42,5 @@ internal class LongConverter : JsonConverter<long>
         long.Parse(reader.GetString()!.Substring(2), NumberStyles.HexNumber);
 
     public override void Write(Utf8JsonWriter writer, long value, JsonSerializerOptions options) =>
-        throw new NotImplementedException();
+        writer.WriteNumberValue(value);
 }

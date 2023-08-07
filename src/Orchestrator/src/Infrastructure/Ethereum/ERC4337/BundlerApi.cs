@@ -7,11 +7,12 @@ using Microsoft.Extensions.Logging;
 
 using Nethereum.Hex.HexTypes;
 
+using Domain.Results;
 using Application.Ethereum.Models.IM;
 
 namespace Infrastructure.Ethereum.ERC4337;
 
-internal class BundlerApi
+public class BundlerApi
 {
     private readonly ILogger<BundlerApi> _logger;
     private readonly IHttpClientFactory _clientFactory;
@@ -76,7 +77,7 @@ internal class BundlerApi
         );
     }
 
-    public async Task<string?> SendUserOperation(UserOperation userOp)
+    public async Task<Either<UserOperationError, string>> SendUserOperation(UserOperation userOp)
     {
         using var client = _clientFactory.CreateClient("bundler");
         using var request = new HttpRequestMessage(HttpMethod.Post, "/rpc");
@@ -97,14 +98,16 @@ internal class BundlerApi
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogWarning("Error sending user operation: {Reason}", response.ReasonPhrase);
-            return null;
+            return new UserOperationError(response.ReasonPhrase);
         }
 
         var doc = JsonSerializer.Deserialize<JsonDocument>(await response.Content.ReadAsStringAsync());
         if (doc!.RootElement.TryGetProperty("error", out JsonElement error))
         {
-            _logger.LogWarning("Error sending user operation: {Reason}", error.GetProperty("message").GetString());
-            return null;
+            var errorMessage = error.GetProperty("message").GetString()!;
+            _logger.LogWarning("Error sending user operation: {Reason}", errorMessage);
+
+            return new UserOperationError(error.GetProperty("code").GetInt32(), errorMessage);
         }
 
         return doc.RootElement.GetProperty("result").GetString()!;

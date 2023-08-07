@@ -218,6 +218,7 @@ public static class IServiceCollectionExtension
         services.AddSingleton<AbiEncoder>();
         services.AddSingleton<BundlerApi>();
         services.AddTransient<UserOperationBuilder>();
+        services.AddSingleton<UserOperationService>();
 
         services.AddHttpClient("bundler", (sp, client) =>
         {

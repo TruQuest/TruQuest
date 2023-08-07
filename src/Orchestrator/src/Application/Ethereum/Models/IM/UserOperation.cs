@@ -26,6 +26,15 @@ public record UserOperation
     public required BigInteger MaxPriorityFeePerGas { get; init; }
     public required string PaymasterAndData { get; init; }
     public required string Signature { get; init; }
+
+    public override string ToString() => JsonSerializer.Serialize(
+        this,
+        new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        }
+    );
 }
 
 public class BigIntegerConverter : JsonConverter<BigInteger>
@@ -34,5 +43,5 @@ public class BigIntegerConverter : JsonConverter<BigInteger>
         BigInteger.Parse(reader.GetString()!.Substring(2), NumberStyles.HexNumber);
 
     public override void Write(Utf8JsonWriter writer, BigInteger value, JsonSerializerOptions options) =>
-        writer.WriteStringValue(value.ToByteArray().ToHex(prefix: true));
+        writer.WriteStringValue(value.ToByteArray(isUnsigned: true, isBigEndian: true).ToHex(prefix: true));
 }

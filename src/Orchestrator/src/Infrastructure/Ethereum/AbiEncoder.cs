@@ -16,6 +16,7 @@ internal class AbiEncoder
         var abi = new FunctionABI(type.GetCustomAttribute<FunctionAttribute>()!.Name, false);
         var @params = type
             .GetProperties()
+            .Where(p => p.GetCustomAttribute<ParameterAttribute>() != null)
             .Select(p => (
                 Param: p.GetCustomAttribute<ParameterAttribute>()!.Parameter,
                 Value: p.GetValue(message)!
