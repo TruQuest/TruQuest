@@ -33,108 +33,114 @@ class _LocalWalletFromImportedMnemonicCreationDialogState
   @override
   Widget buildX(BuildContext context) {
     return Theme(
-      data: ThemeData(
-        brightness: Brightness.dark,
-        colorScheme: Theme.of(context).colorScheme.copyWith(
-              brightness: Brightness.dark,
-              secondary: const Color(0xffF8F9FA),
-            ),
-      ),
+      data: getThemeDataForSteppers(context),
       child: SimpleDialog(
         backgroundColor: const Color(0xFF242423),
+        title: Text(
+          'Create a wallet',
+          style: GoogleFonts.philosopher(
+            color: Colors.white,
+            fontSize: 24,
+          ),
+        ),
         children: [
           SizedBox(
             width: 400,
-            height: 400,
-            child: SingleChildScrollView(
-              child: Stepper(
-                currentStep: _currentStep,
-                onStepContinue: () => setState(() => _currentStep++),
-                controlsBuilder: (context, details) {
-                  return ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF242423),
-                      foregroundColor: Colors.white,
-                    ),
-                    child: Text(details.currentStep == 0 ? 'Import' : 'Create'),
-                    onPressed: () async {
-                      if (details.currentStep == 0) {
-                        details.onStepContinue!();
-                      } else {
-                        var success = await _userBloc.execute<bool>(
-                          CreateAndSaveEncryptedLocalWallet(
-                            mnemonic: _mnemonicController.text,
-                            password: _passwordController.text,
-                          ),
-                        );
+            height: 300,
+            child: Stepper(
+              currentStep: _currentStep,
+              onStepContinue: () => setState(() => _currentStep++),
+              controlsBuilder: (context, details) {
+                return Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF242423),
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                      ),
+                      child: Text(details.currentStep == 0 ? 'Import' : 'Create'),
+                      onPressed: () async {
+                        if (details.currentStep == 0) {
+                          details.onStepContinue!();
+                        } else {
+                          var success = await _userBloc.execute<bool>(
+                            CreateAndSaveEncryptedLocalWallet(
+                              mnemonic: _mnemonicController.text,
+                              password: _passwordController.text,
+                            ),
+                          );
 
-                        if (success.isTrue) {
-                          if (context.mounted) Navigator.of(context).pop();
+                          if (success.isTrue) {
+                            if (context.mounted) Navigator.of(context).pop();
+                          }
                         }
-                      }
-                    },
-                  );
-                },
-                steps: [
-                  Step(
-                    title: Text(
-                      'Import a secret phrase',
-                      style: GoogleFonts.philosopher(
-                        color: const Color(0xffF8F9FA),
-                        fontSize: 16,
-                      ),
+                      },
                     ),
-                    content: Container(
-                      height: 100,
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: TextField(
-                        controller: _mnemonicController,
-                        expands: true,
-                        minLines: null,
-                        maxLines: null,
-                        decoration: const InputDecoration(
-                          hintText: 'Mnemonic',
-                          hintStyle: TextStyle(color: Colors.white70),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.white70),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.white),
-                          ),
+                  ),
+                );
+              },
+              steps: [
+                Step(
+                  title: Text(
+                    'Import a secret phrase',
+                    style: GoogleFonts.philosopher(
+                      color: const Color(0xffF8F9FA),
+                      fontSize: 16,
+                    ),
+                  ),
+                  content: Container(
+                    height: 100,
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: TextField(
+                      controller: _mnemonicController,
+                      expands: true,
+                      minLines: null,
+                      maxLines: null,
+                      decoration: const InputDecoration(
+                        hintText: 'Mnemonic',
+                        hintStyle: TextStyle(color: Colors.white70),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white70),
+                        ),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white),
                         ),
                       ),
                     ),
-                    isActive: true,
                   ),
-                  Step(
-                    title: Text(
-                      'Create a wallet from the phrase and a password',
-                      style: GoogleFonts.philosopher(
-                        color: const Color(0xffF8F9FA),
-                        fontSize: 16,
-                      ),
+                  isActive: true,
+                ),
+                Step(
+                  title: Text(
+                    'Create a wallet from the phrase and a password',
+                    style: GoogleFonts.philosopher(
+                      color: const Color(0xffF8F9FA),
+                      fontSize: 16,
                     ),
-                    content: Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: TextField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          hintText: 'Password',
-                          hintStyle: TextStyle(color: Colors.white70),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.white70),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.white),
-                          ),
+                  ),
+                  content: Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: TextField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        hintText: 'Password',
+                        hintStyle: TextStyle(color: Colors.white70),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white70),
+                        ),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white),
                         ),
                       ),
                     ),
-                    isActive: true,
                   ),
-                ],
-              ),
+                  isActive: true,
+                ),
+              ],
             ),
           ),
         ],
