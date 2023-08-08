@@ -13,6 +13,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Logs;
+using OpenTelemetry.Exporter;
 
 using Domain.Results;
 using Domain.Errors;
@@ -99,7 +100,11 @@ public static class WebApplicationBuilderExtension
 
                 options.AddOtlpExporter(otlpOptions =>
                 {
-                    otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
+                    // @@NOTE: We don't use otel collector for logs since Seq can only ingest OTLP logs
+                    // through gRPC (ergo, TLS), which we don't currently have or need (since in staging
+                    // everything runs on the same machine).
+                    otlpOptions.Endpoint = new Uri(configuration["Seq:Endpoint"]!);
+                    otlpOptions.Protocol = OtlpExportProtocol.HttpProtobuf;
                 });
             });
         }

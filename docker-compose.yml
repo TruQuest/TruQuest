@@ -101,6 +101,19 @@ services:
     depends_on:
       - jaeger
 
+  seq:
+    image: datalust/seq:2023.3
+    environment:
+      ACCEPT_EULA: 'Y'
+      # SEQ_FIRSTRUN_ADMINPASSWORDHASH: ${SEQ_ADMIN_PASSWORD_HASH}
+    volumes:
+      - seq_data:/data
+    ports:
+      - 17080:80
+      - 5341:5341
+    networks:
+      - truquest
+
   file-archive:
     image: file-archive-new:latest
     build:
@@ -119,6 +132,9 @@ services:
       - kafka-1
       - ipfs
       - otel-collector
+
+volumes:
+  seq_data:
 
 networks:
   truquest:
