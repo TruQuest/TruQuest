@@ -16,22 +16,18 @@ class LocalWallet {
   bool get locked => _owner == null;
 
   String get currentOwnerAddress => _ownerIndexToAddress[_currentOwnerIndex]!;
-  String get currentWalletAddress =>
-      _ownerIndexToWalletAddress[_currentOwnerIndex]!;
+  String get currentWalletAddress => _ownerIndexToWalletAddress[_currentOwnerIndex]!;
 
-  String get _currentPrivateKey =>
-      _owner!.derivePath("m/44'/60'/0'/0/$_currentOwnerIndex").privateKey;
+  String get _currentPrivateKey => _owner!.derivePath("m/44'/60'/0'/0/$_currentOwnerIndex").privateKey;
 
   List<String> get walletAddresses =>
-      (_ownerIndexToWalletAddress.entries.toList()
-            ..sort(
-              (e1, e2) => e1.key.compareTo(e2.key),
-            ))
+      (_ownerIndexToWalletAddress.entries.toList()..sort((e1, e2) => e1.key.compareTo(e2.key)))
           .map((e) => e.value)
           .toList();
 
-  LocalWallet(String mnemonic, String password)
-      : _owner = HDNode.fromMnemonic(mnemonic, password) {
+  String get mnemonic => _owner!.mnemonic;
+
+  LocalWallet(String mnemonic, String password) : _owner = HDNode.fromMnemonic(mnemonic, password) {
     _ownerIndexToAddress = {};
     _ownerIndexToWalletAddress = {};
   }
@@ -46,8 +42,7 @@ class LocalWallet {
   void lock() => _owner = null;
 
   int addOwnerAccount({bool switchToAdded = true}) {
-    var index =
-        ((_ownerIndexToAddress.keys.toList()..sort()).lastOrNull ?? -1) + 1;
+    var index = ((_ownerIndexToAddress.keys.toList()..sort()).lastOrNull ?? -1) + 1;
     var path = "m/44'/60'/0'/0/$index";
     var ownerAddress = _owner!.derivePath(path).address;
     _ownerIndexToAddress[index] = ownerAddress;
@@ -64,9 +59,7 @@ class LocalWallet {
       _ownerIndexToWalletAddress[ownerIndex] = walletAddress;
 
   void switchCurrentToWalletsOwner(String walletAddress) {
-    var index = _ownerIndexToWalletAddress.entries
-        .singleWhere((e) => e.value == walletAddress)
-        .key;
+    var index = _ownerIndexToWalletAddress.entries.singleWhere((e) => e.value == walletAddress).key;
     _currentOwnerIndex = index;
   }
 
@@ -91,9 +84,7 @@ class LocalWallet {
               ),
         ),
         Map.fromEntries(
-          (map['ownerIndexToWalletAddress'] as Map<String, dynamic>)
-              .entries
-              .map(
+          (map['ownerIndexToWalletAddress'] as Map<String, dynamic>).entries.map(
                 (entry) => MapEntry(
                   int.parse(entry.key),
                   entry.value as String,
@@ -103,9 +94,7 @@ class LocalWallet {
       );
 
   Future<Map<String, dynamic>> toJson({String? password}) async => {
-        'encryptedOwner': password != null
-            ? await _encryptMnemonic(_owner!.mnemonic, password)
-            : null,
+        'encryptedOwner': password != null ? await _encryptMnemonic(_owner!.mnemonic, password) : null,
         'currentOwnerIndex': _currentOwnerIndex,
         'ownerIndexToAddress': Map.fromEntries(
           _ownerIndexToAddress.entries.map(
@@ -125,9 +114,7 @@ class LocalWallet {
     );
     var hash = hashMessage(Uint8List.fromList(utf8.encode(message)));
 
-    return pk
-        .signDigest(Uint8List.fromList(hex.decode(hash.substring(2))))
-        .combined;
+    return pk.signDigest(Uint8List.fromList(hex.decode(hash.substring(2)))).combined;
   }
 
   String ownerSignDigest(String digest) {
@@ -138,9 +125,7 @@ class LocalWallet {
     );
     var hash = hashMessage(Uint8List.fromList(hex.decode(digest)));
 
-    return pk
-        .signDigest(Uint8List.fromList(hex.decode(hash.substring(2))))
-        .combined;
+    return pk.signDigest(Uint8List.fromList(hex.decode(hash.substring(2)))).combined;
   }
 }
 

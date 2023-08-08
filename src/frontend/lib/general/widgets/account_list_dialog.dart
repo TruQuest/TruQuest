@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:auto_size_text/auto_size_text.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../utils/utils.dart';
 import '../../user/bloc/user_actions.dart';
@@ -20,16 +20,16 @@ class AccountListDialog extends StatelessWidgetX {
   Widget buildX(BuildContext context) {
     return SimpleDialog(
       backgroundColor: const Color(0xFF242423),
-      title: const Text(
+      title: Text(
         'Wallet accounts',
-        style: TextStyle(
+        style: GoogleFonts.philosopher(
           color: Colors.white,
+          fontSize: 24,
         ),
       ),
       children: [
         SizedBox(
           width: 400,
-          height: 400,
           child: StreamBuilder(
             stream: _userBloc.walletAddresses$,
             builder: (context, snapshot) {
@@ -40,14 +40,17 @@ class AccountListDialog extends StatelessWidgetX {
               }
 
               var addresses = snapshot.data!;
-              return ListView(
+              return Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   ...addresses.map(
                     (address) => ListTile(
-                      title: AutoSizeText(
-                        address,
-                        style: const TextStyle(
-                          color: Colors.white,
+                      title: FittedBox(
+                        child: SelectableText(
+                          address,
+                          style: GoogleFonts.righteous(
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                       trailing: _currentWalletAddress == address
@@ -55,22 +58,24 @@ class AccountListDialog extends StatelessWidgetX {
                               Icons.check_box_outlined,
                               color: Colors.white,
                             )
-                          : IconButton(
-                              icon: const Icon(
+                          : InkWell(
+                              child: const Icon(
                                 Icons.check_box_outline_blank_outlined,
                                 color: Colors.white,
                               ),
-                              onPressed: () async {
+                              onTap: () async {
                                 await _userBloc.execute(SwitchAccount(walletAddress: address));
                                 if (context.mounted) Navigator.of(context).pop();
                               },
                             ),
                     ),
                   ),
+                  Divider(color: Colors.white),
                   ListTile(
-                    title: const Text(
+                    title: Text(
                       'Add account',
-                      style: TextStyle(
+                      textAlign: TextAlign.end,
+                      style: GoogleFonts.raleway(
                         color: Colors.white,
                       ),
                     ),
@@ -82,6 +87,26 @@ class AccountListDialog extends StatelessWidgetX {
                       context,
                       (ctx) => _userBloc.executeMultiStage(
                         const AddAccount(),
+                        ctx,
+                      ),
+                    ),
+                  ),
+                  ListTile(
+                    title: Text(
+                      'Reveal secret phrase',
+                      textAlign: TextAlign.end,
+                      style: GoogleFonts.raleway(
+                        color: Colors.white,
+                      ),
+                    ),
+                    trailing: const Icon(
+                      Icons.text_snippet,
+                      color: Colors.white,
+                    ),
+                    onTap: () => multiStageOffChainFlow(
+                      context,
+                      (ctx) => _userBloc.executeMultiStage(
+                        const RevealSecretPhrase(),
                         ctx,
                       ),
                     ),

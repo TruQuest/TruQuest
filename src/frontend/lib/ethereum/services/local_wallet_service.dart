@@ -128,20 +128,15 @@ class LocalWalletService implements IWalletService {
   @override
   FutureOr<String> personalSignDigest(String digest) => _wallet!.ownerSignDigest(digest);
 
-  Future revealSecretPhrase() async {
-    /*
-      The Secret Phrase controls access to your wallet.
-      
-      You can opt-in to backup the phrase in an encrypted form on our server (we never see
-      the unencrypted phrase and hence can't get access to the wallet). This would allow
-      you to easily log-in to TruQuest from any number of devices without having to restore
-      the wallet from the phrase, so long as you remember the password you used for encryption.
+  Stream<Object> revealSecretPhrase(MultiStageOperationContext ctx) async* {
+    _wallet!.lock();
+    yield const WalletLockedError();
 
-      But regardless of whether you choose to use our server as a backup or not, you absolutely
-      MUST backup the phrase on your own onto some cold storage "device" (i.e. something that is
-      never connected to the Internet). You don't need to use a hardware wallet.A good example of such a device is a piece of paper that
-      never leaves you house.
-     
-     */
+    bool unlocked = await ctx.unlockWalletTask.future;
+    if (!unlocked) {
+      return;
+    }
+
+    yield _wallet!.mnemonic;
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
 
 import '../utils/utils.dart';
@@ -29,15 +30,15 @@ class _UnlockWalletDialogState extends StateX<UnlockWalletDialog> {
   Widget buildX(BuildContext context) {
     return AlertDialog(
       backgroundColor: const Color(0xFF242423),
-      title: const Text(
+      title: Text(
         'Unlock the wallet',
-        style: TextStyle(
+        style: GoogleFonts.philosopher(
           color: Colors.white,
         ),
       ),
       content: SizedBox(
         width: 300,
-        height: 100,
+        height: 50,
         child: TextField(
           controller: _passwordController,
           obscureText: true,
@@ -54,21 +55,11 @@ class _UnlockWalletDialogState extends StateX<UnlockWalletDialog> {
               borderSide: BorderSide(color: Colors.white),
             ),
           ),
-        ),
-      ),
-      actions: [
-        RoundedLoadingButton(
-          controller: _buttonController,
-          color: Colors.white,
-          valueColor: Colors.black,
-          successColor: Colors.white,
-          child: const Text(
-            'Unlock',
-            style: TextStyle(
-              color: Colors.black,
-            ),
-          ),
-          onPressed: () async {
+          onSubmitted: (_) async {
+            if (_buttonController.currentState != ButtonState.idle) return;
+            _buttonController.start();
+            await Future.delayed(const Duration(milliseconds: 500));
+
             var unlocked = await _userBloc.execute<bool>(
               UnlockWallet(password: _passwordController.text),
             );
@@ -79,9 +70,41 @@ class _UnlockWalletDialogState extends StateX<UnlockWalletDialog> {
               _buttonController.error();
             }
 
-            await Future.delayed(const Duration(seconds: 1));
-            if (context.mounted) Navigator.of(context).pop(unlocked);
+            // @@??: Why the modal gets automatically closed on <Enter> ?
+            // await Future.delayed(const Duration(seconds: 1));
+            // if (context.mounted) Navigator.of(context).pop(unlocked);
           },
+        ),
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: RoundedLoadingButton(
+            controller: _buttonController,
+            color: Colors.white,
+            valueColor: Colors.black,
+            successColor: Colors.white,
+            child: const Text(
+              'Unlock',
+              style: TextStyle(
+                color: Colors.black,
+              ),
+            ),
+            onPressed: () async {
+              var unlocked = await _userBloc.execute<bool>(
+                UnlockWallet(password: _passwordController.text),
+              );
+
+              if (unlocked.isTrue) {
+                _buttonController.success();
+              } else {
+                _buttonController.error();
+              }
+
+              await Future.delayed(const Duration(seconds: 1));
+              if (context.mounted) Navigator.of(context).pop(unlocked);
+            },
+          ),
         ),
       ],
     );

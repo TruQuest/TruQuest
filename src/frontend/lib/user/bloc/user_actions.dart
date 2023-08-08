@@ -109,3 +109,7 @@ class DepositFunds extends UserAction {
 
   const DepositFunds({required this.amount});
 }
+
+class RevealSecretPhrase extends UserAction {
+  const RevealSecretPhrase();
+}

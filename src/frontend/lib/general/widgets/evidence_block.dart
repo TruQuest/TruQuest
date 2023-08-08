@@ -68,9 +68,7 @@ class _EvidenceBlockState extends StateX<EvidenceBlock> {
                       foregroundColor: Colors.white,
                     ),
                     child: const Text('Ok'),
-                    onPressed: () {
-                      Navigator.of(context).pop(true);
-                    },
+                    onPressed: () => Navigator.of(context).pop(true),
                   )
                 ],
               ),

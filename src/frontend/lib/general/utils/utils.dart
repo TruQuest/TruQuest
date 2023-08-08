@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:convert/convert.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
@@ -220,6 +221,28 @@ Future<bool> multiStageOffChainFlow(
       showDialog(
         context: context,
         builder: (_) => QrCodeDialog(uri: stageResult.uri),
+      );
+    } else if (stageResult is String) {
+      showDialog(
+        context: context,
+        builder: (_) => SimpleDialog(
+          backgroundColor: const Color(0xFF242423),
+          children: [
+            Container(
+              width: 280,
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+              alignment: Alignment.center,
+              child: SelectableText(
+                stageResult,
+                style: GoogleFonts.raleway(
+                  color: Colors.white,
+                  fontSize: 20,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ],
+        ),
       );
     }
   }
