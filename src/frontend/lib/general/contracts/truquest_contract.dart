@@ -9,6 +9,45 @@ class TruQuestContract {
   static final String address = dotenv.env['TruQuestAddress']!;
   static const String _abi = '''[
         {
+          "inputs": [],
+          "name": "s_thingSubmissionStake",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "s_thingSettlementProposalStake",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "s_verifierStake",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
           "inputs": [
             {
               "internalType": "address",
@@ -36,6 +75,25 @@ class TruQuestContract {
             }
           ],
           "name": "s_stakedBalanceOf",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_user",
+              "type": "address"
+            }
+          ],
+          "name": "getAvailableFunds",
           "outputs": [
             {
               "internalType": "uint256",
@@ -168,9 +226,17 @@ class TruQuestContract {
     _contract = Contract(address, _abi, ethereumRpcProvider.provider);
   }
 
+  Future<BigInt> getThingSubmissionStake() => _contract.read<BigInt>('s_thingSubmissionStake');
+
+  Future<BigInt> getThingSettlementProposalStake() => _contract.read<BigInt>('s_thingSettlementProposalStake');
+
+  Future<BigInt> getVerifierStake() => _contract.read<BigInt>('s_verifierStake');
+
   Future<BigInt> balanceOf(String address) => _contract.read<BigInt>('s_balanceOf', args: [address]);
 
   Future<BigInt> stakedBalanceOf(String address) => _contract.read<BigInt>('s_stakedBalanceOf', args: [address]);
+
+  Future<BigInt> getAvailableFunds(String address) => _contract.read<BigInt>('getAvailableFunds', args: [address]);
 
   Future<bool> checkThingAlreadyFunded(String thingId) => _contract.read<bool>(
         'checkThingAlreadyFunded',

@@ -4,6 +4,7 @@ import 'package:either_dart/either.dart';
 
 import '../../ethereum/errors/wallet_action_declined_error.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
+import '../../general/errors/insufficient_balance_error.dart';
 import '../../user/errors/wallet_locked_error.dart';
 import '../../user/services/user_service.dart';
 import '../../ethereum/services/user_operation_service.dart';
@@ -92,20 +93,20 @@ class ThingService {
       }
     }
 
-    // @@TODO!!: Check balance!
-    // int balance = await _truthserumContract.balanceOf(
-    //   _walletService.currentWalletAddress!,
-    // );
-    // print('**************** Balance: $balance drops ****************');
-    // if (balance < amount) {
-    //   yield const InsufficientBalanceError();
-    //   return;
-    // }
+    BigInt thingSubmissionStake = await _truQuestContract.getThingSubmissionStake();
+    BigInt availableFunds = await _userService.getAvailableFundsForCurrentUser();
+    if (availableFunds < thingSubmissionStake) {
+      yield const InsufficientBalanceError();
+      return;
+    }
 
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [
         (TruQuestContract.address, _truQuestContract.fundThing(thingId, signature)),
       ],
+      functionSignature: 'TruQuest.fundPromise(promiseId: $thingId)',
+      description: 'Fund the promise to kick-start an evaluation process.',
+      stakeSize: thingSubmissionStake,
     );
 
     var userOp = await ctx.approveUserOpTask.future;
@@ -161,20 +162,20 @@ class ThingService {
       }
     }
 
-    // @@TODO!!: Check balance!
-    // int balance = await _truthserumContract.balanceOf(
-    //   _walletService.currentWalletAddress!,
-    // );
-    // print('**************** Balance: $balance drops ****************');
-    // if (balance < amount) {
-    //   yield const InsufficientBalanceError();
-    //   return;
-    // }
+    BigInt verifierStake = await _truQuestContract.getVerifierStake();
+    BigInt availableFunds = await _userService.getAvailableFundsForCurrentUser();
+    if (availableFunds < verifierStake) {
+      yield const InsufficientBalanceError();
+      return;
+    }
 
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [
         (ThingSubmissionVerifierLotteryContract.address, _thingSubmissionVerifierLotteryContract.joinLottery(thingId)),
       ],
+      functionSignature: 'PromiseSubmissionVerifierLotery.join(promiseId: $thingId)',
+      description: 'Join the verifier selection lottery.',
+      stakeSize: verifierStake,
     );
 
     var userOp = await ctx.approveUserOpTask.future;
@@ -327,6 +328,8 @@ class ThingService {
           )
         ),
       ],
+      functionSignature: 'PromiseAcceptancePoll.castVote(promiseId: $thingId, decision: "${decision.getString()}")',
+      description: 'Cast a vote indicating your decision regarding the promise.',
     );
 
     var userOp = await ctx.approveUserOpTask.future;

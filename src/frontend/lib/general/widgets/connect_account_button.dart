@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'wallet_selection_dialog.dart';
 import '../utils/utils.dart';
 import '../../user/bloc/user_actions.dart';
 import '../../user/bloc/user_bloc.dart';
@@ -40,27 +41,7 @@ class ConnectAccountButton extends StatelessWidgetX {
               onTap: () async {
                 var walletName = await showDialog<String>(
                   context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Select a wallet'),
-                    actions: [
-                      TextButton(
-                        child: const Text('Local'),
-                        onPressed: () => Navigator.of(context).pop('Local'),
-                      ),
-                      TextButton(
-                        child: const Text('Metamask'),
-                        onPressed: () => Navigator.of(context).pop('Metamask'),
-                      ),
-                      TextButton(
-                        child: const Text('Coinbase Wallet'),
-                        onPressed: () => Navigator.of(context).pop('CoinbaseWallet'),
-                      ),
-                      TextButton(
-                        child: const Text('WalletConnect'),
-                        onPressed: () => Navigator.of(context).pop('WalletConnect'),
-                      ),
-                    ],
-                  ),
+                  builder: (_) => const WalletSelectionDialog(),
                 );
 
                 if (walletName == null) return;

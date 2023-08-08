@@ -3,6 +3,7 @@ import 'dart:async';
 import '../../ethereum/errors/wallet_action_declined_error.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
 import '../../ethereum/services/user_operation_service.dart';
+import '../../general/errors/insufficient_balance_error.dart';
 import '../../user/errors/wallet_locked_error.dart';
 import '../models/im/new_assessment_poll_vote_im.dart';
 import '../../user/services/user_service.dart';
@@ -96,15 +97,12 @@ class SettlementService {
       }
     }
 
-    // @@TODO!!: Check balance!
-    // int balance = await _truthserumContract.balanceOf(
-    //   _walletService.currentWalletAddress!,
-    // );
-    // print('**************** Balance: $balance drops ****************');
-    // if (balance < amount) {
-    //   yield const InsufficientBalanceError();
-    //   return;
-    // }
+    BigInt proposalSubmissionStake = await _truQuestContract.getThingSettlementProposalStake();
+    BigInt availableFunds = await _userService.getAvailableFundsForCurrentUser();
+    if (availableFunds < proposalSubmissionStake) {
+      yield const InsufficientBalanceError();
+      return;
+    }
 
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [
@@ -117,6 +115,9 @@ class SettlementService {
           )
         ),
       ],
+      functionSignature: 'TruQuest.fundProposal(proposalId: $proposalId)',
+      description: 'Fund the proposal to kick-start an evaluation process.',
+      stakeSize: proposalSubmissionStake,
     );
 
     var userOp = await ctx.approveUserOpTask.future;
@@ -191,15 +192,12 @@ class SettlementService {
       }
     }
 
-    // @@TODO!!: Check balance!
-    // int balance = await _truthserumContract.balanceOf(
-    //   _walletService.currentWalletAddress!,
-    // );
-    // print('**************** Balance: $balance drops ****************');
-    // if (balance < amount) {
-    //   yield const InsufficientBalanceError();
-    //   return;
-    // }
+    BigInt verifierStake = await _truQuestContract.getVerifierStake();
+    BigInt availableFunds = await _userService.getAvailableFundsForCurrentUser();
+    if (availableFunds < verifierStake) {
+      yield const InsufficientBalanceError();
+      return;
+    }
 
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [
@@ -212,6 +210,9 @@ class SettlementService {
           )
         ),
       ],
+      functionSignature: 'ProposalAssessmentVerifierLottery.claimASpot(proposalId: $proposalId)',
+      description: 'Claim a verifier selection lottery spot.',
+      stakeSize: verifierStake,
     );
 
     var userOp = await ctx.approveUserOpTask.future;
@@ -241,15 +242,12 @@ class SettlementService {
       }
     }
 
-    // @@TODO!!: Check balance!
-    // int balance = await _truthserumContract.balanceOf(
-    //   _walletService.currentWalletAddress!,
-    // );
-    // print('**************** Balance: $balance drops ****************');
-    // if (balance < amount) {
-    //   yield const InsufficientBalanceError();
-    //   return;
-    // }
+    BigInt verifierStake = await _truQuestContract.getVerifierStake();
+    BigInt availableFunds = await _userService.getAvailableFundsForCurrentUser();
+    if (availableFunds < verifierStake) {
+      yield const InsufficientBalanceError();
+      return;
+    }
 
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [
@@ -261,6 +259,9 @@ class SettlementService {
           )
         ),
       ],
+      functionSignature: 'ProposalAssessmentVerifierLottery.join(proposalId: $proposalId)',
+      description: 'Join the verifier selection lottery.',
+      stakeSize: verifierStake,
     );
 
     var userOp = await ctx.approveUserOpTask.future;
@@ -423,6 +424,9 @@ class SettlementService {
           )
         ),
       ],
+      functionSignature:
+          'ProposalAssessmentPoll.castVote(proposalId: $proposalId, decision: "${decision.getString()}")',
+      description: 'Cast a vote indicating your decision regarding the proposal.',
     );
 
     var userOp = await ctx.approveUserOpTask.future;

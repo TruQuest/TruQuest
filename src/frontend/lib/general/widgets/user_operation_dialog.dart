@@ -52,28 +52,24 @@ class UserOperationDialog extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
-                              child: Align(
-                                alignment: Alignment.topRight,
-                                child: Text(
-                                  'From:',
-                                  style: GoogleFonts.philosopher(
-                                    color: Colors.black,
-                                  ),
+                              child: Text(
+                                'From:',
+                                textAlign: TextAlign.end,
+                                style: GoogleFonts.philosopher(
+                                  color: Colors.black,
                                 ),
                               ),
                             ),
                             SizedBox(width: 24),
                             Expanded(
                               flex: 3,
-                              child: Align(
-                                alignment: Alignment.topLeft,
-                                child: Tooltip(
-                                  message: userOp.sender,
-                                  child: Text(
-                                    userOp.senderShort,
-                                    style: GoogleFonts.raleway(
-                                      color: Colors.black,
-                                    ),
+                              child: Tooltip(
+                                message: userOp.sender,
+                                child: Text(
+                                  userOp.senderShort,
+                                  textAlign: TextAlign.start,
+                                  style: GoogleFonts.raleway(
+                                    color: Colors.black,
                                   ),
                                 ),
                               ),
@@ -85,26 +81,22 @@ class UserOperationDialog extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
-                              child: Align(
-                                alignment: Alignment.topRight,
-                                child: Text(
-                                  'Operation:',
-                                  style: GoogleFonts.philosopher(
-                                    color: Colors.black,
-                                  ),
+                              child: Text(
+                                'Operation:',
+                                textAlign: TextAlign.end,
+                                style: GoogleFonts.philosopher(
+                                  color: Colors.black,
                                 ),
                               ),
                             ),
                             SizedBox(width: 24),
                             Expanded(
                               flex: 3,
-                              child: Align(
-                                alignment: Alignment.topLeft,
-                                child: Text(
-                                  userOp.functionSignature,
-                                  style: GoogleFonts.raleway(
-                                    color: Colors.black,
-                                  ),
+                              child: Text(
+                                userOp.functionSignature,
+                                textAlign: TextAlign.start,
+                                style: GoogleFonts.raleway(
+                                  color: Colors.black,
                                 ),
                               ),
                             ),
@@ -117,28 +109,24 @@ class UserOperationDialog extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Expanded(
-                                  child: Align(
-                                    alignment: Alignment.topRight,
-                                    child: Text(
-                                      'Stake:',
-                                      style: GoogleFonts.philosopher(
-                                        color: Colors.black,
-                                      ),
+                                  child: Text(
+                                    'Truthserum amount:',
+                                    textAlign: TextAlign.end,
+                                    style: GoogleFonts.philosopher(
+                                      color: Colors.black,
                                     ),
                                   ),
                                 ),
                                 SizedBox(width: 24),
                                 Expanded(
                                   flex: 3,
-                                  child: Align(
-                                    alignment: Alignment.topLeft,
-                                    child: Tooltip(
-                                      message: userOp.stakeSize,
-                                      child: Text(
-                                        userOp.stakeSizeShort,
-                                        style: GoogleFonts.righteous(
-                                          color: Colors.black,
-                                        ),
+                                  child: Tooltip(
+                                    message: userOp.stakeSize,
+                                    child: Text(
+                                      userOp.stakeSizeShort,
+                                      textAlign: TextAlign.start,
+                                      style: GoogleFonts.righteous(
+                                        color: Colors.black,
                                       ),
                                     ),
                                   ),
@@ -151,27 +139,23 @@ class UserOperationDialog extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
-                              child: Align(
-                                alignment: Alignment.topRight,
-                                child: Text(
-                                  'Description:',
-                                  style: GoogleFonts.philosopher(
-                                    color: Colors.black,
-                                  ),
+                              child: Text(
+                                'Description:',
+                                textAlign: TextAlign.end,
+                                style: GoogleFonts.philosopher(
+                                  color: Colors.black,
                                 ),
                               ),
                             ),
                             SizedBox(width: 24),
                             Expanded(
                               flex: 3,
-                              child: Align(
-                                alignment: Alignment.topLeft,
-                                child: Text(
-                                  userOp.description,
-                                  style: GoogleFonts.raleway(
-                                    color: Colors.black,
-                                    fontStyle: FontStyle.italic,
-                                  ),
+                              child: Text(
+                                userOp.description,
+                                textAlign: TextAlign.start,
+                                style: GoogleFonts.raleway(
+                                  color: Colors.black,
+                                  fontStyle: FontStyle.italic,
                                 ),
                               ),
                             ),
@@ -190,22 +174,46 @@ class UserOperationDialog extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                            child: Align(
-                              alignment: Alignment.topRight,
-                              child: Text(
-                                'Estimated gas:',
-                                style: GoogleFonts.philosopher(
-                                  color: Colors.white,
-                                ),
+                            child: Text(
+                              'Estimated gas:',
+                              textAlign: TextAlign.end,
+                              style: GoogleFonts.philosopher(
+                                color: Colors.white,
                               ),
                             ),
                           ),
                           SizedBox(width: 24),
                           Expanded(
-                            child: Align(
-                              alignment: Alignment.topLeft,
+                            child: Text(
+                              userOp.estimatedGas,
+                              textAlign: TextAlign.start,
+                              style: GoogleFonts.righteous(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 12),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Estimated transaction fee:',
+                              textAlign: TextAlign.end,
+                              style: GoogleFonts.philosopher(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 24),
+                          Expanded(
+                            child: Tooltip(
+                              message: userOp.estimatedTxnFee,
                               child: Text(
-                                userOp.estimatedGas,
+                                userOp.estimatedTxnFeeShort,
+                                textAlign: TextAlign.start,
                                 style: GoogleFonts.righteous(
                                   color: Colors.white,
                                 ),
@@ -219,58 +227,21 @@ class UserOperationDialog extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                            child: Align(
-                              alignment: Alignment.topRight,
-                              child: Text(
-                                'Estimated transaction fee:',
-                                style: GoogleFonts.philosopher(
-                                  color: Colors.white,
-                                ),
+                            child: Text(
+                              'Transaction fee will be paid by the platform:',
+                              textAlign: TextAlign.end,
+                              style: GoogleFonts.philosopher(
+                                color: Colors.white,
                               ),
                             ),
                           ),
                           SizedBox(width: 24),
                           Expanded(
-                            child: Align(
-                              alignment: Alignment.topLeft,
-                              child: Tooltip(
-                                message: userOp.estimatedTxnFee,
-                                child: Text(
-                                  userOp.estimatedTxnFeeShort,
-                                  style: GoogleFonts.righteous(
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 12),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Align(
-                              alignment: Alignment.topRight,
-                              child: Text(
-                                'Transaction fee will be paid by the platform:',
-                                textAlign: TextAlign.end,
-                                style: GoogleFonts.philosopher(
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 24),
-                          Expanded(
-                            child: Align(
-                              alignment: Alignment.topLeft,
-                              child: Text(
-                                userOp.txnFeeCoveredByPaymaster ? 'YES' : 'NO',
-                                style: GoogleFonts.righteous(
-                                  color: Colors.white,
-                                ),
+                            child: Text(
+                              userOp.txnFeeCoveredByPaymaster ? 'YES' : 'NO',
+                              textAlign: TextAlign.start,
+                              style: GoogleFonts.righteous(
+                                color: Colors.white,
                               ),
                             ),
                           ),
@@ -286,7 +257,21 @@ class UserOperationDialog extends StatelessWidget {
       ),
       actions: [
         TextButton(
-          child: const Text('Ok'),
+          child: Text(
+            'Cancel',
+            style: GoogleFonts.raleway(
+              color: Colors.white,
+            ),
+          ),
+          onPressed: () => Navigator.of(context).pop(null),
+        ),
+        TextButton(
+          child: Text(
+            'Confirm',
+            style: GoogleFonts.raleway(
+              color: Colors.white,
+            ),
+          ),
           onPressed: () => Navigator.of(context).pop(_userOp),
         ),
       ],

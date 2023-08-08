@@ -50,15 +50,15 @@ contract TruQuest {
     AssessmentPoll public s_assessmentPoll;
     address private s_orchestrator;
 
-    uint256 private s_thingSubmissionStake;
-    uint256 private s_verifierStake;
-    uint256 private s_thingSettlementProposalStake;
-    uint256 private s_thingSubmissionAcceptedReward;
-    uint256 private s_thingSubmissionRejectedPenalty;
-    uint256 private s_verifierReward;
-    uint256 private s_verifierPenalty;
-    uint256 private s_thingSettlementProposalAcceptedReward;
-    uint256 private s_thingSettlementProposalRejectedPenalty;
+    uint256 public s_thingSubmissionStake;
+    uint256 public s_verifierStake;
+    uint256 public s_thingSettlementProposalStake;
+    uint256 public s_thingSubmissionAcceptedReward;
+    uint256 public s_thingSubmissionRejectedPenalty;
+    uint256 public s_verifierReward;
+    uint256 public s_verifierPenalty;
+    uint256 public s_thingSettlementProposalAcceptedReward;
+    uint256 public s_thingSettlementProposalRejectedPenalty;
 
     mapping(address => uint256) public s_balanceOf;
     mapping(address => uint256) public s_stakedBalanceOf;

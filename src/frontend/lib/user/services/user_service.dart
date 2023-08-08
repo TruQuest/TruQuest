@@ -245,6 +245,8 @@ class UserService {
     _smartWalletInfoChannel.add(info);
   }
 
+  Future<BigInt> getAvailableFundsForCurrentUser() => _truQuestContract.getAvailableFunds(currentWalletAddress);
+
   Stream<Object> depositFunds(
     int amount,
     MultiStageOperationContext ctx,
