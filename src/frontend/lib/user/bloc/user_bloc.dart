@@ -114,10 +114,7 @@ class UserBloc extends Bloc<UserAction> {
     await _userService.confirmEmail(action.confirmationToken);
   }
 
-  Future<bool> _unlockWallet(UnlockWallet action) async {
-    await _localWalletService.unlockWallet(action.password);
-    return true; // @@!!
-  }
+  Future<bool> _unlockWallet(UnlockWallet action) => _localWalletService.unlockWallet(action.password);
 
   Stream<Object> _addAccount(
     AddAccount action,

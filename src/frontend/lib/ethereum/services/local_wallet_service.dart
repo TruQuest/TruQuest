@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:cryptography/cryptography.dart';
 import 'package:rxdart/rxdart.dart';
 
 import '../../general/contexts/multi_stage_operation_context.dart';
@@ -69,13 +70,14 @@ class LocalWalletService implements IWalletService {
 
   Future<String> _getWalletAddress(String ownerAddress) => _accountFactoryContract.getAddress(ownerAddress);
 
-  Future unlockWallet(String password) async {
+  Future<bool> unlockWallet(String password) async {
     var encryptedWalletJson = jsonDecode(_localStorage.getString('LocalWallet')!);
-    // @@TODO: Handle invalid password.
-    _wallet = await LocalWallet.fromMap(
-      encryptedWalletJson,
-      password: password,
-    );
+    try {
+      _wallet = await LocalWallet.fromMap(encryptedWalletJson, password: password);
+      return true;
+    } on SecretBoxAuthenticationError {
+      return false;
+    }
   }
 
   Stream<Object> addAccount(MultiStageOperationContext ctx) async* {
@@ -89,9 +91,7 @@ class LocalWalletService implements IWalletService {
     }
 
     int index = _wallet!.addOwnerAccount(switchToAdded: false);
-    var walletAddress = await _getWalletAddress(
-      _wallet!.getOwnerAddress(index),
-    );
+    var walletAddress = await _getWalletAddress(_wallet!.getOwnerAddress(index));
     _wallet!.setOwnerWalletAddress(index, walletAddress);
 
     await _updateAccountListInLocalStorage();
@@ -107,9 +107,7 @@ class LocalWalletService implements IWalletService {
   }
 
   Future _updateAccountListInLocalStorage() async {
-    var encryptedWalletJson = jsonDecode(
-      _localStorage.getString('LocalWallet')!,
-    );
+    var encryptedWalletJson = jsonDecode(_localStorage.getString('LocalWallet')!);
     var walletJson = await _wallet!.toJson();
 
     encryptedWalletJson['currentOwnerIndex'] = walletJson['currentOwnerIndex'];

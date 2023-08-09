@@ -45,6 +45,7 @@ class _UnlockWalletDialogState extends StateX<UnlockWalletDialog> {
           style: const TextStyle(
             color: Colors.white,
           ),
+          autofocus: true,
           decoration: const InputDecoration(
             hintText: 'Password',
             hintStyle: TextStyle(color: Colors.white70),
@@ -55,25 +56,7 @@ class _UnlockWalletDialogState extends StateX<UnlockWalletDialog> {
               borderSide: BorderSide(color: Colors.white),
             ),
           ),
-          onSubmitted: (_) async {
-            if (_buttonController.currentState != ButtonState.idle) return;
-            _buttonController.start();
-            await Future.delayed(const Duration(milliseconds: 500));
-
-            var unlocked = await _userBloc.execute<bool>(
-              UnlockWallet(password: _passwordController.text),
-            );
-
-            if (unlocked.isTrue) {
-              _buttonController.success();
-            } else {
-              _buttonController.error();
-            }
-
-            // @@??: Why the modal gets automatically closed on <Enter> ?
-            // await Future.delayed(const Duration(seconds: 1));
-            // if (context.mounted) Navigator.of(context).pop(unlocked);
-          },
+          onSubmitted: (_) => _buttonController.start(),
         ),
       ),
       actions: [
@@ -84,6 +67,7 @@ class _UnlockWalletDialogState extends StateX<UnlockWalletDialog> {
             color: Colors.white,
             valueColor: Colors.black,
             successColor: Colors.white,
+            errorColor: Colors.white,
             child: const Text(
               'Unlock',
               style: TextStyle(

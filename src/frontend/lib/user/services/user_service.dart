@@ -247,10 +247,7 @@ class UserService {
 
   Future<BigInt> getAvailableFundsForCurrentUser() => _truQuestContract.getAvailableFunds(currentWalletAddress);
 
-  Stream<Object> depositFunds(
-    int amount,
-    MultiStageOperationContext ctx,
-  ) async* {
+  Stream<Object> depositFunds(int amount, MultiStageOperationContext ctx) async* {
     print('**************** Deposit funds ****************');
 
     if (!walletUnlocked) {
