@@ -33,9 +33,32 @@ public class ExceptionHandlingBehavior<TRequest, TResponse> : IPipelineBehavior<
         {
             return await next();
         }
+        catch (PostgresException ex) when
+        (
+            ex.SqlState == PostgresErrorCodes.SerializationFailure
+        )
+        {
+            _logger.LogWarning(ex, ex.Message);
+            span.RecordException(ex);
+
+            throw;
+        }
         catch (DbUpdateException ex) when
         (
             ex.InnerException is PostgresException pgEx &&
+            pgEx.SqlState == PostgresErrorCodes.SerializationFailure
+        )
+        {
+            _logger.LogWarning(pgEx, pgEx.Message);
+            span.RecordException(pgEx);
+
+            throw pgEx;
+        }
+        // @@??: Why DbUpdateException is inside an InvalidOperationException ?
+        catch (InvalidOperationException ex) when
+        (
+            ex.InnerException is DbUpdateException dbEx &&
+            dbEx.InnerException is PostgresException pgEx &&
             pgEx.SqlState == PostgresErrorCodes.SerializationFailure
         )
         {

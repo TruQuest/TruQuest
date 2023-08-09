@@ -55,6 +55,16 @@ public class PublisherWrapper
                 await _publisher.Publish(@event);
                 txnScope.Complete();
             }
+            catch (PostgresException ex) when (
+                ex.SqlState == PostgresErrorCodes.UniqueViolation
+            )
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Unique constraint violation while processing {Event}. Skipping...",
+                    @event.GetType().Name
+                );
+            }
             catch (DbUpdateException ex) when (
                 ex.InnerException is PostgresException pgEx &&
                 pgEx.SqlState == PostgresErrorCodes.UniqueViolation
@@ -72,6 +82,16 @@ public class PublisherWrapper
             try
             {
                 await _publisher.Publish(@event);
+            }
+            catch (PostgresException ex) when (
+                ex.SqlState == PostgresErrorCodes.UniqueViolation
+            )
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Unique constraint violation while processing {Event}. Skipping...",
+                    @event.GetType().Name
+                );
             }
             catch (DbUpdateException ex) when (
                 ex.InnerException is PostgresException pgEx &&
