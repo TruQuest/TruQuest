@@ -19,6 +19,7 @@ using OpenTelemetry.Metrics;
 using Domain.Aggregates;
 using Domain.Aggregates.Events;
 using Application.Common.Interfaces;
+using Infrastructure;
 using Infrastructure.Persistence;
 using Infrastructure.Ethereum;
 using API;
@@ -259,7 +260,7 @@ public class Sut : IAsyncLifetime
         };
     }
 
-    public async Task<T> SendRequest<T>(IRequest<T> request)
+    public async Task<TResponse> SendRequest<TResponse>(IRequest<TResponse> request)
     {
         using var scope = _app.Services.CreateScope();
 
@@ -269,8 +270,8 @@ public class Sut : IAsyncLifetime
             context.User = _user;
         }
 
-        var mediator = scope.ServiceProvider.GetRequiredService<ISender>();
-        var result = await mediator.Send(request);
+        var sender = scope.ServiceProvider.GetRequiredService<SenderWrapper>();
+        var result = await sender.Send(request, serviceProvider: scope.ServiceProvider);
 
         return result;
     }

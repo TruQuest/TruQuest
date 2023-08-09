@@ -1,6 +1,5 @@
 using System.Text;
 
-using MediatR;
 using KafkaFlow;
 using KafkaFlow.TypedHandler;
 
@@ -29,16 +28,16 @@ internal class ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccess
     private const string _blockNumberHeaderName = "BlockNumber";
     private const string _txnIndexHeaderName = "TxnIndex";
 
-    private readonly ISender _mediator;
+    private readonly SenderWrapper _sender;
 
-    public ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccessEventHandler(ISender mediator)
+    public ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccessEventHandler(SenderWrapper sender)
     {
-        _mediator = mediator;
+        _sender = sender;
     }
 
     public Task Handle(
         IMessageContext context, ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent message
-    ) => _mediator.Send(new PrepareForAssessmentPollCommand
+    ) => _sender.Send(new PrepareForAssessmentPollCommand
     {
         AssessmentPollInitBlockNumber = long.Parse(
             Encoding.UTF8.GetString((byte[])context.Headers[_blockNumberHeaderName])

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Diagnostics;
 using System.Numerics;
+using System.Reflection;
 
 using Microsoft.AspNetCore.SignalR;
 
@@ -19,6 +20,7 @@ using Domain.Results;
 using Domain.Errors;
 using Application;
 using Application.Common.Interfaces;
+using Application.Common.Behaviors;
 using Infrastructure;
 using Infrastructure.Ethereum;
 
@@ -124,6 +126,16 @@ public static class WebApplicationBuilderExtension
             )
         );
 
+        builder.Services.AddMediatR(config =>
+        {
+            config.Lifetime = ServiceLifetime.Scoped;
+            config.RegisterServicesFromAssembly(Assembly.GetAssembly(typeof(Application.IServiceCollectionExtension))!);
+            config.AddOpenBehavior(typeof(ExceptionHandlingBehavior<,>), ServiceLifetime.Singleton);
+            config.AddOpenBehavior(typeof(AuthorizationBehavior<,>), ServiceLifetime.Scoped);
+            config.AddOpenBehavior(typeof(ValidationBehavior<,>), ServiceLifetime.Singleton);
+            config.AddOpenBehavior(typeof(TransactionBehavior<,>), ServiceLifetime.Singleton);
+        });
+
         builder.Services.AddApplication();
         builder.Services.AddInfrastructure(builder.Environment, builder.Configuration);
 
@@ -135,8 +147,6 @@ public static class WebApplicationBuilderExtension
                 options.ClientTimeoutInterval = TimeSpan.FromSeconds(180);
 
                 options.AddFilter<ConvertHandleErrorToHubExceptionFilter>();
-                options.AddFilter<CopyAuthenticationContextToMethodInvocationScopeFilter>();
-                options.AddFilter<AddConnectionIdProviderToMethodInvocationScopeFilter>();
             })
             .AddJsonProtocol(options =>
             {

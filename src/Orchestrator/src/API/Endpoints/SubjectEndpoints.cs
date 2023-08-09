@@ -1,9 +1,8 @@
-using MediatR;
-
 using Application.Subject.Commands.AddNewSubject;
 using Application.Subject.Queries.GetSubject;
 using Application.Subject.Queries.GetSubjects;
 using Application.Subject.Queries.GetThingsList;
+using Infrastructure;
 
 namespace API.Endpoints;
 
@@ -15,25 +14,28 @@ public static class SubjectEndpoints
 
         group.MapPost(
             "/add",
-            (HttpRequest request, ISender mediator) =>
-                mediator.Send(new AddNewSubjectCommand { Request = request })
+            (HttpRequest request, SenderWrapper sender, HttpContext context) => sender.Send(
+                new AddNewSubjectCommand { Request = request },
+                serviceProvider: context.RequestServices
+            )
         );
 
         group.MapGet(
             "/",
-            (ISender mediator) => mediator.Send(new GetSubjectsQuery())
+            (SenderWrapper sender, HttpContext context) =>
+                sender.Send(new GetSubjectsQuery(), serviceProvider: context.RequestServices)
         );
 
         group.MapGet(
             "/{id}",
-            ([AsParameters] GetSubjectQuery query, ISender mediator) =>
-                mediator.Send(query)
+            ([AsParameters] GetSubjectQuery query, SenderWrapper sender, HttpContext context) =>
+                sender.Send(query, serviceProvider: context.RequestServices)
         );
 
         group.MapGet(
             "/{subjectId}/things",
-            ([AsParameters] GetThingsListQuery query, ISender mediator) =>
-                mediator.Send(query)
+            ([AsParameters] GetThingsListQuery query, SenderWrapper sender, HttpContext context) =>
+                sender.Send(query, serviceProvider: context.RequestServices)
         );
 
         return group;

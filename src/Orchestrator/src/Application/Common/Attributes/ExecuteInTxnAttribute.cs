@@ -6,5 +6,4 @@ namespace Application.Common.Attributes;
 public class ExecuteInTxnAttribute : Attribute
 {
     public IsolationLevel IsolationLevel { get; init; } = IsolationLevel.Serializable;
-    public Type[]? ExcludeRepos { get; init; }
 }

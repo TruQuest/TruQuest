@@ -1,6 +1,5 @@
 using KafkaFlow;
 using KafkaFlow.TypedHandler;
-using MediatR;
 
 using Domain.Aggregates;
 using Application.User.Commands.NotifyWatchers;
@@ -19,15 +18,15 @@ internal class SettlementProposalUpdateEvent
 
 internal class SettlementProposalUpdateEventHandler : IMessageHandler<SettlementProposalUpdateEvent>
 {
-    private readonly ISender _mediator;
+    private readonly SenderWrapper _sender;
 
-    public SettlementProposalUpdateEventHandler(ISender mediator)
+    public SettlementProposalUpdateEventHandler(SenderWrapper sender)
     {
-        _mediator = mediator;
+        _sender = sender;
     }
 
     public Task Handle(IMessageContext context, SettlementProposalUpdateEvent message) =>
-        _mediator.Send(new NotifyWatchersCommand
+        _sender.Send(new NotifyWatchersCommand
         {
             ItemType = WatchedItemTypeIm.SettlementProposal,
             ItemId = message.SettlementProposalId,

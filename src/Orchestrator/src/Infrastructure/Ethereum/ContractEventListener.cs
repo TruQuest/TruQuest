@@ -76,6 +76,7 @@ internal class ContractEventListener : IContractEventListener
                 var tcs = new TaskCompletionSource();
                 await _sink.WriteAsync((@event, tcs));
                 await tcs.Task;
+                // @@??: Check that IBlockProgressRepository updates only once this handler runs to completion.
             }
 
             // @@TODO: Use reflection to create and register handlers.

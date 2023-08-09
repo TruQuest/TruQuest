@@ -199,6 +199,8 @@ public static class IServiceCollectionExtension
         services.AddScoped<IWatchListQueryable, WatchListQueryable>();
 
         services.AddSingleton<IContractEventListener, ContractEventListener>();
+        services.AddScoped<PublisherWrapper>();
+        services.AddSingleton<SenderWrapper>();
 
         services.AddSingleton<AccountProvider>();
         services.AddSingleton<IContractCaller, ContractCaller>();
@@ -247,7 +249,7 @@ public static class IServiceCollectionExtension
                                             .AddSerializer<MessageSerializer, MessageTypeResolver>()
                                             .AddTypedHandlers(handlers =>
                                                 handlers
-                                                    .WithHandlerLifetime(InstanceLifetime.Scoped)
+                                                    .WithHandlerLifetime(InstanceLifetime.Singleton)
                                                     .AddHandlers(new[]
                                                     {
                                                         typeof(ThingFundedEventHandler),

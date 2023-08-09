@@ -1,6 +1,5 @@
 using System.Text;
 
-using MediatR;
 using KafkaFlow;
 using KafkaFlow.TypedHandler;
 
@@ -24,15 +23,15 @@ internal class ThingSubmissionVerifierLotteryClosedWithSuccessEventHandler :
     private const string _blockNumberHeaderName = "BlockNumber";
     private const string _txnIndexHeaderName = "TxnIndex";
 
-    private readonly ISender _mediator;
+    private readonly SenderWrapper _sender;
 
-    public ThingSubmissionVerifierLotteryClosedWithSuccessEventHandler(ISender mediator)
+    public ThingSubmissionVerifierLotteryClosedWithSuccessEventHandler(SenderWrapper sender)
     {
-        _mediator = mediator;
+        _sender = sender;
     }
 
     public Task Handle(IMessageContext context, ThingSubmissionVerifierLotteryClosedWithSuccessEvent message) =>
-        _mediator.Send(new PrepareForAcceptancePollCommand
+        _sender.Send(new PrepareForAcceptancePollCommand
         {
             AcceptancePollInitBlockNumber = long.Parse(
                 Encoding.UTF8.GetString((byte[])context.Headers[_blockNumberHeaderName])

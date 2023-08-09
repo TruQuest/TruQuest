@@ -1,6 +1,5 @@
 using System.Text;
 
-using MediatR;
 using KafkaFlow;
 using KafkaFlow.TypedHandler;
 
@@ -19,15 +18,15 @@ internal class ThingAcceptancePollFinalizedEvent
 
 internal class ThingAcceptancePollFinalizedEventHandler : IMessageHandler<ThingAcceptancePollFinalizedEvent>
 {
-    private readonly ISender _mediator;
+    private readonly SenderWrapper _sender;
 
-    public ThingAcceptancePollFinalizedEventHandler(ISender mediator)
+    public ThingAcceptancePollFinalizedEventHandler(SenderWrapper sender)
     {
-        _mediator = mediator;
+        _sender = sender;
     }
 
     public Task Handle(IMessageContext context, ThingAcceptancePollFinalizedEvent message) =>
-        _mediator.Send(new FinalizeAcceptancePollCommand
+        _sender.Send(new FinalizeAcceptancePollCommand
         {
             ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
             Decision = (SubmissionEvaluationDecision)message.Decision,

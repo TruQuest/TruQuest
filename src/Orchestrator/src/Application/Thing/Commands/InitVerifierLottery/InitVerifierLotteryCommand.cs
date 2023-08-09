@@ -47,6 +47,7 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
 
     public async Task<VoidResult> Handle(InitVerifierLotteryCommand command, CancellationToken ct)
     {
+        // @@TODO: Do not retrieve the whole thing from the db since we only update the state.
         var thing = await _thingRepository.FindById(command.ThingId);
         if (thing.State == ThingState.AwaitingFunding)
         {

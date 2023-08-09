@@ -1,6 +1,5 @@
 using System.Text;
 
-using MediatR;
 using KafkaFlow;
 using KafkaFlow.TypedHandler;
 
@@ -17,15 +16,15 @@ internal class ThingSubmissionVerifierLotteryClosedInFailureEvent
 internal class ThingSubmissionVerifierLotteryClosedInFailureEventHandler :
     IMessageHandler<ThingSubmissionVerifierLotteryClosedInFailureEvent>
 {
-    private readonly ISender _mediator;
+    private readonly SenderWrapper _sender;
 
-    public ThingSubmissionVerifierLotteryClosedInFailureEventHandler(ISender mediator)
+    public ThingSubmissionVerifierLotteryClosedInFailureEventHandler(SenderWrapper sender)
     {
-        _mediator = mediator;
+        _sender = sender;
     }
 
     public Task Handle(IMessageContext context, ThingSubmissionVerifierLotteryClosedInFailureEvent message) =>
-        _mediator.Send(new ArchiveDueToFailedLotteryCommand
+        _sender.Send(new ArchiveDueToFailedLotteryCommand
         {
             ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key))
         });

@@ -1,6 +1,5 @@
 using KafkaFlow;
 using KafkaFlow.TypedHandler;
-using MediatR;
 
 using Domain.Aggregates;
 using Application.User.Commands.NotifyWatchers;
@@ -19,15 +18,15 @@ internal class ThingUpdateEvent
 
 internal class ThingUpdateEventHandler : IMessageHandler<ThingUpdateEvent>
 {
-    private readonly ISender _mediator;
+    private readonly SenderWrapper _sender;
 
-    public ThingUpdateEventHandler(ISender mediator)
+    public ThingUpdateEventHandler(SenderWrapper sender)
     {
-        _mediator = mediator;
+        _sender = sender;
     }
 
     public Task Handle(IMessageContext context, ThingUpdateEvent message) =>
-        _mediator.Send(new NotifyWatchersCommand
+        _sender.Send(new NotifyWatchersCommand
         {
             ItemType = WatchedItemTypeIm.Thing,
             ItemId = message.ThingId,

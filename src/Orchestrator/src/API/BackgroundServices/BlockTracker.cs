@@ -1,6 +1,6 @@
-using Application;
 using Application.Common.Interfaces;
 using Application.Ethereum.Events.BlockMined;
+using Infrastructure;
 
 namespace API.BackgroundServices;
 

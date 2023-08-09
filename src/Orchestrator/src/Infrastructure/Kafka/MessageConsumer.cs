@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 
 using KafkaFlow;
 
-using Application;
 using Application.Common.Interfaces;
 using Application.Common.Messages.Responses;
 using ThingEvents = Application.Thing.Events;

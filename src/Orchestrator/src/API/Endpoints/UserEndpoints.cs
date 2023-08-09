@@ -1,10 +1,9 @@
-using MediatR;
-
 using Application.User.Commands.MarkNotificationsAsRead;
 using Application.User.Commands.SignInWithEthereum;
 using Application.User.Queries.GetNonceForSiwe;
 using Application.User.Commands.AddEmail;
 using Application.User.Commands.ConfirmEmail;
+using Infrastructure;
 
 namespace API.Endpoints;
 
@@ -16,30 +15,32 @@ public static class UserEndpoints
 
         group.MapGet(
             "/siwe/{address}",
-            ([AsParameters] GetNonceForSiweQuery query, ISender mediator) =>
-                mediator.Send(query)
+            ([AsParameters] GetNonceForSiweQuery query, SenderWrapper sender, HttpContext context) =>
+                sender.Send(query, serviceProvider: context.RequestServices)
         );
 
         group.MapPost(
             "/siwe",
-            (SignInWithEthereumCommand command, ISender mediator) =>
-                mediator.Send(command)
+            (SignInWithEthereumCommand command, SenderWrapper sender, HttpContext context) =>
+                sender.Send(command, serviceProvider: context.RequestServices)
         );
 
         group.MapPost(
             "/email",
-            (AddEmailCommand command, ISender mediator) => mediator.Send(command)
+            (AddEmailCommand command, SenderWrapper sender, HttpContext context) =>
+                sender.Send(command, serviceProvider: context.RequestServices)
         );
 
         group.MapPost(
             "/email/confirm",
-            (ConfirmEmailCommand command, ISender mediator) => mediator.Send(command)
+            (ConfirmEmailCommand command, SenderWrapper sender, HttpContext context) =>
+                sender.Send(command, serviceProvider: context.RequestServices)
         );
 
         group.MapPost(
             "/watch-list",
-            (MarkNotificationsAsReadCommand command, ISender mediator) =>
-                mediator.Send(command)
+            (MarkNotificationsAsReadCommand command, SenderWrapper sender, HttpContext context) =>
+                sender.Send(command, serviceProvider: context.RequestServices)
         );
 
         return group;

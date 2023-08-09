@@ -4,25 +4,12 @@ using Microsoft.Extensions.DependencyInjection;
 
 using FluentValidation;
 
-using Application.Common.Behaviors;
-
 namespace Application;
 
 public static class IServiceCollectionExtension
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        services.AddMediatR(config =>
-        {
-            config.Lifetime = ServiceLifetime.Scoped;
-            config.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
-            config.AddOpenBehavior(typeof(TracingBehavior<,>), ServiceLifetime.Singleton);
-            config.AddOpenBehavior(typeof(AuthorizationBehavior<,>), ServiceLifetime.Scoped);
-            config.AddOpenBehavior(typeof(ValidationBehavior<,>), ServiceLifetime.Singleton);
-            config.AddOpenBehavior(typeof(TransactionBehavior<,>), ServiceLifetime.Scoped);
-        });
-        services.AddScoped<PublisherWrapper>();
-
         services.AddValidatorsFromAssembly(
             Assembly.GetExecutingAssembly(),
             lifetime: ServiceLifetime.Singleton,

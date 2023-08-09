@@ -1,5 +1,5 @@
-using Application;
 using Application.Common.Interfaces;
+using Infrastructure;
 
 namespace API.BackgroundServices;
 

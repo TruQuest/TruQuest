@@ -1,6 +1,5 @@
 using System.Text;
 
-using MediatR;
 using KafkaFlow;
 using KafkaFlow.TypedHandler;
 
@@ -16,15 +15,15 @@ internal class ThingFundedEvent
 
 internal class ThingFundedEventHandler : IMessageHandler<ThingFundedEvent>
 {
-    private readonly ISender _mediator;
+    private readonly SenderWrapper _sender;
 
-    public ThingFundedEventHandler(ISender mediator)
+    public ThingFundedEventHandler(SenderWrapper sender)
     {
-        _mediator = mediator;
+        _sender = sender;
     }
 
     public Task Handle(IMessageContext context, ThingFundedEvent @event) =>
-        _mediator.Send(new InitVerifierLotteryCommand
+        _sender.Send(new InitVerifierLotteryCommand
         {
             ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key))
         });

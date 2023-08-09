@@ -12,21 +12,16 @@ public class SharedTxnScope : ISharedTxnScope
 {
     private readonly string _dbConnectionString;
     public DbConnection? DbConnection { get; private set; }
-    public HashSet<Type>? ExcludeRepos { get; private set; }
 
     public SharedTxnScope(IConfiguration configuration)
     {
         _dbConnectionString = configuration.GetConnectionString("Postgres")!;
     }
 
-    public void Init(Type[]? excludeRepos)
+    public void Init()
     {
         DbConnection = new NpgsqlConnection(_dbConnectionString);
-        ExcludeRepos = new(excludeRepos ?? new Type[] { }); // @@TODO: Empty static readonly array.
     }
 
-    void IDisposable.Dispose()
-    {
-        DbConnection?.Dispose();
-    }
+    void IDisposable.Dispose() => DbConnection?.Dispose();
 }

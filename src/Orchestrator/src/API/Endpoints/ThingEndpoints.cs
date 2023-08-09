@@ -1,5 +1,3 @@
-using MediatR;
-
 using Application.Thing.Queries.GetVerifierLotteryParticipants;
 using Application.Thing.Commands.CreateNewThingDraft;
 using Application.Thing.Commands.SubmitNewThing;
@@ -8,6 +6,7 @@ using Application.Thing.Queries.GetVerifiers;
 using Application.Thing.Commands.CastAcceptancePollVote;
 using Application.Thing.Queries.GetSettlementProposalsList;
 using Application.Thing.Commands.Watch;
+using Infrastructure;
 
 namespace API.Endpoints;
 
@@ -19,35 +18,37 @@ public static class ThingEndpoints
 
         group.MapPost(
             "/draft",
-            (HttpRequest request, ISender mediator) => mediator.Send(
-                new CreateNewThingDraftCommand { Request = request }
+            (HttpRequest request, SenderWrapper sender, HttpContext context) => sender.Send(
+                new CreateNewThingDraftCommand { Request = request },
+                serviceProvider: context.RequestServices
             )
         );
 
         group.MapPost(
             "/submit",
-            (SubmitNewThingCommand command, ISender mediator) =>
-                mediator.Send(command)
+            (SubmitNewThingCommand command, SenderWrapper sender, HttpContext context) =>
+                sender.Send(command, serviceProvider: context.RequestServices)
         );
 
         group.MapGet(
             "/{thingId}",
-            ([AsParameters] GetThingQuery query, ISender mediator) =>
-                mediator.Send(query)
+            ([AsParameters] GetThingQuery query, SenderWrapper sender, HttpContext context) =>
+                sender.Send(query, serviceProvider: context.RequestServices)
         );
 
         group.MapGet(
             "/{thingId}/lottery-participants",
             (
                 [AsParameters] GetVerifierLotteryParticipantsQuery query,
-                ISender mediator
-            ) => mediator.Send(query)
+                SenderWrapper sender,
+                HttpContext context
+            ) => sender.Send(query, serviceProvider: context.RequestServices)
         );
 
         group.MapGet(
             "/{thingId}/verifiers",
-            ([AsParameters] GetVerifiersQuery query, ISender mediator) =>
-                mediator.Send(query)
+            ([AsParameters] GetVerifiersQuery query, SenderWrapper sender, HttpContext context) =>
+                sender.Send(query, serviceProvider: context.RequestServices)
         );
 
         group.MapPost(
@@ -55,11 +56,12 @@ public static class ThingEndpoints
             (
                 Guid thingId,
                 CastAcceptancePollVoteCommand command,
-                ISender mediator
+                SenderWrapper sender,
+                HttpContext context
             ) =>
             {
                 command.Input.ThingId = thingId;
-                return mediator.Send(command);
+                return sender.Send(command, serviceProvider: context.RequestServices);
             }
         );
 
@@ -67,13 +69,15 @@ public static class ThingEndpoints
             "/{thingId}/settlement-proposals",
             (
                 [AsParameters] GetSettlementProposalsListQuery query,
-                ISender mediator
-            ) => mediator.Send(query)
+                SenderWrapper sender,
+                HttpContext context
+            ) => sender.Send(query, serviceProvider: context.RequestServices)
         );
 
         group.MapPost(
             "/watch",
-            (WatchCommand command, ISender mediator) => mediator.Send(command)
+            (WatchCommand command, SenderWrapper sender, HttpContext context) =>
+                sender.Send(command, serviceProvider: context.RequestServices)
         );
 
         return group;

@@ -1,27 +1,25 @@
 using Microsoft.AspNetCore.SignalR;
 
-using MediatR;
-
 using Domain.Results;
 using Application.User.Queries.GetWatchListUpdates;
 using Application.User.Commands.SubscribeToUpdates;
 using Application.User.Commands.UnsubscribeFromUpdates;
 using Application.User.Commands.UnsubThenSubToUpdates;
+using Infrastructure;
 
 using API.Hubs.Clients;
-using API.Hubs.Filters;
 
 namespace API.Hubs;
 
 public class TruQuestHub : Hub<ITruQuestClient>
 {
     private readonly ILogger<TruQuestHub> _logger;
-    private readonly ISender _mediator;
+    private readonly SenderWrapper _sender;
 
-    public TruQuestHub(ILogger<TruQuestHub> logger, ISender mediator)
+    public TruQuestHub(ILogger<TruQuestHub> logger, SenderWrapper sender)
     {
         _logger = logger;
-        _mediator = mediator;
+        _sender = sender;
     }
 
     public override async Task OnConnectedAsync()
@@ -31,10 +29,13 @@ public class TruQuestHub : Hub<ITruQuestClient>
 
         if (Context.UserIdentifier != null)
         {
-            var result = await _mediator.Send(new GetWatchListUpdatesQuery
-            {
-                UserId = Context.UserIdentifier
-            });
+            var result = await _sender.Send(
+                new GetWatchListUpdatesQuery
+                {
+                    UserId = Context.UserIdentifier
+                },
+                serviceProvider: Context.GetHttpContext()!.RequestServices
+            );
 
             _logger.LogInformation(
                 "User {UserId}: Retrieved {Count} notifications",
@@ -46,12 +47,21 @@ public class TruQuestHub : Hub<ITruQuestClient>
         }
     }
 
-    [AddConnectionIdProviderToMethodInvocationScope]
-    public Task<VoidResult> SubscribeToUpdates(SubscribeToUpdatesCommand command) => _mediator.Send(command);
+    public Task<VoidResult> SubscribeToUpdates(SubscribeToUpdatesCommand command) => _sender.Send(
+        command,
+        serviceProvider: Context.GetHttpContext()!.RequestServices,
+        signalRConnectionId: Context.ConnectionId
+    );
 
-    [AddConnectionIdProviderToMethodInvocationScope]
-    public Task<VoidResult> UnsubscribeFromUpdates(UnsubscribeFromUpdatesCommand command) => _mediator.Send(command);
+    public Task<VoidResult> UnsubscribeFromUpdates(UnsubscribeFromUpdatesCommand command) => _sender.Send(
+        command,
+        serviceProvider: Context.GetHttpContext()!.RequestServices,
+        signalRConnectionId: Context.ConnectionId
+    );
 
-    [AddConnectionIdProviderToMethodInvocationScope]
-    public Task<VoidResult> UnsubThenSubToUpdates(UnsubThenSubToUpdatesCommand command) => _mediator.Send(command);
+    public Task<VoidResult> UnsubThenSubToUpdates(UnsubThenSubToUpdatesCommand command) => _sender.Send(
+        command,
+        serviceProvider: Context.GetHttpContext()!.RequestServices,
+        signalRConnectionId: Context.ConnectionId
+    );
 }

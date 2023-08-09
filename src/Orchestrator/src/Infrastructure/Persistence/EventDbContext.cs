@@ -36,6 +36,8 @@ public class EventDbContext : DbContext
                 .HasColumnType("jsonb")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .IsRequired();
+
+            builder.HasIndex(e => new { e.ThingId, e.Type }).IsUnique();
         });
 
         modelBuilder.Entity<JoinedThingSubmissionVerifierLotteryEvent>(builder =>
@@ -46,9 +48,11 @@ public class EventDbContext : DbContext
             builder.Property(e => e.TxnIndex).IsRequired();
             builder.Property(e => e.ThingId).IsRequired();
             builder.Property(e => e.UserId).IsRequired();
-            builder.Property(e => e.L1BlockNumber).IsRequired(true);
+            builder.Property(e => e.L1BlockNumber).IsRequired();
             builder.Property(e => e.UserData).IsRequired(false);
             builder.Property(e => e.Nonce).IsRequired(false);
+
+            builder.HasIndex(e => new { e.ThingId, e.UserId }).IsUnique();
         });
 
         modelBuilder.Entity<CastedAcceptancePollVoteEvent>(builder =>
@@ -62,6 +66,10 @@ public class EventDbContext : DbContext
             builder.Property(e => e.Decision).HasConversion<int>().IsRequired();
             builder.Property(e => e.Reason).IsRequired(false);
             builder.Property(e => e.L1BlockNumber).IsRequired();
+
+            // @@NOTE: A user could in theory call castVote multiple times in the same transaction
+            // using AA txn batching, which this index would block...
+            builder.HasIndex(e => new { e.ThingId, e.UserId, e.BlockNumber, e.TxnIndex }).IsUnique();
         });
 
         modelBuilder.Entity<JoinedThingAssessmentVerifierLotteryEvent>(builder =>
@@ -76,6 +84,8 @@ public class EventDbContext : DbContext
             builder.Property(e => e.L1BlockNumber).IsRequired();
             builder.Property(e => e.UserData).IsRequired(false);
             builder.Property(e => e.Nonce).IsRequired(false);
+
+            builder.HasIndex(e => new { e.SettlementProposalId, e.UserId }).IsUnique();
         });
 
         modelBuilder.Entity<ThingAssessmentVerifierLotterySpotClaimedEvent>(builder =>
@@ -88,6 +98,8 @@ public class EventDbContext : DbContext
             builder.Property(e => e.SettlementProposalId).IsRequired();
             builder.Property(e => e.UserId).IsRequired();
             builder.Property(e => e.L1BlockNumber).IsRequired();
+
+            builder.HasIndex(e => new { e.SettlementProposalId, e.UserId }).IsUnique();
         });
 
         modelBuilder.Entity<CastedAssessmentPollVoteEvent>(builder =>
@@ -102,6 +114,8 @@ public class EventDbContext : DbContext
             builder.Property(e => e.Decision).HasConversion<int>().IsRequired();
             builder.Property(e => e.Reason).IsRequired(false);
             builder.Property(e => e.L1BlockNumber).IsRequired();
+
+            builder.HasIndex(e => new { e.SettlementProposalId, e.UserId, e.BlockNumber, e.TxnIndex }).IsUnique();
         });
 
         modelBuilder.Entity<BlockProcessedEvent>(builder =>

@@ -1,6 +1,5 @@
-using MediatR;
-
 using Application.General.Queries.GetTags;
+using Infrastructure;
 
 namespace API.Endpoints;
 
@@ -10,7 +9,8 @@ public static class GeneralEndpoints
     {
         return new()
         {
-            app.MapGet("/tags", (ISender mediator) => mediator.Send(new GetTagsQuery()))
+            app.MapGet("/tags", (SenderWrapper sender, HttpContext context) =>
+                sender.Send(new GetTagsQuery(), serviceProvider: context.RequestServices))
         };
     }
 }

@@ -27,19 +27,17 @@ internal abstract class Repository<T> : IRepository<T> where T : IAggregateRoot
 
     protected Repository(IConfiguration configuration, ISharedTxnScope sharedTxnScope) : this(configuration)
     {
-        if (sharedTxnScope.DbConnection != null && !sharedTxnScope.ExcludeRepos!.Contains(GetType()))
+        if (sharedTxnScope.DbConnection != null)
         {
             _setDbConnection((NpgsqlConnection)sharedTxnScope.DbConnection);
             _useSharedDbConnection = true;
         }
     }
 
-    protected Repository(
-        IConfiguration configuration, DbContext dbContext, ISharedTxnScope sharedTxnScope
-    ) : this(configuration)
+    protected Repository(IConfiguration configuration, DbContext dbContext, ISharedTxnScope sharedTxnScope) : this(configuration)
     {
         _dbContext = dbContext;
-        if (sharedTxnScope.DbConnection != null && !sharedTxnScope.ExcludeRepos!.Contains(GetType()))
+        if (sharedTxnScope.DbConnection != null)
         {
             _setDbConnection((NpgsqlConnection)sharedTxnScope.DbConnection);
             _useSharedDbConnection = true;
