@@ -10,6 +10,9 @@ public interface IContractCaller
     Task<BigInteger> GetWalletNonce(string walletAddress);
     Task<byte[]> GetUserOperationHash(UserOperation userOp);
 
+    Task<int> GetThingSubmissionLotteryNumVerifiers();
+    Task<int> GetThingSubmissionVerifierLotteryDurationBlocks();
+    Task<IEnumerable<string>> GetThingSubmissionVerifierLotteryParticipants(byte[] thingId);
     Task<byte[]> ComputeHashForThingSubmissionVerifierLottery(byte[] data);
     Task<long> InitThingSubmissionVerifierLottery(byte[] thingId, byte[] dataHash, byte[] userXorDataHash);
     Task<long> GetThingSubmissionVerifierLotteryInitBlock(byte[] thingId);
@@ -20,6 +23,9 @@ public interface IContractCaller
     );
     Task CloseThingSubmissionVerifierLotteryInFailure(byte[] thingId, int joinedNumVerifiers);
 
+    Task<int> GetThingAcceptancePollVotingVolumeThresholdPercent();
+    Task<int> GetThingAcceptancePollMajorityThresholdPercent();
+    Task<int> GetThingAcceptancePollDurationBlocks();
     Task<long> GetThingAcceptancePollInitBlock(byte[] thingId);
     Task FinalizeAcceptancePollForThingAsUnsettledDueToInsufficientVotingVolume(
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
@@ -38,6 +44,10 @@ public interface IContractCaller
     );
     Task<IEnumerable<string>> GetVerifiersForThing(byte[] thingId);
 
+    Task<int> GetThingAssessmentLotteryNumVerifiers();
+    Task<int> GetThingAssessmentVerifierLotteryDurationBlocks();
+    Task<IEnumerable<string>> GetThingAssessmentVerifierLotterySpotClaimants(byte[] thingId, byte[] proposalId);
+    Task<IEnumerable<string>> GetThingAssessmentVerifierLotteryParticipants(byte[] thingId, byte[] proposalId);
     Task<byte[]> ComputeHashForThingAssessmentVerifierLottery(byte[] data);
     Task<long> InitThingAssessmentVerifierLottery(byte[] thingId, byte[] proposalId, byte[] dataHash, byte[] userXorDataHash);
     Task<long> GetThingAssessmentVerifierLotteryInitBlock(byte[] thingId, byte[] proposalId);
@@ -49,6 +59,9 @@ public interface IContractCaller
     );
     Task CloseThingAssessmentVerifierLotteryInFailure(byte[] thingId, byte[] proposalId, int joinedNumVerifiers);
 
+    Task<int> GetThingAssessmentPollVotingVolumeThresholdPercent();
+    Task<int> GetThingAssessmentPollMajorityThresholdPercent();
+    Task<int> GetThingAssessmentPollDurationBlocks();
     Task<long> GetThingAssessmentPollInitBlock(byte[] thingId, byte[] proposalId);
     Task FinalizeAssessmentPollForProposalAsUnsettledDueToInsufficientVotingVolume(
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices

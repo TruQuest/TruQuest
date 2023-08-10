@@ -31,7 +31,7 @@ contract ThingAssessmentVerifierLottery {
         int256 block;
     }
 
-    uint256 public constant MAX_NONCE = 10_000_000;
+    uint256 private constant MAX_NONCE = 10_000_000;
 
     L1Block private constant L1BLOCK =
         L1Block(0x4200000000000000000000000000000000000015);
@@ -41,8 +41,8 @@ contract ThingAssessmentVerifierLottery {
     AssessmentPoll private s_assessmentPoll;
     address private s_orchestrator;
 
-    uint8 private s_numVerifiers;
-    uint16 private s_durationBlocks;
+    uint8 public s_numVerifiers;
+    uint16 public s_durationBlocks;
 
     mapping(bytes32 => Commitment)
         private s_thingProposalIdToOrchestratorCommitment;
@@ -193,20 +193,16 @@ contract ThingAssessmentVerifierLottery {
         uint16 _durationBlocks
     ) {
         i_truQuest = TruQuest(_truQuestAddress);
-        s_orchestrator = tx.origin;
+        s_orchestrator = msg.sender;
         s_numVerifiers = _numVerifiers;
         s_durationBlocks = _durationBlocks;
     }
 
-    function connectToAcceptancePoll(
-        address _acceptancePollAddress
-    ) external onlyOrchestrator {
-        s_acceptancePoll = AcceptancePoll(_acceptancePollAddress);
-    }
-
-    function connectToAssessmentPoll(
+    function setPolls(
+        address _acceptancePollAddress,
         address _assessmentPollAddress
     ) external onlyOrchestrator {
+        s_acceptancePoll = AcceptancePoll(_acceptancePollAddress);
         s_assessmentPoll = AssessmentPoll(_assessmentPollAddress);
     }
 
@@ -223,7 +219,7 @@ contract ThingAssessmentVerifierLottery {
 
     function getOrchestratorCommitment(
         bytes32 _thingProposalId
-    ) public view returns (int256, bytes32, bytes32) {
+    ) external view returns (int256, bytes32, bytes32) {
         Commitment
             memory commitment = s_thingProposalIdToOrchestratorCommitment[
                 _thingProposalId
@@ -235,13 +231,9 @@ contract ThingAssessmentVerifierLottery {
         );
     }
 
-    function getLotteryDurationBlocks() public view returns (uint16) {
-        return s_durationBlocks;
-    }
-
     function getLotteryInitBlock(
         bytes32 _thingProposalId
-    ) public view returns (int256) {
+    ) external view returns (int256) {
         return
             s_thingProposalIdToOrchestratorCommitment[_thingProposalId].block;
     }
@@ -249,7 +241,7 @@ contract ThingAssessmentVerifierLottery {
     function checkAlreadyClaimedLotterySpot(
         bytes32 _thingProposalId,
         address _user
-    ) public view returns (bool) {
+    ) external view returns (bool) {
         if (
             s_thingProposalIdToParticipantJoinedBlockNo[_thingProposalId][
                 _user
@@ -273,7 +265,7 @@ contract ThingAssessmentVerifierLottery {
     function checkAlreadyJoinedLottery(
         bytes32 _thingProposalId,
         address _user
-    ) public view returns (bool) {
+    ) external view returns (bool) {
         if (
             s_thingProposalIdToParticipantJoinedBlockNo[_thingProposalId][
                 _user
@@ -294,6 +286,18 @@ contract ThingAssessmentVerifierLottery {
         return false;
     }
 
+    function getSpotClaimants(
+        bytes32 _thingProposalId
+    ) external view returns (address[] memory) {
+        return s_thingProposalIdToClaimants[_thingProposalId];
+    }
+
+    function getParticipants(
+        bytes32 _thingProposalId
+    ) external view returns (address[] memory) {
+        return s_thingProposalIdToParticipants[_thingProposalId];
+    }
+
     function _splitIds(
         bytes32 _thingProposalId
     ) private pure returns (bytes16 _thingId, bytes16 _settlementProposalId) {
@@ -305,7 +309,7 @@ contract ThingAssessmentVerifierLottery {
         bytes32 _thingProposalId,
         bytes32 _dataHash,
         bytes32 _userXorDataHash
-    ) public onlyOrchestrator onlyUninitialized(_thingProposalId) {
+    ) external onlyOrchestrator onlyUninitialized(_thingProposalId) {
         s_thingProposalIdToOrchestratorCommitment[
             _thingProposalId
         ] = Commitment(
@@ -316,6 +320,7 @@ contract ThingAssessmentVerifierLottery {
 
         (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
 
+        // @@TODO: Finish this.
         // bytes16 currentProposalId = i_truQuest.getSettlementProposalId(
         //     thingId
         // );
@@ -337,7 +342,7 @@ contract ThingAssessmentVerifierLottery {
         bytes32 _thingProposalId,
         uint16 _thingVerifiersArrayIndex
     )
-        public
+        external
         whenHasEnoughFundsToStakeAsVerifier
         whenActiveAndNotExpired(_thingProposalId)
         whenNotAlreadyJoined(_thingProposalId)
@@ -376,7 +381,7 @@ contract ThingAssessmentVerifierLottery {
         bytes32 _thingProposalId,
         bytes32 _userData
     )
-        public
+        external
         whenHasEnoughFundsToStakeAsVerifier
         whenActiveAndNotExpired(_thingProposalId)
         whenNotAlreadyJoined(_thingProposalId)
@@ -405,7 +410,9 @@ contract ThingAssessmentVerifierLottery {
         );
     }
 
-    function checkExpired(bytes32 _thingProposalId) public view returns (bool) {
+    function checkExpired(
+        bytes32 _thingProposalId
+    ) external view returns (bool) {
         return
             _getL1BlockNumber() >
             uint256(
@@ -415,7 +422,7 @@ contract ThingAssessmentVerifierLottery {
                 s_durationBlocks;
     }
 
-    function getMaxNonce() public pure returns (uint256) {
+    function getMaxNonce() external pure returns (uint256) {
         return MAX_NONCE;
     }
 
@@ -440,7 +447,7 @@ contract ThingAssessmentVerifierLottery {
             i_truQuest.unstakeAsVerifier(claimants[j]);
         }
 
-        s_thingProposalIdToClaimants[_thingProposalId] = new address[](0); // unnecessary?
+        s_thingProposalIdToClaimants[_thingProposalId] = new address[](0); // @@??: Unnecessary?
         delete s_thingProposalIdToClaimants[_thingProposalId];
 
         return winners;
@@ -467,7 +474,7 @@ contract ThingAssessmentVerifierLottery {
             i_truQuest.unstakeAsVerifier(participants[j]);
         }
 
-        s_thingProposalIdToParticipants[_thingProposalId] = new address[](0); // unnecessary?
+        s_thingProposalIdToParticipants[_thingProposalId] = new address[](0); // @@??: Unnecessary?
         delete s_thingProposalIdToParticipants[_thingProposalId];
 
         return winners;
@@ -495,7 +502,7 @@ contract ThingAssessmentVerifierLottery {
         uint64[] calldata _winnerClaimantIndices,
         uint64[] calldata _winnerIndices
     )
-        public
+        external
         onlyOrchestrator
         whenActive(_thingProposalId)
         whenExpired(_thingProposalId)
@@ -584,7 +591,7 @@ contract ThingAssessmentVerifierLottery {
         bytes32 _thingProposalId,
         uint8 _joinedNumVerifiers
     )
-        public
+        external
         onlyOrchestrator
         whenActive(_thingProposalId)
         whenExpired(_thingProposalId)
@@ -613,10 +620,10 @@ contract ThingAssessmentVerifierLottery {
             i_truQuest.unstakeAsVerifier(participants[i]);
         }
 
-        s_thingProposalIdToClaimants[_thingProposalId] = new address[](0); // unnecessary?
+        s_thingProposalIdToClaimants[_thingProposalId] = new address[](0); // @@??: Unnecessary?
         delete s_thingProposalIdToClaimants[_thingProposalId];
 
-        s_thingProposalIdToParticipants[_thingProposalId] = new address[](0); // unnecessary?
+        s_thingProposalIdToParticipants[_thingProposalId] = new address[](0); // @@??: Unnecessary?
         delete s_thingProposalIdToParticipants[_thingProposalId];
 
         emit LotteryClosedInFailure(

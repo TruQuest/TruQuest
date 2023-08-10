@@ -225,8 +225,8 @@ public class E2ETests : IAsyncLifetime
             .Where(verifierId => accountedVotes.SingleOrDefault(v => v.VoterId == verifierId) == null)
             .ToList();
 
-        var votingVolumeThresholdPercent = await _sut.ExecWithService<IContractStorageQueryable, int>(
-            contractStorageQueryable => contractStorageQueryable.GetThingAcceptancePollVotingVolumeThreshold()
+        var votingVolumeThresholdPercent = await _sut.ExecWithService<IContractCaller, int>(
+            contractCaller => contractCaller.GetThingAcceptancePollVotingVolumeThresholdPercent()
         );
 
         var requiredVoterCount = Math.Ceiling(votingVolumeThresholdPercent / 100f * verifiers.Count);
@@ -240,8 +240,8 @@ public class E2ETests : IAsyncLifetime
             );
         }
 
-        var majorityThresholdPercent = await _sut.ExecWithService<IContractStorageQueryable, int>(
-            contractStorageQueryable => contractStorageQueryable.GetThingAcceptancePollMajorityThreshold()
+        var majorityThresholdPercent = await _sut.ExecWithService<IContractCaller, int>(
+            contractCaller => contractCaller.GetThingAcceptancePollMajorityThresholdPercent()
         );
         var acceptedDecisionRequiredVoteCount = Math.Ceiling(majorityThresholdPercent / 100f * accountedVotes.Count);
 
@@ -465,8 +465,8 @@ public class E2ETests : IAsyncLifetime
 
         Debug.WriteLine($"Server-computed nonce: {nonce}; Blockchain-computed nonce: {thingLotteryClosedWithSuccessEvent.Nonce}");
 
-        int requiredVerifierCount = await _sut.ExecWithService<IContractStorageQueryable, int>(
-            contractStorageQueryable => contractStorageQueryable.GetThingSubmissionNumVerifiers()
+        int requiredVerifierCount = await _sut.ExecWithService<IContractCaller, int>(
+            contractCaller => contractCaller.GetThingSubmissionLotteryNumVerifiers()
         );
 
         var userXorData = thingLotteryClosedWithSuccessEvent.UserXorData;
@@ -796,8 +796,8 @@ public class E2ETests : IAsyncLifetime
         // giving time to add verifiers, change the proposal's state, and create an assessment poll closing task
         await Task.Delay(TimeSpan.FromSeconds(10));
 
-        requiredVerifierCount = await _sut.ExecWithService<IContractStorageQueryable, int>(
-            contractStorageQueryable => contractStorageQueryable.GetThingAssessmentNumVerifiers()
+        requiredVerifierCount = await _sut.ExecWithService<IContractCaller, int>(
+            contractCaller => contractCaller.GetThingAssessmentLotteryNumVerifiers()
         );
 
         verifierCount = await _assessmentPollContract

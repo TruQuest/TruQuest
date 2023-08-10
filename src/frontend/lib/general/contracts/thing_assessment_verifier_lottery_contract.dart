@@ -12,7 +12,7 @@ class ThingAssessmentVerifierLotteryContract {
   static const String _abi = '''[
     {
       "inputs": [],
-      "name": "getLotteryDurationBlocks",
+      "name": "s_durationBlocks",
       "outputs": [
         {
           "internalType": "uint16",
@@ -173,7 +173,7 @@ class ThingAssessmentVerifierLotteryContract {
     );
   }
 
-  Future<int> getLotteryDurationBlocks() => _contract.read<int>('getLotteryDurationBlocks');
+  Future<int> getLotteryDurationBlocks() => _contract.read<int>('s_durationBlocks');
 
   Future<int?> getLotteryInitBlock(String thingId, String proposalId) async {
     var thingIdHex = thingId.toSolInputFormat(prefix: false);

@@ -25,7 +25,7 @@ contract ThingSubmissionVerifierLottery {
         int256 block;
     }
 
-    uint256 public constant MAX_NONCE = 10_000_000;
+    uint256 private constant MAX_NONCE = 10_000_000;
 
     L1Block private constant L1BLOCK =
         L1Block(0x4200000000000000000000000000000000000015);
@@ -34,8 +34,8 @@ contract ThingSubmissionVerifierLottery {
     AcceptancePoll private s_acceptancePoll;
     address private s_orchestrator;
 
-    uint8 private s_numVerifiers;
-    uint16 private s_durationBlocks;
+    uint8 public s_numVerifiers;
+    uint16 public s_durationBlocks;
 
     mapping(bytes16 => Commitment) private s_thingIdToOrchestratorCommitment;
     mapping(bytes16 => mapping(address => uint256))
@@ -161,12 +161,12 @@ contract ThingSubmissionVerifierLottery {
         uint16 _durationBlocks
     ) {
         i_truQuest = TruQuest(_truQuestAddress);
-        s_orchestrator = tx.origin;
+        s_orchestrator = msg.sender;
         s_numVerifiers = _numVerifiers;
         s_durationBlocks = _durationBlocks;
     }
 
-    function connectToAcceptancePoll(
+    function setAcceptancePoll(
         address _acceptancePollAddress
     ) external onlyOrchestrator {
         s_acceptancePoll = AcceptancePoll(_acceptancePollAddress);
@@ -185,7 +185,7 @@ contract ThingSubmissionVerifierLottery {
 
     function getOrchestratorCommitment(
         bytes16 _thingId
-    ) public view returns (int256, bytes32, bytes32) {
+    ) external view returns (int256, bytes32, bytes32) {
         Commitment memory commitment = s_thingIdToOrchestratorCommitment[
             _thingId
         ];
@@ -196,21 +196,23 @@ contract ThingSubmissionVerifierLottery {
         );
     }
 
-    function getLotteryDurationBlocks() public view returns (uint16) {
-        return s_durationBlocks;
-    }
-
     function getLotteryInitBlock(
         bytes16 _thingId
-    ) public view returns (int256) {
+    ) external view returns (int256) {
         return s_thingIdToOrchestratorCommitment[_thingId].block;
     }
 
     function checkAlreadyJoinedLottery(
         bytes16 _thingId,
         address _user
-    ) public view returns (bool) {
+    ) external view returns (bool) {
         return s_thingIdToParticipantJoinedBlockNo[_thingId][_user] > 0;
+    }
+
+    function getParticipants(
+        bytes16 _thingId
+    ) external view returns (address[] memory) {
+        return s_thingIdToParticipants[_thingId];
     }
 
     // @@TODO: Check that the thing is funded.
@@ -218,7 +220,7 @@ contract ThingSubmissionVerifierLottery {
         bytes16 _thingId,
         bytes32 _dataHash,
         bytes32 _userXorDataHash
-    ) public onlyOrchestrator onlyUninitialized(_thingId) {
+    ) external onlyOrchestrator onlyUninitialized(_thingId) {
         s_thingIdToOrchestratorCommitment[_thingId] = Commitment(
             _dataHash,
             _userXorDataHash,
@@ -237,7 +239,7 @@ contract ThingSubmissionVerifierLottery {
         bytes16 _thingId,
         bytes32 _userData
     )
-        public
+        external
         notSubmitter(_thingId)
         whenHasEnoughFundsToStakeAsVerifier
         whenActiveAndNotExpired(_thingId)
@@ -254,14 +256,14 @@ contract ThingSubmissionVerifierLottery {
         emit JoinedLottery(_thingId, msg.sender, _userData, l1BlockNumber);
     }
 
-    function checkExpired(bytes16 _thingId) public view returns (bool) {
+    function checkExpired(bytes16 _thingId) external view returns (bool) {
         return
             _getL1BlockNumber() >
             uint256(s_thingIdToOrchestratorCommitment[_thingId].block) +
                 s_durationBlocks;
     }
 
-    function getMaxNonce() public pure returns (uint256) {
+    function getMaxNonce() external pure returns (uint256) {
         return MAX_NONCE;
     }
 
@@ -271,7 +273,7 @@ contract ThingSubmissionVerifierLottery {
         bytes32 _userXorData,
         bytes32 _hashOfL1EndBlock,
         uint64[] calldata _winnerIndices // sorted asc indices of users in participants array
-    ) public onlyOrchestrator whenActive(_thingId) whenExpired(_thingId) {
+    ) external onlyOrchestrator whenActive(_thingId) whenExpired(_thingId) {
         if (_winnerIndices.length != s_numVerifiers) {
             revert ThingSubmissionVerifierLottery__InvalidNumberOfWinners(
                 _thingId
@@ -328,7 +330,7 @@ contract ThingSubmissionVerifierLottery {
     function closeLotteryInFailure(
         bytes16 _thingId,
         uint8 _joinedNumVerifiers
-    ) public onlyOrchestrator whenActive(_thingId) whenExpired(_thingId) {
+    ) external onlyOrchestrator whenActive(_thingId) whenExpired(_thingId) {
         // @@??: Pass and check data?
         s_thingIdToOrchestratorCommitment[_thingId]
             .block = -s_thingIdToOrchestratorCommitment[_thingId].block;

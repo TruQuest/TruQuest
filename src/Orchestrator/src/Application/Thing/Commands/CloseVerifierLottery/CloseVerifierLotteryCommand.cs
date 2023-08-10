@@ -27,21 +27,18 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
     private readonly IContractCaller _contractCaller;
     private readonly IL1BlockchainQueryable _l1BlockchainQueryable;
     private readonly IJoinedThingSubmissionVerifierLotteryEventRepository _joinedLotteryEventRepository;
-    private readonly IContractStorageQueryable _contractStorageQueryable;
 
     public CloseVerifierLotteryCommandHandler(
         ILogger<CloseVerifierLotteryCommandHandler> logger,
         IContractCaller contractCaller,
         IL1BlockchainQueryable l1BlockchainQueryable,
-        IJoinedThingSubmissionVerifierLotteryEventRepository joinedLotteryEventRepository,
-        IContractStorageQueryable contractStorageQueryable
+        IJoinedThingSubmissionVerifierLotteryEventRepository joinedLotteryEventRepository
     )
     {
         _logger = logger;
         _contractCaller = contractCaller;
         _l1BlockchainQueryable = l1BlockchainQueryable;
         _joinedLotteryEventRepository = joinedLotteryEventRepository;
-        _contractStorageQueryable = contractStorageQueryable;
     }
 
     public async Task<VoidResult> Handle(CloseVerifierLotteryCommand command, CancellationToken ct)
@@ -62,7 +59,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 
         _logger.LogInformation("Thing {ThingId} Lottery: Orchestrator nonce = {Nonce}", command.ThingId, nonce);
 
-        int numVerifiers = await _contractStorageQueryable.GetThingSubmissionNumVerifiers();
+        int numVerifiers = await _contractCaller.GetThingSubmissionLotteryNumVerifiers();
 
         var joinedEvents = await _joinedLotteryEventRepository.FindAllFor(command.ThingId);
         foreach (var @event in joinedEvents)
@@ -88,14 +85,11 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 
         if (winnerEventsIndexed.Count == numVerifiers)
         {
-            // @@??: Retrieve participants array?
+            var participants = await _contractCaller.GetThingSubmissionVerifierLotteryParticipants(thingId);
             foreach (var @event in winnerEventsIndexed)
             {
-                var user = await _contractStorageQueryable.GetThingSubmissionVerifierLotteryParticipantAt(
-                    thingId,
-                    (int)@event.Index
-                );
-                if (user.ToLower() != @event.Event.UserId)
+                var participantAtIndex = participants.ElementAtOrDefault(new Index((int)@event.Index));
+                if (participantAtIndex?.Substring(2).ToLower() != @event.Event.UserId)
                 {
                     throw new Exception("Incorrect winner selection");
                 }

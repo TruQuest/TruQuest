@@ -255,21 +255,31 @@ class UserOperationDialog extends StatelessWidget {
           },
         ),
       ),
+      actionsPadding: const EdgeInsets.only(right: 12, bottom: 12),
       actions: [
-        TextButton(
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+          ),
           child: Text(
             'Cancel',
             style: GoogleFonts.raleway(
-              color: Colors.white,
+              fontWeight: FontWeight.bold,
             ),
           ),
           onPressed: () => Navigator.of(context).pop(null),
         ),
-        TextButton(
+        SizedBox(width: 6),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+          ),
           child: Text(
             'Confirm',
             style: GoogleFonts.raleway(
-              color: Colors.white,
+              fontWeight: FontWeight.bold,
             ),
           ),
           onPressed: () => Navigator.of(context).pop(_userOp),

@@ -85,7 +85,7 @@ class AssessmentPollContract {
     },
     {
       "inputs": [],
-      "name": "getPollDurationBlocks",
+      "name": "s_durationBlocks",
       "outputs": [
         {
           "internalType": "uint16",
@@ -129,7 +129,7 @@ class AssessmentPollContract {
     );
   }
 
-  Future<int> getPollDurationBlocks() => _contract.read<int>('getPollDurationBlocks');
+  Future<int> getPollDurationBlocks() => _contract.read<int>('s_durationBlocks');
 
   Future<int?> getPollInitBlock(String thingId, String proposalId) async {
     var thingIdHex = thingId.toSolInputFormat(prefix: false);

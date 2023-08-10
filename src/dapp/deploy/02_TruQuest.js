@@ -10,20 +10,15 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     from: deployer,
     args: [
       truthserum.address,
-      3 /* _numVerifiers */,
       5 /* _verifierStake */,
+      2 /* _verifierReward */,
+      1 /* _verifierPenalty */,
       25 /* _thingSubmissionStake */,
       7 /* _thingSubmissionAcceptedReward */,
       3 /* _thingSubmissionRejectedPenalty */,
-      2 /* _verifierReward */,
-      1 /* _verifierPenalty */,
-      70 /* _verifierLotteryDurationBlocks */,
-      70 /* _pollDurationBlocks */,
       25 /* _thingSettlementProposalStake */,
-      // 7 /* _thingSettlementProposalAcceptedReward */,
-      // 3 /* _thingSettlementProposalRejectedPenalty */,
-      // 50 /* _votingVolumeThresholdPercent */,
-      // 51 /* _majorityThresholdPercent */
+      7 /* _thingSettlementProposalAcceptedReward */,
+      3 /* _thingSettlementProposalRejectedPenalty */,
     ],
     log: true,
     waitConfirmations: 1,
@@ -82,29 +77,25 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   let ta = await ethers.getContract("ThingAssessmentVerifierLottery");
   let asp = await ethers.getContract("AssessmentPoll");
 
-  var txnResponse = await ts.connectToAcceptancePoll(acp.address);
+  var txnResponse = await truQuest.setLotteryAndPollAddresses(
+    ts.address,
+    acp.address,
+    ta.address,
+    asp.address
+  );
   await txnResponse.wait(1);
 
-  txnResponse = await acp.connectToThingSubmissionVerifierLottery(ts.address);
+  txnResponse = await ts.setAcceptancePoll(acp.address);
   await txnResponse.wait(1);
 
-  txnResponse = await ta.connectToAcceptancePoll(acp.address);
+  txnResponse = await acp.setThingSubmissionVerifierLotteryAddress(ts.address);
   await txnResponse.wait(1);
 
-  txnResponse = await ta.connectToAssessmentPoll(asp.address);
+  txnResponse = await ta.setPolls(acp.address, asp.address);
   await txnResponse.wait(1);
 
-  txnResponse = await asp.connectToThingAssessmentVerifierLottery(ta.address);
+  txnResponse = await asp.setThingAssessmentVerifierLotteryAddress(ta.address);
   await txnResponse.wait(1);
-
-  // log(
-  //   `ThingSubmissionVerifierLottery deployed at ${await truQuest.s_thingSubmissionVerifierLottery()}`
-  // );
-  // log(`AcceptancePoll deployed at ${await truQuest.s_acceptancePoll()}`);
-  // log(
-  //   `ThingAssessmentVerifierLottery deployed at ${await asp.s_verifierLottery()}`
-  // );
-  // log(`AssessmentPoll deployed at ${await truQuest.s_assessmentPoll()}`);
 };
 
 module.exports.tags = ["TruQuest"];

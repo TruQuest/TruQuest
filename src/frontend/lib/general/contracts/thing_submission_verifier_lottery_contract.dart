@@ -41,7 +41,7 @@ class ThingSubmissionVerifierLotteryContract {
     },
     {
       "inputs": [],
-      "name": "getLotteryDurationBlocks",
+      "name": "s_durationBlocks",
       "outputs": [
         {
           "internalType": "uint16",
@@ -142,7 +142,7 @@ class ThingSubmissionVerifierLotteryContract {
     return ((result[0] as BigInt).toInt(), result[1] as String, result[2] as String);
   }
 
-  Future<int> getLotteryDurationBlocks() => _contract.read<int>('getLotteryDurationBlocks');
+  Future<int> getLotteryDurationBlocks() => _contract.read<int>('s_durationBlocks');
 
   Future<int?> getLotteryInitBlock(String thingId) async {
     var initBlock = await _contract.read<BigInt>(

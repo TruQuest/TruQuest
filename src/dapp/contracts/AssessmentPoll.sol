@@ -27,15 +27,15 @@ contract AssessmentPoll {
     }
 
     TruQuest private immutable i_truQuest;
-    ThingAssessmentVerifierLottery private s_verifierLottery;
+    address private s_verifierLotteryAddress;
     address private s_orchestrator;
 
     L1Block private constant L1BLOCK =
         L1Block(0x4200000000000000000000000000000000000015);
 
-    uint16 private s_durationBlocks;
-    uint8 private s_votingVolumeThresholdPercent;
-    uint8 private s_majorityThresholdPercent;
+    uint16 public s_durationBlocks;
+    uint8 public s_votingVolumeThresholdPercent;
+    uint8 public s_majorityThresholdPercent;
 
     mapping(bytes32 => int256) private s_proposalIdToPollInitBlock;
     mapping(bytes32 => address[]) private s_proposalVerifiers;
@@ -82,7 +82,7 @@ contract AssessmentPoll {
     }
 
     modifier onlyThingAssessmentVerifierLottery() {
-        if (msg.sender != address(s_verifierLottery)) {
+        if (msg.sender != s_verifierLotteryAddress) {
             revert AssessmentPoll__Unauthorized();
         }
         _;
@@ -138,7 +138,7 @@ contract AssessmentPoll {
         uint8 _majorityThresholdPercent
     ) {
         i_truQuest = TruQuest(_truQuestAddress);
-        s_orchestrator = tx.origin;
+        s_orchestrator = msg.sender;
         s_durationBlocks = _durationBlocks;
         s_votingVolumeThresholdPercent = _votingVolumeThresholdPercent;
         s_majorityThresholdPercent = _majorityThresholdPercent;
@@ -153,12 +153,10 @@ contract AssessmentPoll {
         );
     }
 
-    function connectToThingAssessmentVerifierLottery(
+    function setThingAssessmentVerifierLotteryAddress(
         address _verifierLotteryAddress
     ) external onlyOrchestrator {
-        s_verifierLottery = ThingAssessmentVerifierLottery(
-            _verifierLotteryAddress
-        );
+        s_verifierLotteryAddress = _verifierLotteryAddress;
     }
 
     function _getL1BlockNumber() private view returns (uint256) {
@@ -168,13 +166,9 @@ contract AssessmentPoll {
         return block.number;
     }
 
-    function getPollDurationBlocks() public view returns (uint16) {
-        return s_durationBlocks;
-    }
-
     function getPollInitBlock(
         bytes32 _thingProposalId
-    ) public view returns (int256) {
+    ) external view returns (int256) {
         return s_proposalIdToPollInitBlock[_thingProposalId];
     }
 
@@ -193,7 +187,7 @@ contract AssessmentPoll {
         uint16 _proposalVerifiersArrayIndex,
         Vote _vote
     )
-        public
+        external
         whenActiveAndNotExpired(_thingProposalId)
         onlyDesignatedVerifier(_thingProposalId, _proposalVerifiersArrayIndex)
     {
@@ -213,7 +207,7 @@ contract AssessmentPoll {
         Vote _vote,
         string calldata _reason
     )
-        public
+        external
         whenActiveAndNotExpired(_thingProposalId)
         onlyDesignatedVerifier(_thingProposalId, _proposalVerifiersArrayIndex)
     {
@@ -230,7 +224,7 @@ contract AssessmentPoll {
 
     function getVerifiers(
         bytes32 _thingProposalId
-    ) public view returns (address[] memory) {
+    ) external view returns (address[] memory) {
         return s_proposalVerifiers[_thingProposalId];
     }
 
@@ -260,7 +254,7 @@ contract AssessmentPoll {
         Decision _decision,
         uint64[] calldata _verifiersToSlashIndices
     )
-        public
+        external
         onlyOrchestrator
         whenActive(_thingProposalId)
         whenExpired(_thingProposalId)
@@ -325,7 +319,7 @@ contract AssessmentPoll {
         string calldata _voteAggIpfsCid,
         uint64[] calldata _verifiersToSlashIndices
     )
-        public
+        external
         onlyOrchestrator
         whenActive(_thingProposalId)
         whenExpired(_thingProposalId)
@@ -359,7 +353,7 @@ contract AssessmentPoll {
         string calldata _voteAggIpfsCid,
         uint64[] calldata _verifiersToSlashIndices
     )
-        public
+        external
         onlyOrchestrator
         whenActive(_thingProposalId)
         whenExpired(_thingProposalId)
@@ -393,7 +387,7 @@ contract AssessmentPoll {
         string calldata _voteAggIpfsCid,
         uint64[] calldata _verifiersToSlashIndices
     )
-        public
+        external
         onlyOrchestrator
         whenActive(_thingProposalId)
         whenExpired(_thingProposalId)
@@ -425,7 +419,7 @@ contract AssessmentPoll {
     function getUserIndexAmongProposalVerifiers(
         bytes32 _thingProposalId,
         address _user
-    ) public view returns (int256) {
+    ) external view returns (int256) {
         int256 index = -1;
         address[] memory verifiers = s_proposalVerifiers[_thingProposalId];
         for (uint256 i = 0; i < verifiers.length; ++i) {

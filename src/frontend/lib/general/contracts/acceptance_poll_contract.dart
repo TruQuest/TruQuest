@@ -10,7 +10,7 @@ class AcceptancePollContract {
   static const String _abi = '''[
     {
       "inputs": [],
-      "name": "getPollDurationBlocks",
+      "name": "s_durationBlocks",
       "outputs": [
         {
           "internalType": "uint16",
@@ -129,7 +129,7 @@ class AcceptancePollContract {
     );
   }
 
-  Future<int> getPollDurationBlocks() => _contract.read<int>('getPollDurationBlocks');
+  Future<int> getPollDurationBlocks() => _contract.read<int>('s_durationBlocks');
 
   Future<int?> getPollInitBlock(String thingId) async {
     var initBlock = await _contract.read<BigInt>(

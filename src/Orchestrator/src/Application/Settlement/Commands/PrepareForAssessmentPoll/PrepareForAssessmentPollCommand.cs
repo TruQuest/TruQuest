@@ -34,7 +34,6 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
     private readonly IJoinedThingAssessmentVerifierLotteryEventRepository _joinedThingAssessmentVerifierLotteryEventRepository;
     private readonly ISettlementProposalUpdateRepository _settlementProposalUpdateRepository;
     private readonly IWatchedItemRepository _watchedItemRepository;
-    private readonly IContractStorageQueryable _contractStorageQueryable;
     private readonly IContractCaller _contractCaller;
 
     public PrepareForAssessmentPollCommandHandler(
@@ -43,7 +42,6 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
         IJoinedThingAssessmentVerifierLotteryEventRepository joinedThingAssessmentVerifierLotteryEventRepository,
         ISettlementProposalUpdateRepository settlementProposalUpdateRepository,
         IWatchedItemRepository watchedItemRepository,
-        IContractStorageQueryable contractStorageQueryable,
         IContractCaller contractCaller
     )
     {
@@ -52,7 +50,6 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
         _joinedThingAssessmentVerifierLotteryEventRepository = joinedThingAssessmentVerifierLotteryEventRepository;
         _settlementProposalUpdateRepository = settlementProposalUpdateRepository;
         _watchedItemRepository = watchedItemRepository;
-        _contractStorageQueryable = contractStorageQueryable;
         _contractCaller = contractCaller;
     }
 
@@ -72,7 +69,7 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
             var pollInitBlock = await _contractCaller.GetThingAssessmentPollInitBlock(
                 proposal.ThingId.ToByteArray(), proposal.Id.ToByteArray()
             );
-            int pollDurationBlocks = await _contractStorageQueryable.GetThingAssessmentPollDurationBlocks();
+            int pollDurationBlocks = await _contractCaller.GetThingAssessmentPollDurationBlocks();
 
             var task = new DeferredTask(
                 type: TaskType.CloseThingSettlementProposalAssessmentPoll,

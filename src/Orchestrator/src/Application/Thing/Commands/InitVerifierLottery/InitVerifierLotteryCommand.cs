@@ -26,15 +26,13 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
     private readonly IThingUpdateRepository _thingUpdateRepository;
     private readonly ITaskRepository _taskRepository;
     private readonly IContractCaller _contractCaller;
-    private readonly IContractStorageQueryable _contractStorageQueryable;
 
     public InitVerifierLotteryCommandHandler(
         ILogger<InitVerifierLotteryCommandHandler> logger,
         IThingRepository thingRepository,
         IThingUpdateRepository thingUpdateRepository,
         ITaskRepository taskRepository,
-        IContractCaller contractCaller,
-        IContractStorageQueryable contractStorageQueryable
+        IContractCaller contractCaller
     )
     {
         _logger = logger;
@@ -42,7 +40,6 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
         _thingUpdateRepository = thingUpdateRepository;
         _taskRepository = taskRepository;
         _contractCaller = contractCaller;
-        _contractStorageQueryable = contractStorageQueryable;
     }
 
     public async Task<VoidResult> Handle(InitVerifierLotteryCommand command, CancellationToken ct)
@@ -63,7 +60,7 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
 
             _logger.LogInformation("Thing {ThingId} Lottery Init Block: {BlockNum}", thing.Id, lotteryInitBlockNumber);
 
-            int lotteryDurationBlocks = await _contractStorageQueryable.GetThingSubmissionVerifierLotteryDurationBlocks();
+            int lotteryDurationBlocks = await _contractCaller.GetThingSubmissionVerifierLotteryDurationBlocks();
 
             var task = new DeferredTask(
                 type: TaskType.CloseThingSubmissionVerifierLottery,

@@ -26,7 +26,6 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
     private readonly IL1BlockchainQueryable _l1BlockchainQueryable;
     private readonly IAcceptancePollVoteRepository _voteRepository;
     private readonly ICastedAcceptancePollVoteEventRepository _castedAcceptancePollVoteEventRepository;
-    private readonly IContractStorageQueryable _contractStorageQueryable;
     private readonly ISigner _signer;
     private readonly IFileStorage _fileStorage;
     private readonly IContractCaller _contractCaller;
@@ -36,7 +35,6 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
         IL1BlockchainQueryable l1BlockchainQueryable,
         IAcceptancePollVoteRepository voteRepository,
         ICastedAcceptancePollVoteEventRepository castedAcceptancePollVoteEventRepository,
-        IContractStorageQueryable contractStorageQueryable,
         ISigner signer,
         IFileStorage fileStorage,
         IContractCaller contractCaller
@@ -46,7 +44,6 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
         _l1BlockchainQueryable = l1BlockchainQueryable;
         _voteRepository = voteRepository;
         _castedAcceptancePollVoteEventRepository = castedAcceptancePollVoteEventRepository;
-        _contractStorageQueryable = contractStorageQueryable;
         _signer = signer;
         _fileStorage = fileStorage;
         _contractCaller = contractCaller;
@@ -139,7 +136,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
             command.ThingId, notVotedVerifierIndices.Count
         );
 
-        int votingVolumeThresholdPercent = await _contractStorageQueryable.GetThingAcceptancePollVotingVolumeThreshold();
+        int votingVolumeThresholdPercent = await _contractCaller.GetThingAcceptancePollVotingVolumeThresholdPercent();
 
         var requiredVoterCount = Math.Ceiling(votingVolumeThresholdPercent / 100f * verifiers.Count());
         _logger.LogDebug("Required voter count: {VoterCount}", requiredVoterCount);
@@ -160,7 +157,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
 
         Debug.Assert(accountedVotes.Count > 0);
 
-        int majorityThresholdPercent = await _contractStorageQueryable.GetThingAcceptancePollMajorityThreshold();
+        int majorityThresholdPercent = await _contractCaller.GetThingAcceptancePollMajorityThresholdPercent();
         Debug.Assert(majorityThresholdPercent >= 51);
         var acceptedDecisionRequiredVoteCount = Math.Ceiling(majorityThresholdPercent / 100f * accountedVotes.Count);
         _logger.LogDebug("Accepted decision required vote count: {VoteCount}", acceptedDecisionRequiredVoteCount);

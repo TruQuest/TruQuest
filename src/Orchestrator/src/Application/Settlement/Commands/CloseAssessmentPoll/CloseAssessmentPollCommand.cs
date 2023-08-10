@@ -29,7 +29,6 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
     private readonly ISigner _signer;
     private readonly IFileStorage _fileStorage;
     private readonly IContractCaller _contractCaller;
-    private readonly IContractStorageQueryable _contractStorageQueryable;
 
     public CloseAssessmentPollCommandHandler(
         ILogger<CloseAssessmentPollCommandHandler> logger,
@@ -38,8 +37,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
         ICastedAssessmentPollVoteEventRepository castedAssessmentPollVoteEventRepository,
         ISigner signer,
         IFileStorage fileStorage,
-        IContractCaller contractCaller,
-        IContractStorageQueryable contractStorageQueryable
+        IContractCaller contractCaller
     )
     {
         _logger = logger;
@@ -49,7 +47,6 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
         _signer = signer;
         _fileStorage = fileStorage;
         _contractCaller = contractCaller;
-        _contractStorageQueryable = contractStorageQueryable;
     }
 
     public async Task<VoidResult> Handle(CloseAssessmentPollCommand command, CancellationToken ct)
@@ -145,7 +142,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
             command.SettlementProposalId, notVotedVerifierIndices.Count
         );
 
-        int votingVolumeThresholdPercent = await _contractStorageQueryable.GetThingAssessmentPollVotingVolumeThreshold();
+        int votingVolumeThresholdPercent = await _contractCaller.GetThingAssessmentPollVotingVolumeThresholdPercent();
 
         var requiredVoterCount = Math.Ceiling(votingVolumeThresholdPercent / 100f * verifiers.Count());
         _logger.LogDebug("Required voter count: {VoterCount}", requiredVoterCount);
@@ -167,7 +164,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
 
         Debug.Assert(accountedVotes.Count > 0);
 
-        int majorityThresholdPercent = await _contractStorageQueryable.GetThingAssessmentPollMajorityThreshold();
+        int majorityThresholdPercent = await _contractCaller.GetThingAssessmentPollMajorityThresholdPercent();
         Debug.Assert(majorityThresholdPercent >= 51);
         var acceptedDecisionRequiredVoteCount = Math.Ceiling(majorityThresholdPercent / 100f * accountedVotes.Count);
         _logger.LogDebug("Accepted decision required vote count: {VoteCount}", acceptedDecisionRequiredVoteCount);

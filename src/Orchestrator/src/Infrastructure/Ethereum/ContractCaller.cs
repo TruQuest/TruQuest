@@ -91,6 +91,24 @@ internal class ContractCaller : IContractCaller
             }
         );
 
+    public Task<int> GetThingSubmissionLotteryNumVerifiers() => _web3.Eth
+        .GetContractQueryHandler<GetNumVerifiersMessage>()
+        .QueryAsync<int>(_thingSubmissionVerifierLotteryAddress, new());
+
+    public Task<int> GetThingSubmissionVerifierLotteryDurationBlocks() => _web3.Eth
+        .GetContractQueryHandler<GetDurationBlocksMessage>()
+        .QueryAsync<int>(_thingSubmissionVerifierLotteryAddress, new());
+
+    public async Task<IEnumerable<string>> GetThingSubmissionVerifierLotteryParticipants(byte[] thingId) => await _web3.Eth
+        .GetContractQueryHandler<GetThingSubmissionVerifierLotteryParticipantsMessage>()
+        .QueryAsync<List<string>>(
+            _thingSubmissionVerifierLotteryAddress,
+            new()
+            {
+                ThingId = thingId
+            }
+        );
+
     public Task<byte[]> ComputeHashForThingSubmissionVerifierLottery(byte[] data)
     {
         return _web3.Eth.GetContractQueryHandler<ComputeHashMessage>().QueryAsync<byte[]>(
@@ -180,6 +198,18 @@ internal class ContractCaller : IContractCaller
 
         _logger.LogInformation("=============== CloseThingSubmissionVerifierLotteryInFailure: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
+
+    public Task<int> GetThingAcceptancePollVotingVolumeThresholdPercent() => _web3.Eth
+        .GetContractQueryHandler<GetPollVotingVolumeThresholdPercentMessage>()
+        .QueryAsync<int>(_acceptancePollAddress, new());
+
+    public Task<int> GetThingAcceptancePollMajorityThresholdPercent() => _web3.Eth
+        .GetContractQueryHandler<GetPollMajorityThresholdPercentMessage>()
+        .QueryAsync<int>(_acceptancePollAddress, new());
+
+    public Task<int> GetThingAcceptancePollDurationBlocks() => _web3.Eth
+        .GetContractQueryHandler<GetDurationBlocksMessage>()
+        .QueryAsync<int>(_acceptancePollAddress, new());
 
     public async Task<long> GetThingAcceptancePollInitBlock(byte[] thingId)
     {
@@ -290,17 +320,42 @@ internal class ContractCaller : IContractCaller
         _logger.LogInformation("=============== FinalizeAcceptancePollForThingAsHardDeclined: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
-    public async Task<IEnumerable<string>> GetVerifiersForThing(byte[] thingId)
-    {
-        var verifiers = await _web3.Eth
-            .GetContractQueryHandler<GetVerifiersForThingMessage>()
-            .QueryAsync<List<string>>(_acceptancePollAddress, new()
-            {
-                ThingId = thingId
-            });
+    public async Task<IEnumerable<string>> GetVerifiersForThing(byte[] thingId) => await _web3.Eth
+        .GetContractQueryHandler<GetVerifiersForThingMessage>()
+        .QueryAsync<List<string>>(_acceptancePollAddress, new()
+        {
+            ThingId = thingId
+        });
 
-        return verifiers;
-    }
+    public Task<int> GetThingAssessmentLotteryNumVerifiers() => _web3.Eth
+        .GetContractQueryHandler<GetNumVerifiersMessage>()
+        .QueryAsync<int>(_thingAssessmentVerifierLotteryAddress, new());
+
+    public Task<int> GetThingAssessmentVerifierLotteryDurationBlocks() => _web3.Eth
+        .GetContractQueryHandler<GetDurationBlocksMessage>()
+        .QueryAsync<int>(_thingAssessmentVerifierLotteryAddress, new());
+
+    public async Task<IEnumerable<string>> GetThingAssessmentVerifierLotterySpotClaimants(byte[] thingId, byte[] proposalId) =>
+        await _web3.Eth
+            .GetContractQueryHandler<GetThingAssessmentVerifierLotterySpotClaimantsMessage>()
+            .QueryAsync<List<string>>(
+                _thingAssessmentVerifierLotteryAddress,
+                new()
+                {
+                    ThingProposalId = thingId.Concat(proposalId).ToArray()
+                }
+            );
+
+    public async Task<IEnumerable<string>> GetThingAssessmentVerifierLotteryParticipants(byte[] thingId, byte[] proposalId) =>
+        await _web3.Eth
+            .GetContractQueryHandler<GetThingAssessmentVerifierLotteryParticipantsMessage>()
+            .QueryAsync<List<string>>(
+                _thingAssessmentVerifierLotteryAddress,
+                new()
+                {
+                    ThingProposalId = thingId.Concat(proposalId).ToArray()
+                }
+            );
 
     public async Task<long> InitThingAssessmentVerifierLottery(
         byte[] thingId, byte[] proposalId, byte[] dataHash, byte[] userXorDataHash
@@ -411,6 +466,18 @@ internal class ContractCaller : IContractCaller
 
         return verifiers;
     }
+
+    public Task<int> GetThingAssessmentPollVotingVolumeThresholdPercent() => _web3.Eth
+        .GetContractQueryHandler<GetPollVotingVolumeThresholdPercentMessage>()
+        .QueryAsync<int>(_assessmentPollAddress, new());
+
+    public Task<int> GetThingAssessmentPollMajorityThresholdPercent() => _web3.Eth
+        .GetContractQueryHandler<GetPollMajorityThresholdPercentMessage>()
+        .QueryAsync<int>(_assessmentPollAddress, new());
+
+    public Task<int> GetThingAssessmentPollDurationBlocks() => _web3.Eth
+        .GetContractQueryHandler<GetDurationBlocksMessage>()
+        .QueryAsync<int>(_assessmentPollAddress, new());
 
     public async Task<long> GetThingAssessmentPollInitBlock(byte[] thingId, byte[] proposalId)
     {

@@ -30,7 +30,6 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
     private readonly IThingSubmissionVerifierLotteryEventQueryable _thingVerifierLotteryEventQueryable;
     private readonly ISettlementProposalAssessmentVerifierLotteryEventQueryable _proposalVerifierLotteryEventQueryable;
     private readonly IJoinedThingAssessmentVerifierLotteryEventRepository _joinedLotteryEventRepository;
-    private readonly IContractStorageQueryable _contractStorageQueryable;
 
     public CloseVerifierLotteryCommandHandler(
         ILogger<CloseVerifierLotteryCommandHandler> logger,
@@ -38,8 +37,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
         IL1BlockchainQueryable l1BlockchainQueryable,
         IThingSubmissionVerifierLotteryEventQueryable thingVerifierLotteryEventQueryable,
         ISettlementProposalAssessmentVerifierLotteryEventQueryable proposalVerifierLotteryEventQueryable,
-        IJoinedThingAssessmentVerifierLotteryEventRepository joinedLotteryEventRepository,
-        IContractStorageQueryable contractStorageQueryable
+        IJoinedThingAssessmentVerifierLotteryEventRepository joinedLotteryEventRepository
     )
     {
         _logger = logger;
@@ -48,7 +46,6 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
         _thingVerifierLotteryEventQueryable = thingVerifierLotteryEventQueryable;
         _proposalVerifierLotteryEventQueryable = proposalVerifierLotteryEventQueryable;
         _joinedLotteryEventRepository = joinedLotteryEventRepository;
-        _contractStorageQueryable = contractStorageQueryable;
     }
 
     public async Task<VoidResult> Handle(CloseVerifierLotteryCommand command, CancellationToken ct)
@@ -68,7 +65,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
             ) % maxNonce
         );
 
-        int numVerifiers = await _contractStorageQueryable.GetThingAssessmentNumVerifiers();
+        int numVerifiers = await _contractCaller.GetThingAssessmentLotteryNumVerifiers();
 
         var spotClaimedEvents = await _proposalVerifierLotteryEventQueryable.GetAllSpotClaimedEventsFor(
             command.ThingId, command.SettlementProposalId
@@ -76,14 +73,11 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 
         var spotClaimedEventsIndexed = spotClaimedEvents.Select((e, i) => (Event: e, Index: i)).ToList();
 
+        var spotClaimants = await _contractCaller.GetThingAssessmentVerifierLotterySpotClaimants(thingId, proposalId);
         foreach (var @event in spotClaimedEventsIndexed)
         {
-            var user = await _contractStorageQueryable.GetThingAssessmentVerifierLotterySpotClaimantAt(
-                thingId,
-                proposalId,
-                @event.Index
-            );
-            if (user.ToLower() != @event.Event.UserId)
+            var claimantAtIndex = spotClaimants.ElementAtOrDefault(new Index(@event.Index));
+            if (claimantAtIndex?.Substring(2).ToLower() != @event.Event.UserId)
             {
                 throw new Exception("Incorrect claimant selection");
             }
@@ -144,14 +138,11 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 
         if (winnerEventsIndexed.Count == availableSpots)
         {
+            var participants = await _contractCaller.GetThingAssessmentVerifierLotteryParticipants(thingId, proposalId);
             foreach (var @event in winnerEventsIndexed)
             {
-                var user = await _contractStorageQueryable.GetThingAssessmentVerifierLotteryParticipantAt(
-                    thingId,
-                    proposalId,
-                    (int)@event.Index
-                );
-                if (user.ToLower() != @event.Event.UserId)
+                var participantAtIndex = participants.ElementAtOrDefault(new Index((int)@event.Index));
+                if (participantAtIndex?.Substring(2).ToLower() != @event.Event.UserId)
                 {
                     throw new Exception("Incorrect winner selection");
                 }

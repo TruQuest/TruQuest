@@ -33,7 +33,6 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
     private readonly IThingUpdateRepository _thingUpdateRepository;
     private readonly IWatchedItemRepository _watchedItemRepository;
     private readonly IContractCaller _contractCaller;
-    private readonly IContractStorageQueryable _contractStorageQueryable;
 
     public PrepareForAcceptancePollCommandHandler(
         IThingRepository thingRepository,
@@ -41,8 +40,7 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
         IJoinedThingSubmissionVerifierLotteryEventRepository joinedThingSubmissionVerifierLotteryEventRepository,
         IThingUpdateRepository thingUpdateRepository,
         IWatchedItemRepository watchedItemRepository,
-        IContractCaller contractCaller,
-        IContractStorageQueryable contractStorageQueryable
+        IContractCaller contractCaller
     )
     {
         _thingRepository = thingRepository;
@@ -51,7 +49,6 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
         _thingUpdateRepository = thingUpdateRepository;
         _watchedItemRepository = watchedItemRepository;
         _contractCaller = contractCaller;
-        _contractStorageQueryable = contractStorageQueryable;
     }
 
     public async Task<VoidResult> Handle(PrepareForAcceptancePollCommand command, CancellationToken ct)
@@ -66,7 +63,7 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
             Debug.Assert(lotteryInitBlock < 0);
 
             var pollInitBlock = await _contractCaller.GetThingAcceptancePollInitBlock(thing.Id.ToByteArray());
-            int pollDurationBlocks = await _contractStorageQueryable.GetThingAcceptancePollDurationBlocks();
+            int pollDurationBlocks = await _contractCaller.GetThingAcceptancePollDurationBlocks();
 
             var task = new DeferredTask(
                 type: TaskType.CloseThingAcceptancePoll,
