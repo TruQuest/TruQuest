@@ -1,3 +1,4 @@
+const { BigNumber } = require("ethers");
 const { ethers } = require("hardhat");
 
 module.exports = async ({ getNamedAccounts, deployments }) => {
@@ -10,15 +11,15 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     from: deployer,
     args: [
       truthserum.address,
-      5 /* _verifierStake */,
-      2 /* _verifierReward */,
-      1 /* _verifierPenalty */,
-      25 /* _thingSubmissionStake */,
-      7 /* _thingSubmissionAcceptedReward */,
-      3 /* _thingSubmissionRejectedPenalty */,
-      25 /* _thingSettlementProposalStake */,
-      7 /* _thingSettlementProposalAcceptedReward */,
-      3 /* _thingSettlementProposalRejectedPenalty */,
+      5 * 1000000 /* _verifierStake */, // 0.005 TRU
+      2 * 1000000 /* _verifierReward */, // 0.002 TRU
+      1 * 1000000 /* _verifierPenalty */, // 0.001 TRU
+      25 * 1000000 /* _thingSubmissionStake */, // 0.025 TRU
+      7 * 1000000 /* _thingSubmissionAcceptedReward */, // 0.007 TRU
+      3 * 1000000 /* _thingSubmissionRejectedPenalty */, // 0.003 TRU
+      25 * 1000000 /* _thingSettlementProposalStake */, // 0.025 TRU
+      7 * 1000000 /* _thingSettlementProposalAcceptedReward */, // 0.007 TRU
+      3 * 1000000 /* _thingSettlementProposalRejectedPenalty */, // 0.003 TRU
     ],
     log: true,
     waitConfirmations: 1,
@@ -77,7 +78,13 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   let ta = await ethers.getContract("ThingAssessmentVerifierLottery");
   let asp = await ethers.getContract("AssessmentPoll");
 
-  var txnResponse = await truQuest.setLotteryAndPollAddresses(
+  var txnResponse = await truthserum.mintTo(
+    truQuest.address,
+    BigNumber.from("1000000000000000") // 1 000 000 TRU
+  );
+  await txnResponse.wait(1);
+
+  txnResponse = await truQuest.setLotteryAndPollAddresses(
     ts.address,
     acp.address,
     ta.address,

@@ -151,6 +151,14 @@ class ThingService {
     String thingId,
     MultiStageOperationContext ctx,
   ) async* {
+    // @@??: Need to refresh the info after joining because otherwise imagine this:
+    // User joins and stays on the lottery page waiting for it to complete.
+    // Once it does the swipe button's value key, which has the form
+    // '${info.userId}::${currentBlock < endBlock}::${info.alreadyJoined}',
+    // changes in the middle bit but, since the info hasn't been refreshed after joining,
+    // the 'swiped' property is still 'false', which results in the button being
+    // disabled but unswiped, whereas it would be more logical for it to be swiped.
+
     print('******************** Join Lottery ********************');
 
     if (!_userService.walletUnlocked) {

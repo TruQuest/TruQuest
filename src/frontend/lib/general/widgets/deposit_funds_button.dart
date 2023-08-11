@@ -3,18 +3,12 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'restrict_when_unauthorized_button.dart';
 import 'deposit_stepper.dart';
-import '../../ethereum/bloc/ethereum_actions.dart';
-import '../../ethereum/bloc/ethereum_bloc.dart';
-import '../../widget_extensions.dart';
 
-// ignore: must_be_immutable
-class DepositFundsButton extends StatelessWidgetX {
-  late final _ethereumBloc = use<EthereumBloc>();
-
-  DepositFundsButton({super.key});
+class DepositFundsButton extends StatelessWidget {
+  const DepositFundsButton({super.key});
 
   @override
-  Widget buildX(BuildContext context) {
+  Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(right: 10),
       height: 36,
@@ -54,15 +48,6 @@ class DepositFundsButton extends StatelessWidgetX {
                       color: Colors.white,
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Track Truthserum in the wallet'),
-                  onPressed: () =>
-                      _ethereumBloc.dispatch(const WatchTruthserum()),
                 ),
                 const SizedBox(height: 16),
                 const SizedBox(

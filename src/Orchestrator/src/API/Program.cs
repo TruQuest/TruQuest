@@ -223,6 +223,8 @@ public static class WebApplicationBuilderExtension
 
     public static async Task<WebApplication> DeployContracts(this WebApplication app)
     {
+        if (!app.Environment.IsDevelopment()) return app;
+
         var processInfo = new ProcessStartInfo()
         {
             FileName = "cmd.exe",
@@ -285,6 +287,8 @@ public static class WebApplicationBuilderExtension
 
     public static async Task<WebApplication> DepositFunds(this WebApplication app)
     {
+        if (!app.Environment.IsDevelopment()) return app;
+
         var configuration = app.Configuration;
         var network = configuration["Ethereum:Network"]!;
         var rpcUrl = configuration[$"Ethereum:Networks:{network}:URL"]!;
@@ -311,20 +315,7 @@ public static class WebApplicationBuilderExtension
 
         var web3 = new Web3(accountProvider.GetAccount("Orchestrator"), rpcUrl);
 
-        var txnDispatcher = web3.Eth.GetContractTransactionHandler<TransferMessage>();
-        var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
-            truthserumAddress,
-            new()
-            {
-                To = truQuestAddress,
-                Amount = 20000
-            }
-        );
-
-        if (network == "Ganache")
-        {
-            await web3.Client.SendRequestAsync(new RpcRequest(Guid.NewGuid().ToString(), "evm_mine"));
-        }
+        var txnDispatcher = web3.Eth.GetContractTransactionHandler<MintToMessage>();
 
         var userOperationService = app.Services.GetRequiredService<UserOperationService>();
         var contractCaller = app.Services.GetRequiredService<IContractCaller>();
@@ -333,12 +324,12 @@ public static class WebApplicationBuilderExtension
         {
             var account = accountProvider.GetAccount(user);
 
-            txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
+            var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
                 truthserumAddress,
                 new()
                 {
                     To = await contractCaller.GetWalletAddressFor(account.Address),
-                    Amount = 1000
+                    Amount = BigInteger.Parse("1000000000") // 1 TRU
                 }
             );
 
@@ -356,14 +347,14 @@ public static class WebApplicationBuilderExtension
                         new ApproveMessage
                         {
                             Spender = truQuestAddress,
-                            Amount = 500
+                            Amount = BigInteger.Parse("500000000") // 0.5 TRU
                         }
                     ),
                     (
                         truQuestAddress,
                         new DepositMessage
                         {
-                            Amount = 500
+                            Amount = BigInteger.Parse("500000000") // 0.5 TRU
                         }
                     )
                 }
@@ -379,12 +370,12 @@ public static class WebApplicationBuilderExtension
     }
 }
 
-[Function("transfer", "bool")]
-public class TransferMessage : FunctionMessage
+[Function("mintTo")]
+public class MintToMessage : FunctionMessage
 {
-    [Parameter("address", "to", 1)]
+    [Parameter("address", "_to", 1)]
     public string To { get; init; }
-    [Parameter("uint256", "amount", 2)]
+    [Parameter("uint256", "_amount", 2)]
     public BigInteger Amount { get; init; }
 }
 

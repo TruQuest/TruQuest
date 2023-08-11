@@ -54,19 +54,21 @@ class _DepositStepperState extends StateX<DepositStepper> {
           },
         ),
         steps: [
-          // @@TODO: Allow specifying units (drops?).
+          // @@TODO: Allow specifying in both TRU and GT.
           Step(
             title: Text(
               'Deposit',
               style: GoogleFonts.philosopher(
                 color: const Color(0xffF8F9FA),
-                fontSize: 16,
+                fontSize: 20,
               ),
             ),
             subtitle: Text(
-              'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
+              'Specify amount in Guttae /guht-ee/\n1 TRU = 1 000 000 000 GT',
               style: GoogleFonts.raleway(
                 color: Colors.white,
+                fontSize: 14,
+                height: 1.3,
               ),
             ),
             content: Padding(

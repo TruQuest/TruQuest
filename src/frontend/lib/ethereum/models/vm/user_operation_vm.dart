@@ -26,9 +26,9 @@ class UserOperationVm {
   String get sender => _sender;
   String get senderShort => '${_sender.substring(0, 8)}..${_sender.substring(_sender.length - 6)}';
   bool get hasStake => _stakeSize != null;
-  String get stakeSizeShort => getFixedLengthAmount(_stakeSize!) + ' TRU';
-  String get stakeSize => getMinLengthAmount(_stakeSize!) + ' TRU';
+  String get stakeSizeShort => getFixedLengthAmount(_stakeSize!, 'TRU') + ' TRU';
+  String get stakeSize => getMinLengthAmount(_stakeSize!, 'TRU') + ' TRU';
   String get estimatedGas => _estimatedGas.toStringWithSpaces();
-  String get estimatedTxnFeeShort => getFixedLengthAmount(_estimatedTxnFee) + ' ETH';
-  String get estimatedTxnFee => getMinLengthAmount(_estimatedTxnFee) + ' ETH';
+  String get estimatedTxnFeeShort => getFixedLengthAmount(_estimatedTxnFee, 'ETH') + ' ETH';
+  String get estimatedTxnFee => getMinLengthAmount(_estimatedTxnFee, 'ETH') + ' ETH';
 }

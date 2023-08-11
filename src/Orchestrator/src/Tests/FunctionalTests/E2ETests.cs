@@ -296,7 +296,7 @@ public class E2ETests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task ShouldDoStuff()
+    public async Task ShouldCreateAndAcceptThingAndSubsequentSettlementProposal()
     {
         var network = _sut.GetConfigurationValue<string>("Ethereum:Network");
 

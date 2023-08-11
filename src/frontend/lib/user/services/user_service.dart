@@ -271,9 +271,9 @@ class UserService {
         (TruthserumContract.address, _truthserumContract.approve(amount)),
         (TruQuestContract.address, _truQuestContract.depositFunds(amount)),
       ],
-      functionSignature: 'Truthserum.approve(TruQuest, ${getMinLengthAmount(BigInt.from(amount))} TRU)\n'
-          'TruQuest.deposit(${getMinLengthAmount(BigInt.from(amount))} TRU)',
-      description: 'Approve TruQuest to use ${getMinLengthAmount(BigInt.from(amount))} TRU from your wallet, '
+      functionSignature: 'Truthserum.approve(TruQuest, ${getMinLengthAmount(BigInt.from(amount), 'TRU')} TRU)\n'
+          'TruQuest.deposit(${getMinLengthAmount(BigInt.from(amount), 'TRU')} TRU)',
+      description: 'Approve TruQuest to use ${getMinLengthAmount(BigInt.from(amount), 'TRU')} TRU from your wallet, '
           'and then use the approval to deposit the specified amount to TruQuest for later use. '
           'Could be withdrawn back to the wallet at any time.',
       stakeSize: BigInt.from(amount),

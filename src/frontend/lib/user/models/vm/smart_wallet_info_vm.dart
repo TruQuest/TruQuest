@@ -52,7 +52,7 @@ class SmartWalletInfoVm {
 
   bool get deployed => _deployed ?? false;
 
-  String get ethBalance => '${getMinLengthAmount(_ethBalance!)} ETH';
+  String get ethBalance => '${getMinLengthAmount(_ethBalance!, 'ETH')} ETH';
 
   String get ethBalanceShort {
     var balance = _ethBalance;
@@ -60,10 +60,10 @@ class SmartWalletInfoVm {
       return '0 ETH';
     }
 
-    return '${getFixedLengthAmount(balance)} ETH';
+    return '${getFixedLengthAmount(balance, 'ETH')} ETH';
   }
 
-  String get truBalance => '${getMinLengthAmount(_truBalance!)} TRU';
+  String get truBalance => '${getMinLengthAmount(_truBalance!, 'TRU')} TRU';
 
   String get truBalanceShort {
     var balance = _truBalance;
@@ -71,16 +71,17 @@ class SmartWalletInfoVm {
       return '0 TRU';
     }
 
-    return '${getFixedLengthAmount(balance)} TRU';
+    return '${getFixedLengthAmount(balance, 'TRU')} TRU';
   }
 
-  String get depositedSlashStaked => '${getMinLengthAmount(_deposited!)} / ${getMinLengthAmount(_staked!)} TRU';
+  String get depositedSlashStaked =>
+      '${getMinLengthAmount(_deposited!, 'TRU')} / ${getMinLengthAmount(_staked!, 'TRU')} TRU';
 
   String get depositedSlashStakedShort {
     var deposited = _deposited;
     if (deposited == null) {
       return 'N/A';
     }
-    return '${getFixedLengthAmount(_deposited!)} / ${getFixedLengthAmount(_staked!)} TRU';
+    return '${getFixedLengthAmount(_deposited!, 'TRU')} / ${getFixedLengthAmount(_staked!, 'TRU')} TRU';
   }
 }

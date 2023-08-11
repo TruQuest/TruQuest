@@ -99,8 +99,11 @@ extension IterableExtension<E> on Iterable<E> {
   }
 }
 
-String getFixedLengthAmount(BigInt amount, [int length = 3]) {
-  var balanceString = formatUnits(BigNumber.from(amount.toString()));
+String getFixedLengthAmount(BigInt amount, String tokenSymbol, [int length = 3]) {
+  var balanceString = formatUnits(
+    BigNumber.from(amount.toString()),
+    tokenSymbol == 'ETH' ? 'ether' : 'gwei',
+  );
   var balanceStringSplit = balanceString.split('.');
   var decimals = balanceStringSplit.length == 1 ? ''.padRight(length, '0') : '';
   if (decimals == '') {
@@ -115,8 +118,11 @@ String getFixedLengthAmount(BigInt amount, [int length = 3]) {
   return '${balanceStringSplit.first}.$decimals';
 }
 
-String getMinLengthAmount(BigInt amount, [int length = 3]) {
-  var balanceString = formatUnits(BigNumber.from(amount.toString()));
+String getMinLengthAmount(BigInt amount, String tokenSymbol, [int length = 3]) {
+  var balanceString = formatUnits(
+    BigNumber.from(amount.toString()),
+    tokenSymbol == 'ETH' ? 'ether' : 'gwei',
+  );
   var balanceStringSplit = balanceString.split('.');
   var decimals = balanceStringSplit.length == 1 ? ''.padRight(length, '0') : '';
   if (decimals == '') {

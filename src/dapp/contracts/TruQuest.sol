@@ -12,6 +12,10 @@ error TruQuest__InvalidSignature();
 error TruQuest__ThingAlreadyHasSettlementProposalUnderAssessment(
     bytes16 thingId
 );
+error TruQuest__RequestedWithdrawAmountExceedsAvailable(
+    uint256 requestedAmount,
+    uint256 availableAmount
+);
 
 contract TruQuest {
     struct ThingTd {
@@ -64,6 +68,8 @@ contract TruQuest {
     mapping(bytes16 => SettlementProposal) public s_thingIdToSettlementProposal;
 
     event FundsDeposited(address indexed user, uint256 amount);
+
+    event FundsWithdrawn(address indexed user, uint256 amount);
 
     event ThingFunded(
         bytes16 indexed thingId,
@@ -209,6 +215,24 @@ contract TruQuest {
         i_truthserum.transferFrom(msg.sender, address(this), _amount);
         s_balanceOf[msg.sender] += _amount;
         emit FundsDeposited(msg.sender, _amount);
+    }
+
+    function withdraw(uint256 _amount) external {
+        uint256 availableAmount = getAvailableFunds(msg.sender);
+        if (availableAmount < _amount) {
+            revert TruQuest__RequestedWithdrawAmountExceedsAvailable(
+                _amount,
+                availableAmount
+            );
+        }
+
+        // @@!!: With current dummy implementation it's possible for transfer
+        // to fail due to insufficient balance. Ignore it for now since the entire
+        // token design and emittance strategy will be rewritten before going live on mainnet.
+        i_truthserum.transfer(msg.sender, _amount);
+        s_balanceOf[msg.sender] -= _amount;
+
+        emit FundsWithdrawn(msg.sender, _amount);
     }
 
     function _stake(address _user, uint256 _amount) private {

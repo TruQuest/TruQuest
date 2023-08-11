@@ -7,26 +7,6 @@ module.exports = async ({ getNamedAccounts, getChainId }) => {
   if (chainId == 1337 || chainId == 31337) {
     console.log("We are on Ganache!");
 
-    // var faucet = ethers.Wallet.fromMnemonic(
-    //   "test test test test test test test test test test test junk"
-    // );
-    // faucet = faucet.connect(ethers.provider);
-
-    // var bal = await ethers.provider.getBalance(faucet.address);
-    // console.log(bal);
-
-    // console.log(faucet);
-
-    // var address = accounts["deployer"];
-    // var txnResponse = await faucet.sendTransaction({
-    //   to: address,
-    //   value: ethers.utils.parseEther("1"),
-    // });
-    // await txnResponse.wait();
-
-    // var balance = await ethers.provider.getBalance(address);
-    // console.log(`${deployer} balance: ${balance}`);
-
     var deployer = ethers.provider.getSigner(accounts["deployer"]);
 
     var walletAddresses = [
