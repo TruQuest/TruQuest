@@ -1,4 +1,4 @@
-![TruQuest Logo](https://github.com/rho-cassiopeiae/TruQuest/blob/dev/src/frontend/assets/images/logo.png?raw=true)
+![TruQuest Logo](https://github.com/rho-cassiopeiae/TruQuest/assets/84779039/fb8ea511-babf-479a-b8fc-8fe8b88aa6cd)
 ## Promise/trustworthiness tracker powered by Ethereum.
 
 Keep track of people and companies' promises.<br>
@@ -20,20 +20,20 @@ People have short memories. Blockchain never forgets.
 
 ## Gallery
 <p float="left">
-    <img src="https://github.com/rho-cassiopeiae/TruQuest/assets/84779039/69e37787-63e1-4bbe-a39d-cf8dd502783a" width="40%" />
-    <img src="https://github.com/rho-cassiopeiae/TruQuest/assets/84779039/b3d8ab98-9294-435d-b688-84b82e8a04d0" width="40%" />
+    <img src="https://github.com/rho-cassiopeiae/TruQuest/assets/84779039/08dfd4e7-95a7-4d10-bac6-8771ee89364f" width="40%" />
+    <img src="https://github.com/rho-cassiopeiae/TruQuest/assets/84779039/406b1fb2-3b3d-4efa-86c9-609d8f9fe0e5" width="40%" />
 </p>
 <p float="left">
-    <img src="https://github.com/rho-cassiopeiae/TruQuest/assets/84779039/4c4fa193-31ae-4c98-99c6-91916fad3e45" width="40%" />
-    <img src="https://github.com/rho-cassiopeiae/TruQuest/assets/84779039/2a4b3a63-7df4-424d-8d69-74a1fae68c7c" width="40%" />
+    <img src="https://github.com/rho-cassiopeiae/TruQuest/assets/84779039/69702565-6a00-4ed7-bd04-6f69a9987e53" width="40%" />
+    <img src="https://github.com/rho-cassiopeiae/TruQuest/assets/84779039/199ee551-f018-4fab-883a-8a073b603666" width="40%" />
 </p>
 <p float="left">
-    <img src="https://github.com/rho-cassiopeiae/TruQuest/assets/84779039/45c06b4a-654e-4c21-91b9-159809ca57d6" width="40%" />
-    <img src="https://github.com/rho-cassiopeiae/TruQuest/assets/84779039/09a942b1-8b95-45de-b069-b06fde7d61e0" width="40%" />
+    <img src="https://github.com/rho-cassiopeiae/TruQuest/assets/84779039/f62f5f4a-d8a2-4503-8f08-81e846f1c9b9" width="40%" />
+    <img src="https://github.com/rho-cassiopeiae/TruQuest/assets/84779039/d600dda6-8989-4344-91fa-8aa9f33b9e86" width="40%" />
 </p>
 <p float="left">
-    <img src="https://github.com/rho-cassiopeiae/TruQuest/assets/84779039/aaff30f4-fe7c-4fb1-8c85-721942c7ed3c" width="40%" />
-    <img src="https://github.com/rho-cassiopeiae/TruQuest/assets/84779039/90cd16ee-392b-4f4b-9356-03d95e6629eb" width="40%" />
+    <img src="https://github.com/rho-cassiopeiae/TruQuest/assets/84779039/e0fc2a24-6142-4eb9-9a71-7d40f6567219" width="40%" />
+    <img src="https://github.com/rho-cassiopeiae/TruQuest/assets/84779039/aeb0d3b8-bd5b-401d-b99a-c9d96ba0ebc6" width="40%" />
 </p>
 
 <a name="how-it-works" />
