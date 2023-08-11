@@ -18,7 +18,7 @@ class DocumentContext {
   String? imageExt;
   Uint8List? imageBytes;
   Uint8List? croppedImageBytes;
-  final List<TagIm> tags = [];
+  final Set<TagIm> tags = {};
   final List<String> evidence = [];
 
   DocumentContext()
@@ -27,8 +27,7 @@ class DocumentContext {
 
   DocumentContext.fromEditable(DocumentContext context)
       : quillController = null,
-        details =
-            jsonEncode(context.quillController!.document.toDelta().toJson()) {
+        details = jsonEncode(context.quillController!.document.toDelta().toJson()) {
     subjectType = context.subjectType;
     subjectId = context.subjectId;
     thingId = context.thingId;

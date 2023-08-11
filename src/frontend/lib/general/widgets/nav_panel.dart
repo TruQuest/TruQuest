@@ -63,7 +63,7 @@ class NavPanel extends StatelessWidgetX {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      'Things',
+                      'Promises',
                       style: GoogleFonts.raleway(
                         fontSize: 17,
                         color: Colors.white,
