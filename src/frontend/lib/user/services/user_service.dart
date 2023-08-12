@@ -260,7 +260,6 @@ class UserService {
     }
 
     BigInt balance = await _truthserumContract.balanceOf(currentWalletAddress);
-    print('**************** Balance: $balance drops ****************');
     if (balance < BigInt.from(amount)) {
       yield const InsufficientBalanceError();
       return;
@@ -284,7 +283,44 @@ class UserService {
       return;
     }
 
-    var error = await _userOperationService.sendUserOp(userOp);
+    var error = await _userOperationService.send(userOp);
+    if (error != null) {
+      yield error;
+    }
+
+    _refreshSmartWalletInfo(currentOwnerAddress, currentWalletAddress);
+  }
+
+  Stream<Object> withdrawFunds(int amount, MultiStageOperationContext ctx) async* {
+    print('**************** Withdraw funds ****************');
+
+    if (!walletUnlocked) {
+      yield const WalletLockedError();
+
+      bool unlocked = await ctx.unlockWalletTask.future;
+      if (!unlocked) {
+        return;
+      }
+    }
+
+    BigInt availableFunds = await _truQuestContract.getAvailableFunds(currentWalletAddress);
+    if (availableFunds < BigInt.from(amount)) {
+      yield const InsufficientBalanceError();
+      return;
+    }
+
+    yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
+      actions: [(TruQuestContract.address, _truQuestContract.withdrawFunds(amount))],
+      functionSignature: 'TruQuest.withdraw(${getMinLengthAmount(BigInt.from(amount), 'TRU')} TRU)',
+      description: 'Withdraw ${getMinLengthAmount(BigInt.from(amount), 'TRU')} TRU from TruQuest back to the wallet.',
+    );
+
+    var userOp = await ctx.approveUserOpTask.future;
+    if (userOp == null) {
+      return;
+    }
+
+    var error = await _userOperationService.send(userOp);
     if (error != null) {
       yield error;
     }

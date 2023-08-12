@@ -15,12 +15,10 @@ class ClippedRect extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipPath(
-      clipper: fromNarrowToWide
-          ? ContainerClipperFromNarrowToWide()
-          : ContainerClipper(),
+      clipper: fromNarrowToWide ? ContainerClipperFromNarrowToWide() : ContainerClipper(),
       child: Container(
         color: color,
-        width: 150,
+        width: 120,
         height: height,
       ),
     );

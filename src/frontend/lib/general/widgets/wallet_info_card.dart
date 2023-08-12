@@ -3,10 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'deposit_funds_button.dart';
 import 'main_page_banner.dart';
 import '../../user/bloc/user_bloc.dart';
 import 'token_price_tracker.dart';
 import '../../widget_extensions.dart';
+import 'withdraw_funds_button.dart';
 
 // ignore: must_be_immutable
 class WalletInfoCard extends StatelessWidgetX {
@@ -68,6 +70,10 @@ class WalletInfoCard extends StatelessWidgetX {
                                 ),
                               ),
                             ),
+                      SizedBox(height: 40),
+                      DepositFundsButton(),
+                      SizedBox(height: 14),
+                      WithdrawFundsButton(),
                     ],
                   ),
                   SizedBox(width: 80),

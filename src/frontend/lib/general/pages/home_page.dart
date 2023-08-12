@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:bot_toast/bot_toast.dart';
 
 import '../widgets/fixed_width.dart';
-import '../widgets/deposit_funds_button.dart';
 import '../widgets/clipped_rect.dart';
 import '../widgets/nav_panel.dart';
 import '../bloc/notification_bloc.dart';
@@ -54,7 +53,7 @@ class _HomePageState extends StateX<HomePage> {
               pinned: false,
               snap: false,
               backgroundColor: const Color(0xffF8F9FA),
-              leadingWidth: 150,
+              leadingWidth: 120,
               leading: const ClippedRect(
                 height: 70,
                 color: Colors.black,
@@ -67,7 +66,13 @@ class _HomePageState extends StateX<HomePage> {
               toolbarHeight: 70,
               centerTitle: true,
               elevation: 0,
-              actions: [DepositFundsButton()],
+              actions: [
+                Banner(
+                  message: 'pre-alpha',
+                  location: BannerLocation.topEnd,
+                  color: const Color.fromARGB(255, 208, 53, 76),
+                ),
+              ],
             ),
             NavPanel(),
             StreamBuilder(

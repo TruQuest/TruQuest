@@ -114,7 +114,7 @@ class ThingService {
       return;
     }
 
-    var error = await _userOperationService.sendUserOp(userOp);
+    var error = await _userOperationService.send(userOp);
     if (error != null) {
       yield error;
     }
@@ -191,7 +191,7 @@ class ThingService {
       return;
     }
 
-    var error = await _userOperationService.sendUserOp(userOp);
+    var error = await _userOperationService.send(userOp);
     if (error != null) {
       yield error;
     }
@@ -345,7 +345,7 @@ class ThingService {
       return;
     }
 
-    var error = await _userOperationService.sendUserOp(userOp);
+    var error = await _userOperationService.send(userOp);
     if (error != null) {
       yield error;
     }

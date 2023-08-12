@@ -4,8 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'restrict_when_unauthorized_button.dart';
 import 'transfer_funds_stepper.dart';
 
-class DepositFundsButton extends StatelessWidget {
-  const DepositFundsButton({super.key});
+class WithdrawFundsButton extends StatelessWidget {
+  const WithdrawFundsButton({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,13 +19,13 @@ class DepositFundsButton extends StatelessWidget {
             fontSize: 12,
           ),
         ),
-        child: const Text('Deposit'),
+        child: const Text('Withdraw'),
         onPressed: () => showDialog(
           context: context,
           builder: (context) => SimpleDialog(
             backgroundColor: const Color(0xFF242423),
             title: Text(
-              'Deposit Truthserum to be used on the platform',
+              'Withdraw funds from the platform back to your wallet',
               style: GoogleFonts.philosopher(
                 color: Colors.white,
               ),
@@ -49,7 +49,7 @@ class DepositFundsButton extends StatelessWidget {
               const SizedBox(height: 16),
               const SizedBox(
                 width: 300,
-                child: TransferFundsStepper(direction: TransferDirection.deposit),
+                child: TransferFundsStepper(direction: TransferDirection.withdraw),
               ),
             ],
           ),

@@ -7,45 +7,48 @@ import '../../user/bloc/user_bloc.dart';
 import 'swipe_button.dart';
 import '../../widget_extensions.dart';
 
-class DepositStepper extends StatefulWidget {
-  const DepositStepper({super.key});
-
-  @override
-  State<DepositStepper> createState() => _DepositStepperState();
+enum TransferDirection {
+  deposit,
+  withdraw,
 }
 
-class _DepositStepperState extends StateX<DepositStepper> {
+class TransferFundsStepper extends StatefulWidget {
+  final TransferDirection direction;
+
+  const TransferFundsStepper({super.key, required this.direction});
+
+  @override
+  State<TransferFundsStepper> createState() => _TransferFundsStepperState();
+}
+
+class _TransferFundsStepperState extends StateX<TransferFundsStepper> {
   late final _userBloc = use<UserBloc>();
 
-  final _depositController = TextEditingController();
+  final _controller = TextEditingController();
 
   @override
   void dispose() {
-    _depositController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget buildX(BuildContext context) {
     return Theme(
-      data: ThemeData(
-        brightness: Brightness.dark,
-        colorScheme: Theme.of(context).colorScheme.copyWith(
-              brightness: Brightness.dark,
-              secondary: const Color(0xffF8F9FA),
-            ),
-      ),
+      data: getThemeDataForSteppers(context),
       child: Stepper(
         currentStep: 0,
         controlsBuilder: (context, details) => SwipeButton(
-          text: 'Swipe to deposit',
+          text: 'Swipe to ${widget.direction == TransferDirection.deposit ? 'deposit' : 'withdraw'}',
           enabled: true,
           swiped: false,
           onCompletedSwipe: () async {
             bool success = await multiStageFlow(
               context,
               (ctx) => _userBloc.executeMultiStage(
-                DepositFunds(amount: int.parse(_depositController.text)),
+                widget.direction == TransferDirection.deposit
+                    ? DepositFunds(amount: int.parse(_controller.text))
+                    : WithdrawFunds(amount: int.parse(_controller.text)),
                 ctx,
               ),
             );
@@ -57,7 +60,7 @@ class _DepositStepperState extends StateX<DepositStepper> {
           // @@TODO: Allow specifying in both TRU and GT.
           Step(
             title: Text(
-              'Deposit',
+              widget.direction == TransferDirection.deposit ? 'Deposit' : 'Withdraw',
               style: GoogleFonts.philosopher(
                 color: const Color(0xffF8F9FA),
                 fontSize: 20,
@@ -74,7 +77,7 @@ class _DepositStepperState extends StateX<DepositStepper> {
             content: Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: TextField(
-                controller: _depositController,
+                controller: _controller,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   hintText: 'Amount',

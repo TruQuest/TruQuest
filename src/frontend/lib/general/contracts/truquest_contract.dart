@@ -120,6 +120,19 @@ class TruQuestContract {
         {
           "inputs": [
             {
+              "internalType": "uint256",
+              "name": "_amount",
+              "type": "uint256"
+            }
+          ],
+          "name": "withdraw",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
               "internalType": "bytes16",
               "name": "_thingId",
               "type": "bytes16"
@@ -295,6 +308,11 @@ class TruQuestContract {
 
   String depositFunds(int amount) => _interface.encodeFunctionData(
         'deposit',
+        [BigNumber.from(amount.toString())],
+      );
+
+  String withdrawFunds(int amount) => _interface.encodeFunctionData(
+        'withdraw',
         [BigNumber.from(amount.toString())],
       );
 }

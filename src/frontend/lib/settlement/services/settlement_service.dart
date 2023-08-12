@@ -125,7 +125,7 @@ class SettlementService {
       return;
     }
 
-    var error = await _userOperationService.sendUserOp(userOp);
+    var error = await _userOperationService.send(userOp);
     if (error != null) {
       yield error;
     }
@@ -220,7 +220,7 @@ class SettlementService {
       return;
     }
 
-    var error = await _userOperationService.sendUserOp(userOp);
+    var error = await _userOperationService.send(userOp);
     if (error != null) {
       yield error;
     }
@@ -269,7 +269,7 @@ class SettlementService {
       return;
     }
 
-    var error = await _userOperationService.sendUserOp(userOp);
+    var error = await _userOperationService.send(userOp);
     if (error != null) {
       yield error;
     }
@@ -434,7 +434,7 @@ class SettlementService {
       return;
     }
 
-    var error = await _userOperationService.sendUserOp(userOp);
+    var error = await _userOperationService.send(userOp);
     if (error != null) {
       yield error;
     }

@@ -205,7 +205,7 @@ class UserOperationBuilder {
       );
 
       var fees = await _ethereumApiService.estimateUserOperationGas(_userOp);
-      var (preVerificationGas, verificationGasLimit, callGasLimit) = fees!;
+      var (preVerificationGas, verificationGasLimit, callGasLimit) = fees;
 
       print('PreVerificationGas: $preVerificationGas');
       preVerificationGas = BigInt.from(

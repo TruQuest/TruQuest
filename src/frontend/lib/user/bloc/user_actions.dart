@@ -101,13 +101,30 @@ class DepositFunds extends UserAction {
     List<String>? errors;
     if (amount <= 0) {
       errors ??= [];
-      errors.add('Amount must be bigger than 0');
+      errors.add('Amount must be greater than 0');
     }
 
     return errors;
   }
 
   const DepositFunds({required this.amount});
+}
+
+class WithdrawFunds extends UserAction {
+  final int amount;
+
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (amount <= 0) {
+      errors ??= [];
+      errors.add('Amount must be greater than 0');
+    }
+
+    return errors;
+  }
+
+  const WithdrawFunds({required this.amount});
 }
 
 class RevealSecretPhrase extends UserAction {

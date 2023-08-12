@@ -69,6 +69,8 @@ class UserBloc extends Bloc<UserAction> {
       return _addAccount(action, ctx);
     } else if (action is DepositFunds) {
       return _depositFunds(action, ctx);
+    } else if (action is WithdrawFunds) {
+      return _withdrawFunds(action, ctx);
     } else if (action is RevealSecretPhrase) {
       return _revealSecretPhrase(action, ctx);
     }
@@ -129,6 +131,12 @@ class UserBloc extends Bloc<UserAction> {
     MultiStageOperationContext ctx,
   ) =>
       _userService.depositFunds(action.amount, ctx);
+
+  Stream<Object> _withdrawFunds(
+    WithdrawFunds action,
+    MultiStageOperationContext ctx,
+  ) =>
+      _userService.withdrawFunds(action.amount, ctx);
 
   Stream<Object> _revealSecretPhrase(
     RevealSecretPhrase action,

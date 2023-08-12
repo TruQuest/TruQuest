@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:either_dart/either.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../errors/user_operation_error.dart';
@@ -101,7 +100,7 @@ class EthereumApiService {
     }
   }
 
-  Future<(BigInt, BigInt, BigInt)?> estimateUserOperationGas(
+  Future<(BigInt, BigInt, BigInt)> estimateUserOperationGas(
     UserOperation userOp,
   ) async {
     try {
@@ -115,7 +114,9 @@ class EthereumApiService {
         },
       );
 
-      // @@TODO: Check error, which is reported as 200 JSON.
+      if (response.data.containsKey('error')) {
+        throw UserOperationError.fromMap(response.data['error']);
+      }
 
       var result = response.data['result'];
       return (
@@ -124,14 +125,11 @@ class EthereumApiService {
         BigInt.parse(result['callGasLimit']),
       );
     } on DioError catch (error) {
-      print(error);
-      return null;
+      throw UserOperationError('Estimate user op gas error: ${error.message}');
     }
   }
 
-  Future<Either<UserOperationError, String>> sendUserOperation(
-    UserOperation userOp,
-  ) async {
+  Future<String> sendUserOperation(UserOperation userOp) async {
     try {
       var response = await _dioBundler.post(
         '/rpc',
@@ -144,13 +142,12 @@ class EthereumApiService {
       );
 
       if (response.data.containsKey('error')) {
-        return Left(UserOperationError.fromMap(response.data['error']));
+        throw UserOperationError.fromMap(response.data['error']);
       }
 
-      return Right(response.data['result'] as String);
+      return response.data['result'] as String;
     } on DioError catch (error) {
-      print(error);
-      return Left(UserOperationError(error.toString()));
+      throw UserOperationError('Send user op error: ${error.message}');
     }
   }
 

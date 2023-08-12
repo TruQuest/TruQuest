@@ -29,7 +29,19 @@ class UserOperationDialog extends StatelessWidget {
         child: StreamBuilder(
           stream: stream,
           builder: (context, snapshot) {
-            if (snapshot.data == null) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              _userOp = null;
+              return Center(
+                child: Text(
+                  'An error occurred. Please try again later',
+                  style: GoogleFonts.raleway(
+                    color: Colors.white,
+                    fontSize: 18,
+                  ),
+                ),
+              );
+            } else if (snapshot.data == null) {
+              _userOp = null;
               return const Center(
                 child: CircularProgressIndicator(color: Colors.white),
               );
