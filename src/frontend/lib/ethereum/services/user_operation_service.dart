@@ -73,9 +73,7 @@ class UserOperationService {
   }) async {
     assert(actions.isNotEmpty);
 
-    double preVerificationGasMultiplier = 1.1,
-        verificationGasLimitMultiplier = 1.5,
-        callGasLimitMultiplier = actions.length * 3.0;
+    double preVerificationGasMultiplier = 1, verificationGasLimitMultiplier = 1, callGasLimitMultiplier = 1;
 
     var userOpBuilder = UserOperation.create().withEstimatedGasLimitsMultipliers(
       preVerificationGasMultiplier: preVerificationGasMultiplier,

@@ -252,7 +252,6 @@ class UserOperationBuilder {
         maxPriorityFeeBid = minPriorityFeeBid;
       }
 
-      // maxPriorityFeeBid = BigInt.zero;
       print('Max priority fee bid: 0x${maxPriorityFeeBid.toRadixString(16)} WEI');
 
       var maxFeeBid = baseFee * BigInt.two + maxPriorityFeeBid;

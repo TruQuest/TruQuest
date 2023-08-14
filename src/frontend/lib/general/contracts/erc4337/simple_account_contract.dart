@@ -6,45 +6,50 @@ class SimpleAccountContract implements IAccountContract {
   static const String _abi = '''
     [
         {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "dest",
-                    "type": "address"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "value",
-                    "type": "uint256"
-                },
-                {
-                    "internalType": "bytes",
-                    "name": "func",
-                    "type": "bytes"
-                }
-            ],
-            "name": "execute",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "dest",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes",
+              "name": "func",
+              "type": "bytes"
+            }
+          ],
+          "name": "execute",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
         },
         {
-            "inputs": [
-              {
-                "internalType": "address[]",
-                "name": "dest",
-                "type": "address[]"
-              },
-              {
-                "internalType": "bytes[]",
-                "name": "func",
-                "type": "bytes[]"
-              }
-            ],
-            "name": "executeBatch",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
+          "inputs": [
+            {
+              "internalType": "address[]",
+              "name": "dest",
+              "type": "address[]"
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "value",
+              "type": "uint256[]"
+            },
+            {
+              "internalType": "bytes[]",
+              "name": "func",
+              "type": "bytes[]"
+            }
+          ],
+          "name": "executeBatch",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
         }
     ]''';
 
@@ -73,6 +78,7 @@ class SimpleAccountContract implements IAccountContract {
       'executeBatch',
       [
         targetAndCallDataList.map((e) => e.$1).toList(),
+        targetAndCallDataList.map((_) => BigNumber.from('0')).toList(),
         targetAndCallDataList.map((e) => e.$2).toList(),
       ],
     );

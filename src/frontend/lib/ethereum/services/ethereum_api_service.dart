@@ -12,12 +12,8 @@ class EthereumApiService {
   late final Dio _dioBundler;
 
   EthereumApiService(IEntryPointContract entryPointContract) : _entryPointAddress = entryPointContract.address {
-    _dio = Dio(
-      BaseOptions(baseUrl: dotenv.env['ETHEREUM_RPC_URL']!),
-    );
-    _dioBundler = Dio(
-      BaseOptions(baseUrl: dotenv.env['ERC4337_BUNDLER_BASE_URL']!),
-    );
+    _dio = Dio(BaseOptions(baseUrl: dotenv.env['ETHEREUM_RPC_URL']!));
+    _dioBundler = Dio(BaseOptions(baseUrl: dotenv.env['ERC4337_BUNDLER_BASE_URL']!));
   }
 
   Future<BigInt?> getBaseFee() async {
@@ -42,20 +38,18 @@ class EthereumApiService {
 
   Future<BigInt?> getMaxPriorityFee() async {
     try {
-      return BigInt.zero;
+      var response = await _dio.post(
+        '/',
+        data: <String, dynamic>{
+          'jsonrpc': '2.0',
+          'method': 'eth_maxPriorityFeePerGas',
+          'params': [],
+          'id': 0,
+        },
+      );
 
-      // var response = await _dio.post(
-      //   '/',
-      //   data: <String, dynamic>{
-      //     'jsonrpc': '2.0',
-      //     'method': 'eth_maxPriorityFeePerGas',
-      //     'params': [],
-      //     'id': 0,
-      //   },
-      // );
-
-      // var fee = response.data['result'];
-      // return BigInt.parse(fee);
+      var fee = response.data['result'];
+      return BigInt.parse(fee);
     } on DioError catch (error) {
       print(error);
       return null;
@@ -100,12 +94,10 @@ class EthereumApiService {
     }
   }
 
-  Future<(BigInt, BigInt, BigInt)> estimateUserOperationGas(
-    UserOperation userOp,
-  ) async {
+  Future<(BigInt, BigInt, BigInt)> estimateUserOperationGas(UserOperation userOp) async {
     try {
       var response = await _dioBundler.post(
-        '/rpc',
+        '/1337',
         data: <String, dynamic>{
           'jsonrpc': '2.0',
           'method': 'eth_estimateUserOperationGas',
@@ -121,7 +113,9 @@ class EthereumApiService {
       var result = response.data['result'];
       return (
         BigInt.parse(result['preVerificationGas']),
-        BigInt.parse(result['verificationGasLimit']),
+        BigInt.parse(
+          result.containsKey('verificationGasLimit') ? result['verificationGasLimit'] : result['verificationGas'],
+        ),
         BigInt.parse(result['callGasLimit']),
       );
     } on DioError catch (error) {
@@ -132,7 +126,7 @@ class EthereumApiService {
   Future<String> sendUserOperation(UserOperation userOp) async {
     try {
       var response = await _dioBundler.post(
-        '/rpc',
+        '/1337',
         data: <String, dynamic>{
           'jsonrpc': '2.0',
           'method': 'eth_sendUserOperation',
@@ -151,12 +145,10 @@ class EthereumApiService {
     }
   }
 
-  Future<GetUserOperationReceiptRvm?> getUserOperationReceipt(
-    String userOpHash,
-  ) async {
+  Future<GetUserOperationReceiptRvm?> getUserOperationReceipt(String userOpHash) async {
     try {
       var response = await _dioBundler.post(
-        '/rpc',
+        '/1337',
         data: <String, dynamic>{
           'jsonrpc': '2.0',
           'method': 'eth_getUserOperationReceipt',
