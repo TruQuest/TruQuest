@@ -57,36 +57,29 @@ module.exports = async ({ getNamedAccounts, getChainId }) => {
     var balance = await ethers.provider.getBalance(address);
     console.log(`deployer balance: ${balance}`);
 
-    address = accounts["submitter"];
-    txnResponse = await faucet.sendTransaction({
-      to: address,
-      value: ethers.utils.parseEther("1.0"),
-    });
-    await txnResponse.wait();
+    var walletAddresses = [
+      "0x48e60BBb664aEfAc9f14aDB42e5FB5b4a119EB66", // entrypoint
 
-    balance = await ethers.provider.getBalance(address);
-    console.log(`submitter balance: ${balance}`);
+      "0xb36b27fD212cC27701899C56E3d65B02E6227fe8",
+      "0xD60e165a7F9D7D05aa1EB8cf013D36C1B992353e",
+      "0xB8f297bF6d897d1339EC909D9CA3090e6F14187a",
+      "0xb745CD594a804Ab2CB18eCdb4888b0C805A771B5",
+      "0x8Ef8d7318f13898816a7EA38dAbB3e2A8E733c2C",
+      "0x92886220f2A9Cafea6756C18DC9a314226557102",
+      "0xCC38c2F9664C2fb88c9B7F7D16A8e77c94c4cf56",
+      "0x317176676Af74b9456f2421455CffE048D9A607d",
+    ];
 
-    address = accounts["proposer"];
-    txnResponse = await faucet.sendTransaction({
-      to: address,
-      value: ethers.utils.parseEther("1.0"),
-    });
-    await txnResponse.wait();
-
-    balance = await ethers.provider.getBalance(address);
-    console.log(`proposer balance: ${balance}`);
-
-    for (var i = 1; i <= 10; ++i) {
-      var address = accounts["verifier" + i];
+    for (var i = 0; i < walletAddresses.length; ++i) {
+      var address = walletAddresses[i];
       var txnResponse = await faucet.sendTransaction({
         to: address,
-        value: ethers.utils.parseEther("1.0"),
+        value: ethers.utils.parseEther("5000"),
       });
       await txnResponse.wait();
 
       var balance = await ethers.provider.getBalance(address);
-      console.log(`verifier${i} balance: ${balance}`);
+      console.log(`${address} balance: ${balance}`);
     }
   }
 };

@@ -114,6 +114,7 @@ internal class UserOperationBuilder
         _callData = _abiEncoder.EncodeFunctionData(new ExecuteBatchMessage
         {
             Dest = targetAndMessageList.Select(e => e.TargetAddress).ToList(),
+            Value = targetAndMessageList.Select(_ => BigInteger.Zero).ToList(),
             Func = targetAndMessageList
                 .Select(e => _abiEncoder.EncodeFunctionData(e.Message).HexToByteArray())
                 .ToList()
@@ -197,7 +198,6 @@ internal class UserOperationBuilder
                 maxPriorityFeeBid = minPriorityFeeBid;
             }
 
-            // maxPriorityFeeBid = 0;
             _logger.LogInformation($"Max priority fee bid: {new HexBigInteger(maxPriorityFeeBid).HexValue} WEI");
 
             var maxFeeBid = baseFee * 2 + maxPriorityFeeBid;

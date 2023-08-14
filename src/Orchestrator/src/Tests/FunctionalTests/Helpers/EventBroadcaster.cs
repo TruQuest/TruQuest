@@ -12,6 +12,11 @@ using AssessmentPollEvents = Application.Ethereum.Events.AssessmentPoll;
 
 namespace Tests.FunctionalTests.Helpers;
 
+public class ThingSubmissionVerifierLotteryClosedInFailureEventArgs : EventArgs
+{
+    public required ThingEthEvents.LotteryClosedInFailure.LotteryClosedInFailureEvent Event { get; init; }
+}
+
 public class ThingSubmissionVerifierLotteryClosedWithSuccessEventArgs : EventArgs
 {
     public required ThingEthEvents.LotteryClosedWithSuccess.LotteryClosedWithSuccessEvent Event { get; init; }
@@ -30,6 +35,7 @@ public class EventBroadcaster
     public event EventHandler? ThingDraftCreated;
     public event EventHandler? ThingSubmissionVerifierLotteryInitialized;
     public event EventHandler? JoinedThingSubmissionVerifierLottery;
+    public event EventHandler<ThingSubmissionVerifierLotteryClosedInFailureEventArgs>? ThingSubmissionVerifierLotteryClosedInFailure;
     public event EventHandler<ThingSubmissionVerifierLotteryClosedWithSuccessEventArgs>? ThingSubmissionVerifierLotteryClosedWithSuccess;
     public event EventHandler? ThingAcceptancePollFinalized;
 
@@ -66,6 +72,10 @@ public class EventBroadcaster
                 else if (@event is ThingEthEvents.JoinedLottery.JoinedLotteryEvent)
                 {
                     OnJoinedThingSubmissionVerifierLottery();
+                }
+                else if (@event is ThingEthEvents.LotteryClosedInFailure.LotteryClosedInFailureEvent thingLotteryClosedInFailureEvent)
+                {
+                    OnThingSubmissionVerifierLotteryClosedInFailure(thingLotteryClosedInFailureEvent);
                 }
                 else if (@event is ThingEthEvents.LotteryClosedWithSuccess.LotteryClosedWithSuccessEvent thingLotteryClosedWithSuccessEvent)
                 {
@@ -120,6 +130,13 @@ public class EventBroadcaster
 
     protected virtual void OnJoinedThingSubmissionVerifierLottery() =>
         JoinedThingSubmissionVerifierLottery?.Invoke(this, EventArgs.Empty);
+
+    protected virtual void OnThingSubmissionVerifierLotteryClosedInFailure(
+        ThingEthEvents.LotteryClosedInFailure.LotteryClosedInFailureEvent @event
+    ) => ThingSubmissionVerifierLotteryClosedInFailure?.Invoke(
+        this,
+        new ThingSubmissionVerifierLotteryClosedInFailureEventArgs { Event = @event }
+    );
 
     protected virtual void OnThingSubmissionVerifierLotteryClosedWithSuccess(
         ThingEthEvents.LotteryClosedWithSuccess.LotteryClosedWithSuccessEvent @event

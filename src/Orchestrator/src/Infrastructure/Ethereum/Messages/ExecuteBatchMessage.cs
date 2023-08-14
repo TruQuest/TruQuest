@@ -1,3 +1,5 @@
+using System.Numerics;
+
 using Nethereum.ABI.FunctionEncoding.Attributes;
 using Nethereum.Contracts;
 
@@ -8,6 +10,8 @@ public class ExecuteBatchMessage : FunctionMessage
 {
     [Parameter("address[]", "dest", 1)]
     public List<string> Dest { get; init; }
-    [Parameter("bytes[]", "func", 2)]
+    [Parameter("uint256[]", "value", 2)]
+    public List<BigInteger> Value { get; init; }
+    [Parameter("bytes[]", "func", 3)]
     public List<byte[]> Func { get; init; }
 }

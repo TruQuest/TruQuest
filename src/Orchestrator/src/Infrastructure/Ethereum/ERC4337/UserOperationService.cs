@@ -39,9 +39,9 @@ public class UserOperationService
         UserOperation userOp;
         UserOperationError? error;
         String? userOpHash = null;
-        float preVerificationGasMultiplier = 1.1f,
-            verificationGasLimitMultiplier = 1.5f,
-            callGasLimitMultiplier = actions.Count * 3.0f;
+        float preVerificationGasMultiplier = 1f,
+            verificationGasLimitMultiplier = 1f,
+            callGasLimitMultiplier = 1f;
 
         do
         {

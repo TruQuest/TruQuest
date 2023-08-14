@@ -40,7 +40,7 @@ public class BundlerApi
     public async Task<(BigInteger, BigInteger, BigInteger)?> EstimateUserOperationGas(UserOperation userOp)
     {
         using var client = _clientFactory.CreateClient("bundler");
-        using var request = new HttpRequestMessage(HttpMethod.Post, "/rpc");
+        using var request = new HttpRequestMessage(HttpMethod.Post, (string?)null);
         request.Content = new StringContent(
             JsonSerializer.Serialize(
                 new RpcRequest
@@ -70,9 +70,15 @@ public class BundlerApi
 
         var gasEstimations = doc.RootElement.GetProperty("result");
 
+        JsonElement verificationGasLimit;
+        if (!gasEstimations.TryGetProperty("verificationGasLimit", out verificationGasLimit))
+        {
+            verificationGasLimit = gasEstimations.GetProperty("verificationGas");
+        }
+
         return (
             new HexBigInteger(gasEstimations.GetProperty("preVerificationGas").GetString()).Value,
-            new HexBigInteger(gasEstimations.GetProperty("verificationGasLimit").GetString()).Value,
+            new HexBigInteger(verificationGasLimit.GetString()).Value,
             new HexBigInteger(gasEstimations.GetProperty("callGasLimit").GetString()).Value
         );
     }
@@ -80,7 +86,7 @@ public class BundlerApi
     public async Task<Either<UserOperationError, string>> SendUserOperation(UserOperation userOp)
     {
         using var client = _clientFactory.CreateClient("bundler");
-        using var request = new HttpRequestMessage(HttpMethod.Post, "/rpc");
+        using var request = new HttpRequestMessage(HttpMethod.Post, (string?)null);
         request.Content = new StringContent(
             JsonSerializer.Serialize(
                 new RpcRequest
@@ -116,7 +122,7 @@ public class BundlerApi
     public async Task<GetUserOperationReceiptVm?> GetUserOperationReceipt(string userOpHash)
     {
         using var client = _clientFactory.CreateClient("bundler");
-        using var request = new HttpRequestMessage(HttpMethod.Post, "/rpc");
+        using var request = new HttpRequestMessage(HttpMethod.Post, (string?)null);
         request.Content = new StringContent(
             JsonSerializer.Serialize(
                 new RpcRequest

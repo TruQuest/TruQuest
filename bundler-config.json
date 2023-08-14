@@ -1,0 +1,16 @@
+{
+    "networks": {
+        "dev": {
+            "entryPoints": [
+                "0x48e60BBb664aEfAc9f14aDB42e5FB5b4a119EB66"
+            ],
+            "relayer": "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
+            "beneficiary": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+            "rpcEndpoint": "http://host.docker.internal:9545",
+            "estimationStaticBuffer": 21000,
+            "validationGasLimit": 10e6,
+            "receiptLookupRange": 1024,
+            "conditionalTransactions": false
+        }
+    }
+}

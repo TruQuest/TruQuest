@@ -3,7 +3,7 @@ using System.Numerics;
 using Microsoft.Extensions.Configuration;
 
 using Nethereum.Web3;
-// using Nethereum.RPC.Eth;
+using Nethereum.RPC.Eth;
 
 using Application.Common.Interfaces;
 
@@ -34,8 +34,7 @@ internal class L2BlockchainQueryable : IL2BlockchainQueryable
 
     public async Task<BigInteger> GetMaxPriorityFee()
     {
-        return 0;
-        // var maxPriorityFee = await new EthMaxPriorityFeePerGas(_web3.Client).SendRequestAsync();
-        // return maxPriorityFee.Value;
+        var maxPriorityFee = await new EthMaxPriorityFeePerGas(_web3.Client).SendRequestAsync();
+        return maxPriorityFee.Value;
     }
 }
