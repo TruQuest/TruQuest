@@ -28,13 +28,16 @@ internal class ThingSettlementProposalAssessmentPollFinalizedEventHandler :
     }
 
     public Task Handle(IMessageContext context, ThingSettlementProposalAssessmentPollFinalizedEvent message) =>
-        _sender.Send(new FinalizeAssessmentPollCommand
-        {
-            ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
-            SettlementProposalId = message.SettlementProposalId,
-            Decision = (AssessmentDecision)message.Decision,
-            VoteAggIpfsCid = message.VoteAggIpfsCid,
-            RewardedVerifiers = message.RewardedVerifiers,
-            SlashedVerifiers = message.SlashedVerifiers
-        });
+        _sender.Send(
+            new FinalizeAssessmentPollCommand
+            {
+                ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
+                SettlementProposalId = message.SettlementProposalId,
+                Decision = (AssessmentDecision)message.Decision,
+                VoteAggIpfsCid = message.VoteAggIpfsCid,
+                RewardedVerifiers = message.RewardedVerifiers,
+                SlashedVerifiers = message.SlashedVerifiers
+            },
+            addToAdditionalSinks: true
+        );
 }

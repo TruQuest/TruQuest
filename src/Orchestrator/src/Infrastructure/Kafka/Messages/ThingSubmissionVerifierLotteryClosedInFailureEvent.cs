@@ -24,8 +24,11 @@ internal class ThingSubmissionVerifierLotteryClosedInFailureEventHandler :
     }
 
     public Task Handle(IMessageContext context, ThingSubmissionVerifierLotteryClosedInFailureEvent message) =>
-        _sender.Send(new ArchiveDueToFailedLotteryCommand
-        {
-            ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key))
-        });
+        _sender.Send(
+            new ArchiveDueToFailedLotteryCommand
+            {
+                ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key))
+            },
+            addToAdditionalSinks: true
+        );
 }

@@ -2,7 +2,7 @@ using Application.Thing.Queries.GetVerifierLotteryParticipants;
 using Application.Thing.Commands.CreateNewThingDraft;
 using Application.Thing.Commands.SubmitNewThing;
 using Application.Thing.Queries.GetThing;
-using Application.Thing.Queries.GetVerifiers;
+using Application.Thing.Queries.GetVotes;
 using Application.Thing.Commands.CastAcceptancePollVote;
 using Application.Thing.Queries.GetSettlementProposalsList;
 using Application.Thing.Commands.Watch;
@@ -46,8 +46,8 @@ public static class ThingEndpoints
         );
 
         group.MapGet(
-            "/{thingId}/verifiers",
-            ([AsParameters] GetVerifiersQuery query, SenderWrapper sender, HttpContext context) =>
+            "/{thingId}/votes",
+            ([AsParameters] GetVotesQuery query, SenderWrapper sender, HttpContext context) =>
                 sender.Send(query, serviceProvider: context.RequestServices)
         );
 

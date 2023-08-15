@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
+import '../../general/widgets/votes_table.dart';
 import '../models/rvm/acceptance_poll_info_vm.dart';
-import '../../general/widgets/verifiers_table.dart';
 import '../../general/widgets/block_countdown.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';
 import '../../user/bloc/user_bloc.dart';
@@ -39,7 +39,7 @@ class _PollState extends StateX<Poll> {
 
     _currentUserId = _userBloc.latestCurrentUser?.id;
 
-    _thingBloc.dispatch(GetVerifiers(thingId: widget.thing.id));
+    _thingBloc.dispatch(GetVotes(thingId: widget.thing.id));
     _acceptancePollInfoFuture = _thingBloc.execute<AcceptancePollInfoVm>(
       GetAcceptancePollInfo(thingId: widget.thing.id),
     );
@@ -60,20 +60,16 @@ class _PollState extends StateX<Poll> {
       children: [
         Expanded(
           child: StreamBuilder(
-            stream: _thingBloc.verifiers$,
+            stream: _thingBloc.votes$,
             builder: (context, snapshot) {
               if (snapshot.data == null) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              var verifiers = snapshot.data!;
-
-              return VerifiersTable(
-                verifiers: verifiers,
+              return VotesTable(
+                result: snapshot.data!,
                 currentUserId: _currentUserId,
-                onRefresh: () => _thingBloc.dispatch(
-                  GetVerifiers(thingId: widget.thing.id),
-                ),
+                onRefresh: () => _thingBloc.dispatch(GetVotes(thingId: widget.thing.id)),
               );
             },
           ),

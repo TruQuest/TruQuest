@@ -24,9 +24,12 @@ internal class ThingSettlementProposalFundedEventHandler : IMessageHandler<Thing
     }
 
     public Task Handle(IMessageContext context, ThingSettlementProposalFundedEvent @event) =>
-        _sender.Send(new InitVerifierLotteryCommand
-        {
-            ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
-            SettlementProposalId = @event.SettlementProposalId
-        });
+        _sender.Send(
+            new InitVerifierLotteryCommand
+            {
+                ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
+                SettlementProposalId = @event.SettlementProposalId
+            },
+            addToAdditionalSinks: true
+        );
 }

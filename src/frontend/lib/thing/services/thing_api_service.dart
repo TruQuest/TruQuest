@@ -5,13 +5,13 @@ import 'package:dio/dio.dart';
 
 import '../../general/models/im/watch_command.dart';
 import '../models/rvm/get_settlement_proposals_list_rvm.dart';
-import '../models/rvm/get_verifiers_rvm.dart';
 import '../../general/errors/vote_error.dart';
 import '../models/im/cast_acceptance_poll_vote_command.dart';
 import '../models/im/new_acceptance_poll_vote_im.dart';
 import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
 import '../models/rvm/get_thing_rvm.dart';
 import '../models/im/submit_new_thing_command.dart';
+import '../models/rvm/get_votes_rvm.dart';
 import '../models/rvm/submit_new_thing_rvm.dart';
 import '../../general/errors/api_error.dart';
 import '../../general/errors/file_error.dart';
@@ -204,10 +204,14 @@ class ThingApiService {
     }
   }
 
-  Future<GetVerifiersRvm> getVerifiers(String thingId) async {
+  Future<GetVotesRvm> getVotes(String thingId) async {
+    var accessToken = (await _serverConnector.latestConnection).$2;
     try {
-      var response = await _dio.get('/things/$thingId/verifiers');
-      return GetVerifiersRvm.fromMap(response.data['data']);
+      var response = await _dio.get(
+        '/things/$thingId/votes',
+        options: accessToken != null ? Options(headers: {'Authorization': 'Bearer $accessToken'}) : null,
+      );
+      return GetVotesRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
       throw _wrapError(error);
     }

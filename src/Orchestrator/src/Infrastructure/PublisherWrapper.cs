@@ -17,13 +17,13 @@ public class PublisherWrapper
     private readonly ILogger<PublisherWrapper> _logger;
     private readonly ISharedTxnScope _sharedTxnScope;
     private readonly IPublisher _publisher;
-    private readonly IEnumerable<IAdditionalContractEventSink> _additionalSinks;
+    private readonly IEnumerable<IAdditionalApplicationEventSink> _additionalSinks;
 
     public PublisherWrapper(
         ILogger<PublisherWrapper> logger,
         ISharedTxnScope sharedTxnScope,
         IPublisher publisher,
-        IEnumerable<IAdditionalContractEventSink> additionalSinks
+        IEnumerable<IAdditionalApplicationEventSink> additionalSinks
     )
     {
         _logger = logger;
@@ -33,7 +33,7 @@ public class PublisherWrapper
     }
 
     public async Task Publish(
-        INotification @event, CancellationToken ct = default, bool addToAdditionalSinks = true
+        INotification @event, CancellationToken ct = default, bool addToAdditionalSinks = false
     )
     {
         var attr = @event.GetType().GetCustomAttribute<ExecuteInTxnAttribute>();

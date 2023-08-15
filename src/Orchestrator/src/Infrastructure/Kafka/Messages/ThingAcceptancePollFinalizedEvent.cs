@@ -26,12 +26,15 @@ internal class ThingAcceptancePollFinalizedEventHandler : IMessageHandler<ThingA
     }
 
     public Task Handle(IMessageContext context, ThingAcceptancePollFinalizedEvent message) =>
-        _sender.Send(new FinalizeAcceptancePollCommand
-        {
-            ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
-            Decision = (SubmissionEvaluationDecision)message.Decision,
-            VoteAggIpfsCid = message.VoteAggIpfsCid,
-            RewardedVerifiers = message.RewardedVerifiers,
-            SlashedVerifiers = message.SlashedVerifiers
-        });
+        _sender.Send(
+            new FinalizeAcceptancePollCommand
+            {
+                ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
+                Decision = (SubmissionEvaluationDecision)message.Decision,
+                VoteAggIpfsCid = message.VoteAggIpfsCid,
+                RewardedVerifiers = message.RewardedVerifiers,
+                SlashedVerifiers = message.SlashedVerifiers
+            },
+            addToAdditionalSinks: true
+        );
 }

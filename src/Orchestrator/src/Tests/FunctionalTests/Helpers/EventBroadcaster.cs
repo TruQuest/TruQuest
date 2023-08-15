@@ -9,6 +9,7 @@ using AcceptancePollEvents = Application.Ethereum.Events.AcceptancePoll;
 using ProposalEvents = Application.Settlement.Events;
 using ProposalEthEvents = Application.Ethereum.Events.ThingAssessmentVerifierLottery;
 using AssessmentPollEvents = Application.Ethereum.Events.AssessmentPoll;
+using ThingCommands = Application.Thing.Commands;
 
 namespace Tests.FunctionalTests.Helpers;
 
@@ -29,9 +30,12 @@ public class ProposalAssessmentVerifierLotteryClosedWithSuccessEventArgs : Event
 
 public class EventBroadcaster
 {
-    private readonly ChannelReader<INotification> _stream;
+    private readonly ChannelReader<INotification> _eventStream;
+    private readonly ChannelReader<IBaseRequest> _requestStream;
     private readonly CancellationTokenSource _cts;
 
+    // @@TODO: This ain't gonna work with multiple flows going at the same time.
+    // Use Dictionary?
     public event EventHandler? ThingDraftCreated;
     public event EventHandler? ThingSubmissionVerifierLotteryInitialized;
     public event EventHandler? JoinedThingSubmissionVerifierLottery;
@@ -43,24 +47,33 @@ public class EventBroadcaster
     public event EventHandler? ProposalAssessmentVerifierLotteryInitialized;
     public event EventHandler? ClaimedProposalAssessmentVerifierLotterySpot;
     public event EventHandler? JoinedProposalAssessmentVerifierLottery;
-    public event EventHandler<ProposalAssessmentVerifierLotteryClosedWithSuccessEventArgs>? ProposalAssessmentVerifierLotteryClosedWithSuccess;
+    public event EventHandler<ProposalAssessmentVerifierLotteryClosedWithSuccessEventArgs>?
+        ProposalAssessmentVerifierLotteryClosedWithSuccess;
     public event EventHandler? CastedProposalAssessmentVote;
     public event EventHandler? ProposalAssessmentPollFinalized;
 
-    public EventBroadcaster(ChannelReader<INotification> stream)
+    public event EventHandler? ThingArchived;
+
+    public EventBroadcaster(
+        ChannelReader<INotification> eventStream,
+        ChannelReader<IBaseRequest> requestStream
+    )
     {
-        _stream = stream;
+        _eventStream = eventStream;
+        _requestStream = requestStream;
         _cts = new CancellationTokenSource();
     }
 
     public async void Start()
     {
+        new Thread(_processRequests).Start();
+
         while (true)
         {
             try
             {
-                var @event = await _stream.ReadAsync(_cts.Token);
-                Debug.WriteLine($"{GetType().Name}: {@event.GetType().Name}");
+                var @event = await _eventStream.ReadAsync(_cts.Token);
+                Debug.WriteLine($"************ {GetType().Name}: {@event.GetType().Name} ************");
                 if (@event is ThingEvents.AttachmentsArchivingCompleted.AttachmentsArchivingCompletedEvent)
                 {
                     OnThingDraftCreated();
@@ -121,6 +134,26 @@ public class EventBroadcaster
         }
     }
 
+    private async void _processRequests()
+    {
+        while (true)
+        {
+            try
+            {
+                var request = await _requestStream.ReadAsync(_cts.Token);
+                Debug.WriteLine($"************ {GetType().Name}: {request.GetType().Name} ************");
+                if (request is ThingCommands.ArchiveDueToFailedLottery.ArchiveDueToFailedLotteryCommand)
+                {
+                    OnThingArchived();
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+        }
+    }
+
     public void Stop() => _cts.Cancel();
 
     protected virtual void OnThingDraftCreated() => ThingDraftCreated?.Invoke(this, EventArgs.Empty);
@@ -171,4 +204,6 @@ public class EventBroadcaster
 
     protected virtual void OnProposalAssessmentPollFinalized() =>
         ProposalAssessmentPollFinalized?.Invoke(this, EventArgs.Empty);
+
+    protected virtual void OnThingArchived() => ThingArchived?.Invoke(this, EventArgs.Empty);
 }

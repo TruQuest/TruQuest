@@ -202,6 +202,7 @@ internal class ContractEventListener : IContractEventListener
                 {
                     BlockNumber = (long)castedAcceptancePollVoteEvent.Log.BlockNumber.Value,
                     TxnIndex = (int)castedAcceptancePollVoteEvent.Log.TransactionIndex.Value,
+                    TxnHash = castedAcceptancePollVoteEvent.Log.TransactionHash,
                     ThingId = castedAcceptancePollVoteEvent.Event.ThingId,
                     UserId = castedAcceptancePollVoteEvent.Event.UserId.Substring(2).ToLower(),
                     Vote = castedAcceptancePollVoteEvent.Event.Vote,
@@ -214,6 +215,7 @@ internal class ContractEventListener : IContractEventListener
                 {
                     BlockNumber = (long)castedAcceptancePollVoteWithReasonEvent.Log.BlockNumber.Value,
                     TxnIndex = (int)castedAcceptancePollVoteWithReasonEvent.Log.TransactionIndex.Value,
+                    TxnHash = castedAcceptancePollVoteWithReasonEvent.Log.TransactionHash,
                     ThingId = castedAcceptancePollVoteWithReasonEvent.Event.ThingId,
                     UserId = castedAcceptancePollVoteWithReasonEvent.Event.UserId.Substring(2).ToLower(),
                     Vote = castedAcceptancePollVoteWithReasonEvent.Event.Vote,

@@ -23,7 +23,7 @@ public class ContractEventTracker : BackgroundService
         {
             using var scope = _serviceProvider.CreateScope();
             var mediator = scope.ServiceProvider.GetRequiredService<PublisherWrapper>();
-            await mediator.Publish(@event);
+            await mediator.Publish(@event, addToAdditionalSinks: true);
         }
     }
 }

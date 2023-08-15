@@ -31,20 +31,23 @@ internal class ThingSubmissionVerifierLotteryClosedWithSuccessEventHandler :
     }
 
     public Task Handle(IMessageContext context, ThingSubmissionVerifierLotteryClosedWithSuccessEvent message) =>
-        _sender.Send(new PrepareForAcceptancePollCommand
-        {
-            AcceptancePollInitBlockNumber = long.Parse(
-                Encoding.UTF8.GetString((byte[])context.Headers[_blockNumberHeaderName])
-            ),
-            AcceptancePollInitTxnIndex = int.Parse(
-                Encoding.UTF8.GetString((byte[])context.Headers[_txnIndexHeaderName])
-            ),
-            ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
-            Orchestrator = message.Orchestrator,
-            Data = message.Data,
-            UserXorData = message.UserXorData,
-            HashOfL1EndBlock = message.HashOfL1EndBlock,
-            Nonce = message.Nonce,
-            WinnerIds = message.WinnerIds
-        });
+        _sender.Send(
+            new PrepareForAcceptancePollCommand
+            {
+                AcceptancePollInitBlockNumber = long.Parse(
+                    Encoding.UTF8.GetString((byte[])context.Headers[_blockNumberHeaderName])
+                ),
+                AcceptancePollInitTxnIndex = int.Parse(
+                    Encoding.UTF8.GetString((byte[])context.Headers[_txnIndexHeaderName])
+                ),
+                ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
+                Orchestrator = message.Orchestrator,
+                Data = message.Data,
+                UserXorData = message.UserXorData,
+                HashOfL1EndBlock = message.HashOfL1EndBlock,
+                Nonce = message.Nonce,
+                WinnerIds = message.WinnerIds
+            },
+            addToAdditionalSinks: true
+        );
 }

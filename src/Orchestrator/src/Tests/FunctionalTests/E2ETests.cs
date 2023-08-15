@@ -81,7 +81,7 @@ public class E2ETests : IAsyncLifetime
     {
         await _sut.ResetState();
 
-        _eventBroadcaster = new EventBroadcaster(_sut.ContractEventSink.Stream);
+        _eventBroadcaster = new EventBroadcaster(_sut.ApplicationEventSink.Stream, _sut.ApplicationRequestSink.Stream);
         _eventBroadcaster.Start();
 
         await _sut.StartKafkaBus();

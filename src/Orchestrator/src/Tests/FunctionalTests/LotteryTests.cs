@@ -73,7 +73,7 @@ public class LotteryTests : IAsyncLifetime
     {
         await _sut.ResetState();
 
-        _eventBroadcaster = new EventBroadcaster(_sut.ContractEventSink.Stream);
+        _eventBroadcaster = new EventBroadcaster(_sut.ApplicationEventSink.Stream, _sut.ApplicationRequestSink.Stream);
         _eventBroadcaster.Start();
 
         await _sut.StartKafkaBus();
@@ -266,6 +266,12 @@ public class LotteryTests : IAsyncLifetime
             contractCaller.GetThingSubmissionVerifierLotteryDurationBlocks()
         );
 
+        var thingArchivedTcs = new TaskCompletionSource();
+        _eventBroadcaster.ThingArchived += delegate
+        {
+            thingArchivedTcs.SetResult();
+        };
+
         await _sut.BlockchainManipulator.Mine(lotteryDurationBlocks);
 
         var thingLotteryClosedInFailureEvent = await thingLotteryClosedTcs.Task;
@@ -284,7 +290,7 @@ public class LotteryTests : IAsyncLifetime
         var submitterBalance = await _sut.ContractCaller.GetAvailableFunds("Submitter");
         submitterBalance.Should().Be(_submitterInitialBalance);
 
-        await Task.Delay(5000); // wait for thing to be archived
+        await thingArchivedTcs.Task;
 
         // Thing should be archived.
         var thing = await _sut.ExecWithService<IThingQueryable, ThingQm?>(thingQueryable =>

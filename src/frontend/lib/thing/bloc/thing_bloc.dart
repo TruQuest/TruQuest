@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import '../../general/models/rvm/verifier_lottery_participant_entry_vm.dart';
-import '../../general/models/rvm/verifier_vm.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
 import '../models/rvm/acceptance_poll_info_vm.dart';
+import '../models/rvm/get_votes_rvm.dart';
 import '../models/rvm/settlement_proposal_preview_vm.dart';
 import '../models/rvm/thing_state_vm.dart';
 import '../models/rvm/get_thing_rvm.dart';
@@ -25,8 +25,8 @@ class ThingBloc extends Bloc<ThingAction> {
   Stream<List<VerifierLotteryParticipantEntryVm>> get verifierLotteryParticipants$ =>
       _verifierLotteryParticipantsChannel.stream;
 
-  final _verifiersChannel = StreamController<List<VerifierVm>>.broadcast();
-  Stream<List<VerifierVm>> get verifiers$ => _verifiersChannel.stream;
+  final _votesChannel = StreamController<GetVotesRvm>.broadcast();
+  Stream<GetVotesRvm> get votes$ => _votesChannel.stream;
 
   final _proposalsListChannel = StreamController<List<SettlementProposalPreviewVm>>.broadcast();
   Stream<List<SettlementProposalPreviewVm>> get proposalsList$ => _proposalsListChannel.stream;
@@ -39,8 +39,8 @@ class ThingBloc extends Bloc<ThingAction> {
         _getVerifierLotteryInfo(action);
       } else if (action is GetVerifierLotteryParticipants) {
         _getVerifierLotteryParticipants(action);
-      } else if (action is GetVerifiers) {
-        _getVerifiers(action);
+      } else if (action is GetVotes) {
+        _getVotes(action);
       } else if (action is GetSettlementProposalsList) {
         _getSettlementProposalsList(action);
       } else if (action is Watch) {
@@ -168,9 +168,9 @@ class ThingBloc extends Bloc<ThingAction> {
         ctx,
       );
 
-  void _getVerifiers(GetVerifiers action) async {
-    var result = await _thingService.getVerifiers(action.thingId);
-    _verifiersChannel.add(result.verifiers);
+  void _getVotes(GetVotes action) async {
+    var result = await _thingService.getVotes(action.thingId);
+    _votesChannel.add(result);
   }
 
   void _getSettlementProposalsList(GetSettlementProposalsList action) async {

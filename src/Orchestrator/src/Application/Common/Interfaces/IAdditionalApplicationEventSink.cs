@@ -2,7 +2,7 @@ using MediatR;
 
 namespace Application.Common.Interfaces;
 
-public interface IAdditionalContractEventSink
+public interface IAdditionalApplicationEventSink
 {
     ValueTask Add(INotification @event);
 }

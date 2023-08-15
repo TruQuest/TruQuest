@@ -26,13 +26,16 @@ internal class SettlementProposalUpdateEventHandler : IMessageHandler<Settlement
     }
 
     public Task Handle(IMessageContext context, SettlementProposalUpdateEvent message) =>
-        _sender.Send(new NotifyWatchersCommand
-        {
-            ItemType = WatchedItemTypeIm.SettlementProposal,
-            ItemId = message.SettlementProposalId,
-            ItemUpdateCategory = (int)message.Category,
-            UpdateTimestamp = message.UpdateTimestamp,
-            Title = message.Title,
-            Details = message.Details
-        });
+        _sender.Send(
+            new NotifyWatchersCommand
+            {
+                ItemType = WatchedItemTypeIm.SettlementProposal,
+                ItemId = message.SettlementProposalId,
+                ItemUpdateCategory = (int)message.Category,
+                UpdateTimestamp = message.UpdateTimestamp,
+                Title = message.Title,
+                Details = message.Details
+            },
+            addToAdditionalSinks: true
+        );
 }

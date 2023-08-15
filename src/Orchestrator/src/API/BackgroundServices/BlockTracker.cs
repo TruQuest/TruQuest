@@ -33,13 +33,7 @@ public class BlockTracker : BackgroundService
             using var scope = _serviceProvider.CreateScope();
             var mediator = scope.ServiceProvider.GetRequiredService<PublisherWrapper>();
 
-            await mediator.Publish(
-                new BlockMinedEvent
-                {
-                    BlockNumber = blockNumber
-                },
-                addToAdditionalSinks: false
-            );
+            await mediator.Publish(new BlockMinedEvent { BlockNumber = blockNumber });
         }
     }
 }

@@ -23,8 +23,11 @@ internal class ThingFundedEventHandler : IMessageHandler<ThingFundedEvent>
     }
 
     public Task Handle(IMessageContext context, ThingFundedEvent @event) =>
-        _sender.Send(new InitVerifierLotteryCommand
-        {
-            ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key))
-        });
+        _sender.Send(
+            new InitVerifierLotteryCommand
+            {
+                ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key))
+            },
+            addToAdditionalSinks: true
+        );
 }

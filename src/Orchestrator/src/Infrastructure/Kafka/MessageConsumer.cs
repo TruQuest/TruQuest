@@ -60,8 +60,7 @@ internal class MessageConsumer : IMessageMiddleware
                         SubmitterId = thingProgress.SubmitterId,
                         ThingId = thingProgress.ThingId,
                         Percent = thingProgress.Percent
-                    },
-                    addToAdditionalSinks: false
+                    }
                 );
             }
             else if (message is ArchiveThingAttachmentsSuccessResult thingSuccessResult)
@@ -72,7 +71,8 @@ internal class MessageConsumer : IMessageMiddleware
                         SubmitterId = thingSuccessResult.SubmitterId,
                         ThingId = thingSuccessResult.ThingId,
                         Input = thingSuccessResult.Input
-                    }
+                    },
+                    addToAdditionalSinks: true
                 );
             }
             else if (message is ArchiveSettlementProposalAttachmentsProgress proposalProgress)
@@ -83,8 +83,7 @@ internal class MessageConsumer : IMessageMiddleware
                         SubmitterId = proposalProgress.SubmitterId,
                         ProposalId = proposalProgress.ProposalId,
                         Percent = proposalProgress.Percent
-                    },
-                    addToAdditionalSinks: false
+                    }
                 );
             }
             else if (message is ArchiveSettlementProposalAttachmentsSuccessResult proposalSuccessResult)
@@ -95,7 +94,8 @@ internal class MessageConsumer : IMessageMiddleware
                         SubmitterId = proposalSuccessResult.SubmitterId,
                         ProposalId = proposalSuccessResult.ProposalId,
                         Input = proposalSuccessResult.Input
-                    }
+                    },
+                    addToAdditionalSinks: true
                 );
             }
         }

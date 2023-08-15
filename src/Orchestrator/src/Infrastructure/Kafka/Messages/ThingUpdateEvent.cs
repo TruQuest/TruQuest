@@ -26,13 +26,16 @@ internal class ThingUpdateEventHandler : IMessageHandler<ThingUpdateEvent>
     }
 
     public Task Handle(IMessageContext context, ThingUpdateEvent message) =>
-        _sender.Send(new NotifyWatchersCommand
-        {
-            ItemType = WatchedItemTypeIm.Thing,
-            ItemId = message.ThingId,
-            ItemUpdateCategory = (int)message.Category,
-            UpdateTimestamp = message.UpdateTimestamp,
-            Title = message.Title,
-            Details = message.Details
-        });
+        _sender.Send(
+            new NotifyWatchersCommand
+            {
+                ItemType = WatchedItemTypeIm.Thing,
+                ItemId = message.ThingId,
+                ItemUpdateCategory = (int)message.Category,
+                UpdateTimestamp = message.UpdateTimestamp,
+                Title = message.Title,
+                Details = message.Details
+            },
+            addToAdditionalSinks: true
+        );
 }

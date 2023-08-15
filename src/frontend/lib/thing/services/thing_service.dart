@@ -12,7 +12,6 @@ import '../models/im/new_acceptance_poll_vote_im.dart';
 import '../../general/models/rvm/verifier_lottery_participant_entry_vm.dart';
 import '../errors/thing_error.dart';
 import '../models/rvm/get_settlement_proposals_list_rvm.dart';
-import '../models/rvm/get_verifiers_rvm.dart';
 import '../../general/utils/utils.dart';
 import '../../general/contracts/acceptance_poll_contract.dart';
 import '../../general/contracts/thing_submission_verifier_lottery_contract.dart';
@@ -21,6 +20,7 @@ import '../models/rvm/get_thing_rvm.dart';
 import '../../general/contracts/truquest_contract.dart';
 import '../../general/contexts/document_context.dart';
 import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
+import '../models/rvm/get_votes_rvm.dart';
 import '../models/rvm/submit_new_thing_rvm.dart';
 import 'thing_api_service.dart';
 
@@ -351,8 +351,8 @@ class ThingService {
     }
   }
 
-  Future<GetVerifiersRvm> getVerifiers(String thingId) async {
-    var result = await _thingApiService.getVerifiers(thingId);
+  Future<GetVotesRvm> getVotes(String thingId) async {
+    var result = await _thingApiService.getVotes(thingId);
     return result;
   }
 

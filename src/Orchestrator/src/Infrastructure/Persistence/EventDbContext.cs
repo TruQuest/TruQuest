@@ -61,6 +61,7 @@ public class EventDbContext : DbContext
             builder.Property(e => e.Id).UseIdentityAlwaysColumn();
             builder.Property(e => e.BlockNumber).IsRequired();
             builder.Property(e => e.TxnIndex).IsRequired();
+            builder.Property(e => e.TxnHash).IsRequired();
             builder.Property(e => e.ThingId).IsRequired();
             builder.Property(e => e.UserId).IsRequired();
             builder.Property(e => e.Decision).HasConversion<int>().IsRequired();
@@ -69,7 +70,7 @@ public class EventDbContext : DbContext
 
             // @@NOTE: A user could in theory call castVote multiple times in the same transaction
             // using AA txn batching, which this index would block...
-            builder.HasIndex(e => new { e.ThingId, e.UserId, e.BlockNumber, e.TxnIndex }).IsUnique();
+            builder.HasIndex(e => e.TxnHash).IsUnique();
         });
 
         modelBuilder.Entity<JoinedThingAssessmentVerifierLotteryEvent>(builder =>

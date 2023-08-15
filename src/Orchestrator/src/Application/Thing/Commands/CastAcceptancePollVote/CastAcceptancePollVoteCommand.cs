@@ -127,7 +127,7 @@ internal class CastAcceptancePollVoteCommandHandler :
             castedAtMs: castedAtUtc.ToUnixTimeMilliseconds(),
             decision: (AcceptancePollVote.VoteDecision)command.Input.Decision,
             reason: command.Input.Reason != string.Empty ? command.Input.Reason : null,
-            voterSignature: command.Signature,
+            voterSignature: command.Signature, // @@??: Do we actually need to store this in db? It is saved in IPFS already.
             ipfsCid: uploadResult.Data!
         );
         _voteRepository.Create(vote);

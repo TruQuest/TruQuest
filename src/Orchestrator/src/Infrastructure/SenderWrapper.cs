@@ -15,19 +15,23 @@ public class SenderWrapper
 {
     private readonly ILogger<SenderWrapper> _logger;
     private readonly IServiceProvider _serviceProvider;
+    private readonly IEnumerable<IAdditionalApplicationRequestSink> _additionalSinks;
 
     public SenderWrapper(
         ILogger<SenderWrapper> logger,
-        IServiceProvider serviceProvider
+        IServiceProvider serviceProvider,
+        IEnumerable<IAdditionalApplicationRequestSink> additionalSinks
     )
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
+        _additionalSinks = additionalSinks;
     }
 
     public async Task<TResponse> Send<TResponse>(
         IRequest<TResponse> request, CancellationToken ct = default,
-        IServiceProvider? serviceProvider = null, string? signalRConnectionId = null
+        IServiceProvider? serviceProvider = null, string? signalRConnectionId = null,
+        bool addToAdditionalSinks = false
     )
     {
         var attr = request.GetType().GetCustomAttribute<ExecuteInTxnAttribute>();
@@ -68,7 +72,17 @@ public class SenderWrapper
 
                     var sender = scope.ServiceProvider.GetRequiredService<ISender>();
 
-                    return await sender.Send(request);
+                    var response = await sender.Send(request);
+
+                    if (addToAdditionalSinks)
+                    {
+                        foreach (var sink in _additionalSinks)
+                        {
+                            await sink.Add(request);
+                        }
+                    }
+
+                    return response;
                 }
                 catch (PostgresException) // Means txn serialization failure, since ExceptionHandlingBehavior handles everything else.
                 {
@@ -112,7 +126,17 @@ public class SenderWrapper
 
             var sender = scope.ServiceProvider.GetRequiredService<ISender>();
 
-            return await sender.Send(request);
+            var response = await sender.Send(request);
+
+            if (addToAdditionalSinks)
+            {
+                foreach (var sink in _additionalSinks)
+                {
+                    await sink.Add(request);
+                }
+            }
+
+            return response;
         }
     }
 }

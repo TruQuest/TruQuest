@@ -6,7 +6,7 @@ using Application.Common.Interfaces;
 
 namespace Tests.FunctionalTests.Helpers;
 
-public class ContractEventSink : IAdditionalContractEventSink
+public class ApplicationEventSink : IAdditionalApplicationEventSink
 {
     private Channel<INotification> _eventChannel;
     public ChannelReader<INotification> Stream => _eventChannel.Reader;

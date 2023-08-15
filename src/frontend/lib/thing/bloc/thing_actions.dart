@@ -160,7 +160,7 @@ class GetAcceptancePollInfo extends ThingAction {
   const GetAcceptancePollInfo({required this.thingId});
 }
 
-class GetVerifiers extends ThingAction {
+class GetVotes extends ThingAction {
   final String thingId;
 
   @override
@@ -174,7 +174,7 @@ class GetVerifiers extends ThingAction {
     return errors;
   }
 
-  const GetVerifiers({required this.thingId});
+  const GetVotes({required this.thingId});
 }
 
 class CastVoteOffChain extends ThingAction {
