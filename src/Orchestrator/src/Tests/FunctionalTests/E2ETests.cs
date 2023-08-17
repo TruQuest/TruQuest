@@ -298,8 +298,6 @@ public class E2ETests : IAsyncLifetime
     [Fact]
     public async Task ShouldCreateAndAcceptThingAndSubsequentSettlementProposal()
     {
-        var network = _sut.GetConfigurationValue<string>("Ethereum:Network");
-
         var submitterAddress = await _sut.ContractCaller.GetWalletAddressFor("Submitter");
 
         Guid subjectId;
@@ -431,10 +429,9 @@ public class E2ETests : IAsyncLifetime
             await _sut.ContractCaller.JoinThingSubmissionVerifierLotteryAs(verifierAccountName, thingIdBytes, userData);
 
             var verifierBalance = await _sut.ContractCaller.GetAvailableFunds(verifierAccountName);
+            verifierBalance.Should().Be(verifierInitialBalance - verifierStake);
 
             var walletAddress = await _sut.ContractCaller.GetWalletAddressFor(verifierAccountName);
-
-            verifierBalance.Should().Be(verifierInitialBalance - verifierStake);
 
             verifiersLotteryData.Add((verifierAccountName, walletAddress, verifierInitialBalance, userData, null));
         }
@@ -463,7 +460,9 @@ public class E2ETests : IAsyncLifetime
 
         nonce.Should().Be(thingLotteryClosedWithSuccessEvent.Nonce);
 
-        Debug.WriteLine($"Server-computed nonce: {nonce}; Blockchain-computed nonce: {thingLotteryClosedWithSuccessEvent.Nonce}");
+        Debug.WriteLine(
+            $"************** Server-computed nonce: {nonce}; Blockchain-computed nonce: {thingLotteryClosedWithSuccessEvent.Nonce} **************"
+        );
 
         int requiredVerifierCount = await _sut.ExecWithService<IContractCaller, int>(
             contractCaller => contractCaller.GetThingSubmissionLotteryNumVerifiers()
@@ -491,8 +490,7 @@ public class E2ETests : IAsyncLifetime
             .Take(requiredVerifierCount)
             .ToList();
 
-        // giving time to add verifiers, change the thing's state, and create an acceptance poll closing task;
-        // or to archive the thing
+        // giving time to add verifiers, change the thing's state, and create an acceptance poll closing task
         await Task.Delay(TimeSpan.FromSeconds(10));
 
         verifierCount = await _acceptancePollContract
@@ -677,7 +675,7 @@ public class E2ETests : IAsyncLifetime
             ("title", "Go to the Moooooon..."),
             ("verdict", $"{(int)VerdictIm.NoEffortWhatsoever}"),
             ("details", _dummyQuillContentJson),
-            ("evidence", "https://facebook.com")
+            ("evidence", "https://google.com")
         ))
         {
             _sut.RunAs(userId: proposerAddress.Substring(2).ToLower(), username: proposerAddress);

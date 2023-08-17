@@ -4,12 +4,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using MediatR;
-using Npgsql;
 
 using Application.Common.Attributes;
 using Application.Common.Interfaces;
 
-namespace Infrastructure;
+namespace Application;
 
 public class SenderWrapper
 {
@@ -84,7 +83,7 @@ public class SenderWrapper
 
                     return response;
                 }
-                catch (PostgresException) // Means txn serialization failure, since ExceptionHandlingBehavior handles everything else.
+                catch // PostgresException. Means txn serialization failure, since ExceptionHandlingBehavior handles everything else.
                 {
                     await Task.Delay(500); // @@TODO: Config.
                 }

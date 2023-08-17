@@ -10,6 +10,7 @@ public class JoinedLotteryEvent : INotification
 {
     public required long BlockNumber { get; init; }
     public required int TxnIndex { get; init; }
+    public required string TxnHash { get; init; }
     public required byte[] ThingId { get; init; }
     public required string UserId { get; init; }
     public required byte[] UserData { get; init; }
@@ -32,6 +33,7 @@ internal class JoinedLotteryEventHandler : INotificationHandler<JoinedLotteryEve
         var joinedThingSubmissionVerifierLotteryEvent = new JoinedThingSubmissionVerifierLotteryEvent(
             blockNumber: @event.BlockNumber,
             txnIndex: @event.TxnIndex,
+            txnHash: @event.TxnHash,
             thingId: new Guid(@event.ThingId),
             userId: @event.UserId,
             l1BlockNumber: @event.L1BlockNumber,

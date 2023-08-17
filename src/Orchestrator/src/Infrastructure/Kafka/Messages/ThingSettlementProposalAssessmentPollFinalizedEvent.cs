@@ -4,6 +4,7 @@ using KafkaFlow;
 using KafkaFlow.TypedHandler;
 
 using Domain.Aggregates;
+using Application;
 using Application.Settlement.Commands.FinalizeAssessmentPoll;
 
 namespace Infrastructure.Kafka.Messages;

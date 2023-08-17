@@ -2,6 +2,7 @@ using KafkaFlow;
 using KafkaFlow.TypedHandler;
 
 using Domain.Aggregates;
+using Application;
 using Application.User.Commands.NotifyWatchers;
 using Application.User.Common.Models.IM;
 

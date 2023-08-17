@@ -16,6 +16,7 @@ public class PrepareForAcceptancePollCommand : IRequest<VoidResult>
 {
     public required long AcceptancePollInitBlockNumber { get; init; }
     public required int AcceptancePollInitTxnIndex { get; init; }
+    public required string AcceptancePollInitTxnHash { get; init; }
     public required Guid ThingId { get; init; }
     public required string Orchestrator { get; init; }
     public required string Data { get; init; }
@@ -78,6 +79,7 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
             var joinedThingSubmissionVerifierLotteryEvent = new JoinedThingSubmissionVerifierLotteryEvent(
                 blockNumber: command.AcceptancePollInitBlockNumber,
                 txnIndex: command.AcceptancePollInitTxnIndex,
+                txnHash: command.AcceptancePollInitTxnHash,
                 thingId: command.ThingId,
                 userId: command.Orchestrator,
                 l1BlockNumber: -lotteryInitBlock,

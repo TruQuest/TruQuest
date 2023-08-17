@@ -1,10 +1,10 @@
+using Application;
 using Application.Settlement.Commands.CastAssessmentPollVote;
 using Application.Settlement.Commands.CreateNewSettlementProposalDraft;
 using Application.Settlement.Commands.SubmitNewSettlementProposal;
 using Application.Settlement.Queries.GetSettlementProposal;
 using Application.Settlement.Queries.GetVerifierLotteryParticipants;
-using Application.Settlement.Queries.GetVerifiers;
-using Infrastructure;
+using Application.Settlement.Queries.GetVotes;
 
 namespace API.Endpoints;
 
@@ -49,8 +49,8 @@ public static class SettlementProposalEndpoints
         );
 
         group.MapGet(
-            "/{proposalId}/verifiers",
-            ([AsParameters] GetVerifiersQuery query, SenderWrapper sender, HttpContext context) =>
+            "/{proposalId}/votes",
+            ([AsParameters] GetVotesQuery query, SenderWrapper sender, HttpContext context) =>
                 sender.Send(query, serviceProvider: context.RequestServices)
         );
 

@@ -1,5 +1,5 @@
+using Application;
 using Application.General.Queries.GetTags;
-using Infrastructure;
 
 namespace API.Endpoints;
 

@@ -1,3 +1,4 @@
+using Application;
 using Application.Thing.Queries.GetVerifierLotteryParticipants;
 using Application.Thing.Commands.CreateNewThingDraft;
 using Application.Thing.Commands.SubmitNewThing;
@@ -6,7 +7,6 @@ using Application.Thing.Queries.GetVotes;
 using Application.Thing.Commands.CastAcceptancePollVote;
 using Application.Thing.Queries.GetSettlementProposalsList;
 using Application.Thing.Commands.Watch;
-using Infrastructure;
 
 namespace API.Endpoints;
 

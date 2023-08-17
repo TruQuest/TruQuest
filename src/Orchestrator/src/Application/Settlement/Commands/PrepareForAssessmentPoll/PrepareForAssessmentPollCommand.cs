@@ -16,6 +16,7 @@ public class PrepareForAssessmentPollCommand : IRequest<VoidResult>
 {
     public required long AssessmentPollInitBlockNumber { get; init; }
     public required int AssessmentPollInitTxnIndex { get; init; }
+    public required string AssessmentPollInitTxnHash { get; init; }
     public required Guid ThingId { get; init; }
     public required Guid SettlementProposalId { get; init; }
     public required string Orchestrator { get; init; }
@@ -85,6 +86,7 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
             var joinedThingAssessmentVerifierLotteryEvent = new JoinedThingAssessmentVerifierLotteryEvent(
                 blockNumber: command.AssessmentPollInitBlockNumber,
                 txnIndex: command.AssessmentPollInitTxnIndex,
+                txnHash: command.AssessmentPollInitTxnHash,
                 thingId: command.ThingId,
                 settlementProposalId: command.SettlementProposalId,
                 userId: command.Orchestrator,

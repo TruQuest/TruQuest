@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 using Dapper;
 
@@ -9,37 +9,74 @@ namespace Infrastructure.Persistence.Queryables;
 
 internal class ThingAssessmentPollVoteQueryable : Queryable, IThingAssessmentPollVoteQueryable
 {
-    private readonly AppDbContext _dbContext;
+    public ThingAssessmentPollVoteQueryable(IConfiguration configuration) : base(configuration) { }
 
-    public ThingAssessmentPollVoteQueryable(AppDbContext dbContext) : base(dbContext)
+    public async Task<(string?, IEnumerable<VoteQm>)> GetAllFor(Guid proposalId, string? userId)
     {
-        _dbContext = dbContext;
-    }
-
-    public async Task<IEnumerable<VoteQm>> GetAllFor(Guid proposalId)
-    {
-        var offChainVotes = await _dbContext.AssessmentPollVotes
-            .AsNoTracking()
-            .Where(v => v.SettlementProposalId == proposalId)
-            .OrderBy(v => v.CastedAtMs)
-            .Select(v => new VoteQm
-            {
-                UserId = v.VoterId,
-                CastedAtMs = v.CastedAtMs
-            })
-            .ToListAsync();
-
         var dbConn = await _getOpenConnection();
-        var onChainVotes = await dbConn.QueryAsync<VoteQm>(
+        using var multiQuery = await dbConn.QueryMultipleAsync(
             @"
-                SELECT e.""UserId"", e.""L1BlockNumber"" AS ""BlockNumber""
-                FROM truquest_events.""CastedAssessmentPollVoteEvents"" AS e
-                WHERE e.""SettlementProposalId"" = @ProposalId
-                ORDER BY e.""BlockNumber"", e.""TxnIndex""
+                SELECT ""VoteAggIpfsCid""
+                FROM truquest.""SettlementProposals""
+                WHERE ""Id"" = @ProposalId;
+
+                SELECT DISTINCT ON (""UserId"")
+                    ""UserId"", ""CastedAtMs"", ""L1BlockNumber"", ""BlockNumber"",
+                    ""Decision"", ""Reason"", ""IpfsCid"", ""TxnHash""
+                FROM (
+                    SELECT *
+                    FROM (
+                        SELECT DISTINCT ON (""VoterId"")
+                            ""VoterId"" AS ""UserId"",
+                            1 AS ""OffChain"",
+                            ""CastedAtMs"",
+                            ""Decision"",
+                            ""Reason"",
+                            ""IpfsCid"",
+                            NULL::BIGINT AS ""L1BlockNumber"",
+                            NULL::BIGINT AS ""BlockNumber"",
+                            NULL::TEXT AS ""TxnHash""
+                        FROM truquest.""AssessmentPollVotes""
+                        WHERE ""SettlementProposalId"" = @ProposalId
+                        ORDER BY ""VoterId"", ""CastedAtMs"" DESC
+                    ) AS a
+
+                    UNION ALL
+
+                    SELECT *
+                    FROM (
+                        SELECT DISTINCT ON (""UserId"")
+                            ""UserId"",
+                            0 AS ""OffChain"",
+                            NULL::BIGINT AS ""CastedAtMs"",
+                            ""Decision"",
+                            ""Reason"",
+                            NULL::TEXT AS ""IpfsCid"",
+                            ""L1BlockNumber"",
+                            ""BlockNumber"",
+                            ""TxnHash""
+                        FROM truquest_events.""CastedAssessmentPollVoteEvents""
+                        WHERE ""SettlementProposalId"" = @ProposalId
+                        ORDER BY ""UserId"", ""BlockNumber"" DESC, ""TxnIndex"" DESC
+                    ) AS b
+                ) AS c
+                ORDER BY ""UserId"", ""OffChain"";
             ",
             param: new { ProposalId = proposalId }
         );
 
-        return offChainVotes.Concat(onChainVotes);
+        var voteAggIpfsCid = multiQuery.ReadSingleOrDefault<string?>();
+        var votes = multiQuery.Read<VoteQm>();
+
+        if (voteAggIpfsCid == null)
+        {
+            // If poll is not yet finalized do not show votes other than the user's own one.
+            foreach (var vote in votes)
+            {
+                if (vote.UserId != userId) vote.ClearSensitiveData();
+            }
+        }
+
+        return (voteAggIpfsCid, votes);
     }
 }

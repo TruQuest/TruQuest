@@ -18,8 +18,8 @@ using OpenTelemetry.Metrics;
 
 using Domain.Aggregates;
 using Domain.Aggregates.Events;
+using Application;
 using Application.Common.Interfaces;
-using Infrastructure;
 using Infrastructure.Persistence;
 using Infrastructure.Ethereum;
 using API;

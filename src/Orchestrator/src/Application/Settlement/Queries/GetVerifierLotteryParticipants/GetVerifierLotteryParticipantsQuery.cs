@@ -41,35 +41,55 @@ internal class GetVerifierLotteryParticipantsQueryHandler :
         GetVerifierLotteryParticipantsQuery query, CancellationToken ct
     )
     {
-        // @@TODO: Get all participants and claimants.
-        var entries = await _settlementProposalQueryable.GetVerifierLotteryParticipants(query.ProposalId);
-        var firstEntry = entries.FirstOrDefault();
-        if (firstEntry != null && _signer.CheckIsOrchestrator(firstEntry.UserId))
+        // ordered from newest to oldest
+        var (participants, claimants) = await _settlementProposalQueryable.GetVerifierLotteryParticipants(query.ProposalId);
+        var latestParticipant = participants.FirstOrDefault();
+        if (latestParticipant != null && _signer.CheckIsOrchestrator(latestParticipant.UserId))
         {
             // means the lottery was closed with success
-            Debug.Assert(firstEntry.Nonce != null);
-            firstEntry.IsOrchestrator = true;
+            Debug.Assert(latestParticipant.Nonce != null && latestParticipant.UserData == null);
+            latestParticipant.MarkAsOrchestrator();
 
-            var verifiers = await _settlementProposalQueryable.GetVerifiers(query.ProposalId);
-            Debug.Assert(verifiers.Any());
-            foreach (var verifier in verifiers)
+            var verifierIds = await _settlementProposalQueryable.GetVerifiers(query.ProposalId);
+            Debug.Assert(verifierIds.Any());
+
+            var participantsAndClaimants = participants.Concat(claimants).ToHashSet();
+            // there should be no users that are both participant and claimant
+            Debug.Assert(participantsAndClaimants.Count() == participants.Count() + claimants.Count());
+            foreach (var verifierId in verifierIds)
             {
-                // @@BUG: If verifier is a claimant there wouldn't be a joined event.
-                var entry = entries.Single(e => e.UserId == verifier.VerifierId);
-                entry.IsWinner = true;
+                var entry = participantsAndClaimants.Single(e => e.UserId == verifierId);
+                entry.MarkAsWinner();
+            }
+        }
+        else
+        {
+            // @@NOTE: There is a period when the lottery is closed (and therefore the nonces are set)
+            // but not yet finalized (verifiers are not yet added to the db, etc.). So we just clear
+            // nonces here since it would be confusing to already show nonces but not winners. 
+            var entry = participants.FirstOrDefault() ?? claimants.FirstOrDefault();
+            if (entry?.Nonce != null)
+            {
+                // if one entry's nonce is set then all entries' nonces are set since we set them in a txn
+                foreach (var e in participants.Concat(claimants)) e.ClearSensitiveData();
             }
         }
 
-        entries = entries
+        participants = participants
             .OrderBy(e => e.SortKey)
-            .ThenByDescending(e => e.JoinedBlockNumber);
+            .ThenByDescending(e => e.BlockNumber);
+
+        claimants = claimants
+            .OrderBy(e => e.SortKey)
+            .ThenByDescending(e => e.BlockNumber);
 
         return new()
         {
             Data = new()
             {
                 ProposalId = query.ProposalId,
-                Entries = entries
+                Participants = participants,
+                Claimants = claimants
             }
         };
     }

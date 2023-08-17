@@ -57,6 +57,7 @@ internal class ThingQueryable : Queryable, IThingQueryable
 
     public async Task<ThingQm?> GetById(Guid id, string? userId)
     {
+        // @@??: Shouldn't we handle the case when userId == null separately ?
         var dbConn = await _getOpenConnection();
         using var multiQuery = await dbConn.QueryMultipleAsync(
             @"
@@ -113,7 +114,7 @@ internal class ThingQueryable : Queryable, IThingQueryable
         var dbConn = await _getOpenConnection();
         var entries = await dbConn.QueryAsync<VerifierLotteryParticipantEntryQm>(
             @"
-                SELECT ""L1BlockNumber"" AS ""JoinedBlockNumber"", ""UserId"", ""UserData"", ""Nonce""
+                SELECT ""L1BlockNumber"", ""BlockNumber"", ""TxnHash"", ""UserId"", ""UserData"", ""Nonce""
                 FROM truquest_events.""JoinedThingSubmissionVerifierLotteryEvents""
                 WHERE ""ThingId"" = @ThingId
                 ORDER BY ""BlockNumber"" DESC, ""TxnIndex"" DESC
@@ -124,20 +125,17 @@ internal class ThingQueryable : Queryable, IThingQueryable
         return entries;
     }
 
-    public async Task<IEnumerable<VerifierQm>> GetVerifiers(Guid thingId)
+    public async Task<IEnumerable<string>> GetVerifiers(Guid thingId)
     {
         var dbConn = await _getOpenConnection();
-        var verifiers = await dbConn.QueryAsync<VerifierQm>(
+        var verifiers = await dbConn.QueryAsync<string>(
             @"
-                SELECT v.""VerifierId"", u.""UserName""
+                SELECT v.""VerifierId""
                 FROM
                     truquest.""Things"" AS t
                         INNER JOIN
                     truquest.""ThingVerifiers"" AS v
                         ON t.""Id"" = v.""ThingId""
-                        INNER JOIN
-                    truquest.""AspNetUsers"" AS u
-                        ON v.""VerifierId"" = u.""Id""
                 WHERE t.""Id"" = @ThingId
             ",
             param: new { ThingId = thingId }

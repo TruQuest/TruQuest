@@ -6,36 +6,43 @@ using Microsoft.Extensions.Logging;
 using MediatR;
 
 using Domain.Results;
+using Domain.Aggregates;
 using Domain.Aggregates.Events;
 
 using Application.Common.Interfaces;
 using Application.Common.Misc;
+using Application.Common.Attributes;
 
 namespace Application.Thing.Commands.CloseVerifierLottery;
 
+[ExecuteInTxn]
 internal class CloseVerifierLotteryCommand : IRequest<VoidResult>
 {
     public required Guid ThingId { get; init; }
     public required byte[] Data { get; init; }
     public required byte[] UserXorData { get; init; }
     public required long EndBlock { get; init; }
+    public required long TaskId { get; init; }
 }
 
 internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifierLotteryCommand, VoidResult>
 {
     private readonly ILogger<CloseVerifierLotteryCommandHandler> _logger;
+    private readonly ITaskRepository _taskRepository;
     private readonly IContractCaller _contractCaller;
     private readonly IL1BlockchainQueryable _l1BlockchainQueryable;
     private readonly IJoinedThingSubmissionVerifierLotteryEventRepository _joinedLotteryEventRepository;
 
     public CloseVerifierLotteryCommandHandler(
         ILogger<CloseVerifierLotteryCommandHandler> logger,
+        ITaskRepository taskRepository,
         IContractCaller contractCaller,
         IL1BlockchainQueryable l1BlockchainQueryable,
         IJoinedThingSubmissionVerifierLotteryEventRepository joinedLotteryEventRepository
     )
     {
         _logger = logger;
+        _taskRepository = taskRepository;
         _contractCaller = contractCaller;
         _l1BlockchainQueryable = l1BlockchainQueryable;
         _joinedLotteryEventRepository = joinedLotteryEventRepository;
@@ -114,6 +121,8 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 
             await _contractCaller.CloseThingSubmissionVerifierLotteryInFailure(thingId, joinedEvents.Count);
         }
+
+        await _taskRepository.SetCompletedStateFor(command.TaskId);
 
         return VoidResult.Instance;
     }

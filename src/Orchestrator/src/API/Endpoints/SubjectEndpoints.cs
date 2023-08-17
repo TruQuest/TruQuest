@@ -1,8 +1,8 @@
+using Application;
 using Application.Subject.Commands.AddNewSubject;
 using Application.Subject.Queries.GetSubject;
 using Application.Subject.Queries.GetSubjects;
 using Application.Subject.Queries.GetThingsList;
-using Infrastructure;
 
 namespace API.Endpoints;
 

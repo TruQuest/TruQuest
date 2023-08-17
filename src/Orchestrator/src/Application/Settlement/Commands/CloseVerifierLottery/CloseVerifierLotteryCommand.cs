@@ -6,13 +6,16 @@ using Microsoft.Extensions.Logging;
 using MediatR;
 
 using Domain.Results;
+using Domain.Aggregates;
 using Domain.Aggregates.Events;
 
 using Application.Common.Interfaces;
 using Application.Common.Misc;
+using Application.Common.Attributes;
 
 namespace Application.Settlement.Commands.CloseVerifierLottery;
 
+[ExecuteInTxn]
 internal class CloseVerifierLotteryCommand : IRequest<VoidResult>
 {
     public required Guid ThingId { get; init; }
@@ -20,38 +23,41 @@ internal class CloseVerifierLotteryCommand : IRequest<VoidResult>
     public required byte[] Data { get; init; }
     public required byte[] UserXorData { get; init; }
     public required long EndBlock { get; init; }
+    public required long TaskId { get; init; }
 }
 
 internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifierLotteryCommand, VoidResult>
 {
     private readonly ILogger<CloseVerifierLotteryCommandHandler> _logger;
+    private readonly ITaskRepository _taskRepository;
     private readonly IContractCaller _contractCaller;
     private readonly IL1BlockchainQueryable _l1BlockchainQueryable;
-    private readonly IThingSubmissionVerifierLotteryEventQueryable _thingVerifierLotteryEventQueryable;
-    private readonly ISettlementProposalAssessmentVerifierLotteryEventQueryable _proposalVerifierLotteryEventQueryable;
+    private readonly IThingAssessmentVerifierLotterySpotClaimedEventRepository _lotterySpotClaimedEventRepository;
     private readonly IJoinedThingAssessmentVerifierLotteryEventRepository _joinedLotteryEventRepository;
 
     public CloseVerifierLotteryCommandHandler(
         ILogger<CloseVerifierLotteryCommandHandler> logger,
+        ITaskRepository taskRepository,
         IContractCaller contractCaller,
         IL1BlockchainQueryable l1BlockchainQueryable,
-        IThingSubmissionVerifierLotteryEventQueryable thingVerifierLotteryEventQueryable,
-        ISettlementProposalAssessmentVerifierLotteryEventQueryable proposalVerifierLotteryEventQueryable,
+        IThingAssessmentVerifierLotterySpotClaimedEventRepository lotterySpotClaimedEventRepository,
         IJoinedThingAssessmentVerifierLotteryEventRepository joinedLotteryEventRepository
     )
     {
         _logger = logger;
+        _taskRepository = taskRepository;
         _contractCaller = contractCaller;
         _l1BlockchainQueryable = l1BlockchainQueryable;
-        _thingVerifierLotteryEventQueryable = thingVerifierLotteryEventQueryable;
-        _proposalVerifierLotteryEventQueryable = proposalVerifierLotteryEventQueryable;
+        _lotterySpotClaimedEventRepository = lotterySpotClaimedEventRepository;
         _joinedLotteryEventRepository = joinedLotteryEventRepository;
     }
 
     public async Task<VoidResult> Handle(CloseVerifierLotteryCommand command, CancellationToken ct)
     {
+        // @@TODO!!: Make idempotent.
         var thingId = command.ThingId.ToByteArray();
         var proposalId = command.SettlementProposalId.ToByteArray();
+
         bool expired = await _contractCaller.CheckThingAssessmentVerifierLotteryExpired(thingId, proposalId);
         Debug.Assert(expired);
 
@@ -67,84 +73,101 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 
         int numVerifiers = await _contractCaller.GetThingAssessmentLotteryNumVerifiers();
 
-        var spotClaimedEvents = await _proposalVerifierLotteryEventQueryable.GetAllSpotClaimedEventsFor(
+        // ordered from oldest to newest
+        var spotClaimedEvents = await _lotterySpotClaimedEventRepository.FindAllFor(
             command.ThingId, command.SettlementProposalId
         );
 
-        var spotClaimedEventsIndexed = spotClaimedEvents.Select((e, i) => (Event: e, Index: i)).ToList();
+        var winnerClaimants = spotClaimedEvents
+            .Select(
+                (e, i) =>
+                {
+                    e.SetNonce((long)(
+                        (
+                            new BigInteger(e.UserData.HexToByteArray(), isUnsigned: true, isBigEndian: true) ^
+                            new BigInteger(command.UserXorData, isUnsigned: true, isBigEndian: true)
+                        ) % maxNonce
+                    ));
+
+                    return (
+                        e.UserId,
+                        Index: i,
+                        Nonce: e.Nonce!.Value
+                    );
+                }
+            )
+            .OrderBy(e => Math.Abs(nonce - e.Nonce))
+                .ThenBy(e => e.Index)
+            .Take(numVerifiers / 2) // @@TODO: Config.
+            .OrderBy(e => e.Index)
+            .ToList();
+
+        Debug.Assert(winnerClaimants.Count <= numVerifiers / 2);
 
         var spotClaimants = await _contractCaller.GetThingAssessmentVerifierLotterySpotClaimants(thingId, proposalId);
-        foreach (var @event in spotClaimedEventsIndexed)
+        foreach (var winnerClaimant in winnerClaimants)
         {
-            var claimantAtIndex = spotClaimants.ElementAtOrDefault(new Index(@event.Index));
-            if (claimantAtIndex?.Substring(2).ToLower() != @event.Event.UserId)
+            var claimantAtIndex = spotClaimants.ElementAtOrDefault(new Index(winnerClaimant.Index));
+            if (claimantAtIndex?.Substring(2).ToLower() != winnerClaimant.UserId)
             {
-                throw new Exception("Incorrect claimant selection");
+                throw new Exception("Incorrect claimant index selection");
             }
         }
 
-        var joinedThingSubmissionVerifierLotteryEvents = await _thingVerifierLotteryEventQueryable.GetJoinedEventsFor(
-            thingId: command.ThingId,
-            userIds: spotClaimedEvents.Select(e => e.UserId).ToList()
-        );
-
-        var winnerClaimantIndices = joinedThingSubmissionVerifierLotteryEvents
-            .Join(
-                spotClaimedEventsIndexed,
-                je => je.UserId,
-                ce => ce.Event.UserId,
-                (je, ce) => new
-                {
-                    ce.Index,
-                    je.Nonce
-                }
-            )
-            .OrderBy(e => Math.Abs(nonce - e.Nonce!.Value))
-                .ThenBy(e => e.Index)
-            .Select(e => (ulong)e.Index)
-            .Take(numVerifiers / 2) // @@TODO: Config.
-            .Order()
-            .ToList();
+        await _lotterySpotClaimedEventRepository.UpdateUserDataAndNoncesFor(spotClaimedEvents);
+        await _lotterySpotClaimedEventRepository.SaveChanges();
 
         _logger.LogInformation(
             "Proposal {ProposalId} verifier lottery: {NumClaimants} spots claimed",
             command.SettlementProposalId,
-            winnerClaimantIndices.Count
+            winnerClaimants.Count
         );
 
-        int availableSpots = numVerifiers - winnerClaimantIndices.Count;
+        int numRequiredParticipants = numVerifiers - winnerClaimants.Count;
 
+        _logger.LogInformation(
+            "Proposal {ProposalId} verifier lottery: {NumRequiredParticipants} participants required",
+            command.SettlementProposalId,
+            numRequiredParticipants
+        );
+
+        // ordered from oldest to newest
         var joinedEvents = await _joinedLotteryEventRepository.FindAllFor(command.ThingId, command.SettlementProposalId);
-        foreach (var @event in joinedEvents)
-        {
-            @event.SetNonce((long)(
-                (
-                    new BigInteger(@event.UserData!.HexToByteArray(), isUnsigned: true, isBigEndian: true) ^
-                    new BigInteger(command.UserXorData, isUnsigned: true, isBigEndian: true)
-                ) % maxNonce
-            ));
-        }
 
-        var winnerEventsIndexed = joinedEvents
-            .Select((e, i) => (Index: (ulong)i, Event: e))
-            .OrderBy(e => Math.Abs(nonce - e.Event.Nonce!.Value))
+        var winnerParticipants = joinedEvents
+            .Select((e, i) =>
+            {
+                e.SetNonce((long)(
+                    (
+                        new BigInteger(e.UserData!.HexToByteArray(), isUnsigned: true, isBigEndian: true) ^
+                        new BigInteger(command.UserXorData, isUnsigned: true, isBigEndian: true)
+                    ) % maxNonce
+                ));
+
+                return (
+                    e.UserId,
+                    Index: i,
+                    Nonce: e.Nonce!.Value
+                );
+            })
+            .OrderBy(e => Math.Abs(nonce - e.Nonce))
                 .ThenBy(e => e.Index)
-            .Take(availableSpots)
+            .Take(numRequiredParticipants)
             .OrderBy(e => e.Index)
             .ToList();
 
         await _joinedLotteryEventRepository.UpdateNoncesFor(joinedEvents);
         await _joinedLotteryEventRepository.SaveChanges();
 
-        if (winnerEventsIndexed.Count == availableSpots)
+        if (winnerParticipants.Count == numRequiredParticipants)
         {
             var participants = await _contractCaller.GetThingAssessmentVerifierLotteryParticipants(thingId, proposalId);
-            foreach (var @event in winnerEventsIndexed)
+            foreach (var winnerParticipant in winnerParticipants)
             {
-                var participantAtIndex = participants.ElementAtOrDefault(new Index((int)@event.Index));
-                if (participantAtIndex?.Substring(2).ToLower() != @event.Event.UserId)
+                var participantAtIndex = participants.ElementAtOrDefault(new Index(winnerParticipant.Index));
+                if (participantAtIndex?.Substring(2).ToLower() != winnerParticipant.UserId)
                 {
-                    throw new Exception("Incorrect winner selection");
+                    throw new Exception("Incorrect winner index selection");
                 }
             }
 
@@ -154,8 +177,8 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
                 data: command.Data,
                 userXorData: command.UserXorData,
                 hashOfL1EndBlock: endBlockHash,
-                winnerClaimantIndices: winnerClaimantIndices,
-                winnerIndices: winnerEventsIndexed.Select(e => e.Index).ToList()
+                winnerClaimantIndices: winnerClaimants.Select(w => (ulong)w.Index).ToList(),
+                winnerIndices: winnerParticipants.Select(e => (ulong)e.Index).ToList()
             );
         }
         else
@@ -164,13 +187,15 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
                 "Proposal {ProposalId} Verifier Selection Lottery: Not enough participants.\n" +
                 "Required: {RequiredNumVerifiers}.\n" +
                 "Joined: {JoinedNumVerifiers}.",
-                command.SettlementProposalId, numVerifiers, winnerClaimantIndices.Count + winnerEventsIndexed.Count
+                command.SettlementProposalId, numVerifiers, winnerClaimants.Count + winnerParticipants.Count
             );
 
             await _contractCaller.CloseThingAssessmentVerifierLotteryInFailure(
-                thingId, proposalId, winnerClaimantIndices.Count + winnerEventsIndexed.Count
+                thingId, proposalId, winnerClaimants.Count + winnerParticipants.Count
             );
         }
+
+        await _taskRepository.SetCompletedStateFor(command.TaskId);
 
         return VoidResult.Instance;
     }

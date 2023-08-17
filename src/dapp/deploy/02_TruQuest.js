@@ -32,7 +32,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     args: [
       truQuest.address,
       3 /* _numVerifiers */,
-      70 /* _verifierLotteryDurationBlocks */,
+      35 /* _verifierLotteryDurationBlocks */,
     ],
     log: true,
     waitConfirmations: 1,
@@ -42,7 +42,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     from: deployer,
     args: [
       truQuest.address,
-      70 /* _pollDurationBlocks */,
+      35 /* _pollDurationBlocks */,
       50 /* _votingVolumeThresholdPercent */,
       51 /* _majorityThresholdPercent */,
     ],
@@ -55,7 +55,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     args: [
       truQuest.address,
       3 /* _numVerifiers */,
-      70 /* _verifierLotteryDurationBlocks */,
+      35 /* _verifierLotteryDurationBlocks */,
     ],
     log: true,
     waitConfirmations: 1,
@@ -65,7 +65,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     from: deployer,
     args: [
       truQuest.address,
-      70 /* _pollDurationBlocks */,
+      35 /* _pollDurationBlocks */,
       50 /* _votingVolumeThresholdPercent */,
       51 /* _majorityThresholdPercent */,
     ],

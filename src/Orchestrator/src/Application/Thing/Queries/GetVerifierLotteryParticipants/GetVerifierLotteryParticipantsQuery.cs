@@ -41,33 +41,45 @@ internal class GetVerifierLotteryParticipantsQueryHandler :
         GetVerifierLotteryParticipantsQuery query, CancellationToken ct
     )
     {
-        var entries = await _thingQueryable.GetVerifierLotteryParticipants(query.ThingId);
-        var firstEntry = entries.FirstOrDefault();
-        if (firstEntry != null && _signer.CheckIsOrchestrator(firstEntry.UserId))
+        var participants = await _thingQueryable.GetVerifierLotteryParticipants(query.ThingId);
+        var latestParticipant = participants.FirstOrDefault();
+        if (latestParticipant != null && _signer.CheckIsOrchestrator(latestParticipant.UserId))
         {
             // means the lottery was closed with success
-            Debug.Assert(firstEntry.Nonce != null);
-            firstEntry.IsOrchestrator = true;
+            Debug.Assert(latestParticipant.Nonce != null && latestParticipant.UserData == null);
+            latestParticipant.MarkAsOrchestrator();
 
-            var verifiers = await _thingQueryable.GetVerifiers(query.ThingId);
-            Debug.Assert(verifiers.Any());
-            foreach (var verifier in verifiers)
+            var verifierIds = await _thingQueryable.GetVerifiers(query.ThingId);
+            Debug.Assert(verifierIds.Any());
+            foreach (var verifierId in verifierIds)
             {
-                var entry = entries.Single(e => e.UserId == verifier.VerifierId);
-                entry.IsWinner = true;
+                var entry = participants.Single(e => e.UserId == verifierId);
+                entry.MarkAsWinner();
+            }
+        }
+        else
+        {
+            // @@NOTE: There is a period when the lottery is closed (and therefore the nonces are set)
+            // but not yet finalized (verifiers are not yet added to the db, etc.). So we just clear
+            // nonces here since it would be confusing to already show nonces but not winners. 
+            var entry = participants.FirstOrDefault();
+            if (entry?.Nonce != null)
+            {
+                // if one entry's nonce is set then all entries' nonces are set since we set them in a txn
+                foreach (var e in participants) e.ClearSensitiveData();
             }
         }
 
-        entries = entries
+        participants = participants
             .OrderBy(e => e.SortKey)
-            .ThenByDescending(e => e.JoinedBlockNumber);
+            .ThenByDescending(e => e.BlockNumber);
 
         return new()
         {
             Data = new()
             {
                 ThingId = query.ThingId,
-                Entries = entries
+                Participants = participants
             }
         };
     }

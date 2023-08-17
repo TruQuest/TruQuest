@@ -91,41 +91,44 @@ internal class SettlementProposalQueryable : Queryable, ISettlementProposalQuery
         return proposal;
     }
 
-    public async Task<IEnumerable<VerifierLotteryParticipantEntryQm>> GetVerifierLotteryParticipants(
-        Guid proposalId
-    )
+    public async Task<(
+        IEnumerable<VerifierLotteryParticipantEntryQm>,
+        IEnumerable<VerifierLotteryParticipantEntryQm>
+    )> GetVerifierLotteryParticipants(Guid proposalId)
     {
         var dbConn = await _getOpenConnection();
-        var entries = await dbConn.QueryAsync<VerifierLotteryParticipantEntryQm>(
+        using var multiQuery = await dbConn.QueryMultipleAsync(
             @"
-                SELECT ""L1BlockNumber"" AS ""JoinedBlockNumber"", ""UserId"", ""UserData"", ""Nonce""
+                SELECT ""L1BlockNumber"", ""BlockNumber"", ""TxnHash"", ""UserId"", ""UserData"", ""Nonce""
                 FROM truquest_events.""JoinedThingAssessmentVerifierLotteryEvents""
-                WHERE ""SettlementProposalId"" = @SettlementProposalId
-                ORDER BY ""BlockNumber"" DESC, ""TxnIndex"" DESC
+                WHERE ""SettlementProposalId"" = @ProposalId
+                ORDER BY ""BlockNumber"" DESC, ""TxnIndex"" DESC;
+
+                SELECT ""L1BlockNumber"", ""BlockNumber"", ""TxnHash"", ""UserId"", ""UserData"", ""Nonce""
+                FROM truquest_events.""ThingAssessmentVerifierLotterySpotClaimedEvents""
+                WHERE ""SettlementProposalId"" = @ProposalId
+                ORDER BY ""BlockNumber"" DESC, ""TxnIndex"" DESC;
             ",
-            param: new
-            {
-                SettlementProposalId = proposalId
-            }
+            param: new { ProposalId = proposalId }
         );
 
-        return entries;
+        var participants = multiQuery.Read<VerifierLotteryParticipantEntryQm>();
+        var claimants = multiQuery.Read<VerifierLotteryParticipantEntryQm>();
+
+        return (participants, claimants);
     }
 
-    public async Task<IEnumerable<VerifierQm>> GetVerifiers(Guid proposalId)
+    public async Task<IEnumerable<string>> GetVerifiers(Guid proposalId)
     {
         var dbConn = await _getOpenConnection();
-        var verifiers = await dbConn.QueryAsync<VerifierQm>(
+        var verifiers = await dbConn.QueryAsync<string>(
             @"
-                SELECT v.""VerifierId"", u.""UserName""
+                SELECT v.""VerifierId""
                 FROM
                     truquest.""SettlementProposals"" AS p
                         INNER JOIN
                     truquest.""SettlementProposalVerifiers"" AS v
                         ON p.""Id"" = v.""SettlementProposalId""
-                        INNER JOIN
-                    truquest.""AspNetUsers"" AS u
-                        ON v.""VerifierId"" = u.""Id""
                 WHERE p.""Id"" = @ProposalId
             ",
             param: new { ProposalId = proposalId }

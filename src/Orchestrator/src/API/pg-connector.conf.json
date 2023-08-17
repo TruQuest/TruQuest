@@ -27,7 +27,7 @@
         "transforms.outbox.table.field.event.key": "ThingId",
         "transforms.outbox.table.field.event.payload": "Payload",
         "transforms.outbox.table.expand.json.payload": "true",
-        "transforms.outbox.table.fields.additional.placement": "BlockNumber:header,TxnIndex:header,Type:header",
+        "transforms.outbox.table.fields.additional.placement": "BlockNumber:header,TxnIndex:header,TxnHash:header,Type:header",
         "transforms.outbox.route.by.field": "ThingId",
         "transforms.outbox.route.topic.replacement": "thing.events",
         "transforms.flatten.type": "io.debezium.transforms.ExtractNewRecordState",

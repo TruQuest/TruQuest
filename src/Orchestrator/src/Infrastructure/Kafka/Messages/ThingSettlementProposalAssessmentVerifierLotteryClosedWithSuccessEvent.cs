@@ -3,6 +3,7 @@ using System.Text;
 using KafkaFlow;
 using KafkaFlow.TypedHandler;
 
+using Application;
 using Application.Settlement.Commands.PrepareForAssessmentPoll;
 
 namespace Infrastructure.Kafka.Messages;
@@ -27,6 +28,7 @@ internal class ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccess
 {
     private const string _blockNumberHeaderName = "BlockNumber";
     private const string _txnIndexHeaderName = "TxnIndex";
+    private const string _txnHashHeaderName = "TxnHash";
 
     private readonly SenderWrapper _sender;
 
@@ -46,6 +48,7 @@ internal class ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccess
             AssessmentPollInitTxnIndex = int.Parse(
                 Encoding.UTF8.GetString((byte[])context.Headers[_txnIndexHeaderName])
             ),
+            AssessmentPollInitTxnHash = Encoding.UTF8.GetString((byte[])context.Headers[_txnHashHeaderName]),
             ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
             SettlementProposalId = message.SettlementProposalId,
             Orchestrator = message.Orchestrator,

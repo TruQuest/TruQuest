@@ -3,6 +3,7 @@ using System.Text;
 using KafkaFlow;
 using KafkaFlow.TypedHandler;
 
+using Application;
 using Application.Thing.Commands.InitVerifierLottery;
 
 namespace Infrastructure.Kafka.Messages;

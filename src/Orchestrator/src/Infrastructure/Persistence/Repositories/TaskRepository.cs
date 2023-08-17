@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
+using Npgsql;
+using NpgsqlTypes;
+
 using Domain.Aggregates;
 using Application.Common.Interfaces;
 
@@ -19,13 +22,22 @@ internal class TaskRepository : Repository<DeferredTask>, ITaskRepository
         _dbContext = dbContext;
     }
 
-    public void Create(DeferredTask task)
-    {
-        _dbContext.Tasks.Add(task);
-    }
+    public void Create(DeferredTask task) => _dbContext.Tasks.Add(task);
 
-    public Task<List<DeferredTask>> FindAllWithScheduledBlockNumber(long leBlockNumber) =>
-        _dbContext.Tasks
-            .Where(t => t.ScheduledBlockNumber > 0 && t.ScheduledBlockNumber <= leBlockNumber)
-            .ToListAsync();
+    public async Task SetCompletedStateFor(long taskId)
+    {
+        var idParam = new NpgsqlParameter<long>("Id", NpgsqlDbType.Bigint)
+        {
+            TypedValue = taskId
+        };
+
+        await _dbContext.Database.ExecuteSqlRawAsync(
+            @"
+                UPDATE truquest.""Tasks""
+                SET ""ScheduledBlockNumber"" = -1
+                WHERE ""Id"" = @Id;
+            ",
+            idParam
+        );
+    }
 }

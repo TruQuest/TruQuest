@@ -18,11 +18,13 @@ internal class CloseAcceptancePollCommand : IRequest<VoidResult>
 {
     public required Guid ThingId { get; init; }
     public required long EndBlock { get; init; }
+    public required long TaskId { get; init; }
 }
 
 internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptancePollCommand, VoidResult>
 {
     private readonly ILogger<CloseAcceptancePollCommandHandler> _logger;
+    private readonly ITaskRepository _taskRepository;
     private readonly IL1BlockchainQueryable _l1BlockchainQueryable;
     private readonly IAcceptancePollVoteRepository _voteRepository;
     private readonly ICastedAcceptancePollVoteEventRepository _castedAcceptancePollVoteEventRepository;
@@ -32,6 +34,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
 
     public CloseAcceptancePollCommandHandler(
         ILogger<CloseAcceptancePollCommandHandler> logger,
+        ITaskRepository taskRepository,
         IL1BlockchainQueryable l1BlockchainQueryable,
         IAcceptancePollVoteRepository voteRepository,
         ICastedAcceptancePollVoteEventRepository castedAcceptancePollVoteEventRepository,
@@ -41,6 +44,7 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
     )
     {
         _logger = logger;
+        _taskRepository = taskRepository;
         _l1BlockchainQueryable = l1BlockchainQueryable;
         _voteRepository = voteRepository;
         _castedAcceptancePollVoteEventRepository = castedAcceptancePollVoteEventRepository;
@@ -244,6 +248,8 @@ internal class CloseAcceptancePollCommandHandler : IRequestHandler<CloseAcceptan
                 verifiersToSlashIndices: verifiersToSlashIndices
             );
         }
+
+        await _taskRepository.SetCompletedStateFor(command.TaskId);
 
         return VoidResult.Instance;
     }

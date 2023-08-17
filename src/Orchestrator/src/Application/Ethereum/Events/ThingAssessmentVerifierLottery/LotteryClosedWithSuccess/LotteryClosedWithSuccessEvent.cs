@@ -10,6 +10,7 @@ public class LotteryClosedWithSuccessEvent : INotification
 {
     public required long BlockNumber { get; init; }
     public required int TxnIndex { get; init; }
+    public required string TxnHash { get; init; }
     public required byte[] ThingId { get; init; }
     public required byte[] SettlementProposalId { get; init; }
     public required string Orchestrator { get; init; }
@@ -37,6 +38,7 @@ internal class LotteryClosedWithSuccessEventHandler : INotificationHandler<Lotte
         var lotteryClosedEvent = new ActionableThingRelatedEvent(
             blockNumber: @event.BlockNumber,
             txnIndex: @event.TxnIndex,
+            txnHash: @event.TxnHash,
             thingId: new Guid(@event.ThingId),
             type: ThingEventType.SettlementProposalAssessmentVerifierLotteryClosedWithSuccess
         );

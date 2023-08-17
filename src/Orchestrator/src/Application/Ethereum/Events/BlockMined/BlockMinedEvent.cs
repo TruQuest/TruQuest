@@ -7,6 +7,7 @@ using Domain.Aggregates;
 using Application.Thing.Commands.CloseAcceptancePoll;
 using Application.Settlement.Commands.CloseAssessmentPoll;
 using Application.Common.Misc;
+using Application.Common.Interfaces;
 
 namespace Application.Ethereum.Events.BlockMined;
 
@@ -17,62 +18,62 @@ public class BlockMinedEvent : INotification
 
 internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
 {
-    private readonly ISender _mediator;
-    private readonly ITaskRepository _taskRepository;
+    private readonly SenderWrapper _sender;
+    private readonly ITaskQueryable _taskQueryable;
 
-    public BlockMinedEventHandler(ISender mediator, ITaskRepository taskRepository)
+    public BlockMinedEventHandler(SenderWrapper sender, ITaskQueryable taskQueryable)
     {
-        _mediator = mediator;
-        _taskRepository = taskRepository;
+        _sender = sender;
+        _taskQueryable = taskQueryable;
     }
 
     public async Task Handle(BlockMinedEvent @event, CancellationToken ct)
     {
-        // @@??: Transaction should encapsulate task as well?
-        var tasks = await _taskRepository.FindAllWithScheduledBlockNumber(leBlockNumber: @event.BlockNumber);
+        var tasks = await _taskQueryable.GetAllWithScheduledBlockNumber(leBlockNumber: @event.BlockNumber);
+        // @@TODO??: Handle tasks in parallel ?
         foreach (var task in tasks)
         {
             switch (task.Type)
             {
                 case TaskType.CloseThingSubmissionVerifierLottery:
-                    await _mediator.Send(new Thing.Commands.CloseVerifierLottery.CloseVerifierLotteryCommand
+                    await _sender.Send(new Thing.Commands.CloseVerifierLottery.CloseVerifierLotteryCommand
                     {
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),
                         Data = ((JsonElement)task.Payload["data"]).GetString()!.HexToByteArray(),
                         UserXorData = ((JsonElement)task.Payload["userXorData"]).GetString()!.HexToByteArray(),
-                        EndBlock = task.ScheduledBlockNumber - 1
+                        EndBlock = task.ScheduledBlockNumber - 1,
+                        TaskId = task.Id!.Value
                     });
                     break;
                 case TaskType.CloseThingAcceptancePoll:
-                    await _mediator.Send(new CloseAcceptancePollCommand
+                    await _sender.Send(new CloseAcceptancePollCommand
                     {
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),
-                        EndBlock = task.ScheduledBlockNumber - 1
+                        EndBlock = task.ScheduledBlockNumber - 1,
+                        TaskId = task.Id!.Value
                     });
                     break;
                 case TaskType.CloseThingAssessmentVerifierLottery:
-                    await _mediator.Send(new Settlement.Commands.CloseVerifierLottery.CloseVerifierLotteryCommand
+                    await _sender.Send(new Settlement.Commands.CloseVerifierLottery.CloseVerifierLotteryCommand
                     {
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),
                         SettlementProposalId = Guid.Parse(((JsonElement)task.Payload["settlementProposalId"]).GetString()!),
                         Data = ((JsonElement)task.Payload["data"]).GetString()!.HexToByteArray(),
                         UserXorData = ((JsonElement)task.Payload["userXorData"]).GetString()!.HexToByteArray(),
-                        EndBlock = task.ScheduledBlockNumber - 1
+                        EndBlock = task.ScheduledBlockNumber - 1,
+                        TaskId = task.Id!.Value
                     });
                     break;
                 case TaskType.CloseThingSettlementProposalAssessmentPoll:
-                    await _mediator.Send(new CloseAssessmentPollCommand
+                    await _sender.Send(new CloseAssessmentPollCommand
                     {
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),
                         SettlementProposalId = Guid.Parse(((JsonElement)task.Payload["settlementProposalId"]).GetString()!),
-                        EndBlock = task.ScheduledBlockNumber - 1
+                        EndBlock = task.ScheduledBlockNumber - 1,
+                        TaskId = task.Id!.Value
                     });
                     break;
             }
-
-            task.SetCompleted();
         }
-
-        await _taskRepository.SaveChanges();
     }
 }

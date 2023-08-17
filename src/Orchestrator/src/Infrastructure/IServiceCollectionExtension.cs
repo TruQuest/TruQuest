@@ -197,10 +197,10 @@ public static class IServiceCollectionExtension
         services.AddScoped<IThingAssessmentPollVoteQueryable, ThingAssessmentPollVoteQueryable>();
         services.AddScoped<ISettlementProposalQueryable, SettlementProposalQueryable>();
         services.AddScoped<IWatchListQueryable, WatchListQueryable>();
+        services.AddScoped<ITaskQueryable, TaskQueryable>();
 
         services.AddSingleton<IContractEventListener, ContractEventListener>();
         services.AddScoped<PublisherWrapper>();
-        services.AddSingleton<SenderWrapper>();
 
         services.AddSingleton<AccountProvider>();
         services.AddSingleton<IContractCaller, ContractCaller>();

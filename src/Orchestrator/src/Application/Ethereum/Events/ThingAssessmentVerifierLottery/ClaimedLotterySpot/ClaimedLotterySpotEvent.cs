@@ -2,12 +2,15 @@ using MediatR;
 
 using Domain.Aggregates.Events;
 
+using Application.Common.Interfaces;
+
 namespace Application.Ethereum.Events.ThingAssessmentVerifierLottery.ClaimedLotterySpot;
 
 public class ClaimedLotterySpotEvent : INotification
 {
     public required long BlockNumber { get; init; }
     public required int TxnIndex { get; init; }
+    public required string TxnHash { get; init; }
     public required byte[] ThingId { get; init; }
     public required byte[] SettlementProposalId { get; init; }
     public required string UserId { get; init; }
@@ -16,24 +19,33 @@ public class ClaimedLotterySpotEvent : INotification
 
 internal class ClaimedLotterySpotEventHandler : INotificationHandler<ClaimedLotterySpotEvent>
 {
+    private readonly IThingSubmissionVerifierLotteryEventQueryable _thingLotteryEventQueryable;
     private readonly IThingAssessmentVerifierLotterySpotClaimedEventRepository _thingAssessmentVerifierLotterySpotClaimedEventRepository;
 
     public ClaimedLotterySpotEventHandler(
+        IThingSubmissionVerifierLotteryEventQueryable thingLotteryEventQueryable,
         IThingAssessmentVerifierLotterySpotClaimedEventRepository thingAssessmentVerifierLotterySpotClaimedEventRepository
     )
     {
+        _thingLotteryEventQueryable = thingLotteryEventQueryable;
         _thingAssessmentVerifierLotterySpotClaimedEventRepository = thingAssessmentVerifierLotterySpotClaimedEventRepository;
     }
 
     public async Task Handle(ClaimedLotterySpotEvent @event, CancellationToken ct)
     {
+        // @@TODO??: Could use trigger for this instead.
+        var thingId = new Guid(@event.ThingId);
+        var joinedEvent = await _thingLotteryEventQueryable.GetJoinedEventFor(thingId, @event.UserId);
+
         var spotClaimedEvent = new ThingAssessmentVerifierLotterySpotClaimedEvent(
             blockNumber: @event.BlockNumber,
             txnIndex: @event.TxnIndex,
-            thingId: new Guid(@event.ThingId),
+            txnHash: @event.TxnHash,
+            thingId: thingId,
             settlementProposalId: new Guid(@event.SettlementProposalId),
             userId: @event.UserId,
-            @event.L1BlockNumber
+            l1BlockNumber: @event.L1BlockNumber,
+            userData: joinedEvent.UserData!
         );
         _thingAssessmentVerifierLotterySpotClaimedEventRepository.Create(spotClaimedEvent);
 

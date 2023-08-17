@@ -18,11 +18,13 @@ internal class CloseAssessmentPollCommand : IRequest<VoidResult>
     public required Guid ThingId { get; init; }
     public required Guid SettlementProposalId { get; init; }
     public required long EndBlock { get; init; }
+    public required long TaskId { get; init; }
 }
 
 internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessmentPollCommand, VoidResult>
 {
     private readonly ILogger<CloseAssessmentPollCommandHandler> _logger;
+    private readonly ITaskRepository _taskRepository;
     private readonly IL1BlockchainQueryable _blockchainQueryable;
     private readonly IAssessmentPollVoteRepository _voteRepository;
     private readonly ICastedAssessmentPollVoteEventRepository _castedAssessmentPollVoteEventRepository;
@@ -32,6 +34,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
 
     public CloseAssessmentPollCommandHandler(
         ILogger<CloseAssessmentPollCommandHandler> logger,
+        ITaskRepository taskRepository,
         IL1BlockchainQueryable blockchainQueryable,
         IAssessmentPollVoteRepository voteRepository,
         ICastedAssessmentPollVoteEventRepository castedAssessmentPollVoteEventRepository,
@@ -41,6 +44,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
     )
     {
         _logger = logger;
+        _taskRepository = taskRepository;
         _blockchainQueryable = blockchainQueryable;
         _voteRepository = voteRepository;
         _castedAssessmentPollVoteEventRepository = castedAssessmentPollVoteEventRepository;
@@ -248,6 +252,8 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
                 verifiersToSlashIndices: verifiersToSlashIndices
             );
         }
+
+        await _taskRepository.SetCompletedStateFor(command.TaskId);
 
         return VoidResult.Instance;
     }

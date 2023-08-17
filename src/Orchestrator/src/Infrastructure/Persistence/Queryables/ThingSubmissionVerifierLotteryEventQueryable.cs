@@ -14,13 +14,10 @@ internal class ThingSubmissionVerifierLotteryEventQueryable : Queryable, IThingS
         _dbContext = dbContext;
     }
 
-    public Task<List<JoinedThingSubmissionVerifierLotteryEvent>> GetJoinedEventsFor(
-        Guid thingId, IEnumerable<string> userIds
-    )
-    {
-        return _dbContext.JoinedThingSubmissionVerifierLotteryEvents
+    public Task<JoinedThingSubmissionVerifierLotteryEvent> GetJoinedEventFor(
+        Guid thingId, string userId
+    ) => _dbContext.JoinedThingSubmissionVerifierLotteryEvents
             .AsNoTracking()
-            .Where(e => e.ThingId == thingId && userIds.Contains(e.UserId))
-            .ToListAsync();
-    }
+            .Where(e => e.ThingId == thingId && e.UserId == userId)
+            .SingleAsync();
 }

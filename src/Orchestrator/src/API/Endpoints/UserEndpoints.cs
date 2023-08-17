@@ -1,9 +1,9 @@
+using Application;
 using Application.User.Commands.MarkNotificationsAsRead;
 using Application.User.Commands.SignInWithEthereum;
 using Application.User.Queries.GetNonceForSiwe;
 using Application.User.Commands.AddEmail;
 using Application.User.Commands.ConfirmEmail;
-using Infrastructure;
 
 namespace API.Endpoints;
 

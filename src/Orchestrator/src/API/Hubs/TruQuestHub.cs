@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.SignalR;
 
 using Domain.Results;
+using Application;
 using Application.User.Queries.GetWatchListUpdates;
 using Application.User.Commands.SubscribeToUpdates;
 using Application.User.Commands.UnsubscribeFromUpdates;
 using Application.User.Commands.UnsubThenSubToUpdates;
-using Infrastructure;
 
 using API.Hubs.Clients;
 

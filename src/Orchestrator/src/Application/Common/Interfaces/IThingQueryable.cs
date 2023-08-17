@@ -14,5 +14,5 @@ public interface IThingQueryable
         Guid thingId
     );
 
-    Task<IEnumerable<VerifierQm>> GetVerifiers(Guid thingId);
+    Task<IEnumerable<string>> GetVerifiers(Guid thingId);
 }

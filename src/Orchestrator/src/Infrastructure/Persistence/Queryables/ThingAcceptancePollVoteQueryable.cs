@@ -11,7 +11,7 @@ internal class ThingAcceptancePollVoteQueryable : Queryable, IThingAcceptancePol
 {
     public ThingAcceptancePollVoteQueryable(IConfiguration configuration) : base(configuration) { }
 
-    public async Task<(string?, IEnumerable<Vote2Qm>)> GetAllFor(Guid thingId, string? userId)
+    public async Task<(string?, IEnumerable<VoteQm>)> GetAllFor(Guid thingId, string? userId)
     {
         var dbConn = await _getOpenConnection();
         using var multiQuery = await dbConn.QueryMultipleAsync(
@@ -68,14 +68,14 @@ internal class ThingAcceptancePollVoteQueryable : Queryable, IThingAcceptancePol
         );
 
         var voteAggIpfsCid = multiQuery.ReadSingleOrDefault<string?>();
-        var votes = multiQuery.Read<Vote2Qm>();
+        var votes = multiQuery.Read<VoteQm>();
 
         if (voteAggIpfsCid == null)
         {
             // If poll is not yet finalized do not show votes other than the user's own one.
             foreach (var vote in votes)
             {
-                if (vote.UserId != userId) vote.ClearSensitiveInfo();
+                if (vote.UserId != userId) vote.ClearSensitiveData();
             }
         }
 

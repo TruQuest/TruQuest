@@ -8,8 +8,9 @@ public interface ISettlementProposalQueryable
 {
     Task<List<SettlementProposalPreviewQm>> GetForThing(Guid thingId, string? userId);
     Task<SettlementProposalQm?> GetById(Guid id, string? userId);
-    Task<IEnumerable<VerifierLotteryParticipantEntryQm>> GetVerifierLotteryParticipants(
-        Guid proposalId
-    );
-    Task<IEnumerable<VerifierQm>> GetVerifiers(Guid proposalId);
+    Task<(
+        IEnumerable<VerifierLotteryParticipantEntryQm>,
+        IEnumerable<VerifierLotteryParticipantEntryQm>
+    )> GetVerifierLotteryParticipants(Guid proposalId);
+    Task<IEnumerable<string>> GetVerifiers(Guid proposalId);
 }
