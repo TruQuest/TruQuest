@@ -58,6 +58,7 @@ public class Sut : IAsyncLifetime
         var appBuilder = API.Program.CreateWebApplicationBuilder(new string[] { });
         appBuilder.Configuration.AddJsonFile("appsettings.Testing.json", optional: false);
         appBuilder.ConfigureServices();
+
         ApplicationEventSink = new ApplicationEventSink();
         appBuilder.Services.AddSingleton<IAdditionalApplicationEventSink>(ApplicationEventSink);
         ApplicationRequestSink = new ApplicationRequestSink();

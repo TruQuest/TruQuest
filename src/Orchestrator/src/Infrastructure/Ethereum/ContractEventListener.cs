@@ -153,6 +153,7 @@ internal class ContractEventListener : IContractEventListener
                     BlockNumber = (long)thingSubmissionVerifierLotteryInitializedEvent.Log.BlockNumber.Value,
                     TxnIndex = (int)thingSubmissionVerifierLotteryInitializedEvent.Log.TransactionIndex.Value,
                     TxnHash = thingSubmissionVerifierLotteryInitializedEvent.Log.TransactionHash,
+                    L1BlockNumber = (long)thingSubmissionVerifierLotteryInitializedEvent.Event.L1BlockNumber,
                     ThingId = thingSubmissionVerifierLotteryInitializedEvent.Event.ThingId,
                     DataHash = thingSubmissionVerifierLotteryInitializedEvent.Event.DataHash,
                     UserXorDataHash = thingSubmissionVerifierLotteryInitializedEvent.Event.UserXorDataHash

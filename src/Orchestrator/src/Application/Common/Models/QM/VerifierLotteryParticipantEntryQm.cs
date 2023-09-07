@@ -4,19 +4,17 @@ namespace Application.Common.Models.QM;
 
 public class VerifierLotteryParticipantEntryQm
 {
-    public long L1BlockNumber { get; }
-    public long BlockNumber { get; }
+    public required long L1BlockNumber { get; init; }
     public required string TxnHash { get; init; }
     public required string UserId { get; init; }
-    public string? UserData { get; }
-    public long? Nonce { get; private set; }
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public bool? IsOrchestrator { get; private set; }
+    public required string UserData { get; init; }
+    public required long? Nonce { get; init; }
+
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public bool? IsWinner { get; private set; }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public int SortKey => IsOrchestrator != null ? 0 : IsWinner != null ? 1 : 2;
+    public int SortKey => IsWinner != null ? 0 : 1;
 
     public override bool Equals(object? obj)
     {
@@ -27,12 +25,5 @@ public class VerifierLotteryParticipantEntryQm
 
     public override int GetHashCode() => UserId.GetHashCode();
 
-    public void MarkAsOrchestrator() => IsOrchestrator = true;
-
     public void MarkAsWinner() => IsWinner = true;
-
-    public void ClearSensitiveData()
-    {
-        Nonce = null;
-    }
 }

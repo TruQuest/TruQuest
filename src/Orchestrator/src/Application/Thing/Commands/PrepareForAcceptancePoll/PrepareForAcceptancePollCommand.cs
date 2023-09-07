@@ -4,7 +4,6 @@ using MediatR;
 
 using Domain.Results;
 using Domain.Aggregates;
-using Domain.Aggregates.Events;
 
 using Application.Common.Interfaces;
 using Application.Common.Attributes;
@@ -30,7 +29,6 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
 {
     private readonly IThingRepository _thingRepository;
     private readonly ITaskRepository _taskRepository;
-    private readonly IJoinedThingSubmissionVerifierLotteryEventRepository _joinedThingSubmissionVerifierLotteryEventRepository;
     private readonly IThingUpdateRepository _thingUpdateRepository;
     private readonly IWatchedItemRepository _watchedItemRepository;
     private readonly IContractCaller _contractCaller;
@@ -38,7 +36,6 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
     public PrepareForAcceptancePollCommandHandler(
         IThingRepository thingRepository,
         ITaskRepository taskRepository,
-        IJoinedThingSubmissionVerifierLotteryEventRepository joinedThingSubmissionVerifierLotteryEventRepository,
         IThingUpdateRepository thingUpdateRepository,
         IWatchedItemRepository watchedItemRepository,
         IContractCaller contractCaller
@@ -46,7 +43,6 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
     {
         _thingRepository = thingRepository;
         _taskRepository = taskRepository;
-        _joinedThingSubmissionVerifierLotteryEventRepository = joinedThingSubmissionVerifierLotteryEventRepository;
         _thingUpdateRepository = thingUpdateRepository;
         _watchedItemRepository = watchedItemRepository;
         _contractCaller = contractCaller;
@@ -75,17 +71,6 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
                 ["thingId"] = thing.Id
             });
             _taskRepository.Create(task);
-
-            var joinedThingSubmissionVerifierLotteryEvent = new JoinedThingSubmissionVerifierLotteryEvent(
-                blockNumber: command.AcceptancePollInitBlockNumber,
-                txnIndex: command.AcceptancePollInitTxnIndex,
-                txnHash: command.AcceptancePollInitTxnHash,
-                thingId: command.ThingId,
-                userId: command.Orchestrator,
-                l1BlockNumber: -lotteryInitBlock,
-                nonce: command.Nonce
-            );
-            _joinedThingSubmissionVerifierLotteryEventRepository.Create(joinedThingSubmissionVerifierLotteryEvent);
 
             var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
@@ -120,7 +105,6 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
 
             await _thingRepository.SaveChanges();
             await _taskRepository.SaveChanges();
-            await _joinedThingSubmissionVerifierLotteryEventRepository.SaveChanges();
             await _watchedItemRepository.SaveChanges();
             await _thingUpdateRepository.SaveChanges();
         }

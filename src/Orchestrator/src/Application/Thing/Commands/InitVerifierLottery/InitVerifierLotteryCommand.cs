@@ -44,9 +44,8 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
 
     public async Task<VoidResult> Handle(InitVerifierLotteryCommand command, CancellationToken ct)
     {
-        // @@TODO: Do not retrieve the whole thing from the db since we only update the state.
-        var thing = await _thingRepository.FindById(command.ThingId);
-        if (thing.State == ThingState.AwaitingFunding)
+        var state = await _thingRepository.GetStateFor(command.ThingId);
+        if (state == ThingState.AwaitingFunding)
         {
             var data = RandomNumberGenerator.GetBytes(32);
             var userXorData = RandomNumberGenerator.GetBytes(32);
@@ -55,10 +54,10 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
             var userXorDataHash = await _contractCaller.ComputeHashForThingSubmissionVerifierLottery(userXorData);
 
             long lotteryInitBlockNumber = await _contractCaller.InitThingSubmissionVerifierLottery(
-                thing.Id.ToByteArray(), dataHash, userXorDataHash
+                command.ThingId.ToByteArray(), dataHash, userXorDataHash
             );
 
-            _logger.LogInformation("Thing {ThingId} Lottery Init Block: {BlockNum}", thing.Id, lotteryInitBlockNumber);
+            _logger.LogInformation("Thing {ThingId} Lottery Init Block: {BlockNum}", command.ThingId, lotteryInitBlockNumber);
 
             int lotteryDurationBlocks = await _contractCaller.GetThingSubmissionVerifierLotteryDurationBlocks();
 
@@ -68,17 +67,17 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
             );
             task.SetPayload(new()
             {
-                ["thingId"] = thing.Id!,
+                ["thingId"] = command.ThingId,
                 ["data"] = data.ToHex(prefix: true),
                 ["userXorData"] = userXorData.ToHex(prefix: true)
             });
 
             _taskRepository.Create(task);
 
-            thing.SetState(ThingState.FundedAndVerifierLotteryInitiated);
+            await _thingRepository.UpdateStateFor(command.ThingId, ThingState.FundedAndVerifierLotteryInitiated);
 
             await _thingUpdateRepository.AddOrUpdate(new ThingUpdate(
-                thingId: thing.Id,
+                thingId: command.ThingId,
                 category: ThingUpdateCategory.General,
                 updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 title: "Promise funded",

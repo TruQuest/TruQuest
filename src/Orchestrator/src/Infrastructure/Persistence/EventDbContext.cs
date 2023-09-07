@@ -8,6 +8,8 @@ namespace Infrastructure.Persistence;
 public class EventDbContext : DbContext
 {
     public DbSet<ActionableThingRelatedEvent> ActionableThingRelatedEvents { get; set; }
+
+    public DbSet<ThingSubmissionVerifierLotteryInitializedEvent> ThingSubmissionVerifierLotteryInitializedEvents { get; set; }
     public DbSet<JoinedThingSubmissionVerifierLotteryEvent> JoinedThingSubmissionVerifierLotteryEvents { get; set; }
     public DbSet<CastedAcceptancePollVoteEvent> CastedAcceptancePollVoteEvents { get; set; }
 
@@ -41,6 +43,21 @@ public class EventDbContext : DbContext
             builder.HasIndex(e => e.TxnHash).IsUnique();
         });
 
+        modelBuilder.Entity<ThingSubmissionVerifierLotteryInitializedEvent>(builder =>
+        {
+            builder.HasKey(e => e.Id);
+            builder.Property(e => e.Id).UseIdentityAlwaysColumn();
+            builder.Property(e => e.BlockNumber).IsRequired();
+            builder.Property(e => e.TxnIndex).IsRequired();
+            builder.Property(e => e.TxnHash).IsRequired();
+            builder.Property(e => e.L1BlockNumber).IsRequired();
+            builder.Property(e => e.ThingId).IsRequired();
+            builder.Property(e => e.DataHash).IsRequired();
+            builder.Property(e => e.UserXorDataHash).IsRequired();
+
+            builder.HasIndex(e => e.TxnHash).IsUnique();
+        });
+
         modelBuilder.Entity<JoinedThingSubmissionVerifierLotteryEvent>(builder =>
         {
             builder.HasKey(e => e.Id);
@@ -51,9 +68,10 @@ public class EventDbContext : DbContext
             builder.Property(e => e.ThingId).IsRequired();
             builder.Property(e => e.UserId).IsRequired();
             builder.Property(e => e.L1BlockNumber).IsRequired();
-            builder.Property(e => e.UserData).IsRequired(false);
+            builder.Property(e => e.UserData).IsRequired();
             builder.Property(e => e.Nonce).IsRequired(false);
 
+            // @@BUG: Multiple users can join in the same txn (thanks to AA).
             builder.HasIndex(e => e.TxnHash).IsUnique();
         });
 

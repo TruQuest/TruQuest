@@ -27,6 +27,30 @@ internal class ThingRepository : Repository, IThingRepository
 
     public Task<Thing> FindById(Guid id) => _dbContext.Things.SingleAsync(t => t.Id == id);
 
+    public Task<ThingState> GetStateFor(Guid thingId) =>
+        _dbContext.Things.Where(t => t.Id == thingId).Select(t => t.State).SingleAsync();
+
+    public async Task UpdateStateFor(Guid thingId, ThingState state)
+    {
+        var thingIdParam = new NpgsqlParameter<Guid>("ThingId", NpgsqlDbType.Uuid)
+        {
+            TypedValue = thingId
+        };
+        var stateParam = new NpgsqlParameter<int>("State", NpgsqlDbType.Integer)
+        {
+            TypedValue = (int)state
+        };
+
+        await _dbContext.Database.ExecuteSqlRawAsync(
+            @"
+                UPDATE truquest.""Things""
+                SET ""State"" = @State
+                WHERE ""Id"" = @ThingId;
+            ",
+            thingIdParam, stateParam
+        );
+    }
+
     public async Task<bool> CheckIsDesignatedVerifierFor(Guid thingId, string userId)
     {
         var thing = await _dbContext.Things

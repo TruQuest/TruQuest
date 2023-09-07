@@ -110,19 +110,6 @@ internal class ThingQueryable : Queryable, IThingQueryable
         return thing;
     }
 
-    public async Task<ThingState> GetStateFor(Guid thingId)
-    {
-        var dbConn = await _getOpenConnection();
-        return await dbConn.QuerySingleAsync<ThingState>(
-            @"
-                SELECT ""State""
-                FROM truquest.""Things""
-                WHERE ""ThingId"" = @ThingId;
-            ",
-            param: new { ThingId = thingId }
-        );
-    }
-
     public async Task<IEnumerable<VerifierLotteryParticipantEntryQm>> GetVerifierLotteryParticipants(Guid thingId)
     {
         var dbConn = await _getOpenConnection();

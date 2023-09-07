@@ -103,18 +103,21 @@ public class UserOperationService
         _logger.LogInformation($"UserOp Hash: {userOpHash}");
 
         GetUserOperationReceiptVm? receipt;
+        // @@HACK: For some reason etherspot/skandha bundler sometimes doesn't return a receipt
+        // even when an operation is successful.
+        attempts = 10;
         do
         {
             await Task.Delay(2000);
             receipt = await _bundlerApi.GetUserOperationReceipt(userOpHash!);
-        } while (receipt == null || receipt.Receipt.Confirmations < confirmations);
+        } while ((receipt == null || receipt.Receipt.Confirmations < confirmations) && --attempts > 0);
 
         _logger.LogInformation($"Receipt:\n{receipt}");
 
-        if (!receipt.Success)
+        if (receipt == null || !receipt.Success)
         {
-            _logger.LogWarning($"UserOp Execution Failed. Reason: {receipt.Reason ?? "Unspecified"}");
-            return new UserOperationError(receipt.Reason);
+            _logger.LogWarning($"UserOp Execution Failed (?). Reason: {(receipt != null ? (receipt.Reason ?? "Unspecified") : "No receipt")}");
+            return new UserOperationError(receipt != null ? receipt.Reason : "No receipt");
         }
 
         return null;

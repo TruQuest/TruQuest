@@ -180,13 +180,15 @@ public static class IServiceCollectionExtension
 
         services.AddSingleton<IBlockProgressRepository, BlockProgressRepository>();
         services.AddScoped<IActionableThingRelatedEventRepository, ActionableThingRelatedEventRepository>();
+        services.AddScoped<IThingSubmissionVerifierLotteryInitializedEventRepository, ThingSubmissionVerifierLotteryInitializedEventRepository>();
         services.AddScoped<IJoinedThingSubmissionVerifierLotteryEventRepository, JoinedThingSubmissionVerifierLotteryEventRepository>();
         services.AddScoped<ICastedAcceptancePollVoteEventRepository, CastedAcceptancePollVoteEventRepository>();
         services.AddScoped<IJoinedThingAssessmentVerifierLotteryEventRepository, JoinedThingAssessmentVerifierLotteryEventRepository>();
         services.AddScoped<IThingAssessmentVerifierLotterySpotClaimedEventRepository, ThingAssessmentVerifierLotterySpotClaimedEventRepository>();
         services.AddScoped<ICastedAssessmentPollVoteEventRepository, CastedAssessmentPollVoteEventRepository>();
 
-        SqlMapper.AddTypeHandler(new JsonTypeHandler());
+        SqlMapper.AddTypeHandler(new DictionaryStringToStringTypeHandler());
+        SqlMapper.AddTypeHandler(new DictionaryStringToObjectTypeHandler());
 
         services.AddScoped<ITagQueryable, TagQueryable>();
         services.AddScoped<ISubjectQueryable, SubjectQueryable>();
