@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 
 using Npgsql;
@@ -9,15 +8,14 @@ using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories;
 
-internal class SubjectRepository : Repository<Subject>, ISubjectRepository
+internal class SubjectRepository : Repository, ISubjectRepository
 {
-    private readonly AppDbContext _dbContext;
+    private new readonly AppDbContext _dbContext;
 
     public SubjectRepository(
-        IConfiguration configuration,
         AppDbContext dbContext,
         ISharedTxnScope sharedTxnScope
-    ) : base(configuration, dbContext, sharedTxnScope)
+    ) : base(dbContext, sharedTxnScope)
     {
         _dbContext = dbContext;
     }

@@ -8,9 +8,12 @@ namespace Infrastructure.Persistence.Queryables;
 internal class SettlementProposalAssessmentVerifierLotteryEventQueryable :
     Queryable, ISettlementProposalAssessmentVerifierLotteryEventQueryable
 {
-    private readonly EventDbContext _dbContext;
+    private new readonly EventDbContext _dbContext;
 
-    public SettlementProposalAssessmentVerifierLotteryEventQueryable(EventDbContext dbContext) : base(dbContext)
+    public SettlementProposalAssessmentVerifierLotteryEventQueryable(
+        EventDbContext dbContext,
+        ISharedTxnScope sharedTxnScope
+    ) : base(dbContext, sharedTxnScope)
     {
         _dbContext = dbContext;
     }

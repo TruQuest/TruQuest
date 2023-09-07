@@ -1,51 +1,33 @@
 using System.Data;
+using System.Data.Common;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
-using Npgsql;
+using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Queryables;
 
-public abstract class Queryable : IDisposable
+internal abstract class Queryable
 {
-    private readonly string? _dbConnectionString;
-    private NpgsqlConnection? _dbConnection;
+    protected readonly DbContext _dbContext;
 
-    private readonly DbContext? _dbContext;
-
-    protected Queryable(IConfiguration configuration)
-    {
-        _dbConnectionString = configuration.GetConnectionString("Postgres")!;
-    }
-
-    protected Queryable(DbContext dbContext)
+    protected Queryable(DbContext dbContext, ISharedTxnScope sharedTxnScope)
     {
         _dbContext = dbContext;
+        if (sharedTxnScope.DbConnection != null)
+        {
+            _dbContext.Database.SetDbConnection(sharedTxnScope.DbConnection);
+        }
     }
 
-    public void Dispose() => _dbConnection?.Dispose();
-
-    protected async ValueTask<NpgsqlConnection> _getOpenConnection()
+    protected async ValueTask<DbConnection> _getOpenConnection()
     {
-        if (_dbContext != null)
+        var dbConn = _dbContext.Database.GetDbConnection();
+        if (dbConn.State != ConnectionState.Open)
         {
-            var dbConn = _dbContext.Database.GetDbConnection();
-            if (dbConn.State != ConnectionState.Open)
-            {
-                await _dbContext.Database.OpenConnectionAsync();
-            }
-            return (NpgsqlConnection)dbConn;
-        }
-        if (_dbConnection == null)
-        {
-            _dbConnection = new NpgsqlConnection(_dbConnectionString);
-        }
-        if (_dbConnection.State != ConnectionState.Open)
-        {
-            await _dbConnection.OpenAsync();
+            await _dbContext.Database.OpenConnectionAsync();
         }
 
-        return _dbConnection;
+        return dbConn;
     }
 }

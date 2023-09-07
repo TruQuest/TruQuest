@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 
 using Npgsql;
@@ -9,15 +8,14 @@ using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories;
 
-internal class WatchedItemRepository : Repository<WatchedItem>, IWatchedItemRepository
+internal class WatchedItemRepository : Repository, IWatchedItemRepository
 {
-    private readonly AppDbContext _dbContext;
+    private new readonly AppDbContext _dbContext;
 
     public WatchedItemRepository(
-        IConfiguration configuration,
         AppDbContext dbContext,
         ISharedTxnScope sharedTxnScope
-    ) : base(configuration, dbContext, sharedTxnScope)
+    ) : base(dbContext, sharedTxnScope)
     {
         _dbContext = dbContext;
     }

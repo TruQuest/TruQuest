@@ -1,21 +1,18 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 using Domain.Aggregates.Events;
 using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories.Events;
 
-internal class CastedAssessmentPollVoteEventRepository :
-    Repository<CastedAssessmentPollVoteEvent>, ICastedAssessmentPollVoteEventRepository
+internal class CastedAssessmentPollVoteEventRepository : Repository, ICastedAssessmentPollVoteEventRepository
 {
-    private readonly EventDbContext _dbContext;
+    private new readonly EventDbContext _dbContext;
 
     public CastedAssessmentPollVoteEventRepository(
-        IConfiguration configuration,
         EventDbContext dbContext,
         ISharedTxnScope sharedTxnScope
-    ) : base(configuration, dbContext, sharedTxnScope)
+    ) : base(dbContext, sharedTxnScope)
     {
         _dbContext = dbContext;
     }

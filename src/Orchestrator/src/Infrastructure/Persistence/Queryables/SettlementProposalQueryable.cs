@@ -12,9 +12,12 @@ namespace Infrastructure.Persistence.Queryables;
 
 internal class SettlementProposalQueryable : Queryable, ISettlementProposalQueryable
 {
-    private readonly AppDbContext _dbContext;
+    private new readonly AppDbContext _dbContext;
 
-    public SettlementProposalQueryable(AppDbContext dbContext) : base(dbContext)
+    public SettlementProposalQueryable(
+        AppDbContext dbContext,
+        ISharedTxnScope sharedTxnScope
+    ) : base(dbContext, sharedTxnScope)
     {
         _dbContext = dbContext;
     }

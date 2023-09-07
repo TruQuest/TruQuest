@@ -1,20 +1,18 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 using Domain.Aggregates;
 using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories;
 
-internal class AssessmentPollVoteRepository : Repository<AssessmentPollVote>, IAssessmentPollVoteRepository
+internal class AssessmentPollVoteRepository : Repository, IAssessmentPollVoteRepository
 {
-    private readonly AppDbContext _dbContext;
+    private new readonly AppDbContext _dbContext;
 
     public AssessmentPollVoteRepository(
-        IConfiguration configuration,
         AppDbContext dbContext,
         ISharedTxnScope sharedTxnScope
-    ) : base(configuration, dbContext, sharedTxnScope)
+    ) : base(dbContext, sharedTxnScope)
     {
         _dbContext = dbContext;
     }

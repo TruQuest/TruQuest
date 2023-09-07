@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Configuration;
-
 using Dapper;
 
 using Domain.Aggregates;
@@ -12,7 +10,10 @@ namespace Infrastructure.Persistence.Queryables;
 
 internal class ThingQueryable : Queryable, IThingQueryable
 {
-    public ThingQueryable(IConfiguration configuration) : base(configuration) { }
+    public ThingQueryable(
+        AppDbContext dbContext,
+        ISharedTxnScope sharedTxnScope
+    ) : base(dbContext, sharedTxnScope) { }
 
     public async Task<IEnumerable<ThingPreviewQm>> GetForSubject(Guid subjectId, string? userId)
     {
@@ -107,6 +108,19 @@ internal class ThingQueryable : Queryable, IThingQueryable
         }
 
         return thing;
+    }
+
+    public async Task<ThingState> GetStateFor(Guid thingId)
+    {
+        var dbConn = await _getOpenConnection();
+        return await dbConn.QuerySingleAsync<ThingState>(
+            @"
+                SELECT ""State""
+                FROM truquest.""Things""
+                WHERE ""ThingId"" = @ThingId;
+            ",
+            param: new { ThingId = thingId }
+        );
     }
 
     public async Task<IEnumerable<VerifierLotteryParticipantEntryQm>> GetVerifierLotteryParticipants(Guid thingId)

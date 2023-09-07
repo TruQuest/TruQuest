@@ -7,9 +7,12 @@ namespace Infrastructure.Persistence.Queryables;
 
 internal class TaskQueryable : Queryable, ITaskQueryable
 {
-    private readonly AppDbContext _dbContext;
+    private new readonly AppDbContext _dbContext;
 
-    public TaskQueryable(AppDbContext dbContext) : base(dbContext)
+    public TaskQueryable(
+        AppDbContext dbContext,
+        ISharedTxnScope sharedTxnScope
+    ) : base(dbContext, sharedTxnScope)
     {
         _dbContext = dbContext;
     }

@@ -1,20 +1,18 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 using Domain.Aggregates;
 using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories;
 
-internal class AcceptancePollVoteRepository : Repository<AcceptancePollVote>, IAcceptancePollVoteRepository
+internal class AcceptancePollVoteRepository : Repository, IAcceptancePollVoteRepository
 {
-    private readonly AppDbContext _dbContext;
+    private new readonly AppDbContext _dbContext;
 
     public AcceptancePollVoteRepository(
-        IConfiguration configuration,
         AppDbContext dbContext,
         ISharedTxnScope sharedTxnScope
-    ) : base(configuration, dbContext, sharedTxnScope)
+    ) : base(dbContext, sharedTxnScope)
     {
         _dbContext = dbContext;
     }

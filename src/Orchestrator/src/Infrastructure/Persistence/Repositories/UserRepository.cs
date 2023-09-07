@@ -1,7 +1,6 @@
 using System.Security.Claims;
 
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
 
 using Domain.Aggregates;
 using Domain.Errors;
@@ -12,16 +11,15 @@ using Infrastructure.User;
 
 namespace Infrastructure.Persistence.Repositories;
 
-internal class UserRepository : Repository<UserDm>, IUserRepository
+internal class UserRepository : Repository, IUserRepository
 {
     private readonly UserManager<UserDm> _userManager;
 
     public UserRepository(
-        IConfiguration configuration,
         AppDbContext dbContext,
         ISharedTxnScope sharedTxnScope,
         UserManager<UserDm> userManager
-    ) : base(configuration, dbContext, sharedTxnScope)
+    ) : base(dbContext, sharedTxnScope)
     {
         _userManager = userManager;
     }

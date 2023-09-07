@@ -114,7 +114,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
             }
         }
 
-        await _lotterySpotClaimedEventRepository.UpdateUserDataAndNoncesFor(spotClaimedEvents);
+        await _lotterySpotClaimedEventRepository.UpdateNoncesFor(spotClaimedEvents);
         await _lotterySpotClaimedEventRepository.SaveChanges();
 
         _logger.LogInformation(

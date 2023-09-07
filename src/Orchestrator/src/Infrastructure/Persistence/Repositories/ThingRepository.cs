@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 using Npgsql;
 using NpgsqlTypes;
@@ -9,15 +8,14 @@ using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories;
 
-internal class ThingRepository : Repository<Thing>, IThingRepository
+internal class ThingRepository : Repository, IThingRepository
 {
-    private readonly AppDbContext _dbContext;
+    private new readonly AppDbContext _dbContext;
 
     public ThingRepository(
-        IConfiguration configuration,
         AppDbContext dbContext,
         ISharedTxnScope sharedTxnScope
-    ) : base(configuration, dbContext, sharedTxnScope)
+    ) : base(dbContext, sharedTxnScope)
     {
         _dbContext = dbContext;
     }

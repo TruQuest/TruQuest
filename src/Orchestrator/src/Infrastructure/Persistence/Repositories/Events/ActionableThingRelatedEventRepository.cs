@@ -1,19 +1,16 @@
-using Microsoft.Extensions.Configuration;
-
 using Domain.Aggregates.Events;
 using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories.Events;
 
-internal class ActionableThingRelatedEventRepository : Repository<ActionableThingRelatedEvent>, IActionableThingRelatedEventRepository
+internal class ActionableThingRelatedEventRepository : Repository, IActionableThingRelatedEventRepository
 {
-    private readonly EventDbContext _dbContext;
+    private new readonly EventDbContext _dbContext;
 
     public ActionableThingRelatedEventRepository(
-        IConfiguration configuration,
         EventDbContext dbContext,
         ISharedTxnScope sharedTxnScope
-    ) : base(configuration, dbContext, sharedTxnScope)
+    ) : base(dbContext, sharedTxnScope)
     {
         _dbContext = dbContext;
     }

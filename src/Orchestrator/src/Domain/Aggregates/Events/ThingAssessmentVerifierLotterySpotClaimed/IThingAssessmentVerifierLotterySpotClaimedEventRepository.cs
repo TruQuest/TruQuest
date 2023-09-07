@@ -8,5 +8,5 @@ public interface IThingAssessmentVerifierLotterySpotClaimedEventRepository : IRe
     Task<List<ThingAssessmentVerifierLotterySpotClaimedEvent>> FindAllFor(
         Guid thingId, Guid settlementProposalId
     );
-    Task UpdateUserDataAndNoncesFor(IEnumerable<ThingAssessmentVerifierLotterySpotClaimedEvent> events);
+    Task UpdateNoncesFor(IEnumerable<ThingAssessmentVerifierLotterySpotClaimedEvent> events);
 }

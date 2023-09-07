@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Configuration;
-
 using Dapper;
 
 using Application.Common.Models.QM;
@@ -9,7 +7,10 @@ namespace Infrastructure.Persistence.Queryables;
 
 internal class ThingAssessmentPollVoteQueryable : Queryable, IThingAssessmentPollVoteQueryable
 {
-    public ThingAssessmentPollVoteQueryable(IConfiguration configuration) : base(configuration) { }
+    public ThingAssessmentPollVoteQueryable(
+        AppDbContext dbContext,
+        ISharedTxnScope sharedTxnScope
+    ) : base(dbContext, sharedTxnScope) { }
 
     public async Task<(string?, IEnumerable<VoteQm>)> GetAllFor(Guid proposalId, string? userId)
     {

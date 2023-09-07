@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 
 using Npgsql;
 using NpgsqlTypes;
@@ -8,16 +8,37 @@ using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories;
 
-internal class ThingUpdateRepository : Repository<ThingUpdate>, IThingUpdateRepository
+internal class ThingUpdateRepository : Repository, IThingUpdateRepository
 {
     public ThingUpdateRepository(
-        IConfiguration configuration,
+        AppDbContext dbContext,
         ISharedTxnScope sharedTxnScope
-    ) : base(configuration, sharedTxnScope) { }
+    ) : base(dbContext, sharedTxnScope) { }
 
     public async Task AddOrUpdate(params ThingUpdate[] updateEvents)
     {
-        using var cmd = await CreateCommand(
+        var thingIdsParam = new NpgsqlParameter<Guid[]>("ThingIds", NpgsqlDbType.Uuid | NpgsqlDbType.Array)
+        {
+            TypedValue = updateEvents.Select(e => e.ThingId).ToArray()
+        };
+        var categoriesParam = new NpgsqlParameter<int[]>("Categories", NpgsqlDbType.Integer | NpgsqlDbType.Array)
+        {
+            TypedValue = updateEvents.Select(e => (int)e.Category).ToArray()
+        };
+        var tsParam = new NpgsqlParameter<long[]>("UpdateTimestamps", NpgsqlDbType.Bigint | NpgsqlDbType.Array)
+        {
+            TypedValue = updateEvents.Select(e => e.UpdateTimestamp).ToArray()
+        };
+        var titlesParam = new NpgsqlParameter<string[]>("Titles", NpgsqlDbType.Text | NpgsqlDbType.Array)
+        {
+            TypedValue = updateEvents.Select(e => e.Title).ToArray()
+        };
+        var detailsParam = new NpgsqlParameter<string?[]>("Details", NpgsqlDbType.Text | NpgsqlDbType.Array)
+        {
+            TypedValue = updateEvents.Select(e => e.Details).ToArray()
+        };
+
+        await _dbContext.Database.ExecuteSqlRawAsync(
             @"
                 INSERT INTO truquest.""ThingUpdates"" (
                     ""ThingId"", ""Category"", ""UpdateTimestamp"", ""Title"", ""Details""
@@ -29,31 +50,8 @@ internal class ThingUpdateRepository : Repository<ThingUpdate>, IThingUpdateRepo
                     ""UpdateTimestamp"" = EXCLUDED.""UpdateTimestamp"",
                     ""Title""           = EXCLUDED.""Title"",
                     ""Details""         = EXCLUDED.""Details"";
-            "
+            ",
+            thingIdsParam, categoriesParam, tsParam, titlesParam, detailsParam
         );
-        cmd.Parameters.AddRange(new NpgsqlParameter[] {
-            new NpgsqlParameter<Guid[]>("ThingIds", NpgsqlDbType.Uuid | NpgsqlDbType.Array)
-            {
-                TypedValue = updateEvents.Select(e => e.ThingId).ToArray()
-            },
-            new NpgsqlParameter<int[]>("Categories", NpgsqlDbType.Integer | NpgsqlDbType.Array)
-            {
-                TypedValue = updateEvents.Select(e => (int)e.Category).ToArray()
-            },
-            new NpgsqlParameter<long[]>("UpdateTimestamps", NpgsqlDbType.Bigint | NpgsqlDbType.Array)
-            {
-                TypedValue = updateEvents.Select(e => e.UpdateTimestamp).ToArray()
-            },
-            new NpgsqlParameter<string[]>("Titles", NpgsqlDbType.Text | NpgsqlDbType.Array)
-            {
-                TypedValue = updateEvents.Select(e => e.Title).ToArray()
-            },
-            new NpgsqlParameter<string?[]>("Details", NpgsqlDbType.Text | NpgsqlDbType.Array)
-            {
-                TypedValue = updateEvents.Select(e => e.Details).ToArray()
-            }
-        });
-
-        await cmd.ExecuteNonQueryAsync();
     }
 }

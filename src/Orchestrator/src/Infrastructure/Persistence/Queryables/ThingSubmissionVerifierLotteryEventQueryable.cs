@@ -7,9 +7,12 @@ namespace Infrastructure.Persistence.Queryables;
 
 internal class ThingSubmissionVerifierLotteryEventQueryable : Queryable, IThingSubmissionVerifierLotteryEventQueryable
 {
-    private readonly EventDbContext _dbContext;
+    private new readonly EventDbContext _dbContext;
 
-    public ThingSubmissionVerifierLotteryEventQueryable(EventDbContext dbContext) : base(dbContext)
+    public ThingSubmissionVerifierLotteryEventQueryable(
+        EventDbContext dbContext,
+        ISharedTxnScope sharedTxnScope
+    ) : base(dbContext, sharedTxnScope)
     {
         _dbContext = dbContext;
     }

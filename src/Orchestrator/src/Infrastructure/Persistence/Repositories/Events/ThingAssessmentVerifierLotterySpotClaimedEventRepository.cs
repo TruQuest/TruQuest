@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 using Npgsql;
 using NpgsqlTypes;
@@ -10,16 +9,15 @@ using Application.Common.Interfaces;
 namespace Infrastructure.Persistence.Repositories.Events;
 
 internal class ThingAssessmentVerifierLotterySpotClaimedEventRepository :
-    Repository<ThingAssessmentVerifierLotterySpotClaimedEvent>,
+    Repository,
     IThingAssessmentVerifierLotterySpotClaimedEventRepository
 {
-    private readonly EventDbContext _dbContext;
+    private new readonly EventDbContext _dbContext;
 
     public ThingAssessmentVerifierLotterySpotClaimedEventRepository(
-        IConfiguration configuration,
         EventDbContext dbContext,
         ISharedTxnScope sharedTxnScope
-    ) : base(configuration, dbContext, sharedTxnScope)
+    ) : base(dbContext, sharedTxnScope)
     {
         _dbContext = dbContext;
     }
@@ -38,15 +36,11 @@ internal class ThingAssessmentVerifierLotterySpotClaimedEventRepository :
             .ThenBy(e => e.TxnIndex)
         .ToListAsync();
 
-    public async Task UpdateUserDataAndNoncesFor(IEnumerable<ThingAssessmentVerifierLotterySpotClaimedEvent> events)
+    public async Task UpdateNoncesFor(IEnumerable<ThingAssessmentVerifierLotterySpotClaimedEvent> events)
     {
         var eventIdsParam = new NpgsqlParameter<long[]>("EventIds", NpgsqlDbType.Bigint | NpgsqlDbType.Array)
         {
             TypedValue = events.Select(e => e.Id!.Value).ToArray()
-        };
-        var userDataArrayParam = new NpgsqlParameter<string[]>("UserDataArray", NpgsqlDbType.Text | NpgsqlDbType.Array)
-        {
-            TypedValue = events.Select(e => e.UserData!).ToArray()
         };
         var noncesParam = new NpgsqlParameter<long[]>("Nonces", NpgsqlDbType.Bigint | NpgsqlDbType.Array)
         {
@@ -55,18 +49,16 @@ internal class ThingAssessmentVerifierLotterySpotClaimedEventRepository :
 
         await _dbContext.Database.ExecuteSqlRawAsync(
             @"
-                WITH ""EventIdToData"" (""Id"", ""UserData"", ""Nonce"") AS (
+                WITH ""EventIdToNonce"" (""Id"", ""Nonce"") AS (
                     SELECT *
-                    FROM UNNEST(@EventIds, @UserDataArray, @Nonces)
+                    FROM UNNEST(@EventIds, @Nonces)
                 )
                 UPDATE truquest_events.""ThingAssessmentVerifierLotterySpotClaimedEvents"" AS c
-                SET
-                    ""UserData"" = e.""UserData"",
-                    ""Nonce"" = e.""Nonce""
-                FROM ""EventIdToData"" AS e
+                SET ""Nonce"" = e.""Nonce""
+                FROM ""EventIdToNonce"" AS e
                 WHERE c.""Id"" = e.""Id""
             ",
-            eventIdsParam, userDataArrayParam, noncesParam
+            eventIdsParam, noncesParam
         );
     }
 }

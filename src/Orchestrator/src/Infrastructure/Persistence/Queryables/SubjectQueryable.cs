@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Configuration;
-
 using Dapper;
 
 using Application.Subject.Queries.GetSubject;
@@ -12,7 +10,10 @@ namespace Infrastructure.Persistence.Queryables;
 
 internal class SubjectQueryable : Queryable, ISubjectQueryable
 {
-    public SubjectQueryable(IConfiguration configuration) : base(configuration) { }
+    public SubjectQueryable(
+        AppDbContext appDbContext,
+        ISharedTxnScope sharedTxnScope
+    ) : base(appDbContext, sharedTxnScope) { }
 
     public async Task<IEnumerable<SubjectPreviewQm>> GetAll()
     {

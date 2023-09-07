@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Configuration;
-
 using Microsoft.EntityFrameworkCore;
 
 using Domain.Aggregates;
@@ -7,15 +5,14 @@ using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories;
 
-internal class SettlementProposalRepository : Repository<SettlementProposal>, ISettlementProposalRepository
+internal class SettlementProposalRepository : Repository, ISettlementProposalRepository
 {
-    private readonly AppDbContext _dbContext;
+    private new readonly AppDbContext _dbContext;
 
     public SettlementProposalRepository(
-        IConfiguration configuration,
         AppDbContext dbContext,
         ISharedTxnScope sharedTxnScope
-    ) : base(configuration, dbContext, sharedTxnScope)
+    ) : base(dbContext, sharedTxnScope)
     {
         _dbContext = dbContext;
     }

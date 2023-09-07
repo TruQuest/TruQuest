@@ -7,9 +7,12 @@ namespace Infrastructure.Persistence.Queryables;
 
 internal class TagQueryable : Queryable, ITagQueryable
 {
-    private readonly AppDbContext _dbContext;
+    private new readonly AppDbContext _dbContext;
 
-    public TagQueryable(AppDbContext dbContext) : base(dbContext)
+    public TagQueryable(
+        AppDbContext dbContext,
+        ISharedTxnScope sharedTxnScope
+    ) : base(dbContext, sharedTxnScope)
     {
         _dbContext = dbContext;
     }

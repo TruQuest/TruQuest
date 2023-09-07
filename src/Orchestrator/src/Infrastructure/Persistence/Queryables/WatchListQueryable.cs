@@ -10,9 +10,12 @@ namespace Infrastructure.Persistence.Queryables;
 
 internal class WatchListQueryable : Queryable, IWatchListQueryable
 {
-    private readonly AppDbContext _dbContext;
+    private new readonly AppDbContext _dbContext;
 
-    public WatchListQueryable(AppDbContext dbContext) : base(dbContext)
+    public WatchListQueryable(
+        AppDbContext dbContext,
+        ISharedTxnScope sharedTxnScope
+    ) : base(dbContext, sharedTxnScope)
     {
         _dbContext = dbContext;
     }

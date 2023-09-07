@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 
 using Npgsql;
@@ -10,15 +9,15 @@ using Application.Common.Interfaces;
 namespace Infrastructure.Persistence.Repositories.Events;
 
 internal class JoinedThingSubmissionVerifierLotteryEventRepository :
-    Repository<JoinedThingSubmissionVerifierLotteryEvent>, IJoinedThingSubmissionVerifierLotteryEventRepository
+    Repository,
+    IJoinedThingSubmissionVerifierLotteryEventRepository
 {
-    private readonly EventDbContext _dbContext;
+    private new readonly EventDbContext _dbContext;
 
     public JoinedThingSubmissionVerifierLotteryEventRepository(
-        IConfiguration configuration,
         EventDbContext dbContext,
         ISharedTxnScope sharedTxnScope
-    ) : base(configuration, dbContext, sharedTxnScope)
+    ) : base(dbContext, sharedTxnScope)
     {
         _dbContext = dbContext;
     }
