@@ -184,19 +184,6 @@ contract ThingSubmissionVerifierLottery {
         return keccak256(abi.encodePacked(address(this), _data));
     }
 
-    function getOrchestratorCommitment(
-        bytes16 _thingId
-    ) external view returns (int256, bytes32, bytes32) {
-        Commitment memory commitment = s_thingIdToOrchestratorCommitment[
-            _thingId
-        ];
-        return (
-            commitment.block,
-            commitment.dataHash,
-            commitment.userXorDataHash
-        );
-    }
-
     function getLotteryInitBlock(
         bytes16 _thingId
     ) external view returns (int256) {

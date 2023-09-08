@@ -1,50 +1,22 @@
 class VerifierLotteryParticipantEntryVm {
-  final int joinedBlockNumber;
+  final int l1BlockNumber;
+  final String txnHash;
   final String userId;
-  final String? userData;
+  final String userData;
   final int? nonce;
-  final bool isOrchestrator;
   final bool isWinner;
 
-  VerifierLotteryParticipantEntryVm._({
-    required this.joinedBlockNumber,
-    required this.userId,
-    required this.userData,
-    required this.nonce,
-    required this.isOrchestrator,
-    required this.isWinner,
-  });
+  String get nonceString => nonce?.toString() ?? '*';
+
+  String get commitment => userData.substring(0, 15) + '..';
+
+  String get userIdShort => '${userId.substring(0, 6)}..${userId.substring(userId.length - 4)}';
 
   VerifierLotteryParticipantEntryVm.fromMap(Map<String, dynamic> map)
-      : joinedBlockNumber = map['joinedBlockNumber'],
+      : l1BlockNumber = map['l1BlockNumber'],
+        txnHash = map['txnHash'],
         userId = map['userId'],
         userData = map['userData'],
         nonce = map['nonce'],
-        isOrchestrator = map.containsKey('isOrchestrator'),
         isWinner = map.containsKey('isWinner'); // either true or absent
-
-  VerifierLotteryParticipantEntryVm.orchestratorNoNonce(
-    this.joinedBlockNumber,
-    String dataHash,
-    String userXorDataHash,
-  )   : userId = 'Orchestrator',
-        userData = '$dataHash|$userXorDataHash',
-        nonce = null,
-        isOrchestrator = true,
-        isWinner = false;
-
-  VerifierLotteryParticipantEntryVm copyWith(
-    String userId,
-    String dataHash,
-    String userXorDataHash,
-  ) {
-    return VerifierLotteryParticipantEntryVm._(
-      joinedBlockNumber: joinedBlockNumber,
-      userId: userId,
-      userData: '$dataHash|$userXorDataHash',
-      nonce: nonce,
-      isOrchestrator: isOrchestrator,
-      isWinner: isWinner,
-    );
-  }
 }

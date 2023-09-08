@@ -9,7 +9,6 @@ import '../../user/errors/wallet_locked_error.dart';
 import '../../user/services/user_service.dart';
 import '../../ethereum/services/user_operation_service.dart';
 import '../models/im/new_acceptance_poll_vote_im.dart';
-import '../../general/models/rvm/verifier_lottery_participant_entry_vm.dart';
 import '../errors/thing_error.dart';
 import '../models/rvm/get_settlement_proposals_list_rvm.dart';
 import '../../general/utils/utils.dart';
@@ -201,41 +200,6 @@ class ThingService {
     String thingId,
   ) async {
     var result = await _thingApiService.getVerifierLotteryParticipants(thingId);
-
-    var (lotteryInitBlock, dataHash, userXorDataHash) =
-        await _thingSubmissionVerifierLotteryContract.getOrchestratorCommitment(thingId);
-
-    var entries = result.entries;
-    if (entries.isEmpty || !entries.first.isOrchestrator) {
-      if (lotteryInitBlock != 0) {
-        result = GetVerifierLotteryParticipantsRvm(
-          thingId: thingId,
-          entries: List.unmodifiable([
-            VerifierLotteryParticipantEntryVm.orchestratorNoNonce(
-              lotteryInitBlock.abs(),
-              dataHash,
-              userXorDataHash,
-            ),
-            ...entries,
-          ]),
-        );
-      }
-    } else {
-      result = GetVerifierLotteryParticipantsRvm(
-        thingId: thingId,
-        entries: List.unmodifiable(
-          [
-            entries.first.copyWith(
-              'Orchestrator',
-              dataHash,
-              userXorDataHash,
-            ),
-            ...entries.skip(1)
-          ],
-        ),
-      );
-    }
-
     return result;
   }
 

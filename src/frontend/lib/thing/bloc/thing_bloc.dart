@@ -1,8 +1,10 @@
 import 'dart:async';
 
-import '../../general/models/rvm/verifier_lottery_participant_entry_vm.dart';
+import 'package:rxdart/rxdart.dart';
+
 import '../../general/contexts/multi_stage_operation_context.dart';
 import '../models/rvm/acceptance_poll_info_vm.dart';
+import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
 import '../models/rvm/get_votes_rvm.dart';
 import '../models/rvm/settlement_proposal_preview_vm.dart';
 import '../models/rvm/thing_state_vm.dart';
@@ -21,8 +23,8 @@ class ThingBloc extends Bloc<ThingAction> {
   final _verifierLotteryInfoChannel = StreamController<VerifierLotteryInfoVm>.broadcast();
   Stream<VerifierLotteryInfoVm> get verifierLotteryInfo$ => _verifierLotteryInfoChannel.stream;
 
-  final _verifierLotteryParticipantsChannel = StreamController<List<VerifierLotteryParticipantEntryVm>>.broadcast();
-  Stream<List<VerifierLotteryParticipantEntryVm>> get verifierLotteryParticipants$ =>
+  final _verifierLotteryParticipantsChannel = BehaviorSubject<GetVerifierLotteryParticipantsRvm>();
+  Stream<GetVerifierLotteryParticipantsRvm> get verifierLotteryParticipants$ =>
       _verifierLotteryParticipantsChannel.stream;
 
   final _votesChannel = StreamController<GetVotesRvm>.broadcast();
@@ -35,8 +37,6 @@ class ThingBloc extends Bloc<ThingAction> {
     actionChannel.stream.listen((action) {
       if (action is GetThing) {
         _getThing(action);
-      } else if (action is GetVerifierLotteryInfo) {
-        _getVerifierLotteryInfo(action);
       } else if (action is GetVerifierLotteryParticipants) {
         _getVerifierLotteryParticipants(action);
       } else if (action is GetVotes) {
@@ -55,6 +55,8 @@ class ThingBloc extends Bloc<ThingAction> {
       return _createNewThingDraft(action);
     } else if (action is SubmitNewThing) {
       return _submitNewThing(action);
+    } else if (action is GetVerifierLotteryInfo) {
+      return _getVerifierLotteryInfo(action);
     } else if (action is GetAcceptancePollInfo) {
       return _getAcceptancePollInfo(action);
     }
@@ -117,28 +119,27 @@ class ThingBloc extends Bloc<ThingAction> {
   Stream<Object> _fundThing(FundThing action, MultiStageOperationContext ctx) =>
       _thingService.fundThing(action.thingId, action.signature, ctx);
 
-  void _getVerifierLotteryInfo(GetVerifierLotteryInfo action) async {
-    var info = await _thingService.getVerifierLotteryInfo(action.thingId);
-    _verifierLotteryInfoChannel.add(
-      VerifierLotteryInfoVm(
-        userId: info.$1,
-        initBlock: info.$2,
-        durationBlocks: info.$3,
-        alreadyJoined: info.$4,
-      ),
+  Future<VerifierLotteryInfoVm> _getVerifierLotteryInfo(GetVerifierLotteryInfo action) async {
+    var result = await _thingService.getVerifierLotteryInfo(action.thingId);
+    var info = VerifierLotteryInfoVm(
+      userId: result.$1,
+      initBlock: result.$2,
+      durationBlocks: result.$3,
+      alreadyJoined: result.$4,
     );
+    _verifierLotteryInfoChannel.add(info);
+
+    return info;
   }
 
   Stream<Object> _joinLottery(JoinLottery action, MultiStageOperationContext ctx) =>
       _thingService.joinLottery(action.thingId, ctx);
 
-  void _getVerifierLotteryParticipants(
-    GetVerifierLotteryParticipants action,
-  ) async {
+  void _getVerifierLotteryParticipants(GetVerifierLotteryParticipants action) async {
     var result = await _thingService.getVerifierLotteryParticipants(
       action.thingId,
     );
-    _verifierLotteryParticipantsChannel.add(result.entries);
+    _verifierLotteryParticipantsChannel.add(result);
   }
 
   Future<AcceptancePollInfoVm> _getAcceptancePollInfo(GetAcceptancePollInfo action) async {

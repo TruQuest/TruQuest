@@ -45,12 +45,20 @@ class _DocumentViewState extends StateX<DocumentView> {
 
   @override
   Widget buildX(BuildContext context) {
-    return SizedBox.expand(
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        color: Color(0xFF242423),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(16),
+          topRight: Radius.circular(16),
+        ),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (widget.leftSideBlock != null)
-            Expanded(flex: 17, child: widget.leftSideBlock!),
+          if (widget.leftSideBlock != null) Expanded(flex: 17, child: widget.leftSideBlock!),
           Expanded(
             flex: widget.leftSideBlock != null ? 59 : 70,
             child: Container(

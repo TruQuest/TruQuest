@@ -11,35 +11,6 @@ class ThingSubmissionVerifierLotteryContract {
   static final String address = dotenv.env['ThingSubmissionVerifierLotteryAddress']!;
   static const String _abi = '''[
     {
-      "inputs": [
-        {
-          "internalType": "bytes16",
-          "name": "_thingId",
-          "type": "bytes16"
-        }
-      ],
-      "name": "getOrchestratorCommitment",
-      "outputs": [
-        {
-          "internalType": "int256",
-          "name": "",
-          "type": "int256"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
       "inputs": [],
       "name": "s_durationBlocks",
       "outputs": [
@@ -129,17 +100,6 @@ class ThingSubmissionVerifierLotteryContract {
       _abi,
       ethereumRpcProvider.provider,
     );
-  }
-
-  Future<(int, String, String)> getOrchestratorCommitment(
-    String thingId,
-  ) async {
-    var result = await _contract.read<List<dynamic>>(
-      'getOrchestratorCommitment',
-      args: [thingId.toSolInputFormat()],
-    );
-
-    return ((result[0] as BigInt).toInt(), result[1] as String, result[2] as String);
   }
 
   Future<int> getLotteryDurationBlocks() => _contract.read<int>('s_durationBlocks');

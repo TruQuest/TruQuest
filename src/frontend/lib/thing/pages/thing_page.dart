@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:contained_tab_bar_view/contained_tab_bar_view.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
 import 'package:sliver_tools/sliver_tools.dart';
@@ -12,7 +13,6 @@ import '../../general/contexts/page_context.dart';
 import '../../general/widgets/document_composer.dart';
 import '../../general/widgets/evidence_block.dart';
 import '../../general/widgets/image_block_with_crop.dart';
-import '../../general/widgets/tab_container.dart';
 import '../../settlement/bloc/settlement_actions.dart';
 import '../../settlement/bloc/settlement_bloc.dart';
 import '../../settlement/widgets/verdict_selection_block.dart';
@@ -89,28 +89,14 @@ class _ThingPageState extends StateX<ThingPage> {
 
   List<Widget> _buildTabs(ThingVm thing) {
     var state = thing.state;
-    var items = [
-      const Icon(
-        Icons.content_paste,
-        color: Colors.white,
-      )
-    ];
+    var items = [const Text('Details')];
 
     if (state.index >= ThingStateVm.fundedAndVerifierLotteryInitiated.index) {
-      items.add(const Icon(
-        Icons.people,
-        color: Colors.white,
-      ));
+      items.add(const Text('Lottery'));
       if (state.index >= ThingStateVm.verifiersSelectedAndPollInitiated.index) {
-        items.add(const Icon(
-          Icons.poll_outlined,
-          color: Colors.white,
-        ));
+        items.add(const Text('Poll'));
         if (state.index >= ThingStateVm.awaitingSettlement.index) {
-          items.add(const Icon(
-            Icons.handshake,
-            color: Colors.white,
-          ));
+          items.add(const Text('Settlement proposals'));
         }
       }
     }
@@ -302,16 +288,29 @@ class _ThingPageState extends StateX<ThingPage> {
       height: 800,
       child: Stack(
         children: [
-          TabContainer(
-            key: ValueKey('${vm.thing.id} ${vm.thing.state}'),
-            controller: TabContainerController(length: tabs.length),
-            tabEdge: TabEdge.top,
-            tabStart: 0.33,
-            tabEnd: 0.66,
-            colors: _tabColors.sublist(0, tabs.length),
-            isStringTabs: false,
+          ContainedTabBarView(
+            key: ValueKey('${vm.thing.id} ${vm.thing.state}'), // @@TODO: Check if necessary.
             tabs: tabs,
-            children: _buildTabContents(vm),
+            tabBarProperties: TabBarProperties(
+              width: 500,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 32,
+                vertical: 8,
+              ),
+              indicator: ContainerTabIndicator(
+                radius: BorderRadius.circular(8),
+                color: Colors.blue,
+                borderWidth: 2,
+                borderColor: Colors.black,
+              ),
+              labelColor: Colors.white,
+              labelPadding: const EdgeInsets.symmetric(
+                horizontal: 32,
+                vertical: 8,
+              ),
+              unselectedLabelColor: Colors.grey[400],
+            ),
+            views: _buildTabContents(vm),
           ),
           if (vm.thing.state == ThingStateVm.consensusNotReached ||
               vm.thing.state == ThingStateVm.verifierLotteryFailed)

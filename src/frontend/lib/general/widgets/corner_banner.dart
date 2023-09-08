@@ -19,26 +19,18 @@ class CornerBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipPath(
-      clipper: position == Alignment.topLeft
-          ? TopLeftCornerBannerClipper()
-          : BottomRightCornerBannerClipper(),
+      clipper: position == Alignment.topLeft ? TopLeftCornerBannerClipper() : BottomRightCornerBannerClipper(),
       child: Container(
         width: size,
         height: size,
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.only(
-            topLeft: position == Alignment.topLeft
-                ? Radius.circular(cornerRadius)
-                : Radius.zero,
-            bottomRight: position == Alignment.bottomRight
-                ? Radius.circular(cornerRadius)
-                : Radius.zero,
+            topLeft: position == Alignment.topLeft ? Radius.circular(cornerRadius) : Radius.zero,
+            bottomRight: position == Alignment.bottomRight ? Radius.circular(cornerRadius) : Radius.zero,
           ),
         ),
-        alignment: position == Alignment.topLeft
-            ? const Alignment(-0.5, -0.5)
-            : const Alignment(0.65, 0.5),
+        alignment: position == Alignment.topLeft ? const Alignment(-0.5, -0.5) : const Alignment(0.65, 0.5),
         child: child,
       ),
     );

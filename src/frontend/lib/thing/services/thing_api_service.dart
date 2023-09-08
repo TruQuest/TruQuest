@@ -173,9 +173,7 @@ class ThingApiService {
   ) async {
     try {
       var response = await _dio.get('/things/$thingId/lottery-participants');
-      return GetVerifierLotteryParticipantsRvm.fromMap(
-        response.data['data'],
-      );
+      return GetVerifierLotteryParticipantsRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
       throw _wrapError(error);
     }
