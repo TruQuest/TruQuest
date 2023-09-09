@@ -13,14 +13,12 @@ namespace Infrastructure.Ethereum;
 internal class OptimismL1BlockListener : IBlockListener
 {
     private readonly Web3 _web3;
-    private readonly int _blockConfirmations;
     private readonly string _l1BlockContractAddress;
 
     public OptimismL1BlockListener(IConfiguration configuration)
     {
         var network = configuration["Ethereum:Network"]!;
         _web3 = new Web3(configuration[$"Ethereum:Networks:{network}:URL"]);
-        _blockConfirmations = configuration.GetValue<int>($"Ethereum:Networks:{network}:BlockConfirmations");
         _l1BlockContractAddress = configuration[$"Ethereum:Contracts:{network}:L1Block:Address"]!;
     }
 
@@ -31,11 +29,12 @@ internal class OptimismL1BlockListener : IBlockListener
         {
             var blockNumber = (long)await _web3.Eth
                 .GetContractQueryHandler<GetOptimismL1BlockNumberMessage>()
-                .QueryAsync<ulong>(
-                    _l1BlockContractAddress,
-                    new()
-                ) -
-                _blockConfirmations;
+                .QueryAsync<ulong>(_l1BlockContractAddress, new());
+
+            // @@NOTE: Don't need block confirmations here since in BlockTracker we wait til
+            // all L2 events corresponding to this L1 block are processed and for an event to be
+            // considered processed it has to be confirmed first.
+
             if (blockNumber > lastReportedBlockNumber)
             {
                 lastReportedBlockNumber = blockNumber;

@@ -191,6 +191,7 @@ public static class IServiceCollectionExtension
         SqlMapper.AddTypeHandler(new DictionaryStringToStringTypeHandler());
         SqlMapper.AddTypeHandler(new DictionaryStringToObjectTypeHandler());
 
+        services.AddScoped<IBlockProgressQueryable, BlockProgressQueryable>();
         services.AddScoped<ITagQueryable, TagQueryable>();
         services.AddScoped<ISubjectQueryable, SubjectQueryable>();
         services.AddScoped<IThingQueryable, ThingQueryable>();
