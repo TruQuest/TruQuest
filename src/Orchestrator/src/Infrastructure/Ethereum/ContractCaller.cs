@@ -1,9 +1,11 @@
 using System.Numerics;
+using System.Threading.Channels;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 
 using Nethereum.Web3;
+using Nethereum.RPC.Eth.DTOs;
 
 using Application.Common.Interfaces;
 using Application.Common.Misc;
@@ -26,6 +28,16 @@ internal class ContractCaller : IContractCaller
     private readonly string _thingAssessmentVerifierLotteryAddress;
     private readonly string _assessmentPollAddress;
 
+    private readonly ChannelReader<(
+        TaskCompletionSource<TransactionReceipt> Tcs,
+        Func<Task<TransactionReceipt>> Task
+    )> _stream;
+
+    private readonly ChannelWriter<(
+        TaskCompletionSource<TransactionReceipt> Tcs,
+        Func<Task<TransactionReceipt>> Task
+    )> _sink;
+
     public ContractCaller(
         ILogger<ContractCaller> logger,
         IConfiguration configuration,
@@ -44,6 +56,33 @@ internal class ContractCaller : IContractCaller
         _acceptancePollAddress = configuration[$"Ethereum:Contracts:{network}:AcceptancePoll:Address"]!;
         _thingAssessmentVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingAssessmentVerifierLottery:Address"]!;
         _assessmentPollAddress = configuration[$"Ethereum:Contracts:{network}:AssessmentPoll:Address"]!;
+
+        var channel = Channel.CreateUnbounded<(
+            TaskCompletionSource<TransactionReceipt> Tcs,
+            Func<Task<TransactionReceipt>> Task
+        )>(new UnboundedChannelOptions { SingleReader = true });
+
+        _stream = channel.Reader;
+        _sink = channel.Writer;
+
+        _monitorMessages();
+    }
+
+    private async void _monitorMessages()
+    {
+        // @@TODO!!: Try-catch!
+        await foreach (var item in _stream.ReadAllAsync())
+        {
+            var txnReceipt = await item.Task();
+            item.Tcs.SetResult(txnReceipt);
+        }
+    }
+
+    private async Task<TransactionReceipt> _sendTxn(Func<Task<TransactionReceipt>> task)
+    {
+        var tcs = new TaskCompletionSource<TransactionReceipt>();
+        await _sink.WriteAsync((tcs, task));
+        return await tcs.Task;
     }
 
     public Task<string> GetWalletAddressFor(string ownerAddress) => _web3.Eth
@@ -118,15 +157,17 @@ internal class ContractCaller : IContractCaller
 
     public async Task<long> InitThingSubmissionVerifierLottery(byte[] thingId, byte[] dataHash, byte[] userXorDataHash)
     {
-        var txnDispatcher = _web3.Eth.GetContractTransactionHandler<InitThingSubmissionVerifierLotteryMessage>();
-        var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
-            _thingSubmissionVerifierLotteryAddress,
-            new()
-            {
-                ThingId = thingId,
-                DataHash = dataHash,
-                UserXorDataHash = userXorDataHash
-            }
+        var txnReceipt = await _sendTxn(() => _web3.Eth
+            .GetContractTransactionHandler<InitThingSubmissionVerifierLotteryMessage>()
+            .SendRequestAndWaitForReceiptAsync(
+                _thingSubmissionVerifierLotteryAddress,
+                new()
+                {
+                    ThingId = thingId,
+                    DataHash = dataHash,
+                    UserXorDataHash = userXorDataHash
+                }
+            )
         );
 
         _logger.LogInformation("=============== InitThingSubmissionVerifierLottery: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
@@ -166,7 +207,7 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, byte[] data, byte[] userXorData, byte[] hashOfL1EndBlock, List<ulong> winnerIndices
     )
     {
-        var txnReceipt = await _web3.Eth
+        var txnReceipt = await _sendTxn(() => _web3.Eth
             .GetContractTransactionHandler<CloseThingSubmissionVerifierLotteryWithSuccessMessage>()
             .SendRequestAndWaitForReceiptAsync(
                 _thingSubmissionVerifierLotteryAddress,
@@ -178,14 +219,15 @@ internal class ContractCaller : IContractCaller
                     HashOfL1EndBlock = hashOfL1EndBlock,
                     WinnerIndices = winnerIndices
                 }
-            );
+            )
+        );
 
         _logger.LogInformation("=============== CloseThingSubmissionVerifierLotteryWithSuccess: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
     public async Task CloseThingSubmissionVerifierLotteryInFailure(byte[] thingId, int joinedNumVerifiers)
     {
-        var txnReceipt = await _web3.Eth
+        var txnReceipt = await _sendTxn(() => _web3.Eth
             .GetContractTransactionHandler<CloseThingSubmissionVerifierLotteryInFailureMessage>()
             .SendRequestAndWaitForReceiptAsync(
                 _thingSubmissionVerifierLotteryAddress,
@@ -194,7 +236,8 @@ internal class ContractCaller : IContractCaller
                     ThingId = thingId,
                     JoinedNumVerifiers = joinedNumVerifiers
                 }
-            );
+            )
+        );
 
         _logger.LogInformation("=============== CloseThingSubmissionVerifierLotteryInFailure: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
@@ -227,7 +270,7 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
-        var txnReceipt = await _web3.Eth
+        var txnReceipt = await _sendTxn(() => _web3.Eth
             .GetContractTransactionHandler<FinalizeAcceptancePollForThingAsUnsettledMessage>()
             .SendRequestAndWaitForReceiptAsync(
                 _acceptancePollAddress,
@@ -238,7 +281,8 @@ internal class ContractCaller : IContractCaller
                     Decision = Decision.UnsettledDueToInsufficientVotingVolume,
                     VerifiersToSlashIndices = verifiersToSlashIndices
                 }
-            );
+            )
+        );
 
         _logger.LogInformation("=============== FinalizeAcceptancePollForThingAsUnsettled: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
@@ -247,7 +291,7 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
-        var txnReceipt = await _web3.Eth
+        var txnReceipt = await _sendTxn(() => _web3.Eth
             .GetContractTransactionHandler<FinalizeAcceptancePollForThingAsUnsettledMessage>()
             .SendRequestAndWaitForReceiptAsync(
                 _acceptancePollAddress,
@@ -258,7 +302,8 @@ internal class ContractCaller : IContractCaller
                     Decision = Decision.UnsettledDueToMajorityThresholdNotReached,
                     VerifiersToSlashIndices = verifiersToSlashIndices
                 }
-            );
+            )
+        );
 
         _logger.LogInformation("=============== FinalizeAcceptancePollForThingAsUnsettled: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
@@ -267,7 +312,7 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
-        var txnReceipt = await _web3.Eth
+        var txnReceipt = await _sendTxn(() => _web3.Eth
             .GetContractTransactionHandler<FinalizeAcceptancePollForThingAsAcceptedMessage>()
             .SendRequestAndWaitForReceiptAsync(
                 _acceptancePollAddress,
@@ -277,7 +322,8 @@ internal class ContractCaller : IContractCaller
                     VoteAggIpfsCid = voteAggIpfsCid,
                     VerifiersToSlashIndices = verifiersToSlashIndices
                 }
-            );
+            )
+        );
 
         _logger.LogInformation("=============== FinalizeAcceptancePollForThingAsAccepted: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
@@ -286,7 +332,7 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
-        var txnReceipt = await _web3.Eth
+        var txnReceipt = await _sendTxn(() => _web3.Eth
             .GetContractTransactionHandler<FinalizeAcceptancePollForThingAsSoftDeclinedMessage>()
             .SendRequestAndWaitForReceiptAsync(
                 _acceptancePollAddress,
@@ -296,7 +342,8 @@ internal class ContractCaller : IContractCaller
                     VoteAggIpfsCid = voteAggIpfsCid,
                     VerifiersToSlashIndices = verifiersToSlashIndices
                 }
-            );
+            )
+        );
 
         _logger.LogInformation("=============== FinalizeAcceptancePollForThingAsSoftDeclined: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
@@ -305,7 +352,7 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
-        var txnReceipt = await _web3.Eth
+        var txnReceipt = await _sendTxn(() => _web3.Eth
             .GetContractTransactionHandler<FinalizeAcceptancePollForThingAsHardDeclinedMessage>()
             .SendRequestAndWaitForReceiptAsync(
                 _acceptancePollAddress,
@@ -315,7 +362,8 @@ internal class ContractCaller : IContractCaller
                     VoteAggIpfsCid = voteAggIpfsCid,
                     VerifiersToSlashIndices = verifiersToSlashIndices
                 }
-            );
+            )
+        );
 
         _logger.LogInformation("=============== FinalizeAcceptancePollForThingAsHardDeclined: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
@@ -361,7 +409,7 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, byte[] proposalId, byte[] dataHash, byte[] userXorDataHash
     )
     {
-        var txnReceipt = await _web3.Eth
+        var txnReceipt = await _sendTxn(() => _web3.Eth
             .GetContractTransactionHandler<InitThingAssessmentVerifierLotteryMessage>()
             .SendRequestAndWaitForReceiptAsync(
                 _thingAssessmentVerifierLotteryAddress,
@@ -371,7 +419,8 @@ internal class ContractCaller : IContractCaller
                     DataHash = dataHash,
                     UserXorDataHash = userXorDataHash
                 }
-            );
+            )
+        );
 
         _logger.LogInformation("=============== InitThingAssessmentVerifierLottery: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
 
@@ -421,7 +470,7 @@ internal class ContractCaller : IContractCaller
         byte[] hashOfL1EndBlock, List<ulong> winnerClaimantIndices, List<ulong> winnerIndices
     )
     {
-        var txnReceipt = await _web3.Eth
+        var txnReceipt = await _sendTxn(() => _web3.Eth
             .GetContractTransactionHandler<CloseThingAssessmentVerifierLotteryWithSuccessMessage>()
             .SendRequestAndWaitForReceiptAsync(
                 _thingAssessmentVerifierLotteryAddress,
@@ -434,7 +483,8 @@ internal class ContractCaller : IContractCaller
                     WinnerClaimantIndices = winnerClaimantIndices,
                     WinnerIndices = winnerIndices
                 }
-            );
+            )
+        );
 
         _logger.LogInformation("=============== CloseThingAssessmentVerifierLotteryWithSuccess: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
@@ -495,7 +545,7 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
-        var txnReceipt = await _web3.Eth
+        var txnReceipt = await _sendTxn(() => _web3.Eth
             .GetContractTransactionHandler<FinalizeAssessmentPollForProposalAsUnsettledMessage>()
             .SendRequestAndWaitForReceiptAsync(
                 _assessmentPollAddress,
@@ -506,7 +556,8 @@ internal class ContractCaller : IContractCaller
                     Decision = Decision.UnsettledDueToInsufficientVotingVolume,
                     VerifiersToSlashIndices = verifiersToSlashIndices
                 }
-            );
+            )
+        );
 
         _logger.LogInformation("=============== FinalizeAssessmentPollForProposalAsUnsettled: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
@@ -515,7 +566,7 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
-        var txnReceipt = await _web3.Eth
+        var txnReceipt = await _sendTxn(() => _web3.Eth
             .GetContractTransactionHandler<FinalizeAssessmentPollForProposalAsUnsettledMessage>()
             .SendRequestAndWaitForReceiptAsync(
                 _assessmentPollAddress,
@@ -526,7 +577,8 @@ internal class ContractCaller : IContractCaller
                     Decision = Decision.UnsettledDueToMajorityThresholdNotReached,
                     VerifiersToSlashIndices = verifiersToSlashIndices
                 }
-            );
+            )
+        );
 
         _logger.LogInformation("=============== FinalizeAssessmentPollForProposalAsUnsettled: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
@@ -535,7 +587,7 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
-        var txnReceipt = await _web3.Eth
+        var txnReceipt = await _sendTxn(() => _web3.Eth
             .GetContractTransactionHandler<FinalizeAssessmentPollForProposalAsAcceptedMessage>()
             .SendRequestAndWaitForReceiptAsync(
                 _assessmentPollAddress,
@@ -545,7 +597,8 @@ internal class ContractCaller : IContractCaller
                     VoteAggIpfsCid = voteAggIpfsCid,
                     VerifiersToSlashIndices = verifiersToSlashIndices
                 }
-            );
+            )
+        );
 
         _logger.LogInformation("=============== FinalizeAssessmentPollForProposalAsAccepted: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
@@ -554,7 +607,7 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
-        var txnReceipt = await _web3.Eth
+        var txnReceipt = await _sendTxn(() => _web3.Eth
             .GetContractTransactionHandler<FinalizeAssessmentPollForProposalAsSoftDeclinedMessage>()
             .SendRequestAndWaitForReceiptAsync(
                 _assessmentPollAddress,
@@ -564,7 +617,8 @@ internal class ContractCaller : IContractCaller
                     VoteAggIpfsCid = voteAggIpfsCid,
                     VerifiersToSlashIndices = verifiersToSlashIndices
                 }
-            );
+            )
+        );
 
         _logger.LogInformation("=============== FinalizeAssessmentPollForProposalAsSoftDeclined: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
@@ -573,7 +627,7 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
-        var txnReceipt = await _web3.Eth
+        var txnReceipt = await _sendTxn(() => _web3.Eth
             .GetContractTransactionHandler<FinalizeAssessmentPollForProposalAsHardDeclinedMessage>()
             .SendRequestAndWaitForReceiptAsync(
                 _assessmentPollAddress,
@@ -583,7 +637,8 @@ internal class ContractCaller : IContractCaller
                     VoteAggIpfsCid = voteAggIpfsCid,
                     VerifiersToSlashIndices = verifiersToSlashIndices
                 }
-            );
+            )
+        );
 
         _logger.LogInformation("=============== FinalizeAssessmentPollForProposalAsHardDeclined: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
