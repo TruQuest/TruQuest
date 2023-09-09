@@ -43,6 +43,8 @@ public static class UserEndpoints
                 sender.Send(command, serviceProvider: context.RequestServices)
         );
 
+        group.AddEndpointFilter(Filters.ConvertHandleResult);
+
         return group;
     }
 }

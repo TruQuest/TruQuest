@@ -1,5 +1,3 @@
-using Domain.Errors;
-using Domain.Results;
 using Domain.Aggregates;
 using Domain.Aggregates.Events;
 
@@ -37,8 +35,6 @@ public interface ISigner
         IEnumerable<AssessmentPollVote> offChainVotes,
         IEnumerable<CastedAssessmentPollVoteEvent> onChainVotes
     );
-
-    bool CheckIsOrchestrator(String address);
 
     string RecoverFromSiweMessage(string message, string signature);
 }

@@ -1,10 +1,13 @@
-using Domain.Aggregates.Events;
+using Application.Common.Models.QM;
 
 namespace Application.Common.Interfaces;
 
 public interface ISettlementProposalAssessmentVerifierLotteryEventQueryable
 {
-    Task<List<ThingAssessmentVerifierLotterySpotClaimedEvent>> GetAllSpotClaimedEventsFor(
-        Guid thingId, Guid settlementProposalId
-    );
+    Task<(
+        OrchestratorLotteryCommitmentQm?,
+        LotteryClosedEventQm?,
+        IEnumerable<VerifierLotteryParticipantEntryQm> Participants,
+        IEnumerable<VerifierLotteryParticipantEntryQm> Claimants
+    )> GetOrchestratorCommitmentAndParticipants(Guid thingId, Guid proposalId);
 }

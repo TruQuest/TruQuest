@@ -16,8 +16,6 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Exporter;
 
-using Domain.Results;
-using Domain.Errors;
 using Application;
 using Application.Common.Interfaces;
 using Application.Common.Behaviors;
@@ -169,52 +167,13 @@ public static class WebApplicationBuilderExtension
         app.UseCors();
         app.UseAuthentication();
 
-        async ValueTask<object?> EndpointFilter(
-            EndpointFilterInvocationContext context, EndpointFilterDelegate next
-        )
-        {
-            var handleResult = (HandleResult?)await next(context);
-            Debug.Assert(handleResult != null);
-            if (handleResult.Error != null)
-            {
-                switch (handleResult.Error)
-                {
-                    case AuthorizationError:
-                        return TypedResults.Json(
-                            handleResult,
-                            statusCode: handleResult.Error.Errors.Values.First().First() == "Forbidden" ?
-                                StatusCodes.Status403Forbidden :
-                                StatusCodes.Status401Unauthorized
-                        );
-                    default:
-                        return TypedResults.BadRequest(handleResult);
-                }
-            }
-
-            return TypedResults.Ok(handleResult);
-        }
-
         // @@TODO: Figure out how to add endpoint filter to all groups and endpoints at once.
         // app.MapGroup("").AddEndpointFilter(...) doesn't work.
-        app
-            .MapUserEndpoints()
-            .AddEndpointFilter(EndpointFilter);
-
-        app
-            .MapSubjectEndpoints()
-            .AddEndpointFilter(EndpointFilter);
-
-        app
-            .MapThingEndpoints()
-            .AddEndpointFilter(EndpointFilter);
-
-        app
-            .MapSettlementProposalEndpoints()
-            .AddEndpointFilter(EndpointFilter);
-
-        app
-            .MapGeneralEndpoints()
-            .ForEach(endpoint => endpoint.AddEndpointFilter(EndpointFilter));
+        app.MapUserEndpoints();
+        app.MapSubjectEndpoints();
+        app.MapThingEndpoints();
+        app.MapSettlementProposalEndpoints();
+        app.MapGeneralEndpoints();
 
         app.MapHub<TruQuestHub>("/hub");
 

@@ -22,18 +22,17 @@ internal class ThingSubmissionVerifierLotteryEventQueryable : Queryable, IThingS
         _dbContext = dbContext;
     }
 
-    public Task<JoinedThingSubmissionVerifierLotteryEvent> GetJoinedEventFor(
-        Guid thingId, string userId
-    ) => _dbContext.JoinedThingSubmissionVerifierLotteryEvents
-            .AsNoTracking()
+    public Task<string> GetJoinedEventUserDataFor(Guid thingId, string userId) =>
+        _dbContext.JoinedThingSubmissionVerifierLotteryEvents
             .Where(e => e.ThingId == thingId && e.UserId == userId)
+            .Select(e => e.UserData)
             .SingleAsync();
 
     public async Task<(
         OrchestratorLotteryCommitmentQm?,
         LotteryClosedEventQm?,
-        IEnumerable<VerifierLotteryParticipantEntryQm
-    >)> GetOrchestratorCommitmentAndParticipants(Guid thingId)
+        IEnumerable<VerifierLotteryParticipantEntryQm>
+    )> GetOrchestratorCommitmentAndParticipants(Guid thingId)
     {
         var dbConn = await _getOpenConnection();
         using var multiQuery = await dbConn.QueryMultipleAsync(
@@ -43,7 +42,7 @@ internal class ThingSubmissionVerifierLotteryEventQueryable : Queryable, IThingS
                 WHERE ""ThingId"" = @ThingId;
 
                 SELECT
-                    ""TxnHash"", ""Type"", ""Payload"",
+                    ""TxnHash"", ""Payload"",
                     CASE
                         WHEN ""Type"" = @LotteryClosedWithSuccessType
                             THEN (""Payload""->>'nonce')::BIGINT
@@ -66,12 +65,12 @@ internal class ThingSubmissionVerifierLotteryEventQueryable : Queryable, IThingS
         );
 
         var orchestratorCommitment = await multiQuery.ReadSingleOrDefaultAsync<OrchestratorLotteryCommitmentQm?>();
-        if (orchestratorCommitment == null) return (null, null, new List<VerifierLotteryParticipantEntryQm>());
+        if (orchestratorCommitment == null) return (null, null, Enumerable.Empty<VerifierLotteryParticipantEntryQm>());
 
         var lotteryClosedEvent = await multiQuery.ReadSingleOrDefaultAsync<LotteryClosedEventQm?>();
         var participantEntries = await multiQuery.ReadAsync<VerifierLotteryParticipantEntryQm>();
 
-        if (lotteryClosedEvent != null && lotteryClosedEvent.Type == ThingEventType.SubmissionVerifierLotteryClosedWithSuccess)
+        if (lotteryClosedEvent?.Nonce != null) // means successful lottery
         {
             foreach (var winnerId in ((JsonElement)lotteryClosedEvent.Payload["winnerIds"]).EnumerateArray())
             {

@@ -10,9 +10,7 @@ namespace API.Endpoints;
 
 public static class SettlementProposalEndpoints
 {
-    public static RouteGroupBuilder MapSettlementProposalEndpoints(
-        this WebApplication app
-    )
+    public static RouteGroupBuilder MapSettlementProposalEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/proposals");
 
@@ -39,14 +37,16 @@ public static class SettlementProposalEndpoints
                 sender.Send(command, serviceProvider: context.RequestServices)
         );
 
-        group.MapGet(
-            "/{proposalId}/lottery-participants",
-            (
-                [AsParameters] GetVerifierLotteryParticipantsQuery query,
-                SenderWrapper sender,
-                HttpContext context
-            ) => sender.Send(query, serviceProvider: context.RequestServices)
-        );
+        app
+            .MapGet(
+                "/things/{thingId}/proposals/{proposalId}/lottery-participants",
+                (
+                    [AsParameters] GetVerifierLotteryParticipantsQuery query,
+                    SenderWrapper sender,
+                    HttpContext context
+                ) => sender.Send(query, serviceProvider: context.RequestServices)
+            )
+            .AddEndpointFilter(Filters.ConvertHandleResult);
 
         group.MapGet(
             "/{proposalId}/votes",
@@ -67,6 +67,8 @@ public static class SettlementProposalEndpoints
                 return sender.Send(command, serviceProvider: context.RequestServices);
             }
         );
+
+        group.AddEndpointFilter(Filters.ConvertHandleResult);
 
         return group;
     }

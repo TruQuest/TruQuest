@@ -40,8 +40,8 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
 
     public async Task<VoidResult> Handle(InitVerifierLotteryCommand command, CancellationToken ct)
     {
-        var proposal = await _settlementProposalRepository.FindById(command.SettlementProposalId);
-        if (proposal.State == SettlementProposalState.AwaitingFunding)
+        var state = await _settlementProposalRepository.GetStateFor(command.SettlementProposalId);
+        if (state == SettlementProposalState.AwaitingFunding)
         {
             var data = RandomNumberGenerator.GetBytes(32);
             var userXorData = RandomNumberGenerator.GetBytes(32);
@@ -63,17 +63,19 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
             task.SetPayload(new()
             {
                 ["thingId"] = command.ThingId,
-                ["settlementProposalId"] = proposal.Id,
+                ["settlementProposalId"] = command.SettlementProposalId,
                 ["data"] = data.ToHex(prefix: true),
                 ["userXorData"] = userXorData.ToHex(prefix: true)
             });
 
             _taskRepository.Create(task);
 
-            proposal.SetState(SettlementProposalState.FundedAndVerifierLotteryInitiated);
+            await _settlementProposalRepository.UpdateStateFor(
+                command.SettlementProposalId, SettlementProposalState.FundedAndVerifierLotteryInitiated
+            );
 
             await _settlementProposalUpdateRepository.AddOrUpdate(new SettlementProposalUpdate(
-                settlementProposalId: proposal.Id,
+                settlementProposalId: command.SettlementProposalId,
                 category: SettlementProposalUpdateCategory.General,
                 updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 title: "Proposal funded",

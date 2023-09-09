@@ -54,6 +54,7 @@ contract ThingAssessmentVerifierLottery {
     event LotteryInitialized(
         bytes16 indexed thingId,
         bytes16 indexed settlementProposalId,
+        uint256 l1BlockNumber,
         address orchestrator,
         bytes32 dataHash,
         bytes32 userXorDataHash
@@ -310,13 +311,10 @@ contract ThingAssessmentVerifierLottery {
         bytes32 _dataHash,
         bytes32 _userXorDataHash
     ) external onlyOrchestrator onlyUninitialized(_thingProposalId) {
+        uint256 l1BlockNumber = _getL1BlockNumber();
         s_thingProposalIdToOrchestratorCommitment[
             _thingProposalId
-        ] = Commitment(
-            _dataHash,
-            _userXorDataHash,
-            int256(_getL1BlockNumber())
-        );
+        ] = Commitment(_dataHash, _userXorDataHash, int256(l1BlockNumber));
 
         (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
 
@@ -332,6 +330,7 @@ contract ThingAssessmentVerifierLottery {
         emit LotteryInitialized(
             thingId,
             proposalId,
+            l1BlockNumber,
             s_orchestrator,
             _dataHash,
             _userXorDataHash

@@ -13,6 +13,7 @@ public class EventDbContext : DbContext
     public DbSet<JoinedThingSubmissionVerifierLotteryEvent> JoinedThingSubmissionVerifierLotteryEvents { get; set; }
     public DbSet<CastedAcceptancePollVoteEvent> CastedAcceptancePollVoteEvents { get; set; }
 
+    public DbSet<ThingAssessmentVerifierLotteryInitializedEvent> ThingAssessmentVerifierLotteryInitializedEvents { get; set; }
     public DbSet<JoinedThingAssessmentVerifierLotteryEvent> JoinedThingAssessmentVerifierLotteryEvents { get; set; }
     public DbSet<ThingAssessmentVerifierLotterySpotClaimedEvent> ThingAssessmentVerifierLotterySpotClaimedEvents { get; set; }
     public DbSet<CastedAssessmentPollVoteEvent> CastedAssessmentPollVoteEvents { get; set; }
@@ -93,6 +94,22 @@ public class EventDbContext : DbContext
             builder.HasIndex(e => e.TxnHash).IsUnique();
         });
 
+        modelBuilder.Entity<ThingAssessmentVerifierLotteryInitializedEvent>(builder =>
+        {
+            builder.HasKey(e => e.Id);
+            builder.Property(e => e.Id).UseIdentityAlwaysColumn();
+            builder.Property(e => e.BlockNumber).IsRequired();
+            builder.Property(e => e.TxnIndex).IsRequired();
+            builder.Property(e => e.TxnHash).IsRequired();
+            builder.Property(e => e.L1BlockNumber).IsRequired();
+            builder.Property(e => e.ThingId).IsRequired();
+            builder.Property(e => e.SettlementProposalId).IsRequired();
+            builder.Property(e => e.DataHash).IsRequired();
+            builder.Property(e => e.UserXorDataHash).IsRequired();
+
+            builder.HasIndex(e => e.TxnHash).IsUnique();
+        });
+
         modelBuilder.Entity<JoinedThingAssessmentVerifierLotteryEvent>(builder =>
         {
             builder.HasKey(e => e.Id);
@@ -104,7 +121,7 @@ public class EventDbContext : DbContext
             builder.Property(e => e.SettlementProposalId).IsRequired();
             builder.Property(e => e.UserId).IsRequired();
             builder.Property(e => e.L1BlockNumber).IsRequired();
-            builder.Property(e => e.UserData).IsRequired(false);
+            builder.Property(e => e.UserData).IsRequired();
             builder.Property(e => e.Nonce).IsRequired(false);
 
             builder.HasIndex(e => e.TxnHash).IsUnique();

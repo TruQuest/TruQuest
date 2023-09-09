@@ -18,7 +18,6 @@ using Application.Settlement.Common.Models.IM;
 using Application.Settlement.Commands.CreateNewSettlementProposalDraft;
 using Application.Settlement.Commands.SubmitNewSettlementProposal;
 using Application.Thing.Queries.GetThing;
-// using Application.Thing.Queries.GetVerifierLotteryParticipants;
 using Application.Common.Misc;
 using Application.Common.Models.QM;
 using ThingEthEvents = Application.Ethereum.Events.ThingSubmissionVerifierLottery;
@@ -299,33 +298,6 @@ public class E2ETests : IAsyncLifetime
     [Fact]
     public async Task ShouldCreateAndAcceptThingAndSubsequentSettlementProposal()
     {
-        // var result = await _sut.SendRequest(new GetVerifierLotteryParticipantsQuery
-        // {
-        //     ThingId = Guid.Parse("8e1814ff-ab9e-4f53-9e9e-dc7a6006fd49")
-        // });
-
-        // var data = result.Data;
-
-        // if (data!.OrchestratorCommitment != null)
-        // {
-        //     Debug.WriteLine(
-        //         JsonSerializer.Serialize(data.OrchestratorCommitment, new JsonSerializerOptions { WriteIndented = true })
-        //     );
-        // }
-
-        // if (data.LotteryClosedEvent != null)
-        // {
-        //     Debug.WriteLine(
-        //         JsonSerializer.Serialize(data.LotteryClosedEvent, new JsonSerializerOptions { WriteIndented = true })
-        //     );
-        // }
-
-        // Debug.WriteLine(
-        //     JsonSerializer.Serialize(data.Participants, new JsonSerializerOptions { WriteIndented = true })
-        // );
-
-        // return;
-
         var submitterAddress = await _sut.ContractCaller.GetWalletAddressFor("Submitter");
 
         Guid subjectId;

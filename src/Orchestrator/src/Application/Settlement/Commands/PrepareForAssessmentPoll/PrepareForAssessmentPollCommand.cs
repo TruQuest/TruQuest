@@ -4,7 +4,6 @@ using MediatR;
 
 using Domain.Aggregates;
 using Domain.Results;
-using Domain.Aggregates.Events;
 
 using Application.Common.Interfaces;
 using Application.Common.Attributes;
@@ -32,7 +31,6 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
 {
     private readonly ISettlementProposalRepository _settlementProposalRepository;
     private readonly ITaskRepository _taskRepository;
-    private readonly IJoinedThingAssessmentVerifierLotteryEventRepository _joinedThingAssessmentVerifierLotteryEventRepository;
     private readonly ISettlementProposalUpdateRepository _settlementProposalUpdateRepository;
     private readonly IWatchedItemRepository _watchedItemRepository;
     private readonly IContractCaller _contractCaller;
@@ -40,7 +38,6 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
     public PrepareForAssessmentPollCommandHandler(
         ISettlementProposalRepository settlementProposalRepository,
         ITaskRepository taskRepository,
-        IJoinedThingAssessmentVerifierLotteryEventRepository joinedThingAssessmentVerifierLotteryEventRepository,
         ISettlementProposalUpdateRepository settlementProposalUpdateRepository,
         IWatchedItemRepository watchedItemRepository,
         IContractCaller contractCaller
@@ -48,7 +45,6 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
     {
         _settlementProposalRepository = settlementProposalRepository;
         _taskRepository = taskRepository;
-        _joinedThingAssessmentVerifierLotteryEventRepository = joinedThingAssessmentVerifierLotteryEventRepository;
         _settlementProposalUpdateRepository = settlementProposalUpdateRepository;
         _watchedItemRepository = watchedItemRepository;
         _contractCaller = contractCaller;
@@ -82,18 +78,6 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
                 ["settlementProposalId"] = proposal.Id
             });
             _taskRepository.Create(task);
-
-            var joinedThingAssessmentVerifierLotteryEvent = new JoinedThingAssessmentVerifierLotteryEvent(
-                blockNumber: command.AssessmentPollInitBlockNumber,
-                txnIndex: command.AssessmentPollInitTxnIndex,
-                txnHash: command.AssessmentPollInitTxnHash,
-                thingId: command.ThingId,
-                settlementProposalId: command.SettlementProposalId,
-                userId: command.Orchestrator,
-                l1BlockNumber: -lotteryInitBlock,
-                nonce: command.Nonce
-            );
-            _joinedThingAssessmentVerifierLotteryEventRepository.Create(joinedThingAssessmentVerifierLotteryEvent);
 
             var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
@@ -129,7 +113,6 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
 
             await _settlementProposalRepository.SaveChanges();
             await _taskRepository.SaveChanges();
-            await _joinedThingAssessmentVerifierLotteryEventRepository.SaveChanges();
             await _watchedItemRepository.SaveChanges();
             await _settlementProposalUpdateRepository.SaveChanges();
         }

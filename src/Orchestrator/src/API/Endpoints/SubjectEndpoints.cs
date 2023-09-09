@@ -38,6 +38,8 @@ public static class SubjectEndpoints
                 sender.Send(query, serviceProvider: context.RequestServices)
         );
 
+        group.AddEndpointFilter(Filters.ConvertHandleResult);
+
         return group;
     }
 }

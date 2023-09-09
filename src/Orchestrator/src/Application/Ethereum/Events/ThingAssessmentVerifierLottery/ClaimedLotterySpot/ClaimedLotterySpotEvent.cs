@@ -33,9 +33,8 @@ internal class ClaimedLotterySpotEventHandler : INotificationHandler<ClaimedLott
 
     public async Task Handle(ClaimedLotterySpotEvent @event, CancellationToken ct)
     {
-        // @@TODO??: Could use trigger for this instead.
         var thingId = new Guid(@event.ThingId);
-        var joinedEvent = await _thingLotteryEventQueryable.GetJoinedEventFor(thingId, @event.UserId);
+        var userData = await _thingLotteryEventQueryable.GetJoinedEventUserDataFor(thingId, @event.UserId);
 
         var spotClaimedEvent = new ThingAssessmentVerifierLotterySpotClaimedEvent(
             blockNumber: @event.BlockNumber,
@@ -45,7 +44,7 @@ internal class ClaimedLotterySpotEventHandler : INotificationHandler<ClaimedLott
             settlementProposalId: new Guid(@event.SettlementProposalId),
             userId: @event.UserId,
             l1BlockNumber: @event.L1BlockNumber,
-            userData: joinedEvent.UserData!
+            userData: userData
         );
         _thingAssessmentVerifierLotterySpotClaimedEventRepository.Create(spotClaimedEvent);
 

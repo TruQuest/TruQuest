@@ -7,10 +7,17 @@ public static class GeneralEndpoints
 {
     public static List<RouteHandlerBuilder> MapGeneralEndpoints(this WebApplication app)
     {
-        return new()
+        var endpoints = new List<RouteHandlerBuilder>()
         {
-            app.MapGet("/tags", (SenderWrapper sender, HttpContext context) =>
-                sender.Send(new GetTagsQuery(), serviceProvider: context.RequestServices))
+            app.MapGet(
+                "/tags",
+                (SenderWrapper sender, HttpContext context) =>
+                    sender.Send(new GetTagsQuery(), serviceProvider: context.RequestServices)
+            )
         };
+
+        foreach (var endpoint in endpoints) endpoint.AddEndpointFilter(Filters.ConvertHandleResult);
+
+        return endpoints;
     }
 }

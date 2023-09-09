@@ -222,9 +222,6 @@ internal class Signer : ISigner
         );
     }
 
-    public bool CheckIsOrchestrator(String address) =>
-        _accountProvider.LookupNameByAddress(address) == "Orchestrator";
-
     public string RecoverFromSiweMessage(string message, string signature) =>
         _personalSigner.EncodeUTF8AndEcRecover(message, signature);
 }
