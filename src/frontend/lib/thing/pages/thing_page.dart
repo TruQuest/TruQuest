@@ -1,12 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:contained_tab_bar_view/contained_tab_bar_view.dart';
+import 'package:contained_tab_bar_view/contained_tab_bar_view.dart' show TabBarProperties, ContainerTabIndicator;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
 import '../../general/utils/utils.dart';
+import '../../general/widgets/contained_tab_bar_view.dart';
 import '../../general/widgets/restrict_when_unauthorized_button.dart';
 import '../../general/contexts/document_context.dart';
 import '../../general/contexts/page_context.dart';
@@ -96,7 +97,7 @@ class _ThingPageState extends StateX<ThingPage> {
       if (state.index >= ThingStateVm.verifiersSelectedAndPollInitiated.index) {
         items.add(const Text('Poll'));
         if (state.index >= ThingStateVm.awaitingSettlement.index) {
-          items.add(const Text('Settlement proposals'));
+          items.add(const Text('Settlement'));
         }
       }
     }
@@ -292,23 +293,15 @@ class _ThingPageState extends StateX<ThingPage> {
             key: ValueKey('${vm.thing.id} ${vm.thing.state}'), // @@TODO: Check if necessary.
             tabs: tabs,
             tabBarProperties: TabBarProperties(
-              width: 500,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 32,
-                vertical: 8,
-              ),
+              margin: const EdgeInsets.only(bottom: 8),
+              width: tabs.length == 1 ? 400 : 600,
+              height: 40,
               indicator: ContainerTabIndicator(
                 radius: BorderRadius.circular(8),
-                color: Colors.blue,
-                borderWidth: 2,
-                borderColor: Colors.black,
+                color: Colors.indigo,
               ),
               labelColor: Colors.white,
-              labelPadding: const EdgeInsets.symmetric(
-                horizontal: 32,
-                vertical: 8,
-              ),
-              unselectedLabelColor: Colors.grey[400],
+              unselectedLabelColor: Colors.grey,
             ),
             views: _buildTabContents(vm),
           ),

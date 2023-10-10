@@ -126,7 +126,6 @@ class ThingService {
     var currentWalletAddress = _userService.latestCurrentUser?.walletAddress;
 
     int? initBlock = await _thingSubmissionVerifierLotteryContract.getLotteryInitBlock(thingId);
-
     int durationBlocks = await _thingSubmissionVerifierLotteryContract.getLotteryDurationBlocks();
 
     // @@NOTE: If user has a wallet but is not signed-in, then checking is

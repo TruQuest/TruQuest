@@ -58,6 +58,7 @@ class _HomePageState extends StateX<HomePage> {
                 height: 70,
                 color: Colors.black,
                 fromNarrowToWide: true,
+                narrowSideFraction: 0.55,
               ),
               title: Image.asset(
                 'assets/images/logo.png',

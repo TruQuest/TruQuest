@@ -21,8 +21,7 @@ class NotificationTracker extends StatefulWidget {
   State<NotificationTracker> createState() => _NotificationTrackerState();
 }
 
-class _NotificationTrackerState extends StateX<NotificationTracker>
-    with SingleTickerProviderStateMixin {
+class _NotificationTrackerState extends StateX<NotificationTracker> with SingleTickerProviderStateMixin {
   late final _notificationBloc = use<NotificationBloc>();
   late final _pageContext = use<PageContext>();
 
@@ -74,8 +73,7 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
           _composition = composition;
         });
 
-        _unreadNotificationsCount$$ =
-            _notificationBloc.unreadNotificationsCount$.listen((_) {
+        _unreadNotificationsCount$$ = _notificationBloc.unreadNotificationsCount$.listen((_) {
           _animationController.reset();
           _animationController.forward();
         });
@@ -221,6 +219,7 @@ class _NotificationTrackerState extends StateX<NotificationTracker>
           height: 50,
           color: Color(0xffF8F9FA),
           fromNarrowToWide: false,
+          narrowSideFraction: 0.4,
         ),
         if (_composition != null)
           IconButton(

@@ -33,7 +33,7 @@ class _BlockCountdownState extends State<BlockCountdown> {
     ),
     startAngle: 180,
     angleRange: 360,
-    size: 220,
+    size: 200,
     animDurationMultiplier: 0.3,
   );
 
@@ -67,8 +67,8 @@ class _BlockCountdownState extends State<BlockCountdown> {
           child: Align(
             alignment: Alignment.center,
             child: Container(
-              width: value / 4,
-              height: value / 4,
+              width: value / 5,
+              height: value / 5,
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.white),
                 borderRadius: BorderRadius.circular(4),

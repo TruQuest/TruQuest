@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
+import '../../general/widgets/clipped_rect.dart';
 import '../../general/widgets/corner_banner.dart';
 import '../../general/widgets/block_countdown.dart';
 import '../../user/bloc/user_bloc.dart';
@@ -57,6 +58,7 @@ class _LotteryState extends StateX<Lottery> {
 
         var initialInfo = snapshot.data!;
 
+        // @@TODO: Move from here.
         var horizontalMargin = 40.0;
         var availableWidth = 1400.0 - horizontalMargin * 2;
         var participantCardWidth = 150.0;
@@ -74,7 +76,7 @@ class _LotteryState extends StateX<Lottery> {
           ),
           child: Column(
             children: [
-              SizedBox(height: 40),
+              SizedBox(height: 30),
               StreamBuilder(
                 stream: _thingBloc.verifierLotteryInfo$,
                 initialData: initialInfo,
@@ -94,7 +96,6 @@ class _LotteryState extends StateX<Lottery> {
 
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Stack(
                             alignment: Alignment.center,
@@ -104,7 +105,7 @@ class _LotteryState extends StateX<Lottery> {
                                 max: endBlock,
                                 initialValue: currentBlock,
                                 appearance: CircularSliderAppearance(
-                                  size: 300,
+                                  size: 270,
                                   customColors: CustomSliderColors(
                                     dotColor: Colors.transparent,
                                   ),
@@ -138,7 +139,7 @@ class _LotteryState extends StateX<Lottery> {
                               ),
                             ],
                           ),
-                          SizedBox(width: 40),
+                          SizedBox(width: 80),
                           SizedBox(
                             width: 600,
                             child: LotteryStepper(
@@ -171,21 +172,69 @@ class _LotteryState extends StateX<Lottery> {
                         Card(
                           margin: const EdgeInsets.symmetric(horizontal: 40),
                           color: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                           elevation: 2,
                           child: Row(
                             children: [
-                              Text(
-                                'Lottery',
-                                style: GoogleFonts.philosopher(fontSize: 24),
+                              ClippedRect(
+                                width: 200,
+                                height: 50,
+                                color: Colors.blue,
+                                fromNarrowToWide: true,
+                                narrowSideFraction: 0.4,
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(8),
+                                  bottomLeft: Radius.circular(8),
+                                ),
+                                child: Text(
+                                  'Orchestrator\'s\n         commitment',
+                                  style: GoogleFonts.philosopher(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                  ),
+                                ),
                               ),
                               if (orchestratorCommitment != null)
-                                Text(
-                                  'Orchestrator commitment: ${orchestratorCommitment.commitmentShort}',
-                                  style: GoogleFonts.raleway(),
+                                RichText(
+                                  text: TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: lotteryClosedEvent?.nonce?.toString() ?? 'No nonce yet',
+                                        style: GoogleFonts.righteous(
+                                          color: Colors.black.withOpacity(0.7),
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text: '\n         ${orchestratorCommitment.commitmentShort}',
+                                        style: GoogleFonts.raleway(
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               Spacer(),
+                              SizedBox(
+                                width: 170,
+                                height: 30,
+                                child: TextField(
+                                  decoration: InputDecoration(
+                                    hintText: 'Search',
+                                    hintStyle: GoogleFonts.raleway(
+                                      fontSize: 14,
+                                    ),
+                                    contentPadding: const EdgeInsets.only(left: 12),
+                                    suffixIcon: Icon(Icons.search, size: 20),
+                                    border: OutlineInputBorder(),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 12),
                               IconButton(
-                                icon: Icon(Icons.refresh),
+                                icon: Icon(Icons.refresh, size: 20),
                                 onPressed: () => _thingBloc.dispatch(
                                   GetVerifierLotteryParticipants(thingId: widget.thing.id),
                                 ),
@@ -200,23 +249,33 @@ class _LotteryState extends StateX<Lottery> {
                               crossAxisCount: crossAxisCount,
                               crossAxisSpacing: crossAxisSpacing,
                               mainAxisExtent: 200,
-                              mainAxisSpacing: 16,
+                              mainAxisSpacing: 24,
                             ),
                             itemBuilder: (context, index) {
-                              var participant = participants[0];
+                              var participant = participants[index];
+
                               return Card(
                                 margin: EdgeInsets.zero,
-                                color: Colors.white,
+                                color: participant.userId == _currentUserId ? Color(0xff0A6EBD) : Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                                 elevation: 5,
-                                clipBehavior: Clip.antiAlias,
                                 child: Stack(
                                   children: [
                                     Column(
                                       children: [
                                         Expanded(
                                           child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6),
                                             width: double.infinity,
-                                            color: Colors.blue,
+                                            decoration: BoxDecoration(
+                                              color: participant.cardColor,
+                                              borderRadius: BorderRadius.only(
+                                                topLeft: Radius.circular(8),
+                                                topRight: Radius.circular(8),
+                                              ),
+                                            ),
                                             alignment: Alignment.center,
                                             child: Column(
                                               mainAxisAlignment: MainAxisAlignment.center,
@@ -229,11 +288,13 @@ class _LotteryState extends StateX<Lottery> {
                                                   ),
                                                 ),
                                                 SizedBox(height: 6),
-                                                Text(
-                                                  participant.commitment,
-                                                  style: GoogleFonts.raleway(
-                                                    color: Colors.white,
-                                                    fontSize: 20,
+                                                FittedBox(
+                                                  child: Text(
+                                                    participant.commitment,
+                                                    style: GoogleFonts.raleway(
+                                                      color: Colors.white,
+                                                      fontSize: 20,
+                                                    ),
                                                   ),
                                                 ),
                                               ],
@@ -244,31 +305,21 @@ class _LotteryState extends StateX<Lottery> {
                                           padding: const EdgeInsets.symmetric(vertical: 8),
                                           child: Text(
                                             participant.userIdShort,
-                                            style: GoogleFonts.philosopher(),
+                                            style: GoogleFonts.raleway(
+                                              color: participant.userId == _currentUserId ? Colors.white : Colors.black,
+                                            ),
                                           ),
                                         ),
                                       ],
                                     ),
-                                    if (participant.userId == _currentUserId)
+                                    if (participant.isWinner)
                                       Positioned(
                                         top: 0,
                                         left: 0,
                                         child: CornerBanner(
                                           position: Alignment.topLeft,
-                                          color: Colors.red,
-                                          cornerRadius: 4,
-                                          size: 26,
-                                          child: SizedBox.shrink(),
-                                        ),
-                                      ),
-                                    if (participant.isWinner)
-                                      Positioned(
-                                        bottom: 0,
-                                        right: 0,
-                                        child: CornerBanner(
-                                          position: Alignment.bottomRight,
-                                          color: Colors.green,
-                                          cornerRadius: 4,
+                                          color: Color.fromARGB(255, 255, 92, 130),
+                                          cornerRadius: 8,
                                           size: 26,
                                           child: SizedBox.shrink(),
                                         ),
@@ -277,7 +328,7 @@ class _LotteryState extends StateX<Lottery> {
                                 ),
                               );
                             },
-                            itemCount: 11,
+                            itemCount: participants.length,
                           ),
                         ),
                         SizedBox(height: 12),
