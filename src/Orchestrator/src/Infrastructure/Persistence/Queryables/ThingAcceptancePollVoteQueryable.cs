@@ -12,12 +12,12 @@ internal class ThingAcceptancePollVoteQueryable : Queryable, IThingAcceptancePol
         ISharedTxnScope sharedTxnScope
     ) : base(dbContext, sharedTxnScope) { }
 
-    public async Task<(string?, IEnumerable<VoteQm>)> GetAllFor(Guid thingId, string? userId)
+    public async Task<(ThingAcceptancePollResultQm, IEnumerable<VoteQm>)> GetAllFor(Guid thingId, string? userId)
     {
         var dbConn = await _getOpenConnection();
         using var multiQuery = await dbConn.QueryMultipleAsync(
             @"
-                SELECT ""VoteAggIpfsCid""
+                SELECT ""State"", ""VoteAggIpfsCid""
                 FROM truquest.""Things""
                 WHERE ""Id"" = @ThingId;
 
@@ -68,18 +68,18 @@ internal class ThingAcceptancePollVoteQueryable : Queryable, IThingAcceptancePol
             param: new { ThingId = thingId }
         );
 
-        var voteAggIpfsCid = multiQuery.ReadSingleOrDefault<string?>();
+        var pollResult = multiQuery.ReadSingle<ThingAcceptancePollResultQm>();
         var votes = multiQuery.Read<VoteQm>();
 
-        if (voteAggIpfsCid == null)
+        if (pollResult.VoteAggIpfsCid == null)
         {
-            // If poll is not yet finalized do not show votes other than the user's own one.
+            // If poll is not yet finalized do not show votes other than the user's own.
             foreach (var vote in votes)
             {
                 if (vote.UserId != userId) vote.ClearSensitiveData();
             }
         }
 
-        return (voteAggIpfsCid, votes);
+        return (pollResult, votes);
     }
 }

@@ -27,7 +27,7 @@ class ThingBloc extends Bloc<ThingAction> {
   Stream<GetVerifierLotteryParticipantsRvm> get verifierLotteryParticipants$ =>
       _verifierLotteryParticipantsChannel.stream;
 
-  final _votesChannel = StreamController<GetVotesRvm>.broadcast();
+  final _votesChannel = BehaviorSubject<GetVotesRvm>();
   Stream<GetVotesRvm> get votes$ => _votesChannel.stream;
 
   final _proposalsListChannel = StreamController<List<SettlementProposalPreviewVm>>.broadcast();

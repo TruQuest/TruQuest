@@ -39,14 +39,18 @@ class _LotteryState extends StateX<Lottery> {
     super.initState();
     _currentUserId = _userBloc.latestCurrentUser?.id;
     _thingBloc.dispatch(GetVerifierLotteryParticipants(thingId: widget.thing.id));
-    _initialInfoRetrieved = _thingBloc.execute<VerifierLotteryInfoVm>(GetVerifierLotteryInfo(thingId: widget.thing.id));
+    _initialInfoRetrieved = _thingBloc.execute<VerifierLotteryInfoVm>(
+      GetVerifierLotteryInfo(thingId: widget.thing.id),
+    );
   }
 
   @override
   void didUpdateWidget(covariant Lottery oldWidget) {
     super.didUpdateWidget(oldWidget);
     _currentUserId = _userBloc.latestCurrentUser?.id;
-    _initialInfoRetrieved = _thingBloc.execute<VerifierLotteryInfoVm>(GetVerifierLotteryInfo(thingId: widget.thing.id));
+    _initialInfoRetrieved = _thingBloc.execute<VerifierLotteryInfoVm>(
+      GetVerifierLotteryInfo(thingId: widget.thing.id),
+    );
   }
 
   @override
@@ -267,7 +271,6 @@ class _LotteryState extends StateX<Lottery> {
                                       children: [
                                         Expanded(
                                           child: Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6),
                                             width: double.infinity,
                                             decoration: BoxDecoration(
                                               color: participant.cardColor,
@@ -288,13 +291,11 @@ class _LotteryState extends StateX<Lottery> {
                                                   ),
                                                 ),
                                                 SizedBox(height: 6),
-                                                FittedBox(
-                                                  child: Text(
-                                                    participant.commitment,
-                                                    style: GoogleFonts.raleway(
-                                                      color: Colors.white,
-                                                      fontSize: 20,
-                                                    ),
+                                                Text(
+                                                  participant.commitment,
+                                                  style: GoogleFonts.raleway(
+                                                    color: Colors.white,
+                                                    fontSize: 17,
                                                   ),
                                                 ),
                                               ],

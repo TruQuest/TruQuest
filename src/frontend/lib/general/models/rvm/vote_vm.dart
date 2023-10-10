@@ -1,3 +1,6 @@
+import 'dart:math';
+
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import 'decision_vm.dart';
@@ -14,6 +17,17 @@ class VoteVm {
 }
 
 class Vote2Vm {
+  static final _colors = [
+    Color(0xff72efdd),
+    Color(0xff64dfdf),
+    Color(0xff56cfe1),
+    Color(0xff48bfe3),
+    Color(0xff4ea8de),
+    Color(0xff5390d9),
+  ];
+
+  static final _random = Random();
+
   final String userId;
   final int? castedAtMs;
   final int? l1BlockNumber;
@@ -23,8 +37,16 @@ class Vote2Vm {
   final String? ipfsCid;
   final String? txnHash;
 
+  Color get cardColor => _colors[_random.nextInt(_colors.length)];
+
+  String get decisionString => decision?.getString() ?? 'Hidden';
+
+  String get onOrOffChain => blockNumber != null ? 'Onchain' : 'Offchain';
+
   String get castedVoteAt =>
       l1BlockNumber?.toString() ?? DateFormat.jm().format(DateTime.fromMillisecondsSinceEpoch(castedAtMs!));
+
+  String get userIdShort => '${userId.substring(0, 6)}..${userId.substring(userId.length - 4)}';
 
   Vote2Vm.fromMap(Map<String, dynamic> map)
       : userId = map['userId'],
