@@ -9,7 +9,6 @@ import '../models/im/new_assessment_poll_vote_im.dart';
 import '../../user/services/user_service.dart';
 import '../../general/contracts/acceptance_poll_contract.dart';
 import '../../general/utils/utils.dart';
-import '../../general/models/rvm/verifier_lottery_participant_entry_vm.dart';
 import '../models/im/decision_im.dart';
 import '../../general/contracts/assessment_poll_contract.dart';
 import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
@@ -17,7 +16,7 @@ import '../../general/contracts/thing_assessment_verifier_lottery_contract.dart'
 import '../../general/contracts/truquest_contract.dart';
 import '../models/rvm/get_settlement_proposal_rvm.dart';
 import '../../general/contexts/document_context.dart';
-import '../models/rvm/get_verifiers_rvm.dart';
+import '../models/rvm/get_votes_rvm.dart';
 import 'settlement_api_service.dart';
 
 class SettlementService {
@@ -139,7 +138,6 @@ class SettlementService {
     var currentWalletAddress = _userService.latestCurrentUser?.walletAddress;
 
     int? initBlock = await _thingAssessmentVerifierLotteryContract.getLotteryInitBlock(thingId, proposalId);
-
     int durationBlocks = await _thingAssessmentVerifierLotteryContract.getLotteryDurationBlocks();
 
     int thingVerifiersArrayIndex = currentWalletAddress != null
@@ -280,43 +278,9 @@ class SettlementService {
     String proposalId,
   ) async {
     var result = await _settlementApiService.getVerifierLotteryParticipants(
+      thingId,
       proposalId,
     );
-
-    var (lotteryInitBlock, dataHash, userXorDataHash) =
-        await _thingAssessmentVerifierLotteryContract.getOrchestratorCommitment(thingId, proposalId);
-
-    var entries = result.entries;
-    if (entries.isEmpty || !entries.first.isOrchestrator) {
-      if (lotteryInitBlock != 0) {
-        result = GetVerifierLotteryParticipantsRvm(
-          proposalId: proposalId,
-          entries: List.unmodifiable([
-            VerifierLotteryParticipantEntryVm.orchestratorNoNonce(
-              lotteryInitBlock.abs(),
-              dataHash,
-              userXorDataHash,
-            ),
-            ...entries,
-          ]),
-        );
-      }
-    } else {
-      result = GetVerifierLotteryParticipantsRvm(
-        proposalId: proposalId,
-        entries: List.unmodifiable(
-          [
-            entries.first.copyWith(
-              'Orchestrator',
-              dataHash,
-              userXorDataHash,
-            ),
-            ...entries.skip(1)
-          ],
-        ),
-      );
-    }
-
     return result;
   }
 
@@ -440,8 +404,8 @@ class SettlementService {
     }
   }
 
-  Future<GetVerifiersRvm> getVerifiers(String proposalId) async {
-    var result = await _settlementApiService.getVerifiers(proposalId);
+  Future<GetVotesRvm> getVotes(String proposalId) async {
+    var result = await _settlementApiService.getVotes(proposalId);
     return result;
   }
 }

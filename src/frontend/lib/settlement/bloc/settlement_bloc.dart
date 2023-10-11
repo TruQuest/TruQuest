@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:rxdart/rxdart.dart';
+
 import '../models/rvm/assessment_poll_info_vm.dart';
-import '../../general/models/rvm/verifier_lottery_participant_entry_vm.dart';
-import '../../general/models/rvm/verifier_vm.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
+import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
+import '../models/rvm/get_votes_rvm.dart';
 import '../models/rvm/settlement_proposal_state_vm.dart';
 import '../models/rvm/get_settlement_proposal_rvm.dart';
 import '../../general/bloc/bloc.dart';
@@ -20,23 +22,21 @@ class SettlementBloc extends Bloc<SettlementAction> {
   final _verifierLotteryInfoChannel = StreamController<VerifierLotteryInfoVm>.broadcast();
   Stream<VerifierLotteryInfoVm> get verifierLotteryInfo$ => _verifierLotteryInfoChannel.stream;
 
-  final _verifierLotteryParticipantsChannel = StreamController<List<VerifierLotteryParticipantEntryVm>>.broadcast();
-  Stream<List<VerifierLotteryParticipantEntryVm>> get verifierLotteryParticipants$ =>
+  final _verifierLotteryParticipantsChannel = BehaviorSubject<GetVerifierLotteryParticipantsRvm>();
+  Stream<GetVerifierLotteryParticipantsRvm> get verifierLotteryParticipants$ =>
       _verifierLotteryParticipantsChannel.stream;
 
-  final _verifiersChannel = StreamController<List<VerifierVm>>.broadcast();
-  Stream<List<VerifierVm>> get verifiers$ => _verifiersChannel.stream;
+  final _votesChannel = BehaviorSubject<GetVotesRvm>();
+  Stream<GetVotesRvm> get votes$ => _votesChannel.stream;
 
   SettlementBloc(super.toastMessenger, this._settlementService) {
     actionChannel.stream.listen((action) {
       if (action is GetSettlementProposal) {
         _getSettlementProposal(action);
-      } else if (action is GetVerifierLotteryInfo) {
-        _getVerifierLotteryInfo(action);
       } else if (action is GetVerifierLotteryParticipants) {
         _getVerifierLotteryParticipants(action);
-      } else if (action is GetVerifiers) {
-        _getVerifiers(action);
+      } else if (action is GetVotes) {
+        _getVotes(action);
       }
     });
   }
@@ -46,7 +46,9 @@ class SettlementBloc extends Bloc<SettlementAction> {
     if (action is CreateNewSettlementProposalDraft) {
       return _createNewSettlementProposalDraft(action);
     } else if (action is SubmitNewSettlementProposal) {
-      _submitNewSettlementProposal(action);
+      return _submitNewSettlementProposal(action);
+    } else if (action is GetVerifierLotteryInfo) {
+      return _getVerifierLotteryInfo(action);
     } else if (action is GetAssessmentPollInfo) {
       return _getAssessmentPollInfo(action);
     }
@@ -118,21 +120,22 @@ class SettlementBloc extends Bloc<SettlementAction> {
         ctx,
       );
 
-  void _getVerifierLotteryInfo(GetVerifierLotteryInfo action) async {
-    var info = await _settlementService.getVerifierLotteryInfo(
+  Future<VerifierLotteryInfoVm> _getVerifierLotteryInfo(GetVerifierLotteryInfo action) async {
+    var result = await _settlementService.getVerifierLotteryInfo(
       action.thingId,
       action.proposalId,
     );
-    _verifierLotteryInfoChannel.add(
-      VerifierLotteryInfoVm(
-        userId: info.$1,
-        initBlock: info.$2,
-        durationBlocks: info.$3,
-        userIndexInThingVerifiersArray: info.$4,
-        alreadyClaimedASpot: info.$5,
-        alreadyJoined: info.$6,
-      ),
+    var info = VerifierLotteryInfoVm(
+      userId: result.$1,
+      initBlock: result.$2,
+      durationBlocks: result.$3,
+      userIndexInThingVerifiersArray: result.$4,
+      alreadyClaimedASpot: result.$5,
+      alreadyJoined: result.$6,
     );
+    _verifierLotteryInfoChannel.add(info);
+
+    return info;
   }
 
   Stream<Object> _claimLotterySpot(ClaimLotterySpot action, MultiStageOperationContext ctx) =>
@@ -149,14 +152,12 @@ class SettlementBloc extends Bloc<SettlementAction> {
         ctx,
       );
 
-  void _getVerifierLotteryParticipants(
-    GetVerifierLotteryParticipants action,
-  ) async {
+  void _getVerifierLotteryParticipants(GetVerifierLotteryParticipants action) async {
     var result = await _settlementService.getVerifierLotteryParticipants(
       action.thingId,
       action.proposalId,
     );
-    _verifierLotteryParticipantsChannel.add(result.entries);
+    _verifierLotteryParticipantsChannel.add(result);
   }
 
   Future<AssessmentPollInfoVm> _getAssessmentPollInfo(GetAssessmentPollInfo action) async {
@@ -192,8 +193,8 @@ class SettlementBloc extends Bloc<SettlementAction> {
         ctx,
       );
 
-  void _getVerifiers(GetVerifiers action) async {
-    var result = await _settlementService.getVerifiers(action.proposalId);
-    _verifiersChannel.add(result.verifiers);
+  void _getVotes(GetVotes action) async {
+    var result = await _settlementService.getVotes(action.proposalId);
+    _votesChannel.add(result);
   }
 }

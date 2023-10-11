@@ -5,7 +5,7 @@ import '../models/rvm/decision_vm.dart';
 import '../models/rvm/vote_vm.dart';
 
 class VoteViewDialog extends StatelessWidget {
-  final Vote2Vm vote;
+  final VoteVm vote;
 
   const VoteViewDialog({super.key, required this.vote});
 

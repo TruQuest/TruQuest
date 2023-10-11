@@ -209,7 +209,7 @@ class ContainedTabBarViewState extends State<ContainedTabBarView> with SingleTic
 
     return widget.tabBarProperties.position == TabBarPosition.left ||
             widget.tabBarProperties.position == TabBarPosition.right
-        ? Container(
+        ? SizedBox(
             width: constraints.maxWidth - widget.tabBarProperties.height - margin.top - margin.bottom,
             child: TabBarView(
               controller: _controller,
@@ -218,7 +218,7 @@ class ContainedTabBarViewState extends State<ContainedTabBarView> with SingleTic
               physics: widget.tabBarViewProperties.physics,
             ),
           )
-        : Container(
+        : SizedBox(
             height: constraints.maxHeight - widget.tabBarProperties.height - margin.top - margin.bottom,
             child: TabBarView(
               controller: _controller,

@@ -5,7 +5,7 @@ class GetVotesRvm {
   final String thingId;
   final ThingStateVm thingState;
   final String? voteAggIpfsCid;
-  final List<Vote2Vm> votes;
+  final List<VoteVm> votes;
 
   String get decision => thingState == ThingStateVm.verifiersSelectedAndPollInitiated
       ? 'Pending'
@@ -18,6 +18,6 @@ class GetVotesRvm {
         thingState = ThingStateVm.values[map['thingState']],
         voteAggIpfsCid = map['voteAggIpfsCid'],
         votes = List.unmodifiable(
-          (map['votes'] as List<dynamic>).map((submap) => Vote2Vm.fromMap(submap)),
+          (map['votes'] as List<dynamic>).map((submap) => VoteVm.fromMap(submap)),
         );
 }

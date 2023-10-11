@@ -232,7 +232,7 @@ class GetAssessmentPollInfo extends SettlementAction {
   });
 }
 
-class GetVerifiers extends SettlementAction {
+class GetVotes extends SettlementAction {
   final String proposalId;
 
   @override
@@ -246,7 +246,7 @@ class GetVerifiers extends SettlementAction {
     return errors;
   }
 
-  const GetVerifiers({required this.proposalId});
+  const GetVotes({required this.proposalId});
 }
 
 class CastVoteOffChain extends SettlementAction {

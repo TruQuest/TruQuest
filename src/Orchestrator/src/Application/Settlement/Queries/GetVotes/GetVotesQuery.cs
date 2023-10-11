@@ -36,7 +36,7 @@ internal class GetVotesQueryHandler : IRequestHandler<GetVotesQuery, HandleResul
 
     public async Task<HandleResult<GetVotesResultVm>> Handle(GetVotesQuery query, CancellationToken ct)
     {
-        var (voteAggIpfsCid, votes) = await _thingAssessmentPollVoteQueryable.GetAllFor(
+        var (pollResult, votes) = await _thingAssessmentPollVoteQueryable.GetAllFor(
             query.ProposalId, _currentPrincipal.Id
         );
 
@@ -45,7 +45,8 @@ internal class GetVotesQueryHandler : IRequestHandler<GetVotesQuery, HandleResul
             Data = new()
             {
                 ProposalId = query.ProposalId,
-                VoteAggIpfsCid = voteAggIpfsCid,
+                ProposalState = pollResult.State,
+                VoteAggIpfsCid = pollResult.VoteAggIpfsCid,
                 Votes = votes
             }
         };

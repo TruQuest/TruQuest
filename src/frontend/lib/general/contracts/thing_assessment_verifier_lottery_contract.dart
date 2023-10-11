@@ -48,35 +48,6 @@ class ThingAssessmentVerifierLotteryContract {
           "internalType": "bytes32",
           "name": "_thingProposalId",
           "type": "bytes32"
-        }
-      ],
-      "name": "getOrchestratorCommitment",
-      "outputs": [
-        {
-          "internalType": "int256",
-          "name": "",
-          "type": "int256"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "_thingProposalId",
-          "type": "bytes32"
         },
         {
           "internalType": "address",
@@ -186,22 +157,6 @@ class ThingAssessmentVerifierLotteryContract {
     );
 
     return block != BigInt.zero ? block.toInt() : null;
-  }
-
-  Future<(int, String, String)> getOrchestratorCommitment(
-    String thingId,
-    String proposalId,
-  ) async {
-    var thingIdHex = thingId.toSolInputFormat(prefix: false);
-    var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
-    var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
-
-    var result = await _contract.read<List<dynamic>>(
-      'getOrchestratorCommitment',
-      args: [thingProposalIdHex],
-    );
-
-    return ((result[0] as BigInt).toInt(), result[1] as String, result[2] as String);
   }
 
   Future<bool> checkAlreadyClaimedLotterySpot(

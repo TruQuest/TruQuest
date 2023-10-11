@@ -22,7 +22,7 @@ import '../../general/errors/vote_error.dart';
 import '../../general/services/server_connector.dart';
 import '../errors/settlement_error.dart';
 import '../models/im/supporting_evidence_im.dart';
-import '../models/rvm/get_verifiers_rvm.dart';
+import '../models/rvm/get_votes_rvm.dart';
 import '../models/rvm/submit_new_settlement_proposal_rvm.dart';
 
 class SettlementApiService {
@@ -172,11 +172,12 @@ class SettlementApiService {
   }
 
   Future<GetVerifierLotteryParticipantsRvm> getVerifierLotteryParticipants(
+    String thingId,
     String proposalId,
   ) async {
     try {
       var response = await _dio.get(
-        '/proposals/$proposalId/lottery-participants',
+        '/things/$thingId/proposals/$proposalId/lottery-participants',
       );
 
       return GetVerifierLotteryParticipantsRvm.fromMap(response.data['data']);
@@ -208,10 +209,14 @@ class SettlementApiService {
     }
   }
 
-  Future<GetVerifiersRvm> getVerifiers(String proposalId) async {
+  Future<GetVotesRvm> getVotes(String proposalId) async {
+    var accessToken = (await _serverConnector.latestConnection).$2;
     try {
-      var response = await _dio.get('/proposals/$proposalId/verifiers');
-      return GetVerifiersRvm.fromMap(response.data['data']);
+      var response = await _dio.get(
+        '/proposals/$proposalId/votes',
+        options: accessToken != null ? Options(headers: {'Authorization': 'Bearer $accessToken'}) : null,
+      );
+      return GetVotesRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
       throw _wrapError(error);
     }

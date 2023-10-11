@@ -1,15 +1,16 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:contained_tab_bar_view/contained_tab_bar_view.dart' show TabBarProperties, ContainerTabIndicator;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
+import '../../general/widgets/contained_tab_bar_view.dart';
 import '../../user/models/vm/user_vm.dart';
 import '../widgets/thing_preview_block.dart';
 import '../widgets/status_stepper_block.dart';
 import '../../general/widgets/arc_banner_image.dart';
 import '../../general/widgets/poster.dart';
-import '../../general/widgets/tab_container.dart';
 import '../../general/widgets/watch_button.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../models/rvm/get_settlement_proposal_rvm.dart';
@@ -45,12 +46,6 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
 
   late final StreamSubscription<UserVm> _currentUser$$;
 
-  final _tabColors = const [
-    Color(0xFF242423),
-    Color(0xFF413C69),
-    Color(0xFF32407B),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -79,27 +74,12 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
 
   List<Widget> _buildTabs(SettlementProposalVm proposal) {
     var state = proposal.state;
-    var items = [
-      const Icon(
-        Icons.content_paste,
-        color: Colors.white,
-      )
-    ];
+    var items = [const Text('Details')];
 
     if (state.index >= SettlementProposalStateVm.fundedAndVerifierLotteryInitiated.index) {
-      items.add(
-        const Icon(
-          Icons.people,
-          color: Colors.white,
-        ),
-      );
+      items.add(const Text('Lottery'));
       if (state.index >= SettlementProposalStateVm.verifiersSelectedAndPollInitiated.index) {
-        items.add(
-          const Icon(
-            Icons.poll_outlined,
-            color: Colors.white,
-          ),
-        );
+        items.add(const Text('Poll'));
       }
     }
 
@@ -234,16 +214,21 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
       height: 800,
       child: Stack(
         children: [
-          TabContainer(
-            key: ValueKey('${vm.proposal.id} ${vm.proposal.state}'),
-            controller: TabContainerController(length: tabs.length),
-            tabEdge: TabEdge.top,
-            tabStart: 0.33,
-            tabEnd: 0.66,
-            colors: _tabColors.sublist(0, tabs.length),
-            isStringTabs: false,
+          ContainedTabBarView(
+            key: ValueKey('${vm.proposal.id} ${vm.proposal.state}'), // @@TODO: Check if necessary.
             tabs: tabs,
-            children: _buildTabContents(vm),
+            tabBarProperties: TabBarProperties(
+              margin: const EdgeInsets.only(bottom: 8),
+              width: tabs.length == 1 ? 300 : 600,
+              height: 40,
+              indicator: ContainerTabIndicator(
+                radius: BorderRadius.circular(8),
+                color: Colors.indigo,
+              ),
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.grey,
+            ),
+            views: _buildTabContents(vm),
           ),
           if (vm.proposal.state.index >= SettlementProposalStateVm.declined.index)
             Positioned(

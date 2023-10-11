@@ -94,8 +94,7 @@ class LotteryStepper extends StatelessWidgetX {
           const SizedBox(height: 6),
           const Divider(
             color: Colors.white70,
-            indent: 116,
-            endIndent: 80,
+            indent: 60,
           ),
           const SizedBox(height: 6),
           Stepper(

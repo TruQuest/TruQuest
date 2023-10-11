@@ -45,13 +45,21 @@ class _ThingsListState extends StateX<ThingsList> {
     return StreamBuilder(
       stream: _subjectBloc.thingsList$,
       builder: (context, snapshot) {
-        if (snapshot.data == null) {
-          return const Center(child: CircularProgressIndicator());
-        }
+        if (snapshot.data == null) return const Center(child: CircularProgressIndicator());
 
         var things = snapshot.data!;
 
-        return Center(
+        return Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            color: Color(0xFF413C69),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(16),
+              topRight: Radius.circular(16),
+            ),
+          ),
+          alignment: Alignment.center,
           child: Column(
             children: [
               Padding(

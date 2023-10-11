@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:contained_tab_bar_view/contained_tab_bar_view.dart' show TabBarProperties, ContainerTabIndicator;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
+import '../../general/widgets/contained_tab_bar_view.dart';
 import '../models/rvm/subject_type_vm.dart';
-import '../../general/widgets/tab_container.dart';
 import '../widgets/things_list.dart';
 import '../../general/widgets/document_view.dart';
 import '../models/rvm/subject_vm.dart';
@@ -163,34 +164,27 @@ class _SubjectPageState extends StateX<SubjectPage> {
   }
 
   Widget _buildBody(SubjectVm subject) {
-    var tabs = const [
-      Icon(
-        Icons.content_paste,
-        color: Colors.white,
-      ),
-      Icon(
-        Icons.checklist_rtl,
-        color: Colors.white,
-      ),
-    ];
+    var tabs = const [Text('Details'), Text('Promises')];
 
     return SizedBox(
       width: double.infinity,
       height: 800,
       child: Stack(
         children: [
-          TabContainer(
-            controller: TabContainerController(length: tabs.length),
-            tabEdge: TabEdge.top,
-            tabStart: 0.33,
-            tabEnd: 0.66,
-            colors: const [
-              Color(0xFF242423),
-              Color(0xFF413C69),
-            ],
-            isStringTabs: false,
+          ContainedTabBarView(
             tabs: tabs,
-            children: _buildTabContents(subject),
+            tabBarProperties: TabBarProperties(
+              margin: const EdgeInsets.only(bottom: 8),
+              width: 600,
+              height: 40,
+              indicator: ContainerTabIndicator(
+                radius: BorderRadius.circular(8),
+                color: Colors.indigo,
+              ),
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.grey,
+            ),
+            views: _buildTabContents(subject),
           ),
           Positioned(
             top: 28,

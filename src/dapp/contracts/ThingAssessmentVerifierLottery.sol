@@ -218,20 +218,6 @@ contract ThingAssessmentVerifierLottery {
         return keccak256(abi.encodePacked(address(this), _data));
     }
 
-    function getOrchestratorCommitment(
-        bytes32 _thingProposalId
-    ) external view returns (int256, bytes32, bytes32) {
-        Commitment
-            memory commitment = s_thingProposalIdToOrchestratorCommitment[
-                _thingProposalId
-            ];
-        return (
-            commitment.block,
-            commitment.dataHash,
-            commitment.userXorDataHash
-        );
-    }
-
     function getLotteryInitBlock(
         bytes32 _thingProposalId
     ) external view returns (int256) {
@@ -624,6 +610,9 @@ contract ThingAssessmentVerifierLottery {
 
         s_thingProposalIdToParticipants[_thingProposalId] = new address[](0); // @@??: Unnecessary?
         delete s_thingProposalIdToParticipants[_thingProposalId];
+
+        // @@TODO!!: Must remove proposal from s_thingIdToSettlementProposal mapping, cause only one proposal
+        // per thing is permitted at any given time.
 
         emit LotteryClosedInFailure(
             thingId,

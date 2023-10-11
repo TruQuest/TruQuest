@@ -273,7 +273,7 @@ class _LotteryState extends StateX<Lottery> {
                                           child: Container(
                                             width: double.infinity,
                                             decoration: BoxDecoration(
-                                              color: participant.cardColor,
+                                              color: participant.coldCardColor,
                                               borderRadius: BorderRadius.only(
                                                 topLeft: Radius.circular(8),
                                                 topRight: Radius.circular(8),

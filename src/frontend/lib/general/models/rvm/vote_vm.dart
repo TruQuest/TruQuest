@@ -6,17 +6,6 @@ import 'package:intl/intl.dart';
 import 'decision_vm.dart';
 
 class VoteVm {
-  final String userId;
-  final int? castedAtMs;
-  final int? blockNumber;
-
-  VoteVm.fromMap(Map<String, dynamic> map)
-      : userId = map['userId'],
-        castedAtMs = map['castedAtMs'],
-        blockNumber = map['blockNumber'];
-}
-
-class Vote2Vm {
   static final _colors = [
     Color(0xff72efdd),
     Color(0xff64dfdf),
@@ -48,7 +37,7 @@ class Vote2Vm {
 
   String get userIdShort => '${userId.substring(0, 6)}..${userId.substring(userId.length - 4)}';
 
-  Vote2Vm.fromMap(Map<String, dynamic> map)
+  VoteVm.fromMap(Map<String, dynamic> map)
       : userId = map['userId'],
         castedAtMs = map['castedAtMs'],
         l1BlockNumber = map['l1BlockNumber'],

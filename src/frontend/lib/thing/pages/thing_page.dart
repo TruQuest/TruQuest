@@ -59,13 +59,6 @@ class _ThingPageState extends StateX<ThingPage> {
 
   late final StreamSubscription<UserVm> _currentUser$$;
 
-  final _tabColors = const [
-    Color(0xFF242423),
-    Color(0xFF413C69),
-    Color(0xFF32407B),
-    Color(0xFF0F6292),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -294,7 +287,7 @@ class _ThingPageState extends StateX<ThingPage> {
             tabs: tabs,
             tabBarProperties: TabBarProperties(
               margin: const EdgeInsets.only(bottom: 8),
-              width: tabs.length == 1 ? 400 : 600,
+              width: tabs.length == 1 ? 300 : 600,
               height: 40,
               indicator: ContainerTabIndicator(
                 radius: BorderRadius.circular(8),
