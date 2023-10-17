@@ -1,3 +1,125 @@
+function coerceToArrayBuffer(thing, name) {
+  if (typeof thing === "string") {
+    // base64url to base64
+    thing = thing.replace(/-/g, "+").replace(/_/g, "/");
+
+    // base64 to Uint8Array
+    var str = window.atob(thing);
+    var bytes = new Uint8Array(str.length);
+    for (var i = 0; i < str.length; i++) {
+      bytes[i] = str.charCodeAt(i);
+    }
+    thing = bytes;
+  }
+
+  // Array to Uint8Array
+  if (Array.isArray(thing)) {
+    thing = new Uint8Array(thing);
+  }
+
+  // Uint8Array to ArrayBuffer
+  if (thing instanceof Uint8Array) {
+    thing = thing.buffer;
+  }
+
+  // error if none of the above worked
+  if (!(thing instanceof ArrayBuffer)) {
+    throw new TypeError("could not coerce '" + name + "' to ArrayBuffer");
+  }
+
+  return thing;
+}
+
+function coerceToBase64Url(thing) {
+  // Array or ArrayBuffer to Uint8Array
+  if (Array.isArray(thing)) {
+    thing = Uint8Array.from(thing);
+  }
+
+  if (thing instanceof ArrayBuffer) {
+    thing = new Uint8Array(thing);
+  }
+
+  // Uint8Array to base64
+  if (thing instanceof Uint8Array) {
+    var str = "";
+    var len = thing.byteLength;
+
+    for (var i = 0; i < len; i++) {
+      str += String.fromCharCode(thing[i]);
+    }
+    thing = window.btoa(str);
+  }
+
+  if (typeof thing !== "string") {
+    throw new Error("could not coerce to string");
+  }
+
+  // base64 to base64url
+  // NOTE: "=" at the end of challenge is optional, strip it off here
+  thing = thing.replace(/\+/g, "-").replace(/\//g, "_").replace(/=*$/g, "");
+
+  return thing;
+}
+
+async function createCredentials(options) {
+  options.challenge = coerceToArrayBuffer(options.challenge);
+  options.user.id = coerceToArrayBuffer(options.user.id);
+  // options.extensions.prf.eval.first = coerceToArrayBuffer(
+  //   options.extensions.prf.eval.first
+  // );
+
+  // options.excludeCredentials = options.excludeCredentials.map((c) => {
+  //   c.id = coerceToArrayBuffer(c.id);
+  //   return c;
+  // });
+
+  var credential = await navigator.credentials.create({
+    publicKey: options,
+  });
+
+  var attestationObject = new Uint8Array(credential.response.attestationObject);
+  var clientDataJSON = new Uint8Array(credential.response.clientDataJSON);
+
+  return {
+    id: credential.id,
+    type: credential.type,
+    // extensions: credential.getClientExtensionResults(),
+    response: {
+      attestationObject: coerceToBase64Url(attestationObject),
+      clientDataJSON: coerceToBase64Url(clientDataJSON),
+    },
+  };
+}
+
+async function getCredentials(options) {
+  options.challenge = coerceToArrayBuffer(options.challenge);
+  options.allowCredentials.forEach((allowCredential) => {
+    allowCredential.id = coerceToArrayBuffer(allowCredential.id);
+  });
+
+  var credential = await navigator.credentials.get({
+    publicKey: options,
+  });
+
+  window.elele = credential;
+
+  var authData = new Uint8Array(credential.response.authenticatorData);
+  var clientDataJSON = new Uint8Array(credential.response.clientDataJSON);
+  var signature = new Uint8Array(credential.response.signature);
+
+  return {
+    id: credential.id,
+    type: credential.type,
+    // extensions: credential.getClientExtensionResults(),
+    response: {
+      authenticatorData: coerceToBase64Url(authData),
+      clientDataJSON: coerceToBase64Url(clientDataJSON),
+      signature: coerceToBase64Url(signature),
+    },
+  };
+}
+
 async function fetchAndResizeImage(url) {
   const response = await fetch(url);
   var blob = await response.blob();

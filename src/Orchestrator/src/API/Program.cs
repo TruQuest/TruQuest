@@ -28,6 +28,8 @@ using API.Hubs;
 using API.Hubs.Misc;
 using API.Hubs.Clients;
 using API.Endpoints;
+using System.Collections.Generic;
+using Fido2NetLib;
 
 namespace API;
 
@@ -37,14 +39,14 @@ public class Program
     {
         DotNetEnv.Env.TraversePath().Load();
 
-        var app = await CreateWebApplicationBuilder(args)
+        var app = CreateWebApplicationBuilder(args)
             .ConfigureServices()
             .Build()
-            .ConfigurePipeline()
-            .DeployContracts()
-                .ContinueWith(deployTask => deployTask.Result.RegisterDebeziumConnector()).Unwrap()
-                .ContinueWith(registerTask => registerTask.Result.StartKafkaBus()).Unwrap()
-                .ContinueWith(startBusTask => startBusTask.Result.DepositFunds()).Unwrap();
+            .ConfigurePipeline();
+        // .DeployContracts()
+        //     .ContinueWith(deployTask => deployTask.Result.RegisterDebeziumConnector()).Unwrap()
+        //     .ContinueWith(registerTask => registerTask.Result.StartKafkaBus()).Unwrap()
+        //     .ContinueWith(startBusTask => startBusTask.Result.DepositFunds()).Unwrap();
 
         app.Run();
     }
@@ -63,51 +65,74 @@ public static class WebApplicationBuilderExtension
         builder.Logging.AddDebug();
         builder.Logging.AddConsole();
 
-        if (!configuration.GetValue<bool>("DbMigrator"))
-        {
-            Action<ResourceBuilder> configureResource = resource =>
-                resource.AddService(
-                    serviceName: Telemetry.ServiceName,
-                    serviceVersion: "0.1.0",
-                    serviceInstanceId: Environment.MachineName
-                );
+        builder.Services.AddSingleton<Application.Dummy.Commands.CreateUser.DummyUserRepo>();
 
-            builder.Services.AddOpenTelemetry()
-                .ConfigureResource(configureResource)
-                .WithTracing(builder =>
-                    builder
-                        .AddSource(Telemetry.ActivitySource.Name)
-                        .SetSampler(new AlwaysOnSampler()) // @@??: Use this in conjunction with OTEL collector tail sampling?
-                        .AddOtlpExporter(otlpOptions =>
-                        {
-                            otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
-                        })
-                )
-                .WithMetrics(builder =>
-                    builder
-                        .AddMeter(Telemetry.Meter.Name)
-                        .AddOtlpExporter(otlpOptions =>
-                        {
-                            otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
-                        })
-                );
+        builder.Services.AddMemoryCache();
+        builder.Services.AddDistributedMemoryCache();
 
-            builder.Logging.AddOpenTelemetry(options =>
+        builder.Services
+            .AddFido2(options =>
             {
-                var resourceBuilder = ResourceBuilder.CreateDefault();
-                configureResource(resourceBuilder);
-                options.SetResourceBuilder(resourceBuilder);
-
-                options.AddOtlpExporter(otlpOptions =>
+                options.ServerDomain = "localhost";
+                options.ServerName = "TruQuest";
+                options.Origins = new HashSet<string>() { "http://localhost:52747" }; // @@!!
+                options.TimestampDriftTolerance = 300000;
+                options.MDSCacheDirPath = "C:/Users/chekh/Desktop/mds";
+                options.BackupEligibleCredentialPolicy = Fido2Configuration.CredentialBackupPolicy.Allowed;
+                options.BackedUpCredentialPolicy = Fido2Configuration.CredentialBackupPolicy.Allowed;
+            })
+            .AddCachedMetadataService(config =>
+            {
+                config.AddFidoMetadataRepository(httpClientBuilder =>
                 {
-                    // @@NOTE: We don't use otel collector for logs since Seq can only ingest OTLP logs
-                    // through gRPC (ergo, TLS), which we don't currently have or need (since in staging
-                    // everything runs on the same machine).
-                    otlpOptions.Endpoint = new Uri(configuration["Seq:Endpoint"]!);
-                    otlpOptions.Protocol = OtlpExportProtocol.HttpProtobuf;
                 });
             });
-        }
+
+        // if (!configuration.GetValue<bool>("DbMigrator"))
+        // {
+        //     Action<ResourceBuilder> configureResource = resource =>
+        //         resource.AddService(
+        //             serviceName: Telemetry.ServiceName,
+        //             serviceVersion: "0.1.0",
+        //             serviceInstanceId: Environment.MachineName
+        //         );
+
+        //     builder.Services.AddOpenTelemetry()
+        //         .ConfigureResource(configureResource)
+        //         .WithTracing(builder =>
+        //             builder
+        //                 .AddSource(Telemetry.ActivitySource.Name)
+        //                 .SetSampler(new AlwaysOnSampler()) // @@??: Use this in conjunction with OTEL collector tail sampling?
+        //                 .AddOtlpExporter(otlpOptions =>
+        //                 {
+        //                     otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
+        //                 })
+        //         )
+        //         .WithMetrics(builder =>
+        //             builder
+        //                 .AddMeter(Telemetry.Meter.Name)
+        //                 .AddOtlpExporter(otlpOptions =>
+        //                 {
+        //                     otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
+        //                 })
+        //         );
+
+        //     builder.Logging.AddOpenTelemetry(options =>
+        //     {
+        //         var resourceBuilder = ResourceBuilder.CreateDefault();
+        //         configureResource(resourceBuilder);
+        //         options.SetResourceBuilder(resourceBuilder);
+
+        //         options.AddOtlpExporter(otlpOptions =>
+        //         {
+        //             // @@NOTE: We don't use otel collector for logs since Seq can only ingest OTLP logs
+        //             // through gRPC (ergo, TLS), which we don't currently have or need (since in staging
+        //             // everything runs on the same machine).
+        //             otlpOptions.Endpoint = new Uri(configuration["Seq:Endpoint"]!);
+        //             otlpOptions.Protocol = OtlpExportProtocol.HttpProtobuf;
+        //         });
+        //     });
+        // }
 
         builder.Services.ConfigureHttpJsonOptions(options =>
         {
@@ -156,8 +181,8 @@ public static class WebApplicationBuilderExtension
         builder.Services.AddSingleton<IClientNotifier, ClientNotifier>();
         builder.Services.AddScoped<IConnectionIdProvider, ConnectionIdProvider>();
 
-        builder.Services.AddHostedService<ContractEventTracker>();
-        builder.Services.AddHostedService<BlockTracker>();
+        // builder.Services.AddHostedService<ContractEventTracker>();
+        // builder.Services.AddHostedService<BlockTracker>();
 
         return builder;
     }
@@ -174,6 +199,7 @@ public static class WebApplicationBuilderExtension
         app.MapThingEndpoints();
         app.MapSettlementProposalEndpoints();
         app.MapGeneralEndpoints();
+        app.MapDummyEndpoints();
 
         app.MapHub<TruQuestHub>("/hub");
 

@@ -98,13 +98,11 @@ class EthereumWallet {
     return result.error;
   }
 
-  Future<EthereumSignResult> personalSign(String account, String data) =>
-      promiseToFuture<EthereumSignResult>(
+  Future<EthereumSignResult> personalSign(String account, String data) => promiseToFuture<EthereumSignResult>(
         _ethereumWallet.personalSign(account, data),
       );
 
-  void removeListener(String event, Function handler) =>
-      _ethereumWallet.removeListener(event, allowInterop(handler));
+  void removeListener(String event, Function handler) => _ethereumWallet.removeListener(event, allowInterop(handler));
 
   void onDisplayUriOnce(void Function(String) handler) {
     _ethereumWallet.once(
@@ -128,8 +126,7 @@ class EthereumWallet {
     _ethereumWallet.on(
       'chainChanged',
       allowInterop(
-        (dynamic chainId) =>
-            chainId is String ? handler(int.parse(chainId)) : handler(chainId),
+        (dynamic chainId) => chainId is String ? handler(int.parse(chainId)) : handler(chainId),
       ),
     );
   }
@@ -152,11 +149,9 @@ abstract class Provider {
     _provider.on('block', allowInterop(handler));
   }
 
-  void removeAllListeners([String? eventName]) =>
-      _provider.removeAllListeners(eventName);
+  void removeAllListeners([String? eventName]) => _provider.removeAllListeners(eventName);
 
-  Future<int> getBlockNumber() =>
-      promiseToFuture<int>(_provider.getBlockNumber());
+  Future<int> getBlockNumber() => promiseToFuture<int>(_provider.getBlockNumber());
 }
 
 @JS('ethers.providers.JsonRpcProvider')
@@ -198,8 +193,7 @@ class Abi {
 
   Abi(dynamic abi) : _interface = _Interface(abi);
 
-  String encodeFunctionData(String fragment, [dynamic values]) =>
-      _interface.encodeFunctionData(fragment, values);
+  String encodeFunctionData(String fragment, [dynamic values]) => _interface.encodeFunctionData(fragment, values);
 }
 
 @JS('ethers.Wallet.createRandom')
@@ -237,8 +231,7 @@ class HDNode {
 
   HDNode._(this._hdNode);
 
-  static HDNode fromMnemonic(String phrase, String password) =>
-      HDNode._(_createHDNodeFromMnemonic(phrase, password));
+  static HDNode fromMnemonic(String phrase, String password) => HDNode._(_createHDNodeFromMnemonic(phrase, password));
 
   String get address => convertToEip55Address(_hdNode.address);
   String get privateKey => _hdNode.privateKey;
@@ -272,8 +265,7 @@ class Signature {
 }
 
 extension SignatureExtension on Signature {
-  String get combined =>
-      '0x' + r.substring(2) + s.substring(2) + hex.encode([v]);
+  String get combined => '0x' + r.substring(2) + s.substring(2) + hex.encode([v]);
 }
 
 @JS('ethers.utils.formatUnits')
@@ -299,8 +291,7 @@ class Contract {
 
   Contract._(this._contract);
 
-  Contract connect(Signer signer) =>
-      Contract._(_contract.connect(signer._signer));
+  Contract connect(Signer signer) => Contract._(_contract.connect(signer._signer));
 
   Future<T> read<T>(
     String functionName, {
@@ -316,8 +307,7 @@ class Contract {
             if (arg is List) {
               return arg
                   .map(
-                    (innerArg) =>
-                        innerArg is BigInt ? innerArg.toString() : innerArg,
+                    (innerArg) => innerArg is BigInt ? innerArg.toString() : innerArg,
                   )
                   .toList();
             } else if (arg is BigInt) {
@@ -356,9 +346,7 @@ class Contract {
             var value = item['hex'] as String;
             resultList.add(
               BigInt.parse(
-                value.startsWith('-')
-                    ? '-${value.substring(3)}'
-                    : value.substring(2),
+                value.startsWith('-') ? '-${value.substring(3)}' : value.substring(2),
                 radix: 16,
               ),
             );
@@ -391,8 +379,7 @@ class Contract {
             if (arg is List) {
               return arg
                   .map(
-                    (innerArg) =>
-                        innerArg is BigInt ? innerArg.toString() : innerArg,
+                    (innerArg) => innerArg is BigInt ? innerArg.toString() : innerArg,
                   )
                   .toList();
             } else if (arg is BigInt) {
@@ -596,4 +583,181 @@ class WalletConnectConnectionOpts {
   external List<int>? get chains;
   external List<int>? get optionalChains;
   external String? get pairingTopic;
+}
+
+@JS()
+@anonymous
+class RelyingParty {
+  external factory RelyingParty({
+    String id,
+    String name,
+  });
+
+  external String get id;
+  external String get name;
+}
+
+@JS()
+@anonymous
+class User {
+  external factory User({
+    String id,
+    String name,
+    String displayName,
+  });
+
+  external String get id;
+  external String get name;
+  external String get displayName;
+}
+
+@JS()
+@anonymous
+class PubKeyCredParam {
+  external factory PubKeyCredParam({
+    String type,
+    int alg,
+  });
+
+  external String get type;
+  external int get alg;
+}
+
+@JS()
+@anonymous
+class AuthenticatorSelection {
+  external factory AuthenticatorSelection({
+    String authenticatorAttachment,
+    String residentKey,
+    bool requireResidentKey,
+    String userVerification,
+  });
+
+  external String get authenticatorAttachment;
+  external String get residentKey;
+  external bool get requireResidentKey;
+  external String get userVerification;
+}
+
+@JS()
+@anonymous
+class Eval {
+  external factory Eval({
+    String first,
+  });
+
+  external String get first;
+}
+
+@JS()
+@anonymous
+class Prf {
+  external factory Prf({
+    Eval eval,
+  });
+
+  external Eval get eval;
+}
+
+@JS()
+@anonymous
+class Extensions {
+  external factory Extensions({
+    Prf prf,
+  });
+
+  external Prf get prf;
+}
+
+@JS()
+@anonymous
+class CreateRegOptions {
+  external factory CreateRegOptions({
+    RelyingParty rp,
+    User user,
+    String challenge,
+    List<PubKeyCredParam> pubKeyCredParams,
+    int timeout,
+    String attestation,
+    AuthenticatorSelection authenticatorSelection,
+    // Extensions extensions,
+    // @@TODO: excludeCredentials
+  });
+
+  external RelyingParty get rp;
+  external User get user;
+  external String get challenge;
+  external List<PubKeyCredParam> get pubKeyCredParams;
+  external int get timeout;
+  external String get attestation;
+  external AuthenticatorSelection get authenticatorSelection;
+  // external Extensions get extensions;
+}
+
+external dynamic createCredentials(CreateRegOptions options);
+
+@JS()
+@anonymous
+class Response {
+  external String get attestationObject;
+  external String get clientDataJSON;
+}
+
+@JS()
+@anonymous
+class PublicKeyCredential {
+  external String get id;
+  external String get type;
+  external Response get response;
+}
+
+@JS()
+@anonymous
+class AllowCredential {
+  external factory AllowCredential({
+    String type,
+    String id,
+    // List<String> transports,
+  });
+
+  external String get type;
+  external String get id;
+  // external List<String> get transports;
+}
+
+@JS()
+@anonymous
+class CreateAuthOptions {
+  external factory CreateAuthOptions({
+    String rpId,
+    String challenge,
+    List<AllowCredential> allowCredentials,
+    String userVerification,
+    int timeout,
+  });
+
+  external String get rpId;
+  external String get challenge;
+  external List<AllowCredential> get allowCredentials;
+  external String get userVerification;
+  external int get timeout;
+}
+
+external dynamic getCredentials(CreateAuthOptions options);
+
+@JS()
+@anonymous
+class AssertResponse {
+  external String get authenticatorData;
+  external String get clientDataJSON;
+  external String get signature;
+  // external String get userHandle;
+}
+
+@JS()
+@anonymous
+class PublicKeyCredentialAssert {
+  external String get id;
+  external String get type;
+  external AssertResponse get response;
 }
