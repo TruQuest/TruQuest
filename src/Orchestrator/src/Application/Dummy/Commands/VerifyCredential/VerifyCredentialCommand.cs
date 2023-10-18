@@ -1,7 +1,9 @@
+using Application.Common.Misc;
 using Application.Dummy.Commands.CreateUser;
 using Domain.Results;
 using Fido2NetLib;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Application.Dummy.Commands.VerifyCredential;
 
@@ -13,11 +15,16 @@ public class VerifyCredentialCommand : IRequest<VoidResult>
 
 internal class VerifyCredentialCommandHandler : IRequestHandler<VerifyCredentialCommand, VoidResult>
 {
+    private readonly ILogger<VerifyCredentialCommandHandler> _logger;
     private readonly DummyUserRepo _dummyUserRepo;
     private readonly IFido2 _fido2;
 
-    public VerifyCredentialCommandHandler(DummyUserRepo dummyUserRepo, IFido2 fido2)
+    public VerifyCredentialCommandHandler(
+        ILogger<VerifyCredentialCommandHandler> logger,
+        DummyUserRepo dummyUserRepo, IFido2 fido2
+    )
     {
+        _logger = logger;
         _dummyUserRepo = dummyUserRepo;
         _fido2 = fido2;
     }
@@ -41,7 +48,7 @@ internal class VerifyCredentialCommandHandler : IRequestHandler<VerifyCredential
             command.Credential,
             options,
             credential.PublicKey,
-            credential.DevicePublicKeys,
+            new(),
             storedCounter,
             callback,
             cancellationToken: ct
@@ -49,8 +56,7 @@ internal class VerifyCredentialCommandHandler : IRequestHandler<VerifyCredential
 
         credential.SignCount = res.SignCount;
 
-        if (res.DevicePublicKey is not null)
-            credential.DevicePublicKeys.Add(res.DevicePublicKey);
+        _logger.LogInformation($"******************* {res.Status} {res.DevicePublicKey?.ToHex(prefix: true)} ***********************");
 
         return VoidResult.Instance;
     }

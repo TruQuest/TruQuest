@@ -3,6 +3,7 @@ using Application.Dummy.Commands.AddCredential;
 using Application.Dummy.Commands.CreateAuthOptions;
 using Application.Dummy.Commands.CreateRegOptions;
 using Application.Dummy.Commands.CreateUser;
+using Application.Dummy.Commands.SaveShare;
 using Application.Dummy.Commands.VerifyCredential;
 
 namespace API.Endpoints;
@@ -36,6 +37,11 @@ public static class DummyEndpoints
             app.MapPost(
                 "/dummy/verify-credential",
                 (VerifyCredentialCommand command, SenderWrapper sender, HttpContext context) =>
+                    sender.Send(command, serviceProvider: context.RequestServices)
+            ),
+            app.MapPost(
+                "/dummy/save-share",
+                (SaveShareCommand command, SenderWrapper sender, HttpContext context) =>
                     sender.Send(command, serviceProvider: context.RequestServices)
             ),
         };

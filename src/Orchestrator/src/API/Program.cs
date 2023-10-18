@@ -75,7 +75,7 @@ public static class WebApplicationBuilderExtension
             {
                 options.ServerDomain = "localhost";
                 options.ServerName = "TruQuest";
-                options.Origins = new HashSet<string>() { "http://localhost:52747" }; // @@!!
+                options.Origins = new HashSet<string>() { "http://localhost:53433" };
                 options.TimestampDriftTolerance = 300000;
                 options.MDSCacheDirPath = "C:/Users/chekh/Desktop/mds";
                 options.BackupEligibleCredentialPolicy = Fido2Configuration.CredentialBackupPolicy.Allowed;
@@ -83,9 +83,7 @@ public static class WebApplicationBuilderExtension
             })
             .AddCachedMetadataService(config =>
             {
-                config.AddFidoMetadataRepository(httpClientBuilder =>
-                {
-                });
+                config.AddFidoMetadataRepository(delegate { });
             });
 
         // if (!configuration.GetValue<bool>("DbMigrator"))
@@ -189,6 +187,8 @@ public static class WebApplicationBuilderExtension
 
     public static WebApplication ConfigurePipeline(this WebApplication app)
     {
+        app.UseStaticFiles();
+
         app.UseCors();
         app.UseAuthentication();
 

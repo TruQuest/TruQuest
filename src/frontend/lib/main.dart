@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'dart:js_util';
+import 'dart:html' as html;
+import 'dart:ui' as ui;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import 'ethereum/services/ethereum_rpc_provider.dart';
 import 'ethereum_js_interop.dart';
@@ -16,6 +19,7 @@ import 'general/pages/home_page.dart';
 
 Future main() async {
   setup();
+  final controller = Controller()..init();
 
   // await dotenv.load();
 
@@ -25,11 +29,13 @@ Future main() async {
   // var ethereumRpcProvider = resolveDependency<EthereumRpcProvider>();
   // await ethereumRpcProvider.init();
 
-  runApp(const App());
+  runApp(App(controller: controller));
 }
 
 class App extends StatelessWidget {
-  const App({super.key});
+  const App({super.key, required this.controller});
+
+  final Controller controller;
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +48,7 @@ class App extends StatelessWidget {
       ),
       builder: BotToastInit(),
       navigatorObservers: [BotToastNavigatorObserver()],
-      home: const Dummy(),
+      home: Dummy(controller: controller),
     );
   }
 }
@@ -56,7 +62,9 @@ class MouseIncludedScrollBehavior extends MaterialScrollBehavior {
 }
 
 class Dummy extends StatefulWidget {
-  const Dummy({super.key});
+  const Dummy({super.key, required this.controller});
+
+  final Controller controller;
 
   @override
   State<Dummy> createState() => _DummyState();
@@ -70,7 +78,6 @@ class _DummyState extends State<Dummy> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           TextButton(
             child: Text('Register'),
@@ -213,8 +220,100 @@ class _DummyState extends State<Dummy> {
               print('******************************** AAAAAAAAAAAAAAAAAA');
             },
           ),
+          EmbeddedIFrame(widget.controller),
         ],
       ),
     );
+  }
+}
+
+class Controller {
+  static const viewId = 'my-view-id';
+
+  late final html.IFrameElement _iframe;
+  html.IFrameElement get iframe => _iframe;
+
+  // This method should only be called once, registering a view with the same
+  // name multiple times may cause issues.
+  void init() {
+    _iframe = html.IFrameElement()..src = "http://localhost:5223/smth.html";
+    _iframe.style
+      ..border = 'none'
+      ..height = '100%'
+      ..width = '100%';
+
+    // ignore: undefined_prefixed_name
+    ui.platformViewRegistry.registerViewFactory(
+      viewId,
+      (int viewId) => _iframe,
+    );
+  }
+
+  void postMessage(String message) {
+    iframe.contentWindow!.postMessage(message, 'http://localhost:5223');
+  }
+
+  void handleMessage(html.Event e) {
+    if (e is html.MessageEvent && e.origin == 'http://localhost:5223') {
+      print('MessageEvent from ${e.origin}: ${e.data}');
+      // var response = await _dio.post(
+      //   '/dummy/save-share',
+      //   data: <String, dynamic>{
+      //     'email': email,
+      //     'keyShare': shares.first,
+      //   },
+      // );
+      // print('**************** Server key share saved!');
+    }
+  }
+}
+
+class EmbeddedIFrame extends StatefulWidget {
+  const EmbeddedIFrame(this.controller, {Key? key}) : super(key: key);
+
+  final Controller controller;
+
+  @override
+  State<EmbeddedIFrame> createState() => _EmbeddedIFrameState();
+}
+
+class _EmbeddedIFrameState extends State<EmbeddedIFrame> {
+  @override
+  void initState() {
+    super.initState();
+    html.window.addEventListener('message', widget.controller.handleMessage);
+  }
+
+  @override
+  void dispose() {
+    html.window.removeEventListener('message', widget.controller.handleMessage);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8.0),
+          height: 40.0,
+          child: ElevatedButton(
+            onPressed: _ping,
+            child: const Text('Post Message'),
+          ),
+        ),
+        SizedBox(
+          width: 270,
+          height: 270,
+          child: HtmlElementView(
+            viewType: Controller.viewId,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _ping() async {
+    widget.controller.postMessage('PING');
   }
 }

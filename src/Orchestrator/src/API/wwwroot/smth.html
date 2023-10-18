@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>title</title>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/secrets.js-grempe@2.0.0/secrets.min.js"
+      type="application/javascript"
+    ></script>
+
+    <script
+      src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"
+      type="application/javascript"
+    ></script>
+
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+      integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+
+    <script>
+      window.addEventListener("message", function (e) {
+        if (e.origin != "http://localhost:53433") return;
+
+        var privateKey = ethers.Wallet.createRandom().privateKey;
+        var keyShares = secrets.share(privateKey.substring(2), 2, 2);
+        privateKey = null;
+
+        localStorage.setItem("keyShare", keyShares[1]);
+
+        new QRCode(document.getElementById("qrcode"), {
+          text: keyShares[1],
+          width: 250,
+          height: 250,
+          colorDark: "#000000",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.H,
+        });
+
+        e.source.postMessage(keyShares[0], "http://localhost:53433");
+        keyShares = null;
+      });
+    </script>
+  </head>
+  <body>
+    <div id="qrcode"></div>
+  </body>
+</html>

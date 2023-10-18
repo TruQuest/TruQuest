@@ -10,6 +10,7 @@ public class DummyUser
     public required Guid Id { get; init; }
     public required string Email { get; init; }
     public required bool EmailConfirmed { get; init; }
+    public string? KeyShare { get; set; }
 }
 
 public class StoredCredential
@@ -50,8 +51,6 @@ public class StoredCredential
     /// </summary>
     public byte[] AttestationObject { get; set; }
 
-    public List<byte[]> DevicePublicKeys { get; set; }
-
     /// <summary>
     /// The value of the clientDataJSON attribute when the public key credential source was registered. 
     /// Storing this in combination with the above attestationObject item enables the Relying Party to re-verify the attestation signature at a later time.
@@ -88,6 +87,11 @@ public class DummyUserRepo
         _users.Add(user);
 
         return user.Id;
+    }
+
+    public void AddKeyShare(string email, string share)
+    {
+        _users.Single(u => u.Email == email).KeyShare = share;
     }
 
     public DummyUser GetByEmail(string email) => _users.Single(u => u.Email == email);

@@ -46,8 +46,7 @@ internal class AddCredentialCommandHandler : IRequestHandler<AddCredentialComman
             IsBackupEligible = result.Result.IsBackupEligible,
             IsBackedUp = result.Result.IsBackedUp,
             AttestationObject = result.Result.AttestationObject,
-            AttestationClientDataJSON = result.Result.AttestationClientDataJson,
-            DevicePublicKeys = new() { result.Result.DevicePublicKey }
+            AttestationClientDataJSON = result.Result.AttestationClientDataJson
         };
 
         _dummyUserRepo.AddCredentialToUser(options.User, cred);
