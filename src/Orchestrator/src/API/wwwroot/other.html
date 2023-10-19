@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>title</title>
+
+    <script
+      src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"
+      type="application/javascript"
+    ></script>
+
+    <script>
+      window.addEventListener("message", function (e) {
+        if (e.origin != "http://localhost:53433") return;
+
+        var codeScanned = false;
+
+        async function onScanSuccess(decodedText, decodedResult) {
+          if (codeScanned) return;
+
+          codeScanned = true;
+          console.log(`Scanned code: ${decodedText}`);
+          console.log(
+            `Key share from local storage: ${localStorage.getItem("keyShare")}`
+          );
+          localStorage.setItem("keyShareScanned", decodedText);
+
+          await html5QrcodeScanner.clear();
+
+          e.source.postMessage("yeah!", "http://localhost:53433");
+        }
+
+        var html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", {
+          fps: 1,
+          qrbox: 250,
+        });
+        html5QrcodeScanner.render(onScanSuccess);
+      });
+    </script>
+  </head>
+  <body>
+    <div id="qr-reader" style="width: 600px"></div>
+  </body>
+</html>
