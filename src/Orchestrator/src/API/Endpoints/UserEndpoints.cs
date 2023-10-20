@@ -4,6 +4,9 @@ using Application.User.Commands.SignInWithEthereum;
 using Application.User.Queries.GetNonceForSiwe;
 using Application.User.Commands.AddEmail;
 using Application.User.Commands.ConfirmEmail;
+using Application.User.Commands.CreateUser;
+using Application.User.Commands.ConfirmEmailAndGetAttestationOptions;
+using Application.User.Commands.AddAuthCredentialAndKeyShare;
 
 namespace API.Endpoints;
 
@@ -40,6 +43,24 @@ public static class UserEndpoints
         group.MapPost(
             "/watch-list",
             (MarkNotificationsAsReadCommand command, SenderWrapper sender, HttpContext context) =>
+                sender.Send(command, serviceProvider: context.RequestServices)
+        );
+
+        group.MapPost(
+            "/create",
+            (CreateUserCommand command, SenderWrapper sender, HttpContext context) =>
+                sender.Send(command, serviceProvider: context.RequestServices)
+        );
+
+        group.MapPost(
+            "/confirm-email",
+            (ConfirmEmailAndGetAttestationOptionsCommand command, SenderWrapper sender, HttpContext context) =>
+                sender.Send(command, serviceProvider: context.RequestServices)
+        );
+
+        group.MapPost(
+            "/add-auth-credential",
+            (AddAuthCredentialAndKeyShareCommand command, SenderWrapper sender, HttpContext context) =>
                 sender.Send(command, serviceProvider: context.RequestServices)
         );
 

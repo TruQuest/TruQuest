@@ -130,3 +130,19 @@ class WithdrawFunds extends UserAction {
 class RevealSecretPhrase extends UserAction {
   const RevealSecretPhrase();
 }
+
+class SignUp extends UserAction {
+  final String email;
+
+  const SignUp({required this.email});
+}
+
+class FinishSignUp extends UserAction {
+  final String email;
+  final String confirmationCode;
+
+  const FinishSignUp({
+    required this.email,
+    required this.confirmationCode,
+  });
+}

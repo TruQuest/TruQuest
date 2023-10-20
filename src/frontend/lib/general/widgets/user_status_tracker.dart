@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'connect_account_button.dart';
+import 'onboarding_dialog.dart';
 import 'sign_in_button.dart';
 import 'account_list_dialog.dart';
 import '../../user/bloc/user_bloc.dart';
@@ -17,6 +18,17 @@ class UserStatusTracker extends StatelessWidgetX {
     return StreamBuilder(
       stream: _userBloc.currentUser$,
       builder: (context, snapshot) {
+        return IconButton(
+          icon: Icon(
+            Icons.abc,
+            color: Colors.white,
+          ),
+          onPressed: () => showDialog(
+            context: context,
+            builder: (context) => OnboardingDialog(),
+          ),
+        );
+
         if (snapshot.data == null) {
           return const SizedBox.shrink();
         }

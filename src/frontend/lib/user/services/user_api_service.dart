@@ -1,8 +1,14 @@
 import 'package:dio/dio.dart';
 
+import '../../ethereum_js_interop.dart';
+import '../models/im/add_auth_credential_and_key_share_command.dart';
 import '../models/im/add_email_command.dart';
+import '../models/im/confirm_email_and_get_attestation_options_command.dart';
 import '../models/im/confirm_email_command.dart';
+import '../models/im/create_user_command.dart';
 import '../models/im/sign_in_with_ethereum_command.dart';
+import '../models/rvm/add_auth_credential_and_key_share_rvm.dart';
+import '../models/rvm/confirm_email_and_get_attestation_options_rvm.dart';
 import '../models/rvm/sign_in_with_ethereum_rvm.dart';
 import '../models/im/mark_notifications_as_read_command.dart';
 import '../models/im/notification_im.dart';
@@ -143,6 +149,59 @@ class UserApiService {
               .toList(),
         ).toJson(),
       );
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future createUser(String email) async {
+    try {
+      await _dio.post(
+        '/user/create',
+        data: CreateUserCommand(email: email).toJson(),
+      );
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future<ConfirmEmailAndGetAttestationOptionsRvm> confirmEmailAndGetAttestationOptions(
+    String email,
+    String confirmationCode,
+  ) async {
+    try {
+      var response = await _dio.post(
+        '/user/confirm-email',
+        data: ConfirmEmailAndGetAttestationOptionsCommand(
+          email: email,
+          confirmationCode: confirmationCode,
+        ).toJson(),
+      );
+
+      return ConfirmEmailAndGetAttestationOptionsRvm.fromMap(response.data['data']);
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future<AddAuthCredentialAndKeyShareRvm> addAuthCredentialAndKeyShare(
+    RawAttestation attestation,
+    String nonce,
+    String signatureOverNonce,
+    String keyShare,
+  ) async {
+    try {
+      var response = await _dio.post(
+        '/user/add-auth-credential',
+        data: AddAuthCredentialAndKeyShareCommand(
+          rawAttestation: attestation,
+          nonce: nonce,
+          signatureOverNonce: signatureOverNonce,
+          keyShare: keyShare,
+        ).toJson(),
+      );
+
+      return AddAuthCredentialAndKeyShareRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
       throw _wrapError(error);
     }

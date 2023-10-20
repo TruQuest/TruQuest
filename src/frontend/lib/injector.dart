@@ -15,6 +15,7 @@ import 'general/contracts/truthserum_contract.dart';
 import 'general/services/general_api_service.dart';
 import 'general/bloc/general_bloc.dart';
 import 'general/services/general_service.dart';
+import 'general/services/iframe_manager.dart';
 import 'general/services/toast_messenger.dart';
 import 'general/services/local_storage.dart';
 import 'general/services/subscription_manager.dart';
@@ -41,6 +42,7 @@ import 'user/services/user_api_service.dart';
 import 'ethereum/bloc/ethereum_bloc.dart';
 import 'user/bloc/user_bloc.dart';
 import 'user/services/user_service.dart';
+import 'user/services/user_service1.dart';
 
 part 'injector.g.dart';
 
@@ -90,6 +92,8 @@ abstract class Injector {
   @Register.singleton(UserOperationService)
   @Register.singleton(ThirdPartyWalletService)
   @Register.factory(UserOperationBuilder)
+  @Register.singleton(IFrameManager)
+  @Register.singleton(UserService1)
   void configure();
 }
 

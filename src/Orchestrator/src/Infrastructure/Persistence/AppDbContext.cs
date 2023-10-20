@@ -9,6 +9,7 @@ namespace Infrastructure.Persistence;
 
 public class AppDbContext : IdentityUserContext<UserDm, string>
 {
+    public DbSet<AuthCredential> AuthCredentials { get; set; }
     public DbSet<DeferredTask> Tasks { get; set; }
     public DbSet<Subject> Subjects { get; set; }
     public DbSet<Tag> Tags { get; set; }
@@ -27,6 +28,31 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
     {
         modelBuilder.HasDefaultSchema("truquest");
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<AuthCredential>(builder =>
+        {
+            builder.HasKey(c => c.Id);
+            builder.Property(c => c.PublicKey).IsRequired();
+            builder.Property(c => c.SignCount).IsRequired();
+            builder
+                .Property(c => c.Transports)
+                .HasColumnType("jsonb")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .IsRequired(false);
+            builder.Property(c => c.IsBackupEligible).IsRequired();
+            builder.Property(c => c.IsBackedUp).IsRequired();
+            builder.Property(c => c.AttestationObject).IsRequired();
+            builder.Property(c => c.AttestationClientDataJSON).IsRequired();
+            builder.Property(c => c.AttestationFormat).IsRequired();
+            builder.Property(c => c.AddedAt).IsRequired();
+            builder.Property(c => c.AaGuid).IsRequired();
+
+            builder
+                .HasOne<UserDm>()
+                .WithMany(u => u.AuthCredentials)
+                .HasForeignKey(c => c.UserId)
+                .IsRequired();
+        });
 
         modelBuilder.Entity<Subject>(builder =>
         {

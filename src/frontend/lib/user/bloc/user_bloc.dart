@@ -5,12 +5,14 @@ import '../../ethereum/services/third_party_wallet_service.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
 import '../../ethereum/services/local_wallet_service.dart';
 import '../models/vm/user_vm.dart';
+import '../services/user_service1.dart';
 import 'user_actions.dart';
 import '../services/user_service.dart';
 import '../../general/bloc/bloc.dart';
 
 class UserBloc extends Bloc<UserAction> {
   final UserService _userService;
+  final UserService1 _userService1;
   final LocalWalletService _localWalletService;
   final ThirdPartyWalletService _thirdPartyWalletService;
 
@@ -24,9 +26,13 @@ class UserBloc extends Bloc<UserAction> {
 
   Stream<SmartWalletInfoVm> get smartWalletInfo$ => _userService.smartWalletInfo$;
 
+  String get privateKeyGenIframeViewId => _userService1.privateKeyGenIframeViewId;
+  String get qrCodeScanIframeViewId => _userService1.qrCodeScanIframeViewId;
+
   UserBloc(
     super.toastMessenger,
     this._userService,
+    this._userService1,
     this._localWalletService,
     this._thirdPartyWalletService,
   ) {
@@ -51,6 +57,10 @@ class UserBloc extends Bloc<UserAction> {
       return _switchAccount(action);
     } else if (action is UnlockWallet) {
       return _unlockWallet(action);
+    } else if (action is SignUp) {
+      return _signUp(action);
+    } else if (action is FinishSignUp) {
+      return _finishSignUp(action);
     }
 
     throw UnimplementedError();
@@ -143,4 +153,16 @@ class UserBloc extends Bloc<UserAction> {
     MultiStageOperationContext ctx,
   ) =>
       _localWalletService.revealSecretPhrase(ctx);
+
+  Future<bool> _signUp(SignUp action) async {
+    await _userService1.createUser(action.email);
+    return true;
+  }
+
+  Future<String> _finishSignUp(FinishSignUp action) async {
+    return await _userService1.confirmEmailAndGetAttestationOptions(
+      action.email,
+      action.confirmationCode,
+    );
+  }
 }

@@ -62,17 +62,15 @@ function coerceToBase64Url(thing) {
   return thing;
 }
 
-async function createCredentials(options) {
+async function createCredential(options) {
   options.challenge = coerceToArrayBuffer(options.challenge);
   options.user.id = coerceToArrayBuffer(options.user.id);
+  options.excludeCredentials.forEach((c) => {
+    c.id = coerceToArrayBuffer(c.id);
+  });
   // options.extensions.prf.eval.first = coerceToArrayBuffer(
   //   options.extensions.prf.eval.first
   // );
-
-  // options.excludeCredentials = options.excludeCredentials.map((c) => {
-  //   c.id = coerceToArrayBuffer(c.id);
-  //   return c;
-  // });
 
   var credential = await navigator.credentials.create({
     publicKey: options,

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 using Domain.Aggregates;
 using Domain.Errors;
@@ -13,6 +14,7 @@ namespace Infrastructure.Persistence.Repositories;
 
 internal class UserRepository : Repository, IUserRepository
 {
+    private new readonly AppDbContext _dbContext;
     private readonly UserManager<UserDm> _userManager;
 
     public UserRepository(
@@ -21,10 +23,13 @@ internal class UserRepository : Repository, IUserRepository
         UserManager<UserDm> userManager
     ) : base(dbContext, sharedTxnScope)
     {
+        _dbContext = dbContext;
         _userManager = userManager;
     }
 
     public Task<UserDm?> FindById(string userId) => _userManager.FindByIdAsync(userId);
+
+    public Task<UserDm?> FindByEmail(string email) => _userManager.FindByEmailAsync(email);
 
     public async Task<UserError?> Create(UserDm user)
     {
@@ -51,4 +56,24 @@ internal class UserRepository : Repository, IUserRepository
     }
 
     public Task<IList<Claim>> GetClaimsFor(UserDm user) => _userManager.GetClaimsAsync(user);
+
+    public async Task<IEnumerable<(string Id, IReadOnlyList<int>? Transports)>> GetAuthCredentialDescriptorsFor(string userId)
+    {
+        var user = await _dbContext.Users
+            .Include(u => u.AuthCredentials) // @@??: Is this necessary? Will 'Select' below auto-include?
+            .Where(u => u.Id == userId)
+            .Select(u => new
+            {
+                CredentialDescriptors = u.AuthCredentials.Select(c => new { c.Id, c.Transports })
+            })
+            .SingleAsync();
+
+        return user.CredentialDescriptors.Select(c => (Id: c.Id, Transports: c.Transports));
+    }
+
+    public async Task<bool> CheckCredentialIdUnique(string credentialId)
+    {
+        var count = await _dbContext.AuthCredentials.CountAsync(c => c.Id == credentialId);
+        return count == 0;
+    }
 }

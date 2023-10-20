@@ -641,38 +641,52 @@ class AuthenticatorSelection {
 
 @JS()
 @anonymous
-class Eval {
-  external factory Eval({
-    String first,
+class PublicKeyCredentialDescriptor {
+  external factory PublicKeyCredentialDescriptor({
+    String type,
+    String id,
+    List<String>? transports,
   });
 
-  external String get first;
+  external String get type;
+  external String get id;
+  external List<String>? get transports;
 }
+
+// @JS()
+// @anonymous
+// class Eval {
+//   external factory Eval({
+//     String first,
+//   });
+
+//   external String get first;
+// }
+
+// @JS()
+// @anonymous
+// class Prf {
+//   external factory Prf({
+//     Eval eval,
+//   });
+
+//   external Eval get eval;
+// }
+
+// @JS()
+// @anonymous
+// class Extensions {
+//   external factory Extensions({
+//     Prf prf,
+//   });
+
+//   external Prf get prf;
+// }
 
 @JS()
 @anonymous
-class Prf {
-  external factory Prf({
-    Eval eval,
-  });
-
-  external Eval get eval;
-}
-
-@JS()
-@anonymous
-class Extensions {
-  external factory Extensions({
-    Prf prf,
-  });
-
-  external Prf get prf;
-}
-
-@JS()
-@anonymous
-class CreateRegOptions {
-  external factory CreateRegOptions({
+class AttestationOptions {
+  external factory AttestationOptions({
     RelyingParty rp,
     User user,
     String challenge,
@@ -680,8 +694,8 @@ class CreateRegOptions {
     int timeout,
     String attestation,
     AuthenticatorSelection authenticatorSelection,
+    List<PublicKeyCredentialDescriptor> excludeCredentials,
     // Extensions extensions,
-    // @@TODO: excludeCredentials
   });
 
   external RelyingParty get rp;
@@ -691,24 +705,25 @@ class CreateRegOptions {
   external int get timeout;
   external String get attestation;
   external AuthenticatorSelection get authenticatorSelection;
+  external List<PublicKeyCredentialDescriptor> get excludeCredentials;
   // external Extensions get extensions;
 }
 
-external dynamic createCredentials(CreateRegOptions options);
+external dynamic createCredential(AttestationOptions options);
 
 @JS()
 @anonymous
-class Response {
+class AuthenticatorAttestationResponse {
   external String get attestationObject;
   external String get clientDataJSON;
 }
 
 @JS()
 @anonymous
-class PublicKeyCredential {
+class RawAttestation {
   external String get id;
   external String get type;
-  external Response get response;
+  external AuthenticatorAttestationResponse get response;
 }
 
 @JS()
