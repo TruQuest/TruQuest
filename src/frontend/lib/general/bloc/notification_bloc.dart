@@ -21,7 +21,6 @@ class NotificationBloc extends Bloc<NotificationAction> {
   Stream<String> get toast$ => _toastChannel.stream;
 
   Stream<int> get unreadNotificationsCount$ => _notificationsCache.unreadNotificationsCount$;
-
   Stream<(List<NotificationVm>, String?)> get unreadNotifications$ => _notificationsCache.unreadNotifications$;
 
   NotificationBloc(
@@ -66,6 +65,6 @@ class NotificationBloc extends Bloc<NotificationAction> {
   }
 
   void _dismiss(Dismiss action) async {
-    await _notificationsCache.remove(action.notifications, action.username);
+    await _notificationsCache.remove(action.notifications, action.userId);
   }
 }

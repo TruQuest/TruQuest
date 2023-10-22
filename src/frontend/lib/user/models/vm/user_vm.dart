@@ -1,11 +1,13 @@
 class UserVm {
+  final String? originWallet;
   final String? id;
-  final String? username;
+  final String? signerAddress;
   final String? walletAddress;
 
   UserVm({
+    required this.originWallet,
     required this.id,
-    required this.username,
+    required this.signerAddress,
     required this.walletAddress,
   });
 }

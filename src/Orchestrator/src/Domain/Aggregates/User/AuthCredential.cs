@@ -16,7 +16,7 @@ public class AuthCredential : Entity
     public string AttestationClientDataJSON { get; }
     public string AttestationFormat { get; }
     public long AddedAt { get; }
-    public Guid AaGuid { get; }
+    public Guid AaGuid { get; } // @@??: Is this always 'AAA...'?
 
     public AuthCredential(
         string id, string userId, string publicKey, int signCount, bool isBackupEligible,
@@ -38,4 +38,6 @@ public class AuthCredential : Entity
     }
 
     public void AddTransports(List<int>? transports) => _transports = transports;
+
+    public void SetSignCount(int signCount) => SignCount = signCount;
 }

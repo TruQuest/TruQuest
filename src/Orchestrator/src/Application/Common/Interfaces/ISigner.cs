@@ -36,5 +36,5 @@ public interface ISigner
         IEnumerable<CastedAssessmentPollVoteEvent> onChainVotes
     );
 
-    string RecoverFromSiweMessage(string message, string signature);
+    string RecoverFromSiweMessage(string message, string signature); // @@TODO: Rename this.
 }

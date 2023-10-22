@@ -11,16 +11,11 @@ class _$Injector extends Injector {
   void configure() {
     final KiwiContainer container = KiwiContainer();
     container
-      ..registerSingleton((c) => UserBloc(
-          c<ToastMessenger>(),
-          c<UserService>(),
-          c<UserService1>(),
-          c<LocalWalletService>(),
-          c<ThirdPartyWalletService>()))
+      ..registerSingleton((c) => UserBloc(c<ToastMessenger>(), c<UserService>(),
+          c<EmbeddedWalletService>(), c<ThirdPartyWalletService>()))
       ..registerSingleton((c) => UserService(
-          c<LocalWalletService>(),
+          c<EmbeddedWalletService>(),
           c<ThirdPartyWalletService>(),
-          c<UserApiService>(),
           c<ServerConnector>(),
           c<LocalStorage>(),
           c<UserOperationService>(),
@@ -86,19 +81,17 @@ class _$Injector extends Injector {
       ..registerSingleton<IAccountFactoryContract>(
           (c) => SimpleAccountFactoryContract(c<EthereumRpcProvider>()))
       ..registerSingleton((c) => DummyContract(c<EthereumRpcProvider>()))
-      ..registerSingleton((c) =>
-          LocalWalletService(c<LocalStorage>(), c<IAccountFactoryContract>()))
       ..registerSingleton((c) => EthereumApiService(c<IEntryPointContract>()))
       ..registerSingleton((c) => UserOperationService(c<EthereumApiService>()))
-      ..registerSingleton(
-          (c) => ThirdPartyWalletService(c<IAccountFactoryContract>()))
+      ..registerSingleton((c) =>
+          ThirdPartyWalletService(c<LocalStorage>(), c<UserApiService>()))
       ..registerFactory((c) => UserOperationBuilder(
           c<UserService>(),
           c<EthereumApiService>(),
           c<IEntryPointContract>(),
           c<IAccountFactoryContract>()))
       ..registerSingleton((c) => IFrameManager())
-      ..registerSingleton(
-          (c) => UserService1(c<UserApiService>(), c<IFrameManager>()));
+      ..registerSingleton((c) => EmbeddedWalletService(
+          c<UserApiService>(), c<IFrameManager>(), c<LocalStorage>()));
   }
 }

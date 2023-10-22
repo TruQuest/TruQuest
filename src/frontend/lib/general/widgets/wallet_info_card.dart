@@ -194,24 +194,24 @@ class WalletInfoCard extends StatelessWidgetX {
                         ),
                         info.isPlaceholder
                             ? Text(
-                                info.ownerAddressShort,
+                                info.signerAddressShort,
                                 style: GoogleFonts.raleway(
                                   color: Colors.black,
                                   fontSize: 16,
                                 ),
                               )
                             : Tooltip(
-                                message: info.ownerAddress,
+                                message: info.signerAddress,
                                 child: InkWell(
                                   child: Text(
-                                    info.ownerAddressShort,
+                                    info.signerAddressShort,
                                     style: GoogleFonts.raleway(
                                       color: Colors.black,
                                       fontSize: 16,
                                     ),
                                   ),
                                   onTap: () async {
-                                    await Clipboard.setData(ClipboardData(text: info.ownerAddress));
+                                    await Clipboard.setData(ClipboardData(text: info.signerAddress));
                                     BotToast.showText(text: 'Copied');
                                   },
                                 ),

@@ -1,7 +1,7 @@
 import '../../../general/utils/utils.dart';
 
 class SmartWalletInfoVm {
-  final String? _ownerAddress;
+  final String? _signerAddress;
   final String? _address;
   final bool? _deployed;
   final BigInt? _ethBalance;
@@ -10,7 +10,7 @@ class SmartWalletInfoVm {
   final BigInt? _staked;
 
   SmartWalletInfoVm(
-    this._ownerAddress,
+    this._signerAddress,
     this._address,
     this._deployed,
     this._ethBalance,
@@ -20,7 +20,7 @@ class SmartWalletInfoVm {
   );
 
   SmartWalletInfoVm.placeholder()
-      : _ownerAddress = null,
+      : _signerAddress = null,
         _address = null,
         _deployed = null,
         _ethBalance = null,
@@ -30,10 +30,10 @@ class SmartWalletInfoVm {
 
   bool get isPlaceholder => _address == null;
 
-  String get ownerAddress => _ownerAddress!;
+  String get signerAddress => _signerAddress!;
 
-  String get ownerAddressShort {
-    var address = _ownerAddress;
+  String get signerAddressShort {
+    var address = _signerAddress;
     if (address == null) {
       return 'Not connected';
     }

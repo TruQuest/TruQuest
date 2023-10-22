@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text.RegularExpressions;
+using System.Diagnostics;
 
 using Microsoft.Extensions.Logging;
 
@@ -35,7 +36,6 @@ internal class Validator : AbstractValidator<SignInWithEthereumCommand>
 internal class SignInWithEthereumCommandHandler :
     IRequestHandler<SignInWithEthereumCommand, HandleResult<SignInWithEthereumResultVm>>
 {
-    private static readonly Regex _walletAddressRegex = new Regex(@"\s(0x[a-fA-F0-9]{40})\s");
     private static readonly Regex _nonceRegex = new Regex(@"\sNonce: (\d{6})\s");
 
     private readonly ILogger<SignInWithEthereumCommandHandler> _logger;
@@ -62,26 +62,12 @@ internal class SignInWithEthereumCommandHandler :
         _contractCaller = contractCaller;
     }
 
-    public async Task<HandleResult<SignInWithEthereumResultVm>> Handle(
-        SignInWithEthereumCommand command, CancellationToken ct
-    )
+    public async Task<HandleResult<SignInWithEthereumResultVm>> Handle(SignInWithEthereumCommand command, CancellationToken ct)
     {
-        var recoveredAddress = _signer.RecoverFromSiweMessage(command.Message, command.Signature);
-        var walletAddress = _walletAddressRegex.Match(command.Message).Groups[1].Value;
-
-        var walletAddressForOwner = await _contractCaller.GetWalletAddressFor(recoveredAddress);
-        if (walletAddress.ToLower() != walletAddressForOwner.ToLower())
-        {
-            return new()
-            {
-                Error = new UserError("Not the owner of the wallet")
-            };
-        }
-
-        _logger.LogInformation("Owner: {Owner}\nWallet: {Wallet}", recoveredAddress, walletAddress);
+        var signerAddress = _signer.RecoverFromSiweMessage(command.Message, command.Signature);
 
         var nonce = _nonceRegex.Match(command.Message).Groups[1].Value;
-        if (!_totpProvider.VerifyTotp(walletAddress, nonce))
+        if (!_totpProvider.VerifyTotp(signerAddress, nonce))
         {
             _logger.LogWarning("Invalid nonce");
             return new()
@@ -90,20 +76,22 @@ internal class SignInWithEthereumCommandHandler :
             };
         }
 
-        var userId = walletAddress.Substring(2).ToLower();
-        IList<Claim> claims;
+        var walletAddress = await _contractCaller.GetWalletAddressFor(signerAddress);
+        _logger.LogInformation("***** Signer: {Signer}. Wallet: {Wallet} *****", signerAddress, walletAddress);
 
-        var user = await _userRepository.FindById(userId);
+        IList<Claim> claims;
+        var user = await _userRepository.FindByUsername(signerAddress);
         if (user != null)
         {
             claims = await _userRepository.GetClaimsFor(user);
+            Debug.Assert(claims.FirstOrDefault(c => c.Type == "key_share") == null);
         }
         else
         {
             user = new UserDm
             {
-                Id = userId,
-                UserName = walletAddress
+                Id = Guid.NewGuid().ToString(),
+                UserName = signerAddress
             };
 
             var error = await _userRepository.Create(user);
@@ -117,7 +105,8 @@ internal class SignInWithEthereumCommandHandler :
 
             claims = new List<Claim>()
             {
-                new("username", user.UserName)
+                new("signer_address", signerAddress),
+                new("wallet_address", walletAddress)
             };
 
             error = await _userRepository.AddClaimsTo(user, claims);
@@ -132,14 +121,14 @@ internal class SignInWithEthereumCommandHandler :
             await _userRepository.SaveChanges();
         }
 
-        var jwt = _authTokenProvider.GenerateJwt(user.Id, claims);
-
         return new()
         {
             Data = new()
             {
-                Username = user.UserName!,
-                Token = jwt
+                UserId = user.Id,
+                SignerAddress = signerAddress,
+                WalletAddress = walletAddress,
+                Token = _authTokenProvider.GenerateJwt(user.Id, claims)
             }
         };
     }

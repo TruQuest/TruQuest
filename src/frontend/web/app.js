@@ -90,7 +90,7 @@ async function createCredential(options) {
   };
 }
 
-async function getCredentials(options) {
+async function getCredential(options) {
   options.challenge = coerceToArrayBuffer(options.challenge);
   options.allowCredentials.forEach((allowCredential) => {
     allowCredential.id = coerceToArrayBuffer(allowCredential.id);
@@ -100,9 +100,7 @@ async function getCredentials(options) {
     publicKey: options,
   });
 
-  window.elele = credential;
-
-  var authData = new Uint8Array(credential.response.authenticatorData);
+  var authenticatorData = new Uint8Array(credential.response.authenticatorData);
   var clientDataJSON = new Uint8Array(credential.response.clientDataJSON);
   var signature = new Uint8Array(credential.response.signature);
 
@@ -111,7 +109,7 @@ async function getCredentials(options) {
     type: credential.type,
     // extensions: credential.getClientExtensionResults(),
     response: {
-      authenticatorData: coerceToBase64Url(authData),
+      authenticatorData: coerceToBase64Url(authenticatorData),
       clientDataJSON: coerceToBase64Url(clientDataJSON),
       signature: coerceToBase64Url(signature),
     },
@@ -244,19 +242,22 @@ class EthereumWallet {
       // @@BUG: Awaiting this line never returns for some reason.
       this.provider.connect(walletConnectConnectionOpts);
       return {
+        accounts: null,
         error: null,
       };
     } else {
       try {
-        await this.provider.request({
+        var accounts = await this.provider.request({
           method: "eth_requestAccounts",
         });
 
         return {
+          accounts: accounts,
           error: null,
         };
       } catch (error) {
         return {
+          accounts: null,
           error: {
             code: error.code,
             message: error.message,

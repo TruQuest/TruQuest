@@ -1,6 +1,6 @@
-namespace Application.User.Commands.SignInWithEthereum;
+namespace Application.User.Commands.SignUp;
 
-public class SignInWithEthereumResultVm
+public class SignUpResultVm
 {
     public required string UserId { get; init; }
     public required string SignerAddress { get; init; }

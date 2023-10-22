@@ -34,10 +34,7 @@ abstract class Bloc<TAction extends Action> {
 
   Future<Object?> handleExecute(TAction action) => throw UnimplementedError();
 
-  Stream<Object> executeMultiStage(
-    TAction action,
-    MultiStageOperationContext ctx,
-  ) {
+  Stream<Object> executeMultiStage(TAction action, MultiStageOperationContext ctx) {
     List<String>? validationErrors;
     if ((validationErrors = action.validate()) != null) {
       toastMessenger.add('• ' + validationErrors!.join('\n• '));
@@ -47,11 +44,7 @@ abstract class Bloc<TAction extends Action> {
     return handleMultiStageExecute(action, ctx);
   }
 
-  Stream<Object> handleMultiStageExecute(
-    TAction action,
-    MultiStageOperationContext ctx,
-  ) =>
-      throw UnimplementedError();
+  Stream<Object> handleMultiStageExecute(TAction action, MultiStageOperationContext ctx) => throw UnimplementedError();
 
   void dispose({TAction? cleanupAction}) {}
 }

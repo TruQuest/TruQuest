@@ -7,10 +7,10 @@ abstract class NotificationAction extends Action {
 
 class Dismiss extends NotificationAction {
   final List<NotificationVm> notifications;
-  final String? username;
+  final String? userId;
 
   const Dismiss({
     required this.notifications,
-    required this.username,
+    required this.userId,
   });
 }

@@ -5,7 +5,6 @@ import 'package:either_dart/either.dart';
 import '../../ethereum/errors/wallet_action_declined_error.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
 import '../../general/errors/insufficient_balance_error.dart';
-import '../../user/errors/wallet_locked_error.dart';
 import '../../user/services/user_service.dart';
 import '../../ethereum/services/user_operation_service.dart';
 import '../models/im/new_acceptance_poll_vote_im.dart';
@@ -83,14 +82,14 @@ class ThingService {
   ) async* {
     print('**************** Fund thing ****************');
 
-    if (!_userService.walletUnlocked) {
-      yield const WalletLockedError();
+    // if (!_userService.walletUnlocked) {
+    //   yield const WalletLockedError();
 
-      bool unlocked = await ctx.unlockWalletTask.future;
-      if (!unlocked) {
-        return;
-      }
-    }
+    //   bool unlocked = await ctx.unlockWalletTask.future;
+    //   if (!unlocked) {
+    //     return;
+    //   }
+    // }
 
     BigInt thingSubmissionStake = await _truQuestContract.getThingSubmissionStake();
     BigInt availableFunds = await _userService.getAvailableFundsForCurrentUser();
@@ -159,14 +158,14 @@ class ThingService {
 
     print('******************** Join Lottery ********************');
 
-    if (!_userService.walletUnlocked) {
-      yield const WalletLockedError();
+    // if (!_userService.walletUnlocked) {
+    //   yield const WalletLockedError();
 
-      bool unlocked = await ctx.unlockWalletTask.future;
-      if (!unlocked) {
-        return;
-      }
-    }
+    //   bool unlocked = await ctx.unlockWalletTask.future;
+    //   if (!unlocked) {
+    //     return;
+    //   }
+    // }
 
     BigInt verifierStake = await _truQuestContract.getVerifierStake();
     BigInt availableFunds = await _userService.getAvailableFundsForCurrentUser();
@@ -241,14 +240,14 @@ class ThingService {
       reason: reason,
     );
 
-    if (!_userService.walletUnlocked) {
-      yield const WalletLockedError();
+    // if (!_userService.walletUnlocked) {
+    //   yield const WalletLockedError();
 
-      bool unlocked = await ctx.unlockWalletTask.future;
-      if (!unlocked) {
-        return;
-      }
-    }
+    //   bool unlocked = await ctx.unlockWalletTask.future;
+    //   if (!unlocked) {
+    //     return;
+    //   }
+    // }
 
     String signature;
     try {
@@ -278,14 +277,14 @@ class ThingService {
   ) async* {
     print('********************** Cast Vote On-chain **********************');
 
-    if (!_userService.walletUnlocked) {
-      yield const WalletLockedError();
+    // if (!_userService.walletUnlocked) {
+    //   yield const WalletLockedError();
 
-      bool unlocked = await ctx.unlockWalletTask.future;
-      if (!unlocked) {
-        return;
-      }
-    }
+    //   bool unlocked = await ctx.unlockWalletTask.future;
+    //   if (!unlocked) {
+    //     return;
+    //   }
+    // }
 
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [

@@ -12,53 +12,32 @@ class NotificationsCache {
   final UserService _userService;
   final UserApiService _userApiService;
 
-  final _usernameToUnreadNotifications = <String?, Set<NotificationVm>>{};
+  final _userIdToUnreadNotifications = <String?, Set<NotificationVm>>{};
   Set<NotificationVm>? _unreadNotifications;
-  String? _username;
+  String? _userId;
 
   final _unreadNotificationsCountChannel = BehaviorSubject<int>();
-  Stream<int> get unreadNotificationsCount$ =>
-      _unreadNotificationsCountChannel.stream;
+  Stream<int> get unreadNotificationsCount$ => _unreadNotificationsCountChannel.stream;
 
-  final _unreadNotificationsChannel =
-      BehaviorSubject<(List<NotificationVm>, String?)>();
-  Stream<(List<NotificationVm>, String?)> get unreadNotifications$ =>
-      _unreadNotificationsChannel.stream;
+  final _unreadNotificationsChannel = BehaviorSubject<(List<NotificationVm>, String?)>();
+  Stream<(List<NotificationVm>, String?)> get unreadNotifications$ => _unreadNotificationsChannel.stream;
 
   NotificationsCache(
     this._userService,
     this._userApiService,
     ServerConnector serverConnector,
   ) {
-    serverConnector.serverEvent$
-        .where((event) => event.$1 == ServerEventType.notification)
-        .listen((event) {
+    serverConnector.serverEvent$.where((event) => event.$1 == ServerEventType.notification).listen((event) {
       var (notification, payload) = event.$2 as (NotificationEventType, Object);
       if (notification == NotificationEventType.initialRetrieve) {
-        var (username, notifications) =
-            payload as (String, List<NotificationVm>);
-        _onInitialRetrieve(username, notifications);
+        var (userId, notifications) = payload as (String, List<NotificationVm>);
+        _onInitialRetrieve(userId, notifications);
       } else if (notification == NotificationEventType.newOne) {
-        var (
-          username,
-          updateTimestamp,
-          itemType,
-          itemId,
-          itemUpdateCategory,
-          title,
-          details
-        ) = payload as (
-          String?,
-          int,
-          WatchedItemTypeVm,
-          String,
-          int,
-          String,
-          String?
-        );
+        var (userId, updateTimestamp, itemType, itemId, itemUpdateCategory, title, details) =
+            payload as (String?, int, WatchedItemTypeVm, String, int, String, String?);
 
         _onNewNotification(
-          username,
+          userId,
           updateTimestamp,
           itemType,
           itemId,
@@ -70,11 +49,11 @@ class NotificationsCache {
     });
 
     _userService.currentUserChanged$.listen((user) {
-      _unreadNotifications = _usernameToUnreadNotifications.putIfAbsent(
-        user.username,
+      _unreadNotifications = _userIdToUnreadNotifications.putIfAbsent(
+        user.id,
         () => {},
       );
-      _username = user.username;
+      _userId = user.id;
       _notify();
     });
   }
@@ -88,20 +67,17 @@ class NotificationsCache {
               (n1, n2) => n2.updateTimestamp.compareTo(n1.updateTimestamp),
             ),
         ),
-        _username,
+        _userId,
       ),
     );
     _unreadNotificationsCountChannel.add(_unreadNotifications?.length ?? 0);
   }
 
-  void _onInitialRetrieve(
-    String username,
-    List<NotificationVm> notifications,
-  ) {
+  void _onInitialRetrieve(String userId, List<NotificationVm> notifications) {
     // @@NOTE: In theory, it's highly unlikely but still possible that this runs
     // before current user is determined, so the set could be absent.
-    var usersUnreadNotifications = _usernameToUnreadNotifications.putIfAbsent(
-      username,
+    var usersUnreadNotifications = _userIdToUnreadNotifications.putIfAbsent(
+      userId,
       () => {},
     );
     usersUnreadNotifications.addAll(notifications);
@@ -109,7 +85,7 @@ class NotificationsCache {
   }
 
   void _onNewNotification(
-    String? username,
+    String? userId,
     int updateTimestamp,
     WatchedItemTypeVm itemType,
     String itemId,
@@ -117,8 +93,8 @@ class NotificationsCache {
     String title,
     String? details,
   ) {
-    var usersUnreadNotifications = _usernameToUnreadNotifications.putIfAbsent(
-      username,
+    var usersUnreadNotifications = _userIdToUnreadNotifications.putIfAbsent(
+      userId,
       () => {},
     );
     usersUnreadNotifications.add(NotificationVm(
@@ -132,19 +108,17 @@ class NotificationsCache {
     _notify();
   }
 
-  Future remove(List<NotificationVm> notifications, String? username) async {
-    var usersUnreadNotifications = _usernameToUnreadNotifications[username]!;
+  Future remove(List<NotificationVm> notifications, String? userId) async {
+    var usersUnreadNotifications = _userIdToUnreadNotifications[userId]!;
     usersUnreadNotifications.removeAll(notifications);
     _notify();
 
-    if (username != null) {
+    if (userId != null) {
       var latestNotificationsPerItemAndCategory = <String, NotificationVm>{};
       for (var notification in notifications) {
         latestNotificationsPerItemAndCategory.update(
           notification.key,
-          (n) => notification.updateTimestamp.isAfter(n.updateTimestamp)
-              ? notification
-              : n,
+          (n) => notification.updateTimestamp.isAfter(n.updateTimestamp) ? notification : n,
           ifAbsent: () => notification,
         );
       }

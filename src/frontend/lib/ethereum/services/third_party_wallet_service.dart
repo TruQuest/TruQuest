@@ -6,20 +6,29 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:universal_html/html.dart' as html;
 
+import '../../general/services/local_storage.dart';
+import '../../user/services/user_api_service.dart';
 import '../models/vm/wallet_connect_uri_vm.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
 import '../errors/wallet_action_declined_error.dart';
-import '../../general/contracts/erc4337/iaccount_factory_contract.dart';
 import 'iwallet_service.dart';
 import '../../ethereum_js_interop.dart';
 
 class ThirdPartyWalletService implements IWalletService {
-  final IAccountFactoryContract _accountFactoryContract;
+  final LocalStorage _localStorage;
+  final UserApiService _userApiService;
+
+  void Function()? _onSelectedForOnboarding;
+  set onSelectedForOnboarding(void Function() f) => _onSelectedForOnboarding = f;
+
+  bool _walletSetup = false;
+
+  late final String _name;
+  @override
+  String get name => _name;
 
   final EthereumWallet _ethereumWallet;
   String? _connectedAccount;
-
-  final walletSetup = Completer<String>();
 
   late final _walletConnectProviderOpts = WalletConnectProviderOpts(
     projectId: dotenv.env['WALLET_CONNECT_PROJECT_ID']!,
@@ -27,7 +36,6 @@ class ThirdPartyWalletService implements IWalletService {
     showQrModal: false,
     methods: [
       'personal_sign', // Checked in MM, works.
-      'wallet_watchAsset',
       "wallet_scanQRCode",
     ],
     events: ['accountsChanged'],
@@ -38,35 +46,13 @@ class ThirdPartyWalletService implements IWalletService {
   );
 
   final _connectedAccountChangedEventChannel = BehaviorSubject<String?>();
-
   @override
-  Stream<(String?, String?)> get currentWalletAddressChanged$ =>
-      _connectedAccountChangedEventChannel.asyncMap((connectedAccount) async {
-        _connectedAccount = connectedAccount;
-        _currentWalletAddress =
-            connectedAccount != null ? await _accountFactoryContract.getAddress(connectedAccount) : null;
+  Stream<String?> get currentSignerChanged$ => _connectedAccountChangedEventChannel.stream;
 
-        print(
-          '*************** $_connectedAccount: $_currentWalletAddress ***************',
-        );
+  ThirdPartyWalletService(this._localStorage, this._userApiService) : _ethereumWallet = EthereumWallet();
 
-        return (_connectedAccount, _currentWalletAddress);
-      });
-
-  String? _currentWalletAddress;
-
-  @override
-  String? get currentWalletAddress => _currentWalletAddress;
-
-  @override
-  String? get currentOwnerAddress => _connectedAccount;
-
-  @override
-  bool get isUnlocked => true;
-
-  ThirdPartyWalletService(this._accountFactoryContract) : _ethereumWallet = EthereumWallet();
-
-  Future<bool> setup(String walletName) async {
+  Future setup(String walletName) async {
+    _name = walletName;
     // @@TODO: Try-catch selected wallet not available.
     await _ethereumWallet.select(
       walletName,
@@ -85,25 +71,35 @@ class ThirdPartyWalletService implements IWalletService {
     // to another account in the previous session.
     var accounts = await _ethereumWallet.getAccounts();
     accounts = accounts.map((a) => convertToEip55Address(a)).toList();
-    var connectedAccount = accounts.firstOrNull;
-    _connectedAccountChangedEventChannel.add(connectedAccount);
+    _connectedAccount = accounts.firstOrNull;
+    _connectedAccountChangedEventChannel.add(_connectedAccount);
 
-    walletSetup.complete(walletName);
-
-    return connectedAccount != null;
+    _walletSetup = true;
   }
 
   void _onAccountsChanged(List<String> accounts) {
     accounts = accounts.map((a) => convertToEip55Address(a)).toList();
     var connectedAccount = accounts.firstOrNull;
     if (_connectedAccount != connectedAccount) {
-      _connectedAccountChangedEventChannel.add(connectedAccount);
+      _connectedAccount = connectedAccount;
+      _connectedAccountChangedEventChannel.add(_connectedAccount);
     }
   }
 
-  Stream<Object> connectAccount(MultiStageOperationContext ctx) async* {
-    var walletName = await walletSetup.future;
-    if (walletName == 'WalletConnect') {
+  Stream<Object> signIn(String? walletName, MultiStageOperationContext ctx) async* {
+    if (!_walletSetup) {
+      assert(walletName != null);
+      _onSelectedForOnboarding?.call();
+      await _localStorage.setString('Wallet', jsonEncode({'name': walletName}));
+      await setup(walletName!);
+    }
+
+    if (_connectedAccount == null) yield* _connectAccount(ctx);
+    if (_connectedAccount != null) yield* _signInWithEthereum(ctx);
+  }
+
+  Stream<Object> _connectAccount(MultiStageOperationContext ctx) async* {
+    if (name == 'WalletConnect') {
       var uriGenerated = Completer<String>();
       _ethereumWallet.onDisplayUriOnce((uri) {
         print('************* WalletConnect URI: $uri *************');
@@ -117,11 +113,69 @@ class ThirdPartyWalletService implements IWalletService {
       return;
     }
 
-    var error = await _ethereumWallet.requestAccounts();
-    if (error != null) {
+    var result = await _ethereumWallet.requestAccounts();
+    if (result.isLeft) {
+      var error = result.left;
       print('Request accounts error: [${error.code}] ${error.message}');
       yield const WalletActionDeclinedError();
+      return;
     }
+
+    var accounts = result.right!;
+    accounts = accounts.map((a) => convertToEip55Address(a)).toList();
+    var connectedAccount = accounts.firstOrNull;
+    if (_connectedAccount != connectedAccount) {
+      // @@NOTE: Do this check since I'm not sure what happens first – '_onAccountsChanged' handler
+      // gets invoked or 'requestAccounts' call returns.
+      _connectedAccount = connectedAccount;
+      _connectedAccountChangedEventChannel.add(_connectedAccount);
+    }
+  }
+
+  Stream<Object> _signInWithEthereum(MultiStageOperationContext ctx) async* {
+    var currentSignerAddress = _connectedAccount!;
+    var nonce = await _userApiService.getNonceForSiwe(currentSignerAddress);
+
+    var domain = 'truquest.io';
+    var statement = 'I accept the TruQuest Terms of Service: https://truquest.io/tos';
+    var uri = 'https://truquest.io/';
+    var version = 1;
+
+    var now = DateTime.now().toUtc().toIso8601String();
+    int indexOfDot = now.indexOf('.');
+    var nowWithoutMicroseconds = now.substring(0, indexOfDot + 4) + 'Z';
+    var message = '$domain wants you to sign in with your Ethereum account:\n'
+        '$currentSignerAddress\n\n'
+        '$statement\n\n'
+        'URI: $uri\n'
+        'Version: $version\n'
+        'Nonce: $nonce\n'
+        'Issued At: $nowWithoutMicroseconds';
+
+    String signature;
+    try {
+      signature = await personalSign(message);
+    } on WalletActionDeclinedError catch (error) {
+      print(error.message);
+      yield error;
+      return;
+    }
+
+    var result = await _userApiService.signInWithEthereum(
+      message,
+      signature,
+    );
+
+    var wallet = jsonDecode(_localStorage.getString('Wallet')!) as Map<String, dynamic>;
+    wallet[currentSignerAddress] = {
+      'userId': result.userId,
+      'walletAddress': convertToEip55Address(result.walletAddress),
+      'token': result.token,
+    };
+
+    await _localStorage.setString('Wallet', jsonEncode(wallet));
+
+    _connectedAccountChangedEventChannel.add(_connectedAccount);
   }
 
   void watchTruthserum() async {
@@ -132,15 +186,13 @@ class ThirdPartyWalletService implements IWalletService {
   }
 
   @override
-  FutureOr<String> personalSign(String message) async {
+  Future<String> personalSign(String message) async {
     var result = await _ethereumWallet.personalSign(
       _connectedAccount!,
       '0x' + hex.encode(utf8.encode(message)),
     );
     if (result.error != null) {
-      print(
-        'Personal sign message error: [${result.error!.code}] ${result.error!.message}',
-      );
+      print('Personal sign message error: [${result.error!.code}] ${result.error!.message}');
       throw const WalletActionDeclinedError();
     }
 
@@ -148,7 +200,7 @@ class ThirdPartyWalletService implements IWalletService {
   }
 
   @override
-  FutureOr<String> personalSignDigest(String digest) async {
+  Future<String> personalSignDigest(String digest) async {
     var result = await _ethereumWallet.personalSign(
       _connectedAccount!,
       digest,

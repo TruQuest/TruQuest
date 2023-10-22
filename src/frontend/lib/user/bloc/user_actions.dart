@@ -1,96 +1,32 @@
+import '../../ethereum_js_interop.dart';
 import '../../general/bloc/actions.dart';
 
 abstract class UserAction extends Action {
   const UserAction();
 }
 
-class SelectThirdPartyWallet extends UserAction {
-  final String walletName;
+class GenerateConfirmationCodeAndAttestationOptions extends UserAction {
+  final String email;
 
-  @override
-  List<String>? validate() {
-    List<String>? errors;
-    if (!(walletName == 'Metamask' || walletName == 'CoinbaseWallet' || walletName == 'WalletConnect')) {
-      errors ??= [];
-      errors.add('Unsupported wallet');
-    }
-
-    return errors;
-  }
-
-  const SelectThirdPartyWallet({required this.walletName});
+  const GenerateConfirmationCodeAndAttestationOptions({required this.email});
 }
 
-class ConnectAccount extends UserAction {
-  const ConnectAccount();
-}
+class SignUp extends UserAction {
+  final String email;
+  final String confirmationCode;
+  final AttestationOptions options;
 
-class GenerateMnemonic extends UserAction {
-  const GenerateMnemonic();
-}
-
-class CreateAndSaveEncryptedLocalWallet extends UserAction {
-  final String mnemonic;
-  final String password;
-
-  @override
-  List<String>? validate() {
-    List<String>? errors;
-    if (mnemonic.split(' ').length != 12) {
-      errors ??= [];
-      errors.add('Mnemonic must be exactly 12 words long');
-    }
-    if (password.length < 8) {
-      errors ??= [];
-      errors.add('Password must be at least 8 characters long');
-    }
-
-    return errors;
-  }
-
-  const CreateAndSaveEncryptedLocalWallet({
-    required this.mnemonic,
-    required this.password,
+  const SignUp({
+    required this.email,
+    required this.confirmationCode,
+    required this.options,
   });
 }
 
-class SignInWithEthereum extends UserAction {
-  const SignInWithEthereum();
-}
+class SignInWithThirdPartyWallet extends UserAction {
+  final String? walletName;
 
-class AddEmail extends UserAction {
-  final String email;
-
-  const AddEmail({required this.email});
-}
-
-class ConfirmEmail extends UserAction {
-  final String confirmationToken;
-
-  const ConfirmEmail({required this.confirmationToken});
-}
-
-class UnlockWallet extends UserAction {
-  final String password;
-
-  const UnlockWallet({required this.password});
-}
-
-class AddAccount extends UserAction {
-  const AddAccount();
-}
-
-class SwitchAccount extends UserAction {
-  final String walletAddress;
-
-  @override
-  List<String>? validate() {
-    List<String>? errors;
-    // @@TODO
-    return errors;
-  }
-
-  const SwitchAccount({required this.walletAddress});
+  const SignInWithThirdPartyWallet({this.walletName});
 }
 
 class DepositFunds extends UserAction {
@@ -125,24 +61,4 @@ class WithdrawFunds extends UserAction {
   }
 
   const WithdrawFunds({required this.amount});
-}
-
-class RevealSecretPhrase extends UserAction {
-  const RevealSecretPhrase();
-}
-
-class SignUp extends UserAction {
-  final String email;
-
-  const SignUp({required this.email});
-}
-
-class FinishSignUp extends UserAction {
-  final String email;
-  final String confirmationCode;
-
-  const FinishSignUp({
-    required this.email,
-    required this.confirmationCode,
-  });
 }

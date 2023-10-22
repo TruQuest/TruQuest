@@ -33,14 +33,14 @@
         if (command == "gen") {
           var wallet = ethers.Wallet.createRandom();
           var keyShares = secrets.share(wallet.privateKey.substring(2), 2, 2);
-          var nonce = messageSplit[2];
-          var signatureOverNonce = await wallet.signMessage(nonce);
+          var confirmationCode = messageSplit[2];
+          var signatureOverCode = await wallet.signMessage(confirmationCode);
           wallet = null;
 
           localStorage.setItem("keyShare", keyShares[1]);
 
           e.source.postMessage(
-            `view-private-key-gen|${requestId}|${keyShares[0]}|${signatureOverNonce}`,
+            `view-private-key-gen|${requestId}|${keyShares[0]}|${signatureOverCode}`,
             "http://localhost:53433"
           );
           keyShares = null;

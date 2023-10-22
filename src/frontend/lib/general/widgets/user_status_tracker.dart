@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'connect_account_button.dart';
+import '../../user/bloc/user_actions.dart';
+import '../utils/utils.dart';
 import 'onboarding_dialog.dart';
-import 'sign_in_button.dart';
-import 'account_list_dialog.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../../widget_extensions.dart';
 
@@ -18,49 +17,49 @@ class UserStatusTracker extends StatelessWidgetX {
     return StreamBuilder(
       stream: _userBloc.currentUser$,
       builder: (context, snapshot) {
-        return IconButton(
-          icon: Icon(
-            Icons.abc,
-            color: Colors.white,
-          ),
-          onPressed: () => showDialog(
-            context: context,
-            builder: (context) => OnboardingDialog(),
-          ),
-        );
-
         if (snapshot.data == null) {
           return const SizedBox.shrink();
         }
 
         var user = snapshot.data!;
-        if (user.walletAddress == null) {
+
+        if (user.id != null) {
           return Tooltip(
-            message: 'Connect',
-            child: ConnectAccountButton(),
+            message: user.signerAddress,
+            child: IconButton(
+              icon: Icon(
+                Icons.account_box,
+                color: Colors.white,
+              ),
+              onPressed: () {},
+            ),
           );
-        } else if (user.id == null) {
-          return const Tooltip(
-            message: 'Sign-in',
-            child: SignInButton(),
+        } else if (user.originWallet == null) {
+          return IconButton(
+            icon: Icon(
+              Icons.login,
+              color: Colors.white,
+            ),
+            onPressed: () => showDialog(
+              context: context,
+              builder: (context) => OnboardingDialog(),
+            ),
           );
         }
 
-        return Tooltip(
-          message: user.id,
-          child: IconButton(
-            icon: const Icon(
-              Icons.account_box,
-              color: Colors.white,
+        // This could only happen with a third party wallet, not embedded one.
+
+        return IconButton(
+          icon: Icon(
+            Icons.login,
+            color: Colors.white,
+          ),
+          onPressed: () => multiStageOffChainFlow(
+            context,
+            (ctx) => _userBloc.executeMultiStage(
+              SignInWithThirdPartyWallet(),
+              ctx,
             ),
-            onPressed: () {
-              if (_userBloc.localWalletSelected) {
-                showDialog(
-                  context: context,
-                  builder: (_) => AccountListDialog(),
-                );
-              }
-            },
           ),
         );
       },

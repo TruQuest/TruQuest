@@ -32,7 +32,7 @@ internal class TotpProvider : ITotpProvider
         _totpSaltBytes.CopyTo(secret, 0);
         addressBytes.CopyTo(secret, _totpSaltBytes.Length);
 
-        return new Totp(secret);
+        return new Totp(secret, step: 120);
     }
 
     public string GenerateTotpFor(string address) => _getTotpGenerator(address).ComputeTotp();

@@ -1,10 +1,8 @@
 import 'dart:async';
 
 abstract class IWalletService {
-  Stream<(String?, String?)> get currentWalletAddressChanged$;
-  String? get currentWalletAddress;
-  String? get currentOwnerAddress;
-  bool get isUnlocked;
-  FutureOr<String> personalSign(String message);
-  FutureOr<String> personalSignDigest(String digest);
+  String get name;
+  Stream<String?> get currentSignerChanged$;
+  Future<String> personalSign(String message);
+  Future<String> personalSignDigest(String digest);
 }

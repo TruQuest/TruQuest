@@ -1,19 +1,24 @@
 import '../../../ethereum_js_interop.dart';
 
-class AddAuthCredentialAndKeyShareCommand {
+class SignUpCommand {
+  final String email;
+  final String confirmationCode;
+  final String signatureOverCode;
   final RawAttestation rawAttestation;
-  final String nonce;
-  final String signatureOverNonce;
   final String keyShare;
 
-  AddAuthCredentialAndKeyShareCommand({
+  SignUpCommand({
+    required this.email,
+    required this.confirmationCode,
+    required this.signatureOverCode,
     required this.rawAttestation,
-    required this.nonce,
-    required this.signatureOverNonce,
     required this.keyShare,
   });
 
   Map<String, dynamic> toJson() => {
+        'email': email,
+        'confirmationCode': confirmationCode,
+        'signatureOverCode': signatureOverCode,
         'rawAttestation': {
           'id': rawAttestation.id,
           'rawId': rawAttestation.id,
@@ -24,8 +29,6 @@ class AddAuthCredentialAndKeyShareCommand {
           },
           'extensions': {},
         },
-        'nonce': nonce,
-        'signatureOverNonce': signatureOverNonce,
         'keyShare': keyShare,
       };
 }

@@ -1,3 +1,4 @@
+using System.Text;
 using System.Security.Claims;
 
 using Microsoft.Extensions.Caching.Memory;
@@ -9,28 +10,27 @@ using MediatR;
 using Domain.Aggregates;
 using Domain.Errors;
 using Domain.Results;
+using UserDm = Domain.Aggregates.User;
 
 using Application.Common.Attributes;
 using Application.Common.Interfaces;
 using Application.Common.Misc;
 
-namespace Application.User.Commands.AddAuthCredentialAndKeyShare;
+namespace Application.User.Commands.SignUp;
 
 [ExecuteInTxn]
-public class AddAuthCredentialAndKeyShareCommand : IRequest<HandleResult<AddAuthCredentialAndKeyShareResultVm>>
+public class SignUpCommand : IRequest<HandleResult<SignUpResultVm>>
 {
+    public required string Email { get; init; }
+    public required string ConfirmationCode { get; init; }
+    public required string SignatureOverCode { get; init; }
     public required AuthenticatorAttestationRawResponse RawAttestation { get; init; }
-    public required string Nonce { get; init; }
-    public required string SignatureOverNonce { get; init; }
     public required string KeyShare { get; init; }
 }
 
-internal class AddAuthCredentialAndKeyShareCommandHandler : IRequestHandler<
-    AddAuthCredentialAndKeyShareCommand,
-    HandleResult<AddAuthCredentialAndKeyShareResultVm>
->
+internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<SignUpResultVm>>
 {
-    private readonly ILogger<AddAuthCredentialAndKeyShareCommandHandler> _logger;
+    private readonly ILogger<SignUpCommandHandler> _logger;
     private readonly IUserRepository _userRepository;
     private readonly IFido2 _fido2;
     private readonly IMemoryCache _memoryCache;
@@ -39,8 +39,8 @@ internal class AddAuthCredentialAndKeyShareCommandHandler : IRequestHandler<
     private readonly IAuthTokenProvider _authTokenProvider;
     private readonly IContractCaller _contractCaller;
 
-    public AddAuthCredentialAndKeyShareCommandHandler(
-        ILogger<AddAuthCredentialAndKeyShareCommandHandler> logger,
+    public SignUpCommandHandler(
+        ILogger<SignUpCommandHandler> logger,
         IUserRepository userRepository,
         IFido2 fido2,
         IMemoryCache memoryCache,
@@ -60,41 +60,54 @@ internal class AddAuthCredentialAndKeyShareCommandHandler : IRequestHandler<
         _contractCaller = contractCaller;
     }
 
-    public async Task<HandleResult<AddAuthCredentialAndKeyShareResultVm>> Handle(
-        AddAuthCredentialAndKeyShareCommand command, CancellationToken ct
-    )
+    public async Task<HandleResult<SignUpResultVm>> Handle(SignUpCommand command, CancellationToken ct)
     {
-        var attestation = AuthenticatorAttestationResponse.Parse(command.RawAttestation);
-        var optionsJson = _memoryCache.Get<string>($"fido2.attestationOptions.{Base64Url.Encode(attestation.Challenge)}");
-        var options = CredentialCreateOptions.FromJson(optionsJson);
-
-        IsCredentialIdUniqueToUserAsyncDelegate uniqueCheck = (args, ct) =>
-            _userRepository.CheckCredentialIdUnique(Base64Url.Encode(args.CredentialId));
-
-        // @@TODO: Handle exceptions.
-        var result = await _fido2.MakeNewCredentialAsync(command.RawAttestation, options, uniqueCheck, ct);
-
-        if (!_totpProvider.VerifyTotp(options.User.Id.ToHex(), command.Nonce)) // @@??: Use challenge instead of user id ?
+        if (!_totpProvider.VerifyTotp(Encoding.UTF8.GetBytes(command.Email).ToHex(), command.ConfirmationCode))
         {
-            _logger.LogWarning("Invalid nonce");
+            _logger.LogWarning("Invalid confirmation code");
             return new()
             {
-                Error = new UserError("Invalid nonce")
+                Error = new UserError("Invalid confirmation code")
             };
         }
 
-        var signerAddress = _signer.RecoverFromSiweMessage(command.Nonce, command.SignatureOverNonce);
+        var attestation = AuthenticatorAttestationResponse.Parse(command.RawAttestation);
+
+        var cacheKey = $"fido2.attestationOptions.{Base64Url.Encode(attestation.Challenge)}";
+        if (!_memoryCache.TryGetValue<string>(cacheKey, out string? optionsJson))
+        {
+            return new()
+            {
+                Error = new UserError("Challenge expired")
+            };
+        }
+
+        _memoryCache.Remove(cacheKey);
+        var options = CredentialCreateOptions.FromJson(optionsJson);
+
+        IsCredentialIdUniqueToUserAsyncDelegate checkCredentialIdUnique = (args, ct) =>
+            _userRepository.CheckCredentialIdUnique(Base64Url.Encode(args.CredentialId));
+
+        // @@TODO!!: Handle exceptions.
+        var result = await _fido2.MakeNewCredentialAsync(command.RawAttestation, options, checkCredentialIdUnique, ct);
+
+        var signerAddress = _signer.RecoverFromSiweMessage(command.ConfirmationCode, command.SignatureOverCode);
         var walletAddress = await _contractCaller.GetWalletAddressFor(signerAddress);
 
-        _logger.LogInformation("Signer: {Signer}\nWallet: {Wallet}", signerAddress, walletAddress);
+        _logger.LogInformation("***** Signer: {Signer}\nWallet: {Wallet} *****", signerAddress, walletAddress);
 
-        var userId = new Guid(options.User.Id).ToString();
+        var user = new UserDm
+        {
+            Id = new Guid(options.User.Id).ToString(),
+            Email = command.Email,
+            UserName = command.Email,
+            EmailConfirmed = true
+        };
 
-        var user = await _userRepository.FindById(userId);
         var credential = new AuthCredential
         (
             id: Base64Url.Encode(result.Result!.Id),
-            userId: userId,
+            userId: user.Id,
             publicKey: Base64Url.Encode(result.Result.PublicKey),
             signCount: (int)result.Result.SignCount,
             isBackupEligible: result.Result.IsBackupEligible,
@@ -107,7 +120,16 @@ internal class AddAuthCredentialAndKeyShareCommandHandler : IRequestHandler<
         );
         credential.AddTransports(result.Result.Transports?.Select(t => (int)t).ToList());
 
-        user!.AddAuthCredential(credential);
+        user.AddAuthCredential(credential);
+
+        var error = await _userRepository.Create(user);
+        if (error != null)
+        {
+            return new()
+            {
+                Error = error
+            };
+        }
 
         var claims = new List<Claim>()
         {
@@ -116,7 +138,7 @@ internal class AddAuthCredentialAndKeyShareCommandHandler : IRequestHandler<
             new("key_share", command.KeyShare)
         };
 
-        var error = await _userRepository.AddClaimsTo(user, claims);
+        error = await _userRepository.AddClaimsTo(user, claims);
         if (error != null)
         {
             return new()
@@ -131,8 +153,10 @@ internal class AddAuthCredentialAndKeyShareCommandHandler : IRequestHandler<
         {
             Data = new()
             {
+                UserId = user.Id,
+                SignerAddress = signerAddress,
                 WalletAddress = walletAddress,
-                Token = _authTokenProvider.GenerateJwt(userId, claims.SkipLast(1).ToList())
+                Token = _authTokenProvider.GenerateJwt(user.Id, claims.SkipLast(1).ToList())
             }
         };
     }

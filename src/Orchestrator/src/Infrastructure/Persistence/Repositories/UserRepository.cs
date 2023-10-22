@@ -31,6 +31,8 @@ internal class UserRepository : Repository, IUserRepository
 
     public Task<UserDm?> FindByEmail(string email) => _userManager.FindByEmailAsync(email);
 
+    public Task<UserDm?> FindByUsername(string username) => _userManager.FindByNameAsync(username);
+
     public async Task<UserError?> Create(UserDm user)
     {
         var result = await _userManager.CreateAsync(user);
@@ -57,6 +59,15 @@ internal class UserRepository : Repository, IUserRepository
 
     public Task<IList<Claim>> GetClaimsFor(UserDm user) => _userManager.GetClaimsAsync(user);
 
+    public async Task<Claim> GetClaim(string userId, string claimType)
+    {
+        var claim = await _dbContext.UserClaims
+            .AsNoTracking()
+            .SingleAsync(c => c.UserId == userId && c.ClaimType == claimType);
+
+        return claim.ToClaim();
+    }
+
     public async Task<IEnumerable<(string Id, IReadOnlyList<int>? Transports)>> GetAuthCredentialDescriptorsFor(string userId)
     {
         var user = await _dbContext.Users
@@ -76,4 +87,7 @@ internal class UserRepository : Repository, IUserRepository
         var count = await _dbContext.AuthCredentials.CountAsync(c => c.Id == credentialId);
         return count == 0;
     }
+
+    public Task<AuthCredential> GetUserAuthCredential(string userId, string credentialId) =>
+        _dbContext.AuthCredentials.SingleAsync(c => c.Id == credentialId && c.UserId == userId);
 }

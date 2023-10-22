@@ -81,7 +81,7 @@ public static class WebApplicationBuilderExtension
                 options.BackupEligibleCredentialPolicy = Fido2Configuration.CredentialBackupPolicy.Allowed;
                 options.BackedUpCredentialPolicy = Fido2Configuration.CredentialBackupPolicy.Allowed;
             })
-            .AddCachedMetadataService(config =>
+            .AddCachedMetadataService(config => // @@TODO: Check if this is necessary.
             {
                 config.AddFidoMetadataRepository(delegate { });
             });

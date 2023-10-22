@@ -24,8 +24,10 @@ public class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
             );
 
             var response = await next();
-
-            txnScope.Complete();
+            if (response.Error == null)
+            {
+                txnScope.Complete();
+            }
 
             return response;
         }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../ethereum_js_interop.dart';
 import '../utils/utils.dart';
 import '../../user/bloc/user_actions.dart';
 import '../../user/bloc/user_bloc.dart';
@@ -20,13 +21,42 @@ class _OnboardingDialogState extends StateX<OnboardingDialog> {
   final _emailController = TextEditingController();
   final _confirmationCodeController = TextEditingController();
 
-  String? _iframeViewId;
+  AttestationOptions? _options;
 
   @override
   void dispose() {
     _emailController.dispose();
     _confirmationCodeController.dispose();
     super.dispose();
+  }
+
+  Widget _buildThirdPartyWalletButton(String walletName) {
+    return InkWell(
+      onTap: () => multiStageOffChainFlow(
+        context,
+        (ctx) => _userBloc.executeMultiStage(
+          SignInWithThirdPartyWallet(walletName: walletName),
+          ctx,
+        ),
+      ),
+      child: Card(
+        color: const Color(0xffF8F9FA),
+        shadowColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        elevation: 5,
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Image.asset(
+            'assets/images/${walletName.toLowerCase()}.png',
+            width: 200,
+            height: 70,
+            fit: BoxFit.contain,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -45,7 +75,7 @@ class _OnboardingDialogState extends StateX<OnboardingDialog> {
         children: [
           SizedBox(
             width: 400,
-            height: 320,
+            height: 450,
             child: Stepper(
               currentStep: _currentStep,
               onStepContinue: () => setState(() => _currentStep++),
@@ -68,18 +98,22 @@ class _OnboardingDialogState extends StateX<OnboardingDialog> {
                     ),
                     onPressed: () async {
                       if (details.currentStep == 0) {
+                        _options = await _userBloc.execute<AttestationOptions>(
+                          GenerateConfirmationCodeAndAttestationOptions(email: _emailController.text),
+                        );
+                        if (_options != null) details.onStepContinue!();
+                      } else if (details.currentStep == 1) {
                         var success = await _userBloc.execute<bool>(
-                          SignUp(email: _emailController.text),
+                          SignUp(
+                            email: _emailController.text,
+                            confirmationCode: _confirmationCodeController.text,
+                            options: _options!,
+                          ),
                         );
                         if (success.isTrue) details.onStepContinue!();
                       } else {
-                        _iframeViewId = await _userBloc.execute<String>(
-                          FinishSignUp(
-                            email: _emailController.text,
-                            confirmationCode: _confirmationCodeController.text,
-                          ),
-                        );
-                        if (_iframeViewId != null) details.onStepContinue!();
+                        // @@TODO: Implement saving image.
+                        throw UnimplementedError();
                       }
                     },
                   ),
@@ -156,6 +190,18 @@ class _OnboardingDialogState extends StateX<OnboardingDialog> {
                 ),
               ],
             ),
+          ),
+          SizedBox(height: 8),
+          Divider(color: Colors.white),
+          SizedBox(height: 8),
+          Column(
+            children: [
+              _buildThirdPartyWalletButton('Metamask'),
+              SizedBox(width: 6),
+              _buildThirdPartyWalletButton('CoinbaseWallet'),
+              SizedBox(width: 6),
+              _buildThirdPartyWalletButton('WalletConnect'),
+            ],
           ),
         ],
       ),

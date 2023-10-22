@@ -101,7 +101,7 @@ class _NotificationTrackerState extends StateX<NotificationTracker> with SingleT
           );
         }
 
-        var (notifications, username) = snapshot.data!;
+        var (notifications, userId) = snapshot.data!;
 
         return Column(
           children: [
@@ -130,7 +130,7 @@ class _NotificationTrackerState extends StateX<NotificationTracker> with SingleT
                       onPressed: () => _notificationBloc.dispatch(
                         Dismiss(
                           notifications: notifications,
-                          username: username,
+                          userId: userId,
                         ),
                       ),
                     ),
@@ -147,7 +147,7 @@ class _NotificationTrackerState extends StateX<NotificationTracker> with SingleT
                     onTap: () {
                       _notificationBloc.dispatch(Dismiss(
                         notifications: [notification],
-                        username: username,
+                        userId: userId,
                       ));
 
                       _pageContext.goto(notification.itemRoute);
@@ -193,7 +193,7 @@ class _NotificationTrackerState extends StateX<NotificationTracker> with SingleT
                               onPressed: () => _notificationBloc.dispatch(
                                 Dismiss(
                                   notifications: [notification],
-                                  username: username,
+                                  userId: userId,
                                 ),
                               ),
                             ),

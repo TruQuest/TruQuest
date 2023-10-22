@@ -34,8 +34,7 @@ class ServerConnector {
 
   final BehaviorSubject<Future<(HubConnection, String?)>> _connectionTaskQueue =
       BehaviorSubject<Future<(HubConnection, String?)>>();
-  Stream<Future<(HubConnection, String?)>> get connectionTask$ =>
-      _connectionTaskQueue.stream;
+  Stream<Future<(HubConnection, String?)>> get connectionTask$ => _connectionTaskQueue.stream;
 
   Future<(HubConnection, String?)> get latestConnection async {
     await _initialConnectionEstablished.future;
@@ -44,8 +43,7 @@ class ServerConnector {
 
   final StreamController<(ServerEventType, Object)> _serverEventChannel =
       StreamController<(ServerEventType, Object)>.broadcast();
-  Stream<(ServerEventType, Object)> get serverEvent$ =>
-      _serverEventChannel.stream;
+  Stream<(ServerEventType, Object)> get serverEvent$ => _serverEventChannel.stream;
 
   ServerConnector() {
     Logger.root.level = Level.ALL;
@@ -60,22 +58,18 @@ class ServerConnector {
     );
   }
 
-  Future<(HubConnection, String?)> _connectToHub(
-    String? username,
-    String? token,
-  ) async {
+  Future<(HubConnection, String?)> _connectToHub(String? userId, String? token) async {
     var hubLogger = Logger('Hub');
     var transportLogger = Logger('Transport');
 
     var hubConnection = HubConnectionBuilder()
         .withUrl(
-          'http://localhost:5223/hub',
+          'http://localhost:5223/hub', // @@TODO: Config.
           options: HttpConnectionOptions(
             transport: HttpTransportType.WebSockets,
             logger: transportLogger,
             logMessageContent: true,
-            accessTokenFactory:
-                token != null ? () => Future.value(token) : null,
+            accessTokenFactory: token != null ? () => Future.value(token) : null,
           ),
         )
         .configureLogging(hubLogger)
@@ -84,9 +78,7 @@ class ServerConnector {
     hubConnection.keepAliveIntervalInMilliseconds = 90 * 1000;
     hubConnection.serverTimeoutInMilliseconds = 180 * 1000;
 
-    hubConnection.onclose(({error}) {
-      print('HubConnection closed. Error: $error');
-    });
+    hubConnection.onclose(({error}) => print('HubConnection closed. Error: $error'));
 
     hubConnection.on(
       'TellAboutNewThingDraftCreationProgress',
@@ -138,7 +130,7 @@ class ServerConnector {
             (
               NotificationEventType.newOne,
               (
-                username,
+                userId,
                 updateTimestamp,
                 itemType,
                 itemId,
@@ -156,8 +148,7 @@ class ServerConnector {
       'OnInitialNotificationRetrieve',
       (List<Object?>? args) {
         var updates = args!.first as List<dynamic>;
-        var notifications =
-            updates.map((map) => NotificationVm.fromMap(map)).toList();
+        var notifications = updates.map((map) => NotificationVm.fromMap(map)).toList();
 
         _serverEventChannel.add(
           (
@@ -165,7 +156,7 @@ class ServerConnector {
             (
               NotificationEventType.initialRetrieve,
               (
-                username!,
+                userId!,
                 notifications,
               ),
             ),
@@ -179,7 +170,7 @@ class ServerConnector {
     return (hubConnection, token);
   }
 
-  void connectToHub(String? username, String? accessToken) async {
+  void connectToHub(String? userId, String? accessToken) async {
     var prevConnectionTask = _connectionTaskQueue.valueOrNull;
     _connectionTaskQueue.add(() async {
       if (prevConnectionTask != null) {
@@ -191,7 +182,7 @@ class ServerConnector {
         }
       }
 
-      var connection = await _connectToHub(username, accessToken);
+      var connection = await _connectToHub(userId, accessToken);
       if (prevConnectionTask == null) {
         _initialConnectionEstablished.complete();
       }

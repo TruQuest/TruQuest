@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:convert/convert.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
@@ -14,11 +13,9 @@ import '../../ethereum/models/vm/wallet_connect_uri_vm.dart';
 import '../../ethereum/errors/wallet_action_declined_error.dart';
 import '../../ethereum/errors/user_operation_error.dart';
 import '../../ethereum/models/im/user_operation.dart';
-import '../../user/errors/wallet_locked_error.dart';
 import '../contexts/multi_stage_operation_context.dart';
 import '../errors/insufficient_balance_error.dart';
 import '../widgets/qr_code_dialog.dart';
-import '../widgets/unlock_wallet_dialog.dart';
 import '../widgets/user_operation_dialog.dart';
 
 double degreesToRadians(double degrees) => (pi / 180) * degrees;
@@ -99,6 +96,10 @@ extension IterableExtension<E> on Iterable<E> {
   }
 }
 
+extension MapExtension<K, V> on Map<K, V> {
+  V? getValueOrNull(K key) => containsKey(key) ? this[key] : null;
+}
+
 String getFixedLengthAmount(BigInt amount, String tokenSymbol, [int length = 3]) {
   var balanceString = formatUnits(
     BigNumber.from(amount.toString()),
@@ -143,15 +144,6 @@ ThemeData getThemeDataForSteppers(BuildContext context) => ThemeData(
           ),
     );
 
-Future<bool> _showUnlockWalletDialog(BuildContext context) async {
-  var unlocked = await showDialog<bool>(
-    context: context,
-    builder: (_) => const UnlockWalletDialog(),
-  );
-
-  return unlocked.isTrue;
-}
-
 Future<UserOperation?> _showUserOpDialog(
   BuildContext context,
   Stream<UserOperationVm> stream,
@@ -165,93 +157,55 @@ Future<bool> multiStageFlow(
   BuildContext context,
   Stream<Object> Function(MultiStageOperationContext ctx) action,
 ) async {
-  var proceededTilTheEndWithNoErrors = true;
+  var proceededTilTheEndWithoutErrors = true;
   var ctx = MultiStageOperationContext();
   await for (var stageResult in action(ctx)) {
     if (stageResult is ValidationError) {
-      proceededTilTheEndWithNoErrors = false;
-    } else if (stageResult is WalletLockedError) {
-      bool unlocked = false;
-      if (context.mounted) {
-        unlocked = await _showUnlockWalletDialog(context);
-      }
-      ctx.unlockWalletTask.complete(unlocked);
-      if (!unlocked) {
-        proceededTilTheEndWithNoErrors = false;
-      }
+      proceededTilTheEndWithoutErrors = false;
     } else if (stageResult is InsufficientBalanceError) {
       // @@TODO: Get rid of BotToast here. Show all messages through ToastMessenger.
       BotToast.showText(text: stageResult.message);
-      proceededTilTheEndWithNoErrors = false;
+      proceededTilTheEndWithoutErrors = false;
     } else if (stageResult is Stream<UserOperationVm>) {
       UserOperation? userOp;
       if (context.mounted) {
         userOp = await _showUserOpDialog(context, stageResult);
       }
       ctx.approveUserOpTask.complete(userOp);
-      if (userOp == null) {
-        proceededTilTheEndWithNoErrors = false;
-      }
+      if (userOp == null) proceededTilTheEndWithoutErrors = false;
     } else if (stageResult is UserOperationError) {
       // @@NOTE: WalletActionDeclinedError is wrapped into this.
       BotToast.showText(text: stageResult.message);
-      proceededTilTheEndWithNoErrors = false;
+      proceededTilTheEndWithoutErrors = false;
+    } else {
+      throw UnimplementedError();
     }
   }
 
-  return proceededTilTheEndWithNoErrors;
+  return proceededTilTheEndWithoutErrors;
 }
 
 Future<bool> multiStageOffChainFlow(
   BuildContext context,
   Stream<Object> Function(MultiStageOperationContext ctx) action,
 ) async {
-  var proceededTilTheEndWithNoErrors = true;
+  var proceededTilTheEndWithoutErrors = true;
   var ctx = MultiStageOperationContext();
   await for (var stageResult in action(ctx)) {
     if (stageResult is ValidationError) {
-      proceededTilTheEndWithNoErrors = false;
-    } else if (stageResult is WalletLockedError) {
-      bool unlocked = false;
-      if (context.mounted) {
-        unlocked = await _showUnlockWalletDialog(context);
-      }
-      ctx.unlockWalletTask.complete(unlocked);
-      if (!unlocked) {
-        proceededTilTheEndWithNoErrors = false;
-      }
+      proceededTilTheEndWithoutErrors = false;
     } else if (stageResult is WalletActionDeclinedError) {
       BotToast.showText(text: stageResult.message);
-      proceededTilTheEndWithNoErrors = false;
+      proceededTilTheEndWithoutErrors = false;
     } else if (stageResult is WalletConnectUriVm) {
       showDialog(
         context: context,
         builder: (_) => QrCodeDialog(uri: stageResult.uri),
       );
-    } else if (stageResult is String) {
-      showDialog(
-        context: context,
-        builder: (_) => SimpleDialog(
-          backgroundColor: const Color(0xFF242423),
-          children: [
-            Container(
-              width: 280,
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-              alignment: Alignment.center,
-              child: SelectableText(
-                stageResult,
-                style: GoogleFonts.raleway(
-                  color: Colors.white,
-                  fontSize: 20,
-                  height: 1.3,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
+    } else {
+      throw UnimplementedError();
     }
   }
 
-  return proceededTilTheEndWithNoErrors;
+  return proceededTilTheEndWithoutErrors;
 }

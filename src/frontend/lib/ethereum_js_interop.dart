@@ -6,6 +6,7 @@ import 'dart:js_util';
 import 'dart:typed_data';
 
 // ignore: depend_on_referenced_packages
+import 'package:either_dart/either.dart';
 import 'package:js/js.dart';
 import 'package:convert/convert.dart';
 
@@ -14,12 +15,6 @@ import 'package:convert/convert.dart';
 class EthereumWalletError {
   external int get code;
   external String get message;
-}
-
-@JS()
-@anonymous
-class EthereumRequestAccountsResult {
-  external EthereumWalletError? get error;
 }
 
 @JS()
@@ -75,13 +70,13 @@ class EthereumWallet {
 
   bool isInitialized() => _ethereumWallet.isInitialized();
 
-  Future<EthereumWalletError?> requestAccounts([
+  Future<Either<EthereumWalletError, List<String>?>> requestAccounts([
     WalletConnectConnectionOpts? walletConnectConnectionOpts,
   ]) async {
-    var result = await promiseToFuture<EthereumRequestAccountsResult>(
+    var result = await promiseToFuture<EthereumAccountsResult>(
       _ethereumWallet.requestAccounts(walletConnectConnectionOpts),
     );
-    return result.error;
+    return result.error != null ? Left(result.error!) : Right(result.accounts?.cast<String>());
   }
 
   Future<List<String>> getAccounts() async {
@@ -728,41 +723,27 @@ class RawAttestation {
 
 @JS()
 @anonymous
-class AllowCredential {
-  external factory AllowCredential({
-    String type,
-    String id,
-    // List<String> transports,
-  });
-
-  external String get type;
-  external String get id;
-  // external List<String> get transports;
-}
-
-@JS()
-@anonymous
-class CreateAuthOptions {
-  external factory CreateAuthOptions({
+class AssertionOptions {
+  external factory AssertionOptions({
     String rpId,
     String challenge,
-    List<AllowCredential> allowCredentials,
+    List<PublicKeyCredentialDescriptor> allowCredentials,
     String userVerification,
     int timeout,
   });
 
   external String get rpId;
   external String get challenge;
-  external List<AllowCredential> get allowCredentials;
+  external List<PublicKeyCredentialDescriptor> get allowCredentials;
   external String get userVerification;
   external int get timeout;
 }
 
-external dynamic getCredentials(CreateAuthOptions options);
+external dynamic getCredential(AssertionOptions options);
 
 @JS()
 @anonymous
-class AssertResponse {
+class AuthenticatorAssertionResponse {
   external String get authenticatorData;
   external String get clientDataJSON;
   external String get signature;
@@ -771,8 +752,8 @@ class AssertResponse {
 
 @JS()
 @anonymous
-class PublicKeyCredentialAssert {
+class RawAssertion {
   external String get id;
   external String get type;
-  external AssertResponse get response;
+  external AuthenticatorAssertionResponse get response;
 }

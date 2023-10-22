@@ -7,7 +7,6 @@ import 'ethereum/services/ethereum_rpc_provider.dart';
 import 'general/contracts/dummy_contract.dart';
 import 'general/contracts/erc4337/entrypoint_contract.dart';
 import 'ethereum/services/ethereum_api_service.dart';
-import 'ethereum/services/local_wallet_service.dart';
 import 'general/contracts/erc4337/iaccount_factory_contract.dart';
 import 'general/contracts/erc4337/ientrypoint_contract.dart';
 import 'general/contracts/erc4337/simple_account_factory_contract.dart';
@@ -42,7 +41,7 @@ import 'user/services/user_api_service.dart';
 import 'ethereum/bloc/ethereum_bloc.dart';
 import 'user/bloc/user_bloc.dart';
 import 'user/services/user_service.dart';
-import 'user/services/user_service1.dart';
+import 'user/services/embedded_wallet_service.dart';
 
 part 'injector.g.dart';
 
@@ -87,13 +86,12 @@ abstract class Injector {
     from: SimpleAccountFactoryContract,
   )
   @Register.singleton(DummyContract)
-  @Register.singleton(LocalWalletService)
   @Register.singleton(EthereumApiService)
   @Register.singleton(UserOperationService)
   @Register.singleton(ThirdPartyWalletService)
   @Register.factory(UserOperationBuilder)
   @Register.singleton(IFrameManager)
-  @Register.singleton(UserService1)
+  @Register.singleton(EmbeddedWalletService)
   void configure();
 }
 

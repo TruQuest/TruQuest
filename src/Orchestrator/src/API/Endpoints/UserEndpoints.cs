@@ -4,9 +4,10 @@ using Application.User.Commands.SignInWithEthereum;
 using Application.User.Queries.GetNonceForSiwe;
 using Application.User.Commands.AddEmail;
 using Application.User.Commands.ConfirmEmail;
-using Application.User.Commands.CreateUser;
-using Application.User.Commands.ConfirmEmailAndGetAttestationOptions;
-using Application.User.Commands.AddAuthCredentialAndKeyShare;
+using Application.User.Commands.SignUp;
+using Application.User.Commands.GenerateConfirmationCodeAndAttestationOptions;
+using Application.User.Commands.GenerateAssertionOptions;
+using Application.User.Commands.VerifyAssertionAndGetKeyShare;
 
 namespace API.Endpoints;
 
@@ -47,20 +48,26 @@ public static class UserEndpoints
         );
 
         group.MapPost(
-            "/create",
-            (CreateUserCommand command, SenderWrapper sender, HttpContext context) =>
+            "/generate-code-and-attestation-options",
+            (GenerateConfirmationCodeAndAttestationOptionsCommand command, SenderWrapper sender, HttpContext context) =>
                 sender.Send(command, serviceProvider: context.RequestServices)
         );
 
         group.MapPost(
-            "/confirm-email",
-            (ConfirmEmailAndGetAttestationOptionsCommand command, SenderWrapper sender, HttpContext context) =>
+            "/sign-up",
+            (SignUpCommand command, SenderWrapper sender, HttpContext context) =>
                 sender.Send(command, serviceProvider: context.RequestServices)
         );
 
         group.MapPost(
-            "/add-auth-credential",
-            (AddAuthCredentialAndKeyShareCommand command, SenderWrapper sender, HttpContext context) =>
+            "/generate-assertion-options",
+            (GenerateAssertionOptionsCommand command, SenderWrapper sender, HttpContext context) =>
+                sender.Send(command, serviceProvider: context.RequestServices)
+        );
+
+        group.MapPost(
+            "/verify-assertion-and-get-key-share",
+            (VerifyAssertionAndGetKeyShareCommand command, SenderWrapper sender, HttpContext context) =>
                 sender.Send(command, serviceProvider: context.RequestServices)
         );
 

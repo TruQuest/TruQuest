@@ -1,14 +1,13 @@
 import 'package:dio/dio.dart';
 
 import '../../ethereum_js_interop.dart';
-import '../models/im/add_auth_credential_and_key_share_command.dart';
 import '../models/im/add_email_command.dart';
-import '../models/im/confirm_email_and_get_attestation_options_command.dart';
 import '../models/im/confirm_email_command.dart';
-import '../models/im/create_user_command.dart';
+import '../models/im/generate_assertion_options_command.dart';
+import '../models/im/generate_confirmation_code_and_attestation_options_command.dart';
 import '../models/im/sign_in_with_ethereum_command.dart';
-import '../models/rvm/add_auth_credential_and_key_share_rvm.dart';
-import '../models/rvm/confirm_email_and_get_attestation_options_rvm.dart';
+import '../models/im/sign_up_command.dart';
+import '../models/im/verify_assertion_and_get_key_share_command.dart';
 import '../models/rvm/sign_in_with_ethereum_rvm.dart';
 import '../models/im/mark_notifications_as_read_command.dart';
 import '../models/im/notification_im.dart';
@@ -23,6 +22,7 @@ import '../../general/errors/forbidden_error.dart';
 import '../../general/errors/invalid_authentication_token_error.dart';
 import '../../general/errors/server_error.dart';
 import '../../general/errors/validation_error.dart';
+import '../models/rvm/sign_up_rvm.dart';
 
 class UserApiService {
   final ServerConnector _serverConnector;
@@ -154,54 +154,134 @@ class UserApiService {
     }
   }
 
-  Future createUser(String email) async {
-    try {
-      await _dio.post(
-        '/user/create',
-        data: CreateUserCommand(email: email).toJson(),
-      );
-    } on DioError catch (error) {
-      throw _wrapError(error);
-    }
-  }
-
-  Future<ConfirmEmailAndGetAttestationOptionsRvm> confirmEmailAndGetAttestationOptions(
-    String email,
-    String confirmationCode,
-  ) async {
+  Future<AttestationOptions> generateConfirmationCodeAndAttestationOptions(String email) async {
     try {
       var response = await _dio.post(
-        '/user/confirm-email',
-        data: ConfirmEmailAndGetAttestationOptionsCommand(
-          email: email,
-          confirmationCode: confirmationCode,
-        ).toJson(),
+        '/user/generate-code-and-attestation-options',
+        data: GenerateConfirmationCodeAndAttestationOptionsCommand(email: email).toJson(),
       );
 
-      return ConfirmEmailAndGetAttestationOptionsRvm.fromMap(response.data['data']);
+      var map = response.data['data'];
+
+      return AttestationOptions(
+        rp: RelyingParty(
+          id: map['rp']['id'],
+          name: map['rp']['name'],
+        ),
+        user: User(
+          id: map['user']['id'],
+          name: map['user']['name'],
+          displayName: map['user']['displayName'],
+        ),
+        challenge: map['challenge'],
+        pubKeyCredParams: (map['pubKeyCredParams'] as List<dynamic>)
+            .map(
+              (submap) => PubKeyCredParam(
+                type: submap['type'],
+                alg: submap['alg'],
+              ),
+            )
+            .toList(),
+        timeout: map['timeout'],
+        attestation: map['attestation'],
+        authenticatorSelection: AuthenticatorSelection(
+          authenticatorAttachment: map['authenticatorSelection']['authenticatorAttachment'],
+          residentKey: map['authenticatorSelection']['residentKey'],
+          requireResidentKey: map['authenticatorSelection']['requireResidentKey'],
+          userVerification: map['authenticatorSelection']['userVerification'],
+        ),
+        excludeCredentials: (map['excludeCredentials'] as List<dynamic>)
+            .map(
+              (submap) => PublicKeyCredentialDescriptor(
+                type: submap['type'],
+                id: submap['id'],
+                transports: submap.containsKey('transports') ? submap['transports'] : null,
+              ),
+            )
+            .toList(),
+        // extensions: Extensions(
+        //   prf: Prf(
+        //     eval: Eval(
+        //       first: map['extensions']['prf']['eval']['first'],
+        //     ),
+        //   ),
+        // ),
+      );
     } on DioError catch (error) {
       throw _wrapError(error);
     }
   }
 
-  Future<AddAuthCredentialAndKeyShareRvm> addAuthCredentialAndKeyShare(
+  Future<SignUpRvm> signUp(
+    String email,
+    String confirmationCode,
+    String signatureOverCode,
     RawAttestation attestation,
-    String nonce,
-    String signatureOverNonce,
     String keyShare,
   ) async {
     try {
       var response = await _dio.post(
-        '/user/add-auth-credential',
-        data: AddAuthCredentialAndKeyShareCommand(
+        '/user/sign-up',
+        data: SignUpCommand(
+          email: email,
+          confirmationCode: confirmationCode,
+          signatureOverCode: signatureOverCode,
           rawAttestation: attestation,
-          nonce: nonce,
-          signatureOverNonce: signatureOverNonce,
           keyShare: keyShare,
         ).toJson(),
       );
 
-      return AddAuthCredentialAndKeyShareRvm.fromMap(response.data['data']);
+      return SignUpRvm.fromMap(response.data['data']);
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future<AssertionOptions> generateAssertionOptions() async {
+    var accessToken = (await _serverConnector.latestConnection).$2;
+    try {
+      var response = await _dio.post(
+        '/user/generate-assertion-options',
+        options: Options(
+          headers: {'Authorization': 'Bearer $accessToken'},
+        ),
+        data: GenerateAssertionOptionsCommand().toJson(),
+      );
+
+      var map = response.data['data'];
+
+      return AssertionOptions(
+        rpId: map['rpId'],
+        challenge: map['challenge'],
+        allowCredentials: (map['allowCredentials'] as List<dynamic>)
+            .map(
+              (submap) => PublicKeyCredentialDescriptor(
+                type: submap['type'],
+                id: submap['id'],
+                transports: submap.containsKey('transports') ? submap['transports'] : null,
+              ),
+            )
+            .toList(),
+        userVerification: map['userVerification'],
+        timeout: map['timeout'],
+      );
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future<String> verifyAssertionAndGetKeyShare(RawAssertion assertion) async {
+    var accessToken = (await _serverConnector.latestConnection).$2;
+    try {
+      var response = await _dio.post(
+        '/user/verify-assertion-and-get-key-share',
+        options: Options(
+          headers: {'Authorization': 'Bearer $accessToken'},
+        ),
+        data: VerifyAssertionAndGetKeyShareCommand(rawAssertion: assertion).toJson(),
+      );
+
+      return response.data['data'] as String;
     } on DioError catch (error) {
       throw _wrapError(error);
     }
