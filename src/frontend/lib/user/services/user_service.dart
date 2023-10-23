@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:rxdart/rxdart.dart';
 
+import '../../ethereum/services/embedded_wallet_service.dart';
 import '../../ethereum/services/ethereum_api_service.dart';
 import '../../general/utils/utils.dart';
 import '../models/vm/smart_wallet_info_vm.dart';
@@ -13,7 +14,6 @@ import '../../ethereum/services/iwallet_service.dart';
 import '../../ethereum/services/third_party_wallet_service.dart';
 import '../../ethereum/services/user_operation_service.dart';
 import '../../general/contracts/truquest_contract.dart';
-import 'embedded_wallet_service.dart';
 import '../models/vm/user_vm.dart';
 import '../../general/services/local_storage.dart';
 import '../../general/services/server_connector.dart';

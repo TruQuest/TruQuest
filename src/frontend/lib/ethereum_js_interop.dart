@@ -3,12 +3,10 @@ library app;
 
 import 'dart:convert';
 import 'dart:js_util';
-import 'dart:typed_data';
 
 // ignore: depend_on_referenced_packages
-import 'package:either_dart/either.dart';
 import 'package:js/js.dart';
-import 'package:convert/convert.dart';
+import 'package:either_dart/either.dart';
 
 @JS()
 @anonymous
@@ -189,78 +187,6 @@ class Abi {
   Abi(dynamic abi) : _interface = _Interface(abi);
 
   String encodeFunctionData(String fragment, [dynamic values]) => _interface.encodeFunctionData(fragment, values);
-}
-
-@JS('ethers.Wallet.createRandom')
-external _Wallet _createRandomWallet();
-
-@JS('ethers.Wallet')
-class _Wallet {
-  external _Mnemonic get mnemonic;
-}
-
-class Wallet {
-  final _Wallet _wallet;
-
-  String get mnemonic => _wallet.mnemonic.phrase;
-
-  Wallet._(this._wallet);
-
-  static Wallet createRandom() => Wallet._(_createRandomWallet());
-}
-
-@JS('ethers.utils.HDNode.fromMnemonic')
-external _HDNode _createHDNodeFromMnemonic(String phrase, String password);
-
-@JS('ethers.utils.HDNode')
-class _HDNode {
-  external String get address;
-  external String privateKey;
-  external _Mnemonic get mnemonic;
-
-  external _HDNode derivePath(String path);
-}
-
-class HDNode {
-  final _HDNode _hdNode;
-
-  HDNode._(this._hdNode);
-
-  static HDNode fromMnemonic(String phrase, String password) => HDNode._(_createHDNodeFromMnemonic(phrase, password));
-
-  String get address => convertToEip55Address(_hdNode.address);
-  String get privateKey => _hdNode.privateKey;
-  String get mnemonic => _hdNode.mnemonic.phrase;
-
-  HDNode derivePath(String path) => HDNode._(_hdNode.derivePath(path));
-}
-
-@JS('ethers.Mnemonic')
-class _Mnemonic {
-  external String get phrase;
-}
-
-@JS('ethers.utils.keccak256')
-external String keccak256(Uint8List data);
-
-@JS('ethers.utils.hashMessage')
-external String hashMessage(Uint8List message);
-
-@JS('ethers.utils.SigningKey')
-class SigningKey {
-  external SigningKey(Uint8List privateKey);
-  external Signature signDigest(Uint8List digest);
-}
-
-@JS('ethers.crypto.Signature')
-class Signature {
-  external String get r;
-  external String get s;
-  external int get v;
-}
-
-extension SignatureExtension on Signature {
-  String get combined => '0x' + r.substring(2) + s.substring(2) + hex.encode([v]);
 }
 
 @JS('ethers.utils.formatUnits')

@@ -65,8 +65,6 @@ public static class WebApplicationBuilderExtension
         builder.Logging.AddDebug();
         builder.Logging.AddConsole();
 
-        builder.Services.AddSingleton<Application.Dummy.Commands.CreateUser.DummyUserRepo>();
-
         builder.Services.AddMemoryCache();
         builder.Services.AddDistributedMemoryCache();
 

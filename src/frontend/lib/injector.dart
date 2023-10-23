@@ -1,6 +1,7 @@
 import 'package:kiwi/kiwi.dart';
 
 import 'ethereum/models/im/user_operation.dart';
+import 'ethereum/services/embedded_wallet_service.dart';
 import 'ethereum/services/third_party_wallet_service.dart';
 import 'ethereum/services/user_operation_service.dart';
 import 'ethereum/services/ethereum_rpc_provider.dart';
@@ -41,7 +42,6 @@ import 'user/services/user_api_service.dart';
 import 'ethereum/bloc/ethereum_bloc.dart';
 import 'user/bloc/user_bloc.dart';
 import 'user/services/user_service.dart';
-import 'user/services/embedded_wallet_service.dart';
 
 part 'injector.g.dart';
 

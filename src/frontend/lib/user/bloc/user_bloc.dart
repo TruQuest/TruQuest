@@ -1,11 +1,11 @@
 import 'dart:async';
 
+import '../../ethereum/services/embedded_wallet_service.dart';
 import '../../ethereum_js_interop.dart';
 import '../models/vm/smart_wallet_info_vm.dart';
 import '../../ethereum/services/third_party_wallet_service.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
 import '../models/vm/user_vm.dart';
-import '../services/embedded_wallet_service.dart';
 import 'user_actions.dart';
 import '../services/user_service.dart';
 import '../../general/bloc/bloc.dart';

@@ -3,11 +3,11 @@ import 'dart:js_util';
 
 import 'package:rxdart/rxdart.dart';
 
-import 'user_api_service.dart';
 import '../../ethereum/services/iwallet_service.dart';
 import '../../ethereum_js_interop.dart';
 import '../../general/services/iframe_manager.dart';
 import '../../general/services/local_storage.dart';
+import '../../user/services/user_api_service.dart';
 
 class EmbeddedWalletService implements IWalletService {
   final UserApiService _userApiService;
