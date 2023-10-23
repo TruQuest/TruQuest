@@ -137,10 +137,11 @@ class UserOperationBuilder {
     this._entryPointContract,
     this._accountFactoryContract,
   ) {
-    _sender = _userService.currentWalletAddress;
+    _sender = _userService.latestCurrentUser!.walletAddress!;
     _tasks.add(() async {
       var code = await _ethereumApiService.getCode(_sender);
-      _initCode = code == '0x' ? _accountFactoryContract.getInitCode(_userService.currentOwnerAddress) : '0x';
+      _initCode =
+          code == '0x' ? _accountFactoryContract.getInitCode(_userService.latestCurrentUser!.signerAddress!) : '0x';
     });
   }
 
@@ -273,9 +274,7 @@ class UserOperationBuilder {
   Future<UserOperation> unsigned() async {
     _withCurrentNonce()._withEstimatedGasLimits()._withCurrentGasPrice();
 
-    for (var task in _tasks) {
-      await task();
-    }
+    for (var task in _tasks) await task();
 
     _userOp.builder = this;
 
@@ -292,9 +291,7 @@ class UserOperationBuilder {
       );
     });
 
-    for (var task in _tasks) {
-      await task();
-    }
+    for (var task in _tasks) await task();
 
     return _userOp;
   }

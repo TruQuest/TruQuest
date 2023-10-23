@@ -108,9 +108,9 @@ class UserService {
     _refreshSmartWalletInfo(currentSignerAddress, userInfo?['walletAddress']);
   }
 
-  FutureOr<String> personalSign(String message) => _walletService.personalSign(message);
+  Future<String> personalSign(String message) => _walletService.personalSign(message);
 
-  FutureOr<String> personalSignDigest(String digest) => _walletService.personalSignDigest(digest);
+  Future<String> personalSignDigest(String digest) => _walletService.personalSignDigest(digest);
 
   void _refreshSmartWalletInfo(String? signerAddress, String? walletAddress) async {
     if (walletAddress == null) {
@@ -139,12 +139,13 @@ class UserService {
     _smartWalletInfoChannel.add(info);
   }
 
-  Future<BigInt> getAvailableFundsForCurrentUser() => _truQuestContract.getAvailableFunds(currentWalletAddress);
+  Future<BigInt> getAvailableFundsForCurrentUser() =>
+      _truQuestContract.getAvailableFunds(latestCurrentUser!.walletAddress!);
 
   Stream<Object> depositFunds(int amount, MultiStageOperationContext ctx) async* {
     print('**************** Deposit funds ****************');
 
-    BigInt balance = await _truthserumContract.balanceOf(currentWalletAddress);
+    BigInt balance = await _truthserumContract.balanceOf(latestCurrentUser!.walletAddress!);
     if (balance < BigInt.from(amount)) {
       yield const InsufficientBalanceError();
       return;
@@ -164,16 +165,12 @@ class UserService {
     );
 
     var userOp = await ctx.approveUserOpTask.future;
-    if (userOp == null) {
-      return;
-    }
+    if (userOp == null) return;
 
     var error = await _userOperationService.send(userOp);
-    if (error != null) {
-      yield error;
-    }
+    if (error != null) yield error;
 
-    _refreshSmartWalletInfo(currentOwnerAddress, currentWalletAddress);
+    _refreshSmartWalletInfo(latestCurrentUser!.signerAddress!, latestCurrentUser!.walletAddress!);
   }
 
   Stream<Object> withdrawFunds(int amount, MultiStageOperationContext ctx) async* {

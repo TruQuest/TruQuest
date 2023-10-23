@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../ethereum_js_interop.dart';
+import '../services/iframe_manager.dart';
 import '../utils/utils.dart';
 import '../../user/bloc/user_actions.dart';
 import '../../user/bloc/user_bloc.dart';
@@ -15,6 +16,7 @@ class OnboardingDialog extends StatefulWidget {
 }
 
 class _OnboardingDialogState extends StateX<OnboardingDialog> {
+  late final _iframeManager = use<IFrameManager>();
   late final _userBloc = use<UserBloc>();
 
   int _currentStep = 0;
@@ -184,7 +186,9 @@ class _OnboardingDialogState extends StateX<OnboardingDialog> {
                     width: 300,
                     height: 300,
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: HtmlElementView(viewType: _userBloc.privateKeyGenIframeViewId),
+                    // @@TODO: Check if putting a transparent container on top of the view would prevent it
+                    // from interfering with scrolling.
+                    child: HtmlElementView(viewType: _iframeManager.iframeKeyShareRender.viewId),
                   ),
                   isActive: true,
                 ),

@@ -30,5 +30,6 @@ linter:
     prefer_interpolation_to_compose_strings: false
     avoid_web_libraries_in_flutter: false
     prefer_conditional_assignment: false
+    curly_braces_in_flow_control_structures: false
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

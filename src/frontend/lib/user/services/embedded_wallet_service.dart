@@ -14,9 +14,6 @@ class EmbeddedWalletService implements IWalletService {
   final IFrameManager _iframeManager;
   final LocalStorage _localStorage;
 
-  String get privateKeyGenIframeViewId => _iframeManager.iframePrivateKeyGen.viewId;
-  String get qrCodeScanIframeViewId => _iframeManager.iframeQrCodeScan.viewId;
-
   void Function()? _onSelectedForOnboarding;
   set onSelectedForOnboarding(void Function() f) => _onSelectedForOnboarding = f;
 
@@ -76,13 +73,13 @@ class EmbeddedWalletService implements IWalletService {
 
     _currentSignerChangedEventChannel.add(signerAddress);
 
-    await _iframeManager.iframePrivateKeyGen.postMessageAndAwaitResponse('render');
+    await _iframeManager.iframeKeyShareRender.postMessageAndAwaitResponse('render');
 
     return true;
   }
 
   @override
-  Future<String> personalSign(String message) async => throw UnimplementedError();
+  Future<String> personalSign(String message) async => throw UnimplementedError(); // @@TODO: Implement!
 
   @override
   Future<String> personalSignDigest(String digest) async {

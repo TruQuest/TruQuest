@@ -195,7 +195,7 @@ class UserApiService {
               (submap) => PublicKeyCredentialDescriptor(
                 type: submap['type'],
                 id: submap['id'],
-                transports: submap.containsKey('transports') ? submap['transports'] : null,
+                transports: submap.containsKey('transports') ? submap['transports'] : [],
               ),
             )
             .toList(),
@@ -258,7 +258,7 @@ class UserApiService {
               (submap) => PublicKeyCredentialDescriptor(
                 type: submap['type'],
                 id: submap['id'],
-                transports: submap.containsKey('transports') ? submap['transports'] : null,
+                transports: submap.containsKey('transports') ? submap['transports'] : [],
               ),
             )
             .toList(),

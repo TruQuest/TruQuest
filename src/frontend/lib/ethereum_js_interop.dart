@@ -640,12 +640,12 @@ class PublicKeyCredentialDescriptor {
   external factory PublicKeyCredentialDescriptor({
     String type,
     String id,
-    List<String>? transports,
+    List<String> transports,
   });
 
   external String get type;
   external String get id;
-  external List<String>? get transports;
+  external List<String> get transports;
 }
 
 // @JS()

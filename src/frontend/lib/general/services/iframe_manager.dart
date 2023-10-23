@@ -6,12 +6,19 @@ import 'package:uuid/uuid.dart';
 
 class IFrameManager {
   final IFrame iframePrivateKeyGen;
+  final IFrame iframeKeyShareRender;
   final IFrame iframeQrCodeScan;
+
+  final Map<String, IFrame> _viewIdToIframe = {};
 
   IFrameManager()
       : iframePrivateKeyGen = IFrame(
           viewId: 'view-private-key-gen',
           url: 'http://localhost:5223/private-key-gen.html',
+        ),
+        iframeKeyShareRender = IFrame(
+          viewId: 'view-key-share-render',
+          url: 'http://localhost:5223/key-share-render.html',
         ),
         iframeQrCodeScan = IFrame(
           viewId: 'view-qr-code-scan',
@@ -19,7 +26,12 @@ class IFrameManager {
           allowCamera: true,
         ) {
     iframePrivateKeyGen._init();
+    iframeKeyShareRender._init();
     iframeQrCodeScan._init();
+
+    _viewIdToIframe[iframePrivateKeyGen.viewId] = iframePrivateKeyGen;
+    _viewIdToIframe[iframeKeyShareRender.viewId] = iframeKeyShareRender;
+    _viewIdToIframe[iframeQrCodeScan.viewId] = iframeQrCodeScan;
 
     html.window.addEventListener('message', _handleMessage);
   }
@@ -29,11 +41,11 @@ class IFrameManager {
       print('***** MessageEvent from ${e.origin}: ${e.data} *****');
       var message = e.data as String;
       var messageSplit = message.split('|');
-      var originName = messageSplit[0];
+      var originViewId = messageSplit[0];
       var requestId = messageSplit[1];
       var content = messageSplit.skip(2).join('|');
 
-      var recepient = originName == iframePrivateKeyGen.viewId ? iframePrivateKeyGen : iframeQrCodeScan;
+      var recepient = _viewIdToIframe[originViewId]!;
       recepient._receiveMessage(requestId, content);
     }
   }

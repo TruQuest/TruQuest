@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>title</title>
+    <title>TruQuest</title>
 
     <script
       src="https://cdn.jsdelivr.net/npm/secrets.js-grempe@2.0.0/secrets.min.js"
@@ -12,13 +12,6 @@
     <script
       src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"
       type="application/javascript"
-    ></script>
-
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
-      integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
     ></script>
 
     <script>
@@ -31,7 +24,12 @@
         var command = messageSplit[1];
 
         if (command == "gen") {
-          var wallet = ethers.Wallet.createRandom();
+          //   var wallet = ethers.Wallet.createRandom();
+          // @@TODO: Different files for dev and prod.
+          var wallet = ethers.Wallet.fromMnemonic(
+            "atom traffic guard castle father vendor modify sauce rebuild true mixture van",
+            "m/44'/60'/0'/0/1"
+          );
           var keyShares = secrets.share(wallet.privateKey.substring(2), 2, 2);
           var confirmationCode = messageSplit[2];
           var signatureOverCode = await wallet.signMessage(confirmationCode);
@@ -44,25 +42,39 @@
             "http://localhost:53433"
           );
           keyShares = null;
-        } else if (command == "render") {
-          new QRCode(document.getElementById("qrcode"), {
-            text: localStorage.getItem("keyShare"),
-            width: 250,
-            height: 250,
-            colorDark: "#000000",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H,
-          });
+        } else if (command == "sign-digest") {
+          var serverKeyShare = messageSplit[2];
+          var digest = messageSplit[3];
+          var localKeyShare = localStorage.getItem("keyShare");
+
+          var privateKey =
+            "0x" + secrets.combine([serverKeyShare, localKeyShare]);
+          serverKeyShare = null;
+          localKeyShare = null;
+
+          var signingKey = new ethers.utils.SigningKey(privateKey);
+          privateKey = null;
+
+          // @@NOTE: MUST arrayify first, because otherwise 'hashMessage' will UTF-8-encode the digest.
+          var hashedEthereumPrefixedMessage = ethers.utils.hashMessage(
+            ethers.utils.arrayify(digest)
+          );
+          var signature = signingKey.signDigest(hashedEthereumPrefixedMessage);
+          signingKey = null;
+
+          var serializedSignature =
+            "0x" +
+            signature.r.substring(2) +
+            signature.s.substring(2) +
+            (signature.v == 27 ? "1b" : "1c");
 
           e.source.postMessage(
-            `view-private-key-gen|${requestId}|ok`,
+            `view-private-key-gen|${requestId}|${serializedSignature}`,
             "http://localhost:53433"
           );
         }
       });
     </script>
   </head>
-  <body>
-    <div id="qrcode"></div>
-  </body>
+  <body></body>
 </html>

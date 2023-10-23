@@ -47,9 +47,7 @@ class UserOperationService {
         return;
       }
 
-      if (canceled.isCompleted) {
-        return;
-      }
+      if (canceled.isCompleted) return;
 
       sink.add(
         UserOperationVm(
@@ -68,9 +66,7 @@ class UserOperationService {
     }
   }
 
-  Future<UserOperation?> _createUnsignedFromBatch({
-    required List<(String, String)> actions,
-  }) async {
+  Future<UserOperation?> _createUnsignedFromBatch({required List<(String, String)> actions}) async {
     assert(actions.isNotEmpty);
 
     double preVerificationGasMultiplier = 1, verificationGasLimitMultiplier = 1, callGasLimitMultiplier = 1;

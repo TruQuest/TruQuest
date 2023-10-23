@@ -100,7 +100,7 @@ internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResul
         {
             Id = new Guid(options.User.Id).ToString(),
             Email = command.Email,
-            UserName = command.Email,
+            UserName = signerAddress,
             EmailConfirmed = true
         };
 

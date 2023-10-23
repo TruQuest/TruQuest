@@ -20,9 +20,6 @@ class UserBloc extends Bloc<UserAction> {
 
   Stream<SmartWalletInfoVm> get smartWalletInfo$ => _userService.smartWalletInfo$;
 
-  String get privateKeyGenIframeViewId => _embeddedWalletService.privateKeyGenIframeViewId;
-  String get qrCodeScanIframeViewId => _embeddedWalletService.qrCodeScanIframeViewId;
-
   UserBloc(
     super.toastMessenger,
     this._userService,

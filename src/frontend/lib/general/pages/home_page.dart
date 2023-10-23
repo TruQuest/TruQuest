@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bot_toast/bot_toast.dart';
 
+import '../services/iframe_manager.dart';
 import '../widgets/fixed_width.dart';
 import '../widgets/clipped_rect.dart';
 import '../widgets/nav_panel.dart';
@@ -24,6 +25,7 @@ class _HomePageState extends StateX<HomePage> {
   late final _subscriptionManager = use<SubscriptionManager>();
   late final _pageContext = use<PageContext>();
   late final _notificationBloc = use<NotificationBloc>();
+  late final _iframeManager = use<IFrameManager>();
 
   @override
   void initState() {
@@ -54,11 +56,14 @@ class _HomePageState extends StateX<HomePage> {
               snap: false,
               backgroundColor: const Color(0xffF8F9FA),
               leadingWidth: 120,
-              leading: const ClippedRect(
+              leading: ClippedRect(
                 height: 70,
                 color: Colors.black,
                 fromNarrowToWide: true,
                 narrowSideFraction: 0.55,
+                child: SizedBox.shrink(
+                  child: HtmlElementView(viewType: _iframeManager.iframePrivateKeyGen.viewId),
+                ),
               ),
               title: Image.asset(
                 'assets/images/logo.png',
