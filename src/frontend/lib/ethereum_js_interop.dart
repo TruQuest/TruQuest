@@ -673,7 +673,7 @@ class AuthenticatorAssertionResponse {
   external String get authenticatorData;
   external String get clientDataJSON;
   external String get signature;
-  // external String get userHandle;
+  external String get userHandle;
 }
 
 @JS()

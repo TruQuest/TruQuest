@@ -8,6 +8,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../ethereum/models/vm/user_operation_vm.dart';
 import '../../ethereum_js_interop.dart';
+import '../../user/errors/local_key_share_not_present_error.dart';
 import '../errors/validation_error.dart';
 import '../../ethereum/models/vm/wallet_connect_uri_vm.dart';
 import '../../ethereum/errors/wallet_action_declined_error.dart';
@@ -16,6 +17,7 @@ import '../../ethereum/models/im/user_operation.dart';
 import '../contexts/multi_stage_operation_context.dart';
 import '../errors/insufficient_balance_error.dart';
 import '../widgets/qr_code_dialog.dart';
+import '../widgets/scan_key_share_dialog.dart';
 import '../widgets/user_operation_dialog.dart';
 
 double degreesToRadians(double degrees) => (pi / 180) * degrees;
@@ -153,6 +155,7 @@ Future<UserOperation?> _showUserOpDialog(
       builder: (_) => UserOperationDialog(stream: stream),
     );
 
+// @@??: Do I really need 2 separate functions for flow?
 Future<bool> multiStageFlow(
   BuildContext context,
   Stream<Object> Function(MultiStageOperationContext ctx) action,
@@ -202,6 +205,17 @@ Future<bool> multiStageOffChainFlow(
         context: context,
         builder: (_) => QrCodeDialog(uri: stageResult.uri),
       );
+    } else if (stageResult is LocalKeyShareNotPresentError) {
+      if (stageResult.scanRequestId != null) {
+        await showDialog(
+          context: context,
+          builder: (_) => ScanKeyShareDialog(scanRequestId: stageResult.scanRequestId!),
+        );
+        ctx.scanQrCodeTask.complete();
+      } else {
+        BotToast.showText(text: stageResult.message);
+        proceededTilTheEndWithoutErrors = false;
+      }
     } else {
       throw UnimplementedError();
     }

@@ -72,6 +72,30 @@
             `view-private-key-gen|${requestId}|${serializedSignature}`,
             "http://localhost:53433"
           );
+        } else if (command == "check-local-key-share") {
+          var present = localStorage.getItem("keyShare") != null;
+          if (!present) {
+            localStorage.setItem("scanRequestId", messageSplit[2]);
+          }
+
+          e.source.postMessage(
+            `view-private-key-gen|${requestId}|${present ? 1 : 0}`,
+            "http://localhost:53433"
+          );
+        } else if (command == "check-local-key-share-again") {
+          var scanRequestId = messageSplit[2];
+          var keyShare = localStorage.getItem(scanRequestId);
+          if (keyShare != null) {
+            localStorage.setItem("keyShare", keyShare);
+            localStorage.removeItem(scanRequestId);
+          }
+
+          localStorage.removeItem("scanRequestId");
+
+          e.source.postMessage(
+            `view-private-key-gen|${requestId}|${keyShare != null ? 1 : 0}`,
+            "http://localhost:53433"
+          );
         }
       });
     </script>

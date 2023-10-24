@@ -1,9 +1,9 @@
 import '../../../ethereum_js_interop.dart';
 
-class VerifyAssertionAndGetKeyShareCommand {
+class VerifyAssertionAndSignInCommand {
   final RawAssertion rawAssertion;
 
-  VerifyAssertionAndGetKeyShareCommand({required this.rawAssertion});
+  VerifyAssertionAndSignInCommand({required this.rawAssertion});
 
   Map<String, dynamic> toJson() => {
         'rawAssertion': {

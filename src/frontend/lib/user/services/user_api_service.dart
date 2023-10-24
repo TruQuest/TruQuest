@@ -3,12 +3,12 @@ import 'package:dio/dio.dart';
 import '../../ethereum_js_interop.dart';
 import '../models/im/add_email_command.dart';
 import '../models/im/confirm_email_command.dart';
-import '../models/im/generate_assertion_options_command.dart';
 import '../models/im/generate_confirmation_code_and_attestation_options_command.dart';
 import '../models/im/sign_in_with_ethereum_command.dart';
 import '../models/im/sign_up_command.dart';
 import '../models/im/verify_assertion_and_get_key_share_command.dart';
-import '../models/rvm/sign_in_with_ethereum_rvm.dart';
+import '../models/im/verify_assertion_and_sign_in_command.dart';
+import '../models/rvm/auth_rvm.dart';
 import '../models/im/mark_notifications_as_read_command.dart';
 import '../models/im/notification_im.dart';
 import '../models/im/watched_item_type_im.dart';
@@ -22,7 +22,6 @@ import '../../general/errors/forbidden_error.dart';
 import '../../general/errors/invalid_authentication_token_error.dart';
 import '../../general/errors/server_error.dart';
 import '../../general/errors/validation_error.dart';
-import '../models/rvm/sign_up_rvm.dart';
 
 class UserApiService {
   final ServerConnector _serverConnector;
@@ -77,7 +76,7 @@ class UserApiService {
     }
   }
 
-  Future<SignInWithEthereumRvm> signInWithEthereum(
+  Future<AuthRvm> signInWithEthereum(
     String message,
     String signature,
   ) async {
@@ -90,7 +89,7 @@ class UserApiService {
         ).toJson(),
       );
 
-      return SignInWithEthereumRvm.fromMap(response.data['data']);
+      return AuthRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
       throw _wrapError(error);
     }
@@ -212,7 +211,7 @@ class UserApiService {
     }
   }
 
-  Future<SignUpRvm> signUp(
+  Future<AuthRvm> signUp(
     String email,
     String confirmationCode,
     String signatureOverCode,
@@ -231,7 +230,7 @@ class UserApiService {
         ).toJson(),
       );
 
-      return SignUpRvm.fromMap(response.data['data']);
+      return AuthRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
       throw _wrapError(error);
     }
@@ -245,7 +244,7 @@ class UserApiService {
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
         ),
-        data: GenerateAssertionOptionsCommand().toJson(),
+        data: {},
       );
 
       var map = response.data['data'];
@@ -282,6 +281,50 @@ class UserApiService {
       );
 
       return response.data['data'] as String;
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future<AssertionOptions> generateAssertionOptionsForSignIn() async {
+    try {
+      var response = await _dio.post(
+        '/user/generate-assertion-options-for-sign-in',
+        data: {},
+      );
+
+      var map = response.data['data'];
+
+      assert((map['allowCredentials'] as List<dynamic>).isEmpty);
+
+      return AssertionOptions(
+        rpId: map['rpId'],
+        challenge: map['challenge'],
+        allowCredentials: (map['allowCredentials'] as List<dynamic>)
+            .map(
+              (submap) => PublicKeyCredentialDescriptor(
+                type: submap['type'],
+                id: submap['id'],
+                transports: submap.containsKey('transports') ? submap['transports'] : [],
+              ),
+            )
+            .toList(),
+        userVerification: map['userVerification'],
+        timeout: map['timeout'],
+      );
+    } on DioError catch (error) {
+      throw _wrapError(error);
+    }
+  }
+
+  Future<AuthRvm> verifyAssertionAndSignIn(RawAssertion assertion) async {
+    try {
+      var response = await _dio.post(
+        '/user/verify-assertion-and-sign-in',
+        data: VerifyAssertionAndSignInCommand(rawAssertion: assertion).toJson(),
+      );
+
+      return AuthRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
       throw _wrapError(error);
     }

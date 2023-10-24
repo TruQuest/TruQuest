@@ -42,6 +42,8 @@ class UserBloc extends Bloc<UserAction> {
   Stream<Object> handleMultiStageExecute(UserAction action, MultiStageOperationContext ctx) {
     if (action is SignInWithThirdPartyWallet) {
       return _signInWithThirdPartyWallet(action, ctx);
+    } else if (action is SignInFromExistingDevice) {
+      return _signInFromExistingDevice(action, ctx);
     } else if (action is DepositFunds) {
       return _depositFunds(action, ctx);
     } else if (action is WithdrawFunds) {
@@ -62,6 +64,9 @@ class UserBloc extends Bloc<UserAction> {
 
   Stream<Object> _signInWithThirdPartyWallet(SignInWithThirdPartyWallet action, MultiStageOperationContext ctx) =>
       _thirdPartyWalletService.signIn(action.walletName, ctx);
+
+  Stream<Object> _signInFromExistingDevice(SignInFromExistingDevice action, MultiStageOperationContext ctx) =>
+      _embeddedWalletService.signInFromExistingDevice(ctx);
 
   Stream<Object> _depositFunds(DepositFunds action, MultiStageOperationContext ctx) =>
       _userService.depositFunds(action.amount, ctx);

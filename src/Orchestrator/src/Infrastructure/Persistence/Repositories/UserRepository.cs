@@ -57,8 +57,6 @@ internal class UserRepository : Repository, IUserRepository
         return null;
     }
 
-    public Task<IList<Claim>> GetClaimsFor(UserDm user) => _userManager.GetClaimsAsync(user);
-
     public async Task<Claim> GetClaim(string userId, string claimType)
     {
         var claim = await _dbContext.UserClaims
@@ -66,6 +64,16 @@ internal class UserRepository : Repository, IUserRepository
             .SingleAsync(c => c.UserId == userId && c.ClaimType == claimType);
 
         return claim.ToClaim();
+    }
+
+    public async Task<List<Claim>> GetClaimsExcept(string userId, IEnumerable<string> except)
+    {
+        var claims = await _dbContext.UserClaims
+            .AsNoTracking()
+            .Where(c => c.UserId == userId && !except.Contains(c.ClaimType))
+            .ToListAsync();
+
+        return claims.Select(c => c.ToClaim()).ToList();
     }
 
     public async Task<IEnumerable<(string Id, IReadOnlyList<int>? Transports)>> GetAuthCredentialDescriptorsFor(string userId)
@@ -88,6 +96,6 @@ internal class UserRepository : Repository, IUserRepository
         return count == 0;
     }
 
-    public Task<AuthCredential> GetUserAuthCredential(string userId, string credentialId) =>
-        _dbContext.AuthCredentials.SingleAsync(c => c.Id == credentialId && c.UserId == userId);
+    public Task<AuthCredential?> GetAuthCredential(string credentialId) =>
+        _dbContext.AuthCredentials.SingleOrDefaultAsync(c => c.Id == credentialId);
 }

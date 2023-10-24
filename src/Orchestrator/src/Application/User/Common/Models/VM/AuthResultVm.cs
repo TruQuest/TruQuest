@@ -1,6 +1,6 @@
-namespace Application.User.Commands.SignUp;
+namespace Application.User.Common.Models.VM;
 
-public class SignUpResultVm
+public class AuthResultVm
 {
     public required string UserId { get; init; }
     public required string SignerAddress { get; init; }

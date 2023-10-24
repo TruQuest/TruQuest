@@ -38,15 +38,17 @@ class IFrameManager {
 
   void _handleMessage(html.Event e) {
     if (e is html.MessageEvent && e.origin == 'http://localhost:5223') {
-      print('***** MessageEvent from ${e.origin}: ${e.data} *****');
       var message = e.data as String;
       var messageSplit = message.split('|');
       var originViewId = messageSplit[0];
       var requestId = messageSplit[1];
-      var content = messageSplit.skip(2).join('|');
-
-      var recepient = _viewIdToIframe[originViewId]!;
-      recepient._receiveMessage(requestId, content);
+      // @@NOTE: Zero uuid means not a /response/ but a simple message from iframe.
+      if (requestId != '00000000-0000-0000-0000-000000000000') {
+        print('***** MessageEvent from ${e.origin}: ${e.data} *****');
+        var content = messageSplit.skip(2).join('|');
+        var recepient = _viewIdToIframe[originViewId]!;
+        recepient._receiveMessage(requestId, content);
+      }
     }
   }
 }

@@ -21,6 +21,7 @@
         var command = messageSplit[1];
 
         if (command == "render") {
+          // @@TODO: Add center logo.
           new QRCode(document.getElementById("qrcode"), {
             text: localStorage.getItem("keyShare"),
             width: 250,

@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using System.Text.RegularExpressions;
-using System.Diagnostics;
 
 using Microsoft.Extensions.Logging;
 
@@ -14,11 +13,12 @@ using UserDm = Domain.Aggregates.User;
 
 using Application.Common.Attributes;
 using Application.Common.Interfaces;
+using Application.User.Common.Models.VM;
 
 namespace Application.User.Commands.SignInWithEthereum;
 
 [ExecuteInTxn]
-public class SignInWithEthereumCommand : IRequest<HandleResult<SignInWithEthereumResultVm>>
+public class SignInWithEthereumCommand : IRequest<HandleResult<AuthResultVm>>
 {
     public required string Message { get; init; }
     public required string Signature { get; init; }
@@ -34,7 +34,7 @@ internal class Validator : AbstractValidator<SignInWithEthereumCommand>
 }
 
 internal class SignInWithEthereumCommandHandler :
-    IRequestHandler<SignInWithEthereumCommand, HandleResult<SignInWithEthereumResultVm>>
+    IRequestHandler<SignInWithEthereumCommand, HandleResult<AuthResultVm>>
 {
     private static readonly Regex _nonceRegex = new Regex(@"\sNonce: (\d{6})\s");
 
@@ -62,7 +62,7 @@ internal class SignInWithEthereumCommandHandler :
         _contractCaller = contractCaller;
     }
 
-    public async Task<HandleResult<SignInWithEthereumResultVm>> Handle(SignInWithEthereumCommand command, CancellationToken ct)
+    public async Task<HandleResult<AuthResultVm>> Handle(SignInWithEthereumCommand command, CancellationToken ct)
     {
         var signerAddress = _signer.RecoverFromSiweMessage(command.Message, command.Signature);
 
@@ -83,8 +83,7 @@ internal class SignInWithEthereumCommandHandler :
         var user = await _userRepository.FindByUsername(signerAddress);
         if (user != null)
         {
-            claims = await _userRepository.GetClaimsFor(user);
-            Debug.Assert(claims.FirstOrDefault(c => c.Type == "key_share") == null);
+            claims = await _userRepository.GetClaimsExcept(user.Id, new[] { "key_share" });
         }
         else
         {

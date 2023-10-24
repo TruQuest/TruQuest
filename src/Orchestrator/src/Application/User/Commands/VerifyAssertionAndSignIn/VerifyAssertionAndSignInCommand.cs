@@ -7,41 +7,40 @@ using Domain.Aggregates;
 using Domain.Errors;
 using Domain.Results;
 
-using Application.Common.Attributes;
 using Application.Common.Interfaces;
+using Application.User.Common.Models.VM;
 
-namespace Application.User.Commands.VerifyAssertionAndGetKeyShare;
+namespace Application.User.Commands.VerifyAssertionAndSignIn;
 
-[RequireAuthorization]
-public class VerifyAssertionAndGetKeyShareCommand : IRequest<HandleResult<string>>
+public class VerifyAssertionAndSignInCommand : IRequest<HandleResult<AuthResultVm>>
 {
     public required AuthenticatorAssertionRawResponse RawAssertion { get; init; }
 }
 
-internal class VerifyAssertionAndGetKeyShareCommandHandler : IRequestHandler<
-    VerifyAssertionAndGetKeyShareCommand,
-    HandleResult<string>
+internal class VerifyAssertionAndSignInCommandHandler : IRequestHandler<
+    VerifyAssertionAndSignInCommand,
+    HandleResult<AuthResultVm>
 >
 {
-    private readonly ICurrentPrincipal _currentPrincipal;
     private readonly IFido2 _fido2;
     private readonly IMemoryCache _memoryCache;
     private readonly IUserRepository _userRepository;
+    private readonly IAuthTokenProvider _authTokenProvider;
 
-    public VerifyAssertionAndGetKeyShareCommandHandler(
-        ICurrentPrincipal currentPrincipal,
+    public VerifyAssertionAndSignInCommandHandler(
         IFido2 fido2,
         IMemoryCache memoryCache,
-        IUserRepository userRepository
+        IUserRepository userRepository,
+        IAuthTokenProvider authTokenProvider
     )
     {
-        _currentPrincipal = currentPrincipal;
         _fido2 = fido2;
         _memoryCache = memoryCache;
         _userRepository = userRepository;
+        _authTokenProvider = authTokenProvider;
     }
 
-    public async Task<HandleResult<string>> Handle(VerifyAssertionAndGetKeyShareCommand command, CancellationToken ct)
+    public async Task<HandleResult<AuthResultVm>> Handle(VerifyAssertionAndSignInCommand command, CancellationToken ct)
     {
         var assertion = AuthenticatorAssertionResponse.Parse(command.RawAssertion);
 
@@ -66,14 +65,6 @@ internal class VerifyAssertionAndGetKeyShareCommandHandler : IRequestHandler<
             };
         }
 
-        if (_currentPrincipal.Id! != credential.UserId)
-        {
-            return new()
-            {
-                Error = new UserError("Invalid request")
-            };
-        }
-
         IsUserHandleOwnerOfCredentialIdAsync checkUserOwnsCredential = (args, ct) =>
             Task.FromResult(credential.UserId == new Guid(args.UserHandle).ToString());
 
@@ -92,11 +83,17 @@ internal class VerifyAssertionAndGetKeyShareCommandHandler : IRequestHandler<
 
         await _userRepository.SaveChanges();
 
-        var keyShareClaim = await _userRepository.GetClaim(_currentPrincipal.Id!, "key_share");
+        var claims = await _userRepository.GetClaimsExcept(credential.UserId, new[] { "key_share" });
 
         return new()
         {
-            Data = keyShareClaim.Value
+            Data = new()
+            {
+                UserId = credential.UserId,
+                SignerAddress = claims.Single(c => c.Type == "signer_address").Value,
+                WalletAddress = claims.Single(c => c.Type == "wallet_address").Value,
+                Token = _authTokenProvider.GenerateJwt(credential.UserId, claims)
+            }
         };
     }
 }

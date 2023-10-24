@@ -2,12 +2,12 @@ using Application;
 using Application.User.Commands.MarkNotificationsAsRead;
 using Application.User.Commands.SignInWithEthereum;
 using Application.User.Queries.GetNonceForSiwe;
-using Application.User.Commands.AddEmail;
-using Application.User.Commands.ConfirmEmail;
 using Application.User.Commands.SignUp;
 using Application.User.Commands.GenerateConfirmationCodeAndAttestationOptions;
 using Application.User.Commands.GenerateAssertionOptions;
 using Application.User.Commands.VerifyAssertionAndGetKeyShare;
+using Application.User.Commands.GenerateAssertionOptionsForSignIn;
+using Application.User.Commands.VerifyAssertionAndSignIn;
 
 namespace API.Endpoints;
 
@@ -26,18 +26,6 @@ public static class UserEndpoints
         group.MapPost(
             "/siwe",
             (SignInWithEthereumCommand command, SenderWrapper sender, HttpContext context) =>
-                sender.Send(command, serviceProvider: context.RequestServices)
-        );
-
-        group.MapPost(
-            "/email",
-            (AddEmailCommand command, SenderWrapper sender, HttpContext context) =>
-                sender.Send(command, serviceProvider: context.RequestServices)
-        );
-
-        group.MapPost(
-            "/email/confirm",
-            (ConfirmEmailCommand command, SenderWrapper sender, HttpContext context) =>
                 sender.Send(command, serviceProvider: context.RequestServices)
         );
 
@@ -68,6 +56,18 @@ public static class UserEndpoints
         group.MapPost(
             "/verify-assertion-and-get-key-share",
             (VerifyAssertionAndGetKeyShareCommand command, SenderWrapper sender, HttpContext context) =>
+                sender.Send(command, serviceProvider: context.RequestServices)
+        );
+
+        group.MapPost(
+            "/generate-assertion-options-for-sign-in",
+            (GenerateAssertionOptionsForSignInCommand command, SenderWrapper sender, HttpContext context) =>
+                sender.Send(command, serviceProvider: context.RequestServices)
+        );
+
+        group.MapPost(
+            "/verify-assertion-and-sign-in",
+            (VerifyAssertionAndSignInCommand command, SenderWrapper sender, HttpContext context) =>
                 sender.Send(command, serviceProvider: context.RequestServices)
         );
 

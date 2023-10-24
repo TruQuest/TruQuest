@@ -15,11 +15,12 @@ using UserDm = Domain.Aggregates.User;
 using Application.Common.Attributes;
 using Application.Common.Interfaces;
 using Application.Common.Misc;
+using Application.User.Common.Models.VM;
 
 namespace Application.User.Commands.SignUp;
 
 [ExecuteInTxn]
-public class SignUpCommand : IRequest<HandleResult<SignUpResultVm>>
+public class SignUpCommand : IRequest<HandleResult<AuthResultVm>>
 {
     public required string Email { get; init; }
     public required string ConfirmationCode { get; init; }
@@ -28,7 +29,7 @@ public class SignUpCommand : IRequest<HandleResult<SignUpResultVm>>
     public required string KeyShare { get; init; }
 }
 
-internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<SignUpResultVm>>
+internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<AuthResultVm>>
 {
     private readonly ILogger<SignUpCommandHandler> _logger;
     private readonly IUserRepository _userRepository;
@@ -60,7 +61,7 @@ internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResul
         _contractCaller = contractCaller;
     }
 
-    public async Task<HandleResult<SignUpResultVm>> Handle(SignUpCommand command, CancellationToken ct)
+    public async Task<HandleResult<AuthResultVm>> Handle(SignUpCommand command, CancellationToken ct)
     {
         if (!_totpProvider.VerifyTotp(Encoding.UTF8.GetBytes(command.Email).ToHex(), command.ConfirmationCode))
         {

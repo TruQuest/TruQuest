@@ -103,6 +103,7 @@ async function getCredential(options) {
   var authenticatorData = new Uint8Array(credential.response.authenticatorData);
   var clientDataJSON = new Uint8Array(credential.response.clientDataJSON);
   var signature = new Uint8Array(credential.response.signature);
+  var userHandle = new Uint8Array(credential.response.userHandle);
 
   return {
     id: credential.id,
@@ -112,6 +113,7 @@ async function getCredential(options) {
       authenticatorData: coerceToBase64Url(authenticatorData),
       clientDataJSON: coerceToBase64Url(clientDataJSON),
       signature: coerceToBase64Url(signature),
+      userHandle: coerceToBase64Url(userHandle),
     },
   };
 }

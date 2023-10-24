@@ -3,10 +3,12 @@ import 'dart:js_util';
 
 import 'package:rxdart/rxdart.dart';
 
+import '../../general/contexts/multi_stage_operation_context.dart';
 import '../../ethereum/services/iwallet_service.dart';
 import '../../ethereum_js_interop.dart';
 import '../../general/services/iframe_manager.dart';
 import '../../general/services/local_storage.dart';
+import '../../user/errors/local_key_share_not_present_error.dart';
 import '../../user/services/user_api_service.dart';
 
 class EmbeddedWalletService implements IWalletService {
@@ -76,6 +78,49 @@ class EmbeddedWalletService implements IWalletService {
     await _iframeManager.iframeKeyShareRender.postMessageAndAwaitResponse('render');
 
     return true;
+  }
+
+  Stream<Object> signInFromExistingDevice(MultiStageOperationContext ctx) async* {
+    var options = await _userApiService.generateAssertionOptionsForSignIn();
+    var assertion = await promiseToFuture<RawAssertion>(getCredential(options));
+    var result = await _userApiService.verifyAssertionAndSignIn(assertion);
+
+    var scanRequestId = DateTime.now().millisecondsSinceEpoch.toString();
+    var present = await _iframeManager.iframePrivateKeyGen.postMessageAndAwaitResponse(
+      'check-local-key-share|$scanRequestId',
+    );
+    if (present == '0') {
+      yield LocalKeyShareNotPresentError(scanRequestId: scanRequestId);
+      await ctx.scanQrCodeTask.future;
+
+      present = await _iframeManager.iframePrivateKeyGen.postMessageAndAwaitResponse(
+        'check-local-key-share-again|$scanRequestId',
+      );
+      if (present == '0') {
+        yield const LocalKeyShareNotPresentError();
+        return;
+      }
+    }
+
+    _onSelectedForOnboarding?.call();
+
+    var signerAddress = convertToEip55Address(result.signerAddress);
+    var walletAddress = convertToEip55Address(result.walletAddress);
+
+    await _localStorage.setString(
+      'Wallet',
+      jsonEncode({
+        'name': name,
+        'signerAddress': signerAddress,
+        signerAddress: {
+          'userId': result.userId,
+          'walletAddress': walletAddress,
+          'token': result.token,
+        },
+      }),
+    );
+
+    _currentSignerChangedEventChannel.add(signerAddress);
   }
 
   @override

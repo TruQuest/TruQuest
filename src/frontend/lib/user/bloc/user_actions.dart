@@ -29,6 +29,10 @@ class SignInWithThirdPartyWallet extends UserAction {
   const SignInWithThirdPartyWallet({this.walletName});
 }
 
+class SignInFromExistingDevice extends UserAction {
+  const SignInFromExistingDevice();
+}
+
 class DepositFunds extends UserAction {
   final int amount;
 
