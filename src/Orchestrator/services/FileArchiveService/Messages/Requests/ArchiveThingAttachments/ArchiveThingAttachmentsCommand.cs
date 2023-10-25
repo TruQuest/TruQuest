@@ -1,3 +1,5 @@
+using System.Text;
+
 using KafkaFlow;
 using KafkaFlow.TypedHandler;
 
@@ -32,10 +34,13 @@ internal class ArchiveThingAttachmentsCommandHandler : IMessageHandler<ArchiveTh
 
     public async Task Handle(IMessageContext context, ArchiveThingAttachmentsCommand message)
     {
+        var requestId = Encoding.UTF8.GetString(context.Headers["trq.requestId"]);
+
         var progress = new Progress<int>(percent =>
         {
             _logger.LogInformation($"Archive Progress: {percent}%");
-            _responseDispatcher.Send(
+            _responseDispatcher.SendSync(
+                requestId,
                 new ArchiveThingAttachmentsProgress
                 {
                     SubmitterId = message.SubmitterId,
@@ -46,8 +51,8 @@ internal class ArchiveThingAttachmentsCommandHandler : IMessageHandler<ArchiveTh
             );
         });
 
-        var error = await _fileArchiver.ArchiveAllAttachments(message.Input, progress);
         object response;
+        var error = await _fileArchiver.ArchiveAllAttachments(message.Input, progress);
         if (error != null)
         {
             response = new ArchiveThingAttachmentsFailureResult
@@ -65,6 +70,6 @@ internal class ArchiveThingAttachmentsCommandHandler : IMessageHandler<ArchiveTh
             };
         }
 
-        await _responseDispatcher.SendAsync(response, key: message.ThingId.ToString());
+        await _responseDispatcher.Send(requestId, response, key: message.ThingId.ToString());
     }
 }

@@ -22,13 +22,9 @@ public class ExceptionHandlingBehavior<TRequest, TResponse> : IPipelineBehavior<
         _logger = logger;
     }
 
-    public async Task<TResponse> Handle(
-        TRequest request,
-        RequestHandlerDelegate<TResponse> next,
-        CancellationToken ct
-    )
+    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
     {
-        var span = Telemetry.StartActivity(request.GetType().Name);
+        var span = Telemetry.StartActivity(request.GetType().Name)!;
         try
         {
             return await next();
@@ -79,7 +75,7 @@ public class ExceptionHandlingBehavior<TRequest, TResponse> : IPipelineBehavior<
         }
         finally
         {
-            span!.Dispose();
+            span.Dispose();
         }
     }
 }

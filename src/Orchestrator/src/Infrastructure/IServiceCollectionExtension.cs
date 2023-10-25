@@ -276,7 +276,9 @@ public static class IServiceCollectionExtension
                                     .WithBufferSize(1)
                                     .WithWorkersCount(1)
                                     .AddMiddlewares(middlewares =>
-                                        middlewares.Add<MessageConsumer>(MiddlewareLifetime.Scoped)
+                                        middlewares
+                                            .Add<TelemetryMiddleware>(MiddlewareLifetime.Singleton)
+                                            .Add<MessageConsumer>(MiddlewareLifetime.Scoped)
                                     )
                             )
                             .AddProducer<RequestDispatcher>(producer =>

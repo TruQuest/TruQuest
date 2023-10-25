@@ -309,7 +309,7 @@ public class E2ETests : IAsyncLifetime
             ("tags", "1|2|3")
         ))
         {
-            _sut.RunAs(userId: submitterAddress.Substring(2).ToLower(), username: submitterAddress);
+            _sut.RunAs(accountName: "Submitter");
 
             var subjectResult = await _sut.SendRequest(new AddNewSubjectCommand
             {

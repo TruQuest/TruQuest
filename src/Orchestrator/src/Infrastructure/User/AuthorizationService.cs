@@ -25,23 +25,13 @@ public class AuthorizationService : AppInterfaces.IAuthorizationService
         _authorizationPolicyProvider = authorizationPolicyProvider;
     }
 
-    public async Task<AuthorizationError?> Authorize(
-        IEnumerable<RequireAuthorizationAttribute> authorizeAttributes
-    )
+    public async Task<AuthorizationError?> Authorize(IEnumerable<RequireAuthorizationAttribute> authorizeAttributes)
     {
         var authorizeData = authorizeAttributes.ToAuthorizeData();
-        var combinedPolicy = await AuthorizationPolicy.CombineAsync(
-            _authorizationPolicyProvider, authorizeData
-        );
-        if (combinedPolicy == null)
-        {
-            return null;
-        }
+        var combinedPolicy = await AuthorizationPolicy.CombineAsync(_authorizationPolicyProvider, authorizeData);
+        if (combinedPolicy == null) return null;
 
-        if (_authenticationContext.User == null)
-        {
-            return new AuthorizationError(_authenticationContext.GetFailureMessage());
-        }
+        if (_authenticationContext.User == null) return new(_authenticationContext.GetFailureMessage());
 
         // @@NOTE: Token is set when SignalR hub path is requested, authentication is a success, and the
         // invoked hub method is decorated with [CopyAuthenticationContextToMethodInvocationScope] attribute.
@@ -54,15 +44,11 @@ public class AuthorizationService : AppInterfaces.IAuthorizationService
             // for every hub method invocation manually.
             if (DateTime.UtcNow.CompareTo(_authenticationContext.Token.ValidTo) > 0)
             {
-                return new AuthorizationError(
-                    $"The token expired at '{_authenticationContext.Token.ValidTo.ToString(CultureInfo.InvariantCulture)}'"
-                );
+                return new($"The token expired at '{_authenticationContext.Token.ValidTo.ToString(CultureInfo.InvariantCulture)}'");
             }
         }
 
-        var result = await _authorizationService.AuthorizeAsync(
-            _authenticationContext.User, combinedPolicy
-        );
+        var result = await _authorizationService.AuthorizeAsync(_authenticationContext.User, combinedPolicy);
 
         return !result.Succeeded ? new AuthorizationError("Forbidden") : null;
     }

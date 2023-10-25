@@ -44,13 +44,17 @@ internal class MessageConsumer : IMessageMiddleware
     public async Task Invoke(IMessageContext context, MiddlewareDelegate next)
     {
         var responseType = _responseMessagesAssembly.GetType(
-            _responseMessagesNamespace + Encoding.UTF8.GetString(context.Headers["responseType"])
+            _responseMessagesNamespace + Encoding.UTF8.GetString(context.Headers["trq.responseType"])
         )!;
         var messageBytes = (byte[])context.Message.Value;
         var message = JsonSerializer.Deserialize(messageBytes, responseType, _options)!;
 
-        var requestId = Encoding.UTF8.GetString(context.Headers["requestId"]);
-        if (requestId == Guid.Empty.ToString())
+        if (context.Headers.Any(kv => kv.Key == "trq.isResponse"))
+        {
+            var requestId = Encoding.UTF8.GetString(context.Headers["trq.requestId"]);
+            await _requestDispatcher.ResponseSink.WriteAsync((requestId, message));
+        }
+        else
         {
             if (message is ArchiveThingAttachmentsProgress thingProgress)
             {
@@ -98,10 +102,6 @@ internal class MessageConsumer : IMessageMiddleware
                     addToAdditionalSinks: true
                 );
             }
-        }
-        else
-        {
-            _requestDispatcher.SetResponseFor(requestId, message);
         }
 
         await next(context);

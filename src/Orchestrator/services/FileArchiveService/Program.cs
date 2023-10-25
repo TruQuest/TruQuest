@@ -100,6 +100,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                                 .AddMiddlewares(middlewares =>
                                     middlewares
                                         .AddSerializer<MessageSerializer, MessageTypeResolver>()
+                                        .Add<TelemetryMiddleware>(MiddlewareLifetime.Singleton)
                                         .AddTypedHandlers(handlers =>
                                             handlers
                                                 .WithHandlerLifetime(InstanceLifetime.Singleton)

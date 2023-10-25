@@ -1,5 +1,5 @@
-using System.Text;
 using System.Diagnostics;
+using System.Text;
 
 using KafkaFlow;
 
@@ -7,6 +7,8 @@ namespace Services;
 
 internal class ResponseDispatcher : IResponseDispatcher
 {
+    private readonly byte[] _isResponseHeaderValue = { 1 };
+
     private readonly ILogger<ResponseDispatcher> _logger;
     private readonly IMessageProducer<ResponseDispatcher> _producer;
 
@@ -19,53 +21,79 @@ internal class ResponseDispatcher : IResponseDispatcher
         _producer = producer;
     }
 
-    public async Task ReplyTo(string requestId, object message, ActivityContext? parentContext = null)
+    public async Task Reply(string requestId, object message)
     {
-        using var span = Telemetry.StartActivity(
-            "responses publish",
-            ActivityKind.Server,
-            parentContext: parentContext ?? new ActivityContext()
-        );
+        using var span = Telemetry.StartActivity(message.GetType().Name, ActivityKind.Producer)!;
 
         var messageKey = Guid.NewGuid().ToString();
 
-        span!.SetTag("messaging.system", "kafka");
-        span.SetTag("messaging.operation", "publish");
-        span.SetTag("messaging.message.conversation_id", requestId);
-        span.SetTag("messaging.destination.name", "responses");
-        span.SetTag("messaging.kafka.message.key", messageKey);
+        span.SetKafkaTags(requestId, messageKey, destinationName: "responses");
+
+        var headers = new MessageHeaders
+        {
+            ["trq.requestId"] = Encoding.UTF8.GetBytes(requestId),
+            ["trq.isResponse"] = _isResponseHeaderValue
+        };
+
+        Telemetry.PropagateContextThrough(span.Context, headers, (headers, key, value) =>
+        {
+            headers[key] = Encoding.UTF8.GetBytes(value);
+        });
 
         await _producer.ProduceAsync(
             messageKey: messageKey,
             messageValue: message,
-            headers: new MessageHeaders
-            {
-                ["requestId"] = Encoding.UTF8.GetBytes(requestId)
-            }
+            headers: headers
         );
     }
 
-    public async Task SendAsync(object message, string? key = null)
+    public async Task Send(string requestId, object message, string? key = null)
     {
+        using var span = Telemetry.StartActivity(message.GetType().Name, ActivityKind.Producer)!;
+
+        var messageKey = key ?? Guid.NewGuid().ToString();
+
+        span.SetKafkaTags(requestId, messageKey, destinationName: "responses");
+
+        var headers = new MessageHeaders
+        {
+            ["trq.requestId"] = Encoding.UTF8.GetBytes(requestId)
+        };
+
+        Telemetry.PropagateContextThrough(span.Context, headers, (headers, key, value) =>
+        {
+            headers[key] = Encoding.UTF8.GetBytes(value);
+        });
+
         await _producer.ProduceAsync(
-            messageKey: key ?? Guid.NewGuid().ToString(),
+            messageKey: messageKey,
             messageValue: message,
-            headers: new MessageHeaders
-            {
-                ["requestId"] = Encoding.UTF8.GetBytes(Guid.Empty.ToString())
-            }
+            headers: headers
         );
     }
 
-    public void Send(object message, string? key = null)
+    public void SendSync(string requestId, object message, string? key = null)
     {
+        using var span = Telemetry.StartActivity(message.GetType().Name, ActivityKind.Producer)!;
+
+        var messageKey = key ?? Guid.NewGuid().ToString();
+
+        span.SetKafkaTags(requestId, messageKey, destinationName: "responses");
+
+        var headers = new MessageHeaders
+        {
+            ["trq.requestId"] = Encoding.UTF8.GetBytes(requestId)
+        };
+
+        Telemetry.PropagateContextThrough(span.Context, headers, (headers, key, value) =>
+        {
+            headers[key] = Encoding.UTF8.GetBytes(value);
+        });
+
         _producer.Produce(
-            messageKey: key ?? Guid.NewGuid().ToString(),
+            messageKey: messageKey,
             messageValue: message,
-            headers: new MessageHeaders
-            {
-                ["requestId"] = Encoding.UTF8.GetBytes(Guid.Empty.ToString())
-            },
+            headers: headers,
             deliveryHandler: report =>
             {
                 if (report.Error.IsError)

@@ -78,15 +78,11 @@ internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectComman
                 .ToList()
         };
 
-        object result;
-        using (var archiveSpan = Telemetry.StartActivity(nameof(ArchiveSubjectAttachmentsCommand)))
+        var result = await _requestDispatcher.GetResult(new ArchiveSubjectAttachmentsCommand
         {
-            result = await _requestDispatcher.GetResult(new ArchiveSubjectAttachmentsCommand
-            {
-                SubmitterId = _currentPrincipal.Id!,
-                Input = input
-            });
-        }
+            SubmitterId = _currentPrincipal.Id!,
+            Input = input
+        });
 
         if (result is ArchiveSubjectAttachmentsFailureResult failureResult)
         {

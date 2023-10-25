@@ -1,10 +1,8 @@
-using System.Diagnostics;
-
 namespace Services;
 
 internal interface IResponseDispatcher
 {
-    Task ReplyTo(string requestId, object message, ActivityContext? parentContext = null);
-    Task SendAsync(object message, string? key = null);
-    void Send(object message, string? key = null);
+    Task Reply(string requestId, object message);
+    Task Send(string requestId, object message, string? key = null);
+    void SendSync(string requestId, object message, string? key = null);
 }

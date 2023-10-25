@@ -14,17 +14,18 @@ public class AuthorizationBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
     where TResponse : HandleResult, new()
 {
     private readonly IAuthorizationService _authorizationService;
+    private readonly ICurrentPrincipal _currentPrincipal;
 
-    public AuthorizationBehavior(IAuthorizationService authorizationService)
+    public AuthorizationBehavior(
+        IAuthorizationService authorizationService,
+        ICurrentPrincipal currentPrincipal
+    )
     {
         _authorizationService = authorizationService;
+        _currentPrincipal = currentPrincipal;
     }
 
-    public async Task<TResponse> Handle(
-        TRequest request,
-        RequestHandlerDelegate<TResponse> next,
-        CancellationToken ct
-    )
+    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
     {
         var authorizeAttributes = request
             .GetType()
@@ -38,6 +39,9 @@ public class AuthorizationBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
                 Error = error
             };
         }
+
+        var span = Telemetry.CurrentActivity!;
+        span.SetTag("UserId", _currentPrincipal.Id);
 
         return await next();
     }

@@ -54,6 +54,6 @@ internal class MessageTypeResolver : IMessageTypeResolver
 
     public void OnProduce(IMessageContext context)
     {
-        context.Headers.SetString("requestType", context.Message.Value.GetType().Name);
+        context.Headers.SetString("trq.requestType", context.Message.Value.GetType().Name);
     }
 }

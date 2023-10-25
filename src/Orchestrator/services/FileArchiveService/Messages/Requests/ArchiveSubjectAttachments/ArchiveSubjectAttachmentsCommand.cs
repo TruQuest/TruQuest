@@ -1,10 +1,7 @@
-using System.Diagnostics;
 using System.Text;
 
 using KafkaFlow;
 using KafkaFlow.TypedHandler;
-using OpenTelemetry;
-using OpenTelemetry.Context.Propagation;
 
 using Messages.Responses;
 using Services;
@@ -36,49 +33,27 @@ internal class ArchiveSubjectAttachmentsCommandHandler : IMessageHandler<Archive
 
     public async Task Handle(IMessageContext context, ArchiveSubjectAttachmentsCommand message)
     {
-        var propagationContext = Propagators.DefaultTextMapPropagator.Extract(
-            default,
-            context.Headers,
-            (headers, key) =>
-            {
-                if (headers.Any(kv => kv.Key == key))
-                {
-                    return new[] { Encoding.UTF8.GetString(headers[key]) };
-                }
-                return Enumerable.Empty<string>();
-            });
-
-        Baggage.Current = propagationContext.Baggage;
-
         object response;
-        using (var span = Telemetry.StartActivity(
-            "requests process",
-            ActivityKind.Server,
-            parentContext: propagationContext.ActivityContext
-        ))
+        var error = await _fileArchiver.ArchiveAllAttachments(message.Input);
+        if (error != null)
         {
-            var error = await _fileArchiver.ArchiveAllAttachments(message.Input);
-            if (error != null)
+            response = new ArchiveSubjectAttachmentsFailureResult
             {
-                response = new ArchiveSubjectAttachmentsFailureResult
-                {
-                    ErrorMessage = error.ToString()
-                };
-            }
-            else
+                ErrorMessage = error.ToString()
+            };
+        }
+        else
+        {
+            response = new ArchiveSubjectAttachmentsSuccessResult
             {
-                response = new ArchiveSubjectAttachmentsSuccessResult
-                {
-                    SubmitterId = message.SubmitterId,
-                    Input = message.Input
-                };
-            }
+                SubmitterId = message.SubmitterId,
+                Input = message.Input
+            };
         }
 
-        await _responseDispatcher.ReplyTo(
-            Encoding.UTF8.GetString(context.Headers["requestId"]),
-            response,
-            parentContext: propagationContext.ActivityContext
+        await _responseDispatcher.Reply(
+            Encoding.UTF8.GetString(context.Headers["trq.requestId"]),
+            response
         );
     }
 }

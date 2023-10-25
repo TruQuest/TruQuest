@@ -8,12 +8,12 @@ internal class MessageTypeResolver : IMessageTypeResolver
     public Type OnConsume(IMessageContext context)
     {
         return Assembly.GetExecutingAssembly().GetType(
-            $"Messages.Requests.{Encoding.UTF8.GetString(context.Headers["requestType"])}"
+            $"Messages.Requests.{Encoding.UTF8.GetString(context.Headers["trq.requestType"])}"
         )!;
     }
 
     public void OnProduce(IMessageContext context)
     {
-        context.Headers.SetString("responseType", context.Message.Value.GetType().Name);
+        context.Headers.SetString("trq.responseType", context.Message.Value.GetType().Name);
     }
 }

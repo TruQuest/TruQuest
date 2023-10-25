@@ -1,10 +1,11 @@
 using System.Diagnostics;
 using System.Collections.Concurrent;
 using System.Text;
+using System.Threading.Channels;
+
+using Microsoft.Extensions.Hosting;
 
 using KafkaFlow;
-using OpenTelemetry;
-using OpenTelemetry.Context.Propagation;
 
 using Application;
 using Application.Common.Interfaces;
@@ -17,58 +18,64 @@ internal class RequestDispatcher : IRequestDispatcher
 
     private readonly ConcurrentDictionary<string, TaskCompletionSource<object>> _requestIdToResponseReceivedTcs = new();
 
-    public RequestDispatcher(IMessageProducer<RequestDispatcher> producer)
+    private readonly ChannelReader<(string RequestId, object Message)> _responseStream;
+    public ChannelWriter<(string RequestId, object Message)> ResponseSink { get; }
+
+    public RequestDispatcher(IMessageProducer<RequestDispatcher> producer, IHostApplicationLifetime appLifetime)
     {
         _producer = producer;
+
+        var responseChannel = Channel.CreateUnbounded<(string RequestId, object Message)>(
+            new UnboundedChannelOptions
+            {
+                SingleReader = true
+            }
+        );
+        _responseStream = responseChannel.Reader;
+        ResponseSink = responseChannel.Writer;
+
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(appLifetime.ApplicationStopping);
+        _monitorResponses(cts.Token);
     }
 
-    public void SetResponseFor(string requestId, object response)
+    private async void _monitorResponses(CancellationToken ct)
     {
-        if (_requestIdToResponseReceivedTcs.TryRemove(requestId, out TaskCompletionSource<object>? tcs))
+        await foreach (var response in _responseStream.ReadAllAsync(ct))
         {
-            tcs.SetResult(response);
+            if (_requestIdToResponseReceivedTcs.TryRemove(response.RequestId, out TaskCompletionSource<object>? tcs))
+            {
+                tcs.SetResult(response.Message);
+            }
         }
     }
 
     public async Task<object> GetResult(object request)
     {
-        TaskCompletionSource<object> tcs;
-        using (var publishSpan = Telemetry.StartActivity("requests publish", ActivityKind.Client))
+        using var span = Telemetry.StartActivity(request.GetType().Name, ActivityKind.Producer)!;
+
+        var requestId = Guid.NewGuid().ToString();
+        var messageKey = Guid.NewGuid().ToString();
+
+        span.SetKafkaTags(requestId, messageKey, destinationName: "requests");
+
+        var headers = new MessageHeaders
         {
-            var context = publishSpan!.Context;
-            var requestId = Guid.NewGuid().ToString();
-            var messageKey = Guid.NewGuid().ToString();
+            ["trq.requestId"] = Encoding.UTF8.GetBytes(requestId)
+        };
 
-            publishSpan.SetTag("messaging.system", "kafka");
-            publishSpan.SetTag("messaging.operation", "publish");
-            publishSpan.SetTag("messaging.message.conversation_id", requestId);
-            publishSpan.SetTag("messaging.destination.name", "requests");
-            publishSpan.SetTag("messaging.kafka.message.key", messageKey);
+        Telemetry.PropagateContextThrough(span.Context, headers, (headers, key, value) =>
+        {
+            headers[key] = Encoding.UTF8.GetBytes(value);
+        });
 
-            var headers = new MessageHeaders
-            {
-                ["requestId"] = Encoding.UTF8.GetBytes(requestId)
-            };
+        var tcs = _requestIdToResponseReceivedTcs[requestId] = new();
 
-            Propagators.DefaultTextMapPropagator.Inject(
-                new PropagationContext(context, Baggage.Current),
-                headers,
-                (headers, key, value) =>
-                {
-                    headers[key] = Encoding.UTF8.GetBytes(value);
-                }
-            );
+        await _producer.ProduceAsync(
+            messageKey: messageKey,
+            messageValue: request,
+            headers: headers
+        );
 
-            tcs = _requestIdToResponseReceivedTcs[requestId] = new();
-
-            await _producer.ProduceAsync(
-                messageKey: messageKey,
-                messageValue: request,
-                headers: headers
-            );
-        }
-
-        using var waitForResponseSpan = Telemetry.StartActivity("responses wait");
         var result = await tcs.Task;
 
         return result;
@@ -76,9 +83,27 @@ internal class RequestDispatcher : IRequestDispatcher
 
     public async Task Send(object request)
     {
+        using var span = Telemetry.StartActivity(request.GetType().Name, ActivityKind.Producer)!;
+
+        var requestId = Guid.NewGuid().ToString();
+        var messageKey = Guid.NewGuid().ToString();
+
+        span.SetKafkaTags(requestId, messageKey, destinationName: "requests");
+
+        var headers = new MessageHeaders
+        {
+            ["trq.requestId"] = Encoding.UTF8.GetBytes(requestId)
+        };
+
+        Telemetry.PropagateContextThrough(span.Context, headers, (headers, key, value) =>
+        {
+            headers[key] = Encoding.UTF8.GetBytes(value);
+        });
+
         await _producer.ProduceAsync(
-            messageKey: Guid.NewGuid().ToString(),
-            messageValue: request
+            messageKey: messageKey,
+            messageValue: request,
+            headers: headers
         );
     }
 }
