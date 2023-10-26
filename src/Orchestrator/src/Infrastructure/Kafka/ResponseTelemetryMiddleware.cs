@@ -7,7 +7,7 @@ using Application;
 
 namespace Infrastructure.Kafka;
 
-internal class TelemetryMiddleware : IMessageMiddleware
+internal class ResponseTelemetryMiddleware : IMessageMiddleware
 {
     public async Task Invoke(IMessageContext context, MiddlewareDelegate next)
     {
@@ -15,18 +15,17 @@ internal class TelemetryMiddleware : IMessageMiddleware
             context.Headers,
             (headers, key) =>
             {
-                if (!key.StartsWith("trq.") && headers.Any(kv => kv.Key == key))
-                {
-                    return Encoding.UTF8.GetString(headers[key]);
-                }
+                if (headers.Any(kv => kv.Key == key)) return Encoding.UTF8.GetString(headers[key]);
                 return null;
             }
         );
 
+        // @@??: Should add messaging tags here to connect both ends of communication ?
+
         using var span = Telemetry.StartActivity(
             Encoding.UTF8.GetString(context.Headers["trq.responseType"]),
-            ActivityKind.Consumer,
-            parentContext: parentSpanContext
+            parentContext: parentSpanContext,
+            kind: ActivityKind.Consumer
         );
 
         await next(context);

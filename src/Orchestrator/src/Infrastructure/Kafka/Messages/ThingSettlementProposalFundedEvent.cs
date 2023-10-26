@@ -8,7 +8,7 @@ using Application.Settlement.Commands.InitVerifierLottery;
 
 namespace Infrastructure.Kafka.Messages;
 
-internal class ThingSettlementProposalFundedEvent
+internal class ThingSettlementProposalFundedEvent : TraceableEvent
 {
     public required Guid SettlementProposalId { get; init; }
     public required string UserId { get; init; }

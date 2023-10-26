@@ -9,7 +9,7 @@ using Application.Thing.Commands.FinalizeAcceptancePoll;
 
 namespace Infrastructure.Kafka.Messages;
 
-internal class ThingAcceptancePollFinalizedEvent
+internal class ThingAcceptancePollFinalizedEvent : TraceableEvent
 {
     public required int Decision { get; init; }
     public required string VoteAggIpfsCid { get; init; }

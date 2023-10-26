@@ -38,6 +38,7 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
                 case TaskType.CloseThingSubmissionVerifierLottery:
                     await _sender.Send(new Thing.Commands.CloseVerifierLottery.CloseVerifierLotteryCommand
                     {
+                        Traceparent = ((JsonElement)task.Payload["traceparent"]).GetString()!,
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),
                         Data = ((JsonElement)task.Payload["data"]).GetString()!.HexToByteArray(),
                         UserXorData = ((JsonElement)task.Payload["userXorData"]).GetString()!.HexToByteArray(),

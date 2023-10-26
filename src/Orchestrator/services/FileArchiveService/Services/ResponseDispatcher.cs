@@ -23,7 +23,7 @@ internal class ResponseDispatcher : IResponseDispatcher
 
     public async Task Reply(string requestId, object message)
     {
-        using var span = Telemetry.StartActivity(message.GetType().Name, ActivityKind.Producer)!;
+        using var span = Telemetry.StartActivity(message.GetType().Name, kind: ActivityKind.Producer)!;
 
         var messageKey = Guid.NewGuid().ToString();
 
@@ -49,7 +49,7 @@ internal class ResponseDispatcher : IResponseDispatcher
 
     public async Task Send(string requestId, object message, string? key = null)
     {
-        using var span = Telemetry.StartActivity(message.GetType().Name, ActivityKind.Producer)!;
+        using var span = Telemetry.StartActivity(message.GetType().Name, kind: ActivityKind.Producer)!;
 
         var messageKey = key ?? Guid.NewGuid().ToString();
 
@@ -74,7 +74,7 @@ internal class ResponseDispatcher : IResponseDispatcher
 
     public void SendSync(string requestId, object message, string? key = null)
     {
-        using var span = Telemetry.StartActivity(message.GetType().Name, ActivityKind.Producer)!;
+        using var span = Telemetry.StartActivity(message.GetType().Name, kind: ActivityKind.Producer)!;
 
         var messageKey = key ?? Guid.NewGuid().ToString();
 

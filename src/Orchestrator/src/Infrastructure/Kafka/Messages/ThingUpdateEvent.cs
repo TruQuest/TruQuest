@@ -8,7 +8,7 @@ using Application.User.Common.Models.IM;
 
 namespace Infrastructure.Kafka.Messages;
 
-internal class ThingUpdateEvent
+internal class ThingUpdateEvent : TraceableEvent
 {
     public required Guid ThingId { get; init; }
     public required ThingUpdateCategory Category { get; init; }

@@ -8,7 +8,7 @@ using Application.Thing.Commands.ArchiveDueToFailedLottery;
 
 namespace Infrastructure.Kafka.Messages;
 
-internal class ThingSubmissionVerifierLotteryClosedInFailureEvent
+internal class ThingSubmissionVerifierLotteryClosedInFailureEvent : TraceableEvent
 {
     public required int RequiredNumVerifiers { get; init; }
     public required int JoinedNumVerifiers { get; init; }

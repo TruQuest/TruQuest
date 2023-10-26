@@ -66,10 +66,15 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
                 type: TaskType.CloseThingAcceptancePoll,
                 scheduledBlockNumber: pollInitBlock + pollDurationBlocks + 1
             );
-            task.SetPayload(new()
+
+            var payload = new Dictionary<string, object>()
             {
                 ["thingId"] = thing.Id
-            });
+            };
+
+            Telemetry.CurrentActivity!.AddTraceparentTo(payload);
+            task.SetPayload(payload);
+
             _taskRepository.Create(task);
 
             var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();

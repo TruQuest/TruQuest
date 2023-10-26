@@ -3,14 +3,12 @@ using MediatR;
 using Domain.Aggregates.Events;
 
 using Application.Common.Interfaces;
+using Application.Ethereum.Common.Models.IM;
 
 namespace Application.Ethereum.Events.ThingAssessmentVerifierLottery.ClaimedLotterySpot;
 
-public class ClaimedLotterySpotEvent : INotification
+public class ClaimedLotterySpotEvent : BaseContractEvent, INotification
 {
-    public required long BlockNumber { get; init; }
-    public required int TxnIndex { get; init; }
-    public required string TxnHash { get; init; }
     public required byte[] ThingId { get; init; }
     public required byte[] SettlementProposalId { get; init; }
     public required string UserId { get; init; }

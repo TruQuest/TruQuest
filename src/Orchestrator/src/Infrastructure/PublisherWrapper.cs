@@ -1,14 +1,19 @@
+using System.Diagnostics;
 using System.Reflection;
 using System.Transactions;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Caching.Memory;
 
 using Npgsql;
 using MediatR;
 
+using Application;
 using Application.Common.Attributes;
 using Application.Common.Interfaces;
+using Application.Ethereum.Events.BlockMined;
+using Application.Ethereum.Common.Models.IM;
 
 namespace Infrastructure;
 
@@ -17,101 +22,120 @@ public class PublisherWrapper
     private readonly ILogger<PublisherWrapper> _logger;
     private readonly ISharedTxnScope _sharedTxnScope;
     private readonly IPublisher _publisher;
+    private readonly IMemoryCache _memoryCache;
     private readonly IEnumerable<IAdditionalApplicationEventSink> _additionalSinks;
 
     public PublisherWrapper(
         ILogger<PublisherWrapper> logger,
         ISharedTxnScope sharedTxnScope,
         IPublisher publisher,
+        IMemoryCache memoryCache,
         IEnumerable<IAdditionalApplicationEventSink> additionalSinks
     )
     {
         _logger = logger;
         _sharedTxnScope = sharedTxnScope;
         _publisher = publisher;
+        _memoryCache = memoryCache;
         _additionalSinks = additionalSinks;
     }
 
-    public async Task Publish(
-        INotification @event, CancellationToken ct = default, bool addToAdditionalSinks = false
-    )
+    public async Task Publish(INotification @event, CancellationToken ct = default, bool addToAdditionalSinks = false)
     {
-        var attr = @event.GetType().GetCustomAttribute<ExecuteInTxnAttribute>();
-        if (attr != null)
+        Activity? span = null;
+        try
         {
-            // @@NOTE: The only events that have ExecuteInTxnAttribute are two AttachmentsArchivingCompletedEvents,
-            // both of which are just a bunch of INSERTs, meaning there couldn't (@@??) be a serialization failure.
-
-            _sharedTxnScope.Init();
-
-            using var txnScope = new TransactionScope(
-                TransactionScopeOption.Required,
-                new TransactionOptions { IsolationLevel = attr.IsolationLevel },
-                TransactionScopeAsyncFlowOption.Enabled
-            );
-
-            try
+            if (@event is not BlockMinedEvent)
             {
-                await _publisher.Publish(@event);
-                txnScope.Complete();
+                string? traceparent = null;
+                if (@event is BaseContractEvent contractEvent)
+                {
+                    // @@!!: Cache entry is added once txn receipt is received, therefore, when listening
+                    // for events we must wait for more confirmations than when we send a txn.
+                    traceparent = _memoryCache.Get<string>(contractEvent.TxnHash);
+                }
+                span = Telemetry.StartActivity(@event.GetType().Name, traceparent: traceparent)!;
             }
-            catch (PostgresException ex) when (
-                ex.SqlState == PostgresErrorCodes.UniqueViolation
-            )
+
+            var attr = @event.GetType().GetCustomAttribute<ExecuteInTxnAttribute>();
+            if (attr != null)
             {
-                _logger.LogWarning(
-                    ex,
-                    "Unique constraint violation while processing {Event}. Skipping...",
-                    @event.GetType().Name
+                // @@NOTE: The only events that have ExecuteInTxnAttribute are two AttachmentsArchivingCompletedEvents,
+                // both of which are just a bunch of INSERTs, meaning there couldn't (@@??) be a serialization failure.
+
+                _sharedTxnScope.Init();
+
+                using var txnScope = new TransactionScope(
+                    TransactionScopeOption.Required,
+                    new TransactionOptions { IsolationLevel = attr.IsolationLevel },
+                    TransactionScopeAsyncFlowOption.Enabled
                 );
+
+                try
+                {
+                    await _publisher.Publish(@event);
+                    txnScope.Complete();
+                }
+                catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.UniqueViolation)
+                {
+                    _logger.LogWarning(
+                        ex,
+                        "Unique constraint violation while processing {Event}. Skipping...",
+                        @event.GetType().Name
+                    );
+                }
+                catch (DbUpdateException ex) when (
+                    ex.InnerException is PostgresException pgEx &&
+                    pgEx.SqlState == PostgresErrorCodes.UniqueViolation
+                )
+                {
+                    _logger.LogWarning(
+                        pgEx,
+                        "Unique constraint violation while processing {Event}. Skipping...",
+                        @event.GetType().Name
+                    );
+                }
             }
-            catch (DbUpdateException ex) when (
-                ex.InnerException is PostgresException pgEx &&
-                pgEx.SqlState == PostgresErrorCodes.UniqueViolation
-            )
+            else
             {
-                _logger.LogWarning(
-                    pgEx,
-                    "Unique constraint violation while processing {Event}. Skipping...",
-                    @event.GetType().Name
-                );
+                try
+                {
+                    await _publisher.Publish(@event);
+                }
+                catch (PostgresException ex) when (
+                    ex.SqlState == PostgresErrorCodes.UniqueViolation
+                )
+                {
+                    _logger.LogWarning(
+                        ex,
+                        "Unique constraint violation while processing {Event}. Skipping...",
+                        @event.GetType().Name
+                    );
+                }
+                catch (DbUpdateException ex) when (
+                    ex.InnerException is PostgresException pgEx &&
+                    pgEx.SqlState == PostgresErrorCodes.UniqueViolation
+                )
+                {
+                    _logger.LogWarning(
+                        pgEx,
+                        "Unique constraint violation while processing {Event}. Skipping...",
+                        @event.GetType().Name
+                    );
+                }
+            }
+
+            if (addToAdditionalSinks)
+            {
+                foreach (var sink in _additionalSinks)
+                {
+                    await sink.Add(@event);
+                }
             }
         }
-        else
+        finally
         {
-            try
-            {
-                await _publisher.Publish(@event);
-            }
-            catch (PostgresException ex) when (
-                ex.SqlState == PostgresErrorCodes.UniqueViolation
-            )
-            {
-                _logger.LogWarning(
-                    ex,
-                    "Unique constraint violation while processing {Event}. Skipping...",
-                    @event.GetType().Name
-                );
-            }
-            catch (DbUpdateException ex) when (
-                ex.InnerException is PostgresException pgEx &&
-                pgEx.SqlState == PostgresErrorCodes.UniqueViolation
-            )
-            {
-                _logger.LogWarning(
-                    pgEx,
-                    "Unique constraint violation while processing {Event}. Skipping...",
-                    @event.GetType().Name
-                );
-            }
-        }
-
-        if (addToAdditionalSinks)
-        {
-            foreach (var sink in _additionalSinks)
-            {
-                await sink.Add(@event);
-            }
+            span?.Dispose();
         }
     }
 }

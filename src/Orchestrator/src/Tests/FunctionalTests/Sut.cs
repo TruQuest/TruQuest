@@ -79,6 +79,8 @@ public class Sut : IAsyncLifetime
         _app = appBuilder.Build().ConfigurePipeline();
 
         AccountProvider = _app.Services.GetRequiredService<AccountProvider>();
+        Signer = new Signer(AccountProvider);
+        BlockchainManipulator = new BlockchainManipulator(_app.Configuration);
         ContractCaller = new ContractCaller(
             _app.Logger,
             _app.Configuration,
@@ -121,9 +123,6 @@ public class Sut : IAsyncLifetime
         // actually start, so, instead, we resolve these providers, which accomplishes the same thing.
         _app.Services.GetRequiredService<TracerProvider>();
         _app.Services.GetRequiredService<MeterProvider>();
-
-        Signer = new Signer(AccountProvider);
-        BlockchainManipulator = new BlockchainManipulator(_app.Configuration);
     }
 
     public Task DisposeAsync() => Task.CompletedTask;

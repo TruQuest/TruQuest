@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Nethereum.Contracts;
 using Nethereum.Web3.Accounts;
 
-using Application.Ethereum.Models.IM;
+using Application.Ethereum.Common.Models.IM;
 
 using Infrastructure.Ethereum.ERC4337;
 

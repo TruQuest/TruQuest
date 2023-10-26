@@ -11,8 +11,10 @@ public class GetWatchListUpdatesQuery : IRequest<HandleResult<IEnumerable<Watche
     public required string UserId { get; init; }
 }
 
-internal class GetWatchListUpdatesQueryHandler :
-    IRequestHandler<GetWatchListUpdatesQuery, HandleResult<IEnumerable<WatchedItemUpdateQm>>>
+internal class GetWatchListUpdatesQueryHandler : IRequestHandler<
+    GetWatchListUpdatesQuery,
+    HandleResult<IEnumerable<WatchedItemUpdateQm>>
+>
 {
     private readonly IWatchListQueryable _watchListQueryable;
 

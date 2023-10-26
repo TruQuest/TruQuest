@@ -51,7 +51,7 @@ internal class RequestDispatcher : IRequestDispatcher
 
     public async Task<object> GetResult(object request)
     {
-        using var span = Telemetry.StartActivity(request.GetType().Name, ActivityKind.Producer)!;
+        using var span = Telemetry.StartActivity(request.GetType().Name, kind: ActivityKind.Producer)!;
 
         var requestId = Guid.NewGuid().ToString();
         var messageKey = Guid.NewGuid().ToString();
@@ -83,7 +83,7 @@ internal class RequestDispatcher : IRequestDispatcher
 
     public async Task Send(object request)
     {
-        using var span = Telemetry.StartActivity(request.GetType().Name, ActivityKind.Producer)!;
+        using var span = Telemetry.StartActivity(request.GetType().Name, kind: ActivityKind.Producer)!;
 
         var requestId = Guid.NewGuid().ToString();
         var messageKey = Guid.NewGuid().ToString();

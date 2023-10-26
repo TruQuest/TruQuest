@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 using Application.Common.Misc;
 
-namespace Application.Ethereum.Models.IM;
+namespace Application.Ethereum.Common.Models.IM;
 
 public record UserOperation
 {

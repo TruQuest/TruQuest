@@ -3,14 +3,12 @@ using MediatR;
 using Domain.Aggregates.Events;
 
 using Application.Common.Misc;
+using Application.Ethereum.Common.Models.IM;
 
 namespace Application.Ethereum.Events.ThingAssessmentVerifierLottery.LotteryClosedWithSuccess;
 
-public class LotteryClosedWithSuccessEvent : INotification
+public class LotteryClosedWithSuccessEvent : BaseContractEvent, INotification
 {
-    public required long BlockNumber { get; init; }
-    public required int TxnIndex { get; init; }
-    public required string TxnHash { get; init; }
     public required byte[] ThingId { get; init; }
     public required byte[] SettlementProposalId { get; init; }
     public required string Orchestrator { get; init; }
@@ -42,7 +40,8 @@ internal class LotteryClosedWithSuccessEventHandler : INotificationHandler<Lotte
             thingId: new Guid(@event.ThingId),
             type: ThingEventType.SettlementProposalAssessmentVerifierLotteryClosedWithSuccess
         );
-        lotteryClosedEvent.SetPayload(new()
+
+        var payload = new Dictionary<string, object>()
         {
             ["settlementProposalId"] = new Guid(@event.SettlementProposalId),
             ["orchestrator"] = @event.Orchestrator,
@@ -52,7 +51,11 @@ internal class LotteryClosedWithSuccessEventHandler : INotificationHandler<Lotte
             ["nonce"] = @event.Nonce,
             ["claimantIds"] = @event.ClaimantIds,
             ["winnerIds"] = @event.WinnerIds
-        });
+        };
+
+        Telemetry.CurrentActivity!.AddTraceparentTo(payload);
+        lotteryClosedEvent.SetPayload(payload);
+
         _actionableThingRelatedEventRepository.Create(lotteryClosedEvent);
 
         await _actionableThingRelatedEventRepository.SaveChanges();

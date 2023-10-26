@@ -12,11 +12,12 @@ using Domain.Aggregates.Events;
 using Application.Common.Interfaces;
 using Application.Common.Misc;
 using Application.Common.Attributes;
+using Application.Common.Models.IM;
 
 namespace Application.Thing.Commands.CloseVerifierLottery;
 
 [ExecuteInTxn]
-internal class CloseVerifierLotteryCommand : IRequest<VoidResult>
+internal class CloseVerifierLotteryCommand : DeferredTaskCommand, IRequest<VoidResult>
 {
     public required Guid ThingId { get; init; }
     public required byte[] Data { get; init; }

@@ -11,18 +11,15 @@ internal class TelemetryMiddleware : IMessageMiddleware
             context.Headers,
             (headers, key) =>
             {
-                if (!key.StartsWith("trq.") && headers.Any(kv => kv.Key == key))
-                {
-                    return Encoding.UTF8.GetString(headers[key]);
-                }
+                if (headers.Any(kv => kv.Key == key)) return Encoding.UTF8.GetString(headers[key]);
                 return null;
             }
         );
 
         using var span = Telemetry.StartActivity(
             Encoding.UTF8.GetString(context.Headers["trq.requestType"]),
-            ActivityKind.Consumer,
-            parentContext: parentSpanContext
+            parentContext: parentSpanContext,
+            kind: ActivityKind.Consumer
         );
 
         await next(context);

@@ -3,13 +3,12 @@ using MediatR;
 using Domain.Aggregates;
 using Domain.Aggregates.Events;
 
+using Application.Ethereum.Common.Models.IM;
+
 namespace Application.Ethereum.Events.AssessmentPoll.CastedVote;
 
-public class CastedVoteEvent : INotification
+public class CastedVoteEvent : BaseContractEvent, INotification
 {
-    public required long BlockNumber { get; init; }
-    public required int TxnIndex { get; init; }
-    public required string TxnHash { get; init; }
     public required byte[] ThingId { get; init; }
     public required byte[] SettlementProposalId { get; init; }
     public required string UserId { get; init; }

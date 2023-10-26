@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 using Nethereum.Hex.HexTypes;
 
 using Domain.Results;
-using Application.Ethereum.Models.IM;
+using Application.Ethereum.Common.Models.IM;
 
 namespace Infrastructure.Ethereum.ERC4337;
 

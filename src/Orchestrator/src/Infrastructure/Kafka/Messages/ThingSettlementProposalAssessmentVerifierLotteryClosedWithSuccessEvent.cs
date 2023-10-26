@@ -8,7 +8,7 @@ using Application.Settlement.Commands.PrepareForAssessmentPoll;
 
 namespace Infrastructure.Kafka.Messages;
 
-internal class ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent
+internal class ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent : TraceableEvent
 {
     public required Guid SettlementProposalId { get; init; }
     public required string Orchestrator { get; init; }

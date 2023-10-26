@@ -11,7 +11,7 @@ using Nethereum.Util;
 using Nethereum.Web3.Accounts;
 
 using Application.Common.Interfaces;
-using Application.Ethereum.Models.IM;
+using Application.Ethereum.Common.Models.IM;
 
 using Infrastructure.Ethereum.Messages;
 

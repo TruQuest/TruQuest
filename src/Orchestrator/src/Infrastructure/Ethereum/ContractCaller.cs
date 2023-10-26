@@ -3,13 +3,16 @@ using System.Threading.Channels;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Hosting;
 
 using Nethereum.Web3;
 using Nethereum.RPC.Eth.DTOs;
 
+using Application;
 using Application.Common.Interfaces;
 using Application.Common.Misc;
-using Application.Ethereum.Models.IM;
+using Application.Ethereum.Common.Models.IM;
 
 using Infrastructure.Ethereum.Messages;
 using Infrastructure.Ethereum.TypedData;
@@ -19,6 +22,7 @@ namespace Infrastructure.Ethereum;
 internal class ContractCaller : IContractCaller
 {
     private readonly ILogger<ContractCaller> _logger;
+    private readonly IMemoryCache _memoryCache;
     private readonly AccountProvider _accountProvider;
     private readonly Web3 _web3;
     private readonly string _entryPointAddress;
@@ -30,21 +34,26 @@ internal class ContractCaller : IContractCaller
 
     private readonly ChannelReader<(
         TaskCompletionSource<TransactionReceipt> Tcs,
-        Func<Task<TransactionReceipt>> Task
+        Func<Task<TransactionReceipt>> Task,
+        string Traceparent
     )> _stream;
 
     private readonly ChannelWriter<(
         TaskCompletionSource<TransactionReceipt> Tcs,
-        Func<Task<TransactionReceipt>> Task
+        Func<Task<TransactionReceipt>> Task,
+        string Traceparent
     )> _sink;
 
     public ContractCaller(
         ILogger<ContractCaller> logger,
+        IMemoryCache memoryCache,
         IConfiguration configuration,
-        AccountProvider accountProvider
+        AccountProvider accountProvider,
+        IHostApplicationLifetime appLifetime
     )
     {
         _logger = logger;
+        _memoryCache = memoryCache;
         _accountProvider = accountProvider;
 
         var network = configuration["Ethereum:Network"]!;
@@ -59,21 +68,24 @@ internal class ContractCaller : IContractCaller
 
         var channel = Channel.CreateUnbounded<(
             TaskCompletionSource<TransactionReceipt> Tcs,
-            Func<Task<TransactionReceipt>> Task
+            Func<Task<TransactionReceipt>> Task,
+            string Traceparent
         )>(new UnboundedChannelOptions { SingleReader = true });
 
         _stream = channel.Reader;
         _sink = channel.Writer;
 
-        _monitorMessages();
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(appLifetime.ApplicationStopping);
+        _monitorMessages(cts.Token);
     }
 
-    private async void _monitorMessages()
+    private async void _monitorMessages(CancellationToken ct)
     {
         // @@TODO!!: Try-catch!
-        await foreach (var item in _stream.ReadAllAsync())
+        await foreach (var item in _stream.ReadAllAsync(ct))
         {
             var txnReceipt = await item.Task();
+            _memoryCache.Set(txnReceipt.TransactionHash, item.Traceparent);
             item.Tcs.SetResult(txnReceipt);
         }
     }
@@ -81,7 +93,7 @@ internal class ContractCaller : IContractCaller
     private async Task<TransactionReceipt> _sendTxn(Func<Task<TransactionReceipt>> task)
     {
         var tcs = new TaskCompletionSource<TransactionReceipt>();
-        await _sink.WriteAsync((tcs, task));
+        await _sink.WriteAsync((tcs, task, Telemetry.CurrentActivity!.GetTraceparent()));
         return await tcs.Task;
     }
 

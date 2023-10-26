@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 using Domain.Base;
 
 namespace Domain.Aggregates.Events;
@@ -26,6 +28,7 @@ public class ActionableThingRelatedEvent : Entity, IAggregateRoot
 
     public void SetPayload(Dictionary<string, object> payload)
     {
+        Debug.Assert(payload.ContainsKey("traceparent"));
         _payload = payload;
     }
 }

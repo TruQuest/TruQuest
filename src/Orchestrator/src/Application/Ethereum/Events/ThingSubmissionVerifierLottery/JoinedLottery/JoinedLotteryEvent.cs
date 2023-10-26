@@ -3,14 +3,12 @@ using MediatR;
 using Domain.Aggregates.Events;
 
 using Application.Common.Misc;
+using Application.Ethereum.Common.Models.IM;
 
 namespace Application.Ethereum.Events.ThingSubmissionVerifierLottery.JoinedLottery;
 
-public class JoinedLotteryEvent : INotification
+public class JoinedLotteryEvent : BaseContractEvent, INotification
 {
-    public required long BlockNumber { get; init; }
-    public required int TxnIndex { get; init; }
-    public required string TxnHash { get; init; }
     public required byte[] ThingId { get; init; }
     public required string UserId { get; init; }
     public required byte[] UserData { get; init; }

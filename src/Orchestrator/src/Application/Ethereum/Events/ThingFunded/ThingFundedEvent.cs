@@ -2,13 +2,12 @@ using MediatR;
 
 using Domain.Aggregates.Events;
 
+using Application.Ethereum.Common.Models.IM;
+
 namespace Application.Ethereum.Events.ThingFunded;
 
-public class ThingFundedEvent : INotification
+public class ThingFundedEvent : BaseContractEvent, INotification
 {
-    public required long BlockNumber { get; init; }
-    public required int TxnIndex { get; init; }
-    public required string TxnHash { get; init; }
     public required byte[] ThingId { get; init; }
     public required string UserId { get; init; }
     public required decimal Stake { get; init; }
@@ -32,11 +31,16 @@ internal class ThingFundedEventHandler : INotificationHandler<ThingFundedEvent>
             thingId: new Guid(@event.ThingId),
             type: ThingEventType.Funded
         );
-        thingFundedEvent.SetPayload(new()
+
+        var payload = new Dictionary<string, object>()
         {
             ["userId"] = @event.UserId,
             ["stake"] = @event.Stake
-        });
+        };
+
+        Telemetry.CurrentActivity!.AddTraceparentTo(payload);
+        thingFundedEvent.SetPayload(payload);
+
         _actionableThingRelatedEventRepository.Create(thingFundedEvent);
 
         await _actionableThingRelatedEventRepository.SaveChanges();

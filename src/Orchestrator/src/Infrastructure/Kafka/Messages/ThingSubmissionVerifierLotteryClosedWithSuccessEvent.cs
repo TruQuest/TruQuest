@@ -8,7 +8,7 @@ using Application.Thing.Commands.PrepareForAcceptancePoll;
 
 namespace Infrastructure.Kafka.Messages;
 
-internal class ThingSubmissionVerifierLotteryClosedWithSuccessEvent
+internal class ThingSubmissionVerifierLotteryClosedWithSuccessEvent : TraceableEvent
 {
     public required string Orchestrator { get; init; }
     public required string Data { get; init; }

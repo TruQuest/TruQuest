@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,6 +10,7 @@ using OpenTelemetry.Trace;
 using Domain.Results;
 using Application;
 using Application.Common.Errors;
+using Application.Common.Models.IM;
 
 namespace Infrastructure;
 
@@ -24,7 +27,12 @@ public class ExceptionHandlingBehavior<TRequest, TResponse> : IPipelineBehavior<
 
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
     {
-        var span = Telemetry.StartActivity(request.GetType().Name)!;
+        string? traceparent = null;
+        if (request is DeferredTaskCommand command) traceparent = command.Traceparent;
+
+        // @@NOTE: Passing null 'traceparent' is the same as not passing it at all, that is,
+        // parent gets set from Activity.Current if any.
+        var span = Telemetry.StartActivity(request.GetType().Name, traceparent: traceparent)!;
         try
         {
             return await next();

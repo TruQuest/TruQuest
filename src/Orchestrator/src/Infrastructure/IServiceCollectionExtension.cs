@@ -250,10 +250,11 @@ public static class IServiceCollectionExtension
                                     .AddMiddlewares(middlewares =>
                                         middlewares
                                             .AddSerializer<MessageSerializer, MessageTypeResolver>()
+                                            .Add<EventTelemetryMiddleware>(MiddlewareLifetime.Singleton)
                                             .AddTypedHandlers(handlers =>
                                                 handlers
                                                     .WithHandlerLifetime(InstanceLifetime.Singleton)
-                                                    .AddHandlers(new[]
+                                                    .AddHandlers(new[] // @@TODO: Add with reflection.
                                                     {
                                                         typeof(ThingFundedEventHandler),
                                                         typeof(ThingSubmissionVerifierLotteryClosedInFailureEventHandler),
@@ -277,7 +278,7 @@ public static class IServiceCollectionExtension
                                     .WithWorkersCount(1)
                                     .AddMiddlewares(middlewares =>
                                         middlewares
-                                            .Add<TelemetryMiddleware>(MiddlewareLifetime.Singleton)
+                                            .Add<ResponseTelemetryMiddleware>(MiddlewareLifetime.Singleton)
                                             .Add<MessageConsumer>(MiddlewareLifetime.Scoped)
                                     )
                             )

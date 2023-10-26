@@ -56,6 +56,7 @@ internal class MessageConsumer : IMessageMiddleware
         }
         else
         {
+            // @@TODO!!: Handle failures!
             if (message is ArchiveThingAttachmentsProgress thingProgress)
             {
                 await _mediator.Publish(

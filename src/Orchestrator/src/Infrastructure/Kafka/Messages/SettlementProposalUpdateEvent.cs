@@ -8,7 +8,7 @@ using Application.User.Common.Models.IM;
 
 namespace Infrastructure.Kafka.Messages;
 
-internal class SettlementProposalUpdateEvent
+internal class SettlementProposalUpdateEvent : TraceableEvent
 {
     public required Guid SettlementProposalId { get; init; }
     public required SettlementProposalUpdateCategory Category { get; init; }

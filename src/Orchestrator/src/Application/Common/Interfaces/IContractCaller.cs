@@ -1,6 +1,6 @@
 using System.Numerics;
 
-using Application.Ethereum.Models.IM;
+using Application.Ethereum.Common.Models.IM;
 
 namespace Application.Common.Interfaces;
 

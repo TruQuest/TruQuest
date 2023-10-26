@@ -9,6 +9,7 @@ public class SettlementProposalUpdate : Entity, IAggregateRoot
     public long UpdateTimestamp { get; }
     public string Title { get; }
     public string? Details { get; }
+    public string? Traceparent { get; private set; }
 
     public SettlementProposalUpdate(
         Guid settlementProposalId, SettlementProposalUpdateCategory category,
@@ -21,4 +22,6 @@ public class SettlementProposalUpdate : Entity, IAggregateRoot
         Title = title;
         Details = details;
     }
+
+    public void SetTraceparent(string traceparent) => Traceparent = traceparent;
 }

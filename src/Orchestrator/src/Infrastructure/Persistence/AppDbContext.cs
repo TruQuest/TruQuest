@@ -315,6 +315,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.Property(u => u.UpdateTimestamp).IsRequired();
             builder.Property(u => u.Title).IsRequired();
             builder.Property(u => u.Details).IsRequired(false);
+            builder.Property(u => u.Traceparent).IsRequired(false);
         });
 
         modelBuilder.Entity<ThingUpdate>(builder =>
@@ -324,6 +325,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.Property(u => u.UpdateTimestamp).IsRequired();
             builder.Property(u => u.Title).IsRequired();
             builder.Property(u => u.Details).IsRequired(false);
+            builder.Property(u => u.Traceparent).IsRequired(false);
         });
 
         modelBuilder.Entity<SettlementProposalUpdate>(builder =>
@@ -333,6 +335,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.Property(u => u.UpdateTimestamp).IsRequired();
             builder.Property(u => u.Title).IsRequired();
             builder.Property(u => u.Details).IsRequired(false);
+            builder.Property(u => u.Traceparent).IsRequired(false);
         });
     }
 }

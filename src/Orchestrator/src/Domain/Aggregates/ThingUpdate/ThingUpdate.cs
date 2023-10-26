@@ -9,6 +9,7 @@ public class ThingUpdate : Entity, IAggregateRoot
     public long UpdateTimestamp { get; }
     public string Title { get; }
     public string? Details { get; }
+    public string? Traceparent { get; private set; }
 
     public ThingUpdate(
         Guid thingId, ThingUpdateCategory category, long updateTimestamp,
@@ -21,4 +22,6 @@ public class ThingUpdate : Entity, IAggregateRoot
         Title = title;
         Details = details;
     }
+
+    public void SetTraceparent(string traceparent) => Traceparent = traceparent;
 }

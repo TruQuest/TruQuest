@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 using Domain.Base;
 
 namespace Domain.Aggregates;
@@ -18,6 +20,7 @@ public class DeferredTask : Entity, IAggregateRoot
 
     public void SetPayload(Dictionary<string, object> payload)
     {
+        Debug.Assert(payload.ContainsKey("traceparent"));
         _payload = payload;
     }
 }

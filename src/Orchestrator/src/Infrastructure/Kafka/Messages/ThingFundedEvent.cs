@@ -8,7 +8,7 @@ using Application.Thing.Commands.InitVerifierLottery;
 
 namespace Infrastructure.Kafka.Messages;
 
-internal class ThingFundedEvent
+internal class ThingFundedEvent : TraceableEvent
 {
     public required string UserId { get; init; }
     public required decimal Stake { get; init; }

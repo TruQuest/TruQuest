@@ -12,10 +12,8 @@ internal class WatchListQueryable : Queryable, IWatchListQueryable
 {
     private new readonly AppDbContext _dbContext;
 
-    public WatchListQueryable(
-        AppDbContext dbContext,
-        ISharedTxnScope sharedTxnScope
-    ) : base(dbContext, sharedTxnScope)
+    public WatchListQueryable(AppDbContext dbContext, ISharedTxnScope sharedTxnScope) :
+        base(dbContext, sharedTxnScope)
     {
         _dbContext = dbContext;
     }

@@ -44,31 +44,63 @@ public static class Telemetry
     }
 
     public static Activity? StartActivity(
-        [CallerMemberName] string name = "", ActivityKind kind = ActivityKind.Internal
-    ) => ActivitySource.StartActivity(name, kind);
+        string name,
+        [CallerFilePath] string callerFilePath = "",
+        [CallerMemberName] string callerMemberName = "",
+        ActivityKind kind = ActivityKind.Internal
+    )
+    {
+        var activityName = $"{Path.GetFileNameWithoutExtension(callerFilePath)}::{callerMemberName}::{name}";
+        return ActivitySource.StartActivity(activityName, kind);
+    }
 
     public static Activity? StartActivity(
-        string name, ActivityKind kind, ActivityContext parentContext,
-        IEnumerable<KeyValuePair<string, object?>>? tags = null,
-        IEnumerable<ActivityLink>? links = null, DateTimeOffset startTime = default
-    ) => ActivitySource.StartActivity(name, kind, parentContext, tags, links, startTime);
+        string name,
+        ActivityContext parentContext,
+        [CallerFilePath] string callerFilePath = "",
+        [CallerMemberName] string callerMemberName = "",
+        ActivityKind kind = ActivityKind.Internal
+    )
+    {
+        var activityName = $"{Path.GetFileNameWithoutExtension(callerFilePath)}::{callerMemberName}::{name}";
+        return ActivitySource.StartActivity(activityName, kind, parentContext);
+    }
 
     public static Activity? StartActivity(
-        string name, ActivityKind kind, string? parentId,
-        IEnumerable<KeyValuePair<string, object?>>? tags = null,
-        IEnumerable<ActivityLink>? links = null, DateTimeOffset startTime = default
-    ) => ActivitySource.StartActivity(name, kind, parentId, tags, links, startTime);
-
-    public static Activity? StartActivity(
-        ActivityKind kind, ActivityContext parentContext = default,
-        IEnumerable<KeyValuePair<string, object?>>? tags = null,
-        IEnumerable<ActivityLink>? links = null, DateTimeOffset startTime = default,
-        [CallerMemberName] string name = ""
-    ) => ActivitySource.StartActivity(kind, parentContext, tags, links, startTime, name);
+        string name,
+        string? traceparent,
+        [CallerFilePath] string callerFilePath = "",
+        [CallerMemberName] string callerMemberName = "",
+        ActivityKind kind = ActivityKind.Internal
+    )
+    {
+        var activityName = $"{Path.GetFileNameWithoutExtension(callerFilePath)}::{callerMemberName}::{name}";
+        return ActivitySource.StartActivity(activityName, kind, traceparent);
+    }
 }
 
 public static class ActivityExtension
 {
+    public static string GetTraceparent(this Activity span)
+    {
+        // @@TODO: Construct traceparent manually.
+        var carrier = new Dictionary<string, string>();
+        Telemetry.PropagateContextThrough(span.Context, carrier, (carrier, key, value) =>
+        {
+            carrier[key] = value;
+        });
+
+        return carrier["traceparent"];
+    }
+
+    public static void AddTraceparentTo(this Activity span, Dictionary<string, object> carrier)
+    {
+        Telemetry.PropagateContextThrough(span.Context, carrier, (carrier, key, value) =>
+        {
+            carrier[key] = value;
+        });
+    }
+
     public static Activity SetKafkaTags(this Activity span, string conversationId, string messageKey, string destinationName)
     {
         return span

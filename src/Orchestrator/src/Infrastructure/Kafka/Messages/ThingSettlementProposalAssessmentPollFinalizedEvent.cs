@@ -9,7 +9,7 @@ using Application.Settlement.Commands.FinalizeAssessmentPoll;
 
 namespace Infrastructure.Kafka.Messages;
 
-internal class ThingSettlementProposalAssessmentPollFinalizedEvent
+internal class ThingSettlementProposalAssessmentPollFinalizedEvent : TraceableEvent
 {
     public required Guid SettlementProposalId { get; init; }
     public required int Decision { get; init; }

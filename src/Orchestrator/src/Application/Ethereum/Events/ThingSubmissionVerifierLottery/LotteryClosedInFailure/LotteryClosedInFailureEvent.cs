@@ -2,13 +2,12 @@ using MediatR;
 
 using Domain.Aggregates.Events;
 
+using Application.Ethereum.Common.Models.IM;
+
 namespace Application.Ethereum.Events.ThingSubmissionVerifierLottery.LotteryClosedInFailure;
 
-public class LotteryClosedInFailureEvent : INotification
+public class LotteryClosedInFailureEvent : BaseContractEvent, INotification
 {
-    public required long BlockNumber { get; init; }
-    public required int TxnIndex { get; init; }
-    public required string TxnHash { get; init; }
     public required byte[] ThingId { get; init; }
     public required int RequiredNumVerifiers { get; init; }
     public required int JoinedNumVerifiers { get; init; }
@@ -34,11 +33,16 @@ internal class LotteryClosedInFailureEventHandler : INotificationHandler<Lottery
             thingId: new Guid(@event.ThingId),
             type: ThingEventType.SubmissionVerifierLotteryClosedInFailure
         );
-        lotteryClosedEvent.SetPayload(new()
+
+        var payload = new Dictionary<string, object>()
         {
             ["requiredNumVerifiers"] = @event.RequiredNumVerifiers,
             ["joinedNumVerifiers"] = @event.JoinedNumVerifiers
-        });
+        };
+
+        Telemetry.CurrentActivity!.AddTraceparentTo(payload);
+        lotteryClosedEvent.SetPayload(payload);
+
         _actionableThingRelatedEventRepository.Create(lotteryClosedEvent);
 
         await _actionableThingRelatedEventRepository.SaveChanges();

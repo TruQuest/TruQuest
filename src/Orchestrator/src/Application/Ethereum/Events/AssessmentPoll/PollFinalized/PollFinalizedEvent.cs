@@ -2,13 +2,12 @@ using MediatR;
 
 using Domain.Aggregates.Events;
 
+using Application.Ethereum.Common.Models.IM;
+
 namespace Application.Ethereum.Events.AssessmentPoll.PollFinalized;
 
-public class PollFinalizedEvent : INotification
+public class PollFinalizedEvent : BaseContractEvent, INotification
 {
-    public required long BlockNumber { get; init; }
-    public required int TxnIndex { get; init; }
-    public required string TxnHash { get; init; }
     public required byte[] ThingId { get; init; }
     public required byte[] SettlementProposalId { get; init; }
     public required int Decision { get; init; }
@@ -35,14 +34,19 @@ internal class PollFinalizedEventHandler : INotificationHandler<PollFinalizedEve
             thingId: new Guid(@event.ThingId),
             type: ThingEventType.SettlementProposalAssessmentPollFinalized
         );
-        pollFinalizedEvent.SetPayload(new()
+
+        var payload = new Dictionary<string, object>()
         {
             ["settlementProposalId"] = new Guid(@event.SettlementProposalId),
             ["decision"] = @event.Decision,
             ["voteAggIpfsCid"] = @event.VoteAggIpfsCid,
             ["rewardedVerifiers"] = @event.RewardedVerifiers,
             ["slashedVerifiers"] = @event.SlashedVerifiers,
-        });
+        };
+
+        Telemetry.CurrentActivity!.AddTraceparentTo(payload);
+        pollFinalizedEvent.SetPayload(payload);
+
         _actionableThingRelatedEventRepository.Create(pollFinalizedEvent);
 
         await _actionableThingRelatedEventRepository.SaveChanges();
