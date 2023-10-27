@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,7 +8,6 @@ using OpenTelemetry.Trace;
 using Domain.Results;
 using Application;
 using Application.Common.Errors;
-using Application.Common.Models.IM;
 
 namespace Infrastructure;
 
@@ -27,23 +24,14 @@ public class ExceptionHandlingBehavior<TRequest, TResponse> : IPipelineBehavior<
 
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
     {
-        string? traceparent = null;
-        if (request is DeferredTaskCommand command) traceparent = command.Traceparent;
-
-        // @@NOTE: Passing null 'traceparent' is the same as not passing it at all, that is,
-        // parent gets set from Activity.Current if any.
-        var span = Telemetry.StartActivity(request.GetType().Name, traceparent: traceparent)!;
         try
         {
             return await next();
         }
-        catch (PostgresException ex) when
-        (
-            ex.SqlState == PostgresErrorCodes.SerializationFailure
-        )
+        catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.SerializationFailure)
         {
             _logger.LogWarning(ex, ex.Message);
-            span.RecordException(ex);
+            Telemetry.CurrentActivity!.RecordException(ex);
 
             throw;
         }
@@ -54,7 +42,7 @@ public class ExceptionHandlingBehavior<TRequest, TResponse> : IPipelineBehavior<
         )
         {
             _logger.LogWarning(pgEx, pgEx.Message);
-            span.RecordException(pgEx);
+            Telemetry.CurrentActivity!.RecordException(pgEx);
 
             throw pgEx;
         }
@@ -67,23 +55,19 @@ public class ExceptionHandlingBehavior<TRequest, TResponse> : IPipelineBehavior<
         )
         {
             _logger.LogWarning(pgEx, pgEx.Message);
-            span.RecordException(pgEx);
+            Telemetry.CurrentActivity!.RecordException(pgEx);
 
             throw pgEx;
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, ex.Message);
-            span.RecordException(ex);
+            Telemetry.CurrentActivity!.RecordException(ex);
 
             return new TResponse
             {
                 Error = new ServerError(ex.Message)
             };
-        }
-        finally
-        {
-            span.Dispose();
         }
     }
 }

@@ -5,33 +5,36 @@ using KafkaFlow.TypedHandler;
 
 using Domain.Aggregates;
 using Application;
-using Application.Thing.Commands.FinalizeAcceptancePoll;
+using Application.Settlement.Commands.FinalizeAssessmentPoll;
 
-namespace Infrastructure.Kafka.Messages;
+namespace Infrastructure.Kafka.Events;
 
-internal class ThingAcceptancePollFinalizedEvent : TraceableEvent
+internal class ThingSettlementProposalAssessmentPollFinalizedEvent : TraceableEvent
 {
+    public required Guid SettlementProposalId { get; init; }
     public required int Decision { get; init; }
     public required string VoteAggIpfsCid { get; init; }
     public List<string> RewardedVerifiers { get; init; } = new();
     public List<string> SlashedVerifiers { get; init; } = new();
 }
 
-internal class ThingAcceptancePollFinalizedEventHandler : IMessageHandler<ThingAcceptancePollFinalizedEvent>
+internal class ThingSettlementProposalAssessmentPollFinalizedEventHandler :
+    IMessageHandler<ThingSettlementProposalAssessmentPollFinalizedEvent>
 {
     private readonly SenderWrapper _sender;
 
-    public ThingAcceptancePollFinalizedEventHandler(SenderWrapper sender)
+    public ThingSettlementProposalAssessmentPollFinalizedEventHandler(SenderWrapper sender)
     {
         _sender = sender;
     }
 
-    public Task Handle(IMessageContext context, ThingAcceptancePollFinalizedEvent message) =>
+    public Task Handle(IMessageContext context, ThingSettlementProposalAssessmentPollFinalizedEvent message) =>
         _sender.Send(
-            new FinalizeAcceptancePollCommand
+            new FinalizeAssessmentPollCommand
             {
                 ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
-                Decision = (SubmissionEvaluationDecision)message.Decision,
+                SettlementProposalId = message.SettlementProposalId,
+                Decision = (AssessmentDecision)message.Decision,
                 VoteAggIpfsCid = message.VoteAggIpfsCid,
                 RewardedVerifiers = message.RewardedVerifiers,
                 SlashedVerifiers = message.SlashedVerifiers

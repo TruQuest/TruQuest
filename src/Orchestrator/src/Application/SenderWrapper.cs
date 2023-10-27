@@ -7,6 +7,7 @@ using MediatR;
 
 using Application.Common.Attributes;
 using Application.Common.Interfaces;
+using Application.Common.Models.IM;
 
 namespace Application;
 
@@ -33,6 +34,13 @@ public class SenderWrapper
         bool addToAdditionalSinks = false
     )
     {
+        string? traceparent = null;
+        if (request is DeferredTaskCommand command) traceparent = command.Traceparent;
+
+        // @@NOTE: Passing null 'traceparent' is the same as not passing it at all, that is,
+        // parent gets set from Activity.Current if any.
+        using var span = Telemetry.StartActivity(request.GetType().FullName!, traceparent: traceparent)!;
+
         var attr = request.GetType().GetCustomAttribute<ExecuteInTxnAttribute>();
         if (attr != null)
         {
@@ -44,8 +52,8 @@ public class SenderWrapper
                 {
                     if (serviceProvider != null)
                     {
-                        // @@NOTE: 'serviceProvider' is not null when called by XXXEndpoints or Sut.SendRequest, and
-                        // null – when called from Kafka's IMessageHandler.
+                        // @@NOTE: 'serviceProvider' is not null when called by XXXEndpoints, Hub, or Sut.SendRequest, and
+                        // null – when called from Kafka's IMessageHandler or BlockMinedEvent.
                         var authenticationContext = scope
                             .ServiceProvider
                             .GetRequiredService<IAuthenticationContext>();
@@ -75,10 +83,7 @@ public class SenderWrapper
 
                     if (addToAdditionalSinks)
                     {
-                        foreach (var sink in _additionalSinks)
-                        {
-                            await sink.Add(request);
-                        }
+                        foreach (var sink in _additionalSinks) await sink.Add(request);
                     }
 
                     return response;
@@ -129,10 +134,7 @@ public class SenderWrapper
 
             if (addToAdditionalSinks)
             {
-                foreach (var sink in _additionalSinks)
-                {
-                    await sink.Add(request);
-                }
+                foreach (var sink in _additionalSinks) await sink.Add(request);
             }
 
             return response;

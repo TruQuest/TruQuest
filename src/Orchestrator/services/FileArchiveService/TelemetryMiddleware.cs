@@ -17,7 +17,7 @@ internal class TelemetryMiddleware : IMessageMiddleware
         );
 
         using var span = Telemetry.StartActivity(
-            Encoding.UTF8.GetString(context.Headers["trq.requestType"]),
+            "Messages.Requests." + Encoding.UTF8.GetString(context.Headers["trq.requestType"]),
             parentContext: parentSpanContext,
             kind: ActivityKind.Consumer
         );

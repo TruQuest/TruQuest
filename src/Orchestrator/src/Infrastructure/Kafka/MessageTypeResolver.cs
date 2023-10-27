@@ -4,7 +4,7 @@ using KafkaFlow;
 
 using Domain.Aggregates.Events;
 
-using Infrastructure.Kafka.Messages;
+using Infrastructure.Kafka.Events;
 
 namespace Infrastructure.Kafka;
 

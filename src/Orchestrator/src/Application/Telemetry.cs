@@ -50,8 +50,11 @@ public static class Telemetry
         ActivityKind kind = ActivityKind.Internal
     )
     {
-        var activityName = $"{Path.GetFileNameWithoutExtension(callerFilePath)}::{callerMemberName}::{name}";
-        return ActivitySource.StartActivity(activityName, kind);
+        var span = ActivitySource.StartActivity(name, kind);
+        span?.AddTag("caller.file.path", callerFilePath);
+        span?.AddTag("caller.member.name", callerMemberName);
+
+        return span;
     }
 
     public static Activity? StartActivity(
@@ -62,8 +65,11 @@ public static class Telemetry
         ActivityKind kind = ActivityKind.Internal
     )
     {
-        var activityName = $"{Path.GetFileNameWithoutExtension(callerFilePath)}::{callerMemberName}::{name}";
-        return ActivitySource.StartActivity(activityName, kind, parentContext);
+        var span = ActivitySource.StartActivity(name, kind, parentContext);
+        span?.AddTag("caller.file.path", callerFilePath);
+        span?.AddTag("caller.member.name", callerMemberName);
+
+        return span;
     }
 
     public static Activity? StartActivity(
@@ -74,8 +80,11 @@ public static class Telemetry
         ActivityKind kind = ActivityKind.Internal
     )
     {
-        var activityName = $"{Path.GetFileNameWithoutExtension(callerFilePath)}::{callerMemberName}::{name}";
-        return ActivitySource.StartActivity(activityName, kind, traceparent);
+        var span = ActivitySource.StartActivity(name, kind, traceparent);
+        span?.AddTag("caller.file.path", callerFilePath);
+        span?.AddTag("caller.member.name", callerMemberName);
+
+        return span;
     }
 }
 

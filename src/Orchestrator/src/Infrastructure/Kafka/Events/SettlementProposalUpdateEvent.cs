@@ -6,7 +6,7 @@ using Application;
 using Application.User.Commands.NotifyWatchers;
 using Application.User.Common.Models.IM;
 
-namespace Infrastructure.Kafka.Messages;
+namespace Infrastructure.Kafka.Events;
 
 internal class SettlementProposalUpdateEvent : TraceableEvent
 {

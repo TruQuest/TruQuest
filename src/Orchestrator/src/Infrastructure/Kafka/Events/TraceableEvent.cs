@@ -1,4 +1,4 @@
-namespace Infrastructure.Kafka.Messages;
+namespace Infrastructure.Kafka.Events;
 
 internal abstract class TraceableEvent
 {

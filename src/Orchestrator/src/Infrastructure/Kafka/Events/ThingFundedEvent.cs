@@ -6,7 +6,7 @@ using KafkaFlow.TypedHandler;
 using Application;
 using Application.Thing.Commands.InitVerifierLottery;
 
-namespace Infrastructure.Kafka.Messages;
+namespace Infrastructure.Kafka.Events;
 
 internal class ThingFundedEvent : TraceableEvent
 {

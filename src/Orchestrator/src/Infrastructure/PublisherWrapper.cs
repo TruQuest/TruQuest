@@ -54,7 +54,7 @@ public class PublisherWrapper
                     // for events we must wait for more confirmations than when we send a txn.
                     traceparent = _memoryCache.Get<string>(contractEvent.TxnHash);
                 }
-                span = Telemetry.StartActivity(@event.GetType().Name, traceparent: traceparent)!;
+                span = Telemetry.StartActivity(@event.GetType().FullName!, traceparent: traceparent)!;
             }
 
             var attr = @event.GetType().GetCustomAttribute<ExecuteInTxnAttribute>();

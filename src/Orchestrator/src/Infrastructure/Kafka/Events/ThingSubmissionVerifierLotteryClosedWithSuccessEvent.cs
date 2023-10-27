@@ -6,7 +6,7 @@ using KafkaFlow.TypedHandler;
 using Application;
 using Application.Thing.Commands.PrepareForAcceptancePoll;
 
-namespace Infrastructure.Kafka.Messages;
+namespace Infrastructure.Kafka.Events;
 
 internal class ThingSubmissionVerifierLotteryClosedWithSuccessEvent : TraceableEvent
 {

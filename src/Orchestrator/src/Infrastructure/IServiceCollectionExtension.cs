@@ -28,7 +28,7 @@ using Infrastructure.Persistence.Repositories;
 using Infrastructure.Files;
 using Infrastructure.Persistence.Repositories.Events;
 using Infrastructure.Kafka;
-using Infrastructure.Kafka.Messages;
+using Infrastructure.Kafka.Events;
 using Infrastructure.Persistence.Queryables;
 using Infrastructure.Ethereum.ERC4337;
 

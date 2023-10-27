@@ -6,7 +6,7 @@ using KafkaFlow.TypedHandler;
 using Application;
 using Application.Thing.Commands.ArchiveDueToFailedLottery;
 
-namespace Infrastructure.Kafka.Messages;
+namespace Infrastructure.Kafka.Events;
 
 internal class ThingSubmissionVerifierLotteryClosedInFailureEvent : TraceableEvent
 {
