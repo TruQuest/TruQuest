@@ -102,6 +102,9 @@ namespace Infrastructure.Persistence.Migrations.Event
                         .HasColumnType("integer");
 
                     b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("WalletAddress")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -147,6 +150,9 @@ namespace Infrastructure.Persistence.Migrations.Event
                         .HasColumnType("integer");
 
                     b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("WalletAddress")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -193,6 +199,9 @@ namespace Infrastructure.Persistence.Migrations.Event
                         .HasColumnType("text");
 
                     b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("WalletAddress")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -236,6 +245,9 @@ namespace Infrastructure.Persistence.Migrations.Event
                         .HasColumnType("text");
 
                     b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("WalletAddress")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -325,6 +337,9 @@ namespace Infrastructure.Persistence.Migrations.Event
                         .HasColumnType("text");
 
                     b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("WalletAddress")
                         .IsRequired()
                         .HasColumnType("text");
 

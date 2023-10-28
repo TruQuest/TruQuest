@@ -28,7 +28,7 @@ public class UserOperationService
     }
 
     public async Task<UserOperationError?> SendBatch(
-        Account owner,
+        Account signer,
         List<(String TargetAddress, FunctionMessage Message)> actions,
         int confirmations = 1
     )
@@ -49,7 +49,7 @@ public class UserOperationService
 
             var userOpBuilder = _serviceProvider.GetRequiredService<UserOperationBuilder>()!;
             userOpBuilder = userOpBuilder
-                .From(owner)
+                .From(signer)
                 .WithEstimatedGasLimitsMultipliers(
                     preVerificationGasMultiplier: preVerificationGasMultiplier,
                     verificationGasLimitMultiplier: verificationGasLimitMultiplier,
@@ -124,9 +124,9 @@ public class UserOperationService
     }
 
     public Task<UserOperationError?> Send(
-        Account owner, string targetAddress, FunctionMessage message, int confirmations = 1
+        Account signer, string targetAddress, FunctionMessage message, int confirmations = 1
     ) => SendBatch(
-        owner: owner,
+        signer: signer,
         actions: new() { (targetAddress, message) },
         confirmations: confirmations
     );

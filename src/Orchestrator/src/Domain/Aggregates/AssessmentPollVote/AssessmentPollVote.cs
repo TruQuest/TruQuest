@@ -13,6 +13,7 @@ public class AssessmentPollVote : Entity, IAggregateRoot
 
     public Guid SettlementProposalId { get; }
     public string VoterId { get; }
+    public string VoterWalletAddress { get; }
     public long CastedAtMs { get; }
     public VoteDecision Decision { get; }
     public string? Reason { get; }
@@ -20,12 +21,13 @@ public class AssessmentPollVote : Entity, IAggregateRoot
     public string IpfsCid { get; }
 
     public AssessmentPollVote(
-        Guid settlementProposalId, string voterId, long castedAtMs,
+        Guid settlementProposalId, string voterId, string voterWalletAddress, long castedAtMs,
         VoteDecision decision, string? reason, string voterSignature, string ipfsCid
     )
     {
         SettlementProposalId = settlementProposalId;
         VoterId = voterId;
+        VoterWalletAddress = voterWalletAddress;
         CastedAtMs = castedAtMs;
         Decision = decision;
         Reason = reason;

@@ -22,12 +22,13 @@ public class PrepareForAcceptancePollCommand : IRequest<VoidResult>
     public required string UserXorData { get; init; }
     public required string HashOfL1EndBlock { get; init; }
     public required long Nonce { get; init; }
-    public required List<string> WinnerIds { get; init; }
+    public required List<string> WinnerWalletAddresses { get; init; }
 }
 
 internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareForAcceptancePollCommand, VoidResult>
 {
     private readonly IThingRepository _thingRepository;
+    private readonly IUserRepository _userRepository;
     private readonly ITaskRepository _taskRepository;
     private readonly IThingUpdateRepository _thingUpdateRepository;
     private readonly IWatchedItemRepository _watchedItemRepository;
@@ -35,6 +36,7 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
 
     public PrepareForAcceptancePollCommandHandler(
         IThingRepository thingRepository,
+        IUserRepository userRepository,
         ITaskRepository taskRepository,
         IThingUpdateRepository thingUpdateRepository,
         IWatchedItemRepository watchedItemRepository,
@@ -42,6 +44,7 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
     )
     {
         _thingRepository = thingRepository;
+        _userRepository = userRepository;
         _taskRepository = taskRepository;
         _thingUpdateRepository = thingUpdateRepository;
         _watchedItemRepository = watchedItemRepository;
@@ -54,7 +57,9 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
         if (thing.State == ThingState.FundedAndVerifierLotteryInitiated)
         {
             thing.SetState(ThingState.VerifiersSelectedAndPollInitiated);
-            thing.AddVerifiers(command.WinnerIds);
+            var userIds = await _userRepository.GetUserIdsByWalletAddresses(command.WinnerWalletAddresses); // @@TODO: Use queryable.
+            Debug.Assert(userIds.Count == command.WinnerWalletAddresses.Count);
+            thing.AddVerifiers(userIds);
 
             var lotteryInitBlock = await _contractCaller.GetThingSubmissionVerifierLotteryInitBlock(thing.Id.ToByteArray());
             Debug.Assert(lotteryInitBlock < 0);
@@ -80,7 +85,7 @@ internal class PrepareForAcceptancePollCommandHandler : IRequestHandler<PrepareF
             var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
             _watchedItemRepository.Add(
-                command.WinnerIds
+                userIds
                     .Select(userId => new WatchedItem(
                         userId: userId,
                         itemType: WatchedItemType.Thing,

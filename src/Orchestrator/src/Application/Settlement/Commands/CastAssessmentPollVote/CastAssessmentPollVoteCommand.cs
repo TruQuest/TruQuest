@@ -72,12 +72,11 @@ internal class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssess
 
         var recoveredAddress = _signer.RecoverFromNewAssessmentPollVoteMessage(command.Input, command.Signature);
 
-        var walletAddress = await _contractCaller.GetWalletAddressFor(recoveredAddress);
-        if (walletAddress.Substring(2).ToLower() != _currentPrincipal.Id)
+        if (_currentPrincipal.SignerAddress != recoveredAddress)
         {
             return new()
             {
-                Error = new VoteError("Not the owner of the wallet")
+                Error = new VoteError("Invalid request")
             };
         }
 
@@ -94,20 +93,22 @@ internal class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssess
             };
         }
 
-        var orchestratorSig = _signer.SignNewAssessmentPollVote(
+        var orchestratorSignature = _signer.SignNewAssessmentPollVote(
             command.Input,
-            walletAddress: walletAddress,
-            ownerAddress: recoveredAddress,
-            ownerSignature: command.Signature
+            userId: _currentPrincipal.Id!,
+            walletAddress: _currentPrincipal.WalletAddress!,
+            signerAddress: _currentPrincipal.SignerAddress!,
+            signature: command.Signature
         );
 
         var uploadResult = await _fileStorage.UploadJson(new
         {
             Vote = command.Input.ToMessageForSigning(),
-            WalletAddress = walletAddress,
-            OwnerAddress = recoveredAddress,
-            OwnerSignature = command.Signature,
-            OrchestratorSignature = orchestratorSig
+            UserId = _currentPrincipal.Id!,
+            WalletAddress = _currentPrincipal.WalletAddress!,
+            SignerAddress = _currentPrincipal.SignerAddress!,
+            Signature = command.Signature,
+            OrchestratorSignature = orchestratorSignature
         });
         if (uploadResult.IsError)
         {
@@ -120,6 +121,7 @@ internal class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssess
         var vote = new AssessmentPollVote(
             settlementProposalId: command.Input.SettlementProposalId.Value,
             voterId: _currentPrincipal.Id!,
+            voterWalletAddress: _currentPrincipal.WalletAddress!,
             castedAtMs: castedAtUtc.ToUnixTimeMilliseconds(),
             decision: (AssessmentPollVote.VoteDecision)command.Input.Decision,
             reason: command.Input.Reason != string.Empty ? command.Input.Reason : null,

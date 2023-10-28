@@ -10,10 +10,11 @@ using Domain.Results;
 
 using Application.Common.Interfaces;
 using Application.Common.Misc;
+using Application.Common.Models.IM;
 
 namespace Application.Settlement.Commands.CloseAssessmentPoll;
 
-internal class CloseAssessmentPollCommand : IRequest<VoidResult>
+internal class CloseAssessmentPollCommand : DeferredTaskCommand, IRequest<VoidResult>
 {
     public required Guid ThingId { get; init; }
     public required Guid SettlementProposalId { get; init; }
@@ -65,7 +66,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
             command.ThingId, command.SettlementProposalId
         );
 
-        var orchestratorSig = _signer.SignAssessmentPollVoteAgg(
+        var orchestratorSignature = _signer.SignAssessmentPollVoteAgg(
             command.ThingId, command.SettlementProposalId,
             (ulong)command.EndBlock, offChainVotes, castedVoteEvents
         );
@@ -74,7 +75,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
         {
             command.ThingId,
             command.SettlementProposalId,
-            command.EndBlock,
+            L1EndBlock = command.EndBlock,
             OffChainVotes = offChainVotes
                 .Select(v => new
                 {
@@ -83,14 +84,15 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
             OnChainVotes = castedVoteEvents
                 .Select(v => new
                 {
+                    v.TxnHash,
                     v.BlockNumber,
                     v.TxnIndex,
-                    v.L1BlockNumber,
-                    v.UserId,
+                    UserId = v.UserId!,
+                    v.WalletAddress,
                     Decision = v.Decision.GetString(),
                     Reason = v.Reason ?? string.Empty
                 }),
-            OrchestratorSignature = orchestratorSig
+            OrchestratorSignature = orchestratorSignature
         });
 
         if (result.IsError)
@@ -110,7 +112,8 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
         {
             accountedVotes.Add(new()
             {
-                VoterId = onChainVote.UserId,
+                VoterId = onChainVote.UserId!,
+                VoterWalletAddress = onChainVote.WalletAddress,
                 VoteDecision = (AccountedVote.Decision)onChainVote.Decision
             });
         }
@@ -123,21 +126,22 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
             accountedVotes.Add(new()
             {
                 VoterId = offChainVote.VoterId,
+                VoterWalletAddress = offChainVote.VoterWalletAddress,
                 VoteDecision = (AccountedVote.Decision)offChainVote.Decision
             });
         }
 
-        var verifiers = await _contractCaller.GetVerifiersForProposal(
+        var verifierAddresses = await _contractCaller.GetVerifiersForProposal(
             command.ThingId.ToByteArray(),
             command.SettlementProposalId.ToByteArray()
         );
-        var verifiersIndexed = verifiers
-            .Select((verifier, i) => (VerifierId: verifier.Substring(2).ToLower(), Index: i))
+        var verifierAddressesIndexed = verifierAddresses
+            .Select((address, i) => (Address: address, Index: i))
             .ToList();
-        _logger.LogDebug("Proposal {ProposalId} Poll: {NumVerifiers} verifiers", command.SettlementProposalId, verifiers.Count());
+        _logger.LogDebug("Proposal {ProposalId} Poll: {NumVerifiers} verifiers", command.SettlementProposalId, verifierAddresses.Count());
 
-        var notVotedVerifierIndices = verifiersIndexed
-            .Where(vi => accountedVotes.SingleOrDefault(v => v.VoterId == vi.VerifierId) == null)
+        var notVotedVerifierIndices = verifierAddressesIndexed
+            .Where(vi => accountedVotes.SingleOrDefault(v => v.VoterWalletAddress == vi.Address) == null)
             .Select(vi => (ulong)vi.Index)
             .ToList();
 
@@ -148,7 +152,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
 
         int votingVolumeThresholdPercent = await _contractCaller.GetThingAssessmentPollVotingVolumeThresholdPercent();
 
-        var requiredVoterCount = Math.Ceiling(votingVolumeThresholdPercent / 100f * verifiers.Count());
+        var requiredVoterCount = Math.Ceiling(votingVolumeThresholdPercent / 100f * verifierAddresses.Count());
         _logger.LogDebug("Required voter count: {VoterCount}", requiredVoterCount);
 
         if (accountedVotes.Count < requiredVoterCount)
@@ -156,7 +160,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
             _logger.LogInformation(
                 "Proposal {ProposalId} Lottery: Insufficient voting volume. " +
                 "Required at least {RequiredVoterCount} voters out of {NumVerifiers} to vote; Got {ActualVoterCount}",
-                command.SettlementProposalId, requiredVoterCount, verifiers.Count(), accountedVotes.Count
+                command.SettlementProposalId, requiredVoterCount, verifierAddresses.Count(), accountedVotes.Count
             );
             await _contractCaller.FinalizeAssessmentPollForProposalAsUnsettledDueToInsufficientVotingVolume(
                 command.ThingId.ToByteArray(), command.SettlementProposalId.ToByteArray(),
@@ -195,7 +199,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
         var verifiersThatDisagreedWithAcceptedDecisionDirection = votesGroupedByDecision
             .Where(v => v.Key.GetScore() != acceptedDecision.Key.GetScore())
             .SelectMany(v => v)
-            .Select(v => v.VoterId)
+            .Select(v => v.VoterWalletAddress)
             .ToList();
 
         _logger.LogInformation(
@@ -209,9 +213,9 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
             votesGroupedByDecision.SingleOrDefault(v => v.Key == AccountedVote.Decision.HardDecline)?.Count() ?? 0
         );
 
-        var indicesOfVerifiersThatDisagreedWithAcceptedDecisionDirection = verifiersIndexed
+        var indicesOfVerifiersThatDisagreedWithAcceptedDecisionDirection = verifierAddressesIndexed
             .Where(vi => verifiersThatDisagreedWithAcceptedDecisionDirection
-                .SingleOrDefault(verifierId => verifierId == vi.VerifierId) != null
+                .SingleOrDefault(verifier => verifier == vi.Address) != null
             )
             .Select(vi => (ulong)vi.Index);
 

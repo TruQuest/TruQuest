@@ -12,11 +12,12 @@ using Domain.Aggregates.Events;
 using Application.Common.Interfaces;
 using Application.Common.Misc;
 using Application.Common.Attributes;
+using Application.Common.Models.IM;
 
 namespace Application.Settlement.Commands.CloseVerifierLottery;
 
 [ExecuteInTxn]
-internal class CloseVerifierLotteryCommand : IRequest<VoidResult>
+internal class CloseVerifierLotteryCommand : DeferredTaskCommand, IRequest<VoidResult>
 {
     public required Guid ThingId { get; init; }
     public required Guid SettlementProposalId { get; init; }
@@ -78,6 +79,10 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
             command.ThingId, command.SettlementProposalId
         );
 
+        // @@NOTE: User could only have claimed a spot if he was one of the thing verifiers, meaning,
+        // he must have joined and won the thing lottery before, meaning, he must be a registered user,
+        // since unregistered users are currently excluded.
+
         var winnerClaimants = spotClaimedEvents
             .Select(
                 (e, i) =>
@@ -90,7 +95,8 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
                     ));
 
                     return (
-                        e.UserId,
+                        UserId: e.UserId!,
+                        e.WalletAddress,
                         Index: i,
                         Nonce: e.Nonce!.Value
                     );
@@ -108,7 +114,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
         foreach (var winnerClaimant in winnerClaimants)
         {
             var claimantAtIndex = spotClaimants.ElementAtOrDefault(new Index(winnerClaimant.Index));
-            if (claimantAtIndex?.Substring(2).ToLower() != winnerClaimant.UserId)
+            if (claimantAtIndex != winnerClaimant.WalletAddress)
             {
                 throw new Exception("Incorrect claimant index selection");
             }
@@ -137,20 +143,25 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
         var winnerParticipants = joinedEvents
             .Select((e, i) =>
             {
-                e.SetNonce((long)(
-                    (
-                        new BigInteger(e.UserData!.HexToByteArray(), isUnsigned: true, isBigEndian: true) ^
-                        new BigInteger(command.UserXorData, isUnsigned: true, isBigEndian: true)
-                    ) % maxNonce
-                ));
+                if (e.UserId != null)
+                {
+                    e.SetNonce((long)(
+                        (
+                            new BigInteger(e.UserData.HexToByteArray(), isUnsigned: true, isBigEndian: true) ^
+                            new BigInteger(command.UserXorData, isUnsigned: true, isBigEndian: true)
+                        ) % maxNonce
+                    ));
+                }
 
                 return (
                     e.UserId,
+                    e.WalletAddress,
                     Index: i,
-                    Nonce: e.Nonce!.Value
+                    e.Nonce
                 );
             })
-            .OrderBy(e => Math.Abs(nonce - e.Nonce))
+            .Where(e => e.Nonce != null)
+            .OrderBy(e => Math.Abs(nonce - e.Nonce!.Value))
                 .ThenBy(e => e.Index)
             .Take(numRequiredParticipants)
             .OrderBy(e => e.Index)
@@ -165,7 +176,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
             foreach (var winnerParticipant in winnerParticipants)
             {
                 var participantAtIndex = participants.ElementAtOrDefault(new Index(winnerParticipant.Index));
-                if (participantAtIndex?.Substring(2).ToLower() != winnerParticipant.UserId)
+                if (participantAtIndex != winnerParticipant.WalletAddress)
                 {
                     throw new Exception("Incorrect winner index selection");
                 }

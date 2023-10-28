@@ -11,7 +11,7 @@ public class ClaimedLotterySpotEvent : BaseContractEvent, INotification
 {
     public required byte[] ThingId { get; init; }
     public required byte[] SettlementProposalId { get; init; }
-    public required string UserId { get; init; }
+    public required string WalletAddress { get; init; }
     public required long L1BlockNumber { get; init; }
 }
 
@@ -32,7 +32,7 @@ internal class ClaimedLotterySpotEventHandler : INotificationHandler<ClaimedLott
     public async Task Handle(ClaimedLotterySpotEvent @event, CancellationToken ct)
     {
         var thingId = new Guid(@event.ThingId);
-        var userData = await _thingLotteryEventQueryable.GetJoinedEventUserDataFor(thingId, @event.UserId);
+        var userData = await _thingLotteryEventQueryable.GetJoinedEventUserDataFor(thingId, @event.WalletAddress);
 
         var spotClaimedEvent = new ThingAssessmentVerifierLotterySpotClaimedEvent(
             blockNumber: @event.BlockNumber,
@@ -40,7 +40,7 @@ internal class ClaimedLotterySpotEventHandler : INotificationHandler<ClaimedLott
             txnHash: @event.TxnHash,
             thingId: thingId,
             settlementProposalId: new Guid(@event.SettlementProposalId),
-            userId: @event.UserId,
+            walletAddress: @event.WalletAddress,
             l1BlockNumber: @event.L1BlockNumber,
             userData: userData
         );

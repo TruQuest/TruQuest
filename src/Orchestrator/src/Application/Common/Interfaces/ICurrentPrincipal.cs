@@ -3,5 +3,6 @@ namespace Application.Common.Interfaces;
 public interface ICurrentPrincipal
 {
     string? Id { get; }
-    string? Username { get; }
+    string? SignerAddress { get; }
+    string? WalletAddress { get; }
 }

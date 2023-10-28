@@ -15,7 +15,7 @@ public class LotteryClosedWithSuccessEvent : BaseContractEvent, INotification
     public required byte[] UserXorData { get; init; }
     public required byte[] HashOfL1EndBlock { get; init; }
     public required long Nonce { get; init; }
-    public required List<string> WinnerIds { get; init; }
+    public required List<string> WinnerWalletAddresses { get; init; }
 }
 
 internal class LotteryClosedWithSuccessEventHandler : INotificationHandler<LotteryClosedWithSuccessEvent>
@@ -46,7 +46,7 @@ internal class LotteryClosedWithSuccessEventHandler : INotificationHandler<Lotte
             ["userXorData"] = @event.UserXorData.ToHex(prefix: true),
             ["hashOfL1EndBlock"] = @event.HashOfL1EndBlock.ToHex(prefix: true),
             ["nonce"] = @event.Nonce,
-            ["winnerIds"] = @event.WinnerIds
+            ["winnerWalletAddresses"] = @event.WinnerWalletAddresses
         };
 
         Telemetry.CurrentActivity!.AddTraceparentTo(payload);

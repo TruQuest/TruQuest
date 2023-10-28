@@ -11,7 +11,7 @@ public class CastedVoteEvent : BaseContractEvent, INotification
 {
     public required byte[] ThingId { get; init; }
     public required byte[] SettlementProposalId { get; init; }
-    public required string UserId { get; init; }
+    public required string WalletAddress { get; init; }
     public required int Vote { get; init; }
     public string? Reason { get; init; }
     public required long L1BlockNumber { get; init; }
@@ -36,7 +36,7 @@ internal class CastedVoteEventHandler : INotificationHandler<CastedVoteEvent>
             txnHash: @event.TxnHash,
             thingId: new Guid(@event.ThingId),
             settlementProposalId: new Guid(@event.SettlementProposalId),
-            userId: @event.UserId,
+            walletAddress: @event.WalletAddress,
             decision: (AssessmentPollVote.VoteDecision)@event.Vote,
             reason: @event.Reason,
             l1BlockNumber: @event.L1BlockNumber

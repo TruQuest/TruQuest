@@ -26,4 +26,11 @@
         <ProjectReference Include="../../lib/ContractStorageExplorer/src/ContractStorageExplorer.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Functions/AddUserIdFromWalletAddress.v0.sql" />
+        <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Triggers/OnNewUserEvent.v0.sql" />
+        <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Triggers/OnNewUserEvent.v0-drop.sql" />
+        <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Triggers/OnNewUserEvent.v1.sql" />
+    </ItemGroup>
+
 </Project>

@@ -28,7 +28,7 @@ internal class UserOperationBuilder
 
     private readonly string _simpleAccountFactoryAddress;
 
-    private Account _owner;
+    private Account _signer;
     private string _sender;
     private BigInteger _nonce;
     private string _initCode;
@@ -66,16 +66,16 @@ internal class UserOperationBuilder
 
     public UserOperationBuilder From(Account account)
     {
-        _owner = account;
+        _signer = account;
         _tasks.Add(async () =>
         {
-            _sender = await _contractCaller.GetWalletAddressFor(_owner.Address);
+            _sender = await _contractCaller.GetWalletAddressFor(_signer.Address);
             bool deployed = await _l2BlockchainQueryable.CheckContractDeployed(_sender);
             if (!deployed)
             {
                 var data = _abiEncoder.EncodeFunctionData(new CreateAccountMessage
                 {
-                    Owner = _owner.Address,
+                    Owner = _signer.Address,
                     Salt = 0
                 });
                 _initCode = _simpleAccountFactoryAddress + data.Substring(2);
@@ -227,7 +227,7 @@ internal class UserOperationBuilder
             var userOpHash = await _contractCaller.GetUserOperationHash(_userOp);
             _userOp = _userOp with
             {
-                Signature = _personalSigner.Sign(userOpHash, new EthECKey(_owner.PrivateKey))
+                Signature = _personalSigner.Sign(userOpHash, new EthECKey(_signer.PrivateKey))
             };
         });
 

@@ -224,12 +224,14 @@ public class Sut : IAsyncLifetime
         ));
     }
 
-    public void RunAs(string accountName)
+    public async Task RunAs(string accountName)
     {
         _user = new ClaimsPrincipal(new ClaimsIdentity(
             new Claim[]
             {
                 new(JwtRegisteredClaimNames.Sub, _accountNameToUserId[accountName]),
+                new("signer_address", AccountProvider.GetAccount(accountName).Address),
+                new("wallet_address", await ContractCaller.GetWalletAddressFor(accountName))
             },
             "Bearer"
         ));

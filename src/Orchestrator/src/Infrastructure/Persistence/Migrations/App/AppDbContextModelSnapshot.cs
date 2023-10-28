@@ -49,6 +49,10 @@ namespace Infrastructure.Persistence.Migrations.App
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("VoterWalletAddress")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("ThingId", "VoterId");
 
                     b.ToTable("AcceptancePollVotes", "truquest");
@@ -76,6 +80,10 @@ namespace Infrastructure.Persistence.Migrations.App
                         .HasColumnType("text");
 
                     b.Property<string>("VoterSignature")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("VoterWalletAddress")
                         .IsRequired()
                         .HasColumnType("text");
 

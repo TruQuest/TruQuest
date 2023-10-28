@@ -142,7 +142,7 @@ internal class ContractEventListener : IContractEventListener
                     TxnIndex = (int)thingFundedEvent.Log.TransactionIndex.Value,
                     TxnHash = thingFundedEvent.Log.TransactionHash,
                     ThingId = thingFundedEvent.Event.ThingId,
-                    UserId = thingFundedEvent.Event.UserId.Substring(2).ToLower(),
+                    WalletAddress = thingFundedEvent.Event.User,
                     Stake = (decimal)thingFundedEvent.Event.Stake
                 };
             }
@@ -167,7 +167,7 @@ internal class ContractEventListener : IContractEventListener
                     TxnIndex = (int)joinedThingSubmissionVerifierLotteryEvent.Log.TransactionIndex.Value,
                     TxnHash = joinedThingSubmissionVerifierLotteryEvent.Log.TransactionHash,
                     ThingId = joinedThingSubmissionVerifierLotteryEvent.Event.ThingId,
-                    UserId = joinedThingSubmissionVerifierLotteryEvent.Event.UserId.Substring(2).ToLower(),
+                    WalletAddress = joinedThingSubmissionVerifierLotteryEvent.Event.User,
                     UserData = joinedThingSubmissionVerifierLotteryEvent.Event.UserData,
                     L1BlockNumber = (long)joinedThingSubmissionVerifierLotteryEvent.Event.L1BlockNumber
                 };
@@ -180,14 +180,12 @@ internal class ContractEventListener : IContractEventListener
                     TxnIndex = (int)thingSubmissionVerifierLotteryClosedWithSuccessEvent.Log.TransactionIndex.Value,
                     TxnHash = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Log.TransactionHash,
                     ThingId = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.ThingId,
-                    Orchestrator = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.Orchestrator.Substring(2).ToLower(),
+                    Orchestrator = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.Orchestrator,
                     Data = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.Data,
                     UserXorData = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.UserXorData,
                     HashOfL1EndBlock = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.HashOfL1EndBlock,
                     Nonce = (long)thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.Nonce,
-                    WinnerIds = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.WinnerIds
-                        .Select(id => id.Substring(2).ToLower())
-                        .ToList()
+                    WinnerWalletAddresses = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.Winners
                 };
             }
             else if (@event is EventLog<ThingSubmissionVerifierLottery.LotteryClosedInFailureEvent> thingSubmissionVerifierLotteryClosedInFailureEvent)
@@ -210,7 +208,7 @@ internal class ContractEventListener : IContractEventListener
                     TxnIndex = (int)castedAcceptancePollVoteEvent.Log.TransactionIndex.Value,
                     TxnHash = castedAcceptancePollVoteEvent.Log.TransactionHash,
                     ThingId = castedAcceptancePollVoteEvent.Event.ThingId,
-                    UserId = castedAcceptancePollVoteEvent.Event.UserId.Substring(2).ToLower(),
+                    WalletAddress = castedAcceptancePollVoteEvent.Event.User,
                     Vote = castedAcceptancePollVoteEvent.Event.Vote,
                     L1BlockNumber = (long)castedAcceptancePollVoteEvent.Event.L1BlockNumber
                 };
@@ -223,7 +221,7 @@ internal class ContractEventListener : IContractEventListener
                     TxnIndex = (int)castedAcceptancePollVoteWithReasonEvent.Log.TransactionIndex.Value,
                     TxnHash = castedAcceptancePollVoteWithReasonEvent.Log.TransactionHash,
                     ThingId = castedAcceptancePollVoteWithReasonEvent.Event.ThingId,
-                    UserId = castedAcceptancePollVoteWithReasonEvent.Event.UserId.Substring(2).ToLower(),
+                    WalletAddress = castedAcceptancePollVoteWithReasonEvent.Event.User,
                     Vote = castedAcceptancePollVoteWithReasonEvent.Event.Vote,
                     Reason = castedAcceptancePollVoteWithReasonEvent.Event.Reason,
                     L1BlockNumber = (long)castedAcceptancePollVoteWithReasonEvent.Event.L1BlockNumber
@@ -252,7 +250,7 @@ internal class ContractEventListener : IContractEventListener
                     TxnHash = thingSettlementProposalFundedEvent.Log.TransactionHash,
                     ThingId = thingSettlementProposalFundedEvent.Event.ThingId,
                     SettlementProposalId = thingSettlementProposalFundedEvent.Event.SettlementProposalId,
-                    UserId = thingSettlementProposalFundedEvent.Event.UserId.Substring(2).ToLower(),
+                    WalletAddress = thingSettlementProposalFundedEvent.Event.User,
                     Stake = (decimal)thingSettlementProposalFundedEvent.Event.Stake
                 };
             }
@@ -279,7 +277,7 @@ internal class ContractEventListener : IContractEventListener
                     TxnHash = thingAssessmentVerifierLotteryClaimedSpotEvent.Log.TransactionHash,
                     ThingId = thingAssessmentVerifierLotteryClaimedSpotEvent.Event.ThingId,
                     SettlementProposalId = thingAssessmentVerifierLotteryClaimedSpotEvent.Event.SettlementProposalId,
-                    UserId = thingAssessmentVerifierLotteryClaimedSpotEvent.Event.UserId.Substring(2).ToLower(),
+                    WalletAddress = thingAssessmentVerifierLotteryClaimedSpotEvent.Event.User,
                     L1BlockNumber = (long)thingAssessmentVerifierLotteryClaimedSpotEvent.Event.L1BlockNumber
                 };
             }
@@ -292,7 +290,7 @@ internal class ContractEventListener : IContractEventListener
                     TxnHash = joinedThingAssessmentVerifierLotteryEvent.Log.TransactionHash,
                     ThingId = joinedThingAssessmentVerifierLotteryEvent.Event.ThingId,
                     SettlementProposalId = joinedThingAssessmentVerifierLotteryEvent.Event.SettlementProposalId,
-                    UserId = joinedThingAssessmentVerifierLotteryEvent.Event.UserId.Substring(2).ToLower(),
+                    WalletAddress = joinedThingAssessmentVerifierLotteryEvent.Event.User,
                     UserData = joinedThingAssessmentVerifierLotteryEvent.Event.UserData,
                     L1BlockNumber = (long)joinedThingAssessmentVerifierLotteryEvent.Event.L1BlockNumber
                 };
@@ -306,17 +304,13 @@ internal class ContractEventListener : IContractEventListener
                     TxnHash = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Log.TransactionHash,
                     ThingId = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.ThingId,
                     SettlementProposalId = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.SettlementProposalId,
-                    Orchestrator = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.Orchestrator.Substring(2).ToLower(),
+                    Orchestrator = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.Orchestrator,
                     Data = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.Data,
                     UserXorData = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.UserXorData,
                     HashOfL1EndBlock = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.HashOfL1EndBlock,
                     Nonce = (long)thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.Nonce,
-                    ClaimantIds = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.ClaimantIds
-                        .Select(id => id.Substring(2).ToLower())
-                        .ToList(),
-                    WinnerIds = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.WinnerIds
-                        .Select(id => id.Substring(2).ToLower())
-                        .ToList()
+                    ClaimantWalletAddresses = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.Claimants,
+                    WinnerWalletAddresses = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.Winners
                 };
             }
             else if (@event is EventLog<AssessmentPoll.CastedVoteEvent> castedAssessmentPollVoteEvent)
@@ -328,7 +322,7 @@ internal class ContractEventListener : IContractEventListener
                     TxnHash = castedAssessmentPollVoteEvent.Log.TransactionHash,
                     ThingId = castedAssessmentPollVoteEvent.Event.ThingId,
                     SettlementProposalId = castedAssessmentPollVoteEvent.Event.SettlementProposalId,
-                    UserId = castedAssessmentPollVoteEvent.Event.UserId.Substring(2).ToLower(),
+                    WalletAddress = castedAssessmentPollVoteEvent.Event.User,
                     Vote = castedAssessmentPollVoteEvent.Event.Vote,
                     L1BlockNumber = (long)castedAssessmentPollVoteEvent.Event.L1BlockNumber
                 };
@@ -342,7 +336,7 @@ internal class ContractEventListener : IContractEventListener
                     TxnHash = castedAssessmentPollVoteWithReasonEvent.Log.TransactionHash,
                     ThingId = castedAssessmentPollVoteWithReasonEvent.Event.ThingId,
                     SettlementProposalId = castedAssessmentPollVoteWithReasonEvent.Event.SettlementProposalId,
-                    UserId = castedAssessmentPollVoteWithReasonEvent.Event.UserId.Substring(2).ToLower(),
+                    WalletAddress = castedAssessmentPollVoteWithReasonEvent.Event.User,
                     Vote = castedAssessmentPollVoteWithReasonEvent.Event.Vote,
                     Reason = castedAssessmentPollVoteWithReasonEvent.Event.Reason,
                     L1BlockNumber = (long)castedAssessmentPollVoteWithReasonEvent.Event.L1BlockNumber
@@ -359,12 +353,8 @@ internal class ContractEventListener : IContractEventListener
                     SettlementProposalId = assessmentPollFinalizedEvent.Event.SettlementProposalId,
                     Decision = assessmentPollFinalizedEvent.Event.Decision,
                     VoteAggIpfsCid = assessmentPollFinalizedEvent.Event.VoteAggIpfsCid,
-                    RewardedVerifiers = assessmentPollFinalizedEvent.Event.RewardedVerifiers
-                        .Select(id => id.Substring(2).ToLower())
-                        .ToList(),
+                    RewardedVerifiers = assessmentPollFinalizedEvent.Event.RewardedVerifiers,
                     SlashedVerifiers = assessmentPollFinalizedEvent.Event.SlashedVerifiers
-                        .Select(id => id.Substring(2).ToLower())
-                        .ToList()
                 };
             }
 

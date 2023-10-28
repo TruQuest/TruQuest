@@ -9,7 +9,7 @@ namespace Application.Ethereum.Events.ThingFunded;
 public class ThingFundedEvent : BaseContractEvent, INotification
 {
     public required byte[] ThingId { get; init; }
-    public required string UserId { get; init; }
+    public required string WalletAddress { get; init; }
     public required decimal Stake { get; init; }
 }
 
@@ -34,7 +34,7 @@ internal class ThingFundedEventHandler : INotificationHandler<ThingFundedEvent>
 
         var payload = new Dictionary<string, object>()
         {
-            ["userId"] = @event.UserId,
+            ["walletAddress"] = @event.WalletAddress,
             ["stake"] = @event.Stake
         };
 

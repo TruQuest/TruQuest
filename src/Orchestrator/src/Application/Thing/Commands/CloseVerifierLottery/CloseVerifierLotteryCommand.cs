@@ -69,8 +69,8 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 
         int numVerifiers = await _contractCaller.GetThingSubmissionLotteryNumVerifiers();
 
-        var joinedEvents = await _joinedLotteryEventRepository.FindAllFor(command.ThingId);
-        foreach (var @event in joinedEvents)
+        var joinedEvents = await _joinedLotteryEventRepository.FindAllFor(command.ThingId); // all, even those with UserId == null
+        foreach (var @event in joinedEvents.Where(e => e.UserId != null))
         {
             @event.SetNonce((long)(
                 (
@@ -82,11 +82,16 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 
         var winnerEventsIndexed = joinedEvents
             .Select((e, i) => (Index: (ulong)i, Event: e))
+            .Where(e => e.Event.Nonce != null)
             .OrderBy(e => Math.Abs(nonce - e.Event.Nonce!.Value))
                 .ThenBy(e => e.Index)
             .Take(numVerifiers)
             .OrderBy(e => e.Index)
             .ToList();
+
+        // @@TODO: There could be a situation when user joins a lottery without actually registering
+        // on the platform and gets a nonce that should win him a verifier spot, but he gets excluded.
+        // How to prove to an observer that his exclusion is justified. Should we even exclude unregistered users?
 
         await _joinedLotteryEventRepository.UpdateNoncesFor(joinedEvents);
         await _joinedLotteryEventRepository.SaveChanges();
@@ -97,7 +102,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
             foreach (var @event in winnerEventsIndexed)
             {
                 var participantAtIndex = participants.ElementAtOrDefault(new Index((int)@event.Index));
-                if (participantAtIndex?.Substring(2).ToLower() != @event.Event.UserId)
+                if (participantAtIndex != @event.Event.WalletAddress)
                 {
                     throw new Exception("Incorrect winner selection");
                 }

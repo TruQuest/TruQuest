@@ -11,7 +11,7 @@ public class JoinedLotteryEvent : BaseContractEvent, INotification
 {
     public required byte[] ThingId { get; init; }
     public required byte[] SettlementProposalId { get; init; }
-    public required string UserId { get; init; }
+    public required string WalletAddress { get; init; }
     public required byte[] UserData { get; init; }
     public required long L1BlockNumber { get; init; }
 }
@@ -33,7 +33,7 @@ internal class JoinedLotteryEventHandler : INotificationHandler<JoinedLotteryEve
             txnHash: @event.TxnHash,
             thingId: new Guid(@event.ThingId),
             settlementProposalId: new Guid(@event.SettlementProposalId),
-            userId: @event.UserId,
+            walletAddress: @event.WalletAddress,
             l1BlockNumber: @event.L1BlockNumber,
             userData: @event.UserData.ToHex(prefix: true)
         );

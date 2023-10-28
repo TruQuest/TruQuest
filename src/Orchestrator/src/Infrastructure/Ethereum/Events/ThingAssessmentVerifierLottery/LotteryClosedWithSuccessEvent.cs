@@ -22,7 +22,7 @@ public class LotteryClosedWithSuccessEvent : IEventDTO
     [Parameter("uint256", "nonce", 7, false)]
     public BigInteger Nonce { get; set; }
     [Parameter("address[]", "claimants", 8, false)]
-    public List<string> ClaimantIds { get; set; }
+    public List<string> Claimants { get; set; }
     [Parameter("address[]", "winners", 9, false)]
-    public List<string> WinnerIds { get; set; }
+    public List<string> Winners { get; set; }
 }

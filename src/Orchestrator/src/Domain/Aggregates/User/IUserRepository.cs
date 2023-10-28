@@ -10,6 +10,7 @@ public interface IUserRepository : IRepository<User>
     Task<User?> FindById(string userId);
     Task<User?> FindByEmail(string email);
     Task<User?> FindByUsername(string username);
+    Task<List<string>> GetUserIdsByWalletAddresses(IEnumerable<string> walletAddresses);
     Task<UserError?> Create(User user);
     Task<UserError?> AddClaimsTo(User user, IList<Claim> claims);
     Task<Claim> GetClaim(string userId, string claimType);

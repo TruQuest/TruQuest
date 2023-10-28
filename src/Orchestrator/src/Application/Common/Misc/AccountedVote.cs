@@ -10,6 +10,7 @@ public class AccountedVote
     }
 
     public required string VoterId { get; init; }
+    public required string VoterWalletAddress { get; init; }
     public required Decision VoteDecision { get; init; }
 
     public override bool Equals(object? obj)

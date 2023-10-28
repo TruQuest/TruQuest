@@ -15,6 +15,6 @@ internal class CurrentPrincipal : ICurrentPrincipal
     }
 
     public string? Id => _principal?.FindFirstValue(JwtRegisteredClaimNames.Sub);
-
-    public string? Username => _principal?.FindFirstValue("username")!; // @@TODO!!: Change this!
+    public string? SignerAddress => _principal?.FindFirstValue("signer_address");
+    public string? WalletAddress => _principal?.FindFirstValue("wallet_address");
 }

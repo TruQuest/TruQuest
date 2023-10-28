@@ -22,9 +22,9 @@ internal class ThingSubmissionVerifierLotteryEventQueryable : Queryable, IThingS
         _dbContext = dbContext;
     }
 
-    public Task<string> GetJoinedEventUserDataFor(Guid thingId, string userId) =>
+    public Task<string> GetJoinedEventUserDataFor(Guid thingId, string walletAddress) =>
         _dbContext.JoinedThingSubmissionVerifierLotteryEvents
-            .Where(e => e.ThingId == thingId && e.UserId == userId)
+            .Where(e => e.ThingId == thingId && e.WalletAddress == walletAddress)
             .Select(e => e.UserData)
             .SingleAsync();
 

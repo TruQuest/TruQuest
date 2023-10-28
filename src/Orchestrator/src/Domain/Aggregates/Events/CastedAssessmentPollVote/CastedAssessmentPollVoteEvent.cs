@@ -10,14 +10,15 @@ public class CastedAssessmentPollVoteEvent : Entity, IAggregateRoot
     public string TxnHash { get; }
     public Guid ThingId { get; }
     public Guid SettlementProposalId { get; }
-    public string UserId { get; }
+    public string? UserId { get; }
+    public string WalletAddress { get; }
     public AssessmentPollVote.VoteDecision Decision { get; }
     public string? Reason { get; }
     public long L1BlockNumber { get; }
 
     public CastedAssessmentPollVoteEvent(
         long blockNumber, int txnIndex, string txnHash, Guid thingId, Guid settlementProposalId,
-        string userId, AssessmentPollVote.VoteDecision decision, string? reason, long l1BlockNumber
+        string walletAddress, AssessmentPollVote.VoteDecision decision, string? reason, long l1BlockNumber
     )
     {
         BlockNumber = blockNumber;
@@ -25,7 +26,7 @@ public class CastedAssessmentPollVoteEvent : Entity, IAggregateRoot
         TxnHash = txnHash;
         ThingId = thingId;
         SettlementProposalId = settlementProposalId;
-        UserId = userId;
+        WalletAddress = walletAddress;
         Decision = decision;
         Reason = reason;
         L1BlockNumber = l1BlockNumber;

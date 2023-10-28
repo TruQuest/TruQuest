@@ -60,13 +60,17 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
                 type: TaskType.CloseThingAssessmentVerifierLottery,
                 scheduledBlockNumber: lotteryInitBlockNumber + lotteryDurationBlocks + 1
             );
-            task.SetPayload(new()
+
+            var payload = new Dictionary<string, object>()
             {
                 ["thingId"] = command.ThingId,
                 ["settlementProposalId"] = command.SettlementProposalId,
                 ["data"] = data.ToHex(prefix: true),
                 ["userXorData"] = userXorData.ToHex(prefix: true)
-            });
+            };
+
+            Telemetry.CurrentActivity!.AddTraceparentTo(payload);
+            task.SetPayload(payload);
 
             _taskRepository.Create(task);
 

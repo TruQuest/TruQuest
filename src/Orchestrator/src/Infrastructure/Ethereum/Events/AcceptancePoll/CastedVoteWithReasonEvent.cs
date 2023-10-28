@@ -10,7 +10,7 @@ public class CastedVoteWithReasonEvent : IEventDTO
     [Parameter("bytes16", "thingId", 1, true)]
     public byte[] ThingId { get; set; }
     [Parameter("address", "user", 2, true)]
-    public string UserId { get; set; }
+    public string User { get; set; }
     [Parameter("uint8", "vote", 3, false)]
     public int Vote { get; set; }
     [Parameter("string", "reason", 4, false)]

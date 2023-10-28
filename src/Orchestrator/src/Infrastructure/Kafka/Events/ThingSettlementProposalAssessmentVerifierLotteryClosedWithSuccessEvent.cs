@@ -19,8 +19,8 @@ internal class ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccess
     // @@BUG: For some reason when claimants are empty debezium discards
     // the key-value pair entirely, so if this property is set to 'required'
     // json deserialization fails.
-    public List<string> ClaimantIds { get; init; } = new();
-    public required List<string> WinnerIds { get; init; }
+    public List<string> ClaimantWalletAddresses { get; init; } = new();
+    public required List<string> WinnerWalletAddresses { get; init; }
 }
 
 internal class ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccessEventHandler :
@@ -56,8 +56,8 @@ internal class ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccess
             UserXorData = message.UserXorData,
             HashOfL1EndBlock = message.HashOfL1EndBlock,
             Nonce = message.Nonce,
-            ClaimantIds = message.ClaimantIds,
-            WinnerIds = message.WinnerIds
+            ClaimantWalletAddresses = message.ClaimantWalletAddresses,
+            WinnerWalletAddresses = message.WinnerWalletAddresses
         },
         addToAdditionalSinks: true
     );

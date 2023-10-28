@@ -207,6 +207,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
         modelBuilder.Entity<AcceptancePollVote>(builder =>
         {
             builder.HasKey(v => new { v.ThingId, v.VoterId });
+            builder.Property(v => v.VoterWalletAddress).IsRequired();
             builder.Property(v => v.CastedAtMs).IsRequired();
             builder.Property(v => v.Decision).HasConversion<int>().IsRequired();
             builder.Property(v => v.Reason).IsRequired(false);
@@ -288,6 +289,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
         modelBuilder.Entity<AssessmentPollVote>(builder =>
         {
             builder.HasKey(v => new { v.SettlementProposalId, v.VoterId });
+            builder.Property(v => v.VoterWalletAddress).IsRequired();
             builder.Property(v => v.CastedAtMs).IsRequired();
             builder.Property(v => v.Decision).HasConversion<int>().IsRequired();
             builder.Property(v => v.Reason).IsRequired(false);
@@ -306,6 +308,8 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.HasKey(w => new { w.UserId, w.ItemType, w.ItemId, w.ItemUpdateCategory });
             builder.Property(w => w.ItemType).HasConversion<int>();
             builder.Property(w => w.LastSeenUpdateTimestamp).IsRequired();
+
+            // @@TODO: Foreign key for UserId.
         });
 
         modelBuilder.Entity<SubjectUpdate>(builder =>

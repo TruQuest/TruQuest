@@ -90,7 +90,7 @@ public class ContractCaller
         var v = (byte)signature.Substring(128, 2).HexToBigInteger(true);
 
         await _userOperationService.Send(
-            owner: _accountProvider.GetAccount(accountName),
+            signer: _accountProvider.GetAccount(accountName),
             targetAddress: _truQuestAddress,
             new FundThingMessage
             {
@@ -107,12 +107,30 @@ public class ContractCaller
     public async Task JoinThingSubmissionVerifierLotteryAs(string accountName, byte[] thingId, byte[] userData)
     {
         await _userOperationService.Send(
-            owner: _accountProvider.GetAccount(accountName),
+            signer: _accountProvider.GetAccount(accountName),
             targetAddress: _thingSubmissionVerifierLotteryAddress,
             message: new JoinThingSubmissionVerifierLotteryMessage
             {
                 ThingId = thingId,
                 UserData = userData
+            }
+        );
+
+        await _blockchainManipulator.Mine(1);
+    }
+
+    public async Task CastAcceptancePollVoteAs(
+        string accountName, byte[] thingId, ushort thingVerifiersArrayIndex, Vote vote
+    )
+    {
+        await _userOperationService.Send(
+            signer: _accountProvider.GetAccount(accountName),
+            targetAddress: _acceptancePollAddress,
+            message: new CastAcceptancePollVoteMessage
+            {
+                ThingId = thingId,
+                ThingVerifiersArrayIndex = thingVerifiersArrayIndex,
+                Vote = vote
             }
         );
 
@@ -129,7 +147,7 @@ public class ContractCaller
         var v = (byte)signature.Substring(128, 2).HexToBigInteger(true);
 
         await _userOperationService.Send(
-            owner: _accountProvider.GetAccount(accountName),
+            signer: _accountProvider.GetAccount(accountName),
             targetAddress: _truQuestAddress,
             message: new FundThingSettlementProposalMessage
             {
@@ -165,7 +183,7 @@ public class ContractCaller
     )
     {
         await _userOperationService.Send(
-            owner: _accountProvider.GetAccount(accountName),
+            signer: _accountProvider.GetAccount(accountName),
             targetAddress: _thingAssessmentVerifierLotteryAddress,
             message: new ClaimLotterySpotMessage
             {
@@ -199,7 +217,7 @@ public class ContractCaller
     public async Task JoinThingAssessmentVerifierLotteryAs(string accountName, byte[] thingProposalId, byte[] userData)
     {
         await _userOperationService.Send(
-            owner: _accountProvider.GetAccount(accountName),
+            signer: _accountProvider.GetAccount(accountName),
             targetAddress: _thingAssessmentVerifierLotteryAddress,
             message: new JoinThingAssessmentVerifierLotteryMessage
             {
@@ -216,7 +234,7 @@ public class ContractCaller
     )
     {
         await _userOperationService.Send(
-            owner: _accountProvider.GetAccount(accountName),
+            signer: _accountProvider.GetAccount(accountName),
             targetAddress: _assessmentPollAddress,
             message: new CastAssessmentPollVoteMessage
             {

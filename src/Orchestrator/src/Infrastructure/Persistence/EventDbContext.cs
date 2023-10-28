@@ -67,7 +67,8 @@ public class EventDbContext : DbContext
             builder.Property(e => e.TxnIndex).IsRequired();
             builder.Property(e => e.TxnHash).IsRequired();
             builder.Property(e => e.ThingId).IsRequired();
-            builder.Property(e => e.UserId).IsRequired();
+            builder.Property(e => e.UserId).IsRequired(false);
+            builder.Property(e => e.WalletAddress).IsRequired();
             builder.Property(e => e.L1BlockNumber).IsRequired();
             builder.Property(e => e.UserData).IsRequired();
             builder.Property(e => e.Nonce).IsRequired(false);
@@ -84,12 +85,13 @@ public class EventDbContext : DbContext
             builder.Property(e => e.TxnIndex).IsRequired();
             builder.Property(e => e.TxnHash).IsRequired();
             builder.Property(e => e.ThingId).IsRequired();
-            builder.Property(e => e.UserId).IsRequired();
+            builder.Property(e => e.UserId).IsRequired(false);
+            builder.Property(e => e.WalletAddress).IsRequired();
             builder.Property(e => e.Decision).HasConversion<int>().IsRequired();
             builder.Property(e => e.Reason).IsRequired(false);
             builder.Property(e => e.L1BlockNumber).IsRequired();
 
-            // @@NOTE: A user could in theory call castVote multiple times in the same transaction
+            // @@!!: A user could in theory call castVote multiple times in the same transaction
             // using AA txn batching, which this index would block...
             builder.HasIndex(e => e.TxnHash).IsUnique();
         });
@@ -119,7 +121,8 @@ public class EventDbContext : DbContext
             builder.Property(e => e.TxnHash).IsRequired();
             builder.Property(e => e.ThingId).IsRequired();
             builder.Property(e => e.SettlementProposalId).IsRequired();
-            builder.Property(e => e.UserId).IsRequired();
+            builder.Property(e => e.UserId).IsRequired(false);
+            builder.Property(e => e.WalletAddress).IsRequired();
             builder.Property(e => e.L1BlockNumber).IsRequired();
             builder.Property(e => e.UserData).IsRequired();
             builder.Property(e => e.Nonce).IsRequired(false);
@@ -136,7 +139,8 @@ public class EventDbContext : DbContext
             builder.Property(e => e.TxnHash).IsRequired();
             builder.Property(e => e.ThingId).IsRequired();
             builder.Property(e => e.SettlementProposalId).IsRequired();
-            builder.Property(e => e.UserId).IsRequired();
+            builder.Property(e => e.UserId).IsRequired(false);
+            builder.Property(e => e.WalletAddress).IsRequired();
             builder.Property(e => e.L1BlockNumber).IsRequired();
             builder.Property(e => e.UserData).IsRequired();
             builder.Property(e => e.Nonce).IsRequired(false);
@@ -153,7 +157,8 @@ public class EventDbContext : DbContext
             builder.Property(e => e.TxnHash).IsRequired();
             builder.Property(e => e.ThingId).IsRequired();
             builder.Property(e => e.SettlementProposalId).IsRequired();
-            builder.Property(e => e.UserId).IsRequired();
+            builder.Property(e => e.UserId).IsRequired(false);
+            builder.Property(e => e.WalletAddress).IsRequired();
             builder.Property(e => e.Decision).HasConversion<int>().IsRequired();
             builder.Property(e => e.Reason).IsRequired(false);
             builder.Property(e => e.L1BlockNumber).IsRequired();

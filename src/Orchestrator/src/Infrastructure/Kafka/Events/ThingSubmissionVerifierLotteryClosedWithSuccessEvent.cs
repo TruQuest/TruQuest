@@ -15,7 +15,7 @@ internal class ThingSubmissionVerifierLotteryClosedWithSuccessEvent : TraceableE
     public required string UserXorData { get; init; }
     public required string HashOfL1EndBlock { get; init; }
     public required long Nonce { get; init; }
-    public required List<string> WinnerIds { get; init; }
+    public required List<string> WinnerWalletAddresses { get; init; }
 }
 
 internal class ThingSubmissionVerifierLotteryClosedWithSuccessEventHandler :
@@ -49,7 +49,7 @@ internal class ThingSubmissionVerifierLotteryClosedWithSuccessEventHandler :
                 UserXorData = message.UserXorData,
                 HashOfL1EndBlock = message.HashOfL1EndBlock,
                 Nonce = message.Nonce,
-                WinnerIds = message.WinnerIds
+                WinnerWalletAddresses = message.WinnerWalletAddresses
             },
             addToAdditionalSinks: true
         );

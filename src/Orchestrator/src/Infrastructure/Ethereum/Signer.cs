@@ -100,16 +100,17 @@ internal class Signer : ISigner
     }
 
     public string SignNewAcceptancePollVote(
-        NewAcceptancePollVoteIm input, string walletAddress,
-        string ownerAddress, string ownerSignature
+        NewAcceptancePollVoteIm input, string userId, string walletAddress,
+        string signerAddress, string signature
     )
     {
         var td = new SignedNewAcceptancePollVoteTd
         {
             Vote = input.ToMessageForSigning(),
+            UserId = userId,
             WalletAddress = walletAddress,
-            OwnerAddress = ownerAddress,
-            OwnerSignature = ownerSignature
+            SignerAddress = signerAddress,
+            Signature = signature
         };
 
         return _personalSigner.EncodeUTF8AndSign(
@@ -119,16 +120,17 @@ internal class Signer : ISigner
     }
 
     public string SignNewAssessmentPollVote(
-        NewAssessmentPollVoteIm input, string walletAddress,
-        string ownerAddress, string ownerSignature
+        NewAssessmentPollVoteIm input, string userId, string walletAddress,
+        string signerAddress, string signature
     )
     {
         var td = new SignedNewAssessmentPollVoteTd
         {
             Vote = input.ToMessageForSigning(),
+            UserId = userId,
             WalletAddress = walletAddress,
-            OwnerAddress = ownerAddress,
-            OwnerSignature = ownerSignature
+            SignerAddress = signerAddress,
+            Signature = signature
         };
 
         return _personalSigner.EncodeUTF8AndSign(
@@ -139,15 +141,15 @@ internal class Signer : ISigner
 
     public string SignAcceptancePollVoteAgg(
         Guid thingId,
-        ulong endBlock,
+        ulong l1EndBlock,
         IEnumerable<AcceptancePollVote> offChainVotes,
         IEnumerable<CastedAcceptancePollVoteEvent> onChainVotes
     )
     {
-        var td = new SignedAcceptancePollVoteAggTd
+        var td = new SignedAcceptancePollVoteAggTd // @@TODO: This stuff ain't TypedData!
         {
             ThingId = thingId,
-            EndBlock = endBlock,
+            L1EndBlock = l1EndBlock,
             OffChainVotes = offChainVotes
                 .Select(v => new OffChainAcceptancePollVoteTd
                 {
@@ -157,10 +159,11 @@ internal class Signer : ISigner
             OnChainVotes = onChainVotes
                 .Select(v => new OnChainAcceptancePollVoteTd
                 {
+                    TxnHash = v.TxnHash,
                     BlockNumber = v.BlockNumber,
                     TxnIndex = v.TxnIndex,
-                    L1BlockNumber = v.L1BlockNumber,
-                    UserId = v.UserId,
+                    UserId = v.UserId!,
+                    WalletAddress = v.WalletAddress,
                     Decision = v.Decision.GetString(),
                     Reason = v.Reason ?? string.Empty
                 })
@@ -187,7 +190,7 @@ internal class Signer : ISigner
     }
 
     public string SignAssessmentPollVoteAgg(
-        Guid thingId, Guid proposalId, ulong endBlock,
+        Guid thingId, Guid proposalId, ulong l1EndBlock,
         IEnumerable<AssessmentPollVote> offChainVotes,
         IEnumerable<CastedAssessmentPollVoteEvent> onChainVotes
     )
@@ -196,7 +199,7 @@ internal class Signer : ISigner
         {
             ThingId = thingId,
             SettlementProposalId = proposalId,
-            EndBlock = endBlock,
+            L1EndBlock = l1EndBlock,
             OffChainVotes = offChainVotes
                 .Select(v => new OffChainAssessmentPollVoteTd
                 {
@@ -206,10 +209,11 @@ internal class Signer : ISigner
             OnChainVotes = onChainVotes
                 .Select(v => new OnChainAssessmentPollVoteTd
                 {
+                    TxnHash = v.TxnHash,
                     BlockNumber = v.BlockNumber,
                     TxnIndex = v.TxnIndex,
-                    L1BlockNumber = v.L1BlockNumber,
-                    UserId = v.UserId, // @@TODO: EIP-55 encode
+                    UserId = v.UserId!,
+                    WalletAddress = v.WalletAddress,
                     Decision = v.Decision.GetString(),
                     Reason = v.Reason ?? string.Empty
                 })

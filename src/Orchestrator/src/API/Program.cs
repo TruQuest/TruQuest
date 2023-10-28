@@ -42,11 +42,10 @@ public class Program
             .ConfigureServices()
             .Build()
             .ConfigurePipeline()
-            .StartKafkaBus();
-        // .DeployContracts()
-        // .ContinueWith(deployTask => deployTask.Result.RegisterDebeziumConnector()).Unwrap()
-        // .ContinueWith(registerTask => registerTask.Result.StartKafkaBus()).Unwrap();
-        // .ContinueWith(startBusTask => startBusTask.Result.DepositFunds()).Unwrap();
+            .DeployContracts()
+                .ContinueWith(deployTask => deployTask.Result.RegisterDebeziumConnector()).Unwrap()
+                .ContinueWith(registerTask => registerTask.Result.StartKafkaBus()).Unwrap()
+                .ContinueWith(startBusTask => startBusTask.Result.DepositFunds()).Unwrap();
 
         app.Run();
     }
@@ -321,7 +320,7 @@ public static class WebApplicationBuilderExtension
             }
 
             await userOperationService.SendBatch(
-                owner: account,
+                signer: account,
                 actions: new()
                 {
                     (

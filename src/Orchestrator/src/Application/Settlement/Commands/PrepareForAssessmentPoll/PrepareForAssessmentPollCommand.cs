@@ -23,13 +23,14 @@ public class PrepareForAssessmentPollCommand : IRequest<VoidResult>
     public required string UserXorData { get; init; }
     public required string HashOfL1EndBlock { get; init; }
     public required long Nonce { get; init; }
-    public required List<string> ClaimantIds { get; init; }
-    public required List<string> WinnerIds { get; init; }
+    public required List<string> ClaimantWalletAddresses { get; init; }
+    public required List<string> WinnerWalletAddresses { get; init; }
 }
 
 internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareForAssessmentPollCommand, VoidResult>
 {
     private readonly ISettlementProposalRepository _settlementProposalRepository;
+    private readonly IUserRepository _userRepository;
     private readonly ITaskRepository _taskRepository;
     private readonly ISettlementProposalUpdateRepository _settlementProposalUpdateRepository;
     private readonly IWatchedItemRepository _watchedItemRepository;
@@ -37,6 +38,7 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
 
     public PrepareForAssessmentPollCommandHandler(
         ISettlementProposalRepository settlementProposalRepository,
+        IUserRepository userRepository,
         ITaskRepository taskRepository,
         ISettlementProposalUpdateRepository settlementProposalUpdateRepository,
         IWatchedItemRepository watchedItemRepository,
@@ -44,6 +46,7 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
     )
     {
         _settlementProposalRepository = settlementProposalRepository;
+        _userRepository = userRepository;
         _taskRepository = taskRepository;
         _settlementProposalUpdateRepository = settlementProposalUpdateRepository;
         _watchedItemRepository = watchedItemRepository;
@@ -56,7 +59,11 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
         if (proposal.State == SettlementProposalState.FundedAndVerifierLotteryInitiated)
         {
             proposal.SetState(SettlementProposalState.VerifiersSelectedAndPollInitiated);
-            proposal.AddVerifiers(command.ClaimantIds.Concat(command.WinnerIds));
+            var userIds = await _userRepository.GetUserIdsByWalletAddresses(
+                command.ClaimantWalletAddresses.Concat(command.WinnerWalletAddresses)
+            );
+            Debug.Assert(userIds.Count == command.ClaimantWalletAddresses.Count + command.WinnerWalletAddresses.Count);
+            proposal.AddVerifiers(userIds);
 
             var lotteryInitBlock = await _contractCaller.GetThingAssessmentVerifierLotteryInitBlock(
                 proposal.ThingId.ToByteArray(), proposal.Id.ToByteArray()
@@ -72,18 +79,22 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
                 type: TaskType.CloseThingSettlementProposalAssessmentPoll,
                 scheduledBlockNumber: pollInitBlock + pollDurationBlocks + 1
             );
-            task.SetPayload(new()
+
+            var payload = new Dictionary<string, object>()
             {
                 ["thingId"] = proposal.ThingId,
                 ["settlementProposalId"] = proposal.Id
-            });
+            };
+
+            Telemetry.CurrentActivity!.AddTraceparentTo(payload);
+            task.SetPayload(payload);
+
             _taskRepository.Create(task);
 
             var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
             _watchedItemRepository.Add(
-                command.WinnerIds
-                    .Concat(command.ClaimantIds)
+                userIds
                     .Select(userId => new WatchedItem(
                         userId: userId,
                         itemType: WatchedItemType.SettlementProposal,

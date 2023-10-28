@@ -11,7 +11,7 @@ namespace Infrastructure.Kafka.Events;
 internal class ThingSettlementProposalFundedEvent : TraceableEvent
 {
     public required Guid SettlementProposalId { get; init; }
-    public required string UserId { get; init; }
+    public required string WalletAddress { get; init; }
     public required decimal Stake { get; init; }
 }
 

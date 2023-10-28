@@ -14,16 +14,16 @@ public interface ISigner
     string SignThing(Guid thingId);
 
     string SignNewAcceptancePollVote(
-        NewAcceptancePollVoteIm input, string walletAddress, string ownerAddress, string ownerSignature
+        NewAcceptancePollVoteIm input, string userId, string walletAddress, string signerAddress, string signature
     );
 
     string SignNewAssessmentPollVote(
-        NewAssessmentPollVoteIm input, string walletAddress, string ownerAddress, string ownerSignature
+        NewAssessmentPollVoteIm input, string userId, string walletAddress, string signerAddress, string signature
     );
 
     string SignAcceptancePollVoteAgg(
         Guid thingId,
-        ulong endBlock,
+        ulong l1EndBlock,
         IEnumerable<AcceptancePollVote> offChainVotes,
         IEnumerable<CastedAcceptancePollVoteEvent> onChainVotes
     );
@@ -31,7 +31,7 @@ public interface ISigner
     string SignSettlementProposal(Guid thingId, Guid proposalId);
 
     string SignAssessmentPollVoteAgg(
-        Guid thingId, Guid proposalId, ulong endBlock,
+        Guid thingId, Guid proposalId, ulong l1EndBlock,
         IEnumerable<AssessmentPollVote> offChainVotes,
         IEnumerable<CastedAssessmentPollVoteEvent> onChainVotes
     );

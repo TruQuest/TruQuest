@@ -9,13 +9,14 @@ public class CastedAcceptancePollVoteEvent : Entity, IAggregateRoot
     public int TxnIndex { get; }
     public string TxnHash { get; }
     public Guid ThingId { get; }
-    public string UserId { get; }
+    public string? UserId { get; }
+    public string WalletAddress { get; }
     public AcceptancePollVote.VoteDecision Decision { get; }
     public string? Reason { get; }
     public long L1BlockNumber { get; }
 
     public CastedAcceptancePollVoteEvent(
-        long blockNumber, int txnIndex, string txnHash, Guid thingId, string userId,
+        long blockNumber, int txnIndex, string txnHash, Guid thingId, string walletAddress,
         AcceptancePollVote.VoteDecision decision, string? reason, long l1BlockNumber
     )
     {
@@ -23,7 +24,7 @@ public class CastedAcceptancePollVoteEvent : Entity, IAggregateRoot
         TxnIndex = txnIndex;
         TxnHash = txnHash;
         ThingId = thingId;
-        UserId = userId;
+        WalletAddress = walletAddress;
         Decision = decision;
         Reason = reason;
         L1BlockNumber = l1BlockNumber;

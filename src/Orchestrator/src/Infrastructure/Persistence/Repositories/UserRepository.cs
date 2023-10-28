@@ -33,6 +33,12 @@ internal class UserRepository : Repository, IUserRepository
 
     public Task<UserDm?> FindByUsername(string username) => _userManager.FindByNameAsync(username);
 
+    public Task<List<string>> GetUserIdsByWalletAddresses(IEnumerable<string> walletAddresses) =>
+        _dbContext.UserClaims
+            .Where(c => c.ClaimType == "wallet_address" && walletAddresses.Contains(c.ClaimValue))
+            .Select(c => c.UserId)
+            .ToListAsync();
+
     public async Task<UserError?> Create(UserDm user)
     {
         var result = await _userManager.CreateAsync(user);
