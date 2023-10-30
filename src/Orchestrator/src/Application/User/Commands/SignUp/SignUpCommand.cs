@@ -14,7 +14,6 @@ using UserDm = Domain.Aggregates.User;
 
 using Application.Common.Attributes;
 using Application.Common.Interfaces;
-using Application.Common.Misc;
 using Application.User.Common.Models.VM;
 
 namespace Application.User.Commands.SignUp;
@@ -63,7 +62,7 @@ internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResul
 
     public async Task<HandleResult<AuthResultVm>> Handle(SignUpCommand command, CancellationToken ct)
     {
-        if (!_totpProvider.VerifyTotp(Encoding.UTF8.GetBytes(command.Email).ToHex(), command.ConfirmationCode))
+        if (!_totpProvider.VerifyTotp(Encoding.UTF8.GetBytes(command.Email), command.ConfirmationCode))
         {
             _logger.LogWarning("Invalid confirmation code");
             return new()
@@ -92,7 +91,7 @@ internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResul
         // @@TODO!!: Handle exceptions.
         var result = await _fido2.MakeNewCredentialAsync(command.RawAttestation, options, checkCredentialIdUnique, ct);
 
-        var signerAddress = _signer.RecoverFromSiweMessage(command.ConfirmationCode, command.SignatureOverCode);
+        var signerAddress = _signer.RecoverFromMessage(command.ConfirmationCode, command.SignatureOverCode);
         var walletAddress = await _contractCaller.GetWalletAddressFor(signerAddress);
 
         _logger.LogInformation("***** Signer: {Signer}\nWallet: {Wallet} *****", signerAddress, walletAddress);

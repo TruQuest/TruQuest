@@ -18,7 +18,7 @@ public class SettlementProposalQm
     public string SubjectName { get; }
     public string ThingTitle { get; }
     public string? ThingCroppedImageIpfsCid { get; }
-    public HashSet<SupportingEvidenceQm> Evidence { get; } = new();
+    public HashSet<SettlementProposalEvidenceQm> Evidence { get; } = new();
 
     public bool Watched { get; set; }
 

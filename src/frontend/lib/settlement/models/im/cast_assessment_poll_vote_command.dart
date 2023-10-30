@@ -1,7 +1,7 @@
-import 'new_assessment_poll_vote_im.dart';
+import 'new_settlement_proposal_assessment_poll_vote_im.dart';
 
 class CastAssessmentPollVoteCommand {
-  final NewAssessmentPollVoteIm input;
+  final NewSettlementProposalAssessmentPollVoteIm input;
   final String signature;
 
   CastAssessmentPollVoteCommand({

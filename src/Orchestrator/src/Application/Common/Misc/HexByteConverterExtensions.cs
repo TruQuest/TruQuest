@@ -1,5 +1,6 @@
 namespace Application.Common.Misc;
 
+// @@COPYPASTA from Nethereum.
 public static class HexByteConverterExtensions
 {
     private static readonly byte[] Empty = new byte[0];

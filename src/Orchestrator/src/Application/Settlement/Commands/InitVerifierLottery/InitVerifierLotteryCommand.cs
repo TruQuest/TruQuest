@@ -46,18 +46,18 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
             var data = RandomNumberGenerator.GetBytes(32);
             var userXorData = RandomNumberGenerator.GetBytes(32);
             // @@TODO!!: Compute on the server!
-            var dataHash = await _contractCaller.ComputeHashForThingAssessmentVerifierLottery(data);
-            var userXorDataHash = await _contractCaller.ComputeHashForThingAssessmentVerifierLottery(userXorData);
+            var dataHash = await _contractCaller.ComputeHashForSettlementProposalAssessmentVerifierLottery(data);
+            var userXorDataHash = await _contractCaller.ComputeHashForSettlementProposalAssessmentVerifierLottery(userXorData);
 
-            long lotteryInitBlockNumber = await _contractCaller.InitThingAssessmentVerifierLottery(
+            long lotteryInitBlockNumber = await _contractCaller.InitSettlementProposalAssessmentVerifierLottery(
                 command.ThingId.ToByteArray(), command.SettlementProposalId.ToByteArray(),
                 dataHash, userXorDataHash
             );
 
-            int lotteryDurationBlocks = await _contractCaller.GetThingAssessmentVerifierLotteryDurationBlocks();
+            int lotteryDurationBlocks = await _contractCaller.GetSettlementProposalAssessmentVerifierLotteryDurationBlocks();
 
             var task = new DeferredTask(
-                type: TaskType.CloseThingAssessmentVerifierLottery,
+                type: TaskType.CloseSettlementProposalAssessmentVerifierLottery,
                 scheduledBlockNumber: lotteryInitBlockNumber + lotteryDurationBlocks + 1
             );
 

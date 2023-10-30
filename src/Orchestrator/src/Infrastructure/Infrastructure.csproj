@@ -27,10 +27,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Functions/AddUserIdFromWalletAddress.v0.sql" />
-        <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Triggers/OnNewUserEvent.v0.sql" />
-        <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Triggers/OnNewUserEvent.v0-drop.sql" />
-        <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Triggers/OnNewUserEvent.v1.sql" />
+        <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Functions/AddUserIdToEvent.v0.sql" />
+        <EmbeddedResource Include="Persistence/Migrations/Event/Scripts/Triggers/OnNewUserActionEvent.v0.sql" />
     </ItemGroup>
 
 </Project>

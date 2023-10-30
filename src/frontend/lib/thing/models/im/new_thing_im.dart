@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 
 import '../../../general/models/im/tag_im.dart';
-import 'evidence_im.dart';
+import 'thing_evidence_im.dart';
 
 class NewThingIm {
   final String subjectId;
@@ -13,7 +13,7 @@ class NewThingIm {
   final Uint8List? imageBytes;
   final String? croppedImageExt;
   final Uint8List? croppedImageBytes;
-  final List<EvidenceIm> evidence;
+  final List<ThingEvidenceIm> evidence;
   final List<TagIm> tags;
 
   NewThingIm({

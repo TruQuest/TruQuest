@@ -335,7 +335,7 @@ class _LotteryState extends StateX<Lottery> {
                                         Padding(
                                           padding: const EdgeInsets.symmetric(vertical: 8),
                                           child: Text(
-                                            entry.userIdShort,
+                                            entry.walletAddressShort,
                                             style: GoogleFonts.raleway(
                                               color: entry.userId == _currentUserId ? Colors.white : Colors.black,
                                             ),

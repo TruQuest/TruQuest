@@ -13,7 +13,7 @@ using Application.Common.Interfaces;
 using Application.Subject.Commands.AddNewSubject;
 using Application.Thing.Commands.CreateNewThingDraft;
 using Application.Thing.Commands.SubmitNewThing;
-using Application.Thing.Commands.CastAcceptancePollVote;
+using Application.Thing.Commands.CastValidationPollVote;
 using Application.Settlement.Common.Models.IM;
 using Application.Settlement.Commands.CreateNewSettlementProposalDraft;
 using Application.Settlement.Commands.SubmitNewSettlementProposal;
@@ -21,8 +21,8 @@ using Application.Thing.Queries.GetThing;
 using Application.Common.Misc;
 using Application.Common.Models.QM;
 using Application.Settlement.Commands.CastAssessmentPollVote;
-using ThingEthEvents = Application.Ethereum.Events.ThingSubmissionVerifierLottery;
-using ProposalEthEvents = Application.Ethereum.Events.ThingAssessmentVerifierLottery;
+using ThingEthEvents = Application.Ethereum.Events.ThingValidationVerifierLottery;
+using ProposalEthEvents = Application.Ethereum.Events.SettlementProposalAssessmentVerifierLottery;
 using Infrastructure.Ethereum.TypedData;
 using API.BackgroundServices;
 
@@ -38,10 +38,10 @@ public class E2ETests : IAsyncLifetime
     private EventBroadcaster _eventBroadcaster;
 
     private Contract _truQuestContract;
-    private Contract _thingSubmissionVerifierLotteryContract;
-    private Contract _acceptancePollContract;
-    private Contract _thingAssessmentVerifierLotteryContract;
-    private Contract _assessmentPollContract;
+    private Contract _thingValidationVerifierLotteryContract;
+    private Contract _thingValidationPollContract;
+    private Contract _settlementProposalAssessmentVerifierLotteryContract;
+    private Contract _settlementProposalAssessmentPollContract;
 
     private readonly string _dummyQuillContentJson;
     private readonly List<Dictionary<string, object>> _dummyQuillContent = new()
@@ -99,31 +99,31 @@ public class E2ETests : IAsyncLifetime
             .OnNetwork(rpcUrl)
             .Find();
 
-        _thingSubmissionVerifierLotteryContract = ContractFinder.Create()
+        _thingValidationVerifierLotteryContract = ContractFinder.Create()
             .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
-            .WithName("ThingSubmissionVerifierLottery")
-            .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:ThingSubmissionVerifierLottery:Address"))
+            .WithName("ThingValidationVerifierLottery")
+            .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:ThingValidationVerifierLottery:Address"))
             .OnNetwork(rpcUrl)
             .Find();
 
-        _acceptancePollContract = ContractFinder.Create()
+        _thingValidationPollContract = ContractFinder.Create()
             .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
-            .WithName("AcceptancePoll")
-            .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:AcceptancePoll:Address"))
+            .WithName("ThingValidationPoll")
+            .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:ThingValidationPoll:Address"))
             .OnNetwork(rpcUrl)
             .Find();
 
-        _thingAssessmentVerifierLotteryContract = ContractFinder.Create()
+        _settlementProposalAssessmentVerifierLotteryContract = ContractFinder.Create()
             .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
-            .WithName("ThingAssessmentVerifierLottery")
-            .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:ThingAssessmentVerifierLottery:Address"))
+            .WithName("SettlementProposalAssessmentVerifierLottery")
+            .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:SettlementProposalAssessmentVerifierLottery:Address"))
             .OnNetwork(rpcUrl)
             .Find();
 
-        _assessmentPollContract = ContractFinder.Create()
+        _settlementProposalAssessmentPollContract = ContractFinder.Create()
             .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
-            .WithName("AssessmentPoll")
-            .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:AssessmentPoll:Address"))
+            .WithName("SettlementProposalAssessmentPoll")
+            .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:SettlementProposalAssessmentPoll:Address"))
             .OnNetwork(rpcUrl)
             .Find();
     }
@@ -143,7 +143,7 @@ public class E2ETests : IAsyncLifetime
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"/ipfs/{thing.VoteAggIpfsCid!}");
         using var response = await client.SendAsync(request);
-        var voteAgg = (await JsonSerializer.DeserializeAsync<SignedAcceptancePollVoteAggTd>(
+        var voteAgg = (await JsonSerializer.DeserializeAsync<SignedThingValidationPollVoteAggTd>(
             await response.Content.ReadAsStreamAsync(),
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
         ))!;
@@ -156,12 +156,12 @@ public class E2ETests : IAsyncLifetime
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, $"/ipfs/{v.IpfsCid}");
             using var response = await client.SendAsync(request);
-            var signedVote = await JsonSerializer.DeserializeAsync<SignedNewAcceptancePollVoteTd>(
+            var signedVote = await JsonSerializer.DeserializeAsync<SignedNewThingValidationPollVoteTd>(
                 await response.Content.ReadAsStreamAsync(),
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
             );
 
-            var vote = NewAcceptancePollVoteIm.FromMessageForSigning(signedVote!.Vote);
+            var vote = NewThingValidationPollVoteIm.FromMessageForSigning(signedVote!.Vote);
 
             return (
                 VoterId: signedVote.UserId,
@@ -179,7 +179,7 @@ public class E2ETests : IAsyncLifetime
             TxnIndex: v.TxnIndex,
             VoterId: v.UserId,
             VoterWalletAddress: v.WalletAddress,
-            Decision: AcceptancePollVoteDecisionExtension.FromString(v.Decision)
+            Decision: ThingValidationPollVoteDecisionExtension.FromString(v.Decision)
         ));
 
         var accountedVotes = new HashSet<AccountedVote>();
@@ -214,7 +214,7 @@ public class E2ETests : IAsyncLifetime
     }
 
     private async Task<(
-        SubmissionEvaluationDecision Decision,
+        ValidationDecision Decision,
         IEnumerable<string> RewardedVerifiers,
         IEnumerable<string> PenalizedVerifiers
     )> _calculatePollResult(byte[] thingIdBytes, HashSet<AccountedVote> accountedVotes)
@@ -230,7 +230,7 @@ public class E2ETests : IAsyncLifetime
             .ToList();
 
         var votingVolumeThresholdPercent = await _sut.ExecWithService<IContractCaller, int>(
-            contractCaller => contractCaller.GetThingAcceptancePollVotingVolumeThresholdPercent()
+            contractCaller => contractCaller.GetThingValidationPollVotingVolumeThresholdPercent()
         );
 
         var requiredVoterCount = Math.Ceiling(votingVolumeThresholdPercent / 100f * verifierAddresses.Count);
@@ -238,14 +238,14 @@ public class E2ETests : IAsyncLifetime
         if (accountedVotes.Count < requiredVoterCount)
         {
             return (
-                Decision: SubmissionEvaluationDecision.UnsettledDueToInsufficientVotingVolume,
+                Decision: ValidationDecision.UnsettledDueToInsufficientVotingVolume,
                 RewardedVerifiers: new string[] { },
                 PenalizedVerifiers: notVotedVerifiers
             );
         }
 
         var majorityThresholdPercent = await _sut.ExecWithService<IContractCaller, int>(
-            contractCaller => contractCaller.GetThingAcceptancePollMajorityThresholdPercent()
+            contractCaller => contractCaller.GetThingValidationPollMajorityThresholdPercent()
         );
         var acceptedDecisionRequiredVoteCount = Math.Ceiling(majorityThresholdPercent / 100f * accountedVotes.Count);
 
@@ -255,7 +255,7 @@ public class E2ETests : IAsyncLifetime
         if (acceptedDecision.Count() < acceptedDecisionRequiredVoteCount)
         {
             return (
-                Decision: SubmissionEvaluationDecision.UnsettledDueToMajorityThresholdNotReached,
+                Decision: ValidationDecision.UnsettledDueToMajorityThresholdNotReached,
                 RewardedVerifiers: new string[] { },
                 PenalizedVerifiers: notVotedVerifiers
             );
@@ -278,7 +278,7 @@ public class E2ETests : IAsyncLifetime
         if (acceptedDecision.Key == AccountedVote.Decision.Accept)
         {
             return (
-                Decision: SubmissionEvaluationDecision.Accepted,
+                Decision: ValidationDecision.Accepted,
                 RewardedVerifiers: verifiersToReward,
                 PenalizedVerifiers: verifiersToSlash
             );
@@ -286,14 +286,14 @@ public class E2ETests : IAsyncLifetime
         else if (acceptedDecision.Key == AccountedVote.Decision.SoftDecline)
         {
             return (
-                Decision: SubmissionEvaluationDecision.SoftDeclined,
+                Decision: ValidationDecision.SoftDeclined,
                 RewardedVerifiers: verifiersToReward,
                 PenalizedVerifiers: verifiersToSlash
             );
         }
 
         return (
-            Decision: SubmissionEvaluationDecision.HardDeclined,
+            Decision: ValidationDecision.HardDeclined,
             RewardedVerifiers: verifiersToReward,
             PenalizedVerifiers: verifiersToSlash
         );
@@ -352,14 +352,14 @@ public class E2ETests : IAsyncLifetime
             ThingId = thingId
         });
 
-        var thingSubmissionStake = (long)(
+        var thingStake = (long)(
             await _truQuestContract
                 .WalkStorage()
-                .Field("s_thingSubmissionStake")
+                .Field("s_thingStake")
                 .GetValue<SolUint256>()
         ).Value;
 
-        Debug.WriteLine($"************ Thing submission stake: {thingSubmissionStake} ************");
+        Debug.WriteLine($"************ Thing stake: {thingStake} ************");
 
         var submitterInitialBalance = await _sut.ContractCaller.GetAvailableFunds("Submitter");
 
@@ -368,7 +368,7 @@ public class E2ETests : IAsyncLifetime
         var thingIdBytes = thingId.ToByteArray();
 
         var lotteryInitializedTcs = new TaskCompletionSource();
-        _eventBroadcaster.ThingSubmissionVerifierLotteryInitialized += delegate
+        _eventBroadcaster.ThingValidationVerifierLotteryInitialized += delegate
         {
             lotteryInitializedTcs.SetResult();
         };
@@ -376,7 +376,7 @@ public class E2ETests : IAsyncLifetime
         await _sut.ContractCaller.FundThingAs("Submitter", thingIdBytes, thingSubmitResult.Data!.Signature);
 
         var submitterBalance = await _sut.ContractCaller.GetAvailableFunds("Submitter");
-        submitterBalance.Should().Be(submitterInitialBalance - thingSubmissionStake);
+        submitterBalance.Should().Be(submitterInitialBalance - thingStake);
 
         var submitter = await _truQuestContract
             .WalkStorage()
@@ -403,13 +403,13 @@ public class E2ETests : IAsyncLifetime
         var verifierCount = 6;
 
         var cde = new AsyncCountdownEvent(verifierCount);
-        _eventBroadcaster.JoinedThingSubmissionVerifierLottery += delegate
+        _eventBroadcaster.JoinedThingValidationVerifierLottery += delegate
         {
             cde.Signal(1);
         };
 
         var thingLotteryClosedTcs = new TaskCompletionSource<ThingEthEvents.LotteryClosedWithSuccess.LotteryClosedWithSuccessEvent>();
-        _eventBroadcaster.ThingSubmissionVerifierLotteryClosedWithSuccess += (_, @event) =>
+        _eventBroadcaster.ThingValidationVerifierLotteryClosedWithSuccess += (_, @event) =>
         {
             thingLotteryClosedTcs.SetResult(@event.Event);
         };
@@ -430,7 +430,7 @@ public class E2ETests : IAsyncLifetime
 
             var verifierInitialBalance = await _sut.ContractCaller.GetAvailableFunds(verifierAccountName);
 
-            await _sut.ContractCaller.JoinThingSubmissionVerifierLotteryAs(verifierAccountName, thingIdBytes, userData);
+            await _sut.ContractCaller.JoinThingValidationVerifierLotteryAs(verifierAccountName, thingIdBytes, userData);
 
             var verifierBalance = await _sut.ContractCaller.GetAvailableFunds(verifierAccountName);
             verifierBalance.Should().Be(verifierInitialBalance - verifierStake);
@@ -442,7 +442,7 @@ public class E2ETests : IAsyncLifetime
 
         await cde.WaitAsync();
 
-        var lotteryDurationBlocks = await _thingSubmissionVerifierLotteryContract
+        var lotteryDurationBlocks = await _thingValidationVerifierLotteryContract
             .WalkStorage()
             .Field("s_durationBlocks")
             .GetValue<SolUint16>();
@@ -452,7 +452,7 @@ public class E2ETests : IAsyncLifetime
         var thingLotteryClosedWithSuccessEvent = await thingLotteryClosedTcs.Task;
 
         var maxNonce = await _sut.ExecWithService<IContractCaller, BigInteger>(
-            contractCaller => contractCaller.GetThingSubmissionVerifierLotteryMaxNonce()
+            contractCaller => contractCaller.GetThingValidationVerifierLotteryMaxNonce()
         );
 
         var nonce = (long)(
@@ -469,7 +469,7 @@ public class E2ETests : IAsyncLifetime
         );
 
         int requiredVerifierCount = await _sut.ExecWithService<IContractCaller, int>(
-            contractCaller => contractCaller.GetThingSubmissionLotteryNumVerifiers()
+            contractCaller => contractCaller.GetThingValidationVerifierLotteryNumVerifiers()
         );
 
         var userXorData = thingLotteryClosedWithSuccessEvent.UserXorData;
@@ -494,10 +494,10 @@ public class E2ETests : IAsyncLifetime
             .Take(requiredVerifierCount)
             .ToList();
 
-        // giving time to add verifiers, change the thing's state, and create an acceptance poll closing task
+        // giving time to add verifiers, change the thing's state, and create a validation poll closing task
         await Task.Delay(TimeSpan.FromSeconds(10));
 
-        verifierCount = await _acceptancePollContract
+        verifierCount = await _thingValidationPollContract
             .WalkStorage()
             .Field("s_thingVerifiers")
             .AsMapping()
@@ -507,12 +507,12 @@ public class E2ETests : IAsyncLifetime
 
         verifierCount.Should().Be(requiredVerifierCount);
 
-        var thingSubmissionVerifierAccountNames = new List<string>();
+        var thingValidationVerifierAccountNames = new List<string>();
 
         for (int i = 0; i < verifierCount; ++i)
         {
             var verifierAddress = (
-                await _acceptancePollContract
+                await _thingValidationPollContract
                     .WalkStorage()
                     .Field("s_thingVerifiers")
                     .AsMapping()
@@ -531,29 +531,29 @@ public class E2ETests : IAsyncLifetime
             var verifierBalance = await _sut.ContractCaller.GetAvailableFunds(verifierAccountName);
             verifierBalance.Should().Be(winnerData.InitialBalance - verifierStake);
 
-            thingSubmissionVerifierAccountNames.Add(verifierAccountName);
+            thingValidationVerifierAccountNames.Add(verifierAccountName);
 
             if (i % 2 == 0)
             {
                 await _sut.RunAs(accountName: verifierAccountName);
 
-                var voteInput = new NewAcceptancePollVoteIm
+                var voteInput = new NewThingValidationPollVoteIm
                 {
                     ThingId = thingId,
                     CastedAt = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
-                    Decision = Application.Thing.Commands.CastAcceptancePollVote.DecisionIm.Accept,
+                    Decision = Application.Thing.Commands.CastValidationPollVote.DecisionIm.Accept,
                     Reason = "Some reason"
                 };
 
-                await _sut.SendRequest(new CastAcceptancePollVoteCommand
+                await _sut.SendRequest(new CastValidationPollVoteCommand
                 {
                     Input = voteInput,
-                    Signature = _sut.Signer.SignNewAcceptancePollVoteMessageAs(verifierAccountName, voteInput)
+                    Signature = _sut.Signer.SignNewThingValidationPollVoteMessageAs(verifierAccountName, voteInput)
                 });
             }
             else
             {
-                await _sut.ContractCaller.CastAcceptancePollVoteAs(verifierAccountName, thingIdBytes, (ushort)i, Vote.Accept);
+                await _sut.ContractCaller.CastThingValidationPollVoteAs(verifierAccountName, thingIdBytes, (ushort)i, Vote.Accept);
             }
         }
 
@@ -566,12 +566,12 @@ public class E2ETests : IAsyncLifetime
         }
 
         var pollFinalizedTcs = new TaskCompletionSource();
-        _eventBroadcaster.ThingAcceptancePollFinalized += delegate
+        _eventBroadcaster.ThingValidationPollFinalized += delegate
         {
             pollFinalizedTcs.SetResult();
         };
 
-        var pollDurationBlocks = await _acceptancePollContract
+        var pollDurationBlocks = await _thingValidationPollContract
             .WalkStorage()
             .Field("s_durationBlocks")
             .GetValue<SolUint16>();
@@ -582,22 +582,22 @@ public class E2ETests : IAsyncLifetime
 
         await Task.Delay(TimeSpan.FromSeconds(10)); // giving time to update the thing's state and ipfs cid
 
-        var thingSubmissionAcceptedReward = (long)(
+        var thingAcceptedReward = (long)(
             await _truQuestContract
                 .WalkStorage()
-                .Field("s_thingSubmissionAcceptedReward")
+                .Field("s_thingAcceptedReward")
                 .GetValue<SolUint256>()
         ).Value;
-        Debug.WriteLine($"*************** Thing submission accepted reward: {thingSubmissionAcceptedReward} ***************");
+        Debug.WriteLine($"*************** Thing accepted reward: {thingAcceptedReward} ***************");
 
-        var thingSubmissionRejectedPenalty = (long)(
+        var thingRejectedPenalty = (long)(
             await _truQuestContract
                 .WalkStorage()
-                .Field("s_thingSubmissionRejectedPenalty")
+                .Field("s_thingRejectedPenalty")
                 .GetValue<SolUint256>()
         ).Value;
         Debug.WriteLine(
-            $"*************** Thing submission rejected penalty: {thingSubmissionRejectedPenalty} ***************"
+            $"*************** Thing rejected penalty: {thingRejectedPenalty} ***************"
         );
 
         var verifierReward = (long)(
@@ -627,19 +627,19 @@ public class E2ETests : IAsyncLifetime
         submitterBalance = await _sut.ContractCaller.GetAvailableFunds("Submitter");
 
         if (pollResult.Decision is
-            SubmissionEvaluationDecision.UnsettledDueToInsufficientVotingVolume or
-            SubmissionEvaluationDecision.UnsettledDueToMajorityThresholdNotReached
+            ValidationDecision.UnsettledDueToInsufficientVotingVolume or
+            ValidationDecision.UnsettledDueToMajorityThresholdNotReached
         )
         {
             thing.State.Should().Be(ThingStateQm.ConsensusNotReached);
             submitterBalance.Should().Be(submitterInitialBalance);
         }
-        else if (pollResult.Decision is SubmissionEvaluationDecision.Accepted)
+        else if (pollResult.Decision is ValidationDecision.Accepted)
         {
             thing.State.Should().Be(ThingStateQm.AwaitingSettlement);
-            submitterBalance.Should().Be(submitterInitialBalance + thingSubmissionAcceptedReward);
+            submitterBalance.Should().Be(submitterInitialBalance + thingAcceptedReward);
         }
-        else if (pollResult.Decision is SubmissionEvaluationDecision.SoftDeclined)
+        else if (pollResult.Decision is ValidationDecision.SoftDeclined)
         {
             thing.State.Should().Be(ThingStateQm.Declined);
             submitterBalance.Should().Be(submitterInitialBalance);
@@ -647,7 +647,7 @@ public class E2ETests : IAsyncLifetime
         else
         {
             thing.State.Should().Be(ThingStateQm.Declined);
-            submitterBalance.Should().Be(submitterInitialBalance - thingSubmissionRejectedPenalty);
+            submitterBalance.Should().Be(submitterInitialBalance - thingRejectedPenalty);
         }
 
         (pollResult.RewardedVerifiers.Count() + pollResult.PenalizedVerifiers.Count()).Should().Be(verifierCount);
@@ -709,7 +709,7 @@ public class E2ETests : IAsyncLifetime
 
         var proposalIdBytes = proposalId.ToByteArray();
 
-        await _sut.ContractCaller.FundThingSettlementProposalAs(
+        await _sut.ContractCaller.FundSettlementProposalAs(
             "Proposer", thingIdBytes, proposalIdBytes, proposalSubmitResult.Data!.Signature
         );
 
@@ -755,19 +755,19 @@ public class E2ETests : IAsyncLifetime
             var verifierAccountName = $"Verifier{i}";
             var walletAddress = await _sut.ContractCaller.GetWalletAddressFor(verifierAccountName);
 
-            if (thingSubmissionVerifierAccountNames.Contains(verifierAccountName))
+            if (thingValidationVerifierAccountNames.Contains(verifierAccountName))
             {
                 var index = await _sut.ContractCaller.GetUserIndexAmongThingVerifiers(thingIdBytes, verifierAccountName);
                 index.Should().BeGreaterThanOrEqualTo(0);
 
-                await _sut.ContractCaller.ClaimThingAssessmentVerifierLotterySpotAs(
+                await _sut.ContractCaller.ClaimSettlementProposalAssessmentVerifierLotterySpotAs(
                     verifierAccountName, thingProposalIdBytes, (ushort)index
                 );
             }
             else
             {
                 var userData = RandomNumberGenerator.GetBytes(32);
-                await _sut.ContractCaller.JoinThingAssessmentVerifierLotteryAs(
+                await _sut.ContractCaller.JoinSettlementProposalAssessmentVerifierLotteryAs(
                     verifierAccountName, thingProposalIdBytes, userData
                 );
             }
@@ -777,7 +777,7 @@ public class E2ETests : IAsyncLifetime
 
         await cde.WaitAsync();
 
-        lotteryDurationBlocks = await _thingAssessmentVerifierLotteryContract
+        lotteryDurationBlocks = await _settlementProposalAssessmentVerifierLotteryContract
             .WalkStorage()
             .Field("s_durationBlocks")
             .GetValue<SolUint16>();
@@ -787,7 +787,7 @@ public class E2ETests : IAsyncLifetime
         var proposalLotteryClosedWithSuccessEvent = await proposalLotteryClosedTcs.Task;
 
         maxNonce = await _sut.ExecWithService<IContractCaller, BigInteger>(
-            contractCaller => contractCaller.GetThingAssessmentVerifierLotteryMaxNonce()
+            contractCaller => contractCaller.GetSettlementProposalAssessmentVerifierLotteryMaxNonce()
         );
 
         nonce = (long)(
@@ -803,12 +803,12 @@ public class E2ETests : IAsyncLifetime
         await Task.Delay(TimeSpan.FromSeconds(10));
 
         requiredVerifierCount = await _sut.ExecWithService<IContractCaller, int>(
-            contractCaller => contractCaller.GetThingAssessmentLotteryNumVerifiers()
+            contractCaller => contractCaller.GetSettlementProposalAssessmentVerifierLotteryNumVerifiers()
         );
 
-        verifierCount = await _assessmentPollContract
+        verifierCount = await _settlementProposalAssessmentPollContract
             .WalkStorage()
-            .Field("s_proposalVerifiers")
+            .Field("s_settlementProposalVerifiers")
             .AsMapping()
             .Key(new SolBytes32(thingProposalIdBytes))
             .AsArrayOf<SolAddress>()
@@ -831,9 +831,9 @@ public class E2ETests : IAsyncLifetime
         for (int i = 0; i < verifierCount; ++i)
         {
             var verifierAddress = (
-                await _assessmentPollContract
+                await _settlementProposalAssessmentPollContract
                     .WalkStorage()
-                    .Field("s_proposalVerifiers")
+                    .Field("s_settlementProposalVerifiers")
                     .AsMapping()
                     .Key(new SolBytes32(thingProposalIdBytes))
                     .AsArrayOf<SolAddress>()
@@ -849,7 +849,7 @@ public class E2ETests : IAsyncLifetime
             {
                 await _sut.RunAs(accountName: verifierAccountName);
 
-                var voteInput = new NewAssessmentPollVoteIm
+                var voteInput = new NewSettlementProposalAssessmentPollVoteIm
                 {
                     ThingId = thingId,
                     SettlementProposalId = proposalId,
@@ -861,12 +861,12 @@ public class E2ETests : IAsyncLifetime
                 await _sut.SendRequest(new CastAssessmentPollVoteCommand
                 {
                     Input = voteInput,
-                    Signature = _sut.Signer.SignNewAssessmentPollVoteMessageAs(verifierAccountName, voteInput)
+                    Signature = _sut.Signer.SignNewSettlementProposalAssessmentPollVoteMessageAs(verifierAccountName, voteInput)
                 });
             }
             else
             {
-                await _sut.ContractCaller.CastAssessmentPollVoteAs(
+                await _sut.ContractCaller.CastSettlementProposalAssessmentPollVoteAs(
                     verifierAccountName, thingProposalIdBytes, (ushort)i, Vote.Accept
                 );
             }
@@ -874,7 +874,7 @@ public class E2ETests : IAsyncLifetime
 
         await cde.WaitAsync();
 
-        pollDurationBlocks = await _assessmentPollContract
+        pollDurationBlocks = await _settlementProposalAssessmentPollContract
             .WalkStorage()
             .Field("s_durationBlocks")
             .GetValue<SolUint16>();

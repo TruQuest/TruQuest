@@ -73,7 +73,7 @@ internal class ThingQueryable : Queryable, IThingQueryable
                     truquest.""Subjects"" AS s
                         ON t.""SubjectId"" = s.""Id""
                         INNER JOIN
-                    truquest.""Evidence"" AS e
+                    truquest.""ThingEvidence"" AS e
                         ON t.""Id"" = e.""ThingId""
                         INNER JOIN
                     truquest.""ThingAttachedTags"" AS tat
@@ -98,7 +98,7 @@ internal class ThingQueryable : Queryable, IThingQueryable
             }
         );
 
-        var thing = multiQuery.SingleWithMultipleMany<ThingQm, EvidenceQm, TagQm>(
+        var thing = multiQuery.SingleWithMultipleMany<ThingQm, ThingEvidenceQm, TagQm>(
             joined1CollectionSelector: thing => thing.Evidence,
             joined2CollectionSelector: thing => thing.Tags
         );
@@ -108,22 +108,6 @@ internal class ThingQueryable : Queryable, IThingQueryable
         }
 
         return thing;
-    }
-
-    public async Task<IEnumerable<VerifierLotteryParticipantEntryQm>> GetVerifierLotteryParticipants(Guid thingId)
-    {
-        var dbConn = await _getOpenConnection();
-        var entries = await dbConn.QueryAsync<VerifierLotteryParticipantEntryQm>(
-            @"
-                SELECT ""L1BlockNumber"", ""BlockNumber"", ""TxnHash"", ""UserId"", ""UserData"", ""Nonce""
-                FROM truquest_events.""JoinedThingSubmissionVerifierLotteryEvents""
-                WHERE ""ThingId"" = @ThingId
-                ORDER BY ""BlockNumber"" DESC, ""TxnIndex"" DESC
-            ",
-            param: new { ThingId = thingId }
-        );
-
-        return entries;
     }
 
     public async Task<IEnumerable<string>> GetVerifiers(Guid thingId)

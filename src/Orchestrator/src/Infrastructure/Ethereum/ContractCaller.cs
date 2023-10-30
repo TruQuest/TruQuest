@@ -27,10 +27,10 @@ internal class ContractCaller : IContractCaller
     private readonly Web3 _web3;
     private readonly string _entryPointAddress;
     private readonly string _simpleAccountFactoryAddress;
-    private readonly string _thingSubmissionVerifierLotteryAddress;
-    private readonly string _acceptancePollAddress;
-    private readonly string _thingAssessmentVerifierLotteryAddress;
-    private readonly string _assessmentPollAddress;
+    private readonly string _thingValidationVerifierLotteryAddress;
+    private readonly string _thingValidationPollAddress;
+    private readonly string _settlementProposalAssessmentVerifierLotteryAddress;
+    private readonly string _settlementProposalAssessmentPollAddress;
 
     private readonly ChannelReader<(
         TaskCompletionSource<TransactionReceipt> Tcs,
@@ -61,10 +61,10 @@ internal class ContractCaller : IContractCaller
         _web3 = new Web3(orchestrator, configuration[$"Ethereum:Networks:{network}:URL"]);
         _entryPointAddress = configuration[$"Ethereum:Contracts:{network}:EntryPoint:Address"]!;
         _simpleAccountFactoryAddress = configuration[$"Ethereum:Contracts:{network}:SimpleAccountFactory:Address"]!;
-        _thingSubmissionVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingSubmissionVerifierLottery:Address"]!;
-        _acceptancePollAddress = configuration[$"Ethereum:Contracts:{network}:AcceptancePoll:Address"]!;
-        _thingAssessmentVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingAssessmentVerifierLottery:Address"]!;
-        _assessmentPollAddress = configuration[$"Ethereum:Contracts:{network}:AssessmentPoll:Address"]!;
+        _thingValidationVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingValidationVerifierLottery:Address"]!;
+        _thingValidationPollAddress = configuration[$"Ethereum:Contracts:{network}:ThingValidationPoll:Address"]!;
+        _settlementProposalAssessmentVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:SettlementProposalAssessmentVerifierLottery:Address"]!;
+        _settlementProposalAssessmentPollAddress = configuration[$"Ethereum:Contracts:{network}:SettlementProposalAssessmentPoll:Address"]!;
 
         var channel = Channel.CreateUnbounded<(
             TaskCompletionSource<TransactionReceipt> Tcs,
@@ -142,37 +142,37 @@ internal class ContractCaller : IContractCaller
             }
         );
 
-    public Task<int> GetThingSubmissionLotteryNumVerifiers() => _web3.Eth
+    public Task<int> GetThingValidationVerifierLotteryNumVerifiers() => _web3.Eth
         .GetContractQueryHandler<GetNumVerifiersMessage>()
-        .QueryAsync<int>(_thingSubmissionVerifierLotteryAddress, new());
+        .QueryAsync<int>(_thingValidationVerifierLotteryAddress, new());
 
-    public Task<int> GetThingSubmissionVerifierLotteryDurationBlocks() => _web3.Eth
+    public Task<int> GetThingValidationVerifierLotteryDurationBlocks() => _web3.Eth
         .GetContractQueryHandler<GetDurationBlocksMessage>()
-        .QueryAsync<int>(_thingSubmissionVerifierLotteryAddress, new());
+        .QueryAsync<int>(_thingValidationVerifierLotteryAddress, new());
 
-    public async Task<IEnumerable<string>> GetThingSubmissionVerifierLotteryParticipants(byte[] thingId) => await _web3.Eth
-        .GetContractQueryHandler<GetThingSubmissionVerifierLotteryParticipantsMessage>()
+    public async Task<IEnumerable<string>> GetThingValidationVerifierLotteryParticipants(byte[] thingId) => await _web3.Eth
+        .GetContractQueryHandler<GetThingValidationVerifierLotteryParticipantsMessage>()
         .QueryAsync<List<string>>(
-            _thingSubmissionVerifierLotteryAddress,
+            _thingValidationVerifierLotteryAddress,
             new()
             {
                 ThingId = thingId
             }
         );
 
-    public Task<byte[]> ComputeHashForThingSubmissionVerifierLottery(byte[] data)
+    public Task<byte[]> ComputeHashForThingValidationVerifierLottery(byte[] data)
     {
         return _web3.Eth.GetContractQueryHandler<ComputeHashMessage>().QueryAsync<byte[]>(
-            _thingSubmissionVerifierLotteryAddress, new() { Data = data }
+            _thingValidationVerifierLotteryAddress, new() { Data = data }
         );
     }
 
-    public async Task<long> InitThingSubmissionVerifierLottery(byte[] thingId, byte[] dataHash, byte[] userXorDataHash)
+    public async Task<long> InitThingValidationVerifierLottery(byte[] thingId, byte[] dataHash, byte[] userXorDataHash)
     {
         var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<InitThingSubmissionVerifierLotteryMessage>()
+            .GetContractTransactionHandler<InitThingValidationVerifierLotteryMessage>()
             .SendRequestAndWaitForReceiptAsync(
-                _thingSubmissionVerifierLotteryAddress,
+                _thingValidationVerifierLotteryAddress,
                 new()
                 {
                     ThingId = thingId,
@@ -182,19 +182,19 @@ internal class ContractCaller : IContractCaller
             )
         );
 
-        _logger.LogInformation("=============== InitThingSubmissionVerifierLottery: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        _logger.LogInformation("=============== InitThingValidationVerifierLottery: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
 
         // @@NOTE: Doing it this way instead of returning block number from the receipt, because
         // even when we are on L2, lottery init block is /L1/ block number.
-        return await GetThingSubmissionVerifierLotteryInitBlock(thingId);
+        return await GetThingValidationVerifierLotteryInitBlock(thingId);
     }
 
-    public async Task<long> GetThingSubmissionVerifierLotteryInitBlock(byte[] thingId)
+    public async Task<long> GetThingValidationVerifierLotteryInitBlock(byte[] thingId)
     {
         var block = await _web3.Eth
-            .GetContractQueryHandler<GetThingSubmissionVerifierLotteryInitBlockMessage>()
+            .GetContractQueryHandler<GetThingValidationVerifierLotteryInitBlockMessage>()
             .QueryAsync<BigInteger>(
-                _thingSubmissionVerifierLotteryAddress,
+                _thingValidationVerifierLotteryAddress,
                 new()
                 {
                     ThingId = thingId
@@ -204,25 +204,25 @@ internal class ContractCaller : IContractCaller
         return (long)block;
     }
 
-    public Task<bool> CheckThingSubmissionVerifierLotteryExpired(byte[] thingId) => _web3.Eth
-        .GetContractQueryHandler<CheckThingSubmissionVerifierLotteryExpiredMessage>()
+    public Task<bool> CheckThingValidationVerifierLotteryExpired(byte[] thingId) => _web3.Eth
+        .GetContractQueryHandler<CheckThingValidationVerifierLotteryExpiredMessage>()
         .QueryAsync<bool>(
-            _thingSubmissionVerifierLotteryAddress,
+            _thingValidationVerifierLotteryAddress,
             new() { ThingId = thingId }
         );
 
-    public Task<BigInteger> GetThingSubmissionVerifierLotteryMaxNonce() => _web3.Eth
+    public Task<BigInteger> GetThingValidationVerifierLotteryMaxNonce() => _web3.Eth
         .GetContractQueryHandler<GetMaxNonceMessage>()
-        .QueryAsync<BigInteger>(_thingSubmissionVerifierLotteryAddress, new());
+        .QueryAsync<BigInteger>(_thingValidationVerifierLotteryAddress, new());
 
-    public async Task CloseThingSubmissionVerifierLotteryWithSuccess(
+    public async Task CloseThingValidationVerifierLotteryWithSuccess(
         byte[] thingId, byte[] data, byte[] userXorData, byte[] hashOfL1EndBlock, List<ulong> winnerIndices
     )
     {
         var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<CloseThingSubmissionVerifierLotteryWithSuccessMessage>()
+            .GetContractTransactionHandler<CloseThingValidationVerifierLotteryWithSuccessMessage>()
             .SendRequestAndWaitForReceiptAsync(
-                _thingSubmissionVerifierLotteryAddress,
+                _thingValidationVerifierLotteryAddress,
                 new()
                 {
                     ThingId = thingId,
@@ -234,15 +234,15 @@ internal class ContractCaller : IContractCaller
             )
         );
 
-        _logger.LogInformation("=============== CloseThingSubmissionVerifierLotteryWithSuccess: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        _logger.LogInformation("=============== CloseThingValidationVerifierLotteryWithSuccess: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
-    public async Task CloseThingSubmissionVerifierLotteryInFailure(byte[] thingId, int joinedNumVerifiers)
+    public async Task CloseThingValidationVerifierLotteryInFailure(byte[] thingId, int joinedNumVerifiers)
     {
         var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<CloseThingSubmissionVerifierLotteryInFailureMessage>()
+            .GetContractTransactionHandler<CloseThingValidationVerifierLotteryInFailureMessage>()
             .SendRequestAndWaitForReceiptAsync(
-                _thingSubmissionVerifierLotteryAddress,
+                _thingValidationVerifierLotteryAddress,
                 new()
                 {
                     ThingId = thingId,
@@ -251,41 +251,41 @@ internal class ContractCaller : IContractCaller
             )
         );
 
-        _logger.LogInformation("=============== CloseThingSubmissionVerifierLotteryInFailure: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        _logger.LogInformation("=============== CloseThingValidationVerifierLotteryInFailure: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
-    public Task<int> GetThingAcceptancePollVotingVolumeThresholdPercent() => _web3.Eth
+    public Task<int> GetThingValidationPollVotingVolumeThresholdPercent() => _web3.Eth
         .GetContractQueryHandler<GetPollVotingVolumeThresholdPercentMessage>()
-        .QueryAsync<int>(_acceptancePollAddress, new());
+        .QueryAsync<int>(_thingValidationPollAddress, new());
 
-    public Task<int> GetThingAcceptancePollMajorityThresholdPercent() => _web3.Eth
+    public Task<int> GetThingValidationPollMajorityThresholdPercent() => _web3.Eth
         .GetContractQueryHandler<GetPollMajorityThresholdPercentMessage>()
-        .QueryAsync<int>(_acceptancePollAddress, new());
+        .QueryAsync<int>(_thingValidationPollAddress, new());
 
-    public Task<int> GetThingAcceptancePollDurationBlocks() => _web3.Eth
+    public Task<int> GetThingValidationPollDurationBlocks() => _web3.Eth
         .GetContractQueryHandler<GetDurationBlocksMessage>()
-        .QueryAsync<int>(_acceptancePollAddress, new());
+        .QueryAsync<int>(_thingValidationPollAddress, new());
 
-    public async Task<long> GetThingAcceptancePollInitBlock(byte[] thingId)
+    public async Task<long> GetThingValidationPollInitBlock(byte[] thingId)
     {
         var block = await _web3.Eth
-            .GetContractQueryHandler<GetThingAcceptancePollInitBlockMessage>()
+            .GetContractQueryHandler<GetThingValidationPollInitBlockMessage>()
             .QueryAsync<BigInteger>(
-                _acceptancePollAddress,
+                _thingValidationPollAddress,
                 new() { ThingId = thingId }
             );
 
         return (long)block;
     }
 
-    public async Task FinalizeAcceptancePollForThingAsUnsettledDueToInsufficientVotingVolume(
+    public async Task FinalizeThingValidationPollAsUnsettledDueToInsufficientVotingVolume(
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
         var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<FinalizeAcceptancePollForThingAsUnsettledMessage>()
+            .GetContractTransactionHandler<FinalizeThingValidationPollAsUnsettledMessage>()
             .SendRequestAndWaitForReceiptAsync(
-                _acceptancePollAddress,
+                _thingValidationPollAddress,
                 new()
                 {
                     ThingId = thingId,
@@ -296,17 +296,17 @@ internal class ContractCaller : IContractCaller
             )
         );
 
-        _logger.LogInformation("=============== FinalizeAcceptancePollForThingAsUnsettled: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        _logger.LogInformation("=============== FinalizeThingValidationPollAsUnsettled: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
-    public async Task FinalizeAcceptancePollForThingAsUnsettledDueToMajorityThresholdNotReached(
+    public async Task FinalizeThingValidationPollAsUnsettledDueToMajorityThresholdNotReached(
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
         var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<FinalizeAcceptancePollForThingAsUnsettledMessage>()
+            .GetContractTransactionHandler<FinalizeThingValidationPollAsUnsettledMessage>()
             .SendRequestAndWaitForReceiptAsync(
-                _acceptancePollAddress,
+                _thingValidationPollAddress,
                 new()
                 {
                     ThingId = thingId,
@@ -317,17 +317,17 @@ internal class ContractCaller : IContractCaller
             )
         );
 
-        _logger.LogInformation("=============== FinalizeAcceptancePollForThingAsUnsettled: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        _logger.LogInformation("=============== FinalizeThingValidationPollAsUnsettled: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
-    public async Task FinalizeAcceptancePollForThingAsAccepted(
+    public async Task FinalizeThingValidationPollAsAccepted(
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
         var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<FinalizeAcceptancePollForThingAsAcceptedMessage>()
+            .GetContractTransactionHandler<FinalizeThingValidationPollAsAcceptedMessage>()
             .SendRequestAndWaitForReceiptAsync(
-                _acceptancePollAddress,
+                _thingValidationPollAddress,
                 new()
                 {
                     ThingId = thingId,
@@ -337,17 +337,17 @@ internal class ContractCaller : IContractCaller
             )
         );
 
-        _logger.LogInformation("=============== FinalizeAcceptancePollForThingAsAccepted: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        _logger.LogInformation("=============== FinalizeThingValidationPollAsAccepted: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
-    public async Task FinalizeAcceptancePollForThingAsSoftDeclined(
+    public async Task FinalizeThingValidationPollAsSoftDeclined(
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
         var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<FinalizeAcceptancePollForThingAsSoftDeclinedMessage>()
+            .GetContractTransactionHandler<FinalizeThingValidationPollAsSoftDeclinedMessage>()
             .SendRequestAndWaitForReceiptAsync(
-                _acceptancePollAddress,
+                _thingValidationPollAddress,
                 new()
                 {
                     ThingId = thingId,
@@ -357,17 +357,17 @@ internal class ContractCaller : IContractCaller
             )
         );
 
-        _logger.LogInformation("=============== FinalizeAcceptancePollForThingAsSoftDeclined: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        _logger.LogInformation("=============== FinalizeThingValidationPollAsSoftDeclined: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
-    public async Task FinalizeAcceptancePollForThingAsHardDeclined(
+    public async Task FinalizeThingValidationPollAsHardDeclined(
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
         var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<FinalizeAcceptancePollForThingAsHardDeclinedMessage>()
+            .GetContractTransactionHandler<FinalizeThingValidationPollAsHardDeclinedMessage>()
             .SendRequestAndWaitForReceiptAsync(
-                _acceptancePollAddress,
+                _thingValidationPollAddress,
                 new()
                 {
                     ThingId = thingId,
@@ -377,54 +377,54 @@ internal class ContractCaller : IContractCaller
             )
         );
 
-        _logger.LogInformation("=============== FinalizeAcceptancePollForThingAsHardDeclined: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        _logger.LogInformation("=============== FinalizeThingValidationPollAsHardDeclined: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
     public async Task<IEnumerable<string>> GetVerifiersForThing(byte[] thingId) => await _web3.Eth
-        .GetContractQueryHandler<GetVerifiersForThingMessage>()
-        .QueryAsync<List<string>>(_acceptancePollAddress, new()
+        .GetContractQueryHandler<GetThingVerifiersMessage>()
+        .QueryAsync<List<string>>(_thingValidationPollAddress, new()
         {
             ThingId = thingId
         });
 
-    public Task<int> GetThingAssessmentLotteryNumVerifiers() => _web3.Eth
+    public Task<int> GetSettlementProposalAssessmentVerifierLotteryNumVerifiers() => _web3.Eth
         .GetContractQueryHandler<GetNumVerifiersMessage>()
-        .QueryAsync<int>(_thingAssessmentVerifierLotteryAddress, new());
+        .QueryAsync<int>(_settlementProposalAssessmentVerifierLotteryAddress, new());
 
-    public Task<int> GetThingAssessmentVerifierLotteryDurationBlocks() => _web3.Eth
+    public Task<int> GetSettlementProposalAssessmentVerifierLotteryDurationBlocks() => _web3.Eth
         .GetContractQueryHandler<GetDurationBlocksMessage>()
-        .QueryAsync<int>(_thingAssessmentVerifierLotteryAddress, new());
+        .QueryAsync<int>(_settlementProposalAssessmentVerifierLotteryAddress, new());
 
-    public async Task<IEnumerable<string>> GetThingAssessmentVerifierLotterySpotClaimants(byte[] thingId, byte[] proposalId) =>
+    public async Task<IEnumerable<string>> GetSettlementProposalAssessmentVerifierLotterySpotClaimants(byte[] thingId, byte[] proposalId) =>
         await _web3.Eth
-            .GetContractQueryHandler<GetThingAssessmentVerifierLotterySpotClaimantsMessage>()
+            .GetContractQueryHandler<GetSettlementProposalAssessmentVerifierLotterySpotClaimantsMessage>()
             .QueryAsync<List<string>>(
-                _thingAssessmentVerifierLotteryAddress,
+                _settlementProposalAssessmentVerifierLotteryAddress,
                 new()
                 {
                     ThingProposalId = thingId.Concat(proposalId).ToArray()
                 }
             );
 
-    public async Task<IEnumerable<string>> GetThingAssessmentVerifierLotteryParticipants(byte[] thingId, byte[] proposalId) =>
+    public async Task<IEnumerable<string>> GetSettlementProposalAssessmentVerifierLotteryParticipants(byte[] thingId, byte[] proposalId) =>
         await _web3.Eth
-            .GetContractQueryHandler<GetThingAssessmentVerifierLotteryParticipantsMessage>()
+            .GetContractQueryHandler<GetSettlementProposalAssessmentVerifierLotteryParticipantsMessage>()
             .QueryAsync<List<string>>(
-                _thingAssessmentVerifierLotteryAddress,
+                _settlementProposalAssessmentVerifierLotteryAddress,
                 new()
                 {
                     ThingProposalId = thingId.Concat(proposalId).ToArray()
                 }
             );
 
-    public async Task<long> InitThingAssessmentVerifierLottery(
+    public async Task<long> InitSettlementProposalAssessmentVerifierLottery(
         byte[] thingId, byte[] proposalId, byte[] dataHash, byte[] userXorDataHash
     )
     {
         var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<InitThingAssessmentVerifierLotteryMessage>()
+            .GetContractTransactionHandler<InitSettlementProposalAssessmentVerifierLotteryMessage>()
             .SendRequestAndWaitForReceiptAsync(
-                _thingAssessmentVerifierLotteryAddress,
+                _settlementProposalAssessmentVerifierLotteryAddress,
                 new()
                 {
                     ThingProposalId = thingId.Concat(proposalId).ToArray(),
@@ -434,17 +434,17 @@ internal class ContractCaller : IContractCaller
             )
         );
 
-        _logger.LogInformation("=============== InitThingAssessmentVerifierLottery: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        _logger.LogInformation("=============== InitSettlementProposalAssessmentVerifierLottery: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
 
-        return await GetThingAssessmentVerifierLotteryInitBlock(thingId, proposalId);
+        return await GetSettlementProposalAssessmentVerifierLotteryInitBlock(thingId, proposalId);
     }
 
-    public async Task<long> GetThingAssessmentVerifierLotteryInitBlock(byte[] thingId, byte[] proposalId)
+    public async Task<long> GetSettlementProposalAssessmentVerifierLotteryInitBlock(byte[] thingId, byte[] proposalId)
     {
         var block = await _web3.Eth
-            .GetContractQueryHandler<GetThingAssessmentVerifierLotteryInitBlockMessage>()
+            .GetContractQueryHandler<GetSettlementProposalAssessmentVerifierLotteryInitBlockMessage>()
             .QueryAsync<BigInteger>(
-                _thingAssessmentVerifierLotteryAddress,
+                _settlementProposalAssessmentVerifierLotteryAddress,
                 new()
                 {
                     ThingProposalId = thingId.Concat(proposalId).ToArray()
@@ -454,38 +454,38 @@ internal class ContractCaller : IContractCaller
         return (long)block;
     }
 
-    public Task<byte[]> ComputeHashForThingAssessmentVerifierLottery(byte[] data)
+    public Task<byte[]> ComputeHashForSettlementProposalAssessmentVerifierLottery(byte[] data)
     {
         return _web3.Eth
             .GetContractQueryHandler<ComputeHashMessage>()
             .QueryAsync<byte[]>(
-                _thingAssessmentVerifierLotteryAddress,
+                _settlementProposalAssessmentVerifierLotteryAddress,
                 new() { Data = data }
             );
     }
 
-    public Task<bool> CheckThingAssessmentVerifierLotteryExpired(
+    public Task<bool> CheckSettlementProposalAssessmentVerifierLotteryExpired(
         byte[] thingId, byte[] proposalId
     ) => _web3.Eth
-        .GetContractQueryHandler<CheckThingAssessmentVerifierLotteryExpiredMessage>()
+        .GetContractQueryHandler<CheckSettlementProposalAssessmentVerifierLotteryExpiredMessage>()
         .QueryAsync<bool>(
-            _thingAssessmentVerifierLotteryAddress,
+            _settlementProposalAssessmentVerifierLotteryAddress,
             new() { ThingProposalId = thingId.Concat(proposalId).ToArray() }
         );
 
-    public Task<BigInteger> GetThingAssessmentVerifierLotteryMaxNonce() => _web3.Eth
+    public Task<BigInteger> GetSettlementProposalAssessmentVerifierLotteryMaxNonce() => _web3.Eth
         .GetContractQueryHandler<GetMaxNonceMessage>()
-        .QueryAsync<BigInteger>(_thingAssessmentVerifierLotteryAddress, new());
+        .QueryAsync<BigInteger>(_settlementProposalAssessmentVerifierLotteryAddress, new());
 
-    public async Task CloseThingAssessmentVerifierLotteryWithSuccess(
+    public async Task CloseSettlementProposalAssessmentVerifierLotteryWithSuccess(
         byte[] thingId, byte[] proposalId, byte[] data, byte[] userXorData,
         byte[] hashOfL1EndBlock, List<ulong> winnerClaimantIndices, List<ulong> winnerIndices
     )
     {
         var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<CloseThingAssessmentVerifierLotteryWithSuccessMessage>()
+            .GetContractTransactionHandler<CloseSettlementProposalAssessmentVerifierLotteryWithSuccessMessage>()
             .SendRequestAndWaitForReceiptAsync(
-                _thingAssessmentVerifierLotteryAddress,
+                _settlementProposalAssessmentVerifierLotteryAddress,
                 new()
                 {
                     ThingProposalId = thingId.Concat(proposalId).ToArray(),
@@ -498,15 +498,15 @@ internal class ContractCaller : IContractCaller
             )
         );
 
-        _logger.LogInformation("=============== CloseThingAssessmentVerifierLotteryWithSuccess: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        _logger.LogInformation("=============== CloseSettlementProposalAssessmentVerifierLotteryWithSuccess: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
-    public async Task CloseThingAssessmentVerifierLotteryInFailure(byte[] thingId, byte[] proposalId, int joinedNumVerifiers)
+    public async Task CloseSettlementProposalAssessmentVerifierLotteryInFailure(byte[] thingId, byte[] proposalId, int joinedNumVerifiers)
     {
         var txnReceipt = await _web3.Eth
-            .GetContractTransactionHandler<CloseThingAssessmentVerifierLotteryInFailureMessage>()
+            .GetContractTransactionHandler<CloseSettlementProposalAssessmentVerifierLotteryInFailureMessage>()
             .SendRequestAndWaitForReceiptAsync(
-                _thingAssessmentVerifierLotteryAddress,
+                _settlementProposalAssessmentVerifierLotteryAddress,
                 new()
                 {
                     ThingProposalId = thingId.Concat(proposalId).ToArray(),
@@ -514,14 +514,14 @@ internal class ContractCaller : IContractCaller
                 }
             );
 
-        _logger.LogInformation("=============== CloseThingAssessmentVerifierLotteryInFailure: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        _logger.LogInformation("=============== CloseSettlementProposalAssessmentVerifierLotteryInFailure: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
-    public async Task<IEnumerable<string>> GetVerifiersForProposal(byte[] thingId, byte[] proposalId)
+    public async Task<IEnumerable<string>> GetVerifiersForSettlementProposal(byte[] thingId, byte[] proposalId)
     {
         var verifiers = await _web3.Eth
-            .GetContractQueryHandler<GetVerifiersForProposalMessage>()
-            .QueryAsync<List<string>>(_assessmentPollAddress, new()
+            .GetContractQueryHandler<GetSettlementProposalVerifiersMessage>()
+            .QueryAsync<List<string>>(_settlementProposalAssessmentPollAddress, new()
             {
                 ThingProposalId = thingId.Concat(proposalId).ToArray()
             });
@@ -529,38 +529,38 @@ internal class ContractCaller : IContractCaller
         return verifiers;
     }
 
-    public Task<int> GetThingAssessmentPollVotingVolumeThresholdPercent() => _web3.Eth
+    public Task<int> GetSettlementProposalAssessmentPollVotingVolumeThresholdPercent() => _web3.Eth
         .GetContractQueryHandler<GetPollVotingVolumeThresholdPercentMessage>()
-        .QueryAsync<int>(_assessmentPollAddress, new());
+        .QueryAsync<int>(_settlementProposalAssessmentPollAddress, new());
 
-    public Task<int> GetThingAssessmentPollMajorityThresholdPercent() => _web3.Eth
+    public Task<int> GetSettlementProposalAssessmentPollMajorityThresholdPercent() => _web3.Eth
         .GetContractQueryHandler<GetPollMajorityThresholdPercentMessage>()
-        .QueryAsync<int>(_assessmentPollAddress, new());
+        .QueryAsync<int>(_settlementProposalAssessmentPollAddress, new());
 
-    public Task<int> GetThingAssessmentPollDurationBlocks() => _web3.Eth
+    public Task<int> GetSettlementProposalAssessmentPollDurationBlocks() => _web3.Eth
         .GetContractQueryHandler<GetDurationBlocksMessage>()
-        .QueryAsync<int>(_assessmentPollAddress, new());
+        .QueryAsync<int>(_settlementProposalAssessmentPollAddress, new());
 
-    public async Task<long> GetThingAssessmentPollInitBlock(byte[] thingId, byte[] proposalId)
+    public async Task<long> GetSettlementProposalAssessmentPollInitBlock(byte[] thingId, byte[] proposalId)
     {
         var block = await _web3.Eth
-            .GetContractQueryHandler<GetThingAssessmentPollInitBlockMessage>()
+            .GetContractQueryHandler<GetSettlementProposalAssessmentPollInitBlockMessage>()
             .QueryAsync<BigInteger>(
-                _assessmentPollAddress,
+                _settlementProposalAssessmentPollAddress,
                 new() { ThingProposalId = thingId.Concat(proposalId).ToArray() }
             );
 
         return (long)block;
     }
 
-    public async Task FinalizeAssessmentPollForProposalAsUnsettledDueToInsufficientVotingVolume(
+    public async Task FinalizeSettlementProposalAssessmentPollAsUnsettledDueToInsufficientVotingVolume(
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
         var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<FinalizeAssessmentPollForProposalAsUnsettledMessage>()
+            .GetContractTransactionHandler<FinalizeSettlementProposalAssessmentPollAsUnsettledMessage>()
             .SendRequestAndWaitForReceiptAsync(
-                _assessmentPollAddress,
+                _settlementProposalAssessmentPollAddress,
                 new()
                 {
                     ThingProposalId = thingId.Concat(proposalId).ToArray(),
@@ -571,17 +571,17 @@ internal class ContractCaller : IContractCaller
             )
         );
 
-        _logger.LogInformation("=============== FinalizeAssessmentPollForProposalAsUnsettled: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        _logger.LogInformation("=============== FinalizeSettlementProposalAssessmentPollAsUnsettled: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
-    public async Task FinalizeAssessmentPollForProposalAsUnsettledDueToMajorityThresholdNotReached(
+    public async Task FinalizeSettlementProposalAssessmentPollAsUnsettledDueToMajorityThresholdNotReached(
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
         var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<FinalizeAssessmentPollForProposalAsUnsettledMessage>()
+            .GetContractTransactionHandler<FinalizeSettlementProposalAssessmentPollAsUnsettledMessage>()
             .SendRequestAndWaitForReceiptAsync(
-                _assessmentPollAddress,
+                _settlementProposalAssessmentPollAddress,
                 new()
                 {
                     ThingProposalId = thingId.Concat(proposalId).ToArray(),
@@ -592,17 +592,17 @@ internal class ContractCaller : IContractCaller
             )
         );
 
-        _logger.LogInformation("=============== FinalizeAssessmentPollForProposalAsUnsettled: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        _logger.LogInformation("=============== FinalizeSettlementProposalAssessmentPollAsUnsettled: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
-    public async Task FinalizeAssessmentPollForProposalAsAccepted(
+    public async Task FinalizeSettlementProposalAssessmentPollAsAccepted(
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
         var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<FinalizeAssessmentPollForProposalAsAcceptedMessage>()
+            .GetContractTransactionHandler<FinalizeSettlementProposalAssessmentPollAsAcceptedMessage>()
             .SendRequestAndWaitForReceiptAsync(
-                _assessmentPollAddress,
+                _settlementProposalAssessmentPollAddress,
                 new()
                 {
                     ThingProposalId = thingId.Concat(proposalId).ToArray(),
@@ -612,17 +612,17 @@ internal class ContractCaller : IContractCaller
             )
         );
 
-        _logger.LogInformation("=============== FinalizeAssessmentPollForProposalAsAccepted: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        _logger.LogInformation("=============== FinalizeSettlementProposalAssessmentPollAsAccepted: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
-    public async Task FinalizeAssessmentPollForProposalAsSoftDeclined(
+    public async Task FinalizeSettlementProposalAssessmentPollAsSoftDeclined(
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
         var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<FinalizeAssessmentPollForProposalAsSoftDeclinedMessage>()
+            .GetContractTransactionHandler<FinalizeSettlementProposalAssessmentPollAsSoftDeclinedMessage>()
             .SendRequestAndWaitForReceiptAsync(
-                _assessmentPollAddress,
+                _settlementProposalAssessmentPollAddress,
                 new()
                 {
                     ThingProposalId = thingId.Concat(proposalId).ToArray(),
@@ -632,17 +632,17 @@ internal class ContractCaller : IContractCaller
             )
         );
 
-        _logger.LogInformation("=============== FinalizeAssessmentPollForProposalAsSoftDeclined: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        _logger.LogInformation("=============== FinalizeSettlementProposalAssessmentPollAsSoftDeclined: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 
-    public async Task FinalizeAssessmentPollForProposalAsHardDeclined(
+    public async Task FinalizeSettlementProposalAssessmentPollAsHardDeclined(
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
         var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<FinalizeAssessmentPollForProposalAsHardDeclinedMessage>()
+            .GetContractTransactionHandler<FinalizeSettlementProposalAssessmentPollAsHardDeclinedMessage>()
             .SendRequestAndWaitForReceiptAsync(
-                _assessmentPollAddress,
+                _settlementProposalAssessmentPollAddress,
                 new()
                 {
                     ThingProposalId = thingId.Concat(proposalId).ToArray(),
@@ -652,6 +652,6 @@ internal class ContractCaller : IContractCaller
             )
         );
 
-        _logger.LogInformation("=============== FinalizeAssessmentPollForProposalAsHardDeclined: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        _logger.LogInformation("=============== FinalizeSettlementProposalAssessmentPollAsHardDeclined: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
     }
 }

@@ -52,7 +52,7 @@ internal class AttachmentsArchivingCompletedEventHandler : INotificationHandler<
         );
         thing.AddEvidence(@event.Input.Evidence.Select(e =>
         {
-            return new Evidence(
+            return new ThingEvidence(
                 originUrl: e.Url,
                 ipfsCid: e.IpfsCid!,
                 previewImageIpfsCid: e.PreviewImageIpfsCid!

@@ -13,9 +13,9 @@ namespace Application.Settlement.Commands.PrepareForAssessmentPoll;
 [ExecuteInTxn]
 public class PrepareForAssessmentPollCommand : IRequest<VoidResult>
 {
-    public required long AssessmentPollInitBlockNumber { get; init; }
-    public required int AssessmentPollInitTxnIndex { get; init; }
-    public required string AssessmentPollInitTxnHash { get; init; }
+    public required long InitBlockNumber { get; init; }
+    public required int InitTxnIndex { get; init; }
+    public required string InitTxnHash { get; init; }
     public required Guid ThingId { get; init; }
     public required Guid SettlementProposalId { get; init; }
     public required string Orchestrator { get; init; }
@@ -65,18 +65,18 @@ internal class PrepareForAssessmentPollCommandHandler : IRequestHandler<PrepareF
             Debug.Assert(userIds.Count == command.ClaimantWalletAddresses.Count + command.WinnerWalletAddresses.Count);
             proposal.AddVerifiers(userIds);
 
-            var lotteryInitBlock = await _contractCaller.GetThingAssessmentVerifierLotteryInitBlock(
+            var lotteryInitBlock = await _contractCaller.GetSettlementProposalAssessmentVerifierLotteryInitBlock(
                 proposal.ThingId.ToByteArray(), proposal.Id.ToByteArray()
             );
             Debug.Assert(lotteryInitBlock < 0);
 
-            var pollInitBlock = await _contractCaller.GetThingAssessmentPollInitBlock(
+            var pollInitBlock = await _contractCaller.GetSettlementProposalAssessmentPollInitBlock(
                 proposal.ThingId.ToByteArray(), proposal.Id.ToByteArray()
             );
-            int pollDurationBlocks = await _contractCaller.GetThingAssessmentPollDurationBlocks();
+            int pollDurationBlocks = await _contractCaller.GetSettlementProposalAssessmentPollDurationBlocks();
 
             var task = new DeferredTask(
-                type: TaskType.CloseThingSettlementProposalAssessmentPoll,
+                type: TaskType.CloseSettlementProposalAssessmentPoll,
                 scheduledBlockNumber: pollInitBlock + pollDurationBlocks + 1
             );
 

@@ -23,20 +23,20 @@ internal class Validator : AbstractValidator<GetVerifierLotteryParticipantsQuery
 internal class GetVerifierLotteryParticipantsQueryHandler :
     IRequestHandler<GetVerifierLotteryParticipantsQuery, HandleResult<GetVerifierLotteryParticipantsResultVm>>
 {
-    private readonly IThingSubmissionVerifierLotteryEventQueryable _thingSubmissionVerifierLotteryEventQueryable;
+    private readonly IThingValidationVerifierLotteryEventQueryable _validationVerifierLotteryEventQueryable;
 
     public GetVerifierLotteryParticipantsQueryHandler(
-        IThingSubmissionVerifierLotteryEventQueryable thingSubmissionVerifierLotteryEventQueryable
+        IThingValidationVerifierLotteryEventQueryable validationVerifierLotteryEventQueryable
     )
     {
-        _thingSubmissionVerifierLotteryEventQueryable = thingSubmissionVerifierLotteryEventQueryable;
+        _validationVerifierLotteryEventQueryable = validationVerifierLotteryEventQueryable;
     }
 
     public async Task<HandleResult<GetVerifierLotteryParticipantsResultVm>> Handle(
         GetVerifierLotteryParticipantsQuery query, CancellationToken ct
     )
     {
-        var (commitment, lotteryClosedEvent, participants) = await _thingSubmissionVerifierLotteryEventQueryable
+        var (commitment, lotteryClosedEvent, participants) = await _validationVerifierLotteryEventQueryable
             .GetOrchestratorCommitmentAndParticipants(query.ThingId);
 
         return new()

@@ -18,6 +18,7 @@ class VoteVm {
   static final _random = Random();
 
   final String userId;
+  // @@TODO: Add walletAddress.
   final int? castedAtMs;
   final int? l1BlockNumber;
   final int? blockNumber;

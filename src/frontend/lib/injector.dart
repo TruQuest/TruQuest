@@ -20,13 +20,13 @@ import 'general/services/toast_messenger.dart';
 import 'general/services/local_storage.dart';
 import 'general/services/subscription_manager.dart';
 import 'general/services/notifications_cache.dart';
-import 'general/contracts/assessment_poll_contract.dart';
-import 'general/contracts/thing_assessment_verifier_lottery_contract.dart';
+import 'general/contracts/settlement_proposal_assessment_poll_contract.dart';
+import 'general/contracts/settlement_proposal_assessment_verifier_lottery_contract.dart';
 import 'settlement/bloc/settlement_bloc.dart';
 import 'settlement/services/settlement_api_service.dart';
 import 'settlement/services/settlement_service.dart';
-import 'general/contracts/acceptance_poll_contract.dart';
-import 'general/contracts/thing_submission_verifier_lottery_contract.dart';
+import 'general/contracts/thing_validation_poll_contract.dart';
+import 'general/contracts/thing_validation_verifier_lottery_contract.dart';
 import 'general/contracts/truquest_contract.dart';
 import 'general/contexts/page_context.dart';
 import 'subject/bloc/subject_bloc.dart';
@@ -62,13 +62,13 @@ abstract class Injector {
   @Register.singleton(PageContext)
   @Register.singleton(TruthserumContract)
   @Register.singleton(TruQuestContract)
-  @Register.singleton(ThingSubmissionVerifierLotteryContract)
-  @Register.singleton(AcceptancePollContract)
+  @Register.singleton(ThingValidationVerifierLotteryContract)
+  @Register.singleton(ThingValidationPollContract)
   @Register.singleton(SettlementBloc)
   @Register.singleton(SettlementService)
   @Register.singleton(SettlementApiService)
-  @Register.singleton(ThingAssessmentVerifierLotteryContract)
-  @Register.singleton(AssessmentPollContract)
+  @Register.singleton(SettlementProposalAssessmentVerifierLotteryContract)
+  @Register.singleton(SettlementProposalAssessmentPollContract)
   @Register.singleton(NotificationsCache)
   @Register.singleton(SubscriptionManager)
   @Register.singleton(LocalStorage)

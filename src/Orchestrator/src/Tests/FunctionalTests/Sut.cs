@@ -212,18 +212,6 @@ public class Sut : IAsyncLifetime
 
     public T GetConfigurationValue<T>(string key) => _app.Configuration.GetValue<T>(key)!;
 
-    public void RunAs(string userId, string username)
-    {
-        _user = new ClaimsPrincipal(new ClaimsIdentity(
-            new Claim[]
-            {
-                new(JwtRegisteredClaimNames.Sub, userId),
-                // new("username", username)
-            },
-            "Bearer"
-        ));
-    }
-
     public async Task RunAs(string accountName)
     {
         _user = new ClaimsPrincipal(new ClaimsIdentity(

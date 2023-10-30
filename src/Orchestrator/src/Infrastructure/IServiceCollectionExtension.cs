@@ -84,7 +84,6 @@ public static class IServiceCollectionExtension
         services.AddSingleton<Eip712TypedDataSigner>();
         services.AddSingleton<EthereumMessageSigner>();
         services.AddSingleton<ISigner, Signer>();
-        services.AddScoped<IConfirmationTokenProvider, ConfirmationTokenProvider>();
         services.AddSingleton<IEmailSender, EmailSender>();
 
         services
@@ -171,22 +170,22 @@ public static class IServiceCollectionExtension
         services.AddScoped<ISubjectRepository, SubjectRepository>();
         services.AddScoped<IThingRepository, ThingRepository>();
         services.AddScoped<ITaskRepository, TaskRepository>();
-        services.AddScoped<IAcceptancePollVoteRepository, AcceptancePollVoteRepository>();
+        services.AddScoped<IThingValidationPollVoteRepository, ThingValidationPollVoteRepository>();
         services.AddScoped<ISettlementProposalRepository, SettlementProposalRepository>();
-        services.AddScoped<IAssessmentPollVoteRepository, AssessmentPollVoteRepository>();
+        services.AddScoped<ISettlementProposalAssessmentPollVoteRepository, SettlementProposalAssessmentPollVoteRepository>();
         services.AddScoped<IWatchedItemRepository, WatchedItemRepository>();
         services.AddScoped<IThingUpdateRepository, ThingUpdateRepository>();
         services.AddScoped<ISettlementProposalUpdateRepository, SettlementProposalUpdateRepository>();
 
         services.AddSingleton<IBlockProgressRepository, BlockProgressRepository>();
         services.AddScoped<IActionableThingRelatedEventRepository, ActionableThingRelatedEventRepository>();
-        services.AddScoped<IThingSubmissionVerifierLotteryInitializedEventRepository, ThingSubmissionVerifierLotteryInitializedEventRepository>();
-        services.AddScoped<IJoinedThingSubmissionVerifierLotteryEventRepository, JoinedThingSubmissionVerifierLotteryEventRepository>();
-        services.AddScoped<ICastedAcceptancePollVoteEventRepository, CastedAcceptancePollVoteEventRepository>();
-        services.AddScoped<IThingAssessmentVerifierLotteryInitializedEventRepository, ThingAssessmentVerifierLotteryInitializedEventRepository>();
-        services.AddScoped<IJoinedThingAssessmentVerifierLotteryEventRepository, JoinedThingAssessmentVerifierLotteryEventRepository>();
-        services.AddScoped<IThingAssessmentVerifierLotterySpotClaimedEventRepository, ThingAssessmentVerifierLotterySpotClaimedEventRepository>();
-        services.AddScoped<ICastedAssessmentPollVoteEventRepository, CastedAssessmentPollVoteEventRepository>();
+        services.AddScoped<IThingValidationVerifierLotteryInitializedEventRepository, ThingValidationVerifierLotteryInitializedEventRepository>();
+        services.AddScoped<IJoinedThingValidationVerifierLotteryEventRepository, JoinedThingValidationVerifierLotteryEventRepository>();
+        services.AddScoped<ICastedThingValidationPollVoteEventRepository, CastedThingValidationPollVoteEventRepository>();
+        services.AddScoped<ISettlementProposalAssessmentVerifierLotteryInitializedEventRepository, SettlementProposalAssessmentVerifierLotteryInitializedEventRepository>();
+        services.AddScoped<IJoinedSettlementProposalAssessmentVerifierLotteryEventRepository, JoinedSettlementProposalAssessmentVerifierLotteryEventRepository>();
+        services.AddScoped<IClaimedSettlementProposalAssessmentVerifierLotterySpotEventRepository, ClaimedSettlementProposalAssessmentVerifierLotterySpotEventRepository>();
+        services.AddScoped<ICastedSettlementProposalAssessmentPollVoteEventRepository, CastedSettlementProposalAssessmentPollVoteEventRepository>();
 
         SqlMapper.AddTypeHandler(new DictionaryStringToStringTypeHandler());
         SqlMapper.AddTypeHandler(new DictionaryStringToObjectTypeHandler());
@@ -195,10 +194,10 @@ public static class IServiceCollectionExtension
         services.AddScoped<ITagQueryable, TagQueryable>();
         services.AddScoped<ISubjectQueryable, SubjectQueryable>();
         services.AddScoped<IThingQueryable, ThingQueryable>();
-        services.AddScoped<IThingSubmissionVerifierLotteryEventQueryable, ThingSubmissionVerifierLotteryEventQueryable>();
+        services.AddScoped<IThingValidationVerifierLotteryEventQueryable, ThingValidationVerifierLotteryEventQueryable>();
         services.AddScoped<ISettlementProposalAssessmentVerifierLotteryEventQueryable, SettlementProposalAssessmentVerifierLotteryEventQueryable>();
-        services.AddScoped<IThingAcceptancePollVoteQueryable, ThingAcceptancePollVoteQueryable>();
-        services.AddScoped<IThingAssessmentPollVoteQueryable, ThingAssessmentPollVoteQueryable>();
+        services.AddScoped<IThingValidationPollVoteQueryable, ThingValidationPollVoteQueryable>();
+        services.AddScoped<ISettlementProposalAssessmentPollVoteQueryable, SettlementProposalAssessmentPollVoteQueryable>();
         services.AddScoped<ISettlementProposalQueryable, SettlementProposalQueryable>();
         services.AddScoped<IWatchListQueryable, WatchListQueryable>();
         services.AddScoped<ITaskQueryable, TaskQueryable>();
@@ -257,12 +256,12 @@ public static class IServiceCollectionExtension
                                                     .AddHandlers(new[] // @@TODO: Add with reflection.
                                                     {
                                                         typeof(ThingFundedEventHandler),
-                                                        typeof(ThingSubmissionVerifierLotteryClosedInFailureEventHandler),
-                                                        typeof(ThingSubmissionVerifierLotteryClosedWithSuccessEventHandler),
-                                                        typeof(ThingAcceptancePollFinalizedEventHandler),
-                                                        typeof(ThingSettlementProposalFundedEventHandler),
-                                                        typeof(ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccessEventHandler),
-                                                        typeof(ThingSettlementProposalAssessmentPollFinalizedEventHandler),
+                                                        typeof(ThingValidationVerifierLotteryClosedInFailureEventHandler),
+                                                        typeof(ThingValidationVerifierLotteryClosedWithSuccessEventHandler),
+                                                        typeof(ThingValidationPollFinalizedEventHandler),
+                                                        typeof(SettlementProposalFundedEventHandler),
+                                                        typeof(SettlementProposalAssessmentVerifierLotteryClosedWithSuccessEventHandler),
+                                                        typeof(SettlementProposalAssessmentPollFinalizedEventHandler),
                                                         typeof(ThingUpdateEventHandler),
                                                         typeof(SettlementProposalUpdateEventHandler)
                                                     })

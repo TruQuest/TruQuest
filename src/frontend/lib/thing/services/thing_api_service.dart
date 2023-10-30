@@ -6,8 +6,8 @@ import 'package:dio/dio.dart';
 import '../../general/models/im/watch_command.dart';
 import '../models/rvm/get_settlement_proposals_list_rvm.dart';
 import '../../general/errors/vote_error.dart';
-import '../models/im/cast_acceptance_poll_vote_command.dart';
-import '../models/im/new_acceptance_poll_vote_im.dart';
+import '../models/im/cast_validation_poll_vote_command.dart';
+import '../models/im/new_thing_validation_poll_vote_im.dart';
 import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
 import '../models/rvm/get_thing_rvm.dart';
 import '../models/im/submit_new_thing_command.dart';
@@ -16,7 +16,7 @@ import '../models/rvm/submit_new_thing_rvm.dart';
 import '../../general/errors/api_error.dart';
 import '../../general/errors/file_error.dart';
 import '../../general/models/im/tag_im.dart';
-import '../models/im/evidence_im.dart';
+import '../models/im/thing_evidence_im.dart';
 import '../../general/errors/connection_error.dart';
 import '../../general/errors/error.dart';
 import '../../general/services/server_connector.dart';
@@ -110,7 +110,7 @@ class ThingApiService {
         imageBytes: imageBytes,
         croppedImageExt: croppedImageBytes != null ? 'png' : null,
         croppedImageBytes: croppedImageBytes,
-        evidence: evidence.map((url) => EvidenceIm(url: url)).toList(),
+        evidence: evidence.map((url) => ThingEvidenceIm(url: url)).toList(),
         tags: tags,
       );
 
@@ -179,8 +179,8 @@ class ThingApiService {
     }
   }
 
-  Future<String> castThingAcceptancePollVote(
-    NewAcceptancePollVoteIm vote,
+  Future<String> castThingValidationPollVote(
+    NewThingValidationPollVoteIm vote,
     String signature,
   ) async {
     var accessToken = (await _serverConnector.latestConnection).$2;
@@ -190,7 +190,7 @@ class ThingApiService {
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
         ),
-        data: CastAcceptancePollVoteCommand(
+        data: CastValidationPollVoteCommand(
           input: vote,
           signature: signature,
         ).toJson(),

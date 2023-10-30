@@ -67,7 +67,7 @@ internal class CreateNewSettlementProposalDraftCommandHandler :
             ImagePath = formValues["file1"],
             CroppedImagePath = formValues["file2"],
             Evidence = ((string)formValues["evidence"]!).Split('|')
-                .Select(url => new SupportingEvidenceIm
+                .Select(url => new SettlementProposalEvidenceIm
                 {
                     Url = url
                 })

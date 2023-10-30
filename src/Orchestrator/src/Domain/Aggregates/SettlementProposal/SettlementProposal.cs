@@ -17,8 +17,8 @@ public class SettlementProposal : Entity, IAggregateRoot
     public string? VoteAggIpfsCid { get; private set; }
     public long? AssessmentPronouncedAt { get; private set; }
 
-    private List<SupportingEvidence> _evidence = new();
-    public IReadOnlyList<SupportingEvidence> Evidence => _evidence;
+    private List<SettlementProposalEvidence> _evidence = new();
+    public IReadOnlyList<SettlementProposalEvidence> Evidence => _evidence;
 
     private List<SettlementProposalVerifier> _verifiers = new();
     public IReadOnlyList<SettlementProposalVerifier> Verifiers => _verifiers;
@@ -39,7 +39,7 @@ public class SettlementProposal : Entity, IAggregateRoot
         SubmitterId = submitterId;
     }
 
-    public void AddEvidence(IEnumerable<SupportingEvidence> evidence)
+    public void AddEvidence(IEnumerable<SettlementProposalEvidence> evidence)
     {
         _evidence.AddRange(evidence);
     }

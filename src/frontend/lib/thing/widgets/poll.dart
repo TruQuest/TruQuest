@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
 import '../../general/widgets/clipped_rect.dart';
-import '../models/rvm/acceptance_poll_info_vm.dart';
+import '../models/rvm/validation_poll_info_vm.dart';
 import '../../general/widgets/block_countdown.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';
 import '../../user/bloc/user_bloc.dart';
@@ -32,7 +32,7 @@ class _PollState extends StateX<Poll> {
 
   String? _currentUserId;
 
-  late Future<AcceptancePollInfoVm?> _infoRetrieved;
+  late Future<ValidationPollInfoVm?> _infoRetrieved;
 
   @override
   void initState() {
@@ -41,8 +41,8 @@ class _PollState extends StateX<Poll> {
     _currentUserId = _userBloc.latestCurrentUser?.id;
 
     _thingBloc.dispatch(GetVotes(thingId: widget.thing.id));
-    _infoRetrieved = _thingBloc.execute<AcceptancePollInfoVm>(
-      GetAcceptancePollInfo(thingId: widget.thing.id),
+    _infoRetrieved = _thingBloc.execute<ValidationPollInfoVm>(
+      GetValidationPollInfo(thingId: widget.thing.id),
     );
   }
 
@@ -50,8 +50,8 @@ class _PollState extends StateX<Poll> {
   void didUpdateWidget(covariant Poll oldWidget) {
     super.didUpdateWidget(oldWidget);
     _currentUserId = _userBloc.latestCurrentUser?.id;
-    _infoRetrieved = _thingBloc.execute<AcceptancePollInfoVm>(
-      GetAcceptancePollInfo(thingId: widget.thing.id),
+    _infoRetrieved = _thingBloc.execute<ValidationPollInfoVm>(
+      GetValidationPollInfo(thingId: widget.thing.id),
     );
   }
 

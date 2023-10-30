@@ -44,22 +44,22 @@ contract TruQuest {
     bytes32 private immutable i_domainSeparator;
 
     Truthserum private immutable i_truthserum;
-    address private s_thingSubmissionVerifierLotteryAddress;
-    address private s_acceptancePollAddress;
-    address private s_thingAssessmentVerifierLotteryAddress;
-    address private s_assessmentPollAddress;
+    address private s_thingValidationVerifierLotteryAddress;
+    address private s_thingValidationPollAddress;
+    address private s_settlementProposalAssessmentVerifierLotteryAddress;
+    address private s_settlementProposalAssessmentPollAddress;
 
     address private s_orchestrator;
 
-    uint256 public s_thingSubmissionStake;
+    uint256 public s_thingStake;
     uint256 public s_verifierStake;
-    uint256 public s_thingSettlementProposalStake;
-    uint256 public s_thingSubmissionAcceptedReward;
-    uint256 public s_thingSubmissionRejectedPenalty;
+    uint256 public s_settlementProposalStake;
+    uint256 public s_thingAcceptedReward;
+    uint256 public s_thingRejectedPenalty;
     uint256 public s_verifierReward;
     uint256 public s_verifierPenalty;
-    uint256 public s_thingSettlementProposalAcceptedReward;
-    uint256 public s_thingSettlementProposalRejectedPenalty;
+    uint256 public s_settlementProposalAcceptedReward;
+    uint256 public s_settlementProposalRejectedPenalty;
 
     mapping(address => uint256) public s_balanceOf;
     mapping(address => uint256) public s_stakedBalanceOf;
@@ -77,11 +77,11 @@ contract TruQuest {
         uint256 thingStake
     );
 
-    event ThingSettlementProposalFunded(
+    event SettlementProposalFunded(
         bytes16 indexed thingId,
         bytes16 indexed settlementProposalId,
         address indexed user,
-        uint256 thingSettlementProposalStake
+        uint256 settlementProposalStake
     );
 
     modifier whenHasAtLeast(uint256 _requiredFunds) {
@@ -101,8 +101,8 @@ contract TruQuest {
 
     modifier onlyVerifierLottery() {
         if (
-            msg.sender != s_thingSubmissionVerifierLotteryAddress &&
-            msg.sender != s_thingAssessmentVerifierLotteryAddress
+            msg.sender != s_thingValidationVerifierLotteryAddress &&
+            msg.sender != s_settlementProposalAssessmentVerifierLotteryAddress
         ) {
             revert TruQuest__Unauthorized();
         }
@@ -111,23 +111,23 @@ contract TruQuest {
 
     modifier onlyPoll() {
         if (
-            msg.sender != s_acceptancePollAddress &&
-            msg.sender != s_assessmentPollAddress
+            msg.sender != s_thingValidationPollAddress &&
+            msg.sender != s_settlementProposalAssessmentPollAddress
         ) {
             revert TruQuest__Unauthorized();
         }
         _;
     }
 
-    modifier onlyAcceptancePoll() {
-        if (msg.sender != s_acceptancePollAddress) {
+    modifier onlyThingValidationPoll() {
+        if (msg.sender != s_thingValidationPollAddress) {
             revert TruQuest__Unauthorized();
         }
         _;
     }
 
-    modifier onlyAssessmentPoll() {
-        if (msg.sender != s_assessmentPollAddress) {
+    modifier onlySettlementProposalAssessmentPoll() {
+        if (msg.sender != s_settlementProposalAssessmentPollAddress) {
             revert TruQuest__Unauthorized();
         }
         _;
@@ -135,10 +135,11 @@ contract TruQuest {
 
     modifier onlyLotteryOrPoll() {
         if (
-            !(msg.sender == s_thingSubmissionVerifierLotteryAddress ||
-                msg.sender == s_thingAssessmentVerifierLotteryAddress ||
-                msg.sender == s_acceptancePollAddress ||
-                msg.sender == s_assessmentPollAddress)
+            !(msg.sender == s_thingValidationVerifierLotteryAddress ||
+                msg.sender ==
+                s_settlementProposalAssessmentVerifierLotteryAddress ||
+                msg.sender == s_thingValidationPollAddress ||
+                msg.sender == s_settlementProposalAssessmentPollAddress)
         ) {
             revert TruQuest__Unauthorized();
         }
@@ -152,7 +153,7 @@ contract TruQuest {
         _;
     }
 
-    modifier onlyWhenNoProposalUnderAssessmentFor(bytes16 _thingId) {
+    modifier onlyWhenNoSettlementProposalUnderAssessmentFor(bytes16 _thingId) {
         if (s_thingIdToSettlementProposal[_thingId].submitter != address(0)) {
             revert TruQuest__ThingAlreadyHasSettlementProposalUnderAssessment(
                 _thingId
@@ -166,30 +167,30 @@ contract TruQuest {
         uint256 _verifierStake,
         uint256 _verifierReward,
         uint256 _verifierPenalty,
-        uint256 _thingSubmissionStake,
-        uint256 _thingSubmissionAcceptedReward,
-        uint256 _thingSubmissionRejectedPenalty,
-        uint256 _thingSettlementProposalStake,
-        uint256 _thingSettlementProposalAcceptedReward,
-        uint256 _thingSettlementProposalRejectedPenalty
+        uint256 _thingStake,
+        uint256 _thingAcceptedReward,
+        uint256 _thingRejectedPenalty,
+        uint256 _settlementProposalStake,
+        uint256 _settlementProposalAcceptedReward,
+        uint256 _settlementProposalRejectedPenalty
     ) {
         i_truthserum = Truthserum(_truthserumAddress);
         s_orchestrator = msg.sender;
         s_verifierStake = _verifierStake;
         s_verifierReward = _verifierReward;
         s_verifierPenalty = _verifierPenalty;
-        s_thingSubmissionStake = _thingSubmissionStake;
-        s_thingSubmissionAcceptedReward = _thingSubmissionAcceptedReward;
-        s_thingSubmissionRejectedPenalty = _thingSubmissionRejectedPenalty;
-        s_thingSettlementProposalStake = _thingSettlementProposalStake;
-        s_thingSettlementProposalAcceptedReward = _thingSettlementProposalAcceptedReward;
-        s_thingSettlementProposalRejectedPenalty = _thingSettlementProposalRejectedPenalty;
+        s_thingStake = _thingStake;
+        s_thingAcceptedReward = _thingAcceptedReward;
+        s_thingRejectedPenalty = _thingRejectedPenalty;
+        s_settlementProposalStake = _settlementProposalStake;
+        s_settlementProposalAcceptedReward = _settlementProposalAcceptedReward;
+        s_settlementProposalRejectedPenalty = _settlementProposalRejectedPenalty;
 
         i_domainSeparator = keccak256(
             abi.encode(
                 keccak256(DOMAIN_TD),
                 keccak256("TruQuest"),
-                keccak256("0.0.1"),
+                keccak256("0.1.0"),
                 block.chainid,
                 address(this),
                 SALT
@@ -200,15 +201,15 @@ contract TruQuest {
     }
 
     function setLotteryAndPollAddresses(
-        address _thingSubmissionVerifierLotteryAddress,
-        address _acceptancePollAddress,
-        address _thingAssessmentVerifierLotteryAddress,
-        address _assessmentPollAddress
+        address _thingValidationVerifierLotteryAddress,
+        address _thingValidationPollAddress,
+        address _settlementProposalAssessmentVerifierLotteryAddress,
+        address _settlementProposalAssessmentPollAddress
     ) external onlyOrchestrator {
-        s_thingSubmissionVerifierLotteryAddress = _thingSubmissionVerifierLotteryAddress;
-        s_acceptancePollAddress = _acceptancePollAddress;
-        s_thingAssessmentVerifierLotteryAddress = _thingAssessmentVerifierLotteryAddress;
-        s_assessmentPollAddress = _assessmentPollAddress;
+        s_thingValidationVerifierLotteryAddress = _thingValidationVerifierLotteryAddress;
+        s_thingValidationPollAddress = _thingValidationPollAddress;
+        s_settlementProposalAssessmentVerifierLotteryAddress = _settlementProposalAssessmentVerifierLotteryAddress;
+        s_settlementProposalAssessmentPollAddress = _settlementProposalAssessmentPollAddress;
     }
 
     function deposit(uint256 _amount) external {
@@ -252,27 +253,27 @@ contract TruQuest {
     }
 
     function unstakeThingSubmitter(address _user) external onlyLotteryOrPoll {
-        _unstake(_user, s_thingSubmissionStake);
+        _unstake(_user, s_thingStake);
     }
 
-    function unstakeProposalSubmitter(
+    function unstakeSettlementProposalSubmitter(
         address _user
     ) external onlyLotteryOrPoll {
-        _unstake(_user, s_thingSettlementProposalStake);
+        _unstake(_user, s_settlementProposalStake);
     }
 
     function unstakeAndRewardThingSubmitter(
         address _user
-    ) external onlyAcceptancePoll {
-        _unstake(_user, s_thingSubmissionStake);
-        s_balanceOf[_user] += s_thingSubmissionAcceptedReward;
+    ) external onlyThingValidationPoll {
+        _unstake(_user, s_thingStake);
+        s_balanceOf[_user] += s_thingAcceptedReward;
     }
 
     function unstakeAndSlashThingSubmitter(
         address _user
-    ) external onlyAcceptancePoll {
-        _unstake(_user, s_thingSubmissionStake);
-        s_balanceOf[_user] -= s_thingSubmissionRejectedPenalty;
+    ) external onlyThingValidationPoll {
+        _unstake(_user, s_thingStake);
+        s_balanceOf[_user] -= s_thingRejectedPenalty;
     }
 
     function unstakeAndRewardVerifier(address _user) external onlyPoll {
@@ -285,18 +286,18 @@ contract TruQuest {
         s_balanceOf[_user] -= s_verifierPenalty;
     }
 
-    function unstakeAndRewardProposalSubmitter(
+    function unstakeAndRewardSettlementProposalSubmitter(
         address _user
-    ) external onlyAssessmentPoll {
-        _unstake(_user, s_thingSettlementProposalStake);
-        s_balanceOf[_user] += s_thingSettlementProposalAcceptedReward;
+    ) external onlySettlementProposalAssessmentPoll {
+        _unstake(_user, s_settlementProposalStake);
+        s_balanceOf[_user] += s_settlementProposalAcceptedReward;
     }
 
-    function unstakeAndSlashProposalSubmitter(
+    function unstakeAndSlashSettlementProposalSubmitter(
         address _user
-    ) external onlyAssessmentPoll {
-        _unstake(_user, s_thingSettlementProposalStake);
-        s_balanceOf[_user] -= s_thingSettlementProposalRejectedPenalty;
+    ) external onlySettlementProposalAssessmentPoll {
+        _unstake(_user, s_settlementProposalStake);
+        s_balanceOf[_user] -= s_settlementProposalRejectedPenalty;
     }
 
     function getAvailableFunds(address _user) public view returns (uint256) {
@@ -340,18 +341,14 @@ contract TruQuest {
         uint8 _v,
         bytes32 _r,
         bytes32 _s
-    )
-        external
-        onlyWhenNotFunded(_thingId)
-        whenHasAtLeast(s_thingSubmissionStake)
-    {
+    ) external onlyWhenNotFunded(_thingId) whenHasAtLeast(s_thingStake) {
         ThingTd memory thing = ThingTd(_thingId);
         if (!_verifyOrchestratorSignatureForThing(thing, _v, _r, _s)) {
             revert TruQuest__InvalidSignature();
         }
-        _stake(msg.sender, s_thingSubmissionStake);
+        _stake(msg.sender, s_thingStake);
         s_thingSubmitter[_thingId] = msg.sender;
-        emit ThingFunded(_thingId, msg.sender, s_thingSubmissionStake);
+        emit ThingFunded(_thingId, msg.sender, s_thingStake);
     }
 
     function _hashSettlementProposal(
@@ -390,20 +387,20 @@ contract TruQuest {
         return s_thingIdToSettlementProposal[_thingId].submitter != address(0);
     }
 
-    function fundThingSettlementProposal(
+    function fundSettlementProposal(
         bytes16 _thingId,
-        bytes16 _proposalId,
+        bytes16 _settlementProposalId,
         uint8 _v,
         bytes32 _r,
         bytes32 _s
     )
         external
-        onlyWhenNoProposalUnderAssessmentFor(_thingId)
-        whenHasAtLeast(s_thingSettlementProposalStake)
+        onlyWhenNoSettlementProposalUnderAssessmentFor(_thingId)
+        whenHasAtLeast(s_settlementProposalStake)
     {
         SettlementProposalTd memory proposal = SettlementProposalTd(
             _thingId,
-            _proposalId
+            _settlementProposalId
         );
         if (
             !_verifyOrchestratorSignatureForSettlementProposal(
@@ -416,17 +413,17 @@ contract TruQuest {
             revert TruQuest__InvalidSignature();
         }
 
-        _stake(msg.sender, s_thingSettlementProposalStake);
+        _stake(msg.sender, s_settlementProposalStake);
         s_thingIdToSettlementProposal[_thingId] = SettlementProposal(
-            _proposalId,
+            _settlementProposalId,
             msg.sender
         );
 
-        emit ThingSettlementProposalFunded(
+        emit SettlementProposalFunded(
             _thingId,
-            _proposalId,
+            _settlementProposalId,
             msg.sender,
-            s_thingSettlementProposalStake
+            s_settlementProposalStake
         );
     }
 

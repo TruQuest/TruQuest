@@ -4,7 +4,7 @@ using MediatR;
 
 using Domain.Aggregates;
 
-using Application.Thing.Commands.CloseAcceptancePoll;
+using Application.Thing.Commands.CloseValidationPoll;
 using Application.Settlement.Commands.CloseAssessmentPoll;
 using Application.Common.Misc;
 using Application.Common.Interfaces;
@@ -35,7 +35,7 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
         {
             switch (task.Type)
             {
-                case TaskType.CloseThingSubmissionVerifierLottery:
+                case TaskType.CloseThingValidationVerifierLottery:
                     await _sender.Send(new Thing.Commands.CloseVerifierLottery.CloseVerifierLotteryCommand
                     {
                         Traceparent = ((JsonElement)task.Payload["traceparent"]).GetString()!,
@@ -46,8 +46,8 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
                         TaskId = task.Id!.Value
                     });
                     break;
-                case TaskType.CloseThingAcceptancePoll:
-                    await _sender.Send(new CloseAcceptancePollCommand
+                case TaskType.CloseThingValidationPoll:
+                    await _sender.Send(new CloseValidationPollCommand
                     {
                         Traceparent = ((JsonElement)task.Payload["traceparent"]).GetString()!,
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),
@@ -55,7 +55,7 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
                         TaskId = task.Id!.Value
                     });
                     break;
-                case TaskType.CloseThingAssessmentVerifierLottery:
+                case TaskType.CloseSettlementProposalAssessmentVerifierLottery:
                     await _sender.Send(new Settlement.Commands.CloseVerifierLottery.CloseVerifierLotteryCommand
                     {
                         Traceparent = ((JsonElement)task.Payload["traceparent"]).GetString()!,
@@ -67,7 +67,7 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
                         TaskId = task.Id!.Value
                     });
                     break;
-                case TaskType.CloseThingSettlementProposalAssessmentPoll:
+                case TaskType.CloseSettlementProposalAssessmentPoll:
                     await _sender.Send(new CloseAssessmentPollCommand
                     {
                         Traceparent = ((JsonElement)task.Payload["traceparent"]).GetString()!,

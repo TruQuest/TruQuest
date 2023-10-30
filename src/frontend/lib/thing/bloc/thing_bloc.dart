@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:rxdart/rxdart.dart';
 
 import '../../general/contexts/multi_stage_operation_context.dart';
-import '../models/rvm/acceptance_poll_info_vm.dart';
+import '../models/rvm/validation_poll_info_vm.dart';
 import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
 import '../models/rvm/get_votes_rvm.dart';
 import '../models/rvm/settlement_proposal_preview_vm.dart';
@@ -57,8 +57,8 @@ class ThingBloc extends Bloc<ThingAction> {
       return _submitNewThing(action);
     } else if (action is GetVerifierLotteryInfo) {
       return _getVerifierLotteryInfo(action);
-    } else if (action is GetAcceptancePollInfo) {
-      return _getAcceptancePollInfo(action);
+    } else if (action is GetValidationPollInfo) {
+      return _getValidationPollInfo(action);
     }
 
     throw UnimplementedError();
@@ -100,9 +100,7 @@ class ThingBloc extends Bloc<ThingAction> {
         action.thingId,
       );
       getThingResult = GetThingRvm(
-        thing: getThingResult.thing.copyWith(
-          fundedAwaitingConfirmation: thingFunded,
-        ),
+        thing: getThingResult.thing.copyWith(fundedAwaitingConfirmation: thingFunded),
         signature: getThingResult.signature,
       );
     }
@@ -136,19 +134,17 @@ class ThingBloc extends Bloc<ThingAction> {
       _thingService.joinLottery(action.thingId, ctx);
 
   void _getVerifierLotteryParticipants(GetVerifierLotteryParticipants action) async {
-    var result = await _thingService.getVerifierLotteryParticipants(
-      action.thingId,
-    );
+    var result = await _thingService.getVerifierLotteryParticipants(action.thingId);
     _verifierLotteryParticipantsChannel.add(result);
   }
 
-  Future<AcceptancePollInfoVm> _getAcceptancePollInfo(GetAcceptancePollInfo action) async {
-    var info = await _thingService.getAcceptancePollInfo(action.thingId);
-    return AcceptancePollInfoVm(
+  Future<ValidationPollInfoVm> _getValidationPollInfo(GetValidationPollInfo action) async {
+    var info = await _thingService.getValidationPollInfo(action.thingId);
+    return ValidationPollInfoVm(
       userId: info.$1,
       initBlock: info.$2,
       durationBlocks: info.$3,
-      userIndexInThingVerifiersArray: info.$4,
+      thingVerifiersArrayIndex: info.$4,
     );
   }
 
@@ -163,7 +159,7 @@ class ThingBloc extends Bloc<ThingAction> {
   Stream<Object> _castVoteOnChain(CastVoteOnChain action, MultiStageOperationContext ctx) =>
       _thingService.castVoteOnChain(
         action.thingId,
-        action.userIndexInThingVerifiersArray,
+        action.thingVerifiersArrayIndex,
         action.decision,
         action.reason,
         ctx,

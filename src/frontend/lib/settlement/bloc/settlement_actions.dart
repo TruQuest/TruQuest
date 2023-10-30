@@ -154,7 +154,7 @@ class GetVerifierLotteryParticipants extends SettlementAction {
 class ClaimLotterySpot extends SettlementAction {
   final String thingId;
   final String proposalId;
-  final int userIndexInThingVerifiersArray;
+  final int thingVerifiersArrayIndex;
 
   @override
   List<String>? validate() {
@@ -167,7 +167,7 @@ class ClaimLotterySpot extends SettlementAction {
       errors ??= [];
       errors.add('Invalid Proposal Id');
     }
-    if (userIndexInThingVerifiersArray < 0) {
+    if (thingVerifiersArrayIndex < 0) {
       errors ??= [];
       errors.add('Invalid index');
     }
@@ -178,7 +178,7 @@ class ClaimLotterySpot extends SettlementAction {
   const ClaimLotterySpot({
     required this.thingId,
     required this.proposalId,
-    required this.userIndexInThingVerifiersArray,
+    required this.thingVerifiersArrayIndex,
   });
 }
 
@@ -266,14 +266,14 @@ class CastVoteOffChain extends SettlementAction {
 class CastVoteOnChain extends SettlementAction {
   final String thingId;
   final String proposalId;
-  final int userIndexInProposalVerifiersArray;
+  final int settlementProposalVerifiersArrayIndex;
   final DecisionIm decision;
   final String reason;
 
   const CastVoteOnChain({
     required this.thingId,
     required this.proposalId,
-    required this.userIndexInProposalVerifiersArray,
+    required this.settlementProposalVerifiersArrayIndex,
     required this.decision,
     required this.reason,
   });

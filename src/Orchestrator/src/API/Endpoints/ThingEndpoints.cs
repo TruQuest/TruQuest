@@ -4,7 +4,7 @@ using Application.Thing.Commands.CreateNewThingDraft;
 using Application.Thing.Commands.SubmitNewThing;
 using Application.Thing.Queries.GetThing;
 using Application.Thing.Queries.GetVotes;
-using Application.Thing.Commands.CastAcceptancePollVote;
+using Application.Thing.Commands.CastValidationPollVote;
 using Application.Thing.Queries.GetSettlementProposalsList;
 using Application.Thing.Commands.Watch;
 
@@ -55,7 +55,7 @@ public static class ThingEndpoints
             "/{thingId}/vote",
             (
                 Guid thingId,
-                CastAcceptancePollVoteCommand command,
+                CastValidationPollVoteCommand command,
                 SenderWrapper sender,
                 HttpContext context
             ) =>

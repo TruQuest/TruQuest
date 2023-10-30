@@ -23,20 +23,20 @@ internal class Validator : AbstractValidator<GetVotesQuery>
 internal class GetVotesQueryHandler : IRequestHandler<GetVotesQuery, HandleResult<GetVotesResultVm>>
 {
     private readonly ICurrentPrincipal _currentPrincipal;
-    private readonly IThingAssessmentPollVoteQueryable _thingAssessmentPollVoteQueryable;
+    private readonly ISettlementProposalAssessmentPollVoteQueryable _settlementProposalAssessmentPollVoteQueryable;
 
     public GetVotesQueryHandler(
         ICurrentPrincipal currentPrincipal,
-        IThingAssessmentPollVoteQueryable thingAssessmentPollVoteQueryable
+        ISettlementProposalAssessmentPollVoteQueryable settlementProposalAssessmentPollVoteQueryable
     )
     {
         _currentPrincipal = currentPrincipal;
-        _thingAssessmentPollVoteQueryable = thingAssessmentPollVoteQueryable;
+        _settlementProposalAssessmentPollVoteQueryable = settlementProposalAssessmentPollVoteQueryable;
     }
 
     public async Task<HandleResult<GetVotesResultVm>> Handle(GetVotesQuery query, CancellationToken ct)
     {
-        var (pollResult, votes) = await _thingAssessmentPollVoteQueryable.GetAllFor(
+        var (pollResult, votes) = await _settlementProposalAssessmentPollVoteQueryable.GetAllFor(
             query.ProposalId, _currentPrincipal.Id
         );
 

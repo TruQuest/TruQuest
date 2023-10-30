@@ -4,14 +4,14 @@ import '../../ethereum/errors/wallet_action_declined_error.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
 import '../../ethereum/services/user_operation_service.dart';
 import '../../general/errors/insufficient_balance_error.dart';
-import '../models/im/new_assessment_poll_vote_im.dart';
+import '../models/im/new_settlement_proposal_assessment_poll_vote_im.dart';
 import '../../user/services/user_service.dart';
-import '../../general/contracts/acceptance_poll_contract.dart';
+import '../../general/contracts/thing_validation_poll_contract.dart';
 import '../../general/utils/utils.dart';
 import '../models/im/decision_im.dart';
-import '../../general/contracts/assessment_poll_contract.dart';
+import '../../general/contracts/settlement_proposal_assessment_poll_contract.dart';
 import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
-import '../../general/contracts/thing_assessment_verifier_lottery_contract.dart';
+import '../../general/contracts/settlement_proposal_assessment_verifier_lottery_contract.dart';
 import '../../general/contracts/truquest_contract.dart';
 import '../models/rvm/get_settlement_proposal_rvm.dart';
 import '../../general/contexts/document_context.dart';
@@ -23,9 +23,9 @@ class SettlementService {
   final UserService _userService;
   final UserOperationService _userOperationService;
   final TruQuestContract _truQuestContract;
-  final AcceptancePollContract _acceptancePollContract;
-  final ThingAssessmentVerifierLotteryContract _thingAssessmentVerifierLotteryContract;
-  final AssessmentPollContract _assessmentPollContract;
+  final ThingValidationPollContract _thingValidationPollContract;
+  final SettlementProposalAssessmentVerifierLotteryContract _settlementProposalAssessmentVerifierLotteryContract;
+  final SettlementProposalAssessmentPollContract _settlementProposalAssessmentPollContract;
 
   final _progress$Channel = StreamController<Stream<int>>();
   Stream<Stream<int>> get progress$$ => _progress$Channel.stream;
@@ -35,9 +35,9 @@ class SettlementService {
     this._userService,
     this._userOperationService,
     this._truQuestContract,
-    this._acceptancePollContract,
-    this._thingAssessmentVerifierLotteryContract,
-    this._assessmentPollContract,
+    this._thingValidationPollContract,
+    this._settlementProposalAssessmentVerifierLotteryContract,
+    this._settlementProposalAssessmentPollContract,
   );
 
   Future createNewSettlementProposalDraft(
@@ -86,18 +86,9 @@ class SettlementService {
   ) async* {
     print('**************** Fund Proposal ****************');
 
-    // if (!_userService.walletUnlocked) {
-    //   yield const WalletLockedError();
-
-    //   bool unlocked = await ctx.unlockWalletTask.future;
-    //   if (!unlocked) {
-    //     return;
-    //   }
-    // }
-
-    BigInt proposalSubmissionStake = await _truQuestContract.getThingSettlementProposalStake();
+    BigInt settlementProposalStake = await _truQuestContract.getSettlementProposalStake();
     BigInt availableFunds = await _userService.getAvailableFundsForCurrentUser();
-    if (availableFunds < proposalSubmissionStake) {
+    if (availableFunds < settlementProposalStake) {
       yield const InsufficientBalanceError();
       return;
     }
@@ -106,7 +97,7 @@ class SettlementService {
       actions: [
         (
           TruQuestContract.address,
-          _truQuestContract.fundThingSettlementProposal(
+          _truQuestContract.fundSettlementProposal(
             thingId,
             proposalId,
             signature,
@@ -115,18 +106,14 @@ class SettlementService {
       ],
       functionSignature: 'TruQuest.fundProposal(proposalId: $proposalId)',
       description: 'Fund the proposal to kick-start an evaluation process.',
-      stakeSize: proposalSubmissionStake,
+      stakeSize: settlementProposalStake,
     );
 
     var userOp = await ctx.approveUserOpTask.future;
-    if (userOp == null) {
-      return;
-    }
+    if (userOp == null) return;
 
     var error = await _userOperationService.send(userOp);
-    if (error != null) {
-      yield error;
-    }
+    if (error != null) yield error;
   }
 
   Future<(String?, int?, int, int, bool?, bool?)> getVerifierLotteryInfo(
@@ -136,18 +123,21 @@ class SettlementService {
     var currentUserId = _userService.latestCurrentUser?.id;
     var currentWalletAddress = _userService.latestCurrentUser?.walletAddress;
 
-    int? initBlock = await _thingAssessmentVerifierLotteryContract.getLotteryInitBlock(thingId, proposalId);
-    int durationBlocks = await _thingAssessmentVerifierLotteryContract.getLotteryDurationBlocks();
+    int? initBlock = await _settlementProposalAssessmentVerifierLotteryContract.getLotteryInitBlock(
+      thingId,
+      proposalId,
+    );
+    int durationBlocks = await _settlementProposalAssessmentVerifierLotteryContract.getLotteryDurationBlocks();
 
     int thingVerifiersArrayIndex = currentWalletAddress != null
-        ? await _acceptancePollContract.getUserIndexAmongThingVerifiers(
+        ? await _thingValidationPollContract.getUserIndexAmongThingVerifiers(
             thingId,
             currentWalletAddress,
           )
         : -1;
 
     bool? alreadyClaimedASpot = currentWalletAddress != null
-        ? await _thingAssessmentVerifierLotteryContract.checkAlreadyClaimedLotterySpot(
+        ? await _settlementProposalAssessmentVerifierLotteryContract.checkAlreadyClaimedLotterySpot(
             thingId,
             proposalId,
             currentWalletAddress,
@@ -155,7 +145,7 @@ class SettlementService {
         : null;
 
     bool? alreadyJoined = currentWalletAddress != null
-        ? await _thingAssessmentVerifierLotteryContract.checkAlreadyJoinedLottery(
+        ? await _settlementProposalAssessmentVerifierLotteryContract.checkAlreadyJoinedLottery(
             thingId,
             proposalId,
             currentWalletAddress,
@@ -175,19 +165,10 @@ class SettlementService {
   Stream<Object> claimLotterySpot(
     String thingId,
     String proposalId,
-    int userIndexInThingVerifiersArray,
+    int thingVerifiersArrayIndex,
     MultiStageOperationContext ctx,
   ) async* {
     print('**************** Claim Lottery Spot ****************');
-
-    // if (!_userService.walletUnlocked) {
-    //   yield const WalletLockedError();
-
-    //   bool unlocked = await ctx.unlockWalletTask.future;
-    //   if (!unlocked) {
-    //     return;
-    //   }
-    // }
 
     BigInt verifierStake = await _truQuestContract.getVerifierStake();
     BigInt availableFunds = await _userService.getAvailableFundsForCurrentUser();
@@ -199,11 +180,11 @@ class SettlementService {
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [
         (
-          ThingAssessmentVerifierLotteryContract.address,
-          _thingAssessmentVerifierLotteryContract.claimLotterySpot(
+          SettlementProposalAssessmentVerifierLotteryContract.address,
+          _settlementProposalAssessmentVerifierLotteryContract.claimLotterySpot(
             thingId,
             proposalId,
-            userIndexInThingVerifiersArray,
+            thingVerifiersArrayIndex,
           )
         ),
       ],
@@ -213,14 +194,10 @@ class SettlementService {
     );
 
     var userOp = await ctx.approveUserOpTask.future;
-    if (userOp == null) {
-      return;
-    }
+    if (userOp == null) return;
 
     var error = await _userOperationService.send(userOp);
-    if (error != null) {
-      yield error;
-    }
+    if (error != null) yield error;
   }
 
   Stream<Object> joinLottery(
@@ -229,15 +206,6 @@ class SettlementService {
     MultiStageOperationContext ctx,
   ) async* {
     print('**************** Join Lottery ****************');
-
-    // if (!_userService.walletUnlocked) {
-    //   yield const WalletLockedError();
-
-    //   bool unlocked = await ctx.unlockWalletTask.future;
-    //   if (!unlocked) {
-    //     return;
-    //   }
-    // }
 
     BigInt verifierStake = await _truQuestContract.getVerifierStake();
     BigInt availableFunds = await _userService.getAvailableFundsForCurrentUser();
@@ -249,8 +217,8 @@ class SettlementService {
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [
         (
-          ThingAssessmentVerifierLotteryContract.address,
-          _thingAssessmentVerifierLotteryContract.joinLottery(
+          SettlementProposalAssessmentVerifierLotteryContract.address,
+          _settlementProposalAssessmentVerifierLotteryContract.joinLottery(
             thingId,
             proposalId,
           )
@@ -262,14 +230,10 @@ class SettlementService {
     );
 
     var userOp = await ctx.approveUserOpTask.future;
-    if (userOp == null) {
-      return;
-    }
+    if (userOp == null) return;
 
     var error = await _userOperationService.send(userOp);
-    if (error != null) {
-      yield error;
-    }
+    if (error != null) yield error;
   }
 
   Future<GetVerifierLotteryParticipantsRvm> getVerifierLotteryParticipants(
@@ -290,15 +254,15 @@ class SettlementService {
     var currentUserId = _userService.latestCurrentUser?.id;
     var currentWalletAddress = _userService.latestCurrentUser?.walletAddress;
 
-    int? initBlock = await _assessmentPollContract.getPollInitBlock(
+    int? initBlock = await _settlementProposalAssessmentPollContract.getPollInitBlock(
       thingId,
       proposalId,
     );
 
-    int durationBlocks = await _assessmentPollContract.getPollDurationBlocks();
+    int durationBlocks = await _settlementProposalAssessmentPollContract.getPollDurationBlocks();
 
-    int proposalVerifiersArrayIndex = currentWalletAddress != null
-        ? await _assessmentPollContract.getUserIndexAmongProposalVerifiers(
+    int settlementProposalVerifiersArrayIndex = currentWalletAddress != null
+        ? await _settlementProposalAssessmentPollContract.getUserIndexAmongSettlementProposalVerifiers(
             thingId,
             proposalId,
             currentWalletAddress,
@@ -309,7 +273,7 @@ class SettlementService {
       currentUserId,
       initBlock,
       durationBlocks,
-      proposalVerifiersArrayIndex,
+      settlementProposalVerifiersArrayIndex,
     );
   }
 
@@ -322,7 +286,7 @@ class SettlementService {
   ) async* {
     print('**************** Cast Vote Off-chain ****************');
 
-    var vote = NewAssessmentPollVoteIm(
+    var vote = NewSettlementProposalAssessmentPollVoteIm(
       thingId: thingId,
       proposalId: proposalId,
       castedAt: DateTime.now().getString(),
@@ -330,27 +294,16 @@ class SettlementService {
       reason: reason,
     );
 
-    // if (!_userService.walletUnlocked) {
-    //   yield const WalletLockedError();
-
-    //   bool unlocked = await ctx.unlockWalletTask.future;
-    //   if (!unlocked) {
-    //     return;
-    //   }
-    // }
-
     String signature;
     try {
-      signature = await _userService.personalSign(
-        vote.toMessageForSigning(),
-      );
+      signature = await _userService.personalSign(vote.toMessageForSigning());
     } on WalletActionDeclinedError catch (error) {
       print(error.message);
       yield error;
       return;
     }
 
-    var ipfsCid = await _settlementApiService.castThingSettlementProposalAssessmentPollVote(vote, signature);
+    var ipfsCid = await _settlementApiService.castSettlementProposalAssessmentPollVote(vote, signature);
 
     print('**************** Vote cid: $ipfsCid ****************');
   }
@@ -358,30 +311,21 @@ class SettlementService {
   Stream<Object> castVoteOnChain(
     String thingId,
     String proposalId,
-    int userIndexInProposalVerifiersArray,
+    int settlementProposalVerifiersArrayIndex,
     DecisionIm decision,
     String reason,
     MultiStageOperationContext ctx,
   ) async* {
     print('**************** Cast Vote On-chain ****************');
 
-    // if (!_userService.walletUnlocked) {
-    //   yield const WalletLockedError();
-
-    //   bool unlocked = await ctx.unlockWalletTask.future;
-    //   if (!unlocked) {
-    //     return;
-    //   }
-    // }
-
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [
         (
-          AssessmentPollContract.address,
-          _assessmentPollContract.castVote(
+          SettlementProposalAssessmentPollContract.address,
+          _settlementProposalAssessmentPollContract.castVote(
             thingId,
             proposalId,
-            userIndexInProposalVerifiersArray,
+            settlementProposalVerifiersArrayIndex,
             decision,
             reason,
           )
@@ -393,14 +337,10 @@ class SettlementService {
     );
 
     var userOp = await ctx.approveUserOpTask.future;
-    if (userOp == null) {
-      return;
-    }
+    if (userOp == null) return;
 
     var error = await _userOperationService.send(userOp);
-    if (error != null) {
-      yield error;
-    }
+    if (error != null) yield error;
   }
 
   Future<GetVotesRvm> getVotes(String proposalId) async {

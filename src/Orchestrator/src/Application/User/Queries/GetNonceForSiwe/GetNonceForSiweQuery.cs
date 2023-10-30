@@ -4,6 +4,7 @@ using FluentValidation;
 using Domain.Results;
 
 using Application.Common.Interfaces;
+using Application.Common.Misc;
 
 namespace Application.User.Queries.GetNonceForSiwe;
 
@@ -31,7 +32,7 @@ internal class GetNonceForSiweQueryHandler : IRequestHandler<GetNonceForSiweQuer
 
     public Task<HandleResult<string>> Handle(GetNonceForSiweQuery query, CancellationToken ct)
     {
-        var nonce = _totpProvider.GenerateTotpFor(query.Address);
+        var nonce = _totpProvider.GenerateTotpFor(query.Address.HexToByteArray());
         return Task.FromResult(new HandleResult<string> { Data = nonce });
     }
 }

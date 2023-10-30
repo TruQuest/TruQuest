@@ -26,10 +26,10 @@ public class ContractCaller
     private readonly string _simpleAccountFactoryAddress;
     private readonly string _truthserumAddress;
     private readonly string _truQuestAddress;
-    private readonly string _thingSubmissionVerifierLotteryAddress;
-    private readonly string _acceptancePollAddress;
-    private readonly string _thingAssessmentVerifierLotteryAddress;
-    private readonly string _assessmentPollAddress;
+    private readonly string _thingValidationVerifierLotteryAddress;
+    private readonly string _thingValidationPollAddress;
+    private readonly string _settlementProposalAssessmentVerifierLotteryAddress;
+    private readonly string _settlementProposalAssessmentPollAddress;
 
     public ContractCaller(
         ILogger logger,
@@ -50,10 +50,10 @@ public class ContractCaller
         _simpleAccountFactoryAddress = configuration[$"Ethereum:Contracts:{network}:SimpleAccountFactory:Address"]!;
         _truthserumAddress = configuration[$"Ethereum:Contracts:{network}:Truthserum:Address"]!;
         _truQuestAddress = configuration[$"Ethereum:Contracts:{network}:TruQuest:Address"]!;
-        _thingSubmissionVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingSubmissionVerifierLottery:Address"]!;
-        _acceptancePollAddress = configuration[$"Ethereum:Contracts:{network}:AcceptancePoll:Address"]!;
-        _thingAssessmentVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingAssessmentVerifierLottery:Address"]!;
-        _assessmentPollAddress = configuration[$"Ethereum:Contracts:{network}:AssessmentPoll:Address"]!;
+        _thingValidationVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingValidationVerifierLottery:Address"]!;
+        _thingValidationPollAddress = configuration[$"Ethereum:Contracts:{network}:ThingValidationPoll:Address"]!;
+        _settlementProposalAssessmentVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:SettlementProposalAssessmentVerifierLottery:Address"]!;
+        _settlementProposalAssessmentPollAddress = configuration[$"Ethereum:Contracts:{network}:SettlementProposalAssessmentPoll:Address"]!;
     }
 
     public Task<string> GetWalletAddressFor(string accountName) => _web3.Eth
@@ -104,12 +104,12 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task JoinThingSubmissionVerifierLotteryAs(string accountName, byte[] thingId, byte[] userData)
+    public async Task JoinThingValidationVerifierLotteryAs(string accountName, byte[] thingId, byte[] userData)
     {
         await _userOperationService.Send(
             signer: _accountProvider.GetAccount(accountName),
-            targetAddress: _thingSubmissionVerifierLotteryAddress,
-            message: new JoinThingSubmissionVerifierLotteryMessage
+            targetAddress: _thingValidationVerifierLotteryAddress,
+            message: new JoinThingValidationVerifierLotteryMessage
             {
                 ThingId = thingId,
                 UserData = userData
@@ -119,14 +119,14 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task CastAcceptancePollVoteAs(
+    public async Task CastThingValidationPollVoteAs(
         string accountName, byte[] thingId, ushort thingVerifiersArrayIndex, Vote vote
     )
     {
         await _userOperationService.Send(
             signer: _accountProvider.GetAccount(accountName),
-            targetAddress: _acceptancePollAddress,
-            message: new CastAcceptancePollVoteMessage
+            targetAddress: _thingValidationPollAddress,
+            message: new CastThingValidationPollVoteMessage
             {
                 ThingId = thingId,
                 ThingVerifiersArrayIndex = thingVerifiersArrayIndex,
@@ -137,7 +137,7 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task FundThingSettlementProposalAs(
+    public async Task FundSettlementProposalAs(
         string accountName, byte[] thingId, byte[] proposalId, string signature
     )
     {
@@ -149,7 +149,7 @@ public class ContractCaller
         await _userOperationService.Send(
             signer: _accountProvider.GetAccount(accountName),
             targetAddress: _truQuestAddress,
-            message: new FundThingSettlementProposalMessage
+            message: new FundSettlementProposalMessage
             {
                 ThingId = thingId,
                 ProposalId = proposalId,
@@ -167,7 +167,7 @@ public class ContractCaller
         var index = await _web3.Eth
             .GetContractQueryHandler<GetUserIndexAmongThingVerifiersMessage>()
             .QueryAsync<BigInteger>(
-                _acceptancePollAddress,
+                _thingValidationPollAddress,
                 new()
                 {
                     ThingId = thingId,
@@ -178,14 +178,14 @@ public class ContractCaller
         return (int)index;
     }
 
-    public async Task ClaimThingAssessmentVerifierLotterySpotAs(
+    public async Task ClaimSettlementProposalAssessmentVerifierLotterySpotAs(
         string accountName, byte[] thingProposalId, ushort thingVerifiersArrayIndex
     )
     {
         await _userOperationService.Send(
             signer: _accountProvider.GetAccount(accountName),
-            targetAddress: _thingAssessmentVerifierLotteryAddress,
-            message: new ClaimLotterySpotMessage
+            targetAddress: _settlementProposalAssessmentVerifierLotteryAddress,
+            message: new ClaimSettlementProposalAssessmentVerifierLotterySpotMessage
             {
                 ThingProposalId = thingProposalId,
                 ThingVerifiersArrayIndex = thingVerifiersArrayIndex
@@ -193,33 +193,21 @@ public class ContractCaller
         );
         // catch (SmartContractCustomErrorRevertException ex)
         // {
-        //     if (ex.IsCustomErrorFor<ThingAssessmentVerifierLottery__AlreadyCommittedToLotteryError>())
+        //     if (ex.IsCustomErrorFor<SomeErrorType>())
         //     {
-        //         var error = ex.DecodeError<ThingAssessmentVerifierLottery__AlreadyCommittedToLotteryError>();
-        //     }
-        //     else if (ex.IsCustomErrorFor<ThingAssessmentVerifierLottery__LotteryExpiredError>())
-        //     {
-        //         var error = ex.DecodeError<ThingAssessmentVerifierLottery__LotteryExpiredError>();
-        //     }
-        //     else if (ex.IsCustomErrorFor<ThingAssessmentVerifierLottery__LotteryNotActiveError>())
-        //     {
-        //         var error = ex.DecodeError<ThingAssessmentVerifierLottery__LotteryNotActiveError>();
-        //     }
-        //     else if (ex.IsCustomErrorFor<ThingAssessmentVerifierLottery__NotEnoughFundsError>())
-        //     {
-        //         var error = ex.DecodeError<ThingAssessmentVerifierLottery__NotEnoughFundsError>();
+        //         var error = ex.DecodeError<SomeErrorType>();
         //     }
         // }
 
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task JoinThingAssessmentVerifierLotteryAs(string accountName, byte[] thingProposalId, byte[] userData)
+    public async Task JoinSettlementProposalAssessmentVerifierLotteryAs(string accountName, byte[] thingProposalId, byte[] userData)
     {
         await _userOperationService.Send(
             signer: _accountProvider.GetAccount(accountName),
-            targetAddress: _thingAssessmentVerifierLotteryAddress,
-            message: new JoinThingAssessmentVerifierLotteryMessage
+            targetAddress: _settlementProposalAssessmentVerifierLotteryAddress,
+            message: new JoinSettlementProposalAssessmentVerifierLotteryMessage
             {
                 ThingProposalId = thingProposalId,
                 UserData = userData
@@ -229,17 +217,17 @@ public class ContractCaller
         await _blockchainManipulator.Mine(1);
     }
 
-    public async Task CastAssessmentPollVoteAs(
-        string accountName, byte[] thingProposalId, ushort proposalVerifiersArrayIndex, Vote vote
+    public async Task CastSettlementProposalAssessmentPollVoteAs(
+        string accountName, byte[] thingProposalId, ushort settlementProposalVerifiersArrayIndex, Vote vote
     )
     {
         await _userOperationService.Send(
             signer: _accountProvider.GetAccount(accountName),
-            targetAddress: _assessmentPollAddress,
-            message: new CastAssessmentPollVoteMessage
+            targetAddress: _settlementProposalAssessmentPollAddress,
+            message: new CastSettlementProposalAssessmentPollVoteMessage
             {
                 ThingProposalId = thingProposalId,
-                ProposalVerifiersArrayIndex = proposalVerifiersArrayIndex,
+                SettlementProposalVerifiersArrayIndex = settlementProposalVerifiersArrayIndex,
                 Vote = vote
             }
         );

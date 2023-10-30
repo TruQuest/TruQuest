@@ -23,7 +23,7 @@ extension ThingStateVmExtension on ThingStateVm {
       case ThingStateVm.verifierLotteryFailed:
         return 'Verifier lottery failed';
       case ThingStateVm.verifiersSelectedAndPollInitiated:
-        return 'Awaiting acceptance poll results';
+        return 'Awaiting validation poll results';
       case ThingStateVm.consensusNotReached:
         return 'Consensus not reached';
       case ThingStateVm.declined:

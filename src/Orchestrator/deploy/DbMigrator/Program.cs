@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Identity;
 
 using Domain.Aggregates;
 using Domain.Aggregates.Events;
+using Application.Common.Interfaces;
+using Infrastructure.Ethereum;
 using Infrastructure.Persistence;
 using API;
 
@@ -72,50 +74,48 @@ var app = API.Program.CreateWebApplicationBuilder(new[] { "DbMigrator=true" })
 using var scope = app.Services.CreateScope();
 
 var appDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-appDbContext.Database.Migrate();
+await appDbContext.Database.MigrateAsync();
 
-var userIds = new[]
+var accountProvider = scope.ServiceProvider.GetRequiredService<AccountProvider>();
+var contractCaller = scope.ServiceProvider.GetRequiredService<IContractCaller>();
+
+Dictionary<string, string> accountNameToUserId = new()
 {
-    "0xb36b27fD212cC27701899C56E3d65B02E6227fe8",
-    "0xD60e165a7F9D7D05aa1EB8cf013D36C1B992353e",
-    "0xB8f297bF6d897d1339EC909D9CA3090e6F14187a",
-    "0xb745CD594a804Ab2CB18eCdb4888b0C805A771B5",
-    "0x8Ef8d7318f13898816a7EA38dAbB3e2A8E733c2C",
-    "0x92886220f2A9Cafea6756C18DC9a314226557102",
-    "0xCC38c2F9664C2fb88c9B7F7D16A8e77c94c4cf56",
-    "0x317176676Af74b9456f2421455CffE048D9A607d",
-
-    "0x20FD69D46DC690ef926d209FF016398D6613F168",
-    "0x29b9B8924cD0c6eae70981f611f3A2a07AC61f16",
-    "0xFC2a6bE9D03eb0F4Db06EaBCac63be3f5002A09B",
-    "0x0aB37d130deD0a85fCf2d472ac7aef1650C3CaaE",
-    "0x881606962701F9483d1D5FAD45d48C27Ec9698E7",
-    "0xaB45E127Fd54B2302E0B1c76d0444b50E12D6d1B",
-    "0x297c19fb45f0a4022c6D7030f21696207e51B9B8",
-    "0x9914DADEe4De641Da1f124Fc6026535be249ECc8",
-
-    "0x69c2ac462AeeD245Fd1A92C789A5d6ccf94b05B7",
-    "0xd5938750a90d2B1529bE082dF1030882DEF5dBab",
-    "0x334A60c06D394Eef6970A0A6679DDbE767972FeD",
-    "0xcaF234cCb63cd528Aeb67Be009230f7a81563E7a",
-    "0x81d7125E7EF2ada9171904760D081cc08510C865",
-    "0x5d6E95D3b671aC27cacB2E8E61c3EC23f9C226EC",
-    "0x6105C4b563E975AF7E814f31b4f900f0129919e9",
-    "0x2a171e640EECA4e9DF7985eB8a80a19b3a0b6276",
+    ["Submitter"] = "615170f7-760f-4383-9276-c3462387945e",
+    ["Proposer"] = "1c8f8397-bfbf-44f9-9231-3f5865178647",
+    ["Verifier1"] = "46959055-c4dc-47f5-8d9d-4109b2fca208",
+    ["Verifier2"] = "02433e23-f818-4417-b7ca-519dadf78447",
+    ["Verifier3"] = "c24e6ebc-6784-486e-97aa-5759a27e52bd",
+    ["Verifier4"] = "327988f5-64c4-4f35-a083-9f9ef4e68648",
+    ["Verifier5"] = "cf86c463-3432-4e4e-ab09-f43c27c3b298",
+    ["Verifier6"] = "8777cd9c-122a-4f49-bba0-9f366654a5c4",
 };
-appDbContext.Users.AddRange(userIds.Select(id => new User
-{
-    Id = id.Substring(2).ToLower(),
-    UserName = id
-}));
-appDbContext.SaveChanges();
 
-appDbContext.UserClaims.AddRange(userIds.Select(id => new IdentityUserClaim<string>
+appDbContext.Users.AddRange(accountNameToUserId.Select(kv => new User
 {
-    UserId = id.Substring(2).ToLower(),
-    ClaimType = "username",
-    ClaimValue = id
+    Id = kv.Value,
+    UserName = accountProvider.GetAccount(kv.Key).Address
 }));
+await appDbContext.SaveChangesAsync();
+
+foreach (var kv in accountNameToUserId)
+{
+    appDbContext.UserClaims.AddRange(new IdentityUserClaim<string>[]
+    {
+        new()
+        {
+            UserId = kv.Value,
+            ClaimType = "signer_address",
+            ClaimValue = accountProvider.GetAccount(kv.Key).Address
+        },
+        new()
+        {
+            UserId = kv.Value,
+            ClaimType = "wallet_address",
+            ClaimValue = await contractCaller.GetWalletAddressFor(kv.Key)
+        }
+    });
+}
 
 appDbContext.Tags.AddRange(
     new Tag("Politics"), new Tag("Sport"), new Tag("IT"),
@@ -123,11 +123,11 @@ appDbContext.Tags.AddRange(
     new Tag("Writing"), new Tag("Space"), new Tag("Engineering"),
     new Tag("Environment"), new Tag("Technology"), new Tag("Education")
 );
-appDbContext.SaveChanges();
+await appDbContext.SaveChangesAsync();
 
-var details = File.ReadAllText("dummy_details.json");
+var details = await File.ReadAllTextAsync("dummy_details.json");
 
-var submitterId = "0xb36b27fD212cC27701899C56E3d65B02E6227fe8".Substring(2).ToLower();
+var submitterId = accountNameToUserId["Submitter"];
 
 var subject1 = new Subject(
     name: "Erik \"Magneto\" Lehnsherr",
@@ -224,7 +224,7 @@ appDbContext.Subjects.AddRange(new[] {
     subject4, subject5, subject6,
     subject7, subject8, subject9
 });
-appDbContext.SaveChanges();
+await appDbContext.SaveChangesAsync();
 
 var thing1 = new Thing(
     id: Guid.NewGuid(),
@@ -237,17 +237,17 @@ var thing1 = new Thing(
 );
 thing1.AddEvidence(new[]
 {
-    new Evidence(
+    new ThingEvidence(
         originUrl: "https://stackoverflow.com",
         ipfsCid: "QmUJLNPMw9q1kQUrgvYYjBEBBJJjH6cVvg45NuR1588JMq",
         previewImageIpfsCid: "Qmahq4Qdk4BqWTNhNFhRXTtpf6i6JNWDC83owyQkFrhzbt"
     ),
-    new Evidence(
+    new ThingEvidence(
         originUrl: "https://twitter.com",
         ipfsCid: "QmWwZmCgixkQbAXrpJGBg6dKPEP49F7Yw8yUnT4xQLEvK6",
         previewImageIpfsCid: "QmNx8iKKmccFDJLusR9aCJAq6qCKxPRrRRVvVTDhv9KfqS"
     ),
-    new Evidence(
+    new ThingEvidence(
         originUrl: "https://google.com",
         ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
         previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
@@ -267,17 +267,17 @@ var thing2 = new Thing(
 );
 thing2.AddEvidence(new[]
 {
-    new Evidence(
+    new ThingEvidence(
         originUrl: "https://stackoverflow.com",
         ipfsCid: "QmUJLNPMw9q1kQUrgvYYjBEBBJJjH6cVvg45NuR1588JMq",
         previewImageIpfsCid: "Qmahq4Qdk4BqWTNhNFhRXTtpf6i6JNWDC83owyQkFrhzbt"
     ),
-    new Evidence(
+    new ThingEvidence(
         originUrl: "https://twitter.com",
         ipfsCid: "QmWwZmCgixkQbAXrpJGBg6dKPEP49F7Yw8yUnT4xQLEvK6",
         previewImageIpfsCid: "QmNx8iKKmccFDJLusR9aCJAq6qCKxPRrRRVvVTDhv9KfqS"
     ),
-    new Evidence(
+    new ThingEvidence(
         originUrl: "https://google.com",
         ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
         previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
@@ -297,17 +297,17 @@ var thing3 = new Thing(
 );
 thing3.AddEvidence(new[]
 {
-    new Evidence(
+    new ThingEvidence(
         originUrl: "https://stackoverflow.com",
         ipfsCid: "QmUJLNPMw9q1kQUrgvYYjBEBBJJjH6cVvg45NuR1588JMq",
         previewImageIpfsCid: "Qmahq4Qdk4BqWTNhNFhRXTtpf6i6JNWDC83owyQkFrhzbt"
     ),
-    new Evidence(
+    new ThingEvidence(
         originUrl: "https://twitter.com",
         ipfsCid: "QmWwZmCgixkQbAXrpJGBg6dKPEP49F7Yw8yUnT4xQLEvK6",
         previewImageIpfsCid: "QmNx8iKKmccFDJLusR9aCJAq6qCKxPRrRRVvVTDhv9KfqS"
     ),
-    new Evidence(
+    new ThingEvidence(
         originUrl: "https://google.com",
         ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
         previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
@@ -327,17 +327,17 @@ var thing4 = new Thing(
 );
 thing4.AddEvidence(new[]
 {
-    new Evidence(
+    new ThingEvidence(
         originUrl: "https://stackoverflow.com",
         ipfsCid: "QmUJLNPMw9q1kQUrgvYYjBEBBJJjH6cVvg45NuR1588JMq",
         previewImageIpfsCid: "Qmahq4Qdk4BqWTNhNFhRXTtpf6i6JNWDC83owyQkFrhzbt"
     ),
-    new Evidence(
+    new ThingEvidence(
         originUrl: "https://twitter.com",
         ipfsCid: "QmWwZmCgixkQbAXrpJGBg6dKPEP49F7Yw8yUnT4xQLEvK6",
         previewImageIpfsCid: "QmNx8iKKmccFDJLusR9aCJAq6qCKxPRrRRVvVTDhv9KfqS"
     ),
-    new Evidence(
+    new ThingEvidence(
         originUrl: "https://google.com",
         ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
         previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
@@ -357,17 +357,17 @@ var thing5 = new Thing(
 );
 thing5.AddEvidence(new[]
 {
-    new Evidence(
+    new ThingEvidence(
         originUrl: "https://stackoverflow.com",
         ipfsCid: "QmUJLNPMw9q1kQUrgvYYjBEBBJJjH6cVvg45NuR1588JMq",
         previewImageIpfsCid: "Qmahq4Qdk4BqWTNhNFhRXTtpf6i6JNWDC83owyQkFrhzbt"
     ),
-    new Evidence(
+    new ThingEvidence(
         originUrl: "https://twitter.com",
         ipfsCid: "QmWwZmCgixkQbAXrpJGBg6dKPEP49F7Yw8yUnT4xQLEvK6",
         previewImageIpfsCid: "QmNx8iKKmccFDJLusR9aCJAq6qCKxPRrRRVvVTDhv9KfqS"
     ),
-    new Evidence(
+    new ThingEvidence(
         originUrl: "https://google.com",
         ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
         previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
@@ -381,7 +381,7 @@ appDbContext.Things.AddRange(new[] {
     thing4, thing5
 });
 
-appDbContext.SaveChanges();
+await appDbContext.SaveChangesAsync();
 
 var proposal1 = new SettlementProposal(
     id: Guid.NewGuid(),
@@ -395,17 +395,17 @@ var proposal1 = new SettlementProposal(
 );
 proposal1.AddEvidence(new[]
 {
-    new SupportingEvidence(
+    new SettlementProposalEvidence(
         originUrl: "https://stackoverflow.com",
         ipfsCid: "QmUJLNPMw9q1kQUrgvYYjBEBBJJjH6cVvg45NuR1588JMq",
         previewImageIpfsCid: "Qmahq4Qdk4BqWTNhNFhRXTtpf6i6JNWDC83owyQkFrhzbt"
     ),
-    new SupportingEvidence(
+    new SettlementProposalEvidence(
         originUrl: "https://twitter.com",
         ipfsCid: "QmWwZmCgixkQbAXrpJGBg6dKPEP49F7Yw8yUnT4xQLEvK6",
         previewImageIpfsCid: "QmNx8iKKmccFDJLusR9aCJAq6qCKxPRrRRVvVTDhv9KfqS"
     ),
-    new SupportingEvidence(
+    new SettlementProposalEvidence(
         originUrl: "https://google.com",
         ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
         previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
@@ -426,17 +426,17 @@ var proposal2 = new SettlementProposal(
 );
 proposal2.AddEvidence(new[]
 {
-    new SupportingEvidence(
+    new SettlementProposalEvidence(
         originUrl: "https://stackoverflow.com",
         ipfsCid: "QmUJLNPMw9q1kQUrgvYYjBEBBJJjH6cVvg45NuR1588JMq",
         previewImageIpfsCid: "Qmahq4Qdk4BqWTNhNFhRXTtpf6i6JNWDC83owyQkFrhzbt"
     ),
-    new SupportingEvidence(
+    new SettlementProposalEvidence(
         originUrl: "https://twitter.com",
         ipfsCid: "QmWwZmCgixkQbAXrpJGBg6dKPEP49F7Yw8yUnT4xQLEvK6",
         previewImageIpfsCid: "QmNx8iKKmccFDJLusR9aCJAq6qCKxPRrRRVvVTDhv9KfqS"
     ),
-    new SupportingEvidence(
+    new SettlementProposalEvidence(
         originUrl: "https://google.com",
         ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
         previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
@@ -457,17 +457,17 @@ var proposal3 = new SettlementProposal(
 );
 proposal3.AddEvidence(new[]
 {
-    new SupportingEvidence(
+    new SettlementProposalEvidence(
         originUrl: "https://stackoverflow.com",
         ipfsCid: "QmUJLNPMw9q1kQUrgvYYjBEBBJJjH6cVvg45NuR1588JMq",
         previewImageIpfsCid: "Qmahq4Qdk4BqWTNhNFhRXTtpf6i6JNWDC83owyQkFrhzbt"
     ),
-    new SupportingEvidence(
+    new SettlementProposalEvidence(
         originUrl: "https://twitter.com",
         ipfsCid: "QmWwZmCgixkQbAXrpJGBg6dKPEP49F7Yw8yUnT4xQLEvK6",
         previewImageIpfsCid: "QmNx8iKKmccFDJLusR9aCJAq6qCKxPRrRRVvVTDhv9KfqS"
     ),
-    new SupportingEvidence(
+    new SettlementProposalEvidence(
         originUrl: "https://google.com",
         ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
         previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
@@ -488,17 +488,17 @@ var proposal4 = new SettlementProposal(
 );
 proposal4.AddEvidence(new[]
 {
-    new SupportingEvidence(
+    new SettlementProposalEvidence(
         originUrl: "https://stackoverflow.com",
         ipfsCid: "QmUJLNPMw9q1kQUrgvYYjBEBBJJjH6cVvg45NuR1588JMq",
         previewImageIpfsCid: "Qmahq4Qdk4BqWTNhNFhRXTtpf6i6JNWDC83owyQkFrhzbt"
     ),
-    new SupportingEvidence(
+    new SettlementProposalEvidence(
         originUrl: "https://twitter.com",
         ipfsCid: "QmWwZmCgixkQbAXrpJGBg6dKPEP49F7Yw8yUnT4xQLEvK6",
         previewImageIpfsCid: "QmNx8iKKmccFDJLusR9aCJAq6qCKxPRrRRVvVTDhv9KfqS"
     ),
-    new SupportingEvidence(
+    new SettlementProposalEvidence(
         originUrl: "https://google.com",
         ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
         previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
@@ -519,17 +519,17 @@ var proposal5 = new SettlementProposal(
 );
 proposal5.AddEvidence(new[]
 {
-    new SupportingEvidence(
+    new SettlementProposalEvidence(
         originUrl: "https://stackoverflow.com",
         ipfsCid: "QmUJLNPMw9q1kQUrgvYYjBEBBJJjH6cVvg45NuR1588JMq",
         previewImageIpfsCid: "Qmahq4Qdk4BqWTNhNFhRXTtpf6i6JNWDC83owyQkFrhzbt"
     ),
-    new SupportingEvidence(
+    new SettlementProposalEvidence(
         originUrl: "https://twitter.com",
         ipfsCid: "QmWwZmCgixkQbAXrpJGBg6dKPEP49F7Yw8yUnT4xQLEvK6",
         previewImageIpfsCid: "QmNx8iKKmccFDJLusR9aCJAq6qCKxPRrRRVvVTDhv9KfqS"
     ),
-    new SupportingEvidence(
+    new SettlementProposalEvidence(
         originUrl: "https://google.com",
         ipfsCid: "QmXKF75UnhR5B7fdhJUNNDC8i7tMrcuJez6MpU1Tv4iMUG",
         previewImageIpfsCid: "QmNysptnFLQ2Ae4YcjHhVuUQDEirb4B4hqgCMAPpCDkbAX"
@@ -542,7 +542,7 @@ appDbContext.SettlementProposals.AddRange(new[] {
     proposal1, proposal2, proposal3,
     proposal4, proposal5
 });
-appDbContext.SaveChanges();
+await appDbContext.SaveChangesAsync();
 
 thing1.AcceptSettlementProposal(proposal1.Id);
 thing1.SetState(ThingState.Settled);
@@ -559,10 +559,10 @@ thing4.SetState(ThingState.Settled);
 thing5.AcceptSettlementProposal(proposal5.Id);
 thing5.SetState(ThingState.Settled);
 
-appDbContext.SaveChanges();
+await appDbContext.SaveChangesAsync();
 
 var eventDbContext = scope.ServiceProvider.GetRequiredService<EventDbContext>();
-eventDbContext.Database.Migrate();
+await eventDbContext.Database.MigrateAsync();
 
 eventDbContext.BlockProcessedEvent.Add(new BlockProcessedEvent(id: 1, blockNumber: null));
-eventDbContext.SaveChanges();
+await eventDbContext.SaveChangesAsync();

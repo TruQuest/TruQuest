@@ -10,7 +10,7 @@ class TruQuestContract {
   static const String _abi = '''[
         {
           "inputs": [],
-          "name": "s_thingSubmissionStake",
+          "name": "s_thingStake",
           "outputs": [
             {
               "internalType": "uint256",
@@ -23,7 +23,7 @@ class TruQuestContract {
         },
         {
           "inputs": [],
-          "name": "s_thingSettlementProposalStake",
+          "name": "s_settlementProposalStake",
           "outputs": [
             {
               "internalType": "uint256",
@@ -205,7 +205,7 @@ class TruQuestContract {
               "type": "bytes32"
             }
           ],
-          "name": "fundThingSettlementProposal",
+          "name": "fundSettlementProposal",
           "outputs": [],
           "stateMutability": "nonpayable",
           "type": "function"
@@ -239,9 +239,9 @@ class TruQuestContract {
     _contract = Contract(address, _abi, ethereumRpcProvider.provider);
   }
 
-  Future<BigInt> getThingSubmissionStake() => _contract.read<BigInt>('s_thingSubmissionStake');
+  Future<BigInt> getThingStake() => _contract.read<BigInt>('s_thingStake');
 
-  Future<BigInt> getThingSettlementProposalStake() => _contract.read<BigInt>('s_thingSettlementProposalStake');
+  Future<BigInt> getSettlementProposalStake() => _contract.read<BigInt>('s_settlementProposalStake');
 
   Future<BigInt> getVerifierStake() => _contract.read<BigInt>('s_verifierStake');
 
@@ -282,7 +282,7 @@ class TruQuestContract {
         args: [thingId.toSolInputFormat()],
       );
 
-  String fundThingSettlementProposal(
+  String fundSettlementProposal(
     String thingId,
     String proposalId,
     String signature,
@@ -295,7 +295,7 @@ class TruQuestContract {
     var v = hex.decode(signature.substring(128, 130)).first;
 
     return _interface.encodeFunctionData(
-      'fundThingSettlementProposal',
+      'fundSettlementProposal',
       [
         thingIdHex,
         proposalIdHex,

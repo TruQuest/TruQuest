@@ -54,7 +54,7 @@ internal class AttachmentsArchivingCompletedEventHandler : INotificationHandler<
         );
         proposal.AddEvidence(@event.Input.Evidence.Select(e =>
         {
-            return new SupportingEvidence(
+            return new SettlementProposalEvidence(
                 originUrl: e.Url,
                 ipfsCid: e.IpfsCid!,
                 previewImageIpfsCid: e.PreviewImageIpfsCid!

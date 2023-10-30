@@ -1,7 +1,7 @@
 import 'package:intl/intl.dart';
 
+import '../../../general/models/rvm/evidence_vm.dart';
 import '../../../general/models/rvm/tag_vm.dart';
-import 'evidence_vm.dart';
 import 'thing_state_vm.dart';
 
 class ThingVm {
@@ -27,22 +27,17 @@ class ThingVm {
 
   final bool? fundedAwaitingConfirmation;
 
-  String get submittedAtFormatted =>
-      DateFormat.yMMMMd('en_US').format(submittedAt!);
+  String get submittedAtFormatted => DateFormat.yMMMMd('en_US').format(submittedAt!);
 
   String get submitterIdShort =>
-      submitterId.substring(0, 6) +
-      '...' +
-      submitterId.substring(submitterId.length - 4, submitterId.length);
+      submitterId.substring(0, 6) + '...' + submitterId.substring(submitterId.length - 4, submitterId.length);
 
   bool isSubmitter(String? userId) => userId == submitterId;
 
   ThingVm.fromMap(Map<String, dynamic> map)
       : id = map['id'],
         state = ThingStateVm.values[map['state']],
-        submittedAt = map['submittedAt'] != null
-            ? DateTime.fromMillisecondsSinceEpoch(map['submittedAt'])
-            : null,
+        submittedAt = map['submittedAt'] != null ? DateTime.fromMillisecondsSinceEpoch(map['submittedAt']) : null,
         title = map['title'],
         details = map['details'],
         imageIpfsCid = map['imageIpfsCid'],
@@ -52,22 +47,17 @@ class ThingVm {
         subjectName = map['subjectName'],
         subjectCroppedImageIpfsCid = map['subjectCroppedImageIpfsCid'],
         subjectAvgScore = map['subjectAvgScore'],
-        settledAt = map['settledAt'] != null
-            ? DateTime.fromMillisecondsSinceEpoch(map['settledAt'])
-            : null,
+        settledAt = map['settledAt'] != null ? DateTime.fromMillisecondsSinceEpoch(map['settledAt']) : null,
         voteAggIpfsCid = map['voteAggIpfsCid'],
         acceptedSettlementProposalId = map['acceptedSettlementProposalId'],
         evidence = List.unmodifiable(
-          (map['evidence'] as List<dynamic>)
-              .map((submap) => EvidenceVm.fromMap(submap)),
+          (map['evidence'] as List<dynamic>).map((submap) => EvidenceVm.fromMap(submap)),
         ),
         tags = List.unmodifiable(
           (map['tags'] as List<dynamic>).map((submap) => TagVm.fromMap(submap)),
         ),
         watched = map['watched'],
-        relatedThings = map['relatedThings'] != null
-            ? (map['relatedThings'] as Map).cast<String, String>()
-            : null,
+        relatedThings = map['relatedThings'] != null ? (map['relatedThings'] as Map).cast<String, String>() : null,
         fundedAwaitingConfirmation = null;
 
   ThingVm._({
@@ -114,8 +104,7 @@ class ThingVm {
       tags: tags,
       watched: watched,
       relatedThings: relatedThings,
-      fundedAwaitingConfirmation:
-          fundedAwaitingConfirmation ?? this.fundedAwaitingConfirmation,
+      fundedAwaitingConfirmation: fundedAwaitingConfirmation ?? this.fundedAwaitingConfirmation,
     );
   }
 }

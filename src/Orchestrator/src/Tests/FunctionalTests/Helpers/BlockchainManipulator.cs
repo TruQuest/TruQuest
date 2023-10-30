@@ -18,10 +18,7 @@ public class BlockchainManipulator
 
     public async Task Mine(int numBlocks)
     {
-        if (_network != "Ganache")
-        {
-            return;
-        }
+        if (_network != "Ganache") return;
 
         for (int i = 0; i < numBlocks; ++i)
         {

@@ -22,18 +22,18 @@ internal class MessageTypeResolver : IMessageTypeResolver
             {
                 case ThingEventType.Funded:
                     return typeof(ThingFundedEvent);
-                case ThingEventType.SubmissionVerifierLotteryClosedInFailure:
-                    return typeof(ThingSubmissionVerifierLotteryClosedInFailureEvent);
-                case ThingEventType.SubmissionVerifierLotteryClosedWithSuccess:
-                    return typeof(ThingSubmissionVerifierLotteryClosedWithSuccessEvent);
-                case ThingEventType.AcceptancePollFinalized:
-                    return typeof(ThingAcceptancePollFinalizedEvent);
+                case ThingEventType.ValidationVerifierLotteryClosedInFailure:
+                    return typeof(ThingValidationVerifierLotteryClosedInFailureEvent);
+                case ThingEventType.ValidationVerifierLotteryClosedWithSuccess:
+                    return typeof(ThingValidationVerifierLotteryClosedWithSuccessEvent);
+                case ThingEventType.ValidationPollFinalized:
+                    return typeof(ThingValidationPollFinalizedEvent);
                 case ThingEventType.SettlementProposalFunded:
-                    return typeof(ThingSettlementProposalFundedEvent);
+                    return typeof(SettlementProposalFundedEvent);
                 case ThingEventType.SettlementProposalAssessmentVerifierLotteryClosedWithSuccess:
-                    return typeof(ThingSettlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent);
+                    return typeof(SettlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent);
                 case ThingEventType.SettlementProposalAssessmentPollFinalized:
-                    return typeof(ThingSettlementProposalAssessmentPollFinalizedEvent);
+                    return typeof(SettlementProposalAssessmentPollFinalizedEvent);
             }
         }
         else if (context.ConsumerContext.Topic == "updates")

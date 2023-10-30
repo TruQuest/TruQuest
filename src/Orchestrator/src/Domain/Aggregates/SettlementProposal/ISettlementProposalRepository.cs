@@ -8,6 +8,6 @@ public interface ISettlementProposalRepository : IRepository<SettlementProposal>
     Task<SettlementProposal> FindById(Guid id);
     Task<SettlementProposalState> GetStateFor(Guid proposalId);
     Task UpdateStateFor(Guid proposalId, SettlementProposalState state);
-    Task<IReadOnlyList<SettlementProposalVerifier>> GetAllVerifiersFor(Guid settlementProposalId);
+    Task<IReadOnlyList<SettlementProposalVerifier>> GetAllVerifiersFor(Guid proposalId);
     Task<bool> CheckIsDesignatedVerifierFor(Guid proposalId, string userId);
 }

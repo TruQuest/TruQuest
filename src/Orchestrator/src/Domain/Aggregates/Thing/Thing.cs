@@ -19,8 +19,8 @@ public class Thing : Entity, IAggregateRoot
 
     // @@??: Do we need smth like SubmissionEvaluatedAt ?
 
-    private List<Evidence> _evidence = new();
-    public IReadOnlyList<Evidence> Evidence => _evidence;
+    private List<ThingEvidence> _evidence = new();
+    public IReadOnlyList<ThingEvidence> Evidence => _evidence;
 
     private List<ThingAttachedTag> _tags = new();
     public IReadOnlyList<ThingAttachedTag> Tags => _tags;
@@ -46,7 +46,7 @@ public class Thing : Entity, IAggregateRoot
         SubjectId = subjectId;
     }
 
-    public void AddEvidence(IEnumerable<Evidence> evidence)
+    public void AddEvidence(IEnumerable<ThingEvidence> evidence)
     {
         _evidence.AddRange(evidence);
     }

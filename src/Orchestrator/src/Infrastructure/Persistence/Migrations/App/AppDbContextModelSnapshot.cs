@@ -24,74 +24,6 @@ namespace Infrastructure.Persistence.Migrations.App
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Domain.Aggregates.AcceptancePollVote", b =>
-                {
-                    b.Property<Guid>("ThingId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("VoterId")
-                        .HasColumnType("text");
-
-                    b.Property<long>("CastedAtMs")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Decision")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("IpfsCid")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Reason")
-                        .HasColumnType("text");
-
-                    b.Property<string>("VoterSignature")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("VoterWalletAddress")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("ThingId", "VoterId");
-
-                    b.ToTable("AcceptancePollVotes", "truquest");
-                });
-
-            modelBuilder.Entity("Domain.Aggregates.AssessmentPollVote", b =>
-                {
-                    b.Property<Guid>("SettlementProposalId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("VoterId")
-                        .HasColumnType("text");
-
-                    b.Property<long>("CastedAtMs")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Decision")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("IpfsCid")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Reason")
-                        .HasColumnType("text");
-
-                    b.Property<string>("VoterSignature")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("VoterWalletAddress")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("SettlementProposalId", "VoterId");
-
-                    b.ToTable("AssessmentPollVotes", "truquest");
-                });
-
             modelBuilder.Entity("Domain.Aggregates.AuthCredential", b =>
                 {
                     b.Property<string>("Id")
@@ -165,34 +97,6 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.ToTable("Tasks", "truquest");
                 });
 
-            modelBuilder.Entity("Domain.Aggregates.Evidence", b =>
-                {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("IpfsCid")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("OriginUrl")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PreviewImageIpfsCid")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("ThingId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ThingId");
-
-                    b.ToTable("Evidence", "truquest");
-                });
-
             modelBuilder.Entity("Domain.Aggregates.SettlementProposal", b =>
                 {
                     b.Property<Guid>("Id")
@@ -242,6 +146,68 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.HasIndex("ThingId");
 
                     b.ToTable("SettlementProposals", "truquest");
+                });
+
+            modelBuilder.Entity("Domain.Aggregates.SettlementProposalAssessmentPollVote", b =>
+                {
+                    b.Property<Guid>("SettlementProposalId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("VoterId")
+                        .HasColumnType("text");
+
+                    b.Property<long>("CastedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Decision")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("IpfsCid")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text");
+
+                    b.Property<string>("VoterSignature")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("VoterWalletAddress")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("SettlementProposalId", "VoterId");
+
+                    b.ToTable("SettlementProposalAssessmentPollVotes", "truquest");
+                });
+
+            modelBuilder.Entity("Domain.Aggregates.SettlementProposalEvidence", b =>
+                {
+                    b.Property<Guid?>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("IpfsCid")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("OriginUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PreviewImageIpfsCid")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("SettlementProposalId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SettlementProposalId");
+
+                    b.ToTable("SettlementProposalEvidence", "truquest");
                 });
 
             modelBuilder.Entity("Domain.Aggregates.SettlementProposalUpdate", b =>
@@ -371,34 +337,6 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.ToTable("SubjectUpdates", "truquest");
                 });
 
-            modelBuilder.Entity("Domain.Aggregates.SupportingEvidence", b =>
-                {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("IpfsCid")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("OriginUrl")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PreviewImageIpfsCid")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("ProposalId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProposalId");
-
-                    b.ToTable("SupportingEvidence", "truquest");
-                });
-
             modelBuilder.Entity("Domain.Aggregates.Tag", b =>
                 {
                     b.Property<int?>("Id")
@@ -485,6 +423,34 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.ToTable("ThingAttachedTags", "truquest");
                 });
 
+            modelBuilder.Entity("Domain.Aggregates.ThingEvidence", b =>
+                {
+                    b.Property<Guid?>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("IpfsCid")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("OriginUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PreviewImageIpfsCid")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ThingId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ThingId");
+
+                    b.ToTable("ThingEvidence", "truquest");
+                });
+
             modelBuilder.Entity("Domain.Aggregates.ThingUpdate", b =>
                 {
                     b.Property<Guid>("ThingId")
@@ -509,6 +475,40 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.HasKey("ThingId", "Category");
 
                     b.ToTable("ThingUpdates", "truquest");
+                });
+
+            modelBuilder.Entity("Domain.Aggregates.ThingValidationPollVote", b =>
+                {
+                    b.Property<Guid>("ThingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("VoterId")
+                        .HasColumnType("text");
+
+                    b.Property<long>("CastedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Decision")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("IpfsCid")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text");
+
+                    b.Property<string>("VoterSignature")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("VoterWalletAddress")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("ThingId", "VoterId");
+
+                    b.ToTable("ThingValidationPollVotes", "truquest");
                 });
 
             modelBuilder.Entity("Domain.Aggregates.ThingVerifier", b =>
@@ -678,38 +678,11 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.ToTable("AspNetUserTokens", "truquest");
                 });
 
-            modelBuilder.Entity("Domain.Aggregates.AcceptancePollVote", b =>
-                {
-                    b.HasOne("Domain.Aggregates.ThingVerifier", null)
-                        .WithOne()
-                        .HasForeignKey("Domain.Aggregates.AcceptancePollVote", "ThingId", "VoterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Domain.Aggregates.AssessmentPollVote", b =>
-                {
-                    b.HasOne("Domain.Aggregates.SettlementProposalVerifier", null)
-                        .WithOne()
-                        .HasForeignKey("Domain.Aggregates.AssessmentPollVote", "SettlementProposalId", "VoterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Domain.Aggregates.AuthCredential", b =>
                 {
                     b.HasOne("Domain.Aggregates.User", null)
                         .WithMany("AuthCredentials")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Domain.Aggregates.Evidence", b =>
-                {
-                    b.HasOne("Domain.Aggregates.Thing", null)
-                        .WithMany("Evidence")
-                        .HasForeignKey("ThingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -725,6 +698,24 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.HasOne("Domain.Aggregates.Thing", null)
                         .WithMany()
                         .HasForeignKey("ThingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Aggregates.SettlementProposalAssessmentPollVote", b =>
+                {
+                    b.HasOne("Domain.Aggregates.SettlementProposalVerifier", null)
+                        .WithOne()
+                        .HasForeignKey("Domain.Aggregates.SettlementProposalAssessmentPollVote", "SettlementProposalId", "VoterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Aggregates.SettlementProposalEvidence", b =>
+                {
+                    b.HasOne("Domain.Aggregates.SettlementProposal", null)
+                        .WithMany("Evidence")
+                        .HasForeignKey("SettlementProposalId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -768,15 +759,6 @@ namespace Infrastructure.Persistence.Migrations.App
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Domain.Aggregates.SupportingEvidence", b =>
-                {
-                    b.HasOne("Domain.Aggregates.SettlementProposal", null)
-                        .WithMany("Evidence")
-                        .HasForeignKey("ProposalId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Domain.Aggregates.Thing", b =>
                 {
                     b.HasOne("Domain.Aggregates.Subject", null)
@@ -807,6 +789,24 @@ namespace Infrastructure.Persistence.Migrations.App
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Domain.Aggregates.ThingEvidence", b =>
+                {
+                    b.HasOne("Domain.Aggregates.Thing", null)
+                        .WithMany("Evidence")
+                        .HasForeignKey("ThingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Aggregates.ThingValidationPollVote", b =>
+                {
+                    b.HasOne("Domain.Aggregates.ThingVerifier", null)
+                        .WithOne()
+                        .HasForeignKey("Domain.Aggregates.ThingValidationPollVote", "ThingId", "VoterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Domain.Aggregates.ThingVerifier", b =>
                 {
                     b.HasOne("Domain.Aggregates.Thing", null)
@@ -818,6 +818,15 @@ namespace Infrastructure.Persistence.Migrations.App
                     b.HasOne("Domain.Aggregates.User", null)
                         .WithMany()
                         .HasForeignKey("VerifierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Aggregates.WatchedItem", b =>
+                {
+                    b.HasOne("Domain.Aggregates.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

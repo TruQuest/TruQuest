@@ -51,7 +51,7 @@ class _PollStepperState extends StateX<PollStepper> {
       child: Stepper(
         currentStep: _currentStep,
         controlsBuilder: (context, details) =>
-            widget.info.userId != null && widget.info.userIndexInProposalVerifiersArray >= 0
+            widget.info.userId != null && widget.info.settlementProposalVerifiersArrayIndex >= 0
                 ? SwipeButton(
                     key: ValueKey(
                       '${details.currentStep}::${widget.info.userId}::${widget.currentBlock < widget.endBlock}',
@@ -90,7 +90,8 @@ class _PollStepperState extends StateX<PollStepper> {
                                   CastVoteOnChain(
                                     thingId: widget.proposal.thingId,
                                     proposalId: widget.proposal.id,
-                                    userIndexInProposalVerifiersArray: widget.info.userIndexInProposalVerifiersArray,
+                                    settlementProposalVerifiersArrayIndex:
+                                        widget.info.settlementProposalVerifiersArrayIndex,
                                     decision: decision,
                                     reason: reason,
                                   ),

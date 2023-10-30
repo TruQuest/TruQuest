@@ -8,7 +8,7 @@ public class NewSettlementProposalIm
     public required string Details { get; init; }
     public required string? ImagePath { get; init; }
     public required string? CroppedImagePath { get; init; }
-    public required IEnumerable<SupportingEvidenceIm> Evidence { get; init; }
+    public required IEnumerable<SettlementProposalEvidenceIm> Evidence { get; init; }
 
     public string? ImageIpfsCid { get; init; }
     public string? CroppedImageIpfsCid { get; init; }

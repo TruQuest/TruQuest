@@ -28,7 +28,7 @@ internal class SettlementProposalAssessmentVerifierLotteryEventQueryable :
         using var multiQuery = await dbConn.QueryMultipleAsync(
             @"
                 SELECT ""L1BlockNumber"", ""TxnHash"", ""DataHash"", ""UserXorDataHash""
-                FROM truquest_events.""ThingAssessmentVerifierLotteryInitializedEvents""
+                FROM truquest_events.""SettlementProposalAssessmentVerifierLotteryInitializedEvents""
                 WHERE ""SettlementProposalId"" = @ProposalId;
 
                 SELECT
@@ -44,13 +44,13 @@ internal class SettlementProposalAssessmentVerifierLotteryEventQueryable :
                     ""Type"" IN (@LotteryClosedWithSuccessType, @LotteryClosedInFailureType) AND
                     ""Payload""->>'settlementProposalId' = @ProposalId::TEXT;
 
-                SELECT ""L1BlockNumber"", ""TxnHash"", ""UserId"", ""UserData"", ""Nonce""
-                FROM truquest_events.""JoinedThingAssessmentVerifierLotteryEvents""
+                SELECT ""L1BlockNumber"", ""TxnHash"", ""UserId"", ""WalletAddress"", ""UserData"", ""Nonce""
+                FROM truquest_events.""JoinedSettlementProposalAssessmentVerifierLotteryEvents""
                 WHERE ""SettlementProposalId"" = @ProposalId
                 ORDER BY ""BlockNumber"" DESC, ""TxnIndex"" DESC;
 
-                SELECT ""L1BlockNumber"", ""TxnHash"", ""UserId"", ""UserData"", ""Nonce""
-                FROM truquest_events.""ThingAssessmentVerifierLotterySpotClaimedEvents""
+                SELECT ""L1BlockNumber"", ""TxnHash"", ""UserId"", ""WalletAddress"", ""UserData"", ""Nonce""
+                FROM truquest_events.""ClaimedSettlementProposalAssessmentVerifierLotterySpotEvents""
                 WHERE ""SettlementProposalId"" = @ProposalId
                 ORDER BY ""BlockNumber"" DESC, ""TxnIndex"" DESC;
             ",
@@ -77,13 +77,13 @@ internal class SettlementProposalAssessmentVerifierLotteryEventQueryable :
 
         if (lotteryClosedEvent?.Nonce != null) // means successful lottery
         {
-            foreach (var winnerId in ((JsonElement)lotteryClosedEvent.Payload["winnerIds"]).EnumerateArray())
+            foreach (var address in ((JsonElement)lotteryClosedEvent.Payload["winnerWalletAddresses"]).EnumerateArray())
             {
-                participantEntries.Single(e => e.UserId == winnerId.GetString()!).MarkAsWinner();
+                participantEntries.Single(e => e.WalletAddress == address.GetString()!).MarkAsWinner();
             }
-            foreach (var claimantId in ((JsonElement)lotteryClosedEvent.Payload["claimantIds"]).EnumerateArray())
+            foreach (var address in ((JsonElement)lotteryClosedEvent.Payload["claimantWalletAddresses"]).EnumerateArray())
             {
-                claimantEntries.Single(e => e.UserId == claimantId.GetString()!).MarkAsWinner();
+                claimantEntries.Single(e => e.WalletAddress == address.GetString()!).MarkAsWinner();
             }
 
             participantEntries = participantEntries.OrderBy(e => e.SortKey);

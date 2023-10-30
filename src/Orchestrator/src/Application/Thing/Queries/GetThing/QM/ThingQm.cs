@@ -19,7 +19,7 @@ public class ThingQm
     public long? SettledAt { get; }
     public string? VoteAggIpfsCid { get; }
     public Guid? AcceptedSettlementProposalId { get; }
-    public HashSet<EvidenceQm> Evidence { get; } = new();
+    public HashSet<ThingEvidenceQm> Evidence { get; } = new();
     public HashSet<TagQm> Tags { get; } = new();
     public bool Watched { get; set; }
     public Dictionary<string, string>? RelatedThings { get; }

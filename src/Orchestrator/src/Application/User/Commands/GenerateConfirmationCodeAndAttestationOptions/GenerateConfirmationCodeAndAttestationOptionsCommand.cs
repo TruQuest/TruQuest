@@ -12,7 +12,6 @@ using Domain.Errors;
 using Domain.Results;
 
 using Application.Common.Interfaces;
-using Application.Common.Misc;
 
 namespace Application.User.Commands.GenerateConfirmationCodeAndAttestationOptions;
 
@@ -94,7 +93,7 @@ internal class GenerateConfirmationCodeAndAttestationOptionsCommandHandler : IRe
         var challenge = Base64Url.Encode(options.Challenge);
         _memoryCache.Set($"fido2.attestationOptions.{challenge}", options.ToJson()); // @@TODO: Expiration.
 
-        var totp = _totpProvider.GenerateTotpFor(Encoding.UTF8.GetBytes(command.Email).ToHex());
+        var totp = _totpProvider.GenerateTotpFor(Encoding.UTF8.GetBytes(command.Email));
         // @@TODO!!: Send the code.
 
         _logger.LogInformation($"******** Confirmation code: {totp}. Attestation Challenge: {challenge} ********");

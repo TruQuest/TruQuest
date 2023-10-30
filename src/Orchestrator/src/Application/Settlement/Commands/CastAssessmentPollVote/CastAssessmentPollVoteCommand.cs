@@ -13,7 +13,7 @@ namespace Application.Settlement.Commands.CastAssessmentPollVote;
 [RequireAuthorization]
 public class CastAssessmentPollVoteCommand : IRequest<HandleResult<string>>
 {
-    public required NewAssessmentPollVoteIm Input { get; init; }
+    public required NewSettlementProposalAssessmentPollVoteIm Input { get; init; }
     public required string Signature { get; init; }
 }
 
@@ -21,7 +21,7 @@ internal class Validator : AbstractValidator<CastAssessmentPollVoteCommand>
 {
     public Validator()
     {
-        RuleFor(c => c.Input).SetValidator(new NewAssessmentPollVoteImValidator());
+        RuleFor(c => c.Input).SetValidator(new NewSettlementProposalAssessmentPollVoteImValidator());
         RuleFor(c => c.Signature).NotEmpty();
     }
 }
@@ -33,7 +33,7 @@ internal class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssess
     private readonly IContractCaller _contractCaller;
     private readonly IFileStorage _fileStorage;
     private readonly ISettlementProposalRepository _settlementProposalRepository;
-    private readonly IAssessmentPollVoteRepository _voteRepository;
+    private readonly ISettlementProposalAssessmentPollVoteRepository _voteRepository;
 
     public CastAssessmentPollVoteCommandHandler(
         ICurrentPrincipal currentPrincipal,
@@ -41,7 +41,7 @@ internal class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssess
         IContractCaller contractCaller,
         IFileStorage fileStorage,
         ISettlementProposalRepository settlementProposalRepository,
-        IAssessmentPollVoteRepository voteRepository
+        ISettlementProposalAssessmentPollVoteRepository voteRepository
     )
     {
         _currentPrincipal = currentPrincipal;
@@ -70,7 +70,7 @@ internal class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssess
             };
         }
 
-        var recoveredAddress = _signer.RecoverFromNewAssessmentPollVoteMessage(command.Input, command.Signature);
+        var recoveredAddress = _signer.RecoverFromNewSettlementProposalAssessmentPollVoteMessage(command.Input, command.Signature);
 
         if (_currentPrincipal.SignerAddress != recoveredAddress)
         {
@@ -93,7 +93,7 @@ internal class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssess
             };
         }
 
-        var orchestratorSignature = _signer.SignNewAssessmentPollVote(
+        var orchestratorSignature = _signer.SignNewSettlementProposalAssessmentPollVote(
             command.Input,
             userId: _currentPrincipal.Id!,
             walletAddress: _currentPrincipal.WalletAddress!,
@@ -118,12 +118,12 @@ internal class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssess
             };
         }
 
-        var vote = new AssessmentPollVote(
+        var vote = new SettlementProposalAssessmentPollVote(
             settlementProposalId: command.Input.SettlementProposalId.Value,
             voterId: _currentPrincipal.Id!,
             voterWalletAddress: _currentPrincipal.WalletAddress!,
             castedAtMs: castedAtUtc.ToUnixTimeMilliseconds(),
-            decision: (AssessmentPollVote.VoteDecision)command.Input.Decision,
+            decision: (SettlementProposalAssessmentPollVote.VoteDecision)command.Input.Decision,
             reason: command.Input.Reason != string.Empty ? command.Input.Reason : null,
             voterSignature: command.Signature,
             ipfsCid: uploadResult.Data!

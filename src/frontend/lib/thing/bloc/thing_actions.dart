@@ -143,7 +143,7 @@ class JoinLottery extends ThingAction {
   const JoinLottery({required this.thingId});
 }
 
-class GetAcceptancePollInfo extends ThingAction {
+class GetValidationPollInfo extends ThingAction {
   final String thingId;
 
   @override
@@ -157,7 +157,7 @@ class GetAcceptancePollInfo extends ThingAction {
     return errors;
   }
 
-  const GetAcceptancePollInfo({required this.thingId});
+  const GetValidationPollInfo({required this.thingId});
 }
 
 class GetVotes extends ThingAction {
@@ -191,13 +191,13 @@ class CastVoteOffChain extends ThingAction {
 
 class CastVoteOnChain extends ThingAction {
   final String thingId;
-  final int userIndexInThingVerifiersArray;
+  final int thingVerifiersArrayIndex;
   final DecisionIm decision;
   final String reason;
 
   const CastVoteOnChain({
     required this.thingId,
-    required this.userIndexInThingVerifiersArray,
+    required this.thingVerifiersArrayIndex,
     required this.decision,
     required this.reason,
   });

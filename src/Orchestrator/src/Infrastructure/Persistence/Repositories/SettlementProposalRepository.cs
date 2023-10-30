@@ -48,12 +48,12 @@ internal class SettlementProposalRepository : Repository, ISettlementProposalRep
         );
     }
 
-    public async Task<IReadOnlyList<SettlementProposalVerifier>> GetAllVerifiersFor(Guid settlementProposalId)
+    public async Task<IReadOnlyList<SettlementProposalVerifier>> GetAllVerifiersFor(Guid proposalId)
     {
         var settlementProposal = await _dbContext.SettlementProposals
             .AsNoTracking()
             .Include(p => p.Verifiers)
-            .SingleAsync(p => p.Id == settlementProposalId);
+            .SingleAsync(p => p.Id == proposalId);
 
         return settlementProposal.Verifiers;
     }

@@ -33,23 +33,23 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
     private readonly ITaskRepository _taskRepository;
     private readonly IContractCaller _contractCaller;
     private readonly IL1BlockchainQueryable _l1BlockchainQueryable;
-    private readonly IThingAssessmentVerifierLotterySpotClaimedEventRepository _lotterySpotClaimedEventRepository;
-    private readonly IJoinedThingAssessmentVerifierLotteryEventRepository _joinedLotteryEventRepository;
+    private readonly IClaimedSettlementProposalAssessmentVerifierLotterySpotEventRepository _claimedLotterySpotEventRepository;
+    private readonly IJoinedSettlementProposalAssessmentVerifierLotteryEventRepository _joinedLotteryEventRepository;
 
     public CloseVerifierLotteryCommandHandler(
         ILogger<CloseVerifierLotteryCommandHandler> logger,
         ITaskRepository taskRepository,
         IContractCaller contractCaller,
         IL1BlockchainQueryable l1BlockchainQueryable,
-        IThingAssessmentVerifierLotterySpotClaimedEventRepository lotterySpotClaimedEventRepository,
-        IJoinedThingAssessmentVerifierLotteryEventRepository joinedLotteryEventRepository
+        IClaimedSettlementProposalAssessmentVerifierLotterySpotEventRepository claimedLotterySpotEventRepository,
+        IJoinedSettlementProposalAssessmentVerifierLotteryEventRepository joinedLotteryEventRepository
     )
     {
         _logger = logger;
         _taskRepository = taskRepository;
         _contractCaller = contractCaller;
         _l1BlockchainQueryable = l1BlockchainQueryable;
-        _lotterySpotClaimedEventRepository = lotterySpotClaimedEventRepository;
+        _claimedLotterySpotEventRepository = claimedLotterySpotEventRepository;
         _joinedLotteryEventRepository = joinedLotteryEventRepository;
     }
 
@@ -59,11 +59,11 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
         var thingId = command.ThingId.ToByteArray();
         var proposalId = command.SettlementProposalId.ToByteArray();
 
-        bool expired = await _contractCaller.CheckThingAssessmentVerifierLotteryExpired(thingId, proposalId);
+        bool expired = await _contractCaller.CheckSettlementProposalAssessmentVerifierLotteryExpired(thingId, proposalId);
         Debug.Assert(expired);
 
         var endBlockHash = await _l1BlockchainQueryable.GetBlockHash(command.EndBlock);
-        BigInteger maxNonce = await _contractCaller.GetThingAssessmentVerifierLotteryMaxNonce();
+        BigInteger maxNonce = await _contractCaller.GetSettlementProposalAssessmentVerifierLotteryMaxNonce();
 
         var nonce = (long)(
             (
@@ -72,10 +72,10 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
             ) % maxNonce
         );
 
-        int numVerifiers = await _contractCaller.GetThingAssessmentLotteryNumVerifiers();
+        int numVerifiers = await _contractCaller.GetSettlementProposalAssessmentVerifierLotteryNumVerifiers();
 
         // ordered from oldest to newest
-        var spotClaimedEvents = await _lotterySpotClaimedEventRepository.FindAllFor(
+        var spotClaimedEvents = await _claimedLotterySpotEventRepository.FindAllFor(
             command.ThingId, command.SettlementProposalId
         );
 
@@ -110,7 +110,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 
         Debug.Assert(winnerClaimants.Count <= numVerifiers / 2);
 
-        var spotClaimants = await _contractCaller.GetThingAssessmentVerifierLotterySpotClaimants(thingId, proposalId);
+        var spotClaimants = await _contractCaller.GetSettlementProposalAssessmentVerifierLotterySpotClaimants(thingId, proposalId);
         foreach (var winnerClaimant in winnerClaimants)
         {
             var claimantAtIndex = spotClaimants.ElementAtOrDefault(new Index(winnerClaimant.Index));
@@ -120,8 +120,8 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
             }
         }
 
-        await _lotterySpotClaimedEventRepository.UpdateNoncesFor(spotClaimedEvents);
-        await _lotterySpotClaimedEventRepository.SaveChanges();
+        await _claimedLotterySpotEventRepository.UpdateNoncesFor(spotClaimedEvents);
+        await _claimedLotterySpotEventRepository.SaveChanges();
 
         _logger.LogInformation(
             "Proposal {ProposalId} verifier lottery: {NumClaimants} spots claimed",
@@ -172,7 +172,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 
         if (winnerParticipants.Count == numRequiredParticipants)
         {
-            var participants = await _contractCaller.GetThingAssessmentVerifierLotteryParticipants(thingId, proposalId);
+            var participants = await _contractCaller.GetSettlementProposalAssessmentVerifierLotteryParticipants(thingId, proposalId);
             foreach (var winnerParticipant in winnerParticipants)
             {
                 var participantAtIndex = participants.ElementAtOrDefault(new Index(winnerParticipant.Index));
@@ -182,7 +182,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
                 }
             }
 
-            await _contractCaller.CloseThingAssessmentVerifierLotteryWithSuccess(
+            await _contractCaller.CloseSettlementProposalAssessmentVerifierLotteryWithSuccess(
                 thingId,
                 proposalId,
                 data: command.Data,
@@ -201,7 +201,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
                 command.SettlementProposalId, numVerifiers, winnerClaimants.Count + winnerParticipants.Count
             );
 
-            await _contractCaller.CloseThingAssessmentVerifierLotteryInFailure(
+            await _contractCaller.CloseSettlementProposalAssessmentVerifierLotteryInFailure(
                 thingId, proposalId, winnerClaimants.Count + winnerParticipants.Count
             );
         }

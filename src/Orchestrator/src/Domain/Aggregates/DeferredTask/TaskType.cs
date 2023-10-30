@@ -2,8 +2,8 @@ namespace Domain.Aggregates;
 
 public enum TaskType
 {
-    CloseThingSubmissionVerifierLottery,
-    CloseThingAcceptancePoll,
-    CloseThingAssessmentVerifierLottery,
-    CloseThingSettlementProposalAssessmentPoll,
+    CloseThingValidationVerifierLottery,
+    CloseThingValidationPoll,
+    CloseSettlementProposalAssessmentVerifierLottery,
+    CloseSettlementProposalAssessmentPoll,
 }

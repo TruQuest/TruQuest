@@ -7,13 +7,13 @@ import '../../general/widgets/vote_dialog.dart';
 import '../../widget_extensions.dart';
 import '../bloc/thing_bloc.dart';
 import '../models/im/decision_im.dart';
-import '../models/rvm/acceptance_poll_info_vm.dart';
+import '../models/rvm/validation_poll_info_vm.dart';
 import '../models/rvm/thing_vm.dart';
 import '../../general/widgets/swipe_button.dart';
 
 class PollStepper extends StatefulWidget {
   final ThingVm thing;
-  final AcceptancePollInfoVm info;
+  final ValidationPollInfoVm info;
   final int currentBlock;
   final int endBlock;
 
@@ -50,61 +50,60 @@ class _PollStepperState extends StateX<PollStepper> {
       data: getThemeDataForSteppers(context),
       child: Stepper(
         currentStep: _currentStep,
-        controlsBuilder: (context, details) =>
-            widget.info.userId != null && widget.info.userIndexInThingVerifiersArray >= 0
-                ? SwipeButton(
-                    // @@NOTE: Without the key flutter would just reuse the same state object for all steps.
-                    key: ValueKey(
-                      '${details.currentStep}::${widget.info.userId}::${widget.currentBlock < widget.endBlock}',
+        controlsBuilder: (context, details) => widget.info.userId != null && widget.info.thingVerifiersArrayIndex >= 0
+            ? SwipeButton(
+                // @@NOTE: Without the key flutter would just reuse the same state object for all steps.
+                key: ValueKey(
+                  '${details.currentStep}::${widget.info.userId}::${widget.currentBlock < widget.endBlock}',
+                ),
+                text: 'Slide to vote',
+                enabled: _checkButtonShouldBeEnabled(),
+                swiped: false,
+                onCompletedSwipe: () async {
+                  await showDialog(
+                    context: context,
+                    builder: (_) => VoteDialog<DecisionIm>(
+                      decisions: const [
+                        DecisionIm.accept,
+                        DecisionIm.softDecline,
+                        DecisionIm.hardDecline,
+                      ],
+                      getDisplayString: (decision) => decision.getString(),
+                      onVote: (decision, reason) async {
+                        if (details.currentStep == 0) {
+                          await multiStageOffChainFlow(
+                            context,
+                            (ctx) => _thingBloc.executeMultiStage(
+                              CastVoteOffChain(
+                                thingId: widget.thing.id,
+                                decision: decision,
+                                reason: reason,
+                              ),
+                              ctx,
+                            ),
+                          );
+                        } else {
+                          await multiStageFlow(
+                            context,
+                            (ctx) => _thingBloc.executeMultiStage(
+                              CastVoteOnChain(
+                                thingId: widget.thing.id,
+                                thingVerifiersArrayIndex: widget.info.thingVerifiersArrayIndex,
+                                decision: decision,
+                                reason: reason,
+                              ),
+                              ctx,
+                            ),
+                          );
+                        }
+                      },
                     ),
-                    text: 'Slide to vote',
-                    enabled: _checkButtonShouldBeEnabled(),
-                    swiped: false,
-                    onCompletedSwipe: () async {
-                      await showDialog(
-                        context: context,
-                        builder: (_) => VoteDialog<DecisionIm>(
-                          decisions: const [
-                            DecisionIm.accept,
-                            DecisionIm.softDecline,
-                            DecisionIm.hardDecline,
-                          ],
-                          getDisplayString: (decision) => decision.getString(),
-                          onVote: (decision, reason) async {
-                            if (details.currentStep == 0) {
-                              await multiStageOffChainFlow(
-                                context,
-                                (ctx) => _thingBloc.executeMultiStage(
-                                  CastVoteOffChain(
-                                    thingId: widget.thing.id,
-                                    decision: decision,
-                                    reason: reason,
-                                  ),
-                                  ctx,
-                                ),
-                              );
-                            } else {
-                              await multiStageFlow(
-                                context,
-                                (ctx) => _thingBloc.executeMultiStage(
-                                  CastVoteOnChain(
-                                    thingId: widget.thing.id,
-                                    userIndexInThingVerifiersArray: widget.info.userIndexInThingVerifiersArray,
-                                    decision: decision,
-                                    reason: reason,
-                                  ),
-                                  ctx,
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                      );
+                  );
 
-                      return false;
-                    },
-                  )
-                : const SizedBox.shrink(),
+                  return false;
+                },
+              )
+            : const SizedBox.shrink(),
         onStepTapped: (value) => setState(() => _currentStep = value),
         steps: [
           Step(

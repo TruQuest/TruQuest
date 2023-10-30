@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 
 import 'verdict_im.dart';
-import 'supporting_evidence_im.dart';
+import 'settlement_proposal_evidence_im.dart';
 
 class NewSettlementProposalIm {
   final String thingId;
@@ -14,7 +14,7 @@ class NewSettlementProposalIm {
   final Uint8List? imageBytes;
   final String? croppedImageExt;
   final Uint8List? croppedImageBytes;
-  final List<SupportingEvidenceIm> evidence;
+  final List<SettlementProposalEvidenceIm> evidence;
 
   NewSettlementProposalIm({
     required this.thingId,

@@ -14,6 +14,7 @@ using UserDm = Domain.Aggregates.User;
 using Application.Common.Attributes;
 using Application.Common.Interfaces;
 using Application.User.Common.Models.VM;
+using Application.Common.Misc;
 
 namespace Application.User.Commands.SignInWithEthereum;
 
@@ -64,10 +65,10 @@ internal class SignInWithEthereumCommandHandler :
 
     public async Task<HandleResult<AuthResultVm>> Handle(SignInWithEthereumCommand command, CancellationToken ct)
     {
-        var signerAddress = _signer.RecoverFromSiweMessage(command.Message, command.Signature);
+        var signerAddress = _signer.RecoverFromMessage(command.Message, command.Signature);
 
         var nonce = _nonceRegex.Match(command.Message).Groups[1].Value;
-        if (!_totpProvider.VerifyTotp(signerAddress, nonce))
+        if (!_totpProvider.VerifyTotp(signerAddress.HexToByteArray(), nonce))
         {
             _logger.LogWarning("Invalid nonce");
             return new()

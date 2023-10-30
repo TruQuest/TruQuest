@@ -46,7 +46,7 @@ class LotteryStepper extends StatelessWidgetX {
         children: [
           Stepper(
             controlsBuilder: (context, details) =>
-                info.userId != null && !proposal.isSubmitter(info.userId) && info.userIndexInThingVerifiersArray >= 0
+                info.userId != null && !proposal.isSubmitter(info.userId) && info.thingVerifiersArrayIndex >= 0
                     ? SwipeButton(
                         key: ValueKey('${info.userId}::${currentBlock < endBlock}::${info.alreadyClaimedASpot}'),
                         text: 'Slide to claim',
@@ -59,7 +59,7 @@ class LotteryStepper extends StatelessWidgetX {
                               ClaimLotterySpot(
                                 thingId: proposal.thingId,
                                 proposalId: proposal.id,
-                                userIndexInThingVerifiersArray: info.userIndexInThingVerifiersArray,
+                                thingVerifiersArrayIndex: info.thingVerifiersArrayIndex,
                               ),
                               ctx,
                             ),

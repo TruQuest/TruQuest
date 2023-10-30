@@ -129,7 +129,7 @@ class SettlementBloc extends Bloc<SettlementAction> {
       userId: result.$1,
       initBlock: result.$2,
       durationBlocks: result.$3,
-      userIndexInThingVerifiersArray: result.$4,
+      thingVerifiersArrayIndex: result.$4,
       alreadyClaimedASpot: result.$5,
       alreadyJoined: result.$6,
     );
@@ -142,7 +142,7 @@ class SettlementBloc extends Bloc<SettlementAction> {
       _settlementService.claimLotterySpot(
         action.thingId,
         action.proposalId,
-        action.userIndexInThingVerifiersArray,
+        action.thingVerifiersArrayIndex,
         ctx,
       );
 
@@ -170,7 +170,7 @@ class SettlementBloc extends Bloc<SettlementAction> {
       userId: info.$1,
       initBlock: info.$2,
       durationBlocks: info.$3,
-      userIndexInProposalVerifiersArray: info.$4,
+      settlementProposalVerifiersArrayIndex: info.$4,
     );
   }
 
@@ -187,7 +187,7 @@ class SettlementBloc extends Bloc<SettlementAction> {
       _settlementService.castVoteOnChain(
         action.thingId,
         action.proposalId,
-        action.userIndexInProposalVerifiersArray,
+        action.settlementProposalVerifiersArrayIndex,
         action.decision,
         action.reason,
         ctx,

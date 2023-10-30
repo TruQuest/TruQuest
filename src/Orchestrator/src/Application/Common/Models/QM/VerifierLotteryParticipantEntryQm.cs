@@ -7,6 +7,7 @@ public class VerifierLotteryParticipantEntryQm
     public required long L1BlockNumber { get; init; }
     public required string TxnHash { get; init; }
     public required string UserId { get; init; }
+    public required string WalletAddress { get; init; }
     public required string UserData { get; init; }
     public required long? Nonce { get; init; }
 

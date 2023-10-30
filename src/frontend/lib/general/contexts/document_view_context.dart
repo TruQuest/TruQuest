@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 
-import '../../thing/models/rvm/evidence_vm.dart';
 import '../../settlement/models/rvm/settlement_proposal_vm.dart';
 import '../../subject/models/rvm/subject_vm.dart';
 import '../../widget_extensions.dart';
 import '../../thing/models/rvm/thing_vm.dart';
+import '../models/rvm/evidence_vm.dart';
 
 class DocumentViewContext implements IDisposable {
   late final QuillController quillController;

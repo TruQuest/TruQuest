@@ -5,8 +5,8 @@ import 'package:stacked_card_carousel/stacked_card_carousel.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../contexts/document_view_context.dart';
-import '../../thing/models/rvm/evidence_vm.dart';
 import '../../widget_extensions.dart';
+import '../models/rvm/evidence_vm.dart';
 
 class EvidenceViewBlock extends StatefulWidget {
   const EvidenceViewBlock({super.key});

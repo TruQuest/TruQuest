@@ -16,10 +16,10 @@ using Application.Common.Interfaces;
 using AppEvents = Application.Ethereum.Events;
 
 using Infrastructure.Ethereum.Events;
-using ThingSubmissionVerifierLottery = Infrastructure.Ethereum.Events.ThingSubmissionVerifierLottery;
-using ThingAssessmentVerifierLottery = Infrastructure.Ethereum.Events.ThingAssessmentVerifierLottery;
-using AcceptancePoll = Infrastructure.Ethereum.Events.AcceptancePoll;
-using AssessmentPoll = Infrastructure.Ethereum.Events.AssessmentPoll;
+using ThingValidationVerifierLottery = Infrastructure.Ethereum.Events.ThingValidationVerifierLottery;
+using SettlementProposalAssessmentVerifierLottery = Infrastructure.Ethereum.Events.SettlementProposalAssessmentVerifierLottery;
+using ThingValidationPoll = Infrastructure.Ethereum.Events.ThingValidationPoll;
+using SettlementProposalAssessmentPoll = Infrastructure.Ethereum.Events.SettlementProposalAssessmentPoll;
 
 namespace Infrastructure.Ethereum;
 
@@ -31,10 +31,10 @@ internal class ContractEventListener : IContractEventListener
     private readonly Web3 _web3;
     private readonly uint _blockConfirmations;
     private readonly string _truQuestAddress;
-    private readonly string _thingSubmissionVerifierLotteryAddress;
-    private readonly string _acceptancePollAddress;
-    private readonly string _thingAssessmentVerifierLotteryAddress;
-    private readonly string _assessmentPollAddress;
+    private readonly string _thingValidationVerifierLotteryAddress;
+    private readonly string _thingValidationPollAddress;
+    private readonly string _settlementProposalAssessmentVerifierLotteryAddress;
+    private readonly string _settlementProposalAssessmentPollAddress;
 
     private readonly ChannelReader<(IEventLog, TaskCompletionSource)> _stream;
     private readonly ChannelWriter<(IEventLog, TaskCompletionSource)> _sink;
@@ -52,10 +52,10 @@ internal class ContractEventListener : IContractEventListener
         _web3 = new Web3(configuration[$"Ethereum:Networks:{network}:URL"]);
         _blockConfirmations = configuration.GetValue<uint>($"Ethereum:Networks:{network}:BlockConfirmations");
         _truQuestAddress = configuration[$"Ethereum:Contracts:{network}:TruQuest:Address"]!;
-        _thingSubmissionVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingSubmissionVerifierLottery:Address"]!;
-        _acceptancePollAddress = configuration[$"Ethereum:Contracts:{network}:AcceptancePoll:Address"]!;
-        _thingAssessmentVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingAssessmentVerifierLottery:Address"]!;
-        _assessmentPollAddress = configuration[$"Ethereum:Contracts:{network}:AssessmentPoll:Address"]!;
+        _thingValidationVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingValidationVerifierLottery:Address"]!;
+        _thingValidationPollAddress = configuration[$"Ethereum:Contracts:{network}:ThingValidationPoll:Address"]!;
+        _settlementProposalAssessmentVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:SettlementProposalAssessmentVerifierLottery:Address"]!;
+        _settlementProposalAssessmentPollAddress = configuration[$"Ethereum:Contracts:{network}:SettlementProposalAssessmentPoll:Address"]!;
 
         var channel = Channel.CreateUnbounded<(IEventLog, TaskCompletionSource)>(
             new UnboundedChannelOptions
@@ -84,22 +84,22 @@ internal class ContractEventListener : IContractEventListener
             var eventHandlers = new ProcessorHandler<FilterLog>[]
             {
                 new EventLogProcessorHandler<ThingFundedEvent>(WriteToChannel),
-                new EventLogProcessorHandler<ThingSubmissionVerifierLottery.LotteryInitializedEvent>(WriteToChannel),
-                new EventLogProcessorHandler<ThingSubmissionVerifierLottery.JoinedLotteryEvent>(WriteToChannel),
-                new EventLogProcessorHandler<ThingSubmissionVerifierLottery.LotteryClosedWithSuccessEvent>(WriteToChannel),
-                new EventLogProcessorHandler<ThingSubmissionVerifierLottery.LotteryClosedInFailureEvent>(WriteToChannel),
-                new EventLogProcessorHandler<AcceptancePoll.CastedVoteEvent>(WriteToChannel),
-                new EventLogProcessorHandler<AcceptancePoll.CastedVoteWithReasonEvent>(WriteToChannel),
-                new EventLogProcessorHandler<AcceptancePoll.PollFinalizedEvent>(WriteToChannel),
-                new EventLogProcessorHandler<ThingSettlementProposalFundedEvent>(WriteToChannel),
-                new EventLogProcessorHandler<ThingAssessmentVerifierLottery.LotteryInitializedEvent>(WriteToChannel),
-                new EventLogProcessorHandler<ThingAssessmentVerifierLottery.ClaimedLotterySpotEvent>(WriteToChannel),
-                new EventLogProcessorHandler<ThingAssessmentVerifierLottery.JoinedLotteryEvent>(WriteToChannel),
-                new EventLogProcessorHandler<ThingAssessmentVerifierLottery.LotteryClosedWithSuccessEvent>(WriteToChannel),
+                new EventLogProcessorHandler<ThingValidationVerifierLottery.LotteryInitializedEvent>(WriteToChannel),
+                new EventLogProcessorHandler<ThingValidationVerifierLottery.JoinedLotteryEvent>(WriteToChannel),
+                new EventLogProcessorHandler<ThingValidationVerifierLottery.LotteryClosedWithSuccessEvent>(WriteToChannel),
+                new EventLogProcessorHandler<ThingValidationVerifierLottery.LotteryClosedInFailureEvent>(WriteToChannel),
+                new EventLogProcessorHandler<ThingValidationPoll.CastedVoteEvent>(WriteToChannel),
+                new EventLogProcessorHandler<ThingValidationPoll.CastedVoteWithReasonEvent>(WriteToChannel),
+                new EventLogProcessorHandler<ThingValidationPoll.PollFinalizedEvent>(WriteToChannel),
+                new EventLogProcessorHandler<SettlementProposalFundedEvent>(WriteToChannel),
+                new EventLogProcessorHandler<SettlementProposalAssessmentVerifierLottery.LotteryInitializedEvent>(WriteToChannel),
+                new EventLogProcessorHandler<SettlementProposalAssessmentVerifierLottery.ClaimedLotterySpotEvent>(WriteToChannel),
+                new EventLogProcessorHandler<SettlementProposalAssessmentVerifierLottery.JoinedLotteryEvent>(WriteToChannel),
+                new EventLogProcessorHandler<SettlementProposalAssessmentVerifierLottery.LotteryClosedWithSuccessEvent>(WriteToChannel),
                 // @@TODO: LotteryClosedInFailure
-                new EventLogProcessorHandler<AssessmentPoll.CastedVoteEvent>(WriteToChannel),
-                new EventLogProcessorHandler<AssessmentPoll.CastedVoteWithReasonEvent>(WriteToChannel),
-                new EventLogProcessorHandler<AssessmentPoll.PollFinalizedEvent>(WriteToChannel),
+                new EventLogProcessorHandler<SettlementProposalAssessmentPoll.CastedVoteEvent>(WriteToChannel),
+                new EventLogProcessorHandler<SettlementProposalAssessmentPoll.CastedVoteWithReasonEvent>(WriteToChannel),
+                new EventLogProcessorHandler<SettlementProposalAssessmentPoll.PollFinalizedEvent>(WriteToChannel),
             };
 
             var contractFilter = new NewFilterInput
@@ -107,10 +107,10 @@ internal class ContractEventListener : IContractEventListener
                 Address = new[]
                 {
                     _truQuestAddress,
-                    _thingSubmissionVerifierLotteryAddress,
-                    _acceptancePollAddress,
-                    _thingAssessmentVerifierLotteryAddress,
-                    _assessmentPollAddress
+                    _thingValidationVerifierLotteryAddress,
+                    _thingValidationPollAddress,
+                    _settlementProposalAssessmentVerifierLotteryAddress,
+                    _settlementProposalAssessmentPollAddress
                 }
             };
 
@@ -146,215 +146,230 @@ internal class ContractEventListener : IContractEventListener
                     Stake = (decimal)thingFundedEvent.Event.Stake
                 };
             }
-            else if (@event is EventLog<ThingSubmissionVerifierLottery.LotteryInitializedEvent> thingSubmissionVerifierLotteryInitializedEvent)
+            else if (@event is EventLog<ThingValidationVerifierLottery.LotteryInitializedEvent> thingValidationVerifierLotteryInitializedEvent)
             {
-                yield return new AppEvents.ThingSubmissionVerifierLottery.LotteryInitialized.LotteryInitializedEvent
+                yield return new AppEvents.ThingValidationVerifierLottery.LotteryInitialized.LotteryInitializedEvent
                 {
-                    BlockNumber = (long)thingSubmissionVerifierLotteryInitializedEvent.Log.BlockNumber.Value,
-                    TxnIndex = (int)thingSubmissionVerifierLotteryInitializedEvent.Log.TransactionIndex.Value,
-                    TxnHash = thingSubmissionVerifierLotteryInitializedEvent.Log.TransactionHash,
-                    L1BlockNumber = (long)thingSubmissionVerifierLotteryInitializedEvent.Event.L1BlockNumber,
-                    ThingId = thingSubmissionVerifierLotteryInitializedEvent.Event.ThingId,
-                    DataHash = thingSubmissionVerifierLotteryInitializedEvent.Event.DataHash,
-                    UserXorDataHash = thingSubmissionVerifierLotteryInitializedEvent.Event.UserXorDataHash
+                    BlockNumber = (long)thingValidationVerifierLotteryInitializedEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)thingValidationVerifierLotteryInitializedEvent.Log.TransactionIndex.Value,
+                    TxnHash = thingValidationVerifierLotteryInitializedEvent.Log.TransactionHash,
+                    L1BlockNumber = (long)thingValidationVerifierLotteryInitializedEvent.Event.L1BlockNumber,
+                    ThingId = thingValidationVerifierLotteryInitializedEvent.Event.ThingId,
+                    DataHash = thingValidationVerifierLotteryInitializedEvent.Event.DataHash,
+                    UserXorDataHash = thingValidationVerifierLotteryInitializedEvent.Event.UserXorDataHash
                 };
             }
-            else if (@event is EventLog<ThingSubmissionVerifierLottery.JoinedLotteryEvent> joinedThingSubmissionVerifierLotteryEvent)
+            else if (@event is EventLog<ThingValidationVerifierLottery.JoinedLotteryEvent> joinedThingValidationVerifierLotteryEvent)
             {
-                yield return new AppEvents.ThingSubmissionVerifierLottery.JoinedLottery.JoinedLotteryEvent
+                yield return new AppEvents.ThingValidationVerifierLottery.JoinedLottery.JoinedLotteryEvent
                 {
-                    BlockNumber = (long)joinedThingSubmissionVerifierLotteryEvent.Log.BlockNumber.Value,
-                    TxnIndex = (int)joinedThingSubmissionVerifierLotteryEvent.Log.TransactionIndex.Value,
-                    TxnHash = joinedThingSubmissionVerifierLotteryEvent.Log.TransactionHash,
-                    ThingId = joinedThingSubmissionVerifierLotteryEvent.Event.ThingId,
-                    WalletAddress = joinedThingSubmissionVerifierLotteryEvent.Event.User,
-                    UserData = joinedThingSubmissionVerifierLotteryEvent.Event.UserData,
-                    L1BlockNumber = (long)joinedThingSubmissionVerifierLotteryEvent.Event.L1BlockNumber
+                    BlockNumber = (long)joinedThingValidationVerifierLotteryEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)joinedThingValidationVerifierLotteryEvent.Log.TransactionIndex.Value,
+                    TxnHash = joinedThingValidationVerifierLotteryEvent.Log.TransactionHash,
+                    ThingId = joinedThingValidationVerifierLotteryEvent.Event.ThingId,
+                    WalletAddress = joinedThingValidationVerifierLotteryEvent.Event.User,
+                    UserData = joinedThingValidationVerifierLotteryEvent.Event.UserData,
+                    L1BlockNumber = (long)joinedThingValidationVerifierLotteryEvent.Event.L1BlockNumber
                 };
             }
-            else if (@event is EventLog<ThingSubmissionVerifierLottery.LotteryClosedWithSuccessEvent> thingSubmissionVerifierLotteryClosedWithSuccessEvent)
+            else if (@event is EventLog<ThingValidationVerifierLottery.LotteryClosedWithSuccessEvent> thingValidationVerifierLotteryClosedWithSuccessEvent)
             {
-                yield return new AppEvents.ThingSubmissionVerifierLottery.LotteryClosedWithSuccess.LotteryClosedWithSuccessEvent
+                yield return new AppEvents.ThingValidationVerifierLottery.LotteryClosedWithSuccess.LotteryClosedWithSuccessEvent
                 {
-                    BlockNumber = (long)thingSubmissionVerifierLotteryClosedWithSuccessEvent.Log.BlockNumber.Value,
-                    TxnIndex = (int)thingSubmissionVerifierLotteryClosedWithSuccessEvent.Log.TransactionIndex.Value,
-                    TxnHash = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Log.TransactionHash,
-                    ThingId = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.ThingId,
-                    Orchestrator = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.Orchestrator,
-                    Data = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.Data,
-                    UserXorData = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.UserXorData,
-                    HashOfL1EndBlock = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.HashOfL1EndBlock,
-                    Nonce = (long)thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.Nonce,
-                    WinnerWalletAddresses = thingSubmissionVerifierLotteryClosedWithSuccessEvent.Event.Winners
+                    BlockNumber = (long)thingValidationVerifierLotteryClosedWithSuccessEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)thingValidationVerifierLotteryClosedWithSuccessEvent.Log.TransactionIndex.Value,
+                    TxnHash = thingValidationVerifierLotteryClosedWithSuccessEvent.Log.TransactionHash,
+                    ThingId = thingValidationVerifierLotteryClosedWithSuccessEvent.Event.ThingId,
+                    Orchestrator = thingValidationVerifierLotteryClosedWithSuccessEvent.Event.Orchestrator,
+                    Data = thingValidationVerifierLotteryClosedWithSuccessEvent.Event.Data,
+                    UserXorData = thingValidationVerifierLotteryClosedWithSuccessEvent.Event.UserXorData,
+                    HashOfL1EndBlock = thingValidationVerifierLotteryClosedWithSuccessEvent.Event.HashOfL1EndBlock,
+                    Nonce = (long)thingValidationVerifierLotteryClosedWithSuccessEvent.Event.Nonce,
+                    WinnerWalletAddresses = thingValidationVerifierLotteryClosedWithSuccessEvent.Event.Winners
                 };
             }
-            else if (@event is EventLog<ThingSubmissionVerifierLottery.LotteryClosedInFailureEvent> thingSubmissionVerifierLotteryClosedInFailureEvent)
+            else if (@event is EventLog<ThingValidationVerifierLottery.LotteryClosedInFailureEvent> thingValidationVerifierLotteryClosedInFailureEvent)
             {
-                yield return new AppEvents.ThingSubmissionVerifierLottery.LotteryClosedInFailure.LotteryClosedInFailureEvent
+                yield return new AppEvents.ThingValidationVerifierLottery.LotteryClosedInFailure.LotteryClosedInFailureEvent
                 {
-                    BlockNumber = (long)thingSubmissionVerifierLotteryClosedInFailureEvent.Log.BlockNumber.Value,
-                    TxnIndex = (int)thingSubmissionVerifierLotteryClosedInFailureEvent.Log.TransactionIndex.Value,
-                    TxnHash = thingSubmissionVerifierLotteryClosedInFailureEvent.Log.TransactionHash,
-                    ThingId = thingSubmissionVerifierLotteryClosedInFailureEvent.Event.ThingId,
-                    RequiredNumVerifiers = thingSubmissionVerifierLotteryClosedInFailureEvent.Event.RequiredNumVerifiers,
-                    JoinedNumVerifiers = thingSubmissionVerifierLotteryClosedInFailureEvent.Event.JoinedNumVerifiers
+                    BlockNumber = (long)thingValidationVerifierLotteryClosedInFailureEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)thingValidationVerifierLotteryClosedInFailureEvent.Log.TransactionIndex.Value,
+                    TxnHash = thingValidationVerifierLotteryClosedInFailureEvent.Log.TransactionHash,
+                    ThingId = thingValidationVerifierLotteryClosedInFailureEvent.Event.ThingId,
+                    RequiredNumVerifiers = thingValidationVerifierLotteryClosedInFailureEvent.Event.RequiredNumVerifiers,
+                    JoinedNumVerifiers = thingValidationVerifierLotteryClosedInFailureEvent.Event.JoinedNumVerifiers
                 };
             }
-            else if (@event is EventLog<AcceptancePoll.CastedVoteEvent> castedAcceptancePollVoteEvent)
+            else if (@event is EventLog<ThingValidationPoll.CastedVoteEvent> castedThingValidationPollVoteEvent)
             {
-                yield return new AppEvents.AcceptancePoll.CastedVote.CastedVoteEvent
+                yield return new AppEvents.ThingValidationPoll.CastedVote.CastedVoteEvent
                 {
-                    BlockNumber = (long)castedAcceptancePollVoteEvent.Log.BlockNumber.Value,
-                    TxnIndex = (int)castedAcceptancePollVoteEvent.Log.TransactionIndex.Value,
-                    TxnHash = castedAcceptancePollVoteEvent.Log.TransactionHash,
-                    ThingId = castedAcceptancePollVoteEvent.Event.ThingId,
-                    WalletAddress = castedAcceptancePollVoteEvent.Event.User,
-                    Vote = castedAcceptancePollVoteEvent.Event.Vote,
-                    L1BlockNumber = (long)castedAcceptancePollVoteEvent.Event.L1BlockNumber
+                    BlockNumber = (long)castedThingValidationPollVoteEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)castedThingValidationPollVoteEvent.Log.TransactionIndex.Value,
+                    TxnHash = castedThingValidationPollVoteEvent.Log.TransactionHash,
+                    ThingId = castedThingValidationPollVoteEvent.Event.ThingId,
+                    WalletAddress = castedThingValidationPollVoteEvent.Event.User,
+                    Vote = castedThingValidationPollVoteEvent.Event.Vote,
+                    L1BlockNumber = (long)castedThingValidationPollVoteEvent.Event.L1BlockNumber
                 };
             }
-            else if (@event is EventLog<AcceptancePoll.CastedVoteWithReasonEvent> castedAcceptancePollVoteWithReasonEvent)
+            else if (@event is EventLog<ThingValidationPoll.CastedVoteWithReasonEvent> castedThingValidationPollVoteWithReasonEvent)
             {
-                yield return new AppEvents.AcceptancePoll.CastedVote.CastedVoteEvent
+                yield return new AppEvents.ThingValidationPoll.CastedVote.CastedVoteEvent
                 {
-                    BlockNumber = (long)castedAcceptancePollVoteWithReasonEvent.Log.BlockNumber.Value,
-                    TxnIndex = (int)castedAcceptancePollVoteWithReasonEvent.Log.TransactionIndex.Value,
-                    TxnHash = castedAcceptancePollVoteWithReasonEvent.Log.TransactionHash,
-                    ThingId = castedAcceptancePollVoteWithReasonEvent.Event.ThingId,
-                    WalletAddress = castedAcceptancePollVoteWithReasonEvent.Event.User,
-                    Vote = castedAcceptancePollVoteWithReasonEvent.Event.Vote,
-                    Reason = castedAcceptancePollVoteWithReasonEvent.Event.Reason,
-                    L1BlockNumber = (long)castedAcceptancePollVoteWithReasonEvent.Event.L1BlockNumber
+                    BlockNumber = (long)castedThingValidationPollVoteWithReasonEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)castedThingValidationPollVoteWithReasonEvent.Log.TransactionIndex.Value,
+                    TxnHash = castedThingValidationPollVoteWithReasonEvent.Log.TransactionHash,
+                    ThingId = castedThingValidationPollVoteWithReasonEvent.Event.ThingId,
+                    WalletAddress = castedThingValidationPollVoteWithReasonEvent.Event.User,
+                    Vote = castedThingValidationPollVoteWithReasonEvent.Event.Vote,
+                    Reason = castedThingValidationPollVoteWithReasonEvent.Event.Reason,
+                    L1BlockNumber = (long)castedThingValidationPollVoteWithReasonEvent.Event.L1BlockNumber
                 };
             }
-            else if (@event is EventLog<AcceptancePoll.PollFinalizedEvent> thingAcceptancePollFinalizedEvent)
+            else if (@event is EventLog<ThingValidationPoll.PollFinalizedEvent> thingValidationPollFinalizedEvent)
             {
-                yield return new AppEvents.AcceptancePoll.PollFinalized.PollFinalizedEvent
+                yield return new AppEvents.ThingValidationPoll.PollFinalized.PollFinalizedEvent
                 {
-                    BlockNumber = (long)thingAcceptancePollFinalizedEvent.Log.BlockNumber.Value,
-                    TxnIndex = (int)thingAcceptancePollFinalizedEvent.Log.TransactionIndex.Value,
-                    TxnHash = thingAcceptancePollFinalizedEvent.Log.TransactionHash,
-                    ThingId = thingAcceptancePollFinalizedEvent.Event.ThingId,
-                    Decision = thingAcceptancePollFinalizedEvent.Event.Decision,
-                    VoteAggIpfsCid = thingAcceptancePollFinalizedEvent.Event.VoteAggIpfsCid,
-                    RewardedVerifiers = thingAcceptancePollFinalizedEvent.Event.RewardedVerifiers,
-                    SlashedVerifiers = thingAcceptancePollFinalizedEvent.Event.SlashedVerifiers
+                    BlockNumber = (long)thingValidationPollFinalizedEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)thingValidationPollFinalizedEvent.Log.TransactionIndex.Value,
+                    TxnHash = thingValidationPollFinalizedEvent.Log.TransactionHash,
+                    ThingId = thingValidationPollFinalizedEvent.Event.ThingId,
+                    Decision = thingValidationPollFinalizedEvent.Event.Decision,
+                    VoteAggIpfsCid = thingValidationPollFinalizedEvent.Event.VoteAggIpfsCid,
+                    RewardedVerifiers = thingValidationPollFinalizedEvent.Event.RewardedVerifiers,
+                    SlashedVerifiers = thingValidationPollFinalizedEvent.Event.SlashedVerifiers
                 };
             }
-            else if (@event is EventLog<ThingSettlementProposalFundedEvent> thingSettlementProposalFundedEvent)
+            else if (@event is EventLog<SettlementProposalFundedEvent> settlementProposalFundedEvent)
             {
-                yield return new AppEvents.ThingSettlementProposalFunded.ThingSettlementProposalFundedEvent
+                yield return new AppEvents.SettlementProposalFunded.SettlementProposalFundedEvent
                 {
-                    BlockNumber = (long)thingSettlementProposalFundedEvent.Log.BlockNumber.Value,
-                    TxnIndex = (int)thingSettlementProposalFundedEvent.Log.TransactionIndex.Value,
-                    TxnHash = thingSettlementProposalFundedEvent.Log.TransactionHash,
-                    ThingId = thingSettlementProposalFundedEvent.Event.ThingId,
-                    SettlementProposalId = thingSettlementProposalFundedEvent.Event.SettlementProposalId,
-                    WalletAddress = thingSettlementProposalFundedEvent.Event.User,
-                    Stake = (decimal)thingSettlementProposalFundedEvent.Event.Stake
+                    BlockNumber = (long)settlementProposalFundedEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)settlementProposalFundedEvent.Log.TransactionIndex.Value,
+                    TxnHash = settlementProposalFundedEvent.Log.TransactionHash,
+                    ThingId = settlementProposalFundedEvent.Event.ThingId,
+                    SettlementProposalId = settlementProposalFundedEvent.Event.SettlementProposalId,
+                    WalletAddress = settlementProposalFundedEvent.Event.User,
+                    Stake = (decimal)settlementProposalFundedEvent.Event.Stake
                 };
             }
-            else if (@event is EventLog<ThingAssessmentVerifierLottery.LotteryInitializedEvent> thingAssessmentVerifierLotteryInitializedEvent)
+            else if (
+                @event is EventLog<SettlementProposalAssessmentVerifierLottery.LotteryInitializedEvent>
+                    settlementProposalAssessmentVerifierLotteryInitializedEvent
+            )
             {
-                yield return new AppEvents.ThingAssessmentVerifierLottery.LotteryInitialized.LotteryInitializedEvent
+                yield return new AppEvents.SettlementProposalAssessmentVerifierLottery.LotteryInitialized.LotteryInitializedEvent
                 {
-                    BlockNumber = (long)thingAssessmentVerifierLotteryInitializedEvent.Log.BlockNumber.Value,
-                    TxnIndex = (int)thingAssessmentVerifierLotteryInitializedEvent.Log.TransactionIndex.Value,
-                    TxnHash = thingAssessmentVerifierLotteryInitializedEvent.Log.TransactionHash,
-                    L1BlockNumber = (long)thingAssessmentVerifierLotteryInitializedEvent.Event.L1BlockNumber,
-                    ThingId = thingAssessmentVerifierLotteryInitializedEvent.Event.ThingId,
-                    SettlementProposalId = thingAssessmentVerifierLotteryInitializedEvent.Event.SettlementProposalId,
-                    DataHash = thingAssessmentVerifierLotteryInitializedEvent.Event.DataHash,
-                    UserXorDataHash = thingAssessmentVerifierLotteryInitializedEvent.Event.UserXorDataHash,
+                    BlockNumber = (long)settlementProposalAssessmentVerifierLotteryInitializedEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)settlementProposalAssessmentVerifierLotteryInitializedEvent.Log.TransactionIndex.Value,
+                    TxnHash = settlementProposalAssessmentVerifierLotteryInitializedEvent.Log.TransactionHash,
+                    L1BlockNumber = (long)settlementProposalAssessmentVerifierLotteryInitializedEvent.Event.L1BlockNumber,
+                    ThingId = settlementProposalAssessmentVerifierLotteryInitializedEvent.Event.ThingId,
+                    SettlementProposalId = settlementProposalAssessmentVerifierLotteryInitializedEvent.Event.SettlementProposalId,
+                    DataHash = settlementProposalAssessmentVerifierLotteryInitializedEvent.Event.DataHash,
+                    UserXorDataHash = settlementProposalAssessmentVerifierLotteryInitializedEvent.Event.UserXorDataHash,
                 };
             }
-            else if (@event is EventLog<ThingAssessmentVerifierLottery.ClaimedLotterySpotEvent> thingAssessmentVerifierLotteryClaimedSpotEvent)
+            else if (
+                @event is EventLog<SettlementProposalAssessmentVerifierLottery.ClaimedLotterySpotEvent>
+                    claimedSettlementProposalAssessmentVerifierLotterySpotEvent
+            )
             {
-                yield return new AppEvents.ThingAssessmentVerifierLottery.ClaimedLotterySpot.ClaimedLotterySpotEvent
+                yield return new AppEvents.SettlementProposalAssessmentVerifierLottery.ClaimedLotterySpot.ClaimedLotterySpotEvent
                 {
-                    BlockNumber = (long)thingAssessmentVerifierLotteryClaimedSpotEvent.Log.BlockNumber.Value,
-                    TxnIndex = (int)thingAssessmentVerifierLotteryClaimedSpotEvent.Log.TransactionIndex.Value,
-                    TxnHash = thingAssessmentVerifierLotteryClaimedSpotEvent.Log.TransactionHash,
-                    ThingId = thingAssessmentVerifierLotteryClaimedSpotEvent.Event.ThingId,
-                    SettlementProposalId = thingAssessmentVerifierLotteryClaimedSpotEvent.Event.SettlementProposalId,
-                    WalletAddress = thingAssessmentVerifierLotteryClaimedSpotEvent.Event.User,
-                    L1BlockNumber = (long)thingAssessmentVerifierLotteryClaimedSpotEvent.Event.L1BlockNumber
+                    BlockNumber = (long)claimedSettlementProposalAssessmentVerifierLotterySpotEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)claimedSettlementProposalAssessmentVerifierLotterySpotEvent.Log.TransactionIndex.Value,
+                    TxnHash = claimedSettlementProposalAssessmentVerifierLotterySpotEvent.Log.TransactionHash,
+                    ThingId = claimedSettlementProposalAssessmentVerifierLotterySpotEvent.Event.ThingId,
+                    SettlementProposalId = claimedSettlementProposalAssessmentVerifierLotterySpotEvent.Event.SettlementProposalId,
+                    WalletAddress = claimedSettlementProposalAssessmentVerifierLotterySpotEvent.Event.User,
+                    L1BlockNumber = (long)claimedSettlementProposalAssessmentVerifierLotterySpotEvent.Event.L1BlockNumber
                 };
             }
-            else if (@event is EventLog<ThingAssessmentVerifierLottery.JoinedLotteryEvent> joinedThingAssessmentVerifierLotteryEvent)
+            else if (
+                @event is EventLog<SettlementProposalAssessmentVerifierLottery.JoinedLotteryEvent>
+                    joinedSettlementProposalAssessmentVerifierLotteryEvent
+            )
             {
-                yield return new AppEvents.ThingAssessmentVerifierLottery.JoinedLottery.JoinedLotteryEvent
+                yield return new AppEvents.SettlementProposalAssessmentVerifierLottery.JoinedLottery.JoinedLotteryEvent
                 {
-                    BlockNumber = (long)joinedThingAssessmentVerifierLotteryEvent.Log.BlockNumber.Value,
-                    TxnIndex = (int)joinedThingAssessmentVerifierLotteryEvent.Log.TransactionIndex.Value,
-                    TxnHash = joinedThingAssessmentVerifierLotteryEvent.Log.TransactionHash,
-                    ThingId = joinedThingAssessmentVerifierLotteryEvent.Event.ThingId,
-                    SettlementProposalId = joinedThingAssessmentVerifierLotteryEvent.Event.SettlementProposalId,
-                    WalletAddress = joinedThingAssessmentVerifierLotteryEvent.Event.User,
-                    UserData = joinedThingAssessmentVerifierLotteryEvent.Event.UserData,
-                    L1BlockNumber = (long)joinedThingAssessmentVerifierLotteryEvent.Event.L1BlockNumber
+                    BlockNumber = (long)joinedSettlementProposalAssessmentVerifierLotteryEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)joinedSettlementProposalAssessmentVerifierLotteryEvent.Log.TransactionIndex.Value,
+                    TxnHash = joinedSettlementProposalAssessmentVerifierLotteryEvent.Log.TransactionHash,
+                    ThingId = joinedSettlementProposalAssessmentVerifierLotteryEvent.Event.ThingId,
+                    SettlementProposalId = joinedSettlementProposalAssessmentVerifierLotteryEvent.Event.SettlementProposalId,
+                    WalletAddress = joinedSettlementProposalAssessmentVerifierLotteryEvent.Event.User,
+                    UserData = joinedSettlementProposalAssessmentVerifierLotteryEvent.Event.UserData,
+                    L1BlockNumber = (long)joinedSettlementProposalAssessmentVerifierLotteryEvent.Event.L1BlockNumber
                 };
             }
-            else if (@event is EventLog<ThingAssessmentVerifierLottery.LotteryClosedWithSuccessEvent> thingAssessmentVerifierLotteryClosedWithSuccessEvent)
+            else if (
+                @event is EventLog<SettlementProposalAssessmentVerifierLottery.LotteryClosedWithSuccessEvent>
+                    settlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent
+            )
             {
-                yield return new AppEvents.ThingAssessmentVerifierLottery.LotteryClosedWithSuccess.LotteryClosedWithSuccessEvent
+                yield return new AppEvents.SettlementProposalAssessmentVerifierLottery.LotteryClosedWithSuccess.LotteryClosedWithSuccessEvent
                 {
-                    BlockNumber = (long)thingAssessmentVerifierLotteryClosedWithSuccessEvent.Log.BlockNumber.Value,
-                    TxnIndex = (int)thingAssessmentVerifierLotteryClosedWithSuccessEvent.Log.TransactionIndex.Value,
-                    TxnHash = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Log.TransactionHash,
-                    ThingId = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.ThingId,
-                    SettlementProposalId = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.SettlementProposalId,
-                    Orchestrator = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.Orchestrator,
-                    Data = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.Data,
-                    UserXorData = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.UserXorData,
-                    HashOfL1EndBlock = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.HashOfL1EndBlock,
-                    Nonce = (long)thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.Nonce,
-                    ClaimantWalletAddresses = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.Claimants,
-                    WinnerWalletAddresses = thingAssessmentVerifierLotteryClosedWithSuccessEvent.Event.Winners
+                    BlockNumber = (long)settlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)settlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent.Log.TransactionIndex.Value,
+                    TxnHash = settlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent.Log.TransactionHash,
+                    ThingId = settlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent.Event.ThingId,
+                    SettlementProposalId = settlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent.Event.SettlementProposalId,
+                    Orchestrator = settlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent.Event.Orchestrator,
+                    Data = settlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent.Event.Data,
+                    UserXorData = settlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent.Event.UserXorData,
+                    HashOfL1EndBlock = settlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent.Event.HashOfL1EndBlock,
+                    Nonce = (long)settlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent.Event.Nonce,
+                    ClaimantWalletAddresses = settlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent.Event.Claimants,
+                    WinnerWalletAddresses = settlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent.Event.Winners
                 };
             }
-            else if (@event is EventLog<AssessmentPoll.CastedVoteEvent> castedAssessmentPollVoteEvent)
+            else if (@event is EventLog<SettlementProposalAssessmentPoll.CastedVoteEvent> castedSettlementProposalAssessmentPollVoteEvent)
             {
-                yield return new AppEvents.AssessmentPoll.CastedVote.CastedVoteEvent
+                yield return new AppEvents.SettlementProposalAssessmentPoll.CastedVote.CastedVoteEvent
                 {
-                    BlockNumber = (long)castedAssessmentPollVoteEvent.Log.BlockNumber.Value,
-                    TxnIndex = (int)castedAssessmentPollVoteEvent.Log.TransactionIndex.Value,
-                    TxnHash = castedAssessmentPollVoteEvent.Log.TransactionHash,
-                    ThingId = castedAssessmentPollVoteEvent.Event.ThingId,
-                    SettlementProposalId = castedAssessmentPollVoteEvent.Event.SettlementProposalId,
-                    WalletAddress = castedAssessmentPollVoteEvent.Event.User,
-                    Vote = castedAssessmentPollVoteEvent.Event.Vote,
-                    L1BlockNumber = (long)castedAssessmentPollVoteEvent.Event.L1BlockNumber
+                    BlockNumber = (long)castedSettlementProposalAssessmentPollVoteEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)castedSettlementProposalAssessmentPollVoteEvent.Log.TransactionIndex.Value,
+                    TxnHash = castedSettlementProposalAssessmentPollVoteEvent.Log.TransactionHash,
+                    ThingId = castedSettlementProposalAssessmentPollVoteEvent.Event.ThingId,
+                    SettlementProposalId = castedSettlementProposalAssessmentPollVoteEvent.Event.SettlementProposalId,
+                    WalletAddress = castedSettlementProposalAssessmentPollVoteEvent.Event.User,
+                    Vote = castedSettlementProposalAssessmentPollVoteEvent.Event.Vote,
+                    L1BlockNumber = (long)castedSettlementProposalAssessmentPollVoteEvent.Event.L1BlockNumber
                 };
             }
-            else if (@event is EventLog<AssessmentPoll.CastedVoteWithReasonEvent> castedAssessmentPollVoteWithReasonEvent)
+            else if (
+                @event is EventLog<SettlementProposalAssessmentPoll.CastedVoteWithReasonEvent>
+                    castedSettlementProposalAssessmentPollVoteWithReasonEvent
+            )
             {
-                yield return new AppEvents.AssessmentPoll.CastedVote.CastedVoteEvent
+                yield return new AppEvents.SettlementProposalAssessmentPoll.CastedVote.CastedVoteEvent
                 {
-                    BlockNumber = (long)castedAssessmentPollVoteWithReasonEvent.Log.BlockNumber.Value,
-                    TxnIndex = (int)castedAssessmentPollVoteWithReasonEvent.Log.TransactionIndex.Value,
-                    TxnHash = castedAssessmentPollVoteWithReasonEvent.Log.TransactionHash,
-                    ThingId = castedAssessmentPollVoteWithReasonEvent.Event.ThingId,
-                    SettlementProposalId = castedAssessmentPollVoteWithReasonEvent.Event.SettlementProposalId,
-                    WalletAddress = castedAssessmentPollVoteWithReasonEvent.Event.User,
-                    Vote = castedAssessmentPollVoteWithReasonEvent.Event.Vote,
-                    Reason = castedAssessmentPollVoteWithReasonEvent.Event.Reason,
-                    L1BlockNumber = (long)castedAssessmentPollVoteWithReasonEvent.Event.L1BlockNumber
+                    BlockNumber = (long)castedSettlementProposalAssessmentPollVoteWithReasonEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)castedSettlementProposalAssessmentPollVoteWithReasonEvent.Log.TransactionIndex.Value,
+                    TxnHash = castedSettlementProposalAssessmentPollVoteWithReasonEvent.Log.TransactionHash,
+                    ThingId = castedSettlementProposalAssessmentPollVoteWithReasonEvent.Event.ThingId,
+                    SettlementProposalId = castedSettlementProposalAssessmentPollVoteWithReasonEvent.Event.SettlementProposalId,
+                    WalletAddress = castedSettlementProposalAssessmentPollVoteWithReasonEvent.Event.User,
+                    Vote = castedSettlementProposalAssessmentPollVoteWithReasonEvent.Event.Vote,
+                    Reason = castedSettlementProposalAssessmentPollVoteWithReasonEvent.Event.Reason,
+                    L1BlockNumber = (long)castedSettlementProposalAssessmentPollVoteWithReasonEvent.Event.L1BlockNumber
                 };
             }
-            else if (@event is EventLog<AssessmentPoll.PollFinalizedEvent> assessmentPollFinalizedEvent)
+            else if (@event is EventLog<SettlementProposalAssessmentPoll.PollFinalizedEvent> settlementProposalAssessmentPollFinalizedEvent)
             {
-                yield return new AppEvents.AssessmentPoll.PollFinalized.PollFinalizedEvent
+                yield return new AppEvents.SettlementProposalAssessmentPoll.PollFinalized.PollFinalizedEvent
                 {
-                    BlockNumber = (long)assessmentPollFinalizedEvent.Log.BlockNumber.Value,
-                    TxnIndex = (int)assessmentPollFinalizedEvent.Log.TransactionIndex.Value,
-                    TxnHash = assessmentPollFinalizedEvent.Log.TransactionHash,
-                    ThingId = assessmentPollFinalizedEvent.Event.ThingId,
-                    SettlementProposalId = assessmentPollFinalizedEvent.Event.SettlementProposalId,
-                    Decision = assessmentPollFinalizedEvent.Event.Decision,
-                    VoteAggIpfsCid = assessmentPollFinalizedEvent.Event.VoteAggIpfsCid,
-                    RewardedVerifiers = assessmentPollFinalizedEvent.Event.RewardedVerifiers,
-                    SlashedVerifiers = assessmentPollFinalizedEvent.Event.SlashedVerifiers
+                    BlockNumber = (long)settlementProposalAssessmentPollFinalizedEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)settlementProposalAssessmentPollFinalizedEvent.Log.TransactionIndex.Value,
+                    TxnHash = settlementProposalAssessmentPollFinalizedEvent.Log.TransactionHash,
+                    ThingId = settlementProposalAssessmentPollFinalizedEvent.Event.ThingId,
+                    SettlementProposalId = settlementProposalAssessmentPollFinalizedEvent.Event.SettlementProposalId,
+                    Decision = settlementProposalAssessmentPollFinalizedEvent.Event.Decision,
+                    VoteAggIpfsCid = settlementProposalAssessmentPollFinalizedEvent.Event.VoteAggIpfsCid,
+                    RewardedVerifiers = settlementProposalAssessmentPollFinalizedEvent.Event.RewardedVerifiers,
+                    SlashedVerifiers = settlementProposalAssessmentPollFinalizedEvent.Event.SlashedVerifiers
                 };
             }
 

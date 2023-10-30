@@ -26,6 +26,7 @@ class VerifierLotteryParticipantEntryVm {
   final int l1BlockNumber;
   final String txnHash;
   final String userId;
+  final String walletAddress;
   final String userData;
   final int? nonce;
   final bool isWinner;
@@ -34,7 +35,8 @@ class VerifierLotteryParticipantEntryVm {
 
   String get commitment => userData.substring(0, 15) + '..';
 
-  String get userIdShort => '${userId.substring(0, 6)}..${userId.substring(userId.length - 4)}';
+  String get walletAddressShort =>
+      '${walletAddress.substring(0, 6)}..${walletAddress.substring(walletAddress.length - 4)}';
 
   Color get coldCardColor => _coldColors[_random.nextInt(_coldColors.length)];
   Color get warmCardColor => _warmColors[_random.nextInt(_warmColors.length)];
@@ -43,6 +45,7 @@ class VerifierLotteryParticipantEntryVm {
       : l1BlockNumber = map['l1BlockNumber'],
         txnHash = map['txnHash'],
         userId = map['userId'],
+        walletAddress = map['walletAddress'],
         userData = map['userData'],
         nonce = map['nonce'],
         isWinner = map.containsKey('isWinner'); // either true or absent

@@ -6,7 +6,6 @@ using Domain.Aggregates;
 using Application.Thing.Queries.GetSettlementProposalsList;
 using Application.Common.Interfaces;
 using Application.Settlement.Queries.GetSettlementProposal;
-using Application.Common.Models.QM;
 
 namespace Infrastructure.Persistence.Queryables;
 
@@ -64,8 +63,8 @@ internal class SettlementProposalQueryable : Queryable, ISettlementProposalQuery
                     truquest.""Subjects"" AS s
                         ON t.""SubjectId"" = s.""Id""
                         INNER JOIN
-                    truquest.""SupportingEvidence"" AS e
-                        ON p.""Id"" = e.""ProposalId""
+                    truquest.""SettlementProposalEvidence"" AS e
+                        ON p.""Id"" = e.""SettlementProposalId""
                 WHERE p.""Id"" = @ItemId;
 
                 SELECT 1
@@ -83,7 +82,7 @@ internal class SettlementProposalQueryable : Queryable, ISettlementProposalQuery
             }
         );
 
-        var proposal = multiQuery.SingleWithMany<SettlementProposalQm, SupportingEvidenceQm>(
+        var proposal = multiQuery.SingleWithMany<SettlementProposalQm, SettlementProposalEvidenceQm>(
             joinedCollectionSelector: proposal => proposal.Evidence
         );
         if (proposal != null)
@@ -92,33 +91,6 @@ internal class SettlementProposalQueryable : Queryable, ISettlementProposalQuery
         }
 
         return proposal;
-    }
-
-    public async Task<(
-        IEnumerable<VerifierLotteryParticipantEntryQm>,
-        IEnumerable<VerifierLotteryParticipantEntryQm>
-    )> GetVerifierLotteryParticipants(Guid proposalId)
-    {
-        var dbConn = await _getOpenConnection();
-        using var multiQuery = await dbConn.QueryMultipleAsync(
-            @"
-                SELECT ""L1BlockNumber"", ""BlockNumber"", ""TxnHash"", ""UserId"", ""UserData"", ""Nonce""
-                FROM truquest_events.""JoinedThingAssessmentVerifierLotteryEvents""
-                WHERE ""SettlementProposalId"" = @ProposalId
-                ORDER BY ""BlockNumber"" DESC, ""TxnIndex"" DESC;
-
-                SELECT ""L1BlockNumber"", ""BlockNumber"", ""TxnHash"", ""UserId"", ""UserData"", ""Nonce""
-                FROM truquest_events.""ThingAssessmentVerifierLotterySpotClaimedEvents""
-                WHERE ""SettlementProposalId"" = @ProposalId
-                ORDER BY ""BlockNumber"" DESC, ""TxnIndex"" DESC;
-            ",
-            param: new { ProposalId = proposalId }
-        );
-
-        var participants = multiQuery.Read<VerifierLotteryParticipantEntryQm>();
-        var claimants = multiQuery.Read<VerifierLotteryParticipantEntryQm>();
-
-        return (participants, claimants);
     }
 
     public async Task<IEnumerable<string>> GetVerifiers(Guid proposalId)

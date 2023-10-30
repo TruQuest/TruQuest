@@ -27,8 +27,8 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
     private readonly ILogger<CloseAssessmentPollCommandHandler> _logger;
     private readonly ITaskRepository _taskRepository;
     private readonly IL1BlockchainQueryable _blockchainQueryable;
-    private readonly IAssessmentPollVoteRepository _voteRepository;
-    private readonly ICastedAssessmentPollVoteEventRepository _castedAssessmentPollVoteEventRepository;
+    private readonly ISettlementProposalAssessmentPollVoteRepository _voteRepository;
+    private readonly ICastedSettlementProposalAssessmentPollVoteEventRepository _castedAssessmentPollVoteEventRepository;
     private readonly ISigner _signer;
     private readonly IFileStorage _fileStorage;
     private readonly IContractCaller _contractCaller;
@@ -37,8 +37,8 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
         ILogger<CloseAssessmentPollCommandHandler> logger,
         ITaskRepository taskRepository,
         IL1BlockchainQueryable blockchainQueryable,
-        IAssessmentPollVoteRepository voteRepository,
-        ICastedAssessmentPollVoteEventRepository castedAssessmentPollVoteEventRepository,
+        ISettlementProposalAssessmentPollVoteRepository voteRepository,
+        ICastedSettlementProposalAssessmentPollVoteEventRepository castedAssessmentPollVoteEventRepository,
         ISigner signer,
         IFileStorage fileStorage,
         IContractCaller contractCaller
@@ -66,7 +66,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
             command.ThingId, command.SettlementProposalId
         );
 
-        var orchestratorSignature = _signer.SignAssessmentPollVoteAgg(
+        var orchestratorSignature = _signer.SignSettlementProposalAssessmentPollVoteAgg(
             command.ThingId, command.SettlementProposalId,
             (ulong)command.EndBlock, offChainVotes, castedVoteEvents
         );
@@ -131,7 +131,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
             });
         }
 
-        var verifierAddresses = await _contractCaller.GetVerifiersForProposal(
+        var verifierAddresses = await _contractCaller.GetVerifiersForSettlementProposal(
             command.ThingId.ToByteArray(),
             command.SettlementProposalId.ToByteArray()
         );
@@ -150,7 +150,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
             command.SettlementProposalId, notVotedVerifierIndices.Count
         );
 
-        int votingVolumeThresholdPercent = await _contractCaller.GetThingAssessmentPollVotingVolumeThresholdPercent();
+        int votingVolumeThresholdPercent = await _contractCaller.GetSettlementProposalAssessmentPollVotingVolumeThresholdPercent();
 
         var requiredVoterCount = Math.Ceiling(votingVolumeThresholdPercent / 100f * verifierAddresses.Count());
         _logger.LogDebug("Required voter count: {VoterCount}", requiredVoterCount);
@@ -162,7 +162,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
                 "Required at least {RequiredVoterCount} voters out of {NumVerifiers} to vote; Got {ActualVoterCount}",
                 command.SettlementProposalId, requiredVoterCount, verifierAddresses.Count(), accountedVotes.Count
             );
-            await _contractCaller.FinalizeAssessmentPollForProposalAsUnsettledDueToInsufficientVotingVolume(
+            await _contractCaller.FinalizeSettlementProposalAssessmentPollAsUnsettledDueToInsufficientVotingVolume(
                 command.ThingId.ToByteArray(), command.SettlementProposalId.ToByteArray(),
                 result.Data!, notVotedVerifierIndices
             );
@@ -172,7 +172,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
 
         Debug.Assert(accountedVotes.Count > 0);
 
-        int majorityThresholdPercent = await _contractCaller.GetThingAssessmentPollMajorityThresholdPercent();
+        int majorityThresholdPercent = await _contractCaller.GetSettlementProposalAssessmentPollMajorityThresholdPercent();
         Debug.Assert(majorityThresholdPercent >= 51);
         var acceptedDecisionRequiredVoteCount = Math.Ceiling(majorityThresholdPercent / 100f * accountedVotes.Count);
         _logger.LogDebug("Accepted decision required vote count: {VoteCount}", acceptedDecisionRequiredVoteCount);
@@ -188,7 +188,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
                 "Required at least {RequiredVoteCount} votes out of {TotalVoteCount}; Got {ActualVoteCount}",
                 command.SettlementProposalId, acceptedDecisionRequiredVoteCount, accountedVotes.Count, acceptedDecision.Count()
             );
-            await _contractCaller.FinalizeAssessmentPollForProposalAsUnsettledDueToMajorityThresholdNotReached(
+            await _contractCaller.FinalizeSettlementProposalAssessmentPollAsUnsettledDueToMajorityThresholdNotReached(
                 command.ThingId.ToByteArray(), command.SettlementProposalId.ToByteArray(),
                 result.Data!, notVotedVerifierIndices
             );
@@ -231,7 +231,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
 
         if (acceptedDecision.Key == AccountedVote.Decision.Accept)
         {
-            await _contractCaller.FinalizeAssessmentPollForProposalAsAccepted(
+            await _contractCaller.FinalizeSettlementProposalAssessmentPollAsAccepted(
                 thingId: command.ThingId.ToByteArray(),
                 proposalId: command.SettlementProposalId.ToByteArray(),
                 voteAggIpfsCid: result.Data!,
@@ -240,7 +240,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
         }
         else if (acceptedDecision.Key == AccountedVote.Decision.SoftDecline)
         {
-            await _contractCaller.FinalizeAssessmentPollForProposalAsSoftDeclined(
+            await _contractCaller.FinalizeSettlementProposalAssessmentPollAsSoftDeclined(
                 thingId: command.ThingId.ToByteArray(),
                 proposalId: command.SettlementProposalId.ToByteArray(),
                 voteAggIpfsCid: result.Data!,
@@ -249,7 +249,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
         }
         else
         {
-            await _contractCaller.FinalizeAssessmentPollForProposalAsHardDeclined(
+            await _contractCaller.FinalizeSettlementProposalAssessmentPollAsHardDeclined(
                 thingId: command.ThingId.ToByteArray(),
                 proposalId: command.SettlementProposalId.ToByteArray(),
                 voteAggIpfsCid: result.Data!,

@@ -2,7 +2,6 @@ namespace Application.Common.Interfaces;
 
 public interface ITotpProvider
 {
-    // @@TODO: Rename the 'address' param.
-    string GenerateTotpFor(string address);
-    bool VerifyTotp(string address, string totp);
+    string GenerateTotpFor(byte[] identifier);
+    bool VerifyTotp(byte[] identifier, string totp);
 }

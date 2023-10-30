@@ -32,14 +32,14 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
     private readonly ITaskRepository _taskRepository;
     private readonly IContractCaller _contractCaller;
     private readonly IL1BlockchainQueryable _l1BlockchainQueryable;
-    private readonly IJoinedThingSubmissionVerifierLotteryEventRepository _joinedLotteryEventRepository;
+    private readonly IJoinedThingValidationVerifierLotteryEventRepository _joinedLotteryEventRepository;
 
     public CloseVerifierLotteryCommandHandler(
         ILogger<CloseVerifierLotteryCommandHandler> logger,
         ITaskRepository taskRepository,
         IContractCaller contractCaller,
         IL1BlockchainQueryable l1BlockchainQueryable,
-        IJoinedThingSubmissionVerifierLotteryEventRepository joinedLotteryEventRepository
+        IJoinedThingValidationVerifierLotteryEventRepository joinedLotteryEventRepository
     )
     {
         _logger = logger;
@@ -52,11 +52,11 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
     public async Task<VoidResult> Handle(CloseVerifierLotteryCommand command, CancellationToken ct)
     {
         var thingId = command.ThingId.ToByteArray();
-        bool expired = await _contractCaller.CheckThingSubmissionVerifierLotteryExpired(thingId);
+        bool expired = await _contractCaller.CheckThingValidationVerifierLotteryExpired(thingId);
         Debug.Assert(expired);
 
         var endBlockHash = await _l1BlockchainQueryable.GetBlockHash(command.EndBlock);
-        BigInteger maxNonce = await _contractCaller.GetThingSubmissionVerifierLotteryMaxNonce();
+        BigInteger maxNonce = await _contractCaller.GetThingValidationVerifierLotteryMaxNonce();
 
         var nonce = (long)(
             (
@@ -67,7 +67,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 
         _logger.LogInformation("Thing {ThingId} Lottery: Orchestrator nonce = {Nonce}", command.ThingId, nonce);
 
-        int numVerifiers = await _contractCaller.GetThingSubmissionLotteryNumVerifiers();
+        int numVerifiers = await _contractCaller.GetThingValidationVerifierLotteryNumVerifiers();
 
         var joinedEvents = await _joinedLotteryEventRepository.FindAllFor(command.ThingId); // all, even those with UserId == null
         foreach (var @event in joinedEvents.Where(e => e.UserId != null))
@@ -98,7 +98,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 
         if (winnerEventsIndexed.Count == numVerifiers)
         {
-            var participants = await _contractCaller.GetThingSubmissionVerifierLotteryParticipants(thingId);
+            var participants = await _contractCaller.GetThingValidationVerifierLotteryParticipants(thingId);
             foreach (var @event in winnerEventsIndexed)
             {
                 var participantAtIndex = participants.ElementAtOrDefault(new Index((int)@event.Index));
@@ -108,7 +108,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
                 }
             }
 
-            await _contractCaller.CloseThingSubmissionVerifierLotteryWithSuccess(
+            await _contractCaller.CloseThingValidationVerifierLotteryWithSuccess(
                 thingId,
                 data: command.Data,
                 userXorData: command.UserXorData,
@@ -125,7 +125,7 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
                 command.ThingId, numVerifiers, joinedEvents.Count
             );
 
-            await _contractCaller.CloseThingSubmissionVerifierLotteryInFailure(thingId, joinedEvents.Count);
+            await _contractCaller.CloseThingValidationVerifierLotteryInFailure(thingId, joinedEvents.Count);
         }
 
         await _taskRepository.SetCompletedStateFor(command.TaskId);

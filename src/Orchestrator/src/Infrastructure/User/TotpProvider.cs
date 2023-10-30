@@ -4,7 +4,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 using OtpNet;
-using Nethereum.Hex.HexConvertors.Extensions;
 
 using Application.Common.Interfaces;
 
@@ -25,19 +24,18 @@ internal class TotpProvider : ITotpProvider
         _totpSaltBytes = Encoding.UTF8.GetBytes(totpSalt);
     }
 
-    Totp _getTotpGenerator(string address)
+    Totp _getTotpGenerator(byte[] identifier)
     {
-        var addressBytes = address.HexToByteArray();
-        var secret = new byte[_totpSaltBytes.Length + addressBytes.Length];
+        var secret = new byte[_totpSaltBytes.Length + identifier.Length];
         _totpSaltBytes.CopyTo(secret, 0);
-        addressBytes.CopyTo(secret, _totpSaltBytes.Length);
+        identifier.CopyTo(secret, _totpSaltBytes.Length);
 
-        return new Totp(secret, step: 120);
+        return new Totp(secret, step: 120); // @@TODO: Config.
     }
 
-    public string GenerateTotpFor(string address) => _getTotpGenerator(address).ComputeTotp();
+    public string GenerateTotpFor(byte[] identifier) => _getTotpGenerator(identifier).ComputeTotp();
 
-    public bool VerifyTotp(string address, string totp) =>
-        _getTotpGenerator(address)
+    public bool VerifyTotp(byte[] identifier, string totp) =>
+        _getTotpGenerator(identifier)
         .VerifyTotp(totp, out long _, window: VerificationWindow.RfcSpecifiedNetworkDelay);
 }

@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 
 import '../models/im/cast_assessment_poll_vote_command.dart';
-import '../models/im/new_assessment_poll_vote_im.dart';
+import '../models/im/new_settlement_proposal_assessment_poll_vote_im.dart';
 import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
 import '../models/rvm/get_settlement_proposal_rvm.dart';
 import '../models/im/new_settlement_proposal_im.dart';
@@ -21,7 +21,7 @@ import '../../general/errors/validation_error.dart';
 import '../../general/errors/vote_error.dart';
 import '../../general/services/server_connector.dart';
 import '../errors/settlement_error.dart';
-import '../models/im/supporting_evidence_im.dart';
+import '../models/im/settlement_proposal_evidence_im.dart';
 import '../models/rvm/get_votes_rvm.dart';
 import '../models/rvm/submit_new_settlement_proposal_rvm.dart';
 
@@ -108,7 +108,7 @@ class SettlementApiService {
         imageBytes: imageBytes,
         croppedImageExt: croppedImageBytes != null ? 'png' : null,
         croppedImageBytes: croppedImageBytes,
-        evidence: evidence.map((url) => SupportingEvidenceIm(url: url)).toList(),
+        evidence: evidence.map((url) => SettlementProposalEvidenceIm(url: url)).toList(),
       );
 
       var response = await _dio.post(
@@ -186,8 +186,8 @@ class SettlementApiService {
     }
   }
 
-  Future<String> castThingSettlementProposalAssessmentPollVote(
-    NewAssessmentPollVoteIm vote,
+  Future<String> castSettlementProposalAssessmentPollVote(
+    NewSettlementProposalAssessmentPollVoteIm vote,
     String signature,
   ) async {
     var accessToken = (await _serverConnector.latestConnection).$2;

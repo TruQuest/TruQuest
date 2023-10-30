@@ -14,9 +14,9 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
     public DbSet<Subject> Subjects { get; set; }
     public DbSet<Tag> Tags { get; set; }
     public DbSet<Thing> Things { get; set; }
-    public DbSet<AcceptancePollVote> AcceptancePollVotes { get; set; }
+    public DbSet<ThingValidationPollVote> ThingValidationPollVotes { get; set; }
     public DbSet<SettlementProposal> SettlementProposals { get; set; }
-    public DbSet<AssessmentPollVote> AssessmentPollVotes { get; set; }
+    public DbSet<SettlementProposalAssessmentPollVote> SettlementProposalAssessmentPollVotes { get; set; }
     public DbSet<WatchedItem> WatchList { get; set; }
     public DbSet<SubjectUpdate> SubjectUpdates { get; set; }
     public DbSet<ThingUpdate> ThingUpdates { get; set; }
@@ -144,7 +144,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
                 .SetPropertyAccessMode(PropertyAccessMode.Field);
         });
 
-        modelBuilder.Entity<Evidence>(builder =>
+        modelBuilder.Entity<ThingEvidence>(builder =>
         {
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).HasValueGenerator<GuidValueGenerator>();
@@ -204,7 +204,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
                 .IsRequired();
         });
 
-        modelBuilder.Entity<AcceptancePollVote>(builder =>
+        modelBuilder.Entity<ThingValidationPollVote>(builder =>
         {
             builder.HasKey(v => new { v.ThingId, v.VoterId });
             builder.Property(v => v.VoterWalletAddress).IsRequired();
@@ -217,7 +217,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder
                 .HasOne<ThingVerifier>()
                 .WithOne()
-                .HasForeignKey<AcceptancePollVote>(v => new { v.ThingId, v.VoterId })
+                .HasForeignKey<ThingValidationPollVote>(v => new { v.ThingId, v.VoterId })
                 .IsRequired();
         });
 
@@ -255,7 +255,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
                 .SetPropertyAccessMode(PropertyAccessMode.Field);
         });
 
-        modelBuilder.Entity<SupportingEvidence>(builder =>
+        modelBuilder.Entity<SettlementProposalEvidence>(builder =>
         {
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).HasValueGenerator<GuidValueGenerator>();
@@ -266,7 +266,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder
                 .HasOne<SettlementProposal>()
                 .WithMany(p => p.Evidence)
-                .HasForeignKey("ProposalId")
+                .HasForeignKey("SettlementProposalId")
                 .IsRequired();
         });
 
@@ -286,7 +286,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
                 .IsRequired();
         });
 
-        modelBuilder.Entity<AssessmentPollVote>(builder =>
+        modelBuilder.Entity<SettlementProposalAssessmentPollVote>(builder =>
         {
             builder.HasKey(v => new { v.SettlementProposalId, v.VoterId });
             builder.Property(v => v.VoterWalletAddress).IsRequired();
@@ -299,7 +299,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder
                 .HasOne<SettlementProposalVerifier>()
                 .WithOne()
-                .HasForeignKey<AssessmentPollVote>(v => new { v.SettlementProposalId, v.VoterId })
+                .HasForeignKey<SettlementProposalAssessmentPollVote>(v => new { v.SettlementProposalId, v.VoterId })
                 .IsRequired();
         });
 
@@ -309,7 +309,11 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.Property(w => w.ItemType).HasConversion<int>();
             builder.Property(w => w.LastSeenUpdateTimestamp).IsRequired();
 
-            // @@TODO: Foreign key for UserId.
+            builder
+                .HasOne<UserDm>()
+                .WithMany()
+                .HasForeignKey(i => i.UserId)
+                .IsRequired();
         });
 
         modelBuilder.Entity<SubjectUpdate>(builder =>

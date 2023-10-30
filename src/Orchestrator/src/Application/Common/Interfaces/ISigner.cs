@@ -1,40 +1,40 @@
 using Domain.Aggregates;
 using Domain.Aggregates.Events;
 
-using Application.Thing.Commands.CastAcceptancePollVote;
+using Application.Thing.Commands.CastValidationPollVote;
 using Application.Settlement.Commands.CastAssessmentPollVote;
 
 namespace Application.Common.Interfaces;
 
 public interface ISigner
 {
-    string RecoverFromNewAcceptancePollVoteMessage(NewAcceptancePollVoteIm input, string signature);
-    string RecoverFromNewAssessmentPollVoteMessage(NewAssessmentPollVoteIm input, string signature);
+    string RecoverFromNewThingValidationPollVoteMessage(NewThingValidationPollVoteIm input, string signature);
+    string RecoverFromNewSettlementProposalAssessmentPollVoteMessage(NewSettlementProposalAssessmentPollVoteIm input, string signature);
 
     string SignThing(Guid thingId);
 
-    string SignNewAcceptancePollVote(
-        NewAcceptancePollVoteIm input, string userId, string walletAddress, string signerAddress, string signature
+    string SignNewThingValidationPollVote(
+        NewThingValidationPollVoteIm input, string userId, string walletAddress, string signerAddress, string signature
     );
 
-    string SignNewAssessmentPollVote(
-        NewAssessmentPollVoteIm input, string userId, string walletAddress, string signerAddress, string signature
+    string SignNewSettlementProposalAssessmentPollVote(
+        NewSettlementProposalAssessmentPollVoteIm input, string userId, string walletAddress, string signerAddress, string signature
     );
 
-    string SignAcceptancePollVoteAgg(
+    string SignThingValidationPollVoteAgg(
         Guid thingId,
         ulong l1EndBlock,
-        IEnumerable<AcceptancePollVote> offChainVotes,
-        IEnumerable<CastedAcceptancePollVoteEvent> onChainVotes
+        IEnumerable<ThingValidationPollVote> offChainVotes,
+        IEnumerable<CastedThingValidationPollVoteEvent> onChainVotes
     );
 
     string SignSettlementProposal(Guid thingId, Guid proposalId);
 
-    string SignAssessmentPollVoteAgg(
+    string SignSettlementProposalAssessmentPollVoteAgg(
         Guid thingId, Guid proposalId, ulong l1EndBlock,
-        IEnumerable<AssessmentPollVote> offChainVotes,
-        IEnumerable<CastedAssessmentPollVoteEvent> onChainVotes
+        IEnumerable<SettlementProposalAssessmentPollVote> offChainVotes,
+        IEnumerable<CastedSettlementProposalAssessmentPollVoteEvent> onChainVotes
     );
 
-    string RecoverFromSiweMessage(string message, string signature); // @@TODO: Rename this.
+    string RecoverFromMessage(string message, string signature);
 }

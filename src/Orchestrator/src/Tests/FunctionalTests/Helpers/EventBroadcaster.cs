@@ -4,26 +4,26 @@ using System.Threading.Channels;
 using MediatR;
 
 using ThingEvents = Application.Thing.Events;
-using ThingEthEvents = Application.Ethereum.Events.ThingSubmissionVerifierLottery;
-using AcceptancePollEvents = Application.Ethereum.Events.AcceptancePoll;
+using ThingEthEvents = Application.Ethereum.Events.ThingValidationVerifierLottery;
+using ThingValidationPollEvents = Application.Ethereum.Events.ThingValidationPoll;
 using ProposalEvents = Application.Settlement.Events;
-using ProposalEthEvents = Application.Ethereum.Events.ThingAssessmentVerifierLottery;
-using AssessmentPollEvents = Application.Ethereum.Events.AssessmentPoll;
+using ProposalEthEvents = Application.Ethereum.Events.SettlementProposalAssessmentVerifierLottery;
+using ProposalAssessmentPollEvents = Application.Ethereum.Events.SettlementProposalAssessmentPoll;
 using ThingCommands = Application.Thing.Commands;
 
 namespace Tests.FunctionalTests.Helpers;
 
-public class ThingSubmissionVerifierLotteryClosedInFailureEventArgs : EventArgs
+public class ThingValidationVerifierLotteryClosedInFailureEventArgs : EventArgs
 {
     public required ThingEthEvents.LotteryClosedInFailure.LotteryClosedInFailureEvent Event { get; init; }
 }
 
-public class ThingSubmissionVerifierLotteryClosedWithSuccessEventArgs : EventArgs
+public class ThingValidationVerifierLotteryClosedWithSuccessEventArgs : EventArgs
 {
     public required ThingEthEvents.LotteryClosedWithSuccess.LotteryClosedWithSuccessEvent Event { get; init; }
 }
 
-public class ProposalAssessmentVerifierLotteryClosedWithSuccessEventArgs : EventArgs
+public class SettlementProposalAssessmentVerifierLotteryClosedWithSuccessEventArgs : EventArgs
 {
     public required ProposalEthEvents.LotteryClosedWithSuccess.LotteryClosedWithSuccessEvent Event { get; init; }
 }
@@ -35,19 +35,19 @@ public class EventBroadcaster
     private readonly CancellationTokenSource _cts;
 
     // @@TODO: This ain't gonna work with multiple flows going at the same time.
-    // Use Dictionary?
+    // Use Dictionary? Multiple broadcaster instances?
     public event EventHandler? ThingDraftCreated;
-    public event EventHandler? ThingSubmissionVerifierLotteryInitialized;
-    public event EventHandler? JoinedThingSubmissionVerifierLottery;
-    public event EventHandler<ThingSubmissionVerifierLotteryClosedInFailureEventArgs>? ThingSubmissionVerifierLotteryClosedInFailure;
-    public event EventHandler<ThingSubmissionVerifierLotteryClosedWithSuccessEventArgs>? ThingSubmissionVerifierLotteryClosedWithSuccess;
-    public event EventHandler? ThingAcceptancePollFinalized;
+    public event EventHandler? ThingValidationVerifierLotteryInitialized;
+    public event EventHandler? JoinedThingValidationVerifierLottery;
+    public event EventHandler<ThingValidationVerifierLotteryClosedInFailureEventArgs>? ThingValidationVerifierLotteryClosedInFailure;
+    public event EventHandler<ThingValidationVerifierLotteryClosedWithSuccessEventArgs>? ThingValidationVerifierLotteryClosedWithSuccess;
+    public event EventHandler? ThingValidationPollFinalized;
 
     public event EventHandler? ProposalDraftCreated;
     public event EventHandler? ProposalAssessmentVerifierLotteryInitialized;
     public event EventHandler? ClaimedProposalAssessmentVerifierLotterySpot;
     public event EventHandler? JoinedProposalAssessmentVerifierLottery;
-    public event EventHandler<ProposalAssessmentVerifierLotteryClosedWithSuccessEventArgs>?
+    public event EventHandler<SettlementProposalAssessmentVerifierLotteryClosedWithSuccessEventArgs>?
         ProposalAssessmentVerifierLotteryClosedWithSuccess;
     public event EventHandler? CastedProposalAssessmentVote;
     public event EventHandler? ProposalAssessmentPollFinalized;
@@ -80,23 +80,23 @@ public class EventBroadcaster
                 }
                 else if (@event is ThingEthEvents.LotteryInitialized.LotteryInitializedEvent)
                 {
-                    OnThingSubmissionVerifierLotteryInitialized();
+                    OnThingValidationVerifierLotteryInitialized();
                 }
                 else if (@event is ThingEthEvents.JoinedLottery.JoinedLotteryEvent)
                 {
-                    OnJoinedThingSubmissionVerifierLottery();
+                    OnJoinedThingValidationVerifierLottery();
                 }
                 else if (@event is ThingEthEvents.LotteryClosedInFailure.LotteryClosedInFailureEvent thingLotteryClosedInFailureEvent)
                 {
-                    OnThingSubmissionVerifierLotteryClosedInFailure(thingLotteryClosedInFailureEvent);
+                    OnThingValidationVerifierLotteryClosedInFailure(thingLotteryClosedInFailureEvent);
                 }
                 else if (@event is ThingEthEvents.LotteryClosedWithSuccess.LotteryClosedWithSuccessEvent thingLotteryClosedWithSuccessEvent)
                 {
-                    OnThingSubmissionVerifierLotteryClosedWithSuccess(thingLotteryClosedWithSuccessEvent);
+                    OnThingValidationVerifierLotteryClosedWithSuccess(thingLotteryClosedWithSuccessEvent);
                 }
-                else if (@event is AcceptancePollEvents.PollFinalized.PollFinalizedEvent)
+                else if (@event is ThingValidationPollEvents.PollFinalized.PollFinalizedEvent)
                 {
-                    OnThingAcceptancePollFinalized();
+                    OnThingValidationPollFinalized();
                 }
                 else if (@event is ProposalEvents.AttachmentsArchivingCompleted.AttachmentsArchivingCompletedEvent)
                 {
@@ -118,11 +118,11 @@ public class EventBroadcaster
                 {
                     OnProposalAssessmentVerifierLotteryClosedWithSuccess(proposalLotteryClosedWithSuccessEvent);
                 }
-                else if (@event is AssessmentPollEvents.CastedVote.CastedVoteEvent)
+                else if (@event is ProposalAssessmentPollEvents.CastedVote.CastedVoteEvent)
                 {
                     OnCastedProposalAssessmentVote();
                 }
-                else if (@event is AssessmentPollEvents.PollFinalized.PollFinalizedEvent)
+                else if (@event is ProposalAssessmentPollEvents.PollFinalized.PollFinalizedEvent)
                 {
                     OnProposalAssessmentPollFinalized();
                 }
@@ -158,28 +158,28 @@ public class EventBroadcaster
 
     protected virtual void OnThingDraftCreated() => ThingDraftCreated?.Invoke(this, EventArgs.Empty);
 
-    protected virtual void OnThingSubmissionVerifierLotteryInitialized() =>
-        ThingSubmissionVerifierLotteryInitialized?.Invoke(this, EventArgs.Empty);
+    protected virtual void OnThingValidationVerifierLotteryInitialized() =>
+        ThingValidationVerifierLotteryInitialized?.Invoke(this, EventArgs.Empty);
 
-    protected virtual void OnJoinedThingSubmissionVerifierLottery() =>
-        JoinedThingSubmissionVerifierLottery?.Invoke(this, EventArgs.Empty);
+    protected virtual void OnJoinedThingValidationVerifierLottery() =>
+        JoinedThingValidationVerifierLottery?.Invoke(this, EventArgs.Empty);
 
-    protected virtual void OnThingSubmissionVerifierLotteryClosedInFailure(
+    protected virtual void OnThingValidationVerifierLotteryClosedInFailure(
         ThingEthEvents.LotteryClosedInFailure.LotteryClosedInFailureEvent @event
-    ) => ThingSubmissionVerifierLotteryClosedInFailure?.Invoke(
+    ) => ThingValidationVerifierLotteryClosedInFailure?.Invoke(
         this,
-        new ThingSubmissionVerifierLotteryClosedInFailureEventArgs { Event = @event }
+        new ThingValidationVerifierLotteryClosedInFailureEventArgs { Event = @event }
     );
 
-    protected virtual void OnThingSubmissionVerifierLotteryClosedWithSuccess(
+    protected virtual void OnThingValidationVerifierLotteryClosedWithSuccess(
         ThingEthEvents.LotteryClosedWithSuccess.LotteryClosedWithSuccessEvent @event
-    ) => ThingSubmissionVerifierLotteryClosedWithSuccess?.Invoke(
+    ) => ThingValidationVerifierLotteryClosedWithSuccess?.Invoke(
         this,
-        new ThingSubmissionVerifierLotteryClosedWithSuccessEventArgs { Event = @event }
+        new ThingValidationVerifierLotteryClosedWithSuccessEventArgs { Event = @event }
     );
 
-    protected virtual void OnThingAcceptancePollFinalized() =>
-        ThingAcceptancePollFinalized?.Invoke(this, EventArgs.Empty);
+    protected virtual void OnThingValidationPollFinalized() =>
+        ThingValidationPollFinalized?.Invoke(this, EventArgs.Empty);
 
     protected virtual void OnProposalDraftCreated() => ProposalDraftCreated?.Invoke(this, EventArgs.Empty);
 
@@ -196,7 +196,7 @@ public class EventBroadcaster
         ProposalEthEvents.LotteryClosedWithSuccess.LotteryClosedWithSuccessEvent @event
     ) => ProposalAssessmentVerifierLotteryClosedWithSuccess?.Invoke(
         this,
-        new ProposalAssessmentVerifierLotteryClosedWithSuccessEventArgs { Event = @event }
+        new SettlementProposalAssessmentVerifierLotteryClosedWithSuccessEventArgs { Event = @event }
     );
 
     protected virtual void OnCastedProposalAssessmentVote() =>

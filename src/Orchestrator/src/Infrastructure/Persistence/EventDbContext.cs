@@ -9,14 +9,14 @@ public class EventDbContext : DbContext
 {
     public DbSet<ActionableThingRelatedEvent> ActionableThingRelatedEvents { get; set; }
 
-    public DbSet<ThingSubmissionVerifierLotteryInitializedEvent> ThingSubmissionVerifierLotteryInitializedEvents { get; set; }
-    public DbSet<JoinedThingSubmissionVerifierLotteryEvent> JoinedThingSubmissionVerifierLotteryEvents { get; set; }
-    public DbSet<CastedAcceptancePollVoteEvent> CastedAcceptancePollVoteEvents { get; set; }
+    public DbSet<ThingValidationVerifierLotteryInitializedEvent> ThingValidationVerifierLotteryInitializedEvents { get; set; }
+    public DbSet<JoinedThingValidationVerifierLotteryEvent> JoinedThingValidationVerifierLotteryEvents { get; set; }
+    public DbSet<CastedThingValidationPollVoteEvent> CastedThingValidationPollVoteEvents { get; set; }
 
-    public DbSet<ThingAssessmentVerifierLotteryInitializedEvent> ThingAssessmentVerifierLotteryInitializedEvents { get; set; }
-    public DbSet<JoinedThingAssessmentVerifierLotteryEvent> JoinedThingAssessmentVerifierLotteryEvents { get; set; }
-    public DbSet<ThingAssessmentVerifierLotterySpotClaimedEvent> ThingAssessmentVerifierLotterySpotClaimedEvents { get; set; }
-    public DbSet<CastedAssessmentPollVoteEvent> CastedAssessmentPollVoteEvents { get; set; }
+    public DbSet<SettlementProposalAssessmentVerifierLotteryInitializedEvent> SettlementProposalAssessmentVerifierLotteryInitializedEvents { get; set; }
+    public DbSet<JoinedSettlementProposalAssessmentVerifierLotteryEvent> JoinedSettlementProposalAssessmentVerifierLotteryEvents { get; set; }
+    public DbSet<ClaimedSettlementProposalAssessmentVerifierLotterySpotEvent> ClaimedSettlementProposalAssessmentVerifierLotterySpotEvents { get; set; }
+    public DbSet<CastedSettlementProposalAssessmentPollVoteEvent> CastedSettlementProposalAssessmentPollVoteEvents { get; set; }
 
     public DbSet<BlockProcessedEvent> BlockProcessedEvent { get; set; }
 
@@ -44,7 +44,7 @@ public class EventDbContext : DbContext
             builder.HasIndex(e => e.TxnHash).IsUnique();
         });
 
-        modelBuilder.Entity<ThingSubmissionVerifierLotteryInitializedEvent>(builder =>
+        modelBuilder.Entity<ThingValidationVerifierLotteryInitializedEvent>(builder =>
         {
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).UseIdentityAlwaysColumn();
@@ -59,7 +59,7 @@ public class EventDbContext : DbContext
             builder.HasIndex(e => e.TxnHash).IsUnique();
         });
 
-        modelBuilder.Entity<JoinedThingSubmissionVerifierLotteryEvent>(builder =>
+        modelBuilder.Entity<JoinedThingValidationVerifierLotteryEvent>(builder =>
         {
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).UseIdentityAlwaysColumn();
@@ -77,7 +77,7 @@ public class EventDbContext : DbContext
             builder.HasIndex(e => e.TxnHash).IsUnique();
         });
 
-        modelBuilder.Entity<CastedAcceptancePollVoteEvent>(builder =>
+        modelBuilder.Entity<CastedThingValidationPollVoteEvent>(builder =>
         {
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).UseIdentityAlwaysColumn();
@@ -96,7 +96,7 @@ public class EventDbContext : DbContext
             builder.HasIndex(e => e.TxnHash).IsUnique();
         });
 
-        modelBuilder.Entity<ThingAssessmentVerifierLotteryInitializedEvent>(builder =>
+        modelBuilder.Entity<SettlementProposalAssessmentVerifierLotteryInitializedEvent>(builder =>
         {
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).UseIdentityAlwaysColumn();
@@ -112,7 +112,7 @@ public class EventDbContext : DbContext
             builder.HasIndex(e => e.TxnHash).IsUnique();
         });
 
-        modelBuilder.Entity<JoinedThingAssessmentVerifierLotteryEvent>(builder =>
+        modelBuilder.Entity<JoinedSettlementProposalAssessmentVerifierLotteryEvent>(builder =>
         {
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).UseIdentityAlwaysColumn();
@@ -130,7 +130,7 @@ public class EventDbContext : DbContext
             builder.HasIndex(e => e.TxnHash).IsUnique();
         });
 
-        modelBuilder.Entity<ThingAssessmentVerifierLotterySpotClaimedEvent>(builder =>
+        modelBuilder.Entity<ClaimedSettlementProposalAssessmentVerifierLotterySpotEvent>(builder =>
         {
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).UseIdentityAlwaysColumn();
@@ -148,7 +148,7 @@ public class EventDbContext : DbContext
             builder.HasIndex(e => e.TxnHash).IsUnique();
         });
 
-        modelBuilder.Entity<CastedAssessmentPollVoteEvent>(builder =>
+        modelBuilder.Entity<CastedSettlementProposalAssessmentPollVoteEvent>(builder =>
         {
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).UseIdentityAlwaysColumn();

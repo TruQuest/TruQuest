@@ -103,11 +103,11 @@ internal class ThingRepository : Repository, IThingRepository
                     FROM truquest.""Things""
                     WHERE ""Id"" = @SourceThingId;
 
-                INSERT INTO truquest.""Evidence"" (
+                INSERT INTO truquest.""ThingEvidence"" (
                     ""Id"", ""ThingId"", ""OriginUrl"", ""IpfsCid"", ""PreviewImageIpfsCid""
                 )
                     SELECT gen_random_uuid(), @DestThingId, ""OriginUrl"", ""IpfsCid"", ""PreviewImageIpfsCid""
-                    FROM truquest.""Evidence""
+                    FROM truquest.""ThingEvidence""
                     WHERE ""ThingId"" = @SourceThingId;
 
                 INSERT INTO truquest.""ThingAttachedTags"" (""ThingId"", ""TagId"")

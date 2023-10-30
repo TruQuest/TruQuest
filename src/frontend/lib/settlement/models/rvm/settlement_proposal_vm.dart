@@ -1,7 +1,7 @@
 import 'package:intl/intl.dart';
 
+import '../../../general/models/rvm/evidence_vm.dart';
 import 'settlement_proposal_state_vm.dart';
-import 'supporting_evidence_vm.dart';
 import 'verdict_vm.dart';
 
 class SettlementProposalVm {
@@ -19,18 +19,15 @@ class SettlementProposalVm {
   final String subjectName;
   final String thingTitle;
   final String? thingCroppedImageIpfsCid;
-  final List<SupportingEvidenceVm> evidence;
+  final List<EvidenceVm> evidence;
   final bool watched;
 
   final bool? canBeFunded;
 
-  String get submittedAtFormatted =>
-      DateFormat.yMMMMd('en_US').format(submittedAt!);
+  String get submittedAtFormatted => DateFormat.yMMMMd('en_US').format(submittedAt!);
 
   String get submitterIdShort =>
-      submitterId.substring(0, 6) +
-      '...' +
-      submitterId.substring(submitterId.length - 4, submitterId.length);
+      submitterId.substring(0, 6) + '...' + submitterId.substring(submitterId.length - 4, submitterId.length);
 
   bool isSubmitter(String? userId) => userId == submitterId;
 
@@ -38,9 +35,7 @@ class SettlementProposalVm {
       : id = map['id'],
         thingId = map['thingId'],
         state = SettlementProposalStateVm.values[map['state']],
-        submittedAt = map['submittedAt'] != null
-            ? DateTime.fromMillisecondsSinceEpoch(map['submittedAt'])
-            : null,
+        submittedAt = map['submittedAt'] != null ? DateTime.fromMillisecondsSinceEpoch(map['submittedAt']) : null,
         title = map['title'],
         verdict = VerdictVm.values[map['verdict']],
         details = map['details'],
@@ -54,8 +49,7 @@ class SettlementProposalVm {
         thingTitle = map['thingTitle'],
         thingCroppedImageIpfsCid = map['thingCroppedImageIpfsCid'],
         evidence = List.unmodifiable(
-          (map['evidence'] as List<dynamic>)
-              .map((submap) => SupportingEvidenceVm.fromMap(submap)),
+          (map['evidence'] as List<dynamic>).map((submap) => EvidenceVm.fromMap(submap)),
         ),
         watched = map['watched'],
         canBeFunded = null;

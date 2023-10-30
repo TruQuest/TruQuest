@@ -61,7 +61,7 @@ internal class CreateNewThingDraftCommandHandler : IRequestHandler<CreateNewThin
             ImagePath = formValues["file1"],
             CroppedImagePath = formValues["file2"],
             Evidence = ((string)formValues["evidence"]!).Split('|')
-                .Select(url => new EvidenceIm
+                .Select(url => new ThingEvidenceIm
                 {
                     Url = url
                 })

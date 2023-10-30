@@ -12,7 +12,7 @@ internal class NewSettlementProposalIm
     public required string? ImagePath { get; init; }
     [ImagePath(BackingField = nameof(CroppedImageIpfsCid))]
     public required string? CroppedImagePath { get; init; }
-    public required IEnumerable<SupportingEvidenceIm> Evidence { get; init; }
+    public required IEnumerable<SettlementProposalEvidenceIm> Evidence { get; init; }
 
     [BackingField]
     public required string? ImageIpfsCid { get; set; }

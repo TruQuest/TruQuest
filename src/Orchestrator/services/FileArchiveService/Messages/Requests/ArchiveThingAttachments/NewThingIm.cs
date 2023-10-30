@@ -12,7 +12,7 @@ internal class NewThingIm
     public required string? ImagePath { get; init; }
     [ImagePath(BackingField = nameof(CroppedImageIpfsCid))]
     public required string? CroppedImagePath { get; init; }
-    public required IEnumerable<EvidenceIm> Evidence { get; init; }
+    public required IEnumerable<ThingEvidenceIm> Evidence { get; init; }
     public required IEnumerable<TagIm> Tags { get; init; }
 
     [BackingField]

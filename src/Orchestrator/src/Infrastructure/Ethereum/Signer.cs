@@ -11,7 +11,7 @@ using Nethereum.Signer;
 using Domain.Aggregates.Events;
 using Domain.Aggregates;
 using Application.Common.Interfaces;
-using Application.Thing.Commands.CastAcceptancePollVote;
+using Application.Thing.Commands.CastValidationPollVote;
 using Application.Settlement.Commands.CastAssessmentPollVote;
 
 using Infrastructure.Ethereum.TypedData;
@@ -73,15 +73,15 @@ internal class Signer : ISigner
         };
     }
 
-    public string RecoverFromNewAcceptancePollVoteMessage(
-        NewAcceptancePollVoteIm input, string signature
+    public string RecoverFromNewThingValidationPollVoteMessage(
+        NewThingValidationPollVoteIm input, string signature
     ) => _personalSigner.EncodeUTF8AndEcRecover(
             input.ToMessageForSigning(),
             signature
         );
 
-    public string RecoverFromNewAssessmentPollVoteMessage(
-        NewAssessmentPollVoteIm input, string signature
+    public string RecoverFromNewSettlementProposalAssessmentPollVoteMessage(
+        NewSettlementProposalAssessmentPollVoteIm input, string signature
     ) => _personalSigner.EncodeUTF8AndEcRecover(
             input.ToMessageForSigning(),
             signature
@@ -99,12 +99,12 @@ internal class Signer : ISigner
         return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);
     }
 
-    public string SignNewAcceptancePollVote(
-        NewAcceptancePollVoteIm input, string userId, string walletAddress,
+    public string SignNewThingValidationPollVote(
+        NewThingValidationPollVoteIm input, string userId, string walletAddress,
         string signerAddress, string signature
     )
     {
-        var td = new SignedNewAcceptancePollVoteTd
+        var td = new SignedNewThingValidationPollVoteTd
         {
             Vote = input.ToMessageForSigning(),
             UserId = userId,
@@ -119,12 +119,12 @@ internal class Signer : ISigner
         );
     }
 
-    public string SignNewAssessmentPollVote(
-        NewAssessmentPollVoteIm input, string userId, string walletAddress,
+    public string SignNewSettlementProposalAssessmentPollVote(
+        NewSettlementProposalAssessmentPollVoteIm input, string userId, string walletAddress,
         string signerAddress, string signature
     )
     {
-        var td = new SignedNewAssessmentPollVoteTd
+        var td = new SignedNewSettlementProposalAssessmentPollVoteTd
         {
             Vote = input.ToMessageForSigning(),
             UserId = userId,
@@ -139,25 +139,25 @@ internal class Signer : ISigner
         );
     }
 
-    public string SignAcceptancePollVoteAgg(
+    public string SignThingValidationPollVoteAgg(
         Guid thingId,
         ulong l1EndBlock,
-        IEnumerable<AcceptancePollVote> offChainVotes,
-        IEnumerable<CastedAcceptancePollVoteEvent> onChainVotes
+        IEnumerable<ThingValidationPollVote> offChainVotes,
+        IEnumerable<CastedThingValidationPollVoteEvent> onChainVotes
     )
     {
-        var td = new SignedAcceptancePollVoteAggTd // @@TODO: This stuff ain't TypedData!
+        var td = new SignedThingValidationPollVoteAggTd // @@TODO: This stuff ain't TypedData!
         {
             ThingId = thingId,
             L1EndBlock = l1EndBlock,
             OffChainVotes = offChainVotes
-                .Select(v => new OffChainAcceptancePollVoteTd
+                .Select(v => new OffChainThingValidationPollVoteTd
                 {
                     IpfsCid = v.IpfsCid
                 })
                 .ToList(),
             OnChainVotes = onChainVotes
-                .Select(v => new OnChainAcceptancePollVoteTd
+                .Select(v => new OnChainThingValidationPollVoteTd
                 {
                     TxnHash = v.TxnHash,
                     BlockNumber = v.BlockNumber,
@@ -189,25 +189,25 @@ internal class Signer : ISigner
         return _eip712Signer.SignTypedDataV4(tdDefinition, _orchestratorPrivateKey);
     }
 
-    public string SignAssessmentPollVoteAgg(
+    public string SignSettlementProposalAssessmentPollVoteAgg(
         Guid thingId, Guid proposalId, ulong l1EndBlock,
-        IEnumerable<AssessmentPollVote> offChainVotes,
-        IEnumerable<CastedAssessmentPollVoteEvent> onChainVotes
+        IEnumerable<SettlementProposalAssessmentPollVote> offChainVotes,
+        IEnumerable<CastedSettlementProposalAssessmentPollVoteEvent> onChainVotes
     )
     {
-        var td = new SignedAssessmentPollVoteAggTd
+        var td = new SignedSettlementProposalAssessmentPollVoteAggTd
         {
             ThingId = thingId,
             SettlementProposalId = proposalId,
             L1EndBlock = l1EndBlock,
             OffChainVotes = offChainVotes
-                .Select(v => new OffChainAssessmentPollVoteTd
+                .Select(v => new OffChainSettlementProposalAssessmentPollVoteTd
                 {
                     IpfsCid = v.IpfsCid
                 })
                 .ToList(),
             OnChainVotes = onChainVotes
-                .Select(v => new OnChainAssessmentPollVoteTd
+                .Select(v => new OnChainSettlementProposalAssessmentPollVoteTd
                 {
                     TxnHash = v.TxnHash,
                     BlockNumber = v.BlockNumber,
@@ -226,6 +226,6 @@ internal class Signer : ISigner
         );
     }
 
-    public string RecoverFromSiweMessage(string message, string signature) =>
+    public string RecoverFromMessage(string message, string signature) =>
         _personalSigner.EncodeUTF8AndEcRecover(message, signature);
 }
