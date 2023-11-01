@@ -153,7 +153,7 @@ class AvatarWithReputationGauge extends StatelessWidget {
                       : size == AvatarSize.medium
                           ? const Offset(40, 4)
                           : Offset(
-                              reputation < 10 ? 40 : 20,
+                              reputation.toString().length < 3 ? 30 : 15,
                               20,
                             ),
                   child: Text(

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Hosting;
 
 using Domain.Aggregates;
 using Domain.Aggregates.Events;
@@ -68,7 +69,9 @@ using API;
 
 // Console.WriteLine("Migrations applied");
 
-var app = API.Program.CreateWebApplicationBuilder(new[] { "DbMigrator=true" })
+var builder = API.Program.CreateWebApplicationBuilder(new[] { "DbMigrator=true" });
+builder.Host.UseDefaultServiceProvider(options => options.ValidateOnBuild = false);
+var app = builder
     .ConfigureServices()
     .Build();
 using var scope = app.Services.CreateScope();
@@ -91,11 +94,16 @@ Dictionary<string, string> accountNameToUserId = new()
     ["Verifier6"] = "8777cd9c-122a-4f49-bba0-9f366654a5c4",
 };
 
-appDbContext.Users.AddRange(accountNameToUserId.Select(kv => new User
+foreach (var kv in accountNameToUserId)
 {
-    Id = kv.Value,
-    UserName = accountProvider.GetAccount(kv.Key).Address
-}));
+    appDbContext.Users.Add(new User
+    {
+        Id = kv.Value,
+        UserName = accountProvider.GetAccount(kv.Key).Address,
+        NormalizedUserName = accountProvider.GetAccount(kv.Key).Address.ToUpper(),
+        WalletAddress = await contractCaller.GetWalletAddressFor(accountProvider.GetAccount(kv.Key).Address)
+    });
+}
 await appDbContext.SaveChangesAsync();
 
 foreach (var kv in accountNameToUserId)
@@ -112,7 +120,7 @@ foreach (var kv in accountNameToUserId)
         {
             UserId = kv.Value,
             ClaimType = "wallet_address",
-            ClaimValue = await contractCaller.GetWalletAddressFor(kv.Key)
+            ClaimValue = await contractCaller.GetWalletAddressFor(accountProvider.GetAccount(kv.Key).Address)
         }
     });
 }

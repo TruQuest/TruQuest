@@ -63,12 +63,15 @@ internal class ThingQueryable : Queryable, IThingQueryable
         using var multiQuery = await dbConn.QueryMultipleAsync(
             @"
                 SELECT
-                    t.*,
+                    t.*, u.""WalletAddress"" AS ""SubmitterWalletAddress"",
                     s.""Name"" AS ""SubjectName"", s.""CroppedImageIpfsCid"" AS ""SubjectCroppedImageIpfsCid"",
                     s.""AvgScore""::INTEGER AS ""SubjectAvgScore"",
                     e.*, tag.*
                 FROM
                     truquest.""Things"" AS t
+                        INNER JOIN
+                    truquest.""AspNetUsers"" AS u
+                        ON t.""SubmitterId"" = u.""Id""
                         INNER JOIN
                     truquest.""Subjects"" AS s
                         ON t.""SubjectId"" = s.""Id""
@@ -108,24 +111,5 @@ internal class ThingQueryable : Queryable, IThingQueryable
         }
 
         return thing;
-    }
-
-    public async Task<IEnumerable<string>> GetVerifiers(Guid thingId)
-    {
-        var dbConn = await _getOpenConnection();
-        var verifiers = await dbConn.QueryAsync<string>(
-            @"
-                SELECT v.""VerifierId""
-                FROM
-                    truquest.""Things"" AS t
-                        INNER JOIN
-                    truquest.""ThingVerifiers"" AS v
-                        ON t.""Id"" = v.""ThingId""
-                WHERE t.""Id"" = @ThingId
-            ",
-            param: new { ThingId = thingId }
-        );
-
-        return verifiers;
     }
 }

@@ -15,6 +15,7 @@ class SettlementProposalVm {
   final String? imageIpfsCid;
   final String? croppedImageIpfsCid;
   final String submitterId;
+  final String submitterWalletAddress;
   final DateTime? assessmentPronouncedAt;
   final String subjectName;
   final String thingTitle;
@@ -26,8 +27,10 @@ class SettlementProposalVm {
 
   String get submittedAtFormatted => DateFormat.yMMMMd('en_US').format(submittedAt!);
 
-  String get submitterIdShort =>
-      submitterId.substring(0, 6) + '...' + submitterId.substring(submitterId.length - 4, submitterId.length);
+  String get submitterWalletAddressShort =>
+      submitterWalletAddress.substring(0, 6) +
+      '...' +
+      submitterWalletAddress.substring(submitterWalletAddress.length - 4, submitterWalletAddress.length);
 
   bool isSubmitter(String? userId) => userId == submitterId;
 
@@ -42,6 +45,7 @@ class SettlementProposalVm {
         imageIpfsCid = map['imageIpfsCid'],
         croppedImageIpfsCid = map['croppedImageIpfsCid'],
         submitterId = map['submitterId'],
+        submitterWalletAddress = map['submitterWalletAddress'],
         assessmentPronouncedAt = map['assessmentPronouncedAt'] != null
             ? DateTime.fromMillisecondsSinceEpoch(map['assessmentPronouncedAt'])
             : null,
@@ -65,6 +69,7 @@ class SettlementProposalVm {
     required this.imageIpfsCid,
     required this.croppedImageIpfsCid,
     required this.submitterId,
+    required this.submitterWalletAddress,
     required this.assessmentPronouncedAt,
     required this.subjectName,
     required this.thingTitle,
@@ -89,6 +94,7 @@ class SettlementProposalVm {
         imageIpfsCid: imageIpfsCid,
         croppedImageIpfsCid: croppedImageIpfsCid,
         submitterId: submitterId,
+        submitterWalletAddress: submitterWalletAddress,
         assessmentPronouncedAt: assessmentPronouncedAt,
         subjectName: subjectName,
         thingTitle: thingTitle,

@@ -124,7 +124,7 @@ class _SubjectPageState extends StateX<SubjectPage> {
                           style: GoogleFonts.raleway(),
                         ),
                         TextSpan(
-                          text: subject.submitterIdShort,
+                          text: subject.submitterWalletAddressShort,
                           style: GoogleFonts.raleway(
                             fontSize: 16,
                           ),

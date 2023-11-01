@@ -29,6 +29,11 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
         modelBuilder.HasDefaultSchema("truquest");
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Entity<UserDm>(builder =>
+        {
+            builder.Property(u => u.WalletAddress).IsRequired();
+        });
+
         modelBuilder.Entity<AuthCredential>(builder =>
         {
             builder.HasKey(c => c.Id);

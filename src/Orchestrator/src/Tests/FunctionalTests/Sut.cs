@@ -160,11 +160,16 @@ public class Sut : IAsyncLifetime
         var appDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await appDbContext.Database.MigrateAsync();
 
-        appDbContext.Users.AddRange(_accountNameToUserId.Select(kv => new User
+        foreach (var kv in _accountNameToUserId)
         {
-            Id = kv.Value,
-            UserName = AccountProvider.GetAccount(kv.Key).Address
-        }));
+            appDbContext.Users.Add(new User
+            {
+                Id = kv.Value,
+                UserName = AccountProvider.GetAccount(kv.Key).Address,
+                NormalizedUserName = AccountProvider.GetAccount(kv.Key).Address.ToUpper(),
+                WalletAddress = await ContractCaller.GetWalletAddressFor(kv.Key)
+            });
+        }
         await appDbContext.SaveChangesAsync();
 
         foreach (var kv in _accountNameToUserId)

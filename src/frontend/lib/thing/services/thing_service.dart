@@ -105,9 +105,7 @@ class ThingService {
     if (error != null) yield error;
   }
 
-  Future<(String?, int?, int, bool?)> getVerifierLotteryInfo(
-    String thingId,
-  ) async {
+  Future<(String?, int?, int, bool?)> getVerifierLotteryInfo(String thingId) async {
     var currentUserId = _userService.latestCurrentUser?.id;
     var currentWalletAddress = _userService.latestCurrentUser?.walletAddress;
 
@@ -175,9 +173,7 @@ class ThingService {
     return result;
   }
 
-  Future<(String?, int?, int, int)> getValidationPollInfo(
-    String thingId,
-  ) async {
+  Future<(String?, int?, int, int)> getValidationPollInfo(String thingId) async {
     var currentUserId = _userService.latestCurrentUser?.id;
     var currentWalletAddress = _userService.latestCurrentUser?.walletAddress;
 

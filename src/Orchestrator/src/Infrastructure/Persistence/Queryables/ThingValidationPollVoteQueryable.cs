@@ -22,7 +22,7 @@ internal class ThingValidationPollVoteQueryable : Queryable, IThingValidationPol
                 WHERE ""Id"" = @ThingId;
 
                 SELECT DISTINCT ON (""UserId"")
-                    ""UserId"", ""CastedAtMs"", ""L1BlockNumber"", ""BlockNumber"",
+                    ""UserId"", ""WalletAddress"", ""CastedAtMs"", ""L1BlockNumber"", ""BlockNumber"",
                     ""Decision"", ""Reason"", ""IpfsCid"", ""TxnHash""
                 FROM (
                     SELECT *
@@ -31,6 +31,7 @@ internal class ThingValidationPollVoteQueryable : Queryable, IThingValidationPol
                     FROM (
                         SELECT DISTINCT ON (""VoterId"")
                             ""VoterId"" AS ""UserId"",
+                            ""VoterWalletAddress"" AS ""WalletAddress"",
                             1 AS ""OffChain"",
                             ""CastedAtMs"",
                             ""Decision"",
@@ -50,6 +51,7 @@ internal class ThingValidationPollVoteQueryable : Queryable, IThingValidationPol
                     FROM (
                         SELECT DISTINCT ON (""UserId"")
                             ""UserId"",
+                            ""WalletAddress"",
                             0 AS ""OffChain"",
                             NULL::BIGINT AS ""CastedAtMs"",
                             ""Decision"",

@@ -13,19 +13,19 @@ class SubjectVm {
   final String imageIpfsCid;
   final String croppedImageIpfsCid;
   final String submitterId;
+  final String submitterWalletAddress;
   final int settledThingsCount;
   final int avgScore;
   final List<ThingPreviewVm> latestSettledThings;
   final List<ThingPreviewVm> latestUnsettledThings;
   final List<TagVm> tags;
 
-  String get submittedAtFormatted =>
-      DateFormat.yMMMMd('en_US').format(submittedAt);
+  String get submittedAtFormatted => DateFormat.yMMMMd('en_US').format(submittedAt);
 
-  String get submitterIdShort =>
-      submitterId.substring(0, 6) +
+  String get submitterWalletAddressShort =>
+      submitterWalletAddress.substring(0, 6) +
       '...' +
-      submitterId.substring(submitterId.length - 4, submitterId.length);
+      submitterWalletAddress.substring(submitterWalletAddress.length - 4, submitterWalletAddress.length);
 
   SubjectVm.fromMap(Map<String, dynamic> map)
       : id = map['id'],
@@ -36,15 +36,14 @@ class SubjectVm {
         imageIpfsCid = map['imageIpfsCid'],
         croppedImageIpfsCid = map['croppedImageIpfsCid'],
         submitterId = map['submitterId'],
+        submitterWalletAddress = map['submitterWalletAddress'],
         settledThingsCount = map['settledThingsCount'],
         avgScore = map['avgScore'],
         latestSettledThings = List.unmodifiable(
-          (map['latestSettledThings'] as List<dynamic>)
-              .map((submap) => ThingPreviewVm.fromMap(submap)),
+          (map['latestSettledThings'] as List<dynamic>).map((submap) => ThingPreviewVm.fromMap(submap)),
         ),
         latestUnsettledThings = List.unmodifiable(
-          (map['latestUnsettledThings'] as List<dynamic>)
-              .map((submap) => ThingPreviewVm.fromMap(submap)),
+          (map['latestUnsettledThings'] as List<dynamic>).map((submap) => ThingPreviewVm.fromMap(submap)),
         ),
         tags = List.unmodifiable(
           (map['tags'] as List<dynamic>).map((submap) => TagVm.fromMap(submap)),

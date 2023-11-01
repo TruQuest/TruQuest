@@ -40,12 +40,19 @@ internal class RequestDispatcher : IRequestDispatcher
 
     private async void _monitorResponses(CancellationToken ct)
     {
-        await foreach (var response in _responseStream.ReadAllAsync(ct))
+        try
         {
-            if (_requestIdToResponseReceivedTcs.TryRemove(response.RequestId, out TaskCompletionSource<object>? tcs))
+            await foreach (var response in _responseStream.ReadAllAsync(ct))
             {
-                tcs.SetResult(response.Message);
+                if (_requestIdToResponseReceivedTcs.TryRemove(response.RequestId, out TaskCompletionSource<object>? tcs))
+                {
+                    tcs.SetResult(response.Message);
+                }
             }
+        }
+        catch (OperationCanceledException)
+        {
+            return;
         }
     }
 

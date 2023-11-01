@@ -181,7 +181,7 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
                             style: GoogleFonts.raleway(),
                           ),
                           TextSpan(
-                            text: proposal.submitterIdShort,
+                            text: proposal.submitterWalletAddressShort,
                             style: GoogleFonts.raleway(
                               fontSize: 16,
                             ),

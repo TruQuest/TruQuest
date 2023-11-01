@@ -22,13 +22,14 @@ internal class SettlementProposalAssessmentPollVoteQueryable : Queryable, ISettl
                 WHERE ""Id"" = @ProposalId;
 
                 SELECT DISTINCT ON (""UserId"")
-                    ""UserId"", ""CastedAtMs"", ""L1BlockNumber"", ""BlockNumber"",
+                    ""UserId"", ""WalletAddress"", ""CastedAtMs"", ""L1BlockNumber"", ""BlockNumber"",
                     ""Decision"", ""Reason"", ""IpfsCid"", ""TxnHash""
                 FROM (
                     SELECT *
                     FROM (
                         SELECT DISTINCT ON (""VoterId"")
                             ""VoterId"" AS ""UserId"",
+                            ""VoterWalletAddress"" AS ""WalletAddress"",
                             1 AS ""OffChain"",
                             ""CastedAtMs"",
                             ""Decision"",
@@ -48,6 +49,7 @@ internal class SettlementProposalAssessmentPollVoteQueryable : Queryable, ISettl
                     FROM (
                         SELECT DISTINCT ON (""UserId"")
                             ""UserId"",
+                            ""WalletAddress"",
                             0 AS ""OffChain"",
                             NULL::BIGINT AS ""CastedAtMs"",
                             ""Decision"",

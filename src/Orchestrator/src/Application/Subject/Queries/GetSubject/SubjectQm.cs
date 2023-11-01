@@ -5,16 +5,17 @@ namespace Application.Subject.Queries.GetSubject;
 
 public class SubjectQm
 {
-    public Guid Id { get; }
-    public long SubmittedAt { get; }
-    public string Name { get; }
-    public string Details { get; }
-    public SubjectTypeQm Type { get; }
-    public string ImageIpfsCid { get; }
-    public string CroppedImageIpfsCid { get; }
-    public string SubmitterId { get; }
-    public int SettledThingsCount { get; }
-    public int AvgScore { get; }
+    public required Guid Id { get; init; }
+    public required long SubmittedAt { get; init; }
+    public required string Name { get; init; }
+    public required string Details { get; init; }
+    public required SubjectTypeQm Type { get; init; }
+    public required string ImageIpfsCid { get; init; }
+    public required string CroppedImageIpfsCid { get; init; }
+    public required string SubmitterId { get; init; }
+    public required string SubmitterWalletAddress { get; init; }
+    public required int SettledThingsCount { get; init; }
+    public required int AvgScore { get; init; }
 
     public List<TagQm> Tags { get; } = new();
 

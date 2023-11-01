@@ -4,25 +4,26 @@ namespace Application.Thing.Queries.GetThing;
 
 public class ThingQm
 {
-    public Guid Id { get; }
-    public ThingStateQm State { get; }
-    public long? SubmittedAt { get; }
-    public string Title { get; }
-    public string Details { get; }
-    public string? ImageIpfsCid { get; }
-    public string? CroppedImageIpfsCid { get; }
-    public string SubmitterId { get; }
-    public Guid SubjectId { get; }
-    public string SubjectName { get; }
-    public string SubjectCroppedImageIpfsCid { get; }
-    public int SubjectAvgScore { get; }
-    public long? SettledAt { get; }
-    public string? VoteAggIpfsCid { get; }
-    public Guid? AcceptedSettlementProposalId { get; }
+    public required Guid Id { get; init; }
+    public required ThingStateQm State { get; init; }
+    public required long? SubmittedAt { get; init; }
+    public required string Title { get; init; }
+    public required string Details { get; init; }
+    public required string? ImageIpfsCid { get; init; }
+    public required string? CroppedImageIpfsCid { get; init; }
+    public required string SubmitterId { get; init; }
+    public required string SubmitterWalletAddress { get; init; }
+    public required Guid SubjectId { get; init; }
+    public required string SubjectName { get; init; }
+    public required string SubjectCroppedImageIpfsCid { get; init; }
+    public required int SubjectAvgScore { get; init; }
+    public required long? SettledAt { get; init; }
+    public required string? VoteAggIpfsCid { get; init; }
+    public required Guid? AcceptedSettlementProposalId { get; init; }
     public HashSet<ThingEvidenceQm> Evidence { get; } = new();
     public HashSet<TagQm> Tags { get; } = new();
     public bool Watched { get; set; }
-    public Dictionary<string, string>? RelatedThings { get; }
+    public required Dictionary<string, string>? RelatedThings { get; init; }
 
     public override bool Equals(object? obj)
     {

@@ -21,7 +21,7 @@ internal class SubjectQueryable : Queryable, ISubjectQueryable
         var subjects = await dbConn.QueryWithMany<SubjectPreviewQm, TagQm>(
             @"
                 SELECT
-                    s.""Id"", s.""SubmittedAt"", s.""Name"", s.""Type"", s.""CroppedImageIpfsCid"", s.""SubmitterId"",
+                    s.""Id"", s.""SubmittedAt"", s.""Name"", s.""Type"", s.""CroppedImageIpfsCid"",
                     s.""SettledThingsCount"", s.""AvgScore""::INTEGER,
                     t.*
                 FROM
@@ -45,9 +45,12 @@ internal class SubjectQueryable : Queryable, ISubjectQueryable
         var dbConn = await _getOpenConnection();
         var subject = await dbConn.SingleWithMany<SubjectQm, TagQm>(
             @"
-                SELECT s.*, t.*
+                SELECT s.*, u.""WalletAddress"" AS ""SubmitterWalletAddress"", t.*
                 FROM
                     truquest.""Subjects"" AS s
+                        INNER JOIN
+                    truquest.""AspNetUsers"" AS u
+                        ON s.""SubmitterId"" = u.""Id""
                         INNER JOIN
                     truquest.""SubjectAttachedTags"" AS sat
                         ON s.""Id"" = sat.""SubjectId""

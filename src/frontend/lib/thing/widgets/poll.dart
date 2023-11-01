@@ -283,7 +283,7 @@ class _PollState extends StateX<Poll> {
                                     Padding(
                                       padding: const EdgeInsets.symmetric(vertical: 8),
                                       child: Text(
-                                        vote.userIdShort,
+                                        vote.walletAddressShort,
                                         style: GoogleFonts.raleway(
                                           color: vote.userId == _currentUserId ? Colors.white : Colors.black,
                                         ),

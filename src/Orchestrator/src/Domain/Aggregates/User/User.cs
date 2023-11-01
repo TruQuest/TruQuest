@@ -6,6 +6,8 @@ namespace Domain.Aggregates;
 
 public class User : IdentityUser<string>, IAggregateRoot
 {
+    public string WalletAddress { get; set; }
+
     private List<AuthCredential> _authCredentials = new();
     public IReadOnlyList<AuthCredential> AuthCredentials => _authCredentials;
 

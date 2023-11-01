@@ -18,7 +18,7 @@ class VoteVm {
   static final _random = Random();
 
   final String userId;
-  // @@TODO: Add walletAddress.
+  final String walletAddress;
   final int? castedAtMs;
   final int? l1BlockNumber;
   final int? blockNumber;
@@ -36,10 +36,12 @@ class VoteVm {
   String get castedVoteAt =>
       l1BlockNumber?.toString() ?? DateFormat.jm().format(DateTime.fromMillisecondsSinceEpoch(castedAtMs!));
 
-  String get userIdShort => '${userId.substring(0, 6)}..${userId.substring(userId.length - 4)}';
+  String get walletAddressShort =>
+      '${walletAddress.substring(0, 6)}..${walletAddress.substring(walletAddress.length - 4)}';
 
   VoteVm.fromMap(Map<String, dynamic> map)
       : userId = map['userId'],
+        walletAddress = map['walletAddress'],
         castedAtMs = map['castedAtMs'],
         l1BlockNumber = map['l1BlockNumber'],
         blockNumber = map['blockNumber'],

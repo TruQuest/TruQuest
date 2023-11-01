@@ -23,6 +23,7 @@ internal class SettlementProposalQueryable : Queryable, ISettlementProposalQuery
 
     public async Task<List<SettlementProposalPreviewQm>> GetForThing(Guid thingId, string? userId)
     {
+        // @@TODO!!: This stuff is broken!
         var proposals = await _dbContext.SettlementProposals
             .AsNoTracking()
             .Where(p => p.ThingId == thingId && (p.State > SettlementProposalState.Draft || p.SubmitterId == userId))
@@ -50,12 +51,15 @@ internal class SettlementProposalQueryable : Queryable, ISettlementProposalQuery
         using var multiQuery = await dbConn.QueryMultipleAsync(
             @"
                 SELECT
-                    p.*,
+                    p.*, u.""WalletAddress"" AS ""SubmitterWalletAddress"",
                     s.""Name"" AS ""SubjectName"",
                     t.""Title"" AS ""ThingTitle"", t.""CroppedImageIpfsCid"" AS ""ThingCroppedImageIpfsCid"",
                     e.*
                 FROM
                     truquest.""SettlementProposals"" AS p
+                        INNER JOIN
+                    truquest.""AspNetUsers"" AS u
+                        ON p.""SubmitterId"" = u.""Id""
                         INNER JOIN
                     truquest.""Things"" AS t
                         ON p.""ThingId"" = t.""Id""
@@ -91,24 +95,5 @@ internal class SettlementProposalQueryable : Queryable, ISettlementProposalQuery
         }
 
         return proposal;
-    }
-
-    public async Task<IEnumerable<string>> GetVerifiers(Guid proposalId)
-    {
-        var dbConn = await _getOpenConnection();
-        var verifiers = await dbConn.QueryAsync<string>(
-            @"
-                SELECT v.""VerifierId""
-                FROM
-                    truquest.""SettlementProposals"" AS p
-                        INNER JOIN
-                    truquest.""SettlementProposalVerifiers"" AS v
-                        ON p.""Id"" = v.""SettlementProposalId""
-                WHERE p.""Id"" = @ProposalId
-            ",
-            param: new { ProposalId = proposalId }
-        );
-
-        return verifiers;
     }
 }

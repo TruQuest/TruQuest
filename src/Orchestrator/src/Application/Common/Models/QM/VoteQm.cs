@@ -3,6 +3,7 @@ namespace Application.Common.Models.QM;
 public class VoteQm
 {
     public required string UserId { get; init; }
+    public required string WalletAddress { get; init; }
     public long? CastedAtMs { get; init; }
     public long? L1BlockNumber { get; init; }
     public long? BlockNumber { get; init; }

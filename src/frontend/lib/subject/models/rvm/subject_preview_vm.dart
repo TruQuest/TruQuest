@@ -10,20 +10,13 @@ class SubjectPreviewVm {
   final String name;
   final SubjectTypeVm type;
   final String croppedImageIpfsCid;
-  final String submitterId;
   final int settledThingsCount;
   final int avgScore;
   final List<TagVm> tags;
 
   String get submittedAtFormatted => DateFormat.yMEd().format(submittedAt);
 
-  String get submitterIdShort =>
-      submitterId.substring(0, 6) +
-      '...' +
-      submitterId.substring(submitterId.length - 4, submitterId.length);
-
-  IconData get typeIcon =>
-      type == SubjectTypeVm.person ? Icons.person : Icons.groups;
+  IconData get typeIcon => type == SubjectTypeVm.person ? Icons.person : Icons.groups;
 
   SubjectPreviewVm.fromMap(Map<String, dynamic> map)
       : id = map['id'],
@@ -31,7 +24,6 @@ class SubjectPreviewVm {
         name = map['name'],
         type = SubjectTypeVm.values[map['type']],
         croppedImageIpfsCid = map['croppedImageIpfsCid'],
-        submitterId = map['submitterId'],
         settledThingsCount = map['settledThingsCount'],
         avgScore = map['avgScore'],
         tags = List.unmodifiable(

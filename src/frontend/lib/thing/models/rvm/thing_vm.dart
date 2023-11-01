@@ -13,6 +13,7 @@ class ThingVm {
   final String? imageIpfsCid;
   final String? croppedImageIpfsCid;
   final String submitterId;
+  final String submitterWalletAddress;
   final String subjectId;
   final String subjectName;
   final String subjectCroppedImageIpfsCid;
@@ -29,8 +30,10 @@ class ThingVm {
 
   String get submittedAtFormatted => DateFormat.yMMMMd('en_US').format(submittedAt!);
 
-  String get submitterIdShort =>
-      submitterId.substring(0, 6) + '...' + submitterId.substring(submitterId.length - 4, submitterId.length);
+  String get submitterWalletAddressShort =>
+      submitterWalletAddress.substring(0, 6) +
+      '...' +
+      submitterWalletAddress.substring(submitterWalletAddress.length - 4, submitterWalletAddress.length);
 
   bool isSubmitter(String? userId) => userId == submitterId;
 
@@ -43,6 +46,7 @@ class ThingVm {
         imageIpfsCid = map['imageIpfsCid'],
         croppedImageIpfsCid = map['croppedImageIpfsCid'],
         submitterId = map['submitterId'],
+        submitterWalletAddress = map['submitterWalletAddress'],
         subjectId = map['subjectId'],
         subjectName = map['subjectName'],
         subjectCroppedImageIpfsCid = map['subjectCroppedImageIpfsCid'],
@@ -69,6 +73,7 @@ class ThingVm {
     required this.imageIpfsCid,
     required this.croppedImageIpfsCid,
     required this.submitterId,
+    required this.submitterWalletAddress,
     required this.subjectId,
     required this.subjectName,
     required this.subjectCroppedImageIpfsCid,
@@ -93,6 +98,7 @@ class ThingVm {
       imageIpfsCid: imageIpfsCid,
       croppedImageIpfsCid: croppedImageIpfsCid,
       submitterId: submitterId,
+      submitterWalletAddress: submitterWalletAddress,
       subjectId: subjectId,
       subjectName: subjectName,
       subjectCroppedImageIpfsCid: subjectCroppedImageIpfsCid,

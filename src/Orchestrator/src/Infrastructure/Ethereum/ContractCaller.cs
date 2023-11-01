@@ -81,12 +81,18 @@ internal class ContractCaller : IContractCaller
 
     private async void _monitorMessages(CancellationToken ct)
     {
-        // @@TODO!!: Try-catch!
-        await foreach (var item in _stream.ReadAllAsync(ct))
+        try
         {
-            var txnReceipt = await item.Task();
-            _memoryCache.Set(txnReceipt.TransactionHash, item.Traceparent);
-            item.Tcs.SetResult(txnReceipt);
+            await foreach (var item in _stream.ReadAllAsync(ct))
+            {
+                var txnReceipt = await item.Task();
+                _memoryCache.Set(txnReceipt.TransactionHash, item.Traceparent);
+                item.Tcs.SetResult(txnReceipt);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            return;
         }
     }
 

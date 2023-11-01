@@ -91,7 +91,8 @@ internal class SignInWithEthereumCommandHandler :
             user = new UserDm
             {
                 Id = Guid.NewGuid().ToString(),
-                UserName = signerAddress
+                UserName = signerAddress,
+                WalletAddress = walletAddress
             };
 
             var error = await _userRepository.Create(user);

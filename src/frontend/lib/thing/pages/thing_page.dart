@@ -244,7 +244,7 @@ class _ThingPageState extends StateX<ThingPage> {
                             style: GoogleFonts.raleway(),
                           ),
                           TextSpan(
-                            text: thing.submitterIdShort,
+                            text: thing.submitterWalletAddressShort,
                             style: GoogleFonts.raleway(
                               fontSize: 16,
                             ),
