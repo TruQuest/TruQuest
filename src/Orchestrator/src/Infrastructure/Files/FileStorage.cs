@@ -1,10 +1,12 @@
 using System.Text.Json;
+using System.Diagnostics;
 
 using Microsoft.Extensions.Logging;
 
 using Domain.Results;
 using Application.Common.Interfaces;
 using Application.Common.Errors;
+using Application;
 
 namespace Infrastructure.Files;
 
@@ -24,7 +26,8 @@ internal class FileStorage : IFileStorage
 
     public async Task<Either<FileError, string>> UploadJson(object obj)
     {
-        // @@TODO!!: Tracing.
+        using var span = Telemetry.StartActivity($"{GetType().FullName}.{nameof(UploadJson)}", kind: ActivityKind.Client);
+
         using var client = _clientFactory.CreateClient("ipfs");
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v0/add?to-files=/");
@@ -43,17 +46,16 @@ internal class FileStorage : IFileStorage
         };
 
         var response = await client.SendAsync(request);
-        if (response.IsSuccessStatusCode)
+        if (!response.IsSuccessStatusCode)
         {
-            var responseMap = await JsonSerializer.DeserializeAsync<Dictionary<string, string>>(
-                await response.Content.ReadAsStreamAsync()
-            );
-
-            return responseMap!["Hash"];
+            _logger.LogWarning(response.ReasonPhrase);
+            return new FileError(response.ReasonPhrase!);
         }
 
-        _logger.LogWarning(response.ReasonPhrase);
+        var responseMap = await JsonSerializer.DeserializeAsync<Dictionary<string, string>>(
+            await response.Content.ReadAsStreamAsync()
+        );
 
-        return new FileError(response.ReasonPhrase!);
+        return responseMap!["Hash"];
     }
 }

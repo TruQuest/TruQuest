@@ -9,6 +9,7 @@ using Microsoft.Net.Http.Headers;
 
 using Domain.Errors;
 using Domain.Results;
+using Application;
 using Application.Common.Errors;
 using Application.Common.Interfaces;
 
@@ -35,7 +36,8 @@ internal class FileReceiver : IFileReceiver
         HttpRequest request, int maxSize, string filePrefix
     )
     {
-        // @@TODO: Tracing.
+        using var span = Telemetry.StartActivity($"{GetType().FullName}.{nameof(ReceiveFilesAndFormValues)}");
+
         if (!_multipartRequestHelper.IsMultipartContentType(request.ContentType))
         {
             return new ValidationError("multipart/form-data request expected");
@@ -81,10 +83,7 @@ internal class FileReceiver : IFileReceiver
                         );
                     }
 
-                    if (!valid)
-                    {
-                        return new ValidationError("Invalid file format");
-                    }
+                    if (!valid) return new ValidationError("Invalid file format");
 
                     var fileName = $"{Guid.NewGuid()}{ext}";
                     var containerFilePath = $"/user_files/{filePrefix}/{fileName}";
@@ -105,10 +104,7 @@ internal class FileReceiver : IFileReceiver
                             while (true)
                             {
                                 int n = await section.Body.ReadAsync(new Memory<byte>(buffer));
-                                if (n == 0)
-                                {
-                                    break;
-                                }
+                                if (n == 0) break;
 
                                 maxSize -= n;
                                 if (maxSize < 0)
@@ -130,10 +126,7 @@ internal class FileReceiver : IFileReceiver
                         }
                         finally
                         {
-                            if (!fileDisposed)
-                            {
-                                fs.Dispose();
-                            }
+                            if (!fileDisposed) fs.Dispose();
                             ArrayPool<byte>.Shared.Return(buffer);
                         }
                     }

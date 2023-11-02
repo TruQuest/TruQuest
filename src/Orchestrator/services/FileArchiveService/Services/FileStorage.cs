@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 
 namespace Services;
@@ -18,6 +19,8 @@ internal class FileStorage : IFileStorage
 
     public async Task<List<string>> Upload(IEnumerable<string> filePaths)
     {
+        using var span = Telemetry.StartActivity($"{GetType().FullName}.{nameof(Upload)}", kind: ActivityKind.Client);
+
         var folder = Guid.NewGuid();
         using var client = _httpClientFactory.CreateClient("ipfs");
 

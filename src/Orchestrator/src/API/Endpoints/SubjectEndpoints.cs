@@ -15,7 +15,7 @@ public static class SubjectEndpoints
         group.MapPost(
             "/add",
             (HttpRequest request, SenderWrapper sender, HttpContext context) => sender.Send(
-                new AddNewSubjectCommand { Request = request },
+                new AddNewSubjectCommand(request),
                 serviceProvider: context.RequestServices
             )
         );

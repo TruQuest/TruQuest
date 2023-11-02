@@ -17,10 +17,7 @@ public static class SettlementProposalEndpoints
         group.MapPost(
             "/draft",
             (HttpRequest request, SenderWrapper sender, HttpContext context) => sender.Send(
-                new CreateNewSettlementProposalDraftCommand
-                {
-                    Request = request
-                },
+                new CreateNewSettlementProposalDraftCommand(request),
                 serviceProvider: context.RequestServices
             )
         );

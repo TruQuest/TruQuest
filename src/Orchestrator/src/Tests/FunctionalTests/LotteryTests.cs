@@ -127,10 +127,7 @@ public class LotteryTests : IAsyncLifetime
         {
             await _sut.RunAs(accountName: "Submitter");
 
-            var subjectResult = await _sut.SendRequest(new AddNewSubjectCommand
-            {
-                Request = request.Request
-            });
+            var subjectResult = await _sut.SendRequest(new AddNewSubjectCommand(request.Request));
 
             subjectId = subjectResult.Data;
         }
@@ -150,10 +147,7 @@ public class LotteryTests : IAsyncLifetime
             ("tags", "1|2|3")
         ))
         {
-            var thingDraftResult = await _sut.SendRequest(new CreateNewThingDraftCommand
-            {
-                Request = request.Request
-            });
+            var thingDraftResult = await _sut.SendRequest(new CreateNewThingDraftCommand(request.Request));
 
             _thingId = thingDraftResult.Data;
         }

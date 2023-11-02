@@ -19,7 +19,7 @@ public static class ThingEndpoints
         group.MapPost(
             "/draft",
             (HttpRequest request, SenderWrapper sender, HttpContext context) => sender.Send(
-                new CreateNewThingDraftCommand { Request = request },
+                new CreateNewThingDraftCommand(request),
                 serviceProvider: context.RequestServices
             )
         );

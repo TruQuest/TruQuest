@@ -152,6 +152,7 @@ public static class WebApplicationBuilderExtension
             config.AddOpenBehavior(typeof(AuthorizationBehavior<,>), ServiceLifetime.Scoped);
             config.AddOpenBehavior(typeof(ValidationBehavior<,>), ServiceLifetime.Singleton);
             config.AddOpenBehavior(typeof(TransactionBehavior<,>), ServiceLifetime.Singleton);
+            config.AddOpenBehavior(typeof(MultipartFormReceivingBehavior<,>), ServiceLifetime.Scoped);
         });
 
         builder.Services.AddApplication();

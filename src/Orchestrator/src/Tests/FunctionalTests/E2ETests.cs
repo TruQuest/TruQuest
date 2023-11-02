@@ -313,10 +313,7 @@ public class E2ETests : IAsyncLifetime
         {
             await _sut.RunAs(accountName: "Submitter");
 
-            var subjectResult = await _sut.SendRequest(new AddNewSubjectCommand
-            {
-                Request = request.Request
-            });
+            var subjectResult = await _sut.SendRequest(new AddNewSubjectCommand(request.Request));
 
             subjectId = subjectResult.Data;
         }
@@ -337,10 +334,7 @@ public class E2ETests : IAsyncLifetime
             ("tags", "1|2|3")
         ))
         {
-            var thingDraftResult = await _sut.SendRequest(new CreateNewThingDraftCommand
-            {
-                Request = request.Request
-            });
+            var thingDraftResult = await _sut.SendRequest(new CreateNewThingDraftCommand(request.Request));
 
             thingId = thingDraftResult.Data;
         }
@@ -686,10 +680,9 @@ public class E2ETests : IAsyncLifetime
         {
             await _sut.RunAs(accountName: "Proposer");
 
-            var proposalDraftResult = await _sut.SendRequest(new CreateNewSettlementProposalDraftCommand
-            {
-                Request = request.Request
-            });
+            var proposalDraftResult = await _sut.SendRequest(
+                new CreateNewSettlementProposalDraftCommand(request.Request)
+            );
 
             proposalId = proposalDraftResult.Data;
         }

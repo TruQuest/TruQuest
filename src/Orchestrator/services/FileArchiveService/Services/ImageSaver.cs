@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Diagnostics;
 
 namespace Services;
 
@@ -32,6 +33,10 @@ internal class ImageSaver : IImageSaver
 
     public async Task<string> SaveLocalCopy(string url, bool isWebPageScreenshot = false)
     {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().FullName}.{nameof(SaveLocalCopy)}", kind: ActivityKind.Client
+        );
+
         using var client = _httpClientFactory.CreateClient("image");
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         var response = await client.SendAsync(request);
@@ -54,10 +59,7 @@ internal class ImageSaver : IImageSaver
 
         long? contentLength = response.Content.Headers.ContentLength;
         var maxSizeBytes = isWebPageScreenshot ? _webPageScreenshotMaxSizeBytes : _userImageMaxSizeBytes;
-        if (contentLength > maxSizeBytes)
-        {
-            throw new Exception("Max size exceeded");
-        }
+        if (contentLength > maxSizeBytes) throw new Exception("Max size exceeded");
 
         int maxBytesToRead = contentLength != null ? (int)contentLength.Value : maxSizeBytes + 1;
         int bufferSize = Math.Min(_fetchBufferSizeBytes, maxBytesToRead);
@@ -82,18 +84,12 @@ internal class ImageSaver : IImageSaver
                             signatureVerified = _imageSignatureVerifier.Verify(buffer, fileExt);
                         }
 
-                        if (!signatureVerified)
-                        {
-                            break;
-                        }
+                        if (!signatureVerified) break;
                     }
                     else
                     {
                         n = await istream.ReadAsync(buffer, 0, bufferSize);
-                        if (n == 0)
-                        {
-                            break;
-                        }
+                        if (n == 0) break;
                     }
 
                     await fstream.WriteAsync(buffer, 0, n);
