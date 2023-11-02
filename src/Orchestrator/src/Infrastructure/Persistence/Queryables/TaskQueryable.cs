@@ -9,10 +9,7 @@ internal class TaskQueryable : Queryable, ITaskQueryable
 {
     private new readonly AppDbContext _dbContext;
 
-    public TaskQueryable(
-        AppDbContext dbContext,
-        ISharedTxnScope sharedTxnScope
-    ) : base(dbContext, sharedTxnScope)
+    public TaskQueryable(AppDbContext dbContext) : base(dbContext)
     {
         _dbContext = dbContext;
     }

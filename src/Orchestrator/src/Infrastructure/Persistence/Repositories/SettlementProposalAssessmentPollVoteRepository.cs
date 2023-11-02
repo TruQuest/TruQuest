@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
 using Domain.Aggregates;
-using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories;
 
@@ -9,10 +8,7 @@ internal class SettlementProposalAssessmentPollVoteRepository : Repository, ISet
 {
     private new readonly AppDbContext _dbContext;
 
-    public SettlementProposalAssessmentPollVoteRepository(
-        AppDbContext dbContext,
-        ISharedTxnScope sharedTxnScope
-    ) : base(dbContext, sharedTxnScope)
+    public SettlementProposalAssessmentPollVoteRepository(AppDbContext dbContext) : base(dbContext)
     {
         _dbContext = dbContext;
     }

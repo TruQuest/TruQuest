@@ -13,10 +13,7 @@ internal class SettlementProposalQueryable : Queryable, ISettlementProposalQuery
 {
     private new readonly AppDbContext _dbContext;
 
-    public SettlementProposalQueryable(
-        AppDbContext dbContext,
-        ISharedTxnScope sharedTxnScope
-    ) : base(dbContext, sharedTxnScope)
+    public SettlementProposalQueryable(AppDbContext dbContext) : base(dbContext)
     {
         _dbContext = dbContext;
     }

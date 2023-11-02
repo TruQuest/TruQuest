@@ -42,6 +42,8 @@ public static class IServiceCollectionExtension
         IConfiguration configuration
     )
     {
+        DbConnectionProvider.ConnectionString = configuration.GetConnectionString("Postgres")!;
+
         services.AddDbContext<AppDbContext>(optionsBuilder =>
             optionsBuilder
                 .UseNpgsql(
@@ -78,7 +80,6 @@ public static class IServiceCollectionExtension
         services.AddDataProtection();
         services.AddHttpContextAccessor();
 
-        services.AddScoped<ISharedTxnScope, SharedTxnScope>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddSingleton<IAuthTokenProvider, AuthTokenProvider>();
         services.AddSingleton<Eip712TypedDataSigner>();
@@ -203,6 +204,7 @@ public static class IServiceCollectionExtension
         services.AddScoped<ITaskQueryable, TaskQueryable>();
 
         services.AddSingleton<IContractEventListener, ContractEventListener>();
+        services.AddSingleton<ISenderWrapper, SenderWrapper>();
         services.AddScoped<PublisherWrapper>();
 
         services.AddSingleton<AccountProvider>();

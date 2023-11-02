@@ -12,10 +12,7 @@ internal class SettlementProposalAssessmentVerifierLotteryEventQueryable :
     Queryable,
     ISettlementProposalAssessmentVerifierLotteryEventQueryable
 {
-    public SettlementProposalAssessmentVerifierLotteryEventQueryable(
-        EventDbContext dbContext,
-        ISharedTxnScope sharedTxnScope
-    ) : base(dbContext, sharedTxnScope) { }
+    public SettlementProposalAssessmentVerifierLotteryEventQueryable(EventDbContext dbContext) : base(dbContext) { }
 
     public async Task<(
         OrchestratorLotteryCommitmentQm?,

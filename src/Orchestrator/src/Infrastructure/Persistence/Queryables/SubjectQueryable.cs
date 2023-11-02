@@ -10,10 +10,7 @@ namespace Infrastructure.Persistence.Queryables;
 
 internal class SubjectQueryable : Queryable, ISubjectQueryable
 {
-    public SubjectQueryable(
-        AppDbContext appDbContext,
-        ISharedTxnScope sharedTxnScope
-    ) : base(appDbContext, sharedTxnScope) { }
+    public SubjectQueryable(AppDbContext appDbContext) : base(appDbContext) { }
 
     public async Task<IEnumerable<SubjectPreviewQm>> GetAll()
     {

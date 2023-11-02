@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
 using Domain.Aggregates.Events;
-using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories.Events;
 
@@ -9,10 +8,7 @@ internal class CastedThingValidationPollVoteEventRepository : Repository, ICaste
 {
     private new readonly EventDbContext _dbContext;
 
-    public CastedThingValidationPollVoteEventRepository(
-        EventDbContext dbContext,
-        ISharedTxnScope sharedTxnScope
-    ) : base(dbContext, sharedTxnScope)
+    public CastedThingValidationPollVoteEventRepository(EventDbContext dbContext) : base(dbContext)
     {
         _dbContext = dbContext;
     }

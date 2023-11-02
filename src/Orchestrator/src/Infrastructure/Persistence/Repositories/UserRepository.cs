@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using Domain.Aggregates;
 using Domain.Errors;
 using UserDm = Domain.Aggregates.User;
-using Application.Common.Interfaces;
 
 using Infrastructure.User;
 
@@ -17,11 +16,7 @@ internal class UserRepository : Repository, IUserRepository
     private new readonly AppDbContext _dbContext;
     private readonly UserManager<UserDm> _userManager;
 
-    public UserRepository(
-        AppDbContext dbContext,
-        ISharedTxnScope sharedTxnScope,
-        UserManager<UserDm> userManager
-    ) : base(dbContext, sharedTxnScope)
+    public UserRepository(AppDbContext dbContext, UserManager<UserDm> userManager) : base(dbContext)
     {
         _dbContext = dbContext;
         _userManager = userManager;

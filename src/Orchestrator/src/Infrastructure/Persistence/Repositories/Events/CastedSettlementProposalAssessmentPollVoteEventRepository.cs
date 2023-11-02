@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
 using Domain.Aggregates.Events;
-using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories.Events;
 
@@ -10,10 +9,7 @@ internal class CastedSettlementProposalAssessmentPollVoteEventRepository :
 {
     private new readonly EventDbContext _dbContext;
 
-    public CastedSettlementProposalAssessmentPollVoteEventRepository(
-        EventDbContext dbContext,
-        ISharedTxnScope sharedTxnScope
-    ) : base(dbContext, sharedTxnScope)
+    public CastedSettlementProposalAssessmentPollVoteEventRepository(EventDbContext dbContext) : base(dbContext)
     {
         _dbContext = dbContext;
     }

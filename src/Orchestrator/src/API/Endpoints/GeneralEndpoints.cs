@@ -1,4 +1,4 @@
-using Application;
+using Application.Common.Interfaces;
 using Application.General.Queries.GetTags;
 
 namespace API.Endpoints;
@@ -11,7 +11,7 @@ public static class GeneralEndpoints
         {
             app.MapGet(
                 "/tags",
-                (SenderWrapper sender, HttpContext context) =>
+                (ISenderWrapper sender, HttpContext context) =>
                     sender.Send(new GetTagsQuery(), serviceProvider: context.RequestServices)
             )
         };

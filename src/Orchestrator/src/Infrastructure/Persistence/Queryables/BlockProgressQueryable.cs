@@ -8,10 +8,7 @@ internal class BlockProgressQueryable : Queryable, IBlockProgressQueryable
 {
     private new readonly EventDbContext _dbContext;
 
-    public BlockProgressQueryable(
-        EventDbContext dbContext,
-        ISharedTxnScope sharedTxnScope
-    ) : base(dbContext, sharedTxnScope)
+    public BlockProgressQueryable(EventDbContext dbContext) : base(dbContext)
     {
         _dbContext = dbContext;
     }

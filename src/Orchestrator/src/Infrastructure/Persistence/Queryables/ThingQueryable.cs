@@ -10,10 +10,7 @@ namespace Infrastructure.Persistence.Queryables;
 
 internal class ThingQueryable : Queryable, IThingQueryable
 {
-    public ThingQueryable(
-        AppDbContext dbContext,
-        ISharedTxnScope sharedTxnScope
-    ) : base(dbContext, sharedTxnScope) { }
+    public ThingQueryable(AppDbContext dbContext) : base(dbContext) { }
 
     public async Task<IEnumerable<ThingPreviewQm>> GetForSubject(Guid subjectId, string? userId)
     {

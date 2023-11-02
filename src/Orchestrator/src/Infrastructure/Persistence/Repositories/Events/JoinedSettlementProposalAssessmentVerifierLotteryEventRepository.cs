@@ -4,7 +4,6 @@ using Npgsql;
 using NpgsqlTypes;
 
 using Domain.Aggregates.Events;
-using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories.Events;
 
@@ -14,10 +13,7 @@ internal class JoinedSettlementProposalAssessmentVerifierLotteryEventRepository 
 {
     private new readonly EventDbContext _dbContext;
 
-    public JoinedSettlementProposalAssessmentVerifierLotteryEventRepository(
-        EventDbContext dbContext,
-        ISharedTxnScope sharedTxnScope
-    ) : base(dbContext, sharedTxnScope)
+    public JoinedSettlementProposalAssessmentVerifierLotteryEventRepository(EventDbContext dbContext) : base(dbContext)
     {
         _dbContext = dbContext;
     }

@@ -1,4 +1,3 @@
-using Application;
 using Application.User.Commands.MarkNotificationsAsRead;
 using Application.User.Commands.SignInWithEthereum;
 using Application.User.Queries.GetNonceForSiwe;
@@ -8,6 +7,7 @@ using Application.User.Commands.GenerateAssertionOptions;
 using Application.User.Commands.VerifyAssertionAndGetKeyShare;
 using Application.User.Commands.GenerateAssertionOptionsForSignIn;
 using Application.User.Commands.VerifyAssertionAndSignIn;
+using Application.Common.Interfaces;
 
 namespace API.Endpoints;
 
@@ -19,55 +19,55 @@ public static class UserEndpoints
 
         group.MapGet(
             "/siwe/{address}",
-            ([AsParameters] GetNonceForSiweQuery query, SenderWrapper sender, HttpContext context) =>
+            ([AsParameters] GetNonceForSiweQuery query, ISenderWrapper sender, HttpContext context) =>
                 sender.Send(query, serviceProvider: context.RequestServices)
         );
 
         group.MapPost(
             "/siwe",
-            (SignInWithEthereumCommand command, SenderWrapper sender, HttpContext context) =>
+            (SignInWithEthereumCommand command, ISenderWrapper sender, HttpContext context) =>
                 sender.Send(command, serviceProvider: context.RequestServices)
         );
 
         group.MapPost(
             "/watch-list",
-            (MarkNotificationsAsReadCommand command, SenderWrapper sender, HttpContext context) =>
+            (MarkNotificationsAsReadCommand command, ISenderWrapper sender, HttpContext context) =>
                 sender.Send(command, serviceProvider: context.RequestServices)
         );
 
         group.MapPost(
             "/generate-code-and-attestation-options",
-            (GenerateConfirmationCodeAndAttestationOptionsCommand command, SenderWrapper sender, HttpContext context) =>
+            (GenerateConfirmationCodeAndAttestationOptionsCommand command, ISenderWrapper sender, HttpContext context) =>
                 sender.Send(command, serviceProvider: context.RequestServices)
         );
 
         group.MapPost(
             "/sign-up",
-            (SignUpCommand command, SenderWrapper sender, HttpContext context) =>
+            (SignUpCommand command, ISenderWrapper sender, HttpContext context) =>
                 sender.Send(command, serviceProvider: context.RequestServices)
         );
 
         group.MapPost(
             "/generate-assertion-options",
-            (GenerateAssertionOptionsCommand command, SenderWrapper sender, HttpContext context) =>
+            (GenerateAssertionOptionsCommand command, ISenderWrapper sender, HttpContext context) =>
                 sender.Send(command, serviceProvider: context.RequestServices)
         );
 
         group.MapPost(
             "/verify-assertion-and-get-key-share",
-            (VerifyAssertionAndGetKeyShareCommand command, SenderWrapper sender, HttpContext context) =>
+            (VerifyAssertionAndGetKeyShareCommand command, ISenderWrapper sender, HttpContext context) =>
                 sender.Send(command, serviceProvider: context.RequestServices)
         );
 
         group.MapPost(
             "/generate-assertion-options-for-sign-in",
-            (GenerateAssertionOptionsForSignInCommand command, SenderWrapper sender, HttpContext context) =>
+            (GenerateAssertionOptionsForSignInCommand command, ISenderWrapper sender, HttpContext context) =>
                 sender.Send(command, serviceProvider: context.RequestServices)
         );
 
         group.MapPost(
             "/verify-assertion-and-sign-in",
-            (VerifyAssertionAndSignInCommand command, SenderWrapper sender, HttpContext context) =>
+            (VerifyAssertionAndSignInCommand command, ISenderWrapper sender, HttpContext context) =>
                 sender.Send(command, serviceProvider: context.RequestServices)
         );
 

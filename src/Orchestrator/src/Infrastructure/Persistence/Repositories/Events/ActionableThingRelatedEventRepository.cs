@@ -1,5 +1,4 @@
 using Domain.Aggregates.Events;
-using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories.Events;
 
@@ -7,10 +6,7 @@ internal class ActionableThingRelatedEventRepository : Repository, IActionableTh
 {
     private new readonly EventDbContext _dbContext;
 
-    public ActionableThingRelatedEventRepository(
-        EventDbContext dbContext,
-        ISharedTxnScope sharedTxnScope
-    ) : base(dbContext, sharedTxnScope)
+    public ActionableThingRelatedEventRepository(EventDbContext dbContext) : base(dbContext)
     {
         _dbContext = dbContext;
     }

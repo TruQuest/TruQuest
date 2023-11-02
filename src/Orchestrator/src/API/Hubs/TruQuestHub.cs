@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.SignalR;
 
 using Domain.Results;
-using Application;
 using Application.User.Queries.GetWatchListUpdates;
 using Application.User.Commands.SubscribeToUpdates;
 using Application.User.Commands.UnsubscribeFromUpdates;
 using Application.User.Commands.UnsubThenSubToUpdates;
+using Application.Common.Interfaces;
 
 using API.Hubs.Clients;
 
@@ -14,9 +14,9 @@ namespace API.Hubs;
 public class TruQuestHub : Hub<ITruQuestClient>
 {
     private readonly ILogger<TruQuestHub> _logger;
-    private readonly SenderWrapper _sender;
+    private readonly ISenderWrapper _sender;
 
-    public TruQuestHub(ILogger<TruQuestHub> logger, SenderWrapper sender)
+    public TruQuestHub(ILogger<TruQuestHub> logger, ISenderWrapper sender)
     {
         _logger = logger;
         _sender = sender;

@@ -1,5 +1,4 @@
 using Domain.Aggregates.Events;
-using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories.Events;
 
@@ -9,10 +8,7 @@ internal class ThingValidationVerifierLotteryInitializedEventRepository :
 {
     private new readonly EventDbContext _dbContext;
 
-    public ThingValidationVerifierLotteryInitializedEventRepository(
-        EventDbContext dbContext,
-        ISharedTxnScope sharedTxnScope
-    ) : base(dbContext, sharedTxnScope)
+    public ThingValidationVerifierLotteryInitializedEventRepository(EventDbContext dbContext) : base(dbContext)
     {
         _dbContext = dbContext;
     }

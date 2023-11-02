@@ -14,10 +14,7 @@ internal class ThingValidationVerifierLotteryEventQueryable : Queryable, IThingV
 {
     private new readonly EventDbContext _dbContext;
 
-    public ThingValidationVerifierLotteryEventQueryable(
-        EventDbContext dbContext,
-        ISharedTxnScope sharedTxnScope
-    ) : base(dbContext, sharedTxnScope)
+    public ThingValidationVerifierLotteryEventQueryable(EventDbContext dbContext) : base(dbContext)
     {
         _dbContext = dbContext;
     }

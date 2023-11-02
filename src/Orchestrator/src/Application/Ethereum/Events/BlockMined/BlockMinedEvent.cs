@@ -18,10 +18,10 @@ public class BlockMinedEvent : INotification
 
 internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
 {
-    private readonly SenderWrapper _sender;
+    private readonly ISenderWrapper _sender;
     private readonly ITaskQueryable _taskQueryable;
 
-    public BlockMinedEventHandler(SenderWrapper sender, ITaskQueryable taskQueryable)
+    public BlockMinedEventHandler(ISenderWrapper sender, ITaskQueryable taskQueryable)
     {
         _sender = sender;
         _taskQueryable = taskQueryable;

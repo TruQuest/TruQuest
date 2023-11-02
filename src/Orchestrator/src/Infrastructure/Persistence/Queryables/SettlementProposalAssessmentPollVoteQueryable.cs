@@ -7,10 +7,7 @@ namespace Infrastructure.Persistence.Queryables;
 
 internal class SettlementProposalAssessmentPollVoteQueryable : Queryable, ISettlementProposalAssessmentPollVoteQueryable
 {
-    public SettlementProposalAssessmentPollVoteQueryable(
-        AppDbContext dbContext,
-        ISharedTxnScope sharedTxnScope
-    ) : base(dbContext, sharedTxnScope) { }
+    public SettlementProposalAssessmentPollVoteQueryable(AppDbContext dbContext) : base(dbContext) { }
 
     public async Task<(SettlementProposalAssessmentPollResultQm, IEnumerable<VoteQm>)> GetAllFor(Guid proposalId, string? userId)
     {

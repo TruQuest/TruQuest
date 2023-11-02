@@ -18,7 +18,6 @@ using OpenTelemetry.Metrics;
 
 using Domain.Aggregates;
 using Domain.Aggregates.Events;
-using Application;
 using Application.Common.Interfaces;
 using Infrastructure.Persistence;
 using Infrastructure.Ethereum;
@@ -287,7 +286,7 @@ public class Sut : IAsyncLifetime
             context.User = _user;
         }
 
-        var sender = scope.ServiceProvider.GetRequiredService<SenderWrapper>();
+        var sender = scope.ServiceProvider.GetRequiredService<ISenderWrapper>();
         var result = await sender.Send(request, serviceProvider: scope.ServiceProvider);
 
         return result;

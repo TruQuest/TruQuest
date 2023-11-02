@@ -4,7 +4,6 @@ using Npgsql;
 using NpgsqlTypes;
 
 using Domain.Aggregates;
-using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories;
 
@@ -12,10 +11,7 @@ internal class TaskRepository : Repository, ITaskRepository
 {
     private new readonly AppDbContext _dbContext;
 
-    public TaskRepository(
-        AppDbContext dbContext,
-        ISharedTxnScope sharedTxnScope
-    ) : base(dbContext, sharedTxnScope)
+    public TaskRepository(AppDbContext dbContext) : base(dbContext)
     {
         _dbContext = dbContext;
     }

@@ -7,10 +7,7 @@ namespace Infrastructure.Persistence.Queryables;
 
 internal class ThingValidationPollVoteQueryable : Queryable, IThingValidationPollVoteQueryable
 {
-    public ThingValidationPollVoteQueryable(
-        AppDbContext dbContext,
-        ISharedTxnScope sharedTxnScope
-    ) : base(dbContext, sharedTxnScope) { }
+    public ThingValidationPollVoteQueryable(AppDbContext dbContext) : base(dbContext) { }
 
     public async Task<(ThingValidationPollResultQm, IEnumerable<VoteQm>)> GetAllFor(Guid thingId, string? userId)
     {

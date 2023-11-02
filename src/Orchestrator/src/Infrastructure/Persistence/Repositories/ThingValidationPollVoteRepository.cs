@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
 using Domain.Aggregates;
-using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories;
 
@@ -9,10 +8,7 @@ internal class ThingValidationPollVoteRepository : Repository, IThingValidationP
 {
     private new readonly AppDbContext _dbContext;
 
-    public ThingValidationPollVoteRepository(
-        AppDbContext dbContext,
-        ISharedTxnScope sharedTxnScope
-    ) : base(dbContext, sharedTxnScope)
+    public ThingValidationPollVoteRepository(AppDbContext dbContext) : base(dbContext)
     {
         _dbContext = dbContext;
     }

@@ -5,13 +5,16 @@ using Microsoft.Extensions.Logging;
 
 using MediatR;
 
+using Application;
 using Application.Common.Attributes;
 using Application.Common.Interfaces;
 using Application.Common.Models.IM;
 
-namespace Application;
+using Infrastructure.Persistence;
 
-public class SenderWrapper
+namespace Infrastructure;
+
+public class SenderWrapper : ISenderWrapper
 {
     private readonly ILogger<SenderWrapper> _logger;
     private readonly IServiceProvider _serviceProvider;
@@ -74,11 +77,9 @@ public class SenderWrapper
                         connectionIdProvider.ConnectionId = signalRConnectionId;
                     }
 
-                    var sharedTxnScope = scope.ServiceProvider.GetRequiredService<ISharedTxnScope>();
-                    sharedTxnScope.Init();
+                    using var dbConn = DbConnectionProvider.Init();
 
                     var sender = scope.ServiceProvider.GetRequiredService<ISender>();
-
                     var response = await sender.Send(request);
 
                     if (addToAdditionalSinks)

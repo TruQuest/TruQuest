@@ -15,26 +15,25 @@ using Application.Common.Interfaces;
 using Application.Ethereum.Events.BlockMined;
 using Application.Ethereum.Common.Models.IM;
 
+using Infrastructure.Persistence;
+
 namespace Infrastructure;
 
 public class PublisherWrapper
 {
     private readonly ILogger<PublisherWrapper> _logger;
-    private readonly ISharedTxnScope _sharedTxnScope;
     private readonly IPublisher _publisher;
     private readonly IMemoryCache _memoryCache;
     private readonly IEnumerable<IAdditionalApplicationEventSink> _additionalSinks;
 
     public PublisherWrapper(
         ILogger<PublisherWrapper> logger,
-        ISharedTxnScope sharedTxnScope,
         IPublisher publisher,
         IMemoryCache memoryCache,
         IEnumerable<IAdditionalApplicationEventSink> additionalSinks
     )
     {
         _logger = logger;
-        _sharedTxnScope = sharedTxnScope;
         _publisher = publisher;
         _memoryCache = memoryCache;
         _additionalSinks = additionalSinks;
@@ -63,7 +62,7 @@ public class PublisherWrapper
                 // @@NOTE: The only events that have ExecuteInTxnAttribute are two AttachmentsArchivingCompletedEvents,
                 // both of which are just a bunch of INSERTs, meaning there couldn't (@@??) be a serialization failure.
 
-                _sharedTxnScope.Init();
+                using var dbConn = DbConnectionProvider.Init();
 
                 using var txnScope = new TransactionScope(
                     TransactionScopeOption.Required,

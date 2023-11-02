@@ -5,15 +5,12 @@ using NpgsqlTypes;
 
 using Domain.Aggregates;
 using Application;
-using Application.Common.Interfaces;
 
 namespace Infrastructure.Persistence.Repositories;
 
 internal class ThingUpdateRepository : Repository, IThingUpdateRepository
 {
-    public ThingUpdateRepository(AppDbContext dbContext, ISharedTxnScope sharedTxnScope) :
-        base(dbContext, sharedTxnScope)
-    { }
+    public ThingUpdateRepository(AppDbContext dbContext) : base(dbContext) { }
 
     public async Task AddOrUpdate(params ThingUpdate[] updateEvents)
     {

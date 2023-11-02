@@ -3,20 +3,18 @@ using System.Data.Common;
 
 using Microsoft.EntityFrameworkCore;
 
-using Application.Common.Interfaces;
-
 namespace Infrastructure.Persistence.Queryables;
 
 internal abstract class Queryable
 {
     protected readonly DbContext _dbContext;
 
-    protected Queryable(DbContext dbContext, ISharedTxnScope sharedTxnScope)
+    protected Queryable(DbContext dbContext)
     {
         _dbContext = dbContext;
-        if (sharedTxnScope.DbConnection != null)
+        if (DbConnectionProvider.TryGet(out DbConnection? dbConn))
         {
-            _dbContext.Database.SetDbConnection(sharedTxnScope.DbConnection);
+            _dbContext.Database.SetDbConnection(dbConn!);
         }
     }
 

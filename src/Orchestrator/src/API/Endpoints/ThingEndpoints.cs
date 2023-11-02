@@ -1,4 +1,3 @@
-using Application;
 using Application.Thing.Queries.GetVerifierLotteryParticipants;
 using Application.Thing.Commands.CreateNewThingDraft;
 using Application.Thing.Commands.SubmitNewThing;
@@ -7,6 +6,7 @@ using Application.Thing.Queries.GetVotes;
 using Application.Thing.Commands.CastValidationPollVote;
 using Application.Thing.Queries.GetSettlementProposalsList;
 using Application.Thing.Commands.Watch;
+using Application.Common.Interfaces;
 
 namespace API.Endpoints;
 
@@ -18,7 +18,7 @@ public static class ThingEndpoints
 
         group.MapPost(
             "/draft",
-            (HttpRequest request, SenderWrapper sender, HttpContext context) => sender.Send(
+            (HttpRequest request, ISenderWrapper sender, HttpContext context) => sender.Send(
                 new CreateNewThingDraftCommand(request),
                 serviceProvider: context.RequestServices
             )
@@ -26,13 +26,13 @@ public static class ThingEndpoints
 
         group.MapPost(
             "/submit",
-            (SubmitNewThingCommand command, SenderWrapper sender, HttpContext context) =>
+            (SubmitNewThingCommand command, ISenderWrapper sender, HttpContext context) =>
                 sender.Send(command, serviceProvider: context.RequestServices)
         );
 
         group.MapGet(
             "/{thingId}",
-            ([AsParameters] GetThingQuery query, SenderWrapper sender, HttpContext context) =>
+            ([AsParameters] GetThingQuery query, ISenderWrapper sender, HttpContext context) =>
                 sender.Send(query, serviceProvider: context.RequestServices)
         );
 
@@ -40,14 +40,14 @@ public static class ThingEndpoints
             "/{thingId}/lottery-participants",
             (
                 [AsParameters] GetVerifierLotteryParticipantsQuery query,
-                SenderWrapper sender,
+                ISenderWrapper sender,
                 HttpContext context
             ) => sender.Send(query, serviceProvider: context.RequestServices)
         );
 
         group.MapGet(
             "/{thingId}/votes",
-            ([AsParameters] GetVotesQuery query, SenderWrapper sender, HttpContext context) =>
+            ([AsParameters] GetVotesQuery query, ISenderWrapper sender, HttpContext context) =>
                 sender.Send(query, serviceProvider: context.RequestServices)
         );
 
@@ -56,7 +56,7 @@ public static class ThingEndpoints
             (
                 Guid thingId,
                 CastValidationPollVoteCommand command,
-                SenderWrapper sender,
+                ISenderWrapper sender,
                 HttpContext context
             ) =>
             {
@@ -69,14 +69,14 @@ public static class ThingEndpoints
             "/{thingId}/settlement-proposals",
             (
                 [AsParameters] GetSettlementProposalsListQuery query,
-                SenderWrapper sender,
+                ISenderWrapper sender,
                 HttpContext context
             ) => sender.Send(query, serviceProvider: context.RequestServices)
         );
 
         group.MapPost(
             "/watch",
-            (WatchCommand command, SenderWrapper sender, HttpContext context) =>
+            (WatchCommand command, ISenderWrapper sender, HttpContext context) =>
                 sender.Send(command, serviceProvider: context.RequestServices)
         );
 

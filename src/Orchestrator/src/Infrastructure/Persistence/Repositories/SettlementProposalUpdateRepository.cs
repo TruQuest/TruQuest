@@ -4,16 +4,13 @@ using Npgsql;
 using NpgsqlTypes;
 
 using Domain.Aggregates;
-using Application.Common.Interfaces;
 using Application;
 
 namespace Infrastructure.Persistence.Repositories;
 
 internal class SettlementProposalUpdateRepository : Repository, ISettlementProposalUpdateRepository
 {
-    public SettlementProposalUpdateRepository(AppDbContext dbContext, ISharedTxnScope sharedTxnScope) :
-        base(dbContext, sharedTxnScope)
-    { }
+    public SettlementProposalUpdateRepository(AppDbContext dbContext) : base(dbContext) { }
 
     public async Task AddOrUpdate(params SettlementProposalUpdate[] updateEvents)
     {

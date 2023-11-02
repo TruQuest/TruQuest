@@ -9,10 +9,7 @@ internal class TagQueryable : Queryable, ITagQueryable
 {
     private new readonly AppDbContext _dbContext;
 
-    public TagQueryable(
-        AppDbContext dbContext,
-        ISharedTxnScope sharedTxnScope
-    ) : base(dbContext, sharedTxnScope)
+    public TagQueryable(AppDbContext dbContext) : base(dbContext)
     {
         _dbContext = dbContext;
     }
