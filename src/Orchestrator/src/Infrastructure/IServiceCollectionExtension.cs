@@ -229,6 +229,7 @@ public static class IServiceCollectionExtension
         });
 
         services.AddSingleton<IRequestDispatcher, RequestDispatcher>();
+        services.AddSingleton<IDeadLetterArchiver, DeadLetterArchiver>();
 
         // @@TODO: Check if still need this.
         if (!configuration.GetValue<bool>("DbMigrator"))
@@ -274,6 +275,12 @@ public static class IServiceCollectionExtension
                                     .AddMiddlewares(middlewares =>
                                         middlewares.AddSerializer<MessageSerializer, MessageTypeResolver>()
                                     )
+                            )
+                            .AddProducer<DeadLetterArchiver>(producer =>
+                                producer
+                                    .DefaultTopic(configuration["Kafka:DeadLetterProducer:Topic"])
+                                    .WithAcks(Acks.All)
+                                    .AddMiddlewares(middlewares => middlewares.AddSerializer<MessageSerializer>())
                             )
                     )
             );

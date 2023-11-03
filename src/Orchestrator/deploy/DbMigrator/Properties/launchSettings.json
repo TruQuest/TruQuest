@@ -4,8 +4,7 @@
         "DbMigrator": {
             "commandName": "Project",
             "environmentVariables": {
-                "DOTNET_ENVIRONMENT": "Development",
-                "ConnectionStrings__Postgres": "Host=localhost;Port=5433;Database=TruQuest;Username=postgres;Password=password;SslMode=Disable;"
+                "DOTNET_ENVIRONMENT": "Development"
             }
         }
     }

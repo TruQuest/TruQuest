@@ -2,15 +2,22 @@ using Microsoft.Extensions.Logging;
 
 using KafkaFlow;
 
+using Application.Common.Interfaces;
+
 namespace Infrastructure.Kafka;
 
 internal class RetryOrArchiveMiddleware : IMessageMiddleware
 {
     private readonly ILogger<RetryOrArchiveMiddleware> _logger;
+    private readonly IDeadLetterArchiver _deadLetterArchiver;
 
-    public RetryOrArchiveMiddleware(ILogger<RetryOrArchiveMiddleware> logger)
+    public RetryOrArchiveMiddleware(
+        ILogger<RetryOrArchiveMiddleware> logger,
+        IDeadLetterArchiver deadLetterArchiver
+    )
     {
         _logger = logger;
+        _deadLetterArchiver = deadLetterArchiver;
     }
 
     public async Task Invoke(IMessageContext context, MiddlewareDelegate next)
@@ -42,7 +49,7 @@ internal class RetryOrArchiveMiddleware : IMessageMiddleware
                     "An unretryable (or a retryable with max attempts exhausted) error occured. Putting into Dead-letter topic"
                 );
 
-                // @@TODO!!: Put in Dead-letter topic.
+                await _deadLetterArchiver.Archive(context.Message.Value, context.Headers);
             }
 
             return;

@@ -30,7 +30,7 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ADVERTISED_HOST_NAME: host.docker.internal
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_CREATE_TOPICS: 'thing.events:1:1,updates:1:1,requests:1:1,responses:1:1'
+      KAFKA_CREATE_TOPICS: 'thing.events:1:1,updates:1:1,requests:1:1,responses:1:1,dead-letters:1:1'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
