@@ -10,5 +10,6 @@ public interface IAuthenticationContext
     SecurityToken? Token { get; set; }
     Exception? Failure { get; set; }
 
+    void SetValuesFrom(IAuthenticationContext other);
     string GetFailureMessage();
 }

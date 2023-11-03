@@ -22,6 +22,7 @@ using Application.Common.Interfaces;
 using Application.Common.Behaviors;
 using Infrastructure;
 using Infrastructure.Ethereum;
+using Infrastructure.Persistence;
 
 using API.BackgroundServices;
 using API.Hubs.Filters;
@@ -166,6 +167,8 @@ public static class WebApplicationBuilderExtension
                 options.ClientTimeoutInterval = TimeSpan.FromSeconds(180);
 
                 options.AddFilter<ConvertHandleErrorToHubExceptionFilter>();
+                options.AddFilter<CopyAuthenticationContextToMethodInvocationScopeFilter>();
+                options.AddFilter<AddConnectionIdProviderToMethodInvocationScopeFilter>();
             })
             .AddJsonProtocol(options =>
             {

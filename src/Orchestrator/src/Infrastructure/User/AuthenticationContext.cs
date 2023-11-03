@@ -13,6 +13,13 @@ public class AuthenticationContext : IAuthenticationContext
     public SecurityToken? Token { get; set; }
     public Exception? Failure { get; set; }
 
+    public void SetValuesFrom(IAuthenticationContext other)
+    {
+        User = other.User;
+        Token = other.Token;
+        Failure = other.Failure;
+    }
+
     public string GetFailureMessage()
     {
         if (Failure == null)

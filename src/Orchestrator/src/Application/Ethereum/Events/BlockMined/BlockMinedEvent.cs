@@ -1,5 +1,7 @@
 using System.Text.Json;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using MediatR;
 
 using Domain.Aggregates;
@@ -18,12 +20,12 @@ public class BlockMinedEvent : INotification
 
 internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
 {
-    private readonly ISenderWrapper _sender;
+    private readonly IServiceProvider _serviceProvider;
     private readonly ITaskQueryable _taskQueryable;
 
-    public BlockMinedEventHandler(ISenderWrapper sender, ITaskQueryable taskQueryable)
+    public BlockMinedEventHandler(IServiceProvider serviceProvider, ITaskQueryable taskQueryable)
     {
-        _sender = sender;
+        _serviceProvider = serviceProvider;
         _taskQueryable = taskQueryable;
     }
 
@@ -33,10 +35,15 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
         // @@TODO??: Handle tasks in parallel ?
         foreach (var task in tasks)
         {
+            using var scope = _serviceProvider.CreateScope();
+            var sender = scope.ServiceProvider.GetRequiredService<SenderWrapper>();
+
+            // @@TODO: Implement retry/?archive? logic.
+
             switch (task.Type)
             {
                 case TaskType.CloseThingValidationVerifierLottery:
-                    await _sender.Send(new Thing.Commands.CloseVerifierLottery.CloseVerifierLotteryCommand
+                    await sender.Send(new Thing.Commands.CloseVerifierLottery.CloseVerifierLotteryCommand
                     {
                         Traceparent = ((JsonElement)task.Payload["traceparent"]).GetString()!,
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),
@@ -47,7 +54,7 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
                     });
                     break;
                 case TaskType.CloseThingValidationPoll:
-                    await _sender.Send(new CloseValidationPollCommand
+                    await sender.Send(new CloseValidationPollCommand
                     {
                         Traceparent = ((JsonElement)task.Payload["traceparent"]).GetString()!,
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),
@@ -56,7 +63,7 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
                     });
                     break;
                 case TaskType.CloseSettlementProposalAssessmentVerifierLottery:
-                    await _sender.Send(new Settlement.Commands.CloseVerifierLottery.CloseVerifierLotteryCommand
+                    await sender.Send(new Settlement.Commands.CloseVerifierLottery.CloseVerifierLotteryCommand
                     {
                         Traceparent = ((JsonElement)task.Payload["traceparent"]).GetString()!,
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),
@@ -68,7 +75,7 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
                     });
                     break;
                 case TaskType.CloseSettlementProposalAssessmentPoll:
-                    await _sender.Send(new CloseAssessmentPollCommand
+                    await sender.Send(new CloseAssessmentPollCommand
                     {
                         Traceparent = ((JsonElement)task.Payload["traceparent"]).GetString()!,
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),

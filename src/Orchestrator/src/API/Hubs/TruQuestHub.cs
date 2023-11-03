@@ -1,22 +1,23 @@
 using Microsoft.AspNetCore.SignalR;
 
 using Domain.Results;
+using Application;
 using Application.User.Queries.GetWatchListUpdates;
 using Application.User.Commands.SubscribeToUpdates;
 using Application.User.Commands.UnsubscribeFromUpdates;
 using Application.User.Commands.UnsubThenSubToUpdates;
-using Application.Common.Interfaces;
 
 using API.Hubs.Clients;
+using API.Hubs.Filters;
 
 namespace API.Hubs;
 
 public class TruQuestHub : Hub<ITruQuestClient>
 {
     private readonly ILogger<TruQuestHub> _logger;
-    private readonly ISenderWrapper _sender;
+    private readonly SenderWrapper _sender;
 
-    public TruQuestHub(ILogger<TruQuestHub> logger, ISenderWrapper sender)
+    public TruQuestHub(ILogger<TruQuestHub> logger, SenderWrapper sender)
     {
         _logger = logger;
         _sender = sender;
@@ -29,14 +30,7 @@ public class TruQuestHub : Hub<ITruQuestClient>
 
         if (Context.UserIdentifier != null)
         {
-            var result = await _sender.Send(
-                new GetWatchListUpdatesQuery
-                {
-                    UserId = Context.UserIdentifier
-                },
-                serviceProvider: Context.GetHttpContext()!.RequestServices
-            );
-
+            var result = await _sender.Send(new GetWatchListUpdatesQuery { UserId = Context.UserIdentifier });
             _logger.LogInformation(
                 "User {UserId}: Retrieved {Count} notifications",
                 Context.UserIdentifier,
@@ -47,21 +41,15 @@ public class TruQuestHub : Hub<ITruQuestClient>
         }
     }
 
-    public Task<VoidResult> SubscribeToUpdates(SubscribeToUpdatesCommand command) => _sender.Send(
-        command,
-        serviceProvider: Context.GetHttpContext()!.RequestServices,
-        signalRConnectionId: Context.ConnectionId
-    );
+    [AddConnectionIdProviderToMethodInvocationScope]
+    public Task<VoidResult> SubscribeToUpdates(SubscribeToUpdatesCommand command) =>
+        _sender.Send(command);
 
-    public Task<VoidResult> UnsubscribeFromUpdates(UnsubscribeFromUpdatesCommand command) => _sender.Send(
-        command,
-        serviceProvider: Context.GetHttpContext()!.RequestServices,
-        signalRConnectionId: Context.ConnectionId
-    );
+    [AddConnectionIdProviderToMethodInvocationScope]
+    public Task<VoidResult> UnsubscribeFromUpdates(UnsubscribeFromUpdatesCommand command) =>
+        _sender.Send(command);
 
-    public Task<VoidResult> UnsubThenSubToUpdates(UnsubThenSubToUpdatesCommand command) => _sender.Send(
-        command,
-        serviceProvider: Context.GetHttpContext()!.RequestServices,
-        signalRConnectionId: Context.ConnectionId
-    );
+    [AddConnectionIdProviderToMethodInvocationScope]
+    public Task<VoidResult> UnsubThenSubToUpdates(UnsubThenSubToUpdatesCommand command) =>
+        _sender.Send(command);
 }

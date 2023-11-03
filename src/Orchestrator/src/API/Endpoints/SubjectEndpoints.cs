@@ -1,4 +1,4 @@
-using Application.Common.Interfaces;
+using Application;
 using Application.Subject.Commands.AddNewSubject;
 using Application.Subject.Queries.GetSubject;
 using Application.Subject.Queries.GetSubjects;
@@ -14,28 +14,25 @@ public static class SubjectEndpoints
 
         group.MapPost(
             "/add",
-            (HttpRequest request, ISenderWrapper sender, HttpContext context) => sender.Send(
-                new AddNewSubjectCommand(request),
-                serviceProvider: context.RequestServices
-            )
+            (HttpRequest request, SenderWrapper sender) =>
+                sender.Send(new AddNewSubjectCommand(request))
         );
 
         group.MapGet(
             "/",
-            (ISenderWrapper sender, HttpContext context) =>
-                sender.Send(new GetSubjectsQuery(), serviceProvider: context.RequestServices)
+            (SenderWrapper sender) => sender.Send(new GetSubjectsQuery())
         );
 
         group.MapGet(
             "/{id}",
-            ([AsParameters] GetSubjectQuery query, ISenderWrapper sender, HttpContext context) =>
-                sender.Send(query, serviceProvider: context.RequestServices)
+            ([AsParameters] GetSubjectQuery query, SenderWrapper sender) =>
+                sender.Send(query)
         );
 
         group.MapGet(
             "/{subjectId}/things",
-            ([AsParameters] GetThingsListQuery query, ISenderWrapper sender, HttpContext context) =>
-                sender.Send(query, serviceProvider: context.RequestServices)
+            ([AsParameters] GetThingsListQuery query, SenderWrapper sender) =>
+                sender.Send(query)
         );
 
         group.AddEndpointFilter(Filters.ConvertHandleResult);

@@ -11,7 +11,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Dapper;
 using KafkaFlow;
-using KafkaFlow.TypedHandler;
 using Nethereum.Signer;
 using Nethereum.Signer.EIP712;
 using Nethereum.BlockchainProcessing.ProgressRepositories;
@@ -28,7 +27,6 @@ using Infrastructure.Persistence.Repositories;
 using Infrastructure.Files;
 using Infrastructure.Persistence.Repositories.Events;
 using Infrastructure.Kafka;
-using Infrastructure.Kafka.Events;
 using Infrastructure.Persistence.Queryables;
 using Infrastructure.Ethereum.ERC4337;
 
@@ -204,7 +202,6 @@ public static class IServiceCollectionExtension
         services.AddScoped<ITaskQueryable, TaskQueryable>();
 
         services.AddSingleton<IContractEventListener, ContractEventListener>();
-        services.AddSingleton<ISenderWrapper, SenderWrapper>();
         services.AddScoped<PublisherWrapper>();
 
         services.AddSingleton<AccountProvider>();
@@ -233,6 +230,7 @@ public static class IServiceCollectionExtension
 
         services.AddSingleton<IRequestDispatcher, RequestDispatcher>();
 
+        // @@TODO: Check if still need this.
         if (!configuration.GetValue<bool>("DbMigrator"))
         {
             services.AddKafka(kafka =>
@@ -252,22 +250,8 @@ public static class IServiceCollectionExtension
                                         middlewares
                                             .AddSerializer<MessageSerializer, MessageTypeResolver>()
                                             .Add<EventTelemetryMiddleware>(MiddlewareLifetime.Singleton)
-                                            .AddTypedHandlers(handlers =>
-                                                handlers
-                                                    .WithHandlerLifetime(InstanceLifetime.Singleton)
-                                                    .AddHandlers(new[] // @@TODO: Add with reflection.
-                                                    {
-                                                        typeof(ThingFundedEventHandler),
-                                                        typeof(ThingValidationVerifierLotteryClosedInFailureEventHandler),
-                                                        typeof(ThingValidationVerifierLotteryClosedWithSuccessEventHandler),
-                                                        typeof(ThingValidationPollFinalizedEventHandler),
-                                                        typeof(SettlementProposalFundedEventHandler),
-                                                        typeof(SettlementProposalAssessmentVerifierLotteryClosedWithSuccessEventHandler),
-                                                        typeof(SettlementProposalAssessmentPollFinalizedEventHandler),
-                                                        typeof(ThingUpdateEventHandler),
-                                                        typeof(SettlementProposalUpdateEventHandler)
-                                                    })
-                                            )
+                                            .Add<RetryOrArchiveMiddleware>(MiddlewareLifetime.Singleton)
+                                            .Add<EventConsumer>(MiddlewareLifetime.Singleton)
                                     )
                             )
                             .AddConsumer(consumer =>

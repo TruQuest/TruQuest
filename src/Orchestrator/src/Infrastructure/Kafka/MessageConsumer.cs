@@ -43,6 +43,8 @@ internal class MessageConsumer : IMessageMiddleware
 
     public async Task Invoke(IMessageContext context, MiddlewareDelegate next)
     {
+        // @@TODO: Refactor. Use MessageTypeResolver and MessageSerializer instead of this manual stuff.
+
         var responseType = _responseMessagesAssembly.GetType(
             _responseMessagesNamespace + Encoding.UTF8.GetString(context.Headers["trq.responseType"])
         )!;

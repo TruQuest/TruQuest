@@ -1,4 +1,4 @@
-using Application.Common.Interfaces;
+using Application;
 using Application.Settlement.Commands.CastAssessmentPollVote;
 using Application.Settlement.Commands.CreateNewSettlementProposalDraft;
 using Application.Settlement.Commands.SubmitNewSettlementProposal;
@@ -16,39 +16,34 @@ public static class SettlementProposalEndpoints
 
         group.MapPost(
             "/draft",
-            (HttpRequest request, ISenderWrapper sender, HttpContext context) => sender.Send(
-                new CreateNewSettlementProposalDraftCommand(request),
-                serviceProvider: context.RequestServices
-            )
+            (HttpRequest request, SenderWrapper sender) =>
+                sender.Send(new CreateNewSettlementProposalDraftCommand(request))
         );
 
         group.MapGet(
             "/{proposalId}",
-            ([AsParameters] GetSettlementProposalQuery query, ISenderWrapper sender, HttpContext context) =>
-                sender.Send(query, serviceProvider: context.RequestServices)
+            ([AsParameters] GetSettlementProposalQuery query, SenderWrapper sender) =>
+                sender.Send(query)
         );
 
         group.MapPost(
             "/submit",
-            (SubmitNewSettlementProposalCommand command, ISenderWrapper sender, HttpContext context) =>
-                sender.Send(command, serviceProvider: context.RequestServices)
+            (SubmitNewSettlementProposalCommand command, SenderWrapper sender) =>
+                sender.Send(command)
         );
 
         app
             .MapGet(
                 "/things/{thingId}/proposals/{proposalId}/lottery-participants",
-                (
-                    [AsParameters] GetVerifierLotteryParticipantsQuery query,
-                    ISenderWrapper sender,
-                    HttpContext context
-                ) => sender.Send(query, serviceProvider: context.RequestServices)
+                ([AsParameters] GetVerifierLotteryParticipantsQuery query, SenderWrapper sender) =>
+                    sender.Send(query)
             )
             .AddEndpointFilter(Filters.ConvertHandleResult);
 
         group.MapGet(
             "/{proposalId}/votes",
-            ([AsParameters] GetVotesQuery query, ISenderWrapper sender, HttpContext context) =>
-                sender.Send(query, serviceProvider: context.RequestServices)
+            ([AsParameters] GetVotesQuery query, SenderWrapper sender) =>
+                sender.Send(query)
         );
 
         group.MapPost(
@@ -56,12 +51,11 @@ public static class SettlementProposalEndpoints
             (
                 Guid proposalId,
                 CastAssessmentPollVoteCommand command,
-                ISenderWrapper sender,
-                HttpContext context
+                SenderWrapper sender
             ) =>
             {
                 command.Input.SettlementProposalId = proposalId;
-                return sender.Send(command, serviceProvider: context.RequestServices);
+                return sender.Send(command);
             }
         );
 

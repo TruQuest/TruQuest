@@ -101,9 +101,7 @@ public class PublisherWrapper
                 {
                     await _publisher.Publish(@event);
                 }
-                catch (PostgresException ex) when (
-                    ex.SqlState == PostgresErrorCodes.UniqueViolation
-                )
+                catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.UniqueViolation)
                 {
                     _logger.LogWarning(
                         ex,
@@ -126,10 +124,7 @@ public class PublisherWrapper
 
             if (addToAdditionalSinks)
             {
-                foreach (var sink in _additionalSinks)
-                {
-                    await sink.Add(@event);
-                }
+                foreach (var sink in _additionalSinks) await sink.Add(@event);
             }
         }
         finally

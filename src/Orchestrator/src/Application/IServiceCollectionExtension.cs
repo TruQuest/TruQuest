@@ -10,6 +10,8 @@ public static class IServiceCollectionExtension
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
+        services.AddScoped<SenderWrapper>();
+
         services.AddValidatorsFromAssembly(
             Assembly.GetExecutingAssembly(),
             lifetime: ServiceLifetime.Singleton,
