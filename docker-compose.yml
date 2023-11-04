@@ -143,6 +143,7 @@ services:
     volumes:
       - './src/Orchestrator/services/FileArchiveService/user_files:/user_files'
       - './src/Orchestrator/services/FileArchiveService/images:/images'
+      - './src/Orchestrator/services/FileArchiveService/screenshots:/screenshots'
     networks:
       - truquest
     depends_on:

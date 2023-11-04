@@ -478,6 +478,7 @@ $RECYCLE.BIN/
 
 /services/FileArchiveService/images
 /services/FileArchiveService/user_files
+/services/FileArchiveService/screenshots
 
 # Local .terraform directories
 **/.terraform/*

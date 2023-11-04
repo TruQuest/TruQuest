@@ -27,7 +27,7 @@ internal class ImageSaver : IImageSaver
 
         _acceptableMimeTypes = new(configuration["Files:Images:AcceptableMimeTypes"]!.Split(','));
         _userImageMaxSizeBytes = configuration.GetValue<int>("Files:Images:UserImageMaxSizeKb") * 1024;
-        _webPageScreenshotMaxSizeBytes = configuration.GetValue<int>("Files:Images:WebPageScreenshotMaxSizeKb") * 1024;
+        _webPageScreenshotMaxSizeBytes = configuration.GetValue<int>("ApiFlash:ScreenshotMaxSizeKb") * 1024;
         _fetchBufferSizeBytes = configuration.GetValue<int>("Files:FetchBufferSizeBytes");
     }
 

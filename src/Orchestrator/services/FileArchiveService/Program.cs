@@ -79,7 +79,14 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<IImageSignatureVerifier, ImageSignatureVerifier>();
         services.AddSingleton<IImageSaver, ImageSaver>();
         services.AddSingleton<IImageCropper, ImageCropper>();
-        services.AddSingleton<IWebPageScreenshotTaker, WebPageScreenshotTaker>();
+        if (configuration.GetValue<string>("Files:TakeWebPageScreenshotsUsing") == "Playwright")
+        {
+            services.AddSingleton<IWebPageScreenshotTaker, WebPageScreenshotTakerUsingPlaywright>();
+        }
+        else
+        {
+            services.AddSingleton<IWebPageScreenshotTaker, WebPageScreenshotTakerUsingApiFlash>();
+        }
         services.AddSingleton<IFileStorage, FileStorage>();
         services.AddSingleton<IFileArchiver, FileArchiver>();
         services.AddSingleton<IResponseDispatcher, ResponseDispatcher>();

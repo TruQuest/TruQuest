@@ -1,5 +1,3 @@
-using SixLabors.ImageSharp.Formats.Jpeg;
-
 namespace Services;
 
 internal class ImageCropper : IImageCropper
@@ -24,9 +22,9 @@ internal class ImageCropper : IImageCropper
 
         image.Mutate(ctx => ctx.Crop(new Rectangle(0, 0, targetWidth, targetHeight)));
 
-        var croppedImagePath = $"{Path.GetDirectoryName(filePath)}/{Path.GetFileNameWithoutExtension(filePath)}-cropped.jpeg";
+        var croppedImagePath = $"{Path.GetDirectoryName(filePath)}/{Path.GetFileNameWithoutExtension(filePath)}-cropped.png";
         using var targetFs = new FileStream(croppedImagePath, FileMode.CreateNew, FileAccess.Write);
-        await image.SaveAsJpegAsync(targetFs, new JpegEncoder { Quality = 100 });
+        await image.SaveAsPngAsync(targetFs);
 
         return croppedImagePath;
     }

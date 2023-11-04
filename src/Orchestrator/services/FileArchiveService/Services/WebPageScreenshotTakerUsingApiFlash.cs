@@ -1,16 +1,16 @@
 namespace Services;
 
-internal class WebPageScreenshotTaker : IWebPageScreenshotTaker
+internal class WebPageScreenshotTakerUsingApiFlash : IWebPageScreenshotTaker
 {
-    private readonly ILogger<WebPageScreenshotTaker> _logger;
+    private readonly ILogger<WebPageScreenshotTakerUsingApiFlash> _logger;
     private readonly IImageSaver _imageSaver;
 
     private readonly string _apiFlashUrl;
     private readonly string _apiFlashAccessKey;
 
-    public WebPageScreenshotTaker(
+    public WebPageScreenshotTakerUsingApiFlash(
         IConfiguration configuration,
-        ILogger<WebPageScreenshotTaker> logger,
+        ILogger<WebPageScreenshotTakerUsingApiFlash> logger,
         IImageSaver imageSaver
     )
     {

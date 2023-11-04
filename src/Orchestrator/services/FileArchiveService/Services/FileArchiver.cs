@@ -170,23 +170,28 @@ internal class FileArchiver : IFileArchiver
                 .Select(t => t.Uri)
             );
 
-            // @@TODO: Check non-emptiness of filePaths.
-
             List<string> ipfsCids;
-            try
+            if (filePaths.Any())
             {
-                ipfsCids = await _fileStorage.Upload(filePaths);
-            }
-            catch (Exception e)
-            {
-                _logger.LogWarning(e, "Error adding images to ipfs");
-                foreach (var task in saveImageTasks)
+                try
                 {
-                    var filePath = await task;
-                    File.Delete(filePath);
+                    ipfsCids = await _fileStorage.Upload(filePaths);
                 }
+                catch (Exception e)
+                {
+                    _logger.LogWarning(e, "Error adding images to ipfs");
+                    foreach (var task in saveImageTasks)
+                    {
+                        var filePath = await task;
+                        File.Delete(filePath);
+                    }
 
-                return new Error("Error adding images to ipfs");
+                    return new Error("Error adding images to ipfs");
+                }
+            }
+            else
+            {
+                ipfsCids = new();
             }
 
             progress?.Report(40);

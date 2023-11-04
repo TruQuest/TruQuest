@@ -330,7 +330,7 @@ public class E2ETests : IAsyncLifetime
             ("subjectId", subjectId.ToString()),
             ("title", "Go to the Moooooon..."),
             ("details", _dummyQuillContentJson),
-            ("evidence", "https://google.com"),
+            ("evidence", "https://reddit.com|https://dtf.ru|https://vc.ru"),
             ("tags", "1|2|3")
         ))
         {
