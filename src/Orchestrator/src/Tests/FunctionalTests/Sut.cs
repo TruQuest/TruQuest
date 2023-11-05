@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using System.IdentityModel.Tokens.Jwt;
 
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Builder;
@@ -23,13 +22,17 @@ using Application.Common.Interfaces;
 using Infrastructure.Persistence;
 using Infrastructure.Ethereum;
 using API;
+using API.BackgroundServices;
 
 using Tests.FunctionalTests.Helpers;
 
 namespace Tests.FunctionalTests;
 
-public class Sut : IAsyncLifetime
+public class Sut
 {
+    private static readonly object _sutInitiliazedLock = new();
+    private static TaskCompletionSource<Sut>? _sutInitialized;
+
     public class HttpRequestForFileUpload : IDisposable
     {
         public required HttpRequest Request { get; init; }
@@ -42,9 +45,7 @@ public class Sut : IAsyncLifetime
     private WebApplication _app;
     private Respawner _respawner;
 
-    private ClaimsPrincipal? _user;
-
-    public Dictionary<string, string> _accountNameToUserId = new()
+    public readonly Dictionary<string, string> AccountNameToUserId = new()
     {
         ["Submitter"] = "615170f7-760f-4383-9276-c3462387945e",
         ["Proposer"] = "1c8f8397-bfbf-44f9-9231-3f5865178647",
@@ -56,12 +57,38 @@ public class Sut : IAsyncLifetime
         ["Verifier6"] = "8777cd9c-122a-4f49-bba0-9f366654a5c4",
     };
 
-    public ApplicationEventSink ApplicationEventSink { get; private set; }
-    public ApplicationRequestSink ApplicationRequestSink { get; private set; }
+    public ApplicationEventChannel ApplicationEventChannel { get; private set; }
+    public ApplicationRequestChannel ApplicationRequestChannel { get; private set; }
     public AccountProvider AccountProvider { get; private set; }
     public Signer Signer { get; private set; }
     public BlockchainManipulator BlockchainManipulator { get; private set; }
     public ContractCaller ContractCaller { get; private set; }
+
+    public static async Task<Sut> GetOrInit()
+    {
+        var mustInit = false;
+        TaskCompletionSource<Sut> sutInitialized;
+        lock (_sutInitiliazedLock)
+        {
+            if (_sutInitialized == null)
+            {
+                _sutInitialized = new();
+                mustInit = true;
+            }
+            sutInitialized = _sutInitialized;
+        }
+
+        if (mustInit)
+        {
+            var sut = new Sut();
+            await sut.InitializeAsync();
+            sutInitialized.SetResult(sut);
+
+            return sut;
+        }
+
+        return await sutInitialized.Task;
+    }
 
     public async Task InitializeAsync()
     {
@@ -71,10 +98,10 @@ public class Sut : IAsyncLifetime
         appBuilder.Configuration.AddJsonFile("appsettings.Testing.json", optional: false);
         appBuilder.ConfigureServices();
 
-        ApplicationEventSink = new ApplicationEventSink();
-        appBuilder.Services.AddSingleton<IAdditionalApplicationEventSink>(ApplicationEventSink);
-        ApplicationRequestSink = new ApplicationRequestSink();
-        appBuilder.Services.AddSingleton<IAdditionalApplicationRequestSink>(ApplicationRequestSink);
+        ApplicationEventChannel = new ApplicationEventChannel();
+        appBuilder.Services.AddSingleton<IAdditionalApplicationEventSink>(ApplicationEventChannel);
+        ApplicationRequestChannel = new ApplicationRequestChannel();
+        appBuilder.Services.AddSingleton<IAdditionalApplicationRequestSink>(ApplicationRequestChannel);
 
         _app = appBuilder.Build().ConfigurePipeline();
 
@@ -123,9 +150,19 @@ public class Sut : IAsyncLifetime
         // actually start, so, instead, we resolve these providers, which accomplishes the same thing.
         _app.Services.GetRequiredService<TracerProvider>();
         _app.Services.GetRequiredService<MeterProvider>();
+
+        await _app.StartKafkaBus();
+        await StartHostedService<BlockTracker>();
+        await StartHostedService<ContractEventTracker>();
     }
 
-    public Task DisposeAsync() => Task.CompletedTask;
+    // @@!!: There is no way to actually call it right now.
+    public async Task DisposeAsync()
+    {
+        await StopHostedService<ContractEventTracker>();
+        await StopHostedService<BlockTracker>();
+        // @@TODO: Stop Kafka bus.
+    }
 
     public async Task<TResult> ExecWithService<TService, TResult>(
         Func<TService, Task<TResult>> func
@@ -138,8 +175,6 @@ public class Sut : IAsyncLifetime
 
         return result;
     }
-
-    public Task StartKafkaBus() => _app.StartKafkaBus();
 
     public Task StartHostedService<T>() where T : IHostedService =>
         _app.Services
@@ -160,7 +195,7 @@ public class Sut : IAsyncLifetime
         var appDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await appDbContext.Database.MigrateAsync();
 
-        foreach (var kv in _accountNameToUserId)
+        foreach (var kv in AccountNameToUserId)
         {
             appDbContext.Users.Add(new User
             {
@@ -172,7 +207,7 @@ public class Sut : IAsyncLifetime
         }
         await appDbContext.SaveChangesAsync();
 
-        foreach (var kv in _accountNameToUserId)
+        foreach (var kv in AccountNameToUserId)
         {
             appDbContext.UserClaims.AddRange(new IdentityUserClaim<string>[]
             {
@@ -208,41 +243,14 @@ public class Sut : IAsyncLifetime
         var appDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await appDbContext.Database.OpenConnectionAsync();
         await _respawner.ResetAsync(appDbContext.Database.GetDbConnection());
-
-        _user = null;
-
-        ApplicationEventSink.Reset();
-        ApplicationRequestSink.Reset();
     }
 
     public T GetConfigurationValue<T>(string key) => _app.Configuration.GetValue<T>(key)!;
 
-    public async Task RunAs(string accountName)
-    {
-        _user = new ClaimsPrincipal(new ClaimsIdentity(
-            new Claim[]
-            {
-                new(JwtRegisteredClaimNames.Sub, _accountNameToUserId[accountName]),
-                new("signer_address", AccountProvider.GetAccount(accountName).Address),
-                new("wallet_address", await ContractCaller.GetWalletAddressFor(accountName))
-            },
-            "Bearer"
-        ));
-    }
-
-    public void RunAsGuest()
-    {
-        _user = null;
-    }
-
     private Stream _getFile(string path)
     {
         var fileInfo = _hostEnvironment.ContentRootFileProvider.GetFileInfo(path);
-        if (fileInfo.Exists)
-        {
-            return fileInfo.CreateReadStream();
-        }
-
+        if (fileInfo.Exists) return fileInfo.CreateReadStream();
         throw new FileNotFoundException();
     }
 
@@ -277,14 +285,14 @@ public class Sut : IAsyncLifetime
         };
     }
 
-    public async Task<TResponse> SendRequest<TResponse>(IRequest<TResponse> request)
+    public async Task<TResponse> SendRequestAs<TResponse>(IRequest<TResponse> request, ClaimsPrincipal? user)
     {
         using var scope = _app.Services.CreateScope();
 
-        if (_user != null)
+        if (user != null)
         {
             var context = scope.ServiceProvider.GetRequiredService<IAuthenticationContext>();
-            context.User = _user;
+            context.User = user;
         }
 
         var sender = scope.ServiceProvider.GetRequiredService<SenderWrapper>();

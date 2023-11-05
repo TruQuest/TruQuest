@@ -24,70 +24,22 @@ using Application.Settlement.Commands.CastAssessmentPollVote;
 using ThingEthEvents = Application.Ethereum.Events.ThingValidationVerifierLottery;
 using ProposalEthEvents = Application.Ethereum.Events.SettlementProposalAssessmentVerifierLottery;
 using Infrastructure.Ethereum.TypedData;
-using API.BackgroundServices;
 
-using Tests.FunctionalTests.Helpers;
 using Tests.FunctionalTests.Helpers.Messages;
 
 namespace Tests.FunctionalTests;
 
-[Collection(nameof(TruQuestTestCollection))]
-public class E2ETests : IAsyncLifetime
+public class E2ETests : BaseTests
 {
-    private readonly Sut _sut;
-    private EventBroadcaster _eventBroadcaster;
-
     private Contract _truQuestContract;
     private Contract _thingValidationVerifierLotteryContract;
     private Contract _thingValidationPollContract;
     private Contract _settlementProposalAssessmentVerifierLotteryContract;
     private Contract _settlementProposalAssessmentPollContract;
 
-    private readonly string _dummyQuillContentJson;
-    private readonly List<Dictionary<string, object>> _dummyQuillContent = new()
+    public override async Task InitializeAsync()
     {
-        new()
-        {
-            ["insert"] = "Hello World!"
-        },
-        new()
-        {
-            ["attributes"] = new Dictionary<string, object>()
-            {
-                ["header"] = 1
-            },
-            ["insert"] = "\n"
-        },
-        new()
-        {
-            ["insert"] = "Welcome to TruQuest!"
-        },
-        new()
-        {
-            ["attributes"] = new Dictionary<string, object>()
-            {
-                ["header"] = 2
-            },
-            ["insert"] = "\n"
-        }
-    };
-
-    public E2ETests(Sut sut)
-    {
-        _sut = sut;
-        _dummyQuillContentJson = JsonSerializer.Serialize(_dummyQuillContent);
-    }
-
-    public async Task InitializeAsync()
-    {
-        await _sut.ResetState();
-
-        _eventBroadcaster = new EventBroadcaster(_sut.ApplicationEventSink.Stream, _sut.ApplicationRequestSink.Stream);
-        _eventBroadcaster.Start();
-
-        await _sut.StartKafkaBus();
-        await _sut.StartHostedService<BlockTracker>();
-        await _sut.StartHostedService<ContractEventTracker>();
+        await base.InitializeAsync();
 
         var network = _sut.GetConfigurationValue<string>("Ethereum:Network");
         var rpcUrl = _sut.GetConfigurationValue<string>($"Ethereum:Networks:{network}:URL");
@@ -126,13 +78,6 @@ public class E2ETests : IAsyncLifetime
             .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:SettlementProposalAssessmentPoll:Address"))
             .OnNetwork(rpcUrl)
             .Find();
-    }
-
-    public async Task DisposeAsync()
-    {
-        await _sut.StopHostedService<ContractEventTracker>();
-        await _sut.StopHostedService<BlockTracker>();
-        _eventBroadcaster.Stop();
     }
 
     private async Task<HashSet<AccountedVote>> _getVotes(ThingQm thing)
@@ -311,9 +256,9 @@ public class E2ETests : IAsyncLifetime
             ("tags", "1|2|3")
         ))
         {
-            await _sut.RunAs(accountName: "Submitter");
+            await _runAs(accountName: "Submitter");
 
-            var subjectResult = await _sut.SendRequest(new AddNewSubjectCommand(request.Request));
+            var subjectResult = await _sendRequest(new AddNewSubjectCommand(request.Request));
 
             subjectId = subjectResult.Data;
         }
@@ -334,14 +279,14 @@ public class E2ETests : IAsyncLifetime
             ("tags", "1|2|3")
         ))
         {
-            var thingDraftResult = await _sut.SendRequest(new CreateNewThingDraftCommand(request.Request));
-
+            var thingDraftResult = await _sendRequest(new CreateNewThingDraftCommand(request.Request));
             thingId = thingDraftResult.Data;
+            _eventBroadcaster.SetThingOfInterest(thingId);
         }
 
         await draftCreatedTcs.Task;
 
-        var thingSubmitResult = await _sut.SendRequest(new SubmitNewThingCommand
+        var thingSubmitResult = await _sendRequest(new SubmitNewThingCommand
         {
             ThingId = thingId
         });
@@ -529,7 +474,7 @@ public class E2ETests : IAsyncLifetime
 
             if (i % 2 == 0)
             {
-                await _sut.RunAs(accountName: verifierAccountName);
+                await _runAs(accountName: verifierAccountName);
 
                 var voteInput = new NewThingValidationPollVoteIm
                 {
@@ -539,7 +484,7 @@ public class E2ETests : IAsyncLifetime
                     Reason = "Some reason"
                 };
 
-                await _sut.SendRequest(new CastValidationPollVoteCommand
+                await _sendRequest(new CastValidationPollVoteCommand
                 {
                     Input = voteInput,
                     Signature = _sut.Signer.SignNewThingValidationPollVoteMessageAs(verifierAccountName, voteInput)
@@ -610,7 +555,7 @@ public class E2ETests : IAsyncLifetime
         ).Value;
         Debug.WriteLine($"*************** Verifier penalty: {verifierPenalty} ***************");
 
-        var thingResult = await _sut.SendRequest(new GetThingQuery { ThingId = thingId });
+        var thingResult = await _sendRequest(new GetThingQuery { ThingId = thingId });
         var thing = thingResult.Data!.Thing;
 
         thing.VoteAggIpfsCid.Should().NotBeNull();
@@ -678,18 +623,19 @@ public class E2ETests : IAsyncLifetime
             ("evidence", "https://google.com")
         ))
         {
-            await _sut.RunAs(accountName: "Proposer");
+            await _runAs(accountName: "Proposer");
 
-            var proposalDraftResult = await _sut.SendRequest(
+            var proposalDraftResult = await _sendRequest(
                 new CreateNewSettlementProposalDraftCommand(request.Request)
             );
 
             proposalId = proposalDraftResult.Data;
+            _eventBroadcaster.SetSettlementProposalOfInterest(proposalId);
         }
 
         await draftCreatedTcs.Task;
 
-        var proposalSubmitResult = await _sut.SendRequest(new SubmitNewSettlementProposalCommand
+        var proposalSubmitResult = await _sendRequest(new SubmitNewSettlementProposalCommand
         {
             ProposalId = proposalId
         });
@@ -840,7 +786,7 @@ public class E2ETests : IAsyncLifetime
 
             if (i % 2 == 0)
             {
-                await _sut.RunAs(accountName: verifierAccountName);
+                await _runAs(accountName: verifierAccountName);
 
                 var voteInput = new NewSettlementProposalAssessmentPollVoteIm
                 {
@@ -851,7 +797,7 @@ public class E2ETests : IAsyncLifetime
                     Reason = "Some reason"
                 };
 
-                await _sut.SendRequest(new CastAssessmentPollVoteCommand
+                await _sendRequest(new CastAssessmentPollVoteCommand
                 {
                     Input = voteInput,
                     Signature = _sut.Signer.SignNewSettlementProposalAssessmentPollVoteMessageAs(verifierAccountName, voteInput)

@@ -124,7 +124,7 @@ public class PublisherWrapper
 
             if (addToAdditionalSinks)
             {
-                foreach (var sink in _additionalSinks) await sink.Add(@event);
+                foreach (var sink in _additionalSinks) sink.Add(@event);
             }
         }
         finally

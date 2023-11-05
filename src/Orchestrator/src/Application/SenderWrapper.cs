@@ -39,7 +39,7 @@ public class SenderWrapper
 
         if (addToAdditionalSinks)
         {
-            foreach (var sink in _additionalSinks) await sink.Add(request);
+            foreach (var sink in _additionalSinks) sink.Add(request);
         }
 
         return response;

@@ -30,12 +30,16 @@ public class SettlementProposalAssessmentVerifierLotteryClosedWithSuccessEventAr
 
 public class EventBroadcaster
 {
+    public ChannelWriter<INotification> EventSink { get; }
     private readonly ChannelReader<INotification> _eventStream;
-    private readonly ChannelReader<IBaseRequest> _requestStream;
-    private readonly CancellationTokenSource _cts;
 
-    // @@TODO: This ain't gonna work with multiple flows going at the same time.
-    // Use Dictionary? Multiple broadcaster instances?
+    public ChannelWriter<IBaseRequest> RequestSink { get; }
+    private readonly ChannelReader<IBaseRequest> _requestStream;
+
+    private readonly CancellationTokenSource _cts;
+    private Guid _thingId;
+    private Guid _proposalId;
+
     public event EventHandler? ThingDraftCreated;
     public event EventHandler? ThingValidationVerifierLotteryInitialized;
     public event EventHandler? JoinedThingValidationVerifierLottery;
@@ -54,14 +58,27 @@ public class EventBroadcaster
 
     public event EventHandler? ThingArchived;
 
-    public EventBroadcaster(
-        ChannelReader<INotification> eventStream,
-        ChannelReader<IBaseRequest> requestStream
-    )
+    public EventBroadcaster()
     {
-        _eventStream = eventStream;
-        _requestStream = requestStream;
+        var eventChannel = Channel.CreateUnbounded<INotification>();
+        EventSink = eventChannel.Writer;
+        _eventStream = eventChannel.Reader;
+
+        var requestChannel = Channel.CreateUnbounded<IBaseRequest>();
+        RequestSink = requestChannel.Writer;
+        _requestStream = requestChannel.Reader;
+
         _cts = new CancellationTokenSource();
+    }
+
+    public void SetThingOfInterest(Guid thingId)
+    {
+        _thingId = thingId;
+    }
+
+    public void SetSettlementProposalOfInterest(Guid proposalId)
+    {
+        _proposalId = proposalId;
     }
 
     public async void Start()
@@ -73,6 +90,21 @@ public class EventBroadcaster
             try
             {
                 var @event = await _eventStream.ReadAsync(_cts.Token);
+                var thingIdProp = @event.GetType().GetProperty("ThingId");
+                var proposalIdProp = @event.GetType().GetProperty("SettlementProposalId") ?? @event.GetType().GetProperty("ProposalId");
+                if (thingIdProp != null)
+                {
+                    var thingIdObj = thingIdProp.GetValue(@event);
+                    var thingId = thingIdObj is Guid ? (Guid)thingIdObj : new Guid((byte[])thingIdObj!);
+                    if (thingId != _thingId) continue;
+                }
+                if (proposalIdProp != null)
+                {
+                    var proposalIdObj = proposalIdProp.GetValue(@event);
+                    var proposalId = proposalIdObj is Guid ? (Guid)proposalIdObj : new Guid((byte[])proposalIdObj!);
+                    if (proposalId != _proposalId) continue;
+                }
+
                 Debug.WriteLine($"************ {GetType().Name}: {@event.GetType().Name} ************");
                 if (@event is ThingEvents.AttachmentsArchivingCompleted.AttachmentsArchivingCompletedEvent)
                 {

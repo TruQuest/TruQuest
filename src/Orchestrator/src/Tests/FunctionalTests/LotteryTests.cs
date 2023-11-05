@@ -1,4 +1,3 @@
-using System.Text.Json;
 using System.Security.Cryptography;
 using System.Diagnostics;
 
@@ -14,71 +13,22 @@ using Application.Thing.Commands.SubmitNewThing;
 using Application.Ethereum.Events.ThingValidationVerifierLottery.LotteryClosedInFailure;
 using Application.Thing.Queries.GetThing;
 using Application.Common.Models.QM;
-using API.BackgroundServices;
-
-using Tests.FunctionalTests.Helpers;
 
 namespace Tests.FunctionalTests;
 
-[Collection(nameof(TruQuestTestCollection))]
-public class LotteryTests : IAsyncLifetime
+public class LotteryTests : BaseTests
 {
-    private readonly Sut _sut;
-    private EventBroadcaster _eventBroadcaster;
-
     private Contract _truQuestContract;
     private Contract _thingValidationVerifierLotteryContract;
     private Contract _thingValidationPollContract;
-
-    private readonly string _dummyQuillContentJson;
-    private readonly List<Dictionary<string, object>> _dummyQuillContent = new()
-    {
-        new()
-        {
-            ["insert"] = "Hello World!"
-        },
-        new()
-        {
-            ["attributes"] = new Dictionary<string, object>()
-            {
-                ["header"] = 1
-            },
-            ["insert"] = "\n"
-        },
-        new()
-        {
-            ["insert"] = "Welcome to TruQuest!"
-        },
-        new()
-        {
-            ["attributes"] = new Dictionary<string, object>()
-            {
-                ["header"] = 2
-            },
-            ["insert"] = "\n"
-        }
-    };
 
     private Guid _thingId;
     private string _submitterId;
     private long _submitterInitialBalance;
 
-    public LotteryTests(Sut sut)
+    public override async Task InitializeAsync()
     {
-        _sut = sut;
-        _dummyQuillContentJson = JsonSerializer.Serialize(_dummyQuillContent);
-    }
-
-    public async Task InitializeAsync()
-    {
-        await _sut.ResetState();
-
-        _eventBroadcaster = new EventBroadcaster(_sut.ApplicationEventSink.Stream, _sut.ApplicationRequestSink.Stream);
-        _eventBroadcaster.Start();
-
-        await _sut.StartKafkaBus();
-        await _sut.StartHostedService<BlockTracker>();
-        await _sut.StartHostedService<ContractEventTracker>();
+        await base.InitializeAsync();
 
         var network = _sut.GetConfigurationValue<string>("Ethereum:Network");
         var rpcUrl = _sut.GetConfigurationValue<string>($"Ethereum:Networks:{network}:URL");
@@ -107,13 +57,6 @@ public class LotteryTests : IAsyncLifetime
         await _initializeThingLottery();
     }
 
-    public async Task DisposeAsync()
-    {
-        await _sut.StopHostedService<ContractEventTracker>();
-        await _sut.StopHostedService<BlockTracker>();
-        _eventBroadcaster.Stop();
-    }
-
     private async Task _initializeThingLottery()
     {
         Guid subjectId;
@@ -125,9 +68,9 @@ public class LotteryTests : IAsyncLifetime
             ("tags", "1|2|3")
         ))
         {
-            await _sut.RunAs(accountName: "Submitter");
+            await _runAs(accountName: "Proposer");
 
-            var subjectResult = await _sut.SendRequest(new AddNewSubjectCommand(request.Request));
+            var subjectResult = await _sendRequest(new AddNewSubjectCommand(request.Request));
 
             subjectId = subjectResult.Data;
         }
@@ -143,18 +86,19 @@ public class LotteryTests : IAsyncLifetime
             ("subjectId", subjectId.ToString()),
             ("title", "Go to the Moooooon..."),
             ("details", _dummyQuillContentJson),
-            ("evidence", "https://google.com"),
+            ("evidence", "https://ycombinator.com|https://habr.com|https://sports.ru"),
             ("tags", "1|2|3")
         ))
         {
-            var thingDraftResult = await _sut.SendRequest(new CreateNewThingDraftCommand(request.Request));
-
+            var thingDraftResult = await _sendRequest(new CreateNewThingDraftCommand(request.Request));
             _thingId = thingDraftResult.Data;
+
+            _eventBroadcaster.SetThingOfInterest(_thingId);
         }
 
         await draftCreatedTcs.Task;
 
-        var thingSubmitResult = await _sut.SendRequest(new SubmitNewThingCommand
+        var thingSubmitResult = await _sendRequest(new SubmitNewThingCommand
         {
             ThingId = _thingId
         });
@@ -166,7 +110,7 @@ public class LotteryTests : IAsyncLifetime
                 .GetValue<SolUint256>()
         ).Value;
 
-        _submitterInitialBalance = await _sut.ContractCaller.GetAvailableFunds("Submitter");
+        _submitterInitialBalance = await _sut.ContractCaller.GetAvailableFunds("Proposer");
 
         var lotteryInitializedTcs = new TaskCompletionSource();
         _eventBroadcaster.ThingValidationVerifierLotteryInitialized += delegate
@@ -176,12 +120,12 @@ public class LotteryTests : IAsyncLifetime
 
         var thingIdBytes = _thingId.ToByteArray();
 
-        await _sut.ContractCaller.FundThingAs("Submitter", thingIdBytes, thingSubmitResult.Data!.Signature);
+        await _sut.ContractCaller.FundThingAs("Proposer", thingIdBytes, thingSubmitResult.Data!.Signature);
 
-        var submitterBalance = await _sut.ContractCaller.GetAvailableFunds("Submitter");
+        var submitterBalance = await _sut.ContractCaller.GetAvailableFunds("Proposer");
         submitterBalance.Should().Be(_submitterInitialBalance - thingStake);
 
-        var submitterAddress = await _sut.ContractCaller.GetWalletAddressFor("Submitter");
+        var submitterAddress = await _sut.ContractCaller.GetWalletAddressFor("Proposer");
 
         var submitter = await _truQuestContract
             .WalkStorage()
@@ -237,7 +181,7 @@ public class LotteryTests : IAsyncLifetime
 
         for (int i = 1; i <= verifierCount; ++i)
         {
-            var verifierAccountName = $"Verifier{i}";
+            var verifierAccountName = $"Verifier{i + 3}";
 
             var userData = RandomNumberGenerator.GetBytes(32);
 
@@ -280,7 +224,7 @@ public class LotteryTests : IAsyncLifetime
         }
 
         // Submitter should also be unstaked without any penalty.
-        var submitterBalance = await _sut.ContractCaller.GetAvailableFunds("Submitter");
+        var submitterBalance = await _sut.ContractCaller.GetAvailableFunds("Proposer");
         submitterBalance.Should().Be(_submitterInitialBalance);
 
         await thingArchivedTcs.Task;

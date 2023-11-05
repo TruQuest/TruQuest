@@ -138,6 +138,8 @@ internal class FileArchiver : IFileArchiver
 
         if (archiveTasks.Any())
         {
+            // @@TODO: Delete local files after upload.
+
             progress?.Report(20);
 
             var saveImageTasks = archiveTasks

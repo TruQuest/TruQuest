@@ -4,5 +4,5 @@ namespace Application.Common.Interfaces;
 
 public interface IAdditionalApplicationRequestSink
 {
-    ValueTask Add(IBaseRequest request);
+    void Add(IBaseRequest request);
 }

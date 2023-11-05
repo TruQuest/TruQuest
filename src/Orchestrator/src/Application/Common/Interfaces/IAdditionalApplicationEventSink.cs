@@ -4,5 +4,5 @@ namespace Application.Common.Interfaces;
 
 public interface IAdditionalApplicationEventSink
 {
-    ValueTask Add(INotification @event);
+    void Add(INotification @event);
 }
