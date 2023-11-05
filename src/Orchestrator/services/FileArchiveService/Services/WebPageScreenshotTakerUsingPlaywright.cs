@@ -10,7 +10,7 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
 {
     private class WorkerAssignment
     {
-        public BlockingCollection<(IEnumerable<string> Urls, TaskCompletionSource<List<string>> Tcs)> Worker { get; init; }
+        public int WorkerIndex { get; init; }
         public int CurrentSize { get; init; }
         public int TargetSize { get; set; }
     }
@@ -21,8 +21,11 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
     private readonly ChannelReader<(IEnumerable<string> Urls, TaskCompletionSource<List<string>?> Tcs)> _stream;
 
     private readonly BlockingCollection<(IEnumerable<string> Urls, TaskCompletionSource<List<string>> Tcs)>[] _workerQueues;
+    private readonly int[] _workerQueueSizes;
 
     private readonly int _targetAvgLoad;
+    private readonly int _scrollTimeoutMs;
+    private readonly int _screenshotTimeoutMs;
 
     public WebPageScreenshotTakerUsingPlaywright(
         IConfiguration configuration,
@@ -32,8 +35,10 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
     {
         _logger = logger;
 
-        var workerCount = configuration.GetValue<int>("Playwright:WorkerCount");
-        _targetAvgLoad = configuration.GetValue<int>("Playwright:TargetAvgLoadPerWorker");
+        var workerCount = configuration.GetValue<int>("WebPageScreenshots:Playwright:WorkerCount");
+        _targetAvgLoad = configuration.GetValue<int>("WebPageScreenshots:Playwright:TargetAvgLoadPerWorker");
+        _scrollTimeoutMs = configuration.GetValue<int>("WebPageScreenshots:Playwright:ScrollTimeoutSec") * 1000;
+        _screenshotTimeoutMs = configuration.GetValue<int>("WebPageScreenshots:Playwright:ScreenshotTimeoutSec") * 1000;
 
         var channel = Channel.CreateUnbounded<(IEnumerable<string> Urls, TaskCompletionSource<List<string>?> Tcs)>(
             new() { SingleReader = true }
@@ -42,6 +47,7 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
         _stream = channel.Reader;
 
         _workerQueues = new BlockingCollection<(IEnumerable<string> Urls, TaskCompletionSource<List<string>> Tcs)>[workerCount];
+        _workerQueueSizes = new int[workerCount];
         for (int i = 0; i < _workerQueues.Length; ++i)
         {
             _workerQueues[i] = new();
@@ -62,11 +68,11 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
     {
         try
         {
-            _logger.LogInformation("Starting monitoring requests...");
+            _logger.LogInformation("Monitoring requests...");
 
             await foreach (var request in _stream.ReadAllAsync(ct))
             {
-                if (_loadBalanceRequests(request.Urls.Count(), out List<WorkerAssignment>? workerAssignments))
+                if (_tryLoadBalanceRequests(request.Urls.Count(), out List<WorkerAssignment>? workerAssignments))
                 {
                     int urlsTakenCount = 0;
                     var tasks = new List<Task<List<string>>>(workerAssignments!.Count(a => a.TargetSize > a.CurrentSize));
@@ -74,10 +80,12 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
                     {
                         int urlsToTake = workerAssignment.TargetSize - workerAssignment.CurrentSize;
                         var urls = request.Urls.Skip(urlsTakenCount).Take(urlsToTake);
+                        Interlocked.Add(ref _workerQueueSizes[workerAssignment.WorkerIndex], urls.Count());
+
                         var tcs = new TaskCompletionSource<List<string>>();
                         tasks.Add(tcs.Task);
 
-                        workerAssignment.Worker.Add((Urls: urls, Tcs: tcs));
+                        _workerQueues[workerAssignment.WorkerIndex].Add((Urls: urls, Tcs: tcs));
                         urlsTakenCount += urlsToTake;
                     }
 
@@ -126,24 +134,25 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
 
     private void _reportLoad()
     {
-        for (int i = 0; i < _workerQueues.Length; ++i)
+        // @@TODO: Reports metrics.
+        for (int i = 0; i < _workerQueueSizes.Length; ++i)
         {
-            _logger.LogInformation("Worker {WorkerIndex} load: {RequestCount}", i, _workerQueues[i].Count);
+            _logger.LogInformation("Worker {WorkerIndex} Load: {WorkerQueueSize}", i, _workerQueueSizes[i]);
         }
     }
 
-    private bool _loadBalanceRequests(int requestCount, out List<WorkerAssignment>? workerAssignments)
+    private bool _tryLoadBalanceRequests(int requestCount, out List<WorkerAssignment>? workerAssignments)
     {
         workerAssignments = null;
-        var avgLoad = (int)(_workerQueues.Average(q => q.Count) + 0.5);
+        var avgLoad = (int)(_workerQueueSizes.Average() + 0.5);
         if (avgLoad >= _targetAvgLoad) return false;
 
         workerAssignments = _workerQueues
-            .Select((q) => new WorkerAssignment
+            .Select((q, i) => new WorkerAssignment
             {
-                Worker = q,
-                CurrentSize = q.Count,
-                TargetSize = q.Count
+                WorkerIndex = i,
+                CurrentSize = _workerQueueSizes[i],
+                TargetSize = _workerQueueSizes[i]
             })
             .OrderBy(a => a.CurrentSize)
             .ToList();
@@ -178,7 +187,7 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
 
     private async void _processRequests(int workerIndex)
     {
-        _logger.LogInformation("Worker {WorkerIndex}: awaiting requests...", workerIndex);
+        _logger.LogInformation("Worker {WorkerIndex}: Awaiting requests...", workerIndex);
 
         var queue = _workerQueues[workerIndex];
         while (true)
@@ -240,7 +249,7 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
                         new
                         {
                             speed = "slow",
-                            timeoutMs = 15000 // @@TODO: Config.
+                            timeoutMs = _scrollTimeoutMs
                         }
                     );
 
@@ -252,7 +261,7 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
                         Path = filePath,
                         FullPage = true,
                         Animations = ScreenshotAnimations.Disabled,
-                        Timeout = 15000 // @@TODO: Config.
+                        Timeout = _screenshotTimeoutMs
                     });
                 }
 
@@ -270,11 +279,15 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
                 }
                 request.Tcs.SetException(ex);
             }
+
+            Interlocked.Add(ref _workerQueueSizes[workerIndex], -request.Urls.Count());
         }
     }
 
     public async Task<List<string>?> Take(IEnumerable<string> urls)
     {
+        using var span = Telemetry.StartActivity($"{GetType().FullName}.{nameof(Take)}");
+
         var tcs = new TaskCompletionSource<List<string>?>();
         await _sink.WriteAsync((Urls: urls, Tcs: tcs));
         return await tcs.Task;

@@ -62,7 +62,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                     })
             );
 
-        var mimeTypes = configuration["Files:Images:AcceptableMimeTypes"]!.Split(',');
+        var mimeTypes = configuration["Images:AcceptableMimeTypes"]!.Split(',');
         services.AddHttpClient("image", (sp, client) =>
         {
             foreach (var mimeType in mimeTypes)
@@ -79,7 +79,7 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<IImageSignatureVerifier, ImageSignatureVerifier>();
         services.AddSingleton<IImageSaver, ImageSaver>();
         services.AddSingleton<IImageCropper, ImageCropper>();
-        if (configuration.GetValue<string>("Files:TakeWebPageScreenshotsUsing") == "Playwright")
+        if (configuration.GetValue<string>("WebPageScreenshots:Backend") == "Playwright")
         {
             services.AddSingleton<IWebPageScreenshotTaker, WebPageScreenshotTakerUsingPlaywright>();
         }

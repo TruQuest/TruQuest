@@ -17,8 +17,8 @@ internal class WebPageScreenshotTakerUsingApiFlash : IWebPageScreenshotTaker
         _logger = logger;
         _imageSaver = imageSaver;
 
-        _apiFlashUrl = configuration["ApiFlash:Url"]!;
-        _apiFlashAccessKey = configuration["ApiFlash:AccessKey"]!;
+        _apiFlashUrl = configuration["WebPageScreenshots:ApiFlash:Url"]!;
+        _apiFlashAccessKey = configuration["WebPageScreenshots:ApiFlash:AccessKey"]!;
     }
 
     public async Task<List<string>?> Take(IEnumerable<string> urls)
