@@ -30,6 +30,7 @@ internal class JoinedThingValidationVerifierLotteryEventRepository :
             .Where(e => e.ThingId == thingId)
             .OrderBy(e => e.BlockNumber)
                 .ThenBy(e => e.TxnIndex)
+                    .ThenBy(e => e.LogIndex)
             .ToListAsync();
     }
 

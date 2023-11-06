@@ -30,6 +30,7 @@ internal class ClaimedSettlementProposalAssessmentVerifierLotterySpotEventReposi
         .Where(e => e.ThingId == thingId && e.SettlementProposalId == proposalId)
         .OrderBy(e => e.BlockNumber)
             .ThenBy(e => e.TxnIndex)
+                .ThenBy(e => e.LogIndex)
         .ToListAsync();
 
     public async Task UpdateNoncesFor(IEnumerable<ClaimedSettlementProposalAssessmentVerifierLotterySpotEvent> events)

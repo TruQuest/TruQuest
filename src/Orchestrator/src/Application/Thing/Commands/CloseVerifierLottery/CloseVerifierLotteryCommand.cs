@@ -91,7 +91,9 @@ internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifie
 
         // @@TODO: There could be a situation when user joins a lottery without actually registering
         // on the platform and gets a nonce that should win him a verifier spot, but he gets excluded.
-        // How to prove to an observer that his exclusion is justified. Should we even exclude unregistered users?
+        // How to prove to an observer that his exclusion was justified?
+
+        // @@??: Should we even exclude unregistered users ?
 
         await _joinedLotteryEventRepository.UpdateNoncesFor(joinedEvents);
         await _joinedLotteryEventRepository.SaveChanges();

@@ -66,6 +66,7 @@ public class EventDbContext : DbContext
             builder.Property(e => e.BlockNumber).IsRequired();
             builder.Property(e => e.TxnIndex).IsRequired();
             builder.Property(e => e.TxnHash).IsRequired();
+            builder.Property(e => e.LogIndex).IsRequired();
             builder.Property(e => e.ThingId).IsRequired();
             builder.Property(e => e.UserId).IsRequired(false);
             builder.Property(e => e.WalletAddress).IsRequired();
@@ -73,8 +74,9 @@ public class EventDbContext : DbContext
             builder.Property(e => e.UserData).IsRequired();
             builder.Property(e => e.Nonce).IsRequired(false);
 
-            // @@BUG: Multiple users can join in the same txn (thanks to AA).
-            builder.HasIndex(e => e.TxnHash).IsUnique();
+            // @@NOTE: Because of AA multiple users can join in the same transaction, meaning,
+            // making a unique index on just TxnHash could lead to incorrect duplicate detection.
+            builder.HasIndex(e => new { e.TxnHash, e.LogIndex }).IsUnique();
         });
 
         modelBuilder.Entity<CastedThingValidationPollVoteEvent>(builder =>
@@ -84,6 +86,7 @@ public class EventDbContext : DbContext
             builder.Property(e => e.BlockNumber).IsRequired();
             builder.Property(e => e.TxnIndex).IsRequired();
             builder.Property(e => e.TxnHash).IsRequired();
+            builder.Property(e => e.LogIndex).IsRequired();
             builder.Property(e => e.ThingId).IsRequired();
             builder.Property(e => e.UserId).IsRequired(false);
             builder.Property(e => e.WalletAddress).IsRequired();
@@ -91,9 +94,7 @@ public class EventDbContext : DbContext
             builder.Property(e => e.Reason).IsRequired(false);
             builder.Property(e => e.L1BlockNumber).IsRequired();
 
-            // @@!!: A user could in theory call castVote multiple times in the same transaction
-            // using AA txn batching, which this index would block...
-            builder.HasIndex(e => e.TxnHash).IsUnique();
+            builder.HasIndex(e => new { e.TxnHash, e.LogIndex }).IsUnique();
         });
 
         modelBuilder.Entity<SettlementProposalAssessmentVerifierLotteryInitializedEvent>(builder =>
@@ -119,6 +120,7 @@ public class EventDbContext : DbContext
             builder.Property(e => e.BlockNumber).IsRequired();
             builder.Property(e => e.TxnIndex).IsRequired();
             builder.Property(e => e.TxnHash).IsRequired();
+            builder.Property(e => e.LogIndex).IsRequired();
             builder.Property(e => e.ThingId).IsRequired();
             builder.Property(e => e.SettlementProposalId).IsRequired();
             builder.Property(e => e.UserId).IsRequired(false);
@@ -127,7 +129,7 @@ public class EventDbContext : DbContext
             builder.Property(e => e.UserData).IsRequired();
             builder.Property(e => e.Nonce).IsRequired(false);
 
-            builder.HasIndex(e => e.TxnHash).IsUnique();
+            builder.HasIndex(e => new { e.TxnHash, e.LogIndex }).IsUnique();
         });
 
         modelBuilder.Entity<ClaimedSettlementProposalAssessmentVerifierLotterySpotEvent>(builder =>
@@ -137,6 +139,7 @@ public class EventDbContext : DbContext
             builder.Property(e => e.BlockNumber).IsRequired();
             builder.Property(e => e.TxnIndex).IsRequired();
             builder.Property(e => e.TxnHash).IsRequired();
+            builder.Property(e => e.LogIndex).IsRequired();
             builder.Property(e => e.ThingId).IsRequired();
             builder.Property(e => e.SettlementProposalId).IsRequired();
             builder.Property(e => e.UserId).IsRequired(false);
@@ -145,7 +148,7 @@ public class EventDbContext : DbContext
             builder.Property(e => e.UserData).IsRequired();
             builder.Property(e => e.Nonce).IsRequired(false);
 
-            builder.HasIndex(e => e.TxnHash).IsUnique();
+            builder.HasIndex(e => new { e.TxnHash, e.LogIndex }).IsUnique();
         });
 
         modelBuilder.Entity<CastedSettlementProposalAssessmentPollVoteEvent>(builder =>
@@ -155,6 +158,7 @@ public class EventDbContext : DbContext
             builder.Property(e => e.BlockNumber).IsRequired();
             builder.Property(e => e.TxnIndex).IsRequired();
             builder.Property(e => e.TxnHash).IsRequired();
+            builder.Property(e => e.LogIndex).IsRequired();
             builder.Property(e => e.ThingId).IsRequired();
             builder.Property(e => e.SettlementProposalId).IsRequired();
             builder.Property(e => e.UserId).IsRequired(false);
@@ -163,7 +167,7 @@ public class EventDbContext : DbContext
             builder.Property(e => e.Reason).IsRequired(false);
             builder.Property(e => e.L1BlockNumber).IsRequired();
 
-            builder.HasIndex(e => e.TxnHash).IsUnique();
+            builder.HasIndex(e => new { e.TxnHash, e.LogIndex }).IsUnique();
         });
 
         modelBuilder.Entity<BlockProcessedEvent>(builder =>

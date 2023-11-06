@@ -5,4 +5,5 @@ public abstract class BaseContractEvent
     public required long BlockNumber { get; init; }
     public required int TxnIndex { get; init; }
     public required string TxnHash { get; init; }
+    public required int LogIndex { get; init; }
 }

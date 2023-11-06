@@ -8,6 +8,7 @@ public class CastedSettlementProposalAssessmentPollVoteEvent : Entity, IAggregat
     public long BlockNumber { get; }
     public int TxnIndex { get; }
     public string TxnHash { get; }
+    public int LogIndex { get; }
     public Guid ThingId { get; }
     public Guid SettlementProposalId { get; }
     public string? UserId { get; }
@@ -17,13 +18,16 @@ public class CastedSettlementProposalAssessmentPollVoteEvent : Entity, IAggregat
     public long L1BlockNumber { get; }
 
     public CastedSettlementProposalAssessmentPollVoteEvent(
-        long blockNumber, int txnIndex, string txnHash, Guid thingId, Guid settlementProposalId,
-        string walletAddress, SettlementProposalAssessmentPollVote.VoteDecision decision, string? reason, long l1BlockNumber
+        long blockNumber, int txnIndex, string txnHash, int logIndex,
+        Guid thingId, Guid settlementProposalId, string walletAddress,
+        SettlementProposalAssessmentPollVote.VoteDecision decision,
+        string? reason, long l1BlockNumber
     )
     {
         BlockNumber = blockNumber;
         TxnIndex = txnIndex;
         TxnHash = txnHash;
+        LogIndex = logIndex;
         ThingId = thingId;
         SettlementProposalId = settlementProposalId;
         WalletAddress = walletAddress;

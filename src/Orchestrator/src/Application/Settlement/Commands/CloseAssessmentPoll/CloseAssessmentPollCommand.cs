@@ -87,6 +87,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
                     v.TxnHash,
                     v.BlockNumber,
                     v.TxnIndex,
+                    v.LogIndex,
                     UserId = v.UserId!,
                     v.WalletAddress,
                     Decision = v.Decision.GetString(),
@@ -108,6 +109,7 @@ internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessme
             castedVoteEvents
                 .OrderByDescending(e => e.BlockNumber)
                     .ThenByDescending(e => e.TxnIndex)
+                       .ThenByDescending(e => e.LogIndex)
         )
         {
             accountedVotes.Add(new()

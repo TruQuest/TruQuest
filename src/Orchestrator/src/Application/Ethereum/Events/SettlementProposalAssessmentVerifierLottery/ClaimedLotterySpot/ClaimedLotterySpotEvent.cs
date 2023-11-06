@@ -38,6 +38,7 @@ internal class ClaimedLotterySpotEventHandler : INotificationHandler<ClaimedLott
             blockNumber: @event.BlockNumber,
             txnIndex: @event.TxnIndex,
             txnHash: @event.TxnHash,
+            logIndex: @event.LogIndex,
             thingId: thingId,
             settlementProposalId: new Guid(@event.SettlementProposalId),
             walletAddress: @event.WalletAddress,

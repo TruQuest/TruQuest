@@ -162,6 +162,7 @@ internal class Signer : ISigner
                     TxnHash = v.TxnHash,
                     BlockNumber = v.BlockNumber,
                     TxnIndex = v.TxnIndex,
+                    LogIndex = v.LogIndex, // @@NOTE: It's possible though unlikely that user voted twice in the same txn (thanks to AA).
                     UserId = v.UserId!,
                     WalletAddress = v.WalletAddress,
                     Decision = v.Decision.GetString(),
@@ -212,6 +213,7 @@ internal class Signer : ISigner
                     TxnHash = v.TxnHash,
                     BlockNumber = v.BlockNumber,
                     TxnIndex = v.TxnIndex,
+                    LogIndex = v.LogIndex,
                     UserId = v.UserId!,
                     WalletAddress = v.WalletAddress,
                     Decision = v.Decision.GetString(),

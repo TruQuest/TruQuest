@@ -122,6 +122,7 @@ public class E2ETests : BaseTests
             TxnHash: v.TxnHash,
             BlockNumber: v.BlockNumber,
             TxnIndex: v.TxnIndex,
+            LogIndex: v.LogIndex,
             VoterId: v.UserId,
             VoterWalletAddress: v.WalletAddress,
             Decision: ThingValidationPollVoteDecisionExtension.FromString(v.Decision)
@@ -132,6 +133,7 @@ public class E2ETests : BaseTests
             onChainVotes
                 .OrderByDescending(e => e.BlockNumber)
                     .ThenByDescending(e => e.TxnIndex)
+                       .ThenByDescending(e => e.LogIndex)
         )
         {
             accountedVotes.Add(new()

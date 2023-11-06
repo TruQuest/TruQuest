@@ -46,6 +46,7 @@ internal class JoinedLotteryEventHandler : INotificationHandler<JoinedLotteryEve
             blockNumber: @event.BlockNumber,
             txnIndex: @event.TxnIndex,
             txnHash: @event.TxnHash,
+            logIndex: @event.LogIndex,
             thingId: new Guid(@event.ThingId),
             walletAddress: @event.WalletAddress,
             l1BlockNumber: @event.L1BlockNumber,

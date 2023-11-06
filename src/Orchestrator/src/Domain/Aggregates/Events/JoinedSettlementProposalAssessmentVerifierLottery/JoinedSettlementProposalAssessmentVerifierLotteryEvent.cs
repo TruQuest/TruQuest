@@ -8,6 +8,7 @@ public class JoinedSettlementProposalAssessmentVerifierLotteryEvent : Entity, IA
     public long BlockNumber { get; }
     public int TxnIndex { get; }
     public string TxnHash { get; }
+    public int LogIndex { get; }
     public Guid ThingId { get; }
     public Guid SettlementProposalId { get; }
     public string? UserId { get; }
@@ -17,13 +18,14 @@ public class JoinedSettlementProposalAssessmentVerifierLotteryEvent : Entity, IA
     public long? Nonce { get; private set; }
 
     public JoinedSettlementProposalAssessmentVerifierLotteryEvent(
-        long blockNumber, int txnIndex, string txnHash, Guid thingId,
+        long blockNumber, int txnIndex, string txnHash, int logIndex, Guid thingId,
         Guid settlementProposalId, string walletAddress, long l1BlockNumber, string userData
     )
     {
         BlockNumber = blockNumber;
         TxnIndex = txnIndex;
         TxnHash = txnHash;
+        LogIndex = logIndex;
         ThingId = thingId;
         SettlementProposalId = settlementProposalId;
         WalletAddress = walletAddress;

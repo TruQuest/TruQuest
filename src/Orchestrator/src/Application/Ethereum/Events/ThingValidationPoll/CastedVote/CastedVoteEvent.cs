@@ -33,6 +33,7 @@ internal class CastedVoteEventHandler : INotificationHandler<CastedVoteEvent>
             blockNumber: @event.BlockNumber,
             txnIndex: @event.TxnIndex,
             txnHash: @event.TxnHash,
+            logIndex: @event.LogIndex,
             thingId: new Guid(@event.ThingId),
             walletAddress: @event.WalletAddress,
             decision: (ThingValidationPollVote.VoteDecision)@event.Vote,
