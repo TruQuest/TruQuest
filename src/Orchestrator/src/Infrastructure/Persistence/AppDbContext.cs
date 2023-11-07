@@ -29,6 +29,14 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
         modelBuilder.HasDefaultSchema("truquest");
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder
+            .HasPostgresEnum<SubjectType>(schema: "truquest", name: "subject_type")
+            .HasPostgresEnum<ThingState>(schema: "truquest", name: "thing_state")
+            .HasPostgresEnum<SettlementProposalState>(schema: "truquest", name: "settlement_proposal_state")
+            .HasPostgresEnum<Verdict>(schema: "truquest", name: "verdict")
+            .HasPostgresEnum<TaskType>(schema: "truquest", name: "task_type")
+            .HasPostgresEnum<WatchedItemType>(schema: "truquest", name: "watched_item_type");
+
         modelBuilder.Entity<UserDm>(builder =>
         {
             builder.Property(u => u.WalletAddress).IsRequired();
@@ -66,7 +74,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.Property(s => s.SubmittedAt).IsRequired();
             builder.Property(s => s.Name).IsRequired();
             builder.Property(s => s.Details).IsRequired();
-            builder.Property(s => s.Type).HasConversion<int>().IsRequired();
+            builder.Property(s => s.Type).IsRequired();
             builder.Property(s => s.ImageIpfsCid).IsRequired();
             builder.Property(s => s.CroppedImageIpfsCid).IsRequired();
             builder.Property(s => s.SettledThingsCount).IsRequired();
@@ -109,7 +117,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
         modelBuilder.Entity<Thing>(builder =>
         {
             builder.HasKey(t => t.Id);
-            builder.Property(t => t.State).HasConversion<int>().IsRequired();
+            builder.Property(t => t.State).IsRequired();
             builder.Property(t => t.SubmittedAt).IsRequired(false);
             builder.Property(t => t.Title).IsRequired();
             builder.Property(t => t.Details).IsRequired();
@@ -200,7 +208,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
         {
             builder.HasKey(t => t.Id);
             builder.Property(t => t.Id).UseIdentityAlwaysColumn();
-            builder.Property(t => t.Type).HasConversion<int>().IsRequired();
+            builder.Property(t => t.Type).IsRequired();
             builder.Property(t => t.ScheduledBlockNumber).IsRequired();
             builder
                 .Property(t => t.Payload)
@@ -229,10 +237,10 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
         modelBuilder.Entity<SettlementProposal>(builder =>
         {
             builder.HasKey(p => p.Id);
-            builder.Property(p => p.State).HasConversion<int>().IsRequired();
+            builder.Property(p => p.State).IsRequired();
             builder.Property(p => p.SubmittedAt).IsRequired(false);
             builder.Property(p => p.Title).IsRequired();
-            builder.Property(p => p.Verdict).HasConversion<int>().IsRequired();
+            builder.Property(p => p.Verdict).IsRequired();
             builder.Property(p => p.Details).IsRequired();
             builder.Property(p => p.ImageIpfsCid).IsRequired(false);
             builder.Property(p => p.CroppedImageIpfsCid).IsRequired(false);
@@ -311,7 +319,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
         modelBuilder.Entity<WatchedItem>(builder =>
         {
             builder.HasKey(w => new { w.UserId, w.ItemType, w.ItemId, w.ItemUpdateCategory });
-            builder.Property(w => w.ItemType).HasConversion<int>();
+            builder.Property(w => w.ItemType);
             builder.Property(w => w.LastSeenUpdateTimestamp).IsRequired();
 
             builder

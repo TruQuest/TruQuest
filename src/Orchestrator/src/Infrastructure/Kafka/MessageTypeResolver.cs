@@ -17,20 +17,22 @@ internal class MessageTypeResolver : IMessageTypeResolver
         if (context.ConsumerContext.Topic == "thing.events")
         {
             var messageTypeBytes = context.Headers[_messageTypeHeaderName];
-            var eventType = (ThingEventType)int.Parse(Encoding.UTF8.GetString(messageTypeBytes));
+            var eventType = ThingEventTypeExtension.FromString(Encoding.UTF8.GetString(messageTypeBytes));
             switch (eventType)
             {
                 case ThingEventType.Funded:
                     return typeof(ThingFundedEvent);
-                case ThingEventType.ValidationVerifierLotteryClosedInFailure:
+                case ThingEventType.ValidationVerifierLotteryFailed:
                     return typeof(ThingValidationVerifierLotteryClosedInFailureEvent);
-                case ThingEventType.ValidationVerifierLotteryClosedWithSuccess:
+                case ThingEventType.ValidationVerifierLotterySucceeded:
                     return typeof(ThingValidationVerifierLotteryClosedWithSuccessEvent);
                 case ThingEventType.ValidationPollFinalized:
                     return typeof(ThingValidationPollFinalizedEvent);
                 case ThingEventType.SettlementProposalFunded:
                     return typeof(SettlementProposalFundedEvent);
-                case ThingEventType.SettlementProposalAssessmentVerifierLotteryClosedWithSuccess:
+                case ThingEventType.SettlementProposalAssessmentVerifierLotteryFailed:
+                    throw new NotImplementedException(); // @@TODO!!
+                case ThingEventType.SettlementProposalAssessmentVerifierLotterySucceeded:
                     return typeof(SettlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent);
                 case ThingEventType.SettlementProposalAssessmentPollFinalized:
                     return typeof(SettlementProposalAssessmentPollFinalizedEvent);

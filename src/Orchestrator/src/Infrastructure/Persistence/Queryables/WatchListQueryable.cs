@@ -51,7 +51,7 @@ internal class WatchListQueryable : Queryable, IWatchListQueryable
                         INNER JOIN
                     truquest.""SubjectUpdates"" AS s
                         ON (
-                            u.""ItemType"" = @SubjectType AND
+                            u.""ItemType"" = @SubjectType::truquest.watched_item_type AND
                             u.""ItemId"" = s.""SubjectId"" AND
                             u.""ItemUpdateCategory"" = s.""Category"" AND
                             u.""LastSeenUpdateTimestamp"" < s.""UpdateTimestamp""
@@ -67,7 +67,7 @@ internal class WatchListQueryable : Queryable, IWatchListQueryable
                         INNER JOIN
                     truquest.""ThingUpdates"" AS t
                         ON (
-                            u.""ItemType"" = @ThingType AND
+                            u.""ItemType"" = @ThingType::truquest.watched_item_type AND
                             u.""ItemId"" = t.""ThingId"" AND
                             u.""ItemUpdateCategory"" = t.""Category"" AND
                             u.""LastSeenUpdateTimestamp"" < t.""UpdateTimestamp""
@@ -83,20 +83,20 @@ internal class WatchListQueryable : Queryable, IWatchListQueryable
                         INNER JOIN
                     truquest.""SettlementProposalUpdates"" AS p
                         ON (
-                            u.""ItemType"" = @ProposalType AND
+                            u.""ItemType"" = @ProposalType::truquest.watched_item_type AND
                             u.""ItemId"" = p.""SettlementProposalId"" AND
                             u.""ItemUpdateCategory"" = p.""Category"" AND
                             u.""LastSeenUpdateTimestamp"" < p.""UpdateTimestamp""
                         )
                 ORDER BY ""UpdateTimestamp"" DESC
-                LIMIT 30 -- @@TODO: Config.
+                LIMIT 30
             ",
             param: new
             {
                 UserId = userId,
-                SubjectType = (int)WatchedItemType.Subject,
-                ThingType = (int)WatchedItemType.Thing,
-                ProposalType = (int)WatchedItemType.SettlementProposal
+                SubjectType = WatchedItemType.Subject.GetString(),
+                ThingType = WatchedItemType.Thing.GetString(),
+                ProposalType = WatchedItemType.SettlementProposal.GetString()
             }
         );
 

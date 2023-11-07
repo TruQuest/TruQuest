@@ -23,7 +23,7 @@ internal class SettlementProposalQueryable : Queryable, ISettlementProposalQuery
         // @@TODO!!: This stuff is broken!
         var proposals = await _dbContext.SettlementProposals
             .AsNoTracking()
-            .Where(p => p.ThingId == thingId && (p.State > SettlementProposalState.Draft || p.SubmitterId == userId))
+            .Where(p => p.ThingId == thingId && (p.State != SettlementProposalState.Draft || p.SubmitterId == userId))
             .Select(p => new SettlementProposalPreviewQm
             {
                 Id = p.Id,
@@ -72,12 +72,12 @@ internal class SettlementProposalQueryable : Queryable, ISettlementProposalQuery
                 FROM truquest.""WatchList""
                 WHERE
                     (""UserId"", ""ItemType"", ""ItemId"", ""ItemUpdateCategory"") =
-                    (@UserId, @ItemType, @ItemId, @ItemUpdateCategory);
+                    (@UserId, @ItemType::truquest.watched_item_type, @ItemId, @ItemUpdateCategory);
             ",
             param: new
             {
                 UserId = userId,
-                ItemType = (int)WatchedItemType.SettlementProposal,
+                ItemType = WatchedItemType.SettlementProposal.GetString(),
                 ItemId = id,
                 ItemUpdateCategory = (int)SettlementProposalUpdateCategory.General
             }

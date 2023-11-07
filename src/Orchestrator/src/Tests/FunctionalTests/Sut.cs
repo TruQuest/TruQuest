@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
 
+using Npgsql;
 using Respawn;
 using Respawn.Graph;
 using MediatR;
@@ -194,6 +195,11 @@ public class Sut
     {
         var appDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await appDbContext.Database.MigrateAsync();
+        var dbConn = (NpgsqlConnection)appDbContext.Database.GetDbConnection();
+        // Connection gets closed after applying migrations fsr.
+        await dbConn.OpenAsync();
+        // @@NOTE: Required for Npgsql to pick up newly created enums.
+        await dbConn.ReloadTypesAsync();
 
         foreach (var kv in AccountNameToUserId)
         {
@@ -231,6 +237,9 @@ public class Sut
 
         var eventDbContext = scope.ServiceProvider.GetRequiredService<EventDbContext>();
         await eventDbContext.Database.MigrateAsync();
+        dbConn = (NpgsqlConnection)eventDbContext.Database.GetDbConnection();
+        await dbConn.OpenAsync();
+        await dbConn.ReloadTypesAsync();
 
         eventDbContext.BlockProcessedEvent.Add(new BlockProcessedEvent(id: 1, blockNumber: null));
         await eventDbContext.SaveChangesAsync();

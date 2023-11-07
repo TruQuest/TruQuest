@@ -29,10 +29,7 @@ internal class SettlementProposalRepository : Repository, ISettlementProposalRep
         {
             TypedValue = proposalId
         };
-        var stateParam = new NpgsqlParameter<int>("State", NpgsqlDbType.Integer)
-        {
-            TypedValue = (int)state
-        };
+        var stateParam = new NpgsqlParameter("State", state);
 
         await _dbContext.Database.ExecuteSqlRawAsync(
             @"

@@ -13,10 +13,8 @@ internal class CastedThingValidationPollVoteEventRepository : Repository, ICaste
         _dbContext = dbContext;
     }
 
-    public void Create(CastedThingValidationPollVoteEvent @event)
-    {
+    public void Create(CastedThingValidationPollVoteEvent @event) =>
         _dbContext.CastedThingValidationPollVoteEvents.Add(@event);
-    }
 
     public Task<List<CastedThingValidationPollVoteEvent>> GetAllFor(Guid thingId)
     {

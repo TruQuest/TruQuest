@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using Npgsql;
 using Dapper;
 using KafkaFlow;
 using Nethereum.Signer;
@@ -41,6 +42,16 @@ public static class IServiceCollectionExtension
     )
     {
         DbConnectionProvider.ConnectionString = configuration.GetConnectionString("Postgres")!;
+
+#pragma warning disable CS0618
+        NpgsqlConnection.GlobalTypeMapper.MapEnum<SubjectType>("truquest.subject_type");
+        NpgsqlConnection.GlobalTypeMapper.MapEnum<ThingState>("truquest.thing_state");
+        NpgsqlConnection.GlobalTypeMapper.MapEnum<SettlementProposalState>("truquest.settlement_proposal_state");
+        NpgsqlConnection.GlobalTypeMapper.MapEnum<Verdict>("truquest.verdict");
+        NpgsqlConnection.GlobalTypeMapper.MapEnum<TaskType>("truquest.task_type");
+        NpgsqlConnection.GlobalTypeMapper.MapEnum<WatchedItemType>("truquest.watched_item_type");
+        NpgsqlConnection.GlobalTypeMapper.MapEnum<ThingEventType>("truquest_events.thing_event_type");
+#pragma warning restore CS0618
 
         services.AddDbContext<AppDbContext>(optionsBuilder =>
             optionsBuilder

@@ -134,6 +134,8 @@ internal class ContractEventListener : IContractEventListener
 
         await foreach (var (@event, tcs) in _stream.ReadAllAsync())
         {
+            // @@??: Assert that all address containing fields are EIP-55-encoded?
+
             if (@event is EventLog<ThingFundedEvent> thingFundedEvent)
             {
                 yield return new AppEvents.ThingFunded.ThingFundedEvent

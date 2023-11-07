@@ -14,10 +14,8 @@ internal class CastedSettlementProposalAssessmentPollVoteEventRepository :
         _dbContext = dbContext;
     }
 
-    public void Create(CastedSettlementProposalAssessmentPollVoteEvent @event)
-    {
+    public void Create(CastedSettlementProposalAssessmentPollVoteEvent @event) =>
         _dbContext.CastedSettlementProposalAssessmentPollVoteEvents.Add(@event);
-    }
 
     public Task<List<CastedSettlementProposalAssessmentPollVoteEvent>> GetAllFor(Guid thingId, Guid proposalId)
     {

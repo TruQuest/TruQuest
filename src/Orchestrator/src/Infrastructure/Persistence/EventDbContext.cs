@@ -26,6 +26,8 @@ public class EventDbContext : DbContext
     {
         modelBuilder.HasDefaultSchema("truquest_events");
 
+        modelBuilder.HasPostgresEnum<ThingEventType>(schema: "truquest_events", name: "thing_event_type");
+
         modelBuilder.Entity<ActionableThingRelatedEvent>(builder =>
         {
             builder.HasKey(e => e.Id);
@@ -34,7 +36,7 @@ public class EventDbContext : DbContext
             builder.Property(e => e.TxnIndex).IsRequired();
             builder.Property(e => e.TxnHash).IsRequired();
             builder.Property(e => e.ThingId).IsRequired();
-            builder.Property(e => e.Type).HasConversion<int>().IsRequired();
+            builder.Property(e => e.Type).IsRequired();
             builder
                 .Property(e => e.Payload)
                 .HasColumnType("jsonb")

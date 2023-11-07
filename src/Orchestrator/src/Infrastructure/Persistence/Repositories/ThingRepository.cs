@@ -16,10 +16,7 @@ internal class ThingRepository : Repository, IThingRepository
         _dbContext = dbContext;
     }
 
-    public void Create(Thing thing)
-    {
-        _dbContext.Things.Add(thing);
-    }
+    public void Create(Thing thing) => _dbContext.Things.Add(thing);
 
     public Task<Thing> FindById(Guid id) => _dbContext.Things.SingleAsync(t => t.Id == id);
 
@@ -32,10 +29,7 @@ internal class ThingRepository : Repository, IThingRepository
         {
             TypedValue = thingId
         };
-        var stateParam = new NpgsqlParameter<int>("State", NpgsqlDbType.Integer)
-        {
-            TypedValue = (int)state
-        };
+        var stateParam = new NpgsqlParameter("State", state);
 
         await _dbContext.Database.ExecuteSqlRawAsync(
             @"
@@ -78,10 +72,7 @@ internal class ThingRepository : Repository, IThingRepository
         {
             TypedValue = Guid.NewGuid()
         };
-        var stateParam = new NpgsqlParameter<int>("State", NpgsqlDbType.Integer)
-        {
-            TypedValue = (int)state
-        };
+        var stateParam = new NpgsqlParameter("State", state);
 
         await _dbContext.Database.ExecuteSqlRawAsync(
             @"

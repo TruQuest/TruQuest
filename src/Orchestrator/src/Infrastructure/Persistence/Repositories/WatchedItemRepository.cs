@@ -16,22 +16,13 @@ internal class WatchedItemRepository : Repository, IWatchedItemRepository
         _dbContext = dbContext;
     }
 
-    public void Add(params WatchedItem[] watchedItems)
-    {
-        _dbContext.WatchList.AddRange(watchedItems);
-    }
+    public void Add(params WatchedItem[] watchedItems) => _dbContext.WatchList.AddRange(watchedItems);
 
-    public void Remove(WatchedItem watchedItem)
-    {
-        _dbContext.WatchList.Remove(watchedItem);
-    }
+    public void Remove(WatchedItem watchedItem) => _dbContext.WatchList.Remove(watchedItem);
 
     public async Task DuplicateGeneralItemsFrom(WatchedItemType itemType, Guid sourceItemId, Guid destItemId)
     {
-        var itemTypeParam = new NpgsqlParameter<int>("ItemType", NpgsqlDbType.Integer)
-        {
-            TypedValue = (int)itemType
-        };
+        var itemTypeParam = new NpgsqlParameter("ItemType", itemType);
         var sourceItemIdParam = new NpgsqlParameter<Guid>("SourceItemId", NpgsqlDbType.Uuid)
         {
             TypedValue = sourceItemId
@@ -63,10 +54,7 @@ internal class WatchedItemRepository : Repository, IWatchedItemRepository
 
     public async Task UpdateLastSeenTimestamp(IEnumerable<WatchedItem> watchedItems)
     {
-        var itemTypesParam = new NpgsqlParameter<int[]>("ItemTypes", NpgsqlDbType.Integer | NpgsqlDbType.Array)
-        {
-            TypedValue = watchedItems.Select(i => (int)i.ItemType).ToArray()
-        };
+        var itemTypesParam = new NpgsqlParameter("ItemTypes", watchedItems.Select(i => i.ItemType).ToArray());
         var itemIdsParam = new NpgsqlParameter<Guid[]>("ItemIds", NpgsqlDbType.Uuid | NpgsqlDbType.Array)
         {
             TypedValue = watchedItems.Select(i => i.ItemId).ToArray()

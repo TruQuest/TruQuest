@@ -16,10 +16,7 @@ internal class SubjectRepository : Repository, ISubjectRepository
         _dbContext = dbContext;
     }
 
-    public void Create(Subject subject)
-    {
-        _dbContext.Subjects.Add(subject);
-    }
+    public void Create(Subject subject) => _dbContext.Subjects.Add(subject);
 
     public async Task<Subject?> GetById(Guid subjectId)
     {

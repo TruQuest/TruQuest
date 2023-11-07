@@ -36,7 +36,7 @@ internal class LotteryClosedWithSuccessEventHandler : INotificationHandler<Lotte
             txnIndex: @event.TxnIndex,
             txnHash: @event.TxnHash,
             thingId: new Guid(@event.ThingId),
-            type: ThingEventType.ValidationVerifierLotteryClosedWithSuccess
+            type: ThingEventType.ValidationVerifierLotterySucceeded
         );
 
         var payload = new Dictionary<string, object>()

@@ -18,10 +18,8 @@ internal class JoinedSettlementProposalAssessmentVerifierLotteryEventRepository 
         _dbContext = dbContext;
     }
 
-    public void Create(JoinedSettlementProposalAssessmentVerifierLotteryEvent @event)
-    {
+    public void Create(JoinedSettlementProposalAssessmentVerifierLotteryEvent @event) =>
         _dbContext.JoinedSettlementProposalAssessmentVerifierLotteryEvents.Add(@event);
-    }
 
     public Task<List<JoinedSettlementProposalAssessmentVerifierLotteryEvent>> FindAllFor(Guid thingId, Guid proposalId)
     {

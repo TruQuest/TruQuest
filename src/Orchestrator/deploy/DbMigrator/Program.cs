@@ -3,6 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Hosting;
 
+using Npgsql;
+
 using Domain.Aggregates;
 using Domain.Aggregates.Events;
 using Application.Common.Interfaces;
@@ -78,6 +80,9 @@ using var scope = app.Services.CreateScope();
 
 var appDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 await appDbContext.Database.MigrateAsync();
+var dbConn = (NpgsqlConnection)appDbContext.Database.GetDbConnection();
+await dbConn.OpenAsync();
+await dbConn.ReloadTypesAsync();
 
 var accountProvider = scope.ServiceProvider.GetRequiredService<AccountProvider>();
 var contractCaller = scope.ServiceProvider.GetRequiredService<IContractCaller>();
@@ -571,6 +576,9 @@ await appDbContext.SaveChangesAsync();
 
 var eventDbContext = scope.ServiceProvider.GetRequiredService<EventDbContext>();
 await eventDbContext.Database.MigrateAsync();
+dbConn = (NpgsqlConnection)eventDbContext.Database.GetDbConnection();
+await dbConn.OpenAsync();
+await dbConn.ReloadTypesAsync();
 
 eventDbContext.BlockProcessedEvent.Add(new BlockProcessedEvent(id: 1, blockNumber: null));
 await eventDbContext.SaveChangesAsync();

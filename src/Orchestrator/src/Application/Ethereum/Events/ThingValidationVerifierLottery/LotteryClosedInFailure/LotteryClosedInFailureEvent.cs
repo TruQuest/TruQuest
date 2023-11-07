@@ -31,7 +31,7 @@ internal class LotteryClosedInFailureEventHandler : INotificationHandler<Lottery
             txnIndex: @event.TxnIndex,
             txnHash: @event.TxnHash,
             thingId: new Guid(@event.ThingId),
-            type: ThingEventType.ValidationVerifierLotteryClosedInFailure
+            type: ThingEventType.ValidationVerifierLotteryFailed
         );
 
         var payload = new Dictionary<string, object>()

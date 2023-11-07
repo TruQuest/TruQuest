@@ -18,10 +18,8 @@ internal class JoinedThingValidationVerifierLotteryEventRepository :
         _dbContext = dbContext;
     }
 
-    public void Create(JoinedThingValidationVerifierLotteryEvent @event)
-    {
+    public void Create(JoinedThingValidationVerifierLotteryEvent @event) =>
         _dbContext.JoinedThingValidationVerifierLotteryEvents.Add(@event);
-    }
 
     public Task<List<JoinedThingValidationVerifierLotteryEvent>> FindAllFor(Guid thingId)
     {

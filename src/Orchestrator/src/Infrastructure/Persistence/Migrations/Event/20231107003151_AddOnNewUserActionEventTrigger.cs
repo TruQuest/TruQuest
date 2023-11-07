@@ -5,7 +5,7 @@
 namespace Infrastructure.Persistence.Migrations.Event
 {
     /// <inheritdoc />
-    public partial class AddTriggersToUserActionEventTables : Migration
+    public partial class AddOnNewUserActionEventTrigger : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

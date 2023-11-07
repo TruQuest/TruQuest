@@ -35,18 +35,18 @@ internal class ThingQueryable : Queryable, IThingQueryable
                         ON (tat.""TagId"" = tag.""Id"")
                 WHERE
                     t.""SubjectId"" = @SubjectId AND
-                    t.""State"" != @LotteryFailedState AND
-                    t.""State"" != @ConsensusNotReachedState AND
-                    (t.""State"" > @DraftState OR t.""SubmitterId"" = @UserId);
+                    t.""State"" != @LotteryFailedState::truquest.thing_state AND
+                    t.""State"" != @ConsensusNotReachedState::truquest.thing_state AND
+                    (t.""State"" != @DraftState::truquest.thing_state OR t.""SubmitterId"" = @UserId);
             ",
             joinedCollectionSelector: thing => thing.Tags,
             param: new
             {
                 SubjectId = subjectId,
                 UserId = userId,
-                LotteryFailedState = (int)ThingState.VerifierLotteryFailed,
-                ConsensusNotReachedState = (int)ThingState.ConsensusNotReached,
-                DraftState = (int)ThingState.Draft
+                LotteryFailedState = ThingState.VerifierLotteryFailed.GetString(),
+                ConsensusNotReachedState = ThingState.ConsensusNotReached.GetString(),
+                DraftState = ThingState.Draft.GetString()
             }
         );
 
@@ -59,7 +59,7 @@ internal class ThingQueryable : Queryable, IThingQueryable
         var dbConn = await _getOpenConnection();
         using var multiQuery = await dbConn.QueryMultipleAsync(
             @"
-                SELECT
+                SELECT -- @@NOTE: Conversion from Postgres enum to ThingStateQm enum just magically works in Dapper.
                     t.*, u.""WalletAddress"" AS ""SubmitterWalletAddress"",
                     s.""Name"" AS ""SubjectName"", s.""CroppedImageIpfsCid"" AS ""SubjectCroppedImageIpfsCid"",
                     s.""AvgScore""::INTEGER AS ""SubjectAvgScore"",
@@ -87,12 +87,12 @@ internal class ThingQueryable : Queryable, IThingQueryable
                 FROM truquest.""WatchList""
                 WHERE
                     (""UserId"", ""ItemType"", ""ItemId"", ""ItemUpdateCategory"") =
-                    (@UserId, @ItemType, @ItemId, @ItemUpdateCategory);
+                    (@UserId, @ItemType::truquest.watched_item_type, @ItemId, @ItemUpdateCategory);
             ",
             param: new
             {
                 UserId = userId,
-                ItemType = (int)WatchedItemType.Thing,
+                ItemType = WatchedItemType.Thing.GetString(),
                 ItemId = id,
                 ItemUpdateCategory = (int)ThingUpdateCategory.General
             }

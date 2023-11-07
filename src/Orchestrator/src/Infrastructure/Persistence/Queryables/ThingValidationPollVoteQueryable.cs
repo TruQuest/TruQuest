@@ -19,8 +19,8 @@ internal class ThingValidationPollVoteQueryable : Queryable, IThingValidationPol
                 WHERE ""Id"" = @ThingId;
 
                 SELECT DISTINCT ON (""UserId"")
-                    ""UserId"", ""WalletAddress"", ""CastedAtMs"", ""L1BlockNumber"", ""BlockNumber"",
-                    ""Decision"", ""Reason"", ""IpfsCid"", ""TxnHash""
+                    ""UserId"", ""WalletAddress"", ""CastedAtMs"", ""L1BlockNumber"",
+                    ""BlockNumber"", ""Decision"", ""Reason"", ""IpfsCid"", ""TxnHash""
                 FROM (
                     SELECT *
                     -- @@NOTE: We do this weird subquery because when using UNION can only order the whole result set,

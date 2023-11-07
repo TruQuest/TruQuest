@@ -38,7 +38,10 @@ internal class SettlementProposalAssessmentVerifierLotteryEventQueryable :
                 FROM truquest_events.""ActionableThingRelatedEvents""
                 WHERE
                     ""ThingId"" = @ThingId AND
-                    ""Type"" IN (@LotteryClosedWithSuccessType, @LotteryClosedInFailureType) AND
+                    ""Type"" IN (
+                        @LotteryClosedWithSuccessType::truquest_events.thing_event_type,
+                        @LotteryClosedInFailureType::truquest_events.thing_event_type
+                    ) AND
                     ""Payload""->>'settlementProposalId' = @ProposalId::TEXT;
 
                 SELECT ""L1BlockNumber"", ""TxnHash"", ""UserId"", ""WalletAddress"", ""UserData"", ""Nonce""
@@ -55,8 +58,8 @@ internal class SettlementProposalAssessmentVerifierLotteryEventQueryable :
             {
                 ThingId = thingId,
                 ProposalId = proposalId,
-                LotteryClosedWithSuccessType = (int)ThingEventType.SettlementProposalAssessmentVerifierLotteryClosedWithSuccess,
-                LotteryClosedInFailureType = (int)ThingEventType.SettlementProposalAssessmentVerifierLotteryClosedInFailure
+                LotteryClosedWithSuccessType = ThingEventType.SettlementProposalAssessmentVerifierLotterySucceeded.GetString(),
+                LotteryClosedInFailureType = ThingEventType.SettlementProposalAssessmentVerifierLotteryFailed.GetString()
             }
         );
 

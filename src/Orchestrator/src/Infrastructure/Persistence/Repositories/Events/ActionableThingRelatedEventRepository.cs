@@ -11,8 +11,5 @@ internal class ActionableThingRelatedEventRepository : Repository, IActionableTh
         _dbContext = dbContext;
     }
 
-    public void Create(ActionableThingRelatedEvent @event)
-    {
-        _dbContext.ActionableThingRelatedEvents.Add(@event);
-    }
+    public void Create(ActionableThingRelatedEvent @event) => _dbContext.ActionableThingRelatedEvents.Add(@event);
 }

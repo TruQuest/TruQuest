@@ -46,7 +46,10 @@ internal class ThingValidationVerifierLotteryEventQueryable : Queryable, IThingV
                         ELSE NULL
                     END AS ""Nonce""
                 FROM truquest_events.""ActionableThingRelatedEvents""
-                WHERE ""ThingId"" = @ThingId AND ""Type"" IN (@LotteryClosedWithSuccessType, @LotteryClosedInFailureType);
+                WHERE ""ThingId"" = @ThingId AND ""Type"" IN (
+                    @LotteryClosedWithSuccessType::truquest_events.thing_event_type,
+                    @LotteryClosedInFailureType::truquest_events.thing_event_type
+                );
 
                 SELECT ""L1BlockNumber"", ""TxnHash"", ""UserId"", ""WalletAddress"", ""UserData"", ""Nonce""
                 FROM truquest_events.""JoinedThingValidationVerifierLotteryEvents""
@@ -56,8 +59,8 @@ internal class ThingValidationVerifierLotteryEventQueryable : Queryable, IThingV
             param: new
             {
                 ThingId = thingId,
-                LotteryClosedWithSuccessType = (int)ThingEventType.ValidationVerifierLotteryClosedWithSuccess,
-                LotteryClosedInFailureType = (int)ThingEventType.ValidationVerifierLotteryClosedInFailure
+                LotteryClosedWithSuccessType = ThingEventType.ValidationVerifierLotterySucceeded.GetString(),
+                LotteryClosedInFailureType = ThingEventType.ValidationVerifierLotteryFailed.GetString()
             }
         );
 

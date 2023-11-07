@@ -15,10 +15,7 @@ internal class SettlementProposalUpdateRepository : Repository, ISettlementPropo
     public async Task AddOrUpdate(params SettlementProposalUpdate[] updateEvents)
     {
         var traceparent = Telemetry.CurrentActivity!.GetTraceparent();
-        foreach (var @event in updateEvents)
-        {
-            @event.SetTraceparent(traceparent);
-        }
+        foreach (var @event in updateEvents) @event.SetTraceparent(traceparent);
 
         var proposalIdsParam = new NpgsqlParameter<Guid[]>("SettlementProposalIds", NpgsqlDbType.Uuid | NpgsqlDbType.Array)
         {

@@ -19,8 +19,8 @@ internal class SettlementProposalAssessmentPollVoteQueryable : Queryable, ISettl
                 WHERE ""Id"" = @ProposalId;
 
                 SELECT DISTINCT ON (""UserId"")
-                    ""UserId"", ""WalletAddress"", ""CastedAtMs"", ""L1BlockNumber"", ""BlockNumber"",
-                    ""Decision"", ""Reason"", ""IpfsCid"", ""TxnHash""
+                    ""UserId"", ""WalletAddress"", ""CastedAtMs"", ""L1BlockNumber"",
+                    ""BlockNumber"", ""Decision"", ""Reason"", ""IpfsCid"", ""TxnHash""
                 FROM (
                     SELECT *
                     FROM (

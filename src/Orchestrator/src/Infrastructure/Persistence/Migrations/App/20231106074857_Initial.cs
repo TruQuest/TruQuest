@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Domain.Aggregates;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -16,12 +17,21 @@ namespace Infrastructure.Persistence.Migrations.App
             migrationBuilder.EnsureSchema(
                 name: "truquest");
 
+            migrationBuilder.AlterDatabase()
+                .Annotation("Npgsql:Enum:truquest.settlement_proposal_state", "draft,awaiting_funding,funded_and_verifier_lottery_initiated,verifier_lottery_failed,verifiers_selected_and_poll_initiated,consensus_not_reached,declined,accepted")
+                .Annotation("Npgsql:Enum:truquest.subject_type", "person,organization")
+                .Annotation("Npgsql:Enum:truquest.task_type", "close_thing_validation_verifier_lottery,close_thing_validation_poll,close_settlement_proposal_assessment_verifier_lottery,close_settlement_proposal_assessment_poll")
+                .Annotation("Npgsql:Enum:truquest.thing_state", "draft,awaiting_funding,funded_and_verifier_lottery_initiated,verifier_lottery_failed,verifiers_selected_and_poll_initiated,consensus_not_reached,declined,awaiting_settlement,settled")
+                .Annotation("Npgsql:Enum:truquest.verdict", "delivered,guess_it_counts,aint_good_enough,motion_not_action,no_effort_whatsoever,as_good_as_malicious_intent")
+                .Annotation("Npgsql:Enum:truquest.watched_item_type", "subject,thing,settlement_proposal");
+
             migrationBuilder.CreateTable(
                 name: "AspNetUsers",
                 schema: "truquest",
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
+                    WalletAddress = table.Column<string>(type: "text", nullable: false),
                     UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
@@ -97,7 +107,7 @@ namespace Infrastructure.Persistence.Migrations.App
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityAlwaysColumn),
-                    Type = table.Column<int>(type: "integer", nullable: false),
+                    Type = table.Column<TaskType>(type: "truquest.task_type", nullable: false),
                     ScheduledBlockNumber = table.Column<long>(type: "bigint", nullable: false),
                     Payload = table.Column<IReadOnlyDictionary<string, object>>(type: "jsonb", nullable: false)
                 },
@@ -229,7 +239,7 @@ namespace Infrastructure.Persistence.Migrations.App
                     SubmittedAt = table.Column<long>(type: "bigint", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     Details = table.Column<string>(type: "text", nullable: false),
-                    Type = table.Column<int>(type: "integer", nullable: false),
+                    Type = table.Column<SubjectType>(type: "truquest.subject_type", nullable: false),
                     ImageIpfsCid = table.Column<string>(type: "text", nullable: false),
                     CroppedImageIpfsCid = table.Column<string>(type: "text", nullable: false),
                     SubmitterId = table.Column<string>(type: "text", nullable: false),
@@ -254,7 +264,7 @@ namespace Infrastructure.Persistence.Migrations.App
                 columns: table => new
                 {
                     UserId = table.Column<string>(type: "text", nullable: false),
-                    ItemType = table.Column<int>(type: "integer", nullable: false),
+                    ItemType = table.Column<WatchedItemType>(type: "truquest.watched_item_type", nullable: false),
                     ItemId = table.Column<Guid>(type: "uuid", nullable: false),
                     ItemUpdateCategory = table.Column<int>(type: "integer", nullable: false),
                     LastSeenUpdateTimestamp = table.Column<long>(type: "bigint", nullable: false)
@@ -304,7 +314,7 @@ namespace Infrastructure.Persistence.Migrations.App
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    State = table.Column<int>(type: "integer", nullable: false),
+                    State = table.Column<ThingState>(type: "truquest.thing_state", nullable: false),
                     SubmittedAt = table.Column<long>(type: "bigint", nullable: true),
                     Title = table.Column<string>(type: "text", nullable: false),
                     Details = table.Column<string>(type: "text", nullable: false),
@@ -343,10 +353,10 @@ namespace Infrastructure.Persistence.Migrations.App
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ThingId = table.Column<Guid>(type: "uuid", nullable: false),
-                    State = table.Column<int>(type: "integer", nullable: false),
+                    State = table.Column<SettlementProposalState>(type: "truquest.settlement_proposal_state", nullable: false),
                     SubmittedAt = table.Column<long>(type: "bigint", nullable: true),
                     Title = table.Column<string>(type: "text", nullable: false),
-                    Verdict = table.Column<int>(type: "integer", nullable: false),
+                    Verdict = table.Column<Verdict>(type: "truquest.verdict", nullable: false),
                     Details = table.Column<string>(type: "text", nullable: false),
                     ImageIpfsCid = table.Column<string>(type: "text", nullable: true),
                     CroppedImageIpfsCid = table.Column<string>(type: "text", nullable: true),

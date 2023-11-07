@@ -15,10 +15,7 @@ internal class ThingUpdateRepository : Repository, IThingUpdateRepository
     public async Task AddOrUpdate(params ThingUpdate[] updateEvents)
     {
         var traceparent = Telemetry.CurrentActivity!.GetTraceparent();
-        foreach (var @event in updateEvents)
-        {
-            @event.SetTraceparent(traceparent);
-        }
+        foreach (var @event in updateEvents) @event.SetTraceparent(traceparent);
 
         var thingIdsParam = new NpgsqlParameter<Guid[]>("ThingIds", NpgsqlDbType.Uuid | NpgsqlDbType.Array)
         {

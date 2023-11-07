@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Domain.Aggregates.Events;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -16,6 +17,9 @@ namespace Infrastructure.Persistence.Migrations.Event
             migrationBuilder.EnsureSchema(
                 name: "truquest_events");
 
+            migrationBuilder.AlterDatabase()
+                .Annotation("Npgsql:Enum:truquest_events.thing_event_type", "funded,validation_verifier_lottery_failed,validation_verifier_lottery_succeeded,validation_poll_finalized,settlement_proposal_funded,settlement_proposal_assessment_verifier_lottery_failed,settlement_proposal_assessment_verifier_lottery_succeeded,settlement_proposal_assessment_poll_finalized");
+
             migrationBuilder.CreateTable(
                 name: "ActionableThingRelatedEvents",
                 schema: "truquest_events",
@@ -26,7 +30,7 @@ namespace Infrastructure.Persistence.Migrations.Event
                     TxnIndex = table.Column<int>(type: "integer", nullable: false),
                     TxnHash = table.Column<string>(type: "text", nullable: false),
                     ThingId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Type = table.Column<int>(type: "integer", nullable: false),
+                    Type = table.Column<ThingEventType>(type: "truquest_events.thing_event_type", nullable: false),
                     Payload = table.Column<IReadOnlyDictionary<string, object>>(type: "jsonb", nullable: false)
                 },
                 constraints: table =>
@@ -57,6 +61,7 @@ namespace Infrastructure.Persistence.Migrations.Event
                     BlockNumber = table.Column<long>(type: "bigint", nullable: false),
                     TxnIndex = table.Column<int>(type: "integer", nullable: false),
                     TxnHash = table.Column<string>(type: "text", nullable: false),
+                    LogIndex = table.Column<int>(type: "integer", nullable: false),
                     ThingId = table.Column<Guid>(type: "uuid", nullable: false),
                     SettlementProposalId = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<string>(type: "text", nullable: true),
@@ -80,6 +85,7 @@ namespace Infrastructure.Persistence.Migrations.Event
                     BlockNumber = table.Column<long>(type: "bigint", nullable: false),
                     TxnIndex = table.Column<int>(type: "integer", nullable: false),
                     TxnHash = table.Column<string>(type: "text", nullable: false),
+                    LogIndex = table.Column<int>(type: "integer", nullable: false),
                     ThingId = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<string>(type: "text", nullable: true),
                     WalletAddress = table.Column<string>(type: "text", nullable: false),
@@ -102,6 +108,7 @@ namespace Infrastructure.Persistence.Migrations.Event
                     BlockNumber = table.Column<long>(type: "bigint", nullable: false),
                     TxnIndex = table.Column<int>(type: "integer", nullable: false),
                     TxnHash = table.Column<string>(type: "text", nullable: false),
+                    LogIndex = table.Column<int>(type: "integer", nullable: false),
                     ThingId = table.Column<Guid>(type: "uuid", nullable: false),
                     SettlementProposalId = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<string>(type: "text", nullable: true),
@@ -125,6 +132,7 @@ namespace Infrastructure.Persistence.Migrations.Event
                     BlockNumber = table.Column<long>(type: "bigint", nullable: false),
                     TxnIndex = table.Column<int>(type: "integer", nullable: false),
                     TxnHash = table.Column<string>(type: "text", nullable: false),
+                    LogIndex = table.Column<int>(type: "integer", nullable: false),
                     ThingId = table.Column<Guid>(type: "uuid", nullable: false),
                     SettlementProposalId = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<string>(type: "text", nullable: true),
@@ -148,6 +156,7 @@ namespace Infrastructure.Persistence.Migrations.Event
                     BlockNumber = table.Column<long>(type: "bigint", nullable: false),
                     TxnIndex = table.Column<int>(type: "integer", nullable: false),
                     TxnHash = table.Column<string>(type: "text", nullable: false),
+                    LogIndex = table.Column<int>(type: "integer", nullable: false),
                     ThingId = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<string>(type: "text", nullable: true),
                     WalletAddress = table.Column<string>(type: "text", nullable: false),
@@ -209,38 +218,38 @@ namespace Infrastructure.Persistence.Migrations.Event
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_CastedSettlementProposalAssessmentPollVoteEvents_TxnHash",
+                name: "IX_CastedSettlementProposalAssessmentPollVoteEvents_TxnHash_Lo~",
                 schema: "truquest_events",
                 table: "CastedSettlementProposalAssessmentPollVoteEvents",
-                column: "TxnHash",
+                columns: new[] { "TxnHash", "LogIndex" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_CastedThingValidationPollVoteEvents_TxnHash",
+                name: "IX_CastedThingValidationPollVoteEvents_TxnHash_LogIndex",
                 schema: "truquest_events",
                 table: "CastedThingValidationPollVoteEvents",
-                column: "TxnHash",
+                columns: new[] { "TxnHash", "LogIndex" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_ClaimedSettlementProposalAssessmentVerifierLotterySpotEvent~",
                 schema: "truquest_events",
                 table: "ClaimedSettlementProposalAssessmentVerifierLotterySpotEvents",
-                column: "TxnHash",
+                columns: new[] { "TxnHash", "LogIndex" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_JoinedSettlementProposalAssessmentVerifierLotteryEvents_Txn~",
                 schema: "truquest_events",
                 table: "JoinedSettlementProposalAssessmentVerifierLotteryEvents",
-                column: "TxnHash",
+                columns: new[] { "TxnHash", "LogIndex" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_JoinedThingValidationVerifierLotteryEvents_TxnHash",
+                name: "IX_JoinedThingValidationVerifierLotteryEvents_TxnHash_LogIndex",
                 schema: "truquest_events",
                 table: "JoinedThingValidationVerifierLotteryEvents",
-                column: "TxnHash",
+                columns: new[] { "TxnHash", "LogIndex" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
