@@ -1,3 +1,5 @@
+using System.Reflection;
+using System.Diagnostics;
 using System.Threading.Channels;
 using System.Runtime.CompilerServices;
 
@@ -5,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 
 using MediatR;
+using Nethereum.Util;
 using Nethereum.Web3;
 using Nethereum.Contracts;
 using Nethereum.BlockchainProcessing.Processor;
@@ -134,7 +137,39 @@ internal class ContractEventListener : IContractEventListener
 
         await foreach (var (@event, tcs) in _stream.ReadAllAsync())
         {
-            // @@??: Assert that all address containing fields are EIP-55-encoded?
+#if DEBUG
+            var eventProp = @event.GetType().GetProperty("Event")!;
+            var parsedEvent = eventProp.GetValue(@event)!;
+            var addressProps = parsedEvent.GetType()
+                .GetProperties()
+                .Where(p => p.GetCustomAttribute<ParameterAttribute>()!.Type == "address");
+
+            var addressUtil = AddressUtil.Current;
+            foreach (var addressProp in addressProps)
+            {
+                var address = (string)addressProp.GetValue(parsedEvent)!;
+                Debug.Assert(
+                    addressUtil.IsValidEthereumAddressHexFormat(address) &&
+                    addressUtil.IsChecksumAddress(address)
+                );
+            }
+
+            var addressArrayProps = parsedEvent.GetType()
+                .GetProperties()
+                .Where(p => p.GetCustomAttribute<ParameterAttribute>()!.Type == "address[]");
+
+            foreach (var addressArrayProp in addressArrayProps)
+            {
+                var addresses = (List<string>)addressArrayProp.GetValue(parsedEvent)!;
+                foreach (var address in addresses)
+                {
+                    Debug.Assert(
+                        addressUtil.IsValidEthereumAddressHexFormat(address) &&
+                        addressUtil.IsChecksumAddress(address)
+                    );
+                }
+            }
+#endif
 
             if (@event is EventLog<ThingFundedEvent> thingFundedEvent)
             {

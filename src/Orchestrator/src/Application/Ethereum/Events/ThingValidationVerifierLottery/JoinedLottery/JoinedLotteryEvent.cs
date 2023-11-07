@@ -1,12 +1,9 @@
-using System.Diagnostics;
-
 using MediatR;
 
 using Domain.Aggregates.Events;
 
 using Application.Common.Misc;
 using Application.Ethereum.Common.Models.IM;
-using Application.Common.Interfaces;
 
 namespace Application.Ethereum.Events.ThingValidationVerifierLottery.JoinedLottery;
 
@@ -21,27 +18,16 @@ public class JoinedLotteryEvent : BaseContractEvent, INotification
 internal class JoinedLotteryEventHandler : INotificationHandler<JoinedLotteryEvent>
 {
     private readonly IJoinedThingValidationVerifierLotteryEventRepository _joinedValidationVerifierLotteryEventRepository;
-#if DEBUG
-    private readonly IEthereumAddressFormatter _ethereumAddressFormatter;
-#endif
 
     public JoinedLotteryEventHandler(
         IJoinedThingValidationVerifierLotteryEventRepository joinedValidationVerifierLotteryEventRepository
-#if DEBUG
-        , IEthereumAddressFormatter ethereumAddressFormatter
-#endif
     )
     {
         _joinedValidationVerifierLotteryEventRepository = joinedValidationVerifierLotteryEventRepository;
-#if DEBUG
-        _ethereumAddressFormatter = ethereumAddressFormatter;
-#endif
     }
 
     public async Task Handle(JoinedLotteryEvent @event, CancellationToken ct)
     {
-        Debug.Assert(_ethereumAddressFormatter.IsValidEIP55EncodedAddress(@event.WalletAddress));
-
         var joinedLotteryEvent = new JoinedThingValidationVerifierLotteryEvent(
             blockNumber: @event.BlockNumber,
             txnIndex: @event.TxnIndex,
