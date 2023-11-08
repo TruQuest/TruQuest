@@ -191,13 +191,6 @@ public class ContractCaller
                 ThingVerifiersArrayIndex = thingVerifiersArrayIndex
             }
         );
-        // catch (SmartContractCustomErrorRevertException ex)
-        // {
-        //     if (ex.IsCustomErrorFor<SomeErrorType>())
-        //     {
-        //         var error = ex.DecodeError<SomeErrorType>();
-        //     }
-        // }
 
         await _blockchainManipulator.Mine(1);
     }

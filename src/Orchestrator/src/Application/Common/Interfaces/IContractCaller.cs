@@ -1,5 +1,6 @@
 using System.Numerics;
 
+using Application.Common.Attributes;
 using Application.Ethereum.Common.Models.IM;
 
 namespace Application.Common.Interfaces;
@@ -14,13 +15,16 @@ public interface IContractCaller
     Task<int> GetThingValidationVerifierLotteryDurationBlocks();
     Task<IEnumerable<string>> GetThingValidationVerifierLotteryParticipants(byte[] thingId);
     Task<byte[]> ComputeHashForThingValidationVerifierLottery(byte[] data);
+    [TrackGasUsage(MetricName = "init-thing-lottery")]
     Task<long> InitThingValidationVerifierLottery(byte[] thingId, byte[] dataHash, byte[] userXorDataHash);
     Task<long> GetThingValidationVerifierLotteryInitBlock(byte[] thingId);
     Task<bool> CheckThingValidationVerifierLotteryExpired(byte[] thingId);
     Task<BigInteger> GetThingValidationVerifierLotteryMaxNonce();
+    [TrackGasUsage(MetricName = "close-thing-lottery-success")]
     Task CloseThingValidationVerifierLotteryWithSuccess(
         byte[] thingId, byte[] data, byte[] userXorData, byte[] hashOfL1EndBlock, List<ulong> winnerIndices
     );
+    [TrackGasUsage(MetricName = "close-thing-lottery-failure")]
     Task CloseThingValidationVerifierLotteryInFailure(byte[] thingId, int joinedNumVerifiers);
 
     Task<int> GetThingValidationPollVotingVolumeThresholdPercent();

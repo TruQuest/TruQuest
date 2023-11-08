@@ -57,6 +57,11 @@ internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierL
                 command.ThingId.ToByteArray(), dataHash, userXorDataHash
             );
 
+            // @@NOTE: In a theoretical situation when something glitches and two identical Init commands get dispatched one
+            // after another, even though the above call will fail for the second command, we still should continue executing
+            // the code below, since we don't know which transaction Postgres will keep and which one it will discard due to
+            // serialization failure.
+
             _logger.LogInformation("Thing {ThingId} Lottery Init Block: {BlockNum}", command.ThingId, lotteryInitBlockNumber);
 
             int lotteryDurationBlocks = await _contractCaller.GetThingValidationVerifierLotteryDurationBlocks();

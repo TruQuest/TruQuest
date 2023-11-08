@@ -106,6 +106,33 @@ public static class WebApplicationBuilderExtension
                 .WithMetrics(builder =>
                     builder
                         .AddMeter(Telemetry.Meter.Name)
+                        .AddView(metric =>
+                        {
+                            if (metric.Name.StartsWith("ethereum.contract-call."))
+                            {
+                                return new ExplicitBucketHistogramConfiguration
+                                {
+                                    Boundaries = new double[]
+                                    {
+                                        50000,
+                                        100000,
+                                        150000,
+                                        200000,
+                                        250000,
+                                        300000,
+                                        350000,
+                                        400000,
+                                        450000,
+                                        500000
+                                    }
+                                };
+                            }
+
+                            return null;
+                        })
+                        .AddConsoleExporter(options =>
+                            options.Targets = OpenTelemetry.Exporter.ConsoleExporterOutputTargets.Debug
+                        )
                         .AddOtlpExporter(otlpOptions =>
                         {
                             otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);

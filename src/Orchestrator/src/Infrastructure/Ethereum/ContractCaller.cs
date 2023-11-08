@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Threading.Channels;
+using System.Runtime.CompilerServices;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
@@ -8,7 +9,9 @@ using Microsoft.Extensions.Hosting;
 
 using Nethereum.Web3;
 using Nethereum.RPC.Eth.DTOs;
+using Nethereum.Contracts;
 
+using Domain.Results;
 using Application;
 using Application.Common.Interfaces;
 using Application.Common.Misc;
@@ -16,6 +19,7 @@ using Application.Ethereum.Common.Models.IM;
 
 using Infrastructure.Ethereum.Messages;
 using Infrastructure.Ethereum.TypedData;
+using Infrastructure.Ethereum.Errors;
 
 namespace Infrastructure.Ethereum;
 
@@ -33,15 +37,17 @@ internal class ContractCaller : IContractCaller
     private readonly string _settlementProposalAssessmentPollAddress;
 
     private readonly ChannelReader<(
-        TaskCompletionSource<TransactionReceipt> Tcs,
-        Func<Task<TransactionReceipt>> Task,
-        string Traceparent
+        TaskCompletionSource<Either<BaseError, TransactionReceipt>> Tcs,
+        Func<Task<Either<BaseError, TransactionReceipt>>> Task,
+        string Traceparent,
+        string FunctionName
     )> _stream;
 
     private readonly ChannelWriter<(
-        TaskCompletionSource<TransactionReceipt> Tcs,
-        Func<Task<TransactionReceipt>> Task,
-        string Traceparent
+        TaskCompletionSource<Either<BaseError, TransactionReceipt>> Tcs,
+        Func<Task<Either<BaseError, TransactionReceipt>>> Task,
+        string Traceparent,
+        string FunctionName
     )> _sink;
 
     public ContractCaller(
@@ -67,9 +73,10 @@ internal class ContractCaller : IContractCaller
         _settlementProposalAssessmentPollAddress = configuration[$"Ethereum:Contracts:{network}:SettlementProposalAssessmentPoll:Address"]!;
 
         var channel = Channel.CreateUnbounded<(
-            TaskCompletionSource<TransactionReceipt> Tcs,
-            Func<Task<TransactionReceipt>> Task,
-            string Traceparent
+            TaskCompletionSource<Either<BaseError, TransactionReceipt>> Tcs,
+            Func<Task<Either<BaseError, TransactionReceipt>>> Task,
+            string Traceparent,
+            string FunctionName
         )>(new UnboundedChannelOptions { SingleReader = true });
 
         _stream = channel.Reader;
@@ -85,9 +92,14 @@ internal class ContractCaller : IContractCaller
         {
             await foreach (var item in _stream.ReadAllAsync(ct))
             {
-                var txnReceipt = await item.Task();
-                _memoryCache.Set(txnReceipt.TransactionHash, item.Traceparent);
-                item.Tcs.SetResult(txnReceipt);
+                // @@TODO!!: Try-catch common errors like insufficient funds, OOG, etc.
+                var result = await item.Task();
+                if (!result.IsError)
+                {
+                    _memoryCache.Set(result.Data!.TransactionHash, item.Traceparent);
+                    Metrics.FunctionNameToGasUsedHistogram[item.FunctionName].Record((int)result.Data!.GasUsed.Value);
+                }
+                item.Tcs.SetResult(result);
             }
         }
         catch (OperationCanceledException)
@@ -96,10 +108,13 @@ internal class ContractCaller : IContractCaller
         }
     }
 
-    private async Task<TransactionReceipt> _sendTxn(Func<Task<TransactionReceipt>> task)
+    private async Task<Either<BaseError, TransactionReceipt>> _sendTxn(
+        Func<Task<Either<BaseError, TransactionReceipt>>> task,
+        [CallerMemberName] string callerMethodName = ""
+    )
     {
-        var tcs = new TaskCompletionSource<TransactionReceipt>();
-        await _sink.WriteAsync((tcs, task, Telemetry.CurrentActivity!.GetTraceparent()));
+        var tcs = new TaskCompletionSource<Either<BaseError, TransactionReceipt>>();
+        await _sink.WriteAsync((tcs, task, Telemetry.CurrentActivity!.GetTraceparent(), callerMethodName));
         return await tcs.Task;
     }
 
@@ -175,20 +190,50 @@ internal class ContractCaller : IContractCaller
 
     public async Task<long> InitThingValidationVerifierLottery(byte[] thingId, byte[] dataHash, byte[] userXorDataHash)
     {
-        var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<InitThingValidationVerifierLotteryMessage>()
-            .SendRequestAndWaitForReceiptAsync(
-                _thingValidationVerifierLotteryAddress,
-                new()
+        var result = await _sendTxn(async () =>
+        {
+            try
+            {
+                return await _web3.Eth
+                    .GetContractTransactionHandler<InitThingValidationVerifierLotteryMessage>()
+                    .SendRequestAndWaitForReceiptAsync(
+                        _thingValidationVerifierLotteryAddress,
+                        new()
+                        {
+                            ThingId = thingId,
+                            DataHash = dataHash,
+                            UserXorDataHash = userXorDataHash
+                        }
+                    );
+            }
+            catch (SmartContractCustomErrorRevertException ex)
+            {
+                BaseError error;
+                if (ex.IsCustomErrorFor<Errors.ThingValidationVerifierLottery.AlreadyInitializedError>())
                 {
-                    ThingId = thingId,
-                    DataHash = dataHash,
-                    UserXorDataHash = userXorDataHash
+                    error = ex.DecodeError<Errors.ThingValidationVerifierLottery.AlreadyInitializedError>();
                 }
-            )
-        );
+                else
+                {
+                    throw new NotImplementedException();
+                }
 
-        _logger.LogInformation("=============== InitThingValidationVerifierLottery: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+                return error;
+            }
+        });
+
+        if (result.IsError)
+        {
+            _logger.LogWarning(
+                "Error trying to initialize thing {ThingId} validation verifier lottery: {ContractError}", new Guid(thingId), result.Error
+            );
+        }
+        else
+        {
+            _logger.LogInformation(
+                "=============== InitThingValidationVerifierLottery: Txn hash {TxnHash} ===============", result.Data!.TransactionHash
+            );
+        }
 
         // @@NOTE: Doing it this way instead of returning block number from the receipt, because
         // even when we are on L2, lottery init block is /L1/ block number.
@@ -225,39 +270,79 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, byte[] data, byte[] userXorData, byte[] hashOfL1EndBlock, List<ulong> winnerIndices
     )
     {
-        var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<CloseThingValidationVerifierLotteryWithSuccessMessage>()
-            .SendRequestAndWaitForReceiptAsync(
-                _thingValidationVerifierLotteryAddress,
-                new()
-                {
-                    ThingId = thingId,
-                    Data = data,
-                    UserXorData = userXorData,
-                    HashOfL1EndBlock = hashOfL1EndBlock,
-                    WinnerIndices = winnerIndices
-                }
-            )
-        );
+        var result = await _sendTxn(async () =>
+        {
+            try
+            {
+                return await _web3.Eth
+                    .GetContractTransactionHandler<CloseThingValidationVerifierLotteryWithSuccessMessage>()
+                    .SendRequestAndWaitForReceiptAsync(
+                        _thingValidationVerifierLotteryAddress,
+                        new()
+                        {
+                            ThingId = thingId,
+                            Data = data,
+                            UserXorData = userXorData,
+                            HashOfL1EndBlock = hashOfL1EndBlock,
+                            WinnerIndices = winnerIndices
+                        }
+                    );
+            }
+            catch (SmartContractCustomErrorRevertException ex)
+            {
+                throw new NotImplementedException();
+            }
+        });
 
-        _logger.LogInformation("=============== CloseThingValidationVerifierLotteryWithSuccess: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        if (result.IsError)
+        {
+            _logger.LogWarning(
+                "Error trying to close thing {ThingId} validation verifier lottery with success: {ContractError}", new Guid(thingId), result.Error
+            );
+        }
+        else
+        {
+            _logger.LogInformation(
+                "=============== CloseThingValidationVerifierLotteryWithSuccess: Txn hash {TxnHash} ===============", result.Data!.TransactionHash
+            );
+        }
     }
 
     public async Task CloseThingValidationVerifierLotteryInFailure(byte[] thingId, int joinedNumVerifiers)
     {
-        var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<CloseThingValidationVerifierLotteryInFailureMessage>()
-            .SendRequestAndWaitForReceiptAsync(
-                _thingValidationVerifierLotteryAddress,
-                new()
-                {
-                    ThingId = thingId,
-                    JoinedNumVerifiers = joinedNumVerifiers
-                }
-            )
-        );
+        var result = await _sendTxn(async () =>
+        {
+            try
+            {
+                return await _web3.Eth
+                    .GetContractTransactionHandler<CloseThingValidationVerifierLotteryInFailureMessage>()
+                    .SendRequestAndWaitForReceiptAsync(
+                        _thingValidationVerifierLotteryAddress,
+                        new()
+                        {
+                            ThingId = thingId,
+                            JoinedNumVerifiers = joinedNumVerifiers
+                        }
+                    );
+            }
+            catch (SmartContractCustomErrorRevertException ex)
+            {
+                throw new NotImplementedException();
+            }
+        });
 
-        _logger.LogInformation("=============== CloseThingValidationVerifierLotteryInFailure: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        if (result.IsError)
+        {
+            _logger.LogWarning(
+                "Error trying to close thing {ThingId} validation verifier lottery in failure: {ContractError}", new Guid(thingId), result.Error
+            );
+        }
+        else
+        {
+            _logger.LogInformation(
+                "=============== CloseThingValidationVerifierLotteryInFailure: Txn hash {TxnHash} ===============", result.Data!.TransactionHash
+            );
+        }
     }
 
     public Task<int> GetThingValidationPollVotingVolumeThresholdPercent() => _web3.Eth
@@ -288,102 +373,212 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
-        var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<FinalizeThingValidationPollAsUnsettledMessage>()
-            .SendRequestAndWaitForReceiptAsync(
-                _thingValidationPollAddress,
-                new()
-                {
-                    ThingId = thingId,
-                    VoteAggIpfsCid = voteAggIpfsCid,
-                    Decision = Decision.UnsettledDueToInsufficientVotingVolume,
-                    VerifiersToSlashIndices = verifiersToSlashIndices
-                }
-            )
-        );
+        var result = await _sendTxn(async () =>
+        {
+            try
+            {
+                return await _web3.Eth
+                    .GetContractTransactionHandler<FinalizeThingValidationPollAsUnsettledMessage>()
+                    .SendRequestAndWaitForReceiptAsync(
+                        _thingValidationPollAddress,
+                        new()
+                        {
+                            ThingId = thingId,
+                            VoteAggIpfsCid = voteAggIpfsCid,
+                            Decision = Decision.UnsettledDueToInsufficientVotingVolume,
+                            VerifiersToSlashIndices = verifiersToSlashIndices
+                        }
+                    );
+            }
+            catch (SmartContractCustomErrorRevertException ex)
+            {
+                throw new NotImplementedException();
+            }
+        });
 
-        _logger.LogInformation("=============== FinalizeThingValidationPollAsUnsettled: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        if (result.IsError)
+        {
+            _logger.LogWarning(
+                "Error trying to finalize thing {ThingId} validation poll as unsettled due to insufficient voting volume: {ContractError}",
+                new Guid(thingId),
+                result.Error
+            );
+        }
+        else
+        {
+            _logger.LogInformation(
+                "=============== FinalizeThingValidationPollAsUnsettled: Txn hash {TxnHash} ===============", result.Data!.TransactionHash
+            );
+        }
     }
 
     public async Task FinalizeThingValidationPollAsUnsettledDueToMajorityThresholdNotReached(
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
-        var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<FinalizeThingValidationPollAsUnsettledMessage>()
-            .SendRequestAndWaitForReceiptAsync(
-                _thingValidationPollAddress,
-                new()
-                {
-                    ThingId = thingId,
-                    VoteAggIpfsCid = voteAggIpfsCid,
-                    Decision = Decision.UnsettledDueToMajorityThresholdNotReached,
-                    VerifiersToSlashIndices = verifiersToSlashIndices
-                }
-            )
-        );
+        var result = await _sendTxn(async () =>
+        {
+            try
+            {
+                return await _web3.Eth
+                    .GetContractTransactionHandler<FinalizeThingValidationPollAsUnsettledMessage>()
+                    .SendRequestAndWaitForReceiptAsync(
+                        _thingValidationPollAddress,
+                        new()
+                        {
+                            ThingId = thingId,
+                            VoteAggIpfsCid = voteAggIpfsCid,
+                            Decision = Decision.UnsettledDueToMajorityThresholdNotReached,
+                            VerifiersToSlashIndices = verifiersToSlashIndices
+                        }
+                    );
+            }
+            catch (SmartContractCustomErrorRevertException ex)
+            {
+                throw new NotImplementedException();
+            }
+        });
 
-        _logger.LogInformation("=============== FinalizeThingValidationPollAsUnsettled: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        if (result.IsError)
+        {
+            _logger.LogWarning(
+                "Error trying to finalize thing {ThingId} validation poll as unsettled due to majority threshold not reached: {ContractError}",
+                new Guid(thingId),
+                result.Error
+            );
+        }
+        else
+        {
+            _logger.LogInformation(
+                "=============== FinalizeThingValidationPollAsUnsettled: Txn hash {TxnHash} ===============", result.Data!.TransactionHash
+            );
+        }
     }
 
     public async Task FinalizeThingValidationPollAsAccepted(
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
-        var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<FinalizeThingValidationPollAsAcceptedMessage>()
-            .SendRequestAndWaitForReceiptAsync(
-                _thingValidationPollAddress,
-                new()
-                {
-                    ThingId = thingId,
-                    VoteAggIpfsCid = voteAggIpfsCid,
-                    VerifiersToSlashIndices = verifiersToSlashIndices
-                }
-            )
-        );
+        var result = await _sendTxn(async () =>
+        {
+            try
+            {
+                return await _web3.Eth
+                    .GetContractTransactionHandler<FinalizeThingValidationPollAsAcceptedMessage>()
+                    .SendRequestAndWaitForReceiptAsync(
+                        _thingValidationPollAddress,
+                        new()
+                        {
+                            ThingId = thingId,
+                            VoteAggIpfsCid = voteAggIpfsCid,
+                            VerifiersToSlashIndices = verifiersToSlashIndices
+                        }
+                    );
+            }
+            catch (SmartContractCustomErrorRevertException ex)
+            {
+                throw new NotImplementedException();
+            }
+        });
 
-        _logger.LogInformation("=============== FinalizeThingValidationPollAsAccepted: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        if (result.IsError)
+        {
+            _logger.LogWarning(
+                "Error trying to finalize thing {ThingId} validation poll as accepted: {ContractError}",
+                new Guid(thingId),
+                result.Error
+            );
+        }
+        else
+        {
+            _logger.LogInformation(
+                "=============== FinalizeThingValidationPollAsAccepted: Txn hash {TxnHash} ===============", result.Data!.TransactionHash
+            );
+        }
     }
 
     public async Task FinalizeThingValidationPollAsSoftDeclined(
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
-        var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<FinalizeThingValidationPollAsSoftDeclinedMessage>()
-            .SendRequestAndWaitForReceiptAsync(
-                _thingValidationPollAddress,
-                new()
-                {
-                    ThingId = thingId,
-                    VoteAggIpfsCid = voteAggIpfsCid,
-                    VerifiersToSlashIndices = verifiersToSlashIndices
-                }
-            )
-        );
+        var result = await _sendTxn(async () =>
+        {
+            try
+            {
+                return await _web3.Eth
+                    .GetContractTransactionHandler<FinalizeThingValidationPollAsSoftDeclinedMessage>()
+                    .SendRequestAndWaitForReceiptAsync(
+                        _thingValidationPollAddress,
+                        new()
+                        {
+                            ThingId = thingId,
+                            VoteAggIpfsCid = voteAggIpfsCid,
+                            VerifiersToSlashIndices = verifiersToSlashIndices
+                        }
+                    );
+            }
+            catch (SmartContractCustomErrorRevertException ex)
+            {
+                throw new NotImplementedException();
+            }
+        });
 
-        _logger.LogInformation("=============== FinalizeThingValidationPollAsSoftDeclined: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        if (result.IsError)
+        {
+            _logger.LogWarning(
+                "Error trying to finalize thing {ThingId} validation poll as soft declined: {ContractError}",
+                new Guid(thingId),
+                result.Error
+            );
+        }
+        else
+        {
+            _logger.LogInformation(
+                "=============== FinalizeThingValidationPollAsSoftDeclined: Txn hash {TxnHash} ===============", result.Data!.TransactionHash
+            );
+        }
     }
 
     public async Task FinalizeThingValidationPollAsHardDeclined(
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
-        var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<FinalizeThingValidationPollAsHardDeclinedMessage>()
-            .SendRequestAndWaitForReceiptAsync(
-                _thingValidationPollAddress,
-                new()
-                {
-                    ThingId = thingId,
-                    VoteAggIpfsCid = voteAggIpfsCid,
-                    VerifiersToSlashIndices = verifiersToSlashIndices
-                }
-            )
-        );
+        var result = await _sendTxn(async () =>
+        {
+            try
+            {
+                return await _web3.Eth
+                    .GetContractTransactionHandler<FinalizeThingValidationPollAsHardDeclinedMessage>()
+                    .SendRequestAndWaitForReceiptAsync(
+                        _thingValidationPollAddress,
+                        new()
+                        {
+                            ThingId = thingId,
+                            VoteAggIpfsCid = voteAggIpfsCid,
+                            VerifiersToSlashIndices = verifiersToSlashIndices
+                        }
+                    );
+            }
+            catch (SmartContractCustomErrorRevertException ex)
+            {
+                throw new NotImplementedException();
+            }
+        });
 
-        _logger.LogInformation("=============== FinalizeThingValidationPollAsHardDeclined: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        if (result.IsError)
+        {
+            _logger.LogWarning(
+                "Error trying to finalize thing {ThingId} validation poll as hard declined: {ContractError}",
+                new Guid(thingId),
+                result.Error
+            );
+        }
+        else
+        {
+            _logger.LogInformation(
+                "=============== FinalizeThingValidationPollAsHardDeclined: Txn hash {TxnHash} ===============", result.Data!.TransactionHash
+            );
+        }
     }
 
     public async Task<IEnumerable<string>> GetVerifiersForThing(byte[] thingId) => await _web3.Eth
@@ -427,20 +622,44 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, byte[] proposalId, byte[] dataHash, byte[] userXorDataHash
     )
     {
-        var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<InitSettlementProposalAssessmentVerifierLotteryMessage>()
-            .SendRequestAndWaitForReceiptAsync(
-                _settlementProposalAssessmentVerifierLotteryAddress,
-                new()
-                {
-                    ThingProposalId = thingId.Concat(proposalId).ToArray(),
-                    DataHash = dataHash,
-                    UserXorDataHash = userXorDataHash
-                }
-            )
-        );
+        var result = await _sendTxn(async () =>
+        {
+            try
+            {
+                return await _web3.Eth
+                    .GetContractTransactionHandler<InitSettlementProposalAssessmentVerifierLotteryMessage>()
+                    .SendRequestAndWaitForReceiptAsync(
+                        _settlementProposalAssessmentVerifierLotteryAddress,
+                        new()
+                        {
+                            ThingProposalId = thingId.Concat(proposalId).ToArray(),
+                            DataHash = dataHash,
+                            UserXorDataHash = userXorDataHash
+                        }
+                    );
+            }
+            catch (SmartContractCustomErrorRevertException ex)
+            {
+                throw new NotImplementedException();
+            }
+        });
 
-        _logger.LogInformation("=============== InitSettlementProposalAssessmentVerifierLottery: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        if (result.IsError)
+        {
+            _logger.LogWarning(
+                "Error trying to initialize settlement proposal {ProposalId} (for thing {ThingId}) assessment verifier lottery: {ContractError}",
+                new Guid(proposalId),
+                new Guid(thingId),
+                result.Error
+            );
+        }
+        else
+        {
+            _logger.LogInformation(
+                "=============== InitSettlementProposalAssessmentVerifierLottery: Txn hash {TxnHash} ===============",
+                result.Data!.TransactionHash
+            );
+        }
 
         return await GetSettlementProposalAssessmentVerifierLotteryInitBlock(thingId, proposalId);
     }
@@ -488,39 +707,88 @@ internal class ContractCaller : IContractCaller
         byte[] hashOfL1EndBlock, List<ulong> winnerClaimantIndices, List<ulong> winnerIndices
     )
     {
-        var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<CloseSettlementProposalAssessmentVerifierLotteryWithSuccessMessage>()
-            .SendRequestAndWaitForReceiptAsync(
-                _settlementProposalAssessmentVerifierLotteryAddress,
-                new()
-                {
-                    ThingProposalId = thingId.Concat(proposalId).ToArray(),
-                    Data = data,
-                    UserXorData = userXorData,
-                    HashOfL1EndBlock = hashOfL1EndBlock,
-                    WinnerClaimantIndices = winnerClaimantIndices,
-                    WinnerIndices = winnerIndices
-                }
-            )
-        );
+        var result = await _sendTxn(async () =>
+        {
+            try
+            {
+                return await _web3.Eth
+                    .GetContractTransactionHandler<CloseSettlementProposalAssessmentVerifierLotteryWithSuccessMessage>()
+                    .SendRequestAndWaitForReceiptAsync(
+                        _settlementProposalAssessmentVerifierLotteryAddress,
+                        new()
+                        {
+                            ThingProposalId = thingId.Concat(proposalId).ToArray(),
+                            Data = data,
+                            UserXorData = userXorData,
+                            HashOfL1EndBlock = hashOfL1EndBlock,
+                            WinnerClaimantIndices = winnerClaimantIndices,
+                            WinnerIndices = winnerIndices
+                        }
+                    );
+            }
+            catch (SmartContractCustomErrorRevertException ex)
+            {
+                throw new NotImplementedException();
+            }
+        });
 
-        _logger.LogInformation("=============== CloseSettlementProposalAssessmentVerifierLotteryWithSuccess: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        if (result.IsError)
+        {
+            _logger.LogWarning(
+                "Error trying to close settlement proposal {ProposalId} (for thing {ThingId}) assessment verifier lottery with success: {ContractError}",
+                new Guid(proposalId),
+                new Guid(thingId),
+                result.Error
+            );
+        }
+        else
+        {
+            _logger.LogInformation(
+                "=============== CloseSettlementProposalAssessmentVerifierLotteryWithSuccess: Txn hash {TxnHash} ===============",
+                result.Data!.TransactionHash
+            );
+        }
     }
 
     public async Task CloseSettlementProposalAssessmentVerifierLotteryInFailure(byte[] thingId, byte[] proposalId, int joinedNumVerifiers)
     {
-        var txnReceipt = await _web3.Eth
-            .GetContractTransactionHandler<CloseSettlementProposalAssessmentVerifierLotteryInFailureMessage>()
-            .SendRequestAndWaitForReceiptAsync(
-                _settlementProposalAssessmentVerifierLotteryAddress,
-                new()
-                {
-                    ThingProposalId = thingId.Concat(proposalId).ToArray(),
-                    JoinedNumVerifiers = joinedNumVerifiers
-                }
-            );
+        var result = await _sendTxn(async () =>
+        {
+            try
+            {
+                return await _web3.Eth
+                    .GetContractTransactionHandler<CloseSettlementProposalAssessmentVerifierLotteryInFailureMessage>()
+                    .SendRequestAndWaitForReceiptAsync(
+                        _settlementProposalAssessmentVerifierLotteryAddress,
+                        new()
+                        {
+                            ThingProposalId = thingId.Concat(proposalId).ToArray(),
+                            JoinedNumVerifiers = joinedNumVerifiers
+                        }
+                    );
+            }
+            catch (SmartContractCustomErrorRevertException ex)
+            {
+                throw new NotImplementedException();
+            }
+        });
 
-        _logger.LogInformation("=============== CloseSettlementProposalAssessmentVerifierLotteryInFailure: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        if (result.IsError)
+        {
+            _logger.LogWarning(
+                "Error trying to close settlement proposal {ProposalId} (for thing {ThingId}) assessment verifier lottery in failure: {ContractError}",
+                new Guid(proposalId),
+                new Guid(thingId),
+                result.Error
+            );
+        }
+        else
+        {
+            _logger.LogInformation(
+                "=============== CloseSettlementProposalAssessmentVerifierLotteryInFailure: Txn hash {TxnHash} ===============",
+                result.Data!.TransactionHash
+            );
+        }
     }
 
     public async Task<IEnumerable<string>> GetVerifiersForSettlementProposal(byte[] thingId, byte[] proposalId)
@@ -563,101 +831,221 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
-        var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<FinalizeSettlementProposalAssessmentPollAsUnsettledMessage>()
-            .SendRequestAndWaitForReceiptAsync(
-                _settlementProposalAssessmentPollAddress,
-                new()
-                {
-                    ThingProposalId = thingId.Concat(proposalId).ToArray(),
-                    VoteAggIpfsCid = voteAggIpfsCid,
-                    Decision = Decision.UnsettledDueToInsufficientVotingVolume,
-                    VerifiersToSlashIndices = verifiersToSlashIndices
-                }
-            )
-        );
+        var result = await _sendTxn(async () =>
+        {
+            try
+            {
+                return await _web3.Eth
+                    .GetContractTransactionHandler<FinalizeSettlementProposalAssessmentPollAsUnsettledMessage>()
+                    .SendRequestAndWaitForReceiptAsync(
+                        _settlementProposalAssessmentPollAddress,
+                        new()
+                        {
+                            ThingProposalId = thingId.Concat(proposalId).ToArray(),
+                            VoteAggIpfsCid = voteAggIpfsCid,
+                            Decision = Decision.UnsettledDueToInsufficientVotingVolume,
+                            VerifiersToSlashIndices = verifiersToSlashIndices
+                        }
+                    );
+            }
+            catch (SmartContractCustomErrorRevertException ex)
+            {
+                throw new NotImplementedException();
+            }
+        });
 
-        _logger.LogInformation("=============== FinalizeSettlementProposalAssessmentPollAsUnsettled: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        if (result.IsError)
+        {
+            _logger.LogWarning(
+                "Error trying to finalize settlement proposal {ProposalId} (for thing {ThingId}) assessment poll as unsettled due to insufficient voting volume: {ContractError}",
+                new Guid(proposalId),
+                new Guid(thingId),
+                result.Error
+            );
+        }
+        else
+        {
+            _logger.LogInformation(
+                "=============== FinalizeSettlementProposalAssessmentPollAsUnsettled: Txn hash {TxnHash} ===============",
+                result.Data!.TransactionHash
+            );
+        }
     }
 
     public async Task FinalizeSettlementProposalAssessmentPollAsUnsettledDueToMajorityThresholdNotReached(
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
-        var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<FinalizeSettlementProposalAssessmentPollAsUnsettledMessage>()
-            .SendRequestAndWaitForReceiptAsync(
-                _settlementProposalAssessmentPollAddress,
-                new()
-                {
-                    ThingProposalId = thingId.Concat(proposalId).ToArray(),
-                    VoteAggIpfsCid = voteAggIpfsCid,
-                    Decision = Decision.UnsettledDueToMajorityThresholdNotReached,
-                    VerifiersToSlashIndices = verifiersToSlashIndices
-                }
-            )
-        );
+        var result = await _sendTxn(async () =>
+        {
+            try
+            {
+                return await _web3.Eth
+                    .GetContractTransactionHandler<FinalizeSettlementProposalAssessmentPollAsUnsettledMessage>()
+                    .SendRequestAndWaitForReceiptAsync(
+                        _settlementProposalAssessmentPollAddress,
+                        new()
+                        {
+                            ThingProposalId = thingId.Concat(proposalId).ToArray(),
+                            VoteAggIpfsCid = voteAggIpfsCid,
+                            Decision = Decision.UnsettledDueToMajorityThresholdNotReached,
+                            VerifiersToSlashIndices = verifiersToSlashIndices
+                        }
+                    );
+            }
+            catch (SmartContractCustomErrorRevertException ex)
+            {
+                throw new NotImplementedException();
+            }
+        });
 
-        _logger.LogInformation("=============== FinalizeSettlementProposalAssessmentPollAsUnsettled: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        if (result.IsError)
+        {
+            _logger.LogWarning(
+                "Error trying to finalize settlement proposal {ProposalId} (for thing {ThingId}) assessment poll as unsettled due to majority threshold not reached: {ContractError}",
+                new Guid(proposalId),
+                new Guid(thingId),
+                result.Error
+            );
+        }
+        else
+        {
+            _logger.LogInformation(
+                "=============== FinalizeSettlementProposalAssessmentPollAsUnsettled: Txn hash {TxnHash} ===============",
+                result.Data!.TransactionHash
+            );
+        }
     }
 
     public async Task FinalizeSettlementProposalAssessmentPollAsAccepted(
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
-        var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<FinalizeSettlementProposalAssessmentPollAsAcceptedMessage>()
-            .SendRequestAndWaitForReceiptAsync(
-                _settlementProposalAssessmentPollAddress,
-                new()
-                {
-                    ThingProposalId = thingId.Concat(proposalId).ToArray(),
-                    VoteAggIpfsCid = voteAggIpfsCid,
-                    VerifiersToSlashIndices = verifiersToSlashIndices
-                }
-            )
-        );
+        var result = await _sendTxn(async () =>
+        {
+            try
+            {
+                return await _web3.Eth
+                    .GetContractTransactionHandler<FinalizeSettlementProposalAssessmentPollAsAcceptedMessage>()
+                    .SendRequestAndWaitForReceiptAsync(
+                        _settlementProposalAssessmentPollAddress,
+                        new()
+                        {
+                            ThingProposalId = thingId.Concat(proposalId).ToArray(),
+                            VoteAggIpfsCid = voteAggIpfsCid,
+                            VerifiersToSlashIndices = verifiersToSlashIndices
+                        }
+                    );
+            }
+            catch (SmartContractCustomErrorRevertException ex)
+            {
+                throw new NotImplementedException();
+            }
+        });
 
-        _logger.LogInformation("=============== FinalizeSettlementProposalAssessmentPollAsAccepted: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        if (result.IsError)
+        {
+            _logger.LogWarning(
+                "Error trying to finalize settlement proposal {ProposalId} (for thing {ThingId}) assessment poll as accepted: {ContractError}",
+                new Guid(proposalId),
+                new Guid(thingId),
+                result.Error
+            );
+        }
+        else
+        {
+            _logger.LogInformation(
+                "=============== FinalizeSettlementProposalAssessmentPollAsAccepted: Txn hash {TxnHash} ===============",
+                result.Data!.TransactionHash
+            );
+        }
     }
 
     public async Task FinalizeSettlementProposalAssessmentPollAsSoftDeclined(
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
-        var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<FinalizeSettlementProposalAssessmentPollAsSoftDeclinedMessage>()
-            .SendRequestAndWaitForReceiptAsync(
-                _settlementProposalAssessmentPollAddress,
-                new()
-                {
-                    ThingProposalId = thingId.Concat(proposalId).ToArray(),
-                    VoteAggIpfsCid = voteAggIpfsCid,
-                    VerifiersToSlashIndices = verifiersToSlashIndices
-                }
-            )
-        );
+        var result = await _sendTxn(async () =>
+        {
+            try
+            {
+                return await _web3.Eth
+                    .GetContractTransactionHandler<FinalizeSettlementProposalAssessmentPollAsSoftDeclinedMessage>()
+                    .SendRequestAndWaitForReceiptAsync(
+                        _settlementProposalAssessmentPollAddress,
+                        new()
+                        {
+                            ThingProposalId = thingId.Concat(proposalId).ToArray(),
+                            VoteAggIpfsCid = voteAggIpfsCid,
+                            VerifiersToSlashIndices = verifiersToSlashIndices
+                        }
+                    );
+            }
+            catch (SmartContractCustomErrorRevertException ex)
+            {
+                throw new NotImplementedException();
+            }
+        });
 
-        _logger.LogInformation("=============== FinalizeSettlementProposalAssessmentPollAsSoftDeclined: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        if (result.IsError)
+        {
+            _logger.LogWarning(
+                "Error trying to finalize settlement proposal {ProposalId} (for thing {ThingId}) assessment poll as soft declined: {ContractError}",
+                new Guid(proposalId),
+                new Guid(thingId),
+                result.Error
+            );
+        }
+        else
+        {
+            _logger.LogInformation(
+                "=============== FinalizeSettlementProposalAssessmentPollAsSoftDeclined: Txn hash {TxnHash} ===============",
+                result.Data!.TransactionHash
+            );
+        }
     }
 
     public async Task FinalizeSettlementProposalAssessmentPollAsHardDeclined(
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
-        var txnReceipt = await _sendTxn(() => _web3.Eth
-            .GetContractTransactionHandler<FinalizeSettlementProposalAssessmentPollAsHardDeclinedMessage>()
-            .SendRequestAndWaitForReceiptAsync(
-                _settlementProposalAssessmentPollAddress,
-                new()
-                {
-                    ThingProposalId = thingId.Concat(proposalId).ToArray(),
-                    VoteAggIpfsCid = voteAggIpfsCid,
-                    VerifiersToSlashIndices = verifiersToSlashIndices
-                }
-            )
-        );
+        var result = await _sendTxn(async () =>
+        {
+            try
+            {
+                return await _web3.Eth
+                    .GetContractTransactionHandler<FinalizeSettlementProposalAssessmentPollAsHardDeclinedMessage>()
+                    .SendRequestAndWaitForReceiptAsync(
+                        _settlementProposalAssessmentPollAddress,
+                        new()
+                        {
+                            ThingProposalId = thingId.Concat(proposalId).ToArray(),
+                            VoteAggIpfsCid = voteAggIpfsCid,
+                            VerifiersToSlashIndices = verifiersToSlashIndices
+                        }
+                    );
+            }
+            catch (SmartContractCustomErrorRevertException ex)
+            {
+                throw new NotImplementedException();
+            }
+        });
 
-        _logger.LogInformation("=============== FinalizeSettlementProposalAssessmentPollAsHardDeclined: Txn hash {TxnHash} ===============", txnReceipt.TransactionHash);
+        if (result.IsError)
+        {
+            _logger.LogWarning(
+                "Error trying to finalize settlement proposal {ProposalId} (for thing {ThingId}) assessment poll as hard declined: {ContractError}",
+                new Guid(proposalId),
+                new Guid(thingId),
+                result.Error
+            );
+        }
+        else
+        {
+            _logger.LogInformation(
+                "=============== FinalizeSettlementProposalAssessmentPollAsHardDeclined: Txn hash {TxnHash} ===============",
+                result.Data!.TransactionHash
+            );
+        }
     }
 }
