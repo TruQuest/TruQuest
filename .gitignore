@@ -1,2 +1,4 @@
 ipfs/
 **/.env
+**/uptrace.crt
+**/uptrace.key

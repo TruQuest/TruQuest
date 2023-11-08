@@ -91,22 +91,6 @@ services:
       - zookeeper
       - kafka-1
 
-  jaeger:
-    image: jaegertracing/all-in-one:1.46.0
-    environment:
-      COLLECTOR_OTLP_ENABLED: 'true'
-      SPAN_STORAGE_TYPE: badger
-      BADGER_EPHEMERAL: 'false'
-      BADGER_DIRECTORY_VALUE: /badger/data
-      BADGER_DIRECTORY_KEY: /badger/key
-    volumes:
-      - jaeger_data:/badger
-    ports:
-      - 16686:16686
-      - '4317'
-    networks:
-      - truquest
-
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.80.0
     command: [ --config=/etc/otel-collector-config.yml ]
@@ -117,20 +101,7 @@ services:
     networks:
       - truquest
     depends_on:
-      - jaeger
-
-  seq:
-    image: datalust/seq:2023.3
-    environment:
-      ACCEPT_EULA: 'Y'
-      # SEQ_FIRSTRUN_ADMINPASSWORDHASH: ${SEQ_ADMIN_PASSWORD_HASH}
-    volumes:
-      - seq_data:/data
-    ports:
-      - 17080:80
-      - 5341:5341
-    networks:
-      - truquest
+      - uptrace
 
   file-archive:
     image: file-archive-new:latest
@@ -139,7 +110,7 @@ services:
     environment:
       DOTNET_ENVIRONMENT: Development
       ASPNETCORE_ENVIRONMENT: Development
-      ApiFlash__AccessKey: ${ApiFlash__AccessKey}
+      WebPageScreenshots__ApiFlash__AccessKey: ${WebPageScreenshots__ApiFlash__AccessKey}
     volumes:
       - './src/Orchestrator/services/FileArchiveService/user_files:/user_files'
       - './src/Orchestrator/services/FileArchiveService/images:/images'
@@ -151,11 +122,49 @@ services:
       - kafka-1
       - ipfs
       - otel-collector
-      - seq
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.4
+    restart: on-failure
+    environment:
+      CLICKHOUSE_DB: uptrace
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'localhost:8123/ping']
+      interval: 1s
+      timeout: 1s
+      retries: 30
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    ports:
+      - '8123:8123'
+      - '9000:9000'
+    networks:
+      - truquest
+
+  uptrace:
+    image: 'uptrace/uptrace:1.5.6'
+    restart: on-failure
+    volumes:
+      - ./uptrace/uptrace-dev.yml:/etc/uptrace/uptrace.yml
+      - ./uptrace/uptrace.crt:/etc/uptrace/tls/uptrace.crt
+      - ./uptrace/uptrace.key:/etc/uptrace/tls/uptrace.key
+    ports:
+      - '14317:14317'
+      - '14318:14318'
+    networks:
+      - truquest
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    restart: on-failure
+    ports:
+      - '8025:8025'
+    networks:
+      - truquest
 
 volumes:
   jaeger_data:
-  seq_data:
+  clickhouse_data:
 
 networks:
   truquest:

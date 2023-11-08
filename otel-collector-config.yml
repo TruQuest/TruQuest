@@ -6,10 +6,12 @@ receivers:
 exporters:
   logging:
     verbosity: detailed
-  otlp/jaeger:
-    endpoint: jaeger:4317
+  otlp/uptrace:
+    endpoint: uptrace:14317
     tls:
-      insecure: true
+      insecure_skip_verify: true
+    headers:
+      uptrace-dsn: "https://truquest_secret_token@localhost:14317/1"
 
 processors:
   batch:
@@ -18,9 +20,13 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      exporters: [otlp/jaeger]
+      exporters: [otlp/uptrace]
       processors: [batch]
     metrics:
       receivers: [otlp]
       exporters: [logging]
+      processors: [batch]
+    logs:
+      receivers: [otlp]
+      exporters: [otlp/uptrace]
       processors: [batch]

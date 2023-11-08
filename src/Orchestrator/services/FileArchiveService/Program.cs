@@ -2,7 +2,6 @@ using System.Net.Http.Headers;
 
 using KafkaFlow;
 using KafkaFlow.TypedHandler;
-using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -34,8 +33,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 
             options.AddOtlpExporter(otlpOptions =>
             {
-                otlpOptions.Endpoint = new Uri(configuration["Seq:Endpoint"]!);
-                otlpOptions.Protocol = OtlpExportProtocol.HttpProtobuf;
+                otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
             });
         });
     })
