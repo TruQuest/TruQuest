@@ -10,6 +10,23 @@ public static class Metrics
 {
     public static IReadOnlyDictionary<string, Histogram<int>> FunctionNameToGasUsedHistogram { get; }
 
+    private static Func<double> _onOrchestratorBalanceObserved;
+    public static Func<double> OnOrchestratorBalanceObserved
+    {
+        set
+        {
+            _onOrchestratorBalanceObserved = value;
+            _orchestratorBalanceGauge = Telemetry.Meter.CreateObservableGauge<double>(
+                name: "orchestrator.balance.in-ether",
+                observeValue: _onOrchestratorBalanceObserved,
+                unit: "ether",
+                description: "Orchestrator balance on L2"
+            );
+        }
+    }
+
+    private static ObservableGauge<double> _orchestratorBalanceGauge;
+
     static Metrics()
     {
         var functionNameToGasUsedHistogram = new Dictionary<string, Histogram<int>>();
@@ -21,7 +38,7 @@ public static class Metrics
         {
             var attr = method.GetCustomAttribute<TrackGasUsageAttribute>()!;
             functionNameToGasUsedHistogram[method.Name] = Telemetry.Meter.CreateHistogram<int>(
-                name: $"ethereum.contract-call.{attr.MetricName}.gas-used",
+                name: $"contract-call.{attr.MetricName}.gas-used",
                 unit: "gas",
                 description: "Gas used by transactions"
             );

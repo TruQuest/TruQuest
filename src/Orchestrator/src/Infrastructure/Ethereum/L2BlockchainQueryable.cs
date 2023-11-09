@@ -51,4 +51,10 @@ internal class L2BlockchainQueryable : IL2BlockchainQueryable
                 new(),
                 new BlockParameter((ulong)l2Block) // @@NOTE: The state right /after/ all txns of this block are executed.
             );
+
+    public async Task<(BigInteger InWei, double InEther)> GetBalance(string address)
+    {
+        var balance = await _web3.Eth.GetBalance.SendRequestAsync(address);
+        return (balance.Value, (double)Web3.Convert.FromWei(balance));
+    }
 }

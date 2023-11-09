@@ -11,7 +11,7 @@ exporters:
     tls:
       insecure_skip_verify: true
     headers:
-      uptrace-dsn: "https://truquest_secret_token@localhost:14317/1"
+      uptrace-dsn: "https://truquest_secret_token@localhost:14317/2"
 
 processors:
   batch:

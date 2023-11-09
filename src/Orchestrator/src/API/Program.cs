@@ -108,7 +108,7 @@ public static class WebApplicationBuilderExtension
                         .AddMeter(Telemetry.Meter.Name)
                         .AddView(metric =>
                         {
-                            if (metric.Name.StartsWith("ethereum.contract-call."))
+                            if (metric.Name.StartsWith("contract-call."))
                             {
                                 return new ExplicitBucketHistogramConfiguration
                                 {
@@ -204,6 +204,7 @@ public static class WebApplicationBuilderExtension
 
         builder.Services.AddHostedService<ContractEventTracker>();
         builder.Services.AddHostedService<BlockTracker>();
+        builder.Services.AddHostedService<OrchestratorStatusTracker>();
 
         return builder;
     }

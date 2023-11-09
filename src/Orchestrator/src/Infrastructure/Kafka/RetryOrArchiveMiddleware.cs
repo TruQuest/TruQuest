@@ -49,6 +49,10 @@ internal class RetryOrArchiveMiddleware : IMessageMiddleware
                     "An unretryable (or a retryable with max attempts exhausted) error occured. Putting into Dead-letter topic"
                 );
 
+                // @@TODO: Dead letters should be archived to Postgres, so that we can have a bg job monitoring how
+                // many unhandled dead letters there are, plus so that we can pick and choose the order in which to
+                // handle the letters.
+
                 await _deadLetterArchiver.Archive(context.Message.Value, context.Headers);
             }
 

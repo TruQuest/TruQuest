@@ -155,6 +155,7 @@ public class Sut
         await _app.StartKafkaBus();
         await StartHostedService<BlockTracker>();
         await StartHostedService<ContractEventTracker>();
+        await StartHostedService<OrchestratorStatusTracker>();
     }
 
     // @@!!: There is no way to actually call it right now.

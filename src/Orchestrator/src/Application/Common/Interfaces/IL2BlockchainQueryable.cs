@@ -8,4 +8,5 @@ public interface IL2BlockchainQueryable
     Task<BigInteger> GetBaseFee();
     Task<BigInteger> GetMaxPriorityFee();
     Task<long> GetCorrespondingL1BlockNumberFor(long l2Block);
+    Task<(BigInteger InWei, double InEther)> GetBalance(string address);
 }
