@@ -94,7 +94,14 @@ public static class IServiceCollectionExtension
         services.AddSingleton<Eip712TypedDataSigner>();
         services.AddSingleton<EthereumMessageSigner>();
         services.AddSingleton<ISigner, Signer>();
-        services.AddSingleton<IEmailSender, EmailSender>();
+        if (environment.IsStaging() || environment.IsProduction())
+        {
+            services.AddSingleton<IEmailSender, EmailSender>();
+        }
+        else
+        {
+            services.AddSingleton<IEmailSender, DummyEmailSender>();
+        }
 
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

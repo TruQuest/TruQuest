@@ -3,9 +3,10 @@ using System.Text;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
+using MediatR;
 using Fido2NetLib;
 using Fido2NetLib.Objects;
-using MediatR;
+using FluentValidation;
 
 using Domain.Aggregates;
 using Domain.Errors;
@@ -20,6 +21,14 @@ public class GenerateConfirmationCodeAndAttestationOptionsCommand : IRequest<Han
     public required string Email { get; init; }
 }
 
+internal class Validator : AbstractValidator<GenerateConfirmationCodeAndAttestationOptionsCommand>
+{
+    public Validator()
+    {
+        RuleFor(c => c.Email).EmailAddress();
+    }
+}
+
 internal class GenerateConfirmationCodeAndAttestationOptionsCommandHandler : IRequestHandler<
     GenerateConfirmationCodeAndAttestationOptionsCommand,
     HandleResult<CredentialCreateOptions>
@@ -30,13 +39,15 @@ internal class GenerateConfirmationCodeAndAttestationOptionsCommandHandler : IRe
     private readonly IFido2 _fido2;
     private readonly IMemoryCache _memoryCache;
     private readonly ITotpProvider _totpProvider;
+    private readonly IEmailSender _emailSender;
 
     public GenerateConfirmationCodeAndAttestationOptionsCommandHandler(
         ILogger<GenerateConfirmationCodeAndAttestationOptionsCommandHandler> logger,
         IUserRepository userRepository,
         IFido2 fido2,
         IMemoryCache memoryCache,
-        ITotpProvider totpProvider
+        ITotpProvider totpProvider,
+        IEmailSender emailSender
     )
     {
         _logger = logger;
@@ -44,6 +55,7 @@ internal class GenerateConfirmationCodeAndAttestationOptionsCommandHandler : IRe
         _fido2 = fido2;
         _memoryCache = memoryCache;
         _totpProvider = totpProvider;
+        _emailSender = emailSender;
     }
 
     public async Task<HandleResult<CredentialCreateOptions>> Handle(GenerateConfirmationCodeAndAttestationOptionsCommand command, CancellationToken ct)
@@ -94,9 +106,11 @@ internal class GenerateConfirmationCodeAndAttestationOptionsCommandHandler : IRe
         _memoryCache.Set($"fido2.attestationOptions.{challenge}", options.ToJson()); // @@TODO: Expiration.
 
         var totp = _totpProvider.GenerateTotpFor(Encoding.UTF8.GetBytes(command.Email));
-        // @@TODO!!: Send the code.
-
-        _logger.LogInformation($"******** Confirmation code: {totp}. Attestation Challenge: {challenge} ********");
+        await _emailSender.Send(
+            recipient: command.Email,
+            subject: "Welcome to TruQuest!",
+            body: $"Your confirmation code is {totp}"
+        );
 
         return new()
         {
