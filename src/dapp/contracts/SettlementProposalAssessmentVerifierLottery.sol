@@ -56,6 +56,7 @@ contract SettlementProposalAssessmentVerifierLottery {
     uint8 public s_numVerifiers;
     uint16 public s_durationBlocks;
 
+    bytes32[] private s_thingProposals;
     mapping(bytes32 => Commitment)
         private s_thingProposalIdToOrchestratorCommitment;
     mapping(bytes32 => mapping(address => uint256))
@@ -229,6 +230,81 @@ contract SettlementProposalAssessmentVerifierLottery {
         );
     }
 
+    function exportData()
+        external
+        view
+        returns (
+            bytes32[] memory thingProposalIds,
+            Commitment[] memory orchestratorCommitments,
+            address[][] memory participants,
+            address[][] memory claimants,
+            uint256[][] memory blockNumbers
+        )
+    {
+        thingProposalIds = s_thingProposals;
+        orchestratorCommitments = new Commitment[](thingProposalIds.length);
+        participants = new address[][](thingProposalIds.length);
+        claimants = new address[][](thingProposalIds.length);
+        blockNumbers = new uint256[][](thingProposalIds.length);
+        for (uint256 i = 0; i < thingProposalIds.length; ++i) {
+            bytes32 thingProposalId = thingProposalIds[i];
+            orchestratorCommitments[
+                i
+            ] = s_thingProposalIdToOrchestratorCommitment[thingProposalId];
+            participants[i] = s_thingProposalIdToParticipants[thingProposalId];
+            claimants[i] = s_thingProposalIdToClaimants[thingProposalId];
+            blockNumbers[i] = new uint256[](
+                participants[i].length + claimants[i].length
+            );
+            uint256 j = 0;
+            for (; j < participants[i].length; ++j) {
+                blockNumbers[i][
+                    j
+                ] = s_thingProposalIdToParticipantJoinedBlockNo[
+                    thingProposalId
+                ][participants[i][j]];
+            }
+            uint256 k = 0;
+            for (; j < blockNumbers[i].length; ++j) {
+                blockNumbers[i][
+                    j
+                ] = s_thingProposalIdToParticipantJoinedBlockNo[
+                    thingProposalId
+                ][claimants[i][k++]];
+            }
+        }
+    }
+
+    function importData(
+        bytes32[] calldata _thingProposalIds,
+        Commitment[] calldata _orchestratorCommitments,
+        address[][] calldata _participants,
+        address[][] calldata _claimants,
+        uint256[][] calldata _blockNumbers
+    ) external onlyOrchestrator {
+        s_thingProposals = _thingProposalIds;
+        for (uint256 i = 0; i < _thingProposalIds.length; ++i) {
+            bytes32 thingProposalId = _thingProposalIds[i];
+            s_thingProposalIdToOrchestratorCommitment[
+                thingProposalId
+            ] = _orchestratorCommitments[i];
+            s_thingProposalIdToParticipants[thingProposalId] = _participants[i];
+            s_thingProposalIdToClaimants[thingProposalId] = _claimants[i];
+            uint256 j = 0;
+            for (; j < _participants[i].length; ++j) {
+                s_thingProposalIdToParticipantJoinedBlockNo[thingProposalId][
+                    _participants[i][j]
+                ] = _blockNumbers[i][j];
+            }
+            uint256 k = 0;
+            for (; j < _blockNumbers[i].length; ++j) {
+                s_thingProposalIdToParticipantJoinedBlockNo[thingProposalId][
+                    _claimants[i][k++]
+                ] = _blockNumbers[i][j];
+            }
+        }
+    }
+
     function _getL1BlockNumber() private view returns (uint256) {
         if (block.chainid == 901) {
             return L1BLOCK.number();
@@ -320,6 +396,7 @@ contract SettlementProposalAssessmentVerifierLottery {
         bytes32 _userXorDataHash
     ) external onlyOrchestrator onlyUninitialized(_thingProposalId) {
         uint256 l1BlockNumber = _getL1BlockNumber();
+        s_thingProposals.push(_thingProposalId);
         s_thingProposalIdToOrchestratorCommitment[
             _thingProposalId
         ] = Commitment(_dataHash, _userXorDataHash, int256(l1BlockNumber));

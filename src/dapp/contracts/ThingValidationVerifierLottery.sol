@@ -37,6 +37,7 @@ contract ThingValidationVerifierLottery {
     uint8 public s_numVerifiers;
     uint16 public s_durationBlocks;
 
+    bytes16[] private s_things;
     mapping(bytes16 => Commitment) private s_thingIdToOrchestratorCommitment;
     mapping(bytes16 => mapping(address => uint256))
         private s_thingIdToParticipantJoinedBlockNo;
@@ -175,6 +176,56 @@ contract ThingValidationVerifierLottery {
         );
     }
 
+    function exportData()
+        external
+        view
+        returns (
+            bytes16[] memory thingIds,
+            Commitment[] memory orchestratorCommitments,
+            address[][] memory participants,
+            uint256[][] memory blockNumbers
+        )
+    {
+        thingIds = s_things;
+        orchestratorCommitments = new Commitment[](thingIds.length);
+        participants = new address[][](thingIds.length);
+        blockNumbers = new uint256[][](thingIds.length);
+        for (uint256 i = 0; i < thingIds.length; ++i) {
+            bytes16 thingId = thingIds[i];
+            orchestratorCommitments[i] = s_thingIdToOrchestratorCommitment[
+                thingId
+            ];
+            participants[i] = s_thingIdToParticipants[thingId];
+            blockNumbers[i] = new uint256[](participants[i].length);
+            for (uint256 j = 0; j < blockNumbers[i].length; ++j) {
+                blockNumbers[i][j] = s_thingIdToParticipantJoinedBlockNo[
+                    thingId
+                ][participants[i][j]];
+            }
+        }
+    }
+
+    function importData(
+        bytes16[] calldata _thingIds,
+        Commitment[] calldata _orchestratorCommitments,
+        address[][] calldata _participants,
+        uint256[][] calldata _blockNumbers
+    ) external onlyOrchestrator {
+        s_things = _thingIds;
+        for (uint256 i = 0; i < _thingIds.length; ++i) {
+            bytes16 thingId = _thingIds[i];
+            s_thingIdToOrchestratorCommitment[
+                thingId
+            ] = _orchestratorCommitments[i];
+            s_thingIdToParticipants[thingId] = _participants[i];
+            for (uint256 j = 0; j < _participants[i].length; ++j) {
+                s_thingIdToParticipantJoinedBlockNo[thingId][
+                    _participants[i][j]
+                ] = _blockNumbers[i][j];
+            }
+        }
+    }
+
     function _getL1BlockNumber() private view returns (uint256) {
         if (block.chainid == 901) {
             return L1BLOCK.number();
@@ -212,6 +263,7 @@ contract ThingValidationVerifierLottery {
         bytes32 _userXorDataHash
     ) external onlyOrchestrator onlyUninitialized(_thingId) {
         uint256 l1BlockNumber = _getL1BlockNumber();
+        s_things.push(_thingId);
         s_thingIdToOrchestratorCommitment[_thingId] = Commitment(
             _dataHash,
             _userXorDataHash,

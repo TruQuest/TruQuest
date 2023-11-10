@@ -41,6 +41,7 @@ contract SettlementProposalAssessmentPoll {
     uint8 public s_votingVolumeThresholdPercent;
     uint8 public s_majorityThresholdPercent;
 
+    bytes32[] private s_thingProposals;
     mapping(bytes32 => int256) private s_thingProposalIdToPollInitBlock;
     mapping(bytes32 => address[]) private s_settlementProposalVerifiers;
 
@@ -175,6 +176,41 @@ contract SettlementProposalAssessmentPoll {
         s_settlementProposalAssessmentVerifierLotteryAddress = _settlementProposalAssessmentVerifierLotteryAddress;
     }
 
+    function exportData()
+        external
+        view
+        returns (
+            bytes32[] memory thingProposalIds,
+            int256[] memory initBlockNumbers,
+            address[][] memory verifiers
+        )
+    {
+        thingProposalIds = s_thingProposals;
+        initBlockNumbers = new int256[](thingProposalIds.length);
+        verifiers = new address[][](thingProposalIds.length);
+        for (uint256 i = 0; i < thingProposalIds.length; ++i) {
+            initBlockNumbers[i] = s_thingProposalIdToPollInitBlock[
+                thingProposalIds[i]
+            ];
+            verifiers[i] = s_settlementProposalVerifiers[thingProposalIds[i]];
+        }
+    }
+
+    function importData(
+        bytes32[] calldata _thingProposalIds,
+        int256[] calldata _initBlockNumbers,
+        address[][] calldata _verifiers
+    ) external onlyOrchestrator {
+        s_thingProposals = _thingProposalIds;
+        for (uint256 i = 0; i < _thingProposalIds.length; ++i) {
+            bytes32 thingProposalId = _thingProposalIds[i];
+            s_thingProposalIdToPollInitBlock[
+                thingProposalId
+            ] = _initBlockNumbers[i];
+            s_settlementProposalVerifiers[thingProposalId] = _verifiers[i];
+        }
+    }
+
     function _getL1BlockNumber() private view returns (uint256) {
         if (block.chainid == 901) {
             return L1BLOCK.number();
@@ -192,6 +228,7 @@ contract SettlementProposalAssessmentPoll {
         bytes32 _thingProposalId,
         address[] memory _verifiers
     ) external onlySettlementProposalAssessmentVerifierLottery {
+        s_thingProposals.push(_thingProposalId);
         s_thingProposalIdToPollInitBlock[_thingProposalId] = int256(
             _getL1BlockNumber()
         );

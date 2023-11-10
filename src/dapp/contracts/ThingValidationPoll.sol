@@ -37,6 +37,7 @@ contract ThingValidationPoll {
     uint8 public s_votingVolumeThresholdPercent;
     uint8 public s_majorityThresholdPercent;
 
+    bytes16[] private s_things;
     mapping(bytes16 => int256) private s_thingIdToPollInitBlock;
     mapping(bytes16 => address[]) private s_thingVerifiers;
 
@@ -144,6 +145,37 @@ contract ThingValidationPoll {
         s_thingValidationVerifierLotteryAddress = _thingValidationVerifierLotteryAddress;
     }
 
+    function exportData()
+        external
+        view
+        returns (
+            bytes16[] memory thingIds,
+            int256[] memory initBlockNumbers,
+            address[][] memory verifiers
+        )
+    {
+        thingIds = s_things;
+        initBlockNumbers = new int256[](thingIds.length);
+        verifiers = new address[][](thingIds.length);
+        for (uint256 i = 0; i < thingIds.length; ++i) {
+            initBlockNumbers[i] = s_thingIdToPollInitBlock[thingIds[i]];
+            verifiers[i] = s_thingVerifiers[thingIds[i]];
+        }
+    }
+
+    function importData(
+        bytes16[] calldata _thingIds,
+        int256[] calldata _initBlockNumbers,
+        address[][] calldata _verifiers
+    ) external onlyOrchestrator {
+        s_things = _thingIds;
+        for (uint256 i = 0; i < _thingIds.length; ++i) {
+            bytes16 thingId = _thingIds[i];
+            s_thingIdToPollInitBlock[thingId] = _initBlockNumbers[i];
+            s_thingVerifiers[thingId] = _verifiers[i];
+        }
+    }
+
     function _getL1BlockNumber() private view returns (uint256) {
         if (block.chainid == 901) {
             return L1BLOCK.number();
@@ -159,6 +191,7 @@ contract ThingValidationPoll {
         bytes16 _thingId,
         address[] memory _verifiers
     ) external onlyThingValidationVerifierLottery {
+        s_things.push(_thingId);
         s_thingIdToPollInitBlock[_thingId] = int256(_getL1BlockNumber());
         s_thingVerifiers[_thingId] = _verifiers;
     }

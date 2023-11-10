@@ -1,0 +1,11 @@
+{
+    "$schema": "https://json.schemastore.org/launchsettings.json",
+    "profiles": {
+        "DbMigrator": {
+            "commandName": "Project",
+            "environmentVariables": {
+                "MNEMONIC": "atom traffic guard castle father vendor modify sauce rebuild true mixture van"
+            }
+        }
+    }
+}

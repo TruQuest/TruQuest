@@ -5,6 +5,7 @@ import "@ganache/console.log/console.sol";
 
 import "./Truthserum.sol";
 
+error TruQuest__TheWorldIsStopped();
 error TruQuest__ThingAlreadyFunded(bytes16 thingId);
 error TruQuest__NotEnoughFunds(uint256 requiredAmount, uint256 availableAmount);
 error TruQuest__Unauthorized();
@@ -43,6 +44,8 @@ contract TruQuest {
         "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,bytes32 salt)";
     bytes32 private immutable i_domainSeparator;
 
+    bytes private constant VERSION = "0.1.0";
+
     Truthserum private immutable i_truthserum;
     address private s_thingValidationVerifierLotteryAddress;
     address private s_thingValidationPollAddress;
@@ -61,10 +64,20 @@ contract TruQuest {
     uint256 public s_settlementProposalAcceptedReward;
     uint256 public s_settlementProposalRejectedPenalty;
 
+    // @@NOTE: When 'true', no longer accept deposit, withdraw, and fund requests, so that once
+    // all currently active evaluation processes (lotteries and polls) finish, we can safely
+    // export all data from the contracts and import it into new ones. Used to migrate data
+    // between contract versions on the testnet. Will be removed (along with import/export functions
+    // and some fields that are only maintained for migration purposes) from the mainnet version.
+    bool public s_stopTheWorld;
+
+    address[] private s_users;
     mapping(address => uint256) public s_balanceOf;
     mapping(address => uint256) public s_stakedBalanceOf;
 
+    bytes16[] private s_fundedThings;
     mapping(bytes16 => address) public s_thingSubmitter;
+    bytes16[] private s_thingsWithFundedSettlementProposal;
     mapping(bytes16 => SettlementProposal) public s_thingIdToSettlementProposal;
 
     event FundsDeposited(address indexed user, uint256 amount);
@@ -162,6 +175,13 @@ contract TruQuest {
         _;
     }
 
+    modifier onlyWhenTheWorldIsSpinning() {
+        if (s_stopTheWorld) {
+            revert TruQuest__TheWorldIsStopped();
+        }
+        _;
+    }
+
     constructor(
         address _truthserumAddress,
         uint256 _verifierStake,
@@ -190,7 +210,7 @@ contract TruQuest {
             abi.encode(
                 keccak256(DOMAIN_TD),
                 keccak256("TruQuest"),
-                keccak256("0.1.0"),
+                keccak256(VERSION),
                 block.chainid,
                 address(this),
                 SALT
@@ -198,6 +218,10 @@ contract TruQuest {
         );
         i_thingTdHash = keccak256(THING_TD);
         i_settlementProposalTdHash = keccak256(SETTLEMENT_PROPOSAL_TD);
+    }
+
+    function getVersion() external pure returns (string memory) {
+        return string(VERSION);
     }
 
     function setLotteryAndPollAddresses(
@@ -212,13 +236,98 @@ contract TruQuest {
         s_settlementProposalAssessmentPollAddress = _settlementProposalAssessmentPollAddress;
     }
 
-    function deposit(uint256 _amount) external {
+    function stopTheWorld(bool value) external onlyOrchestrator {
+        s_stopTheWorld = value;
+    }
+
+    function exportUsersAndBalances()
+        external
+        view
+        returns (
+            address[] memory users,
+            uint256[] memory balances,
+            uint256[] memory stakedBalances
+        )
+    {
+        users = s_users;
+        balances = new uint256[](users.length);
+        stakedBalances = new uint256[](users.length);
+        for (uint256 i = 0; i < users.length; ++i) {
+            balances[i] = s_balanceOf[users[i]];
+            stakedBalances[i] = s_stakedBalanceOf[users[i]];
+        }
+    }
+
+    function importUsersAndBalances(
+        address[] calldata _users,
+        uint256[] calldata _balances,
+        uint256[] calldata _stakedBalances
+    ) external onlyOrchestrator {
+        s_users = _users;
+        for (uint256 i = 0; i < _users.length; ++i) {
+            address user = _users[i];
+            s_balanceOf[user] = _balances[i];
+            s_stakedBalanceOf[user] = _stakedBalances[i];
+        }
+    }
+
+    function exportThingSubmitter()
+        external
+        view
+        returns (bytes16[] memory thingIds, address[] memory submitters)
+    {
+        thingIds = s_fundedThings;
+        submitters = new address[](thingIds.length);
+        for (uint256 i = 0; i < submitters.length; ++i) {
+            submitters[i] = s_thingSubmitter[thingIds[i]];
+        }
+    }
+
+    function importThingSubmitters(
+        bytes16[] calldata _thingIds,
+        address[] calldata _submitters
+    ) external onlyOrchestrator {
+        s_fundedThings = _thingIds;
+        for (uint256 i = 0; i < _thingIds.length; ++i) {
+            s_thingSubmitter[_thingIds[i]] = _submitters[i];
+        }
+    }
+
+    function exportThingIdToSettlementProposal()
+        external
+        view
+        returns (
+            bytes16[] memory thingIds,
+            SettlementProposal[] memory settlementProposals
+        )
+    {
+        thingIds = s_thingsWithFundedSettlementProposal;
+        settlementProposals = new SettlementProposal[](thingIds.length);
+        for (uint256 i = 0; i < settlementProposals.length; ++i) {
+            settlementProposals[i] = s_thingIdToSettlementProposal[thingIds[i]];
+        }
+    }
+
+    function importThingIdToSettlementProposal(
+        bytes16[] calldata _thingIds,
+        SettlementProposal[] calldata _settlementProposals
+    ) external onlyOrchestrator {
+        s_thingsWithFundedSettlementProposal = _thingIds;
+        for (uint256 i = 0; i < _thingIds.length; ++i) {
+            s_thingIdToSettlementProposal[_thingIds[i]] = _settlementProposals[
+                i
+            ];
+        }
+    }
+
+    function deposit(uint256 _amount) external onlyWhenTheWorldIsSpinning {
         i_truthserum.transferFrom(msg.sender, address(this), _amount);
+        s_users.push(msg.sender);
         s_balanceOf[msg.sender] += _amount;
         emit FundsDeposited(msg.sender, _amount);
     }
 
-    function withdraw(uint256 _amount) external {
+    function withdraw(uint256 _amount) external onlyWhenTheWorldIsSpinning {
         uint256 availableAmount = getAvailableFunds(msg.sender);
         if (availableAmount < _amount) {
             revert TruQuest__RequestedWithdrawAmountExceedsAvailable(
@@ -341,12 +450,18 @@ contract TruQuest {
         uint8 _v,
         bytes32 _r,
         bytes32 _s
-    ) external onlyWhenNotFunded(_thingId) whenHasAtLeast(s_thingStake) {
+    )
+        external
+        onlyWhenTheWorldIsSpinning
+        onlyWhenNotFunded(_thingId)
+        whenHasAtLeast(s_thingStake)
+    {
         ThingTd memory thing = ThingTd(_thingId);
         if (!_verifyOrchestratorSignatureForThing(thing, _v, _r, _s)) {
             revert TruQuest__InvalidSignature();
         }
         _stake(msg.sender, s_thingStake);
+        s_fundedThings.push(_thingId);
         s_thingSubmitter[_thingId] = msg.sender;
         emit ThingFunded(_thingId, msg.sender, s_thingStake);
     }
@@ -395,6 +510,7 @@ contract TruQuest {
         bytes32 _s
     )
         external
+        onlyWhenTheWorldIsSpinning
         onlyWhenNoSettlementProposalUnderAssessmentFor(_thingId)
         whenHasAtLeast(s_settlementProposalStake)
     {
@@ -414,6 +530,7 @@ contract TruQuest {
         }
 
         _stake(msg.sender, s_settlementProposalStake);
+        s_thingsWithFundedSettlementProposal.push(_thingId);
         s_thingIdToSettlementProposal[_thingId] = SettlementProposal(
             _settlementProposalId,
             msg.sender
