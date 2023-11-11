@@ -128,6 +128,10 @@ foreach (var kv in accountNameToUserId)
             ClaimValue = await contractCaller.GetWalletAddressFor(accountProvider.GetAccount(kv.Key).Address)
         }
     });
+
+    appDbContext.Whitelist.Add(new WhitelistEntry(
+        WhitelistEntryType.SignerAddress, accountProvider.GetAccount(kv.Key).Address
+    ));
 }
 
 appDbContext.Tags.AddRange(

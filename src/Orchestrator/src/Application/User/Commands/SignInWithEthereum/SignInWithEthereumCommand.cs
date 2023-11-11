@@ -42,6 +42,7 @@ internal class SignInWithEthereumCommandHandler :
     private readonly ILogger<SignInWithEthereumCommandHandler> _logger;
     private readonly ISigner _signer;
     private readonly ITotpProvider _totpProvider;
+    private readonly IWhitelistQueryable _whitelistQueryable;
     private readonly IUserRepository _userRepository;
     private readonly IAuthTokenProvider _authTokenProvider;
     private readonly IContractCaller _contractCaller;
@@ -50,6 +51,7 @@ internal class SignInWithEthereumCommandHandler :
         ILogger<SignInWithEthereumCommandHandler> logger,
         ISigner signer,
         ITotpProvider totpProvider,
+        IWhitelistQueryable whitelistQueryable,
         IUserRepository userRepository,
         IAuthTokenProvider authTokenProvider,
         IContractCaller contractCaller
@@ -58,6 +60,7 @@ internal class SignInWithEthereumCommandHandler :
         _logger = logger;
         _signer = signer;
         _totpProvider = totpProvider;
+        _whitelistQueryable = whitelistQueryable;
         _userRepository = userRepository;
         _authTokenProvider = authTokenProvider;
         _contractCaller = contractCaller;
@@ -66,6 +69,13 @@ internal class SignInWithEthereumCommandHandler :
     public async Task<HandleResult<AuthResultVm>> Handle(SignInWithEthereumCommand command, CancellationToken ct)
     {
         var signerAddress = _signer.RecoverFromMessage(command.Message, command.Signature);
+        if (!await _whitelistQueryable.CheckIsWhitelisted(WhitelistEntryType.SignerAddress, signerAddress))
+        {
+            return new()
+            {
+                Error = new AuthorizationError("Sorry, the access is currently restricted. Email me at admin@truquest.io to get access")
+            };
+        }
 
         var nonce = _nonceRegex.Match(command.Message).Groups[1].Value;
         if (!_totpProvider.VerifyTotp(signerAddress.HexToByteArray(), nonce))

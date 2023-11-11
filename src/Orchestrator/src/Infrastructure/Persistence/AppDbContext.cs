@@ -21,6 +21,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
     public DbSet<SubjectUpdate> SubjectUpdates { get; set; }
     public DbSet<ThingUpdate> ThingUpdates { get; set; }
     public DbSet<SettlementProposalUpdate> SettlementProposalUpdates { get; set; }
+    public DbSet<WhitelistEntry> Whitelist { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -35,7 +36,8 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             .HasPostgresEnum<SettlementProposalState>(schema: "truquest", name: "settlement_proposal_state")
             .HasPostgresEnum<Verdict>(schema: "truquest", name: "verdict")
             .HasPostgresEnum<TaskType>(schema: "truquest", name: "task_type")
-            .HasPostgresEnum<WatchedItemType>(schema: "truquest", name: "watched_item_type");
+            .HasPostgresEnum<WatchedItemType>(schema: "truquest", name: "watched_item_type")
+            .HasPostgresEnum<WhitelistEntryType>(schema: "truquest", name: "whitelist_entry_type");
 
         modelBuilder.Entity<UserDm>(builder =>
         {
@@ -357,6 +359,14 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.Property(u => u.Title).IsRequired();
             builder.Property(u => u.Details).IsRequired(false);
             builder.Property(u => u.Traceparent).IsRequired(false);
+        });
+
+        modelBuilder.Entity<WhitelistEntry>(builder =>
+        {
+            builder.HasKey(e => e.Id);
+            builder.Property(e => e.Id).UseIdentityAlwaysColumn();
+            builder.Property(e => e.Type).IsRequired();
+            builder.Property(e => e.Value).IsRequired();
         });
     }
 }

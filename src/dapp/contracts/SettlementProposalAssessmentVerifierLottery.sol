@@ -5,6 +5,7 @@ import "./TruQuest.sol";
 import "./ThingValidationPoll.sol";
 import "./SettlementProposalAssessmentPoll.sol";
 import "./L1Block.sol";
+import "./RestrictedAccess.sol";
 
 error SettlementProposalAssessmentVerifierLottery__Unauthorized();
 error SettlementProposalAssessmentVerifierLottery__SubmitterCannotParticipate(
@@ -203,6 +204,13 @@ contract SettlementProposalAssessmentVerifierLottery {
             revert SettlementProposalAssessmentVerifierLottery__StillInProgress(
                 _thingProposalId
             );
+        }
+        _;
+    }
+
+    modifier onlyIfWhitelisted() {
+        if (!i_truQuest.checkHasAccess(msg.sender)) {
+            revert RestrictedAccess__Forbidden();
         }
         _;
     }
@@ -466,6 +474,7 @@ contract SettlementProposalAssessmentVerifierLottery {
         bytes32 _userData
     )
         external
+        onlyIfWhitelisted
         whenHasEnoughFundsToStakeAsVerifier
         whenActiveAndNotExpired(_thingProposalId)
         whenNotAlreadyJoined(_thingProposalId)

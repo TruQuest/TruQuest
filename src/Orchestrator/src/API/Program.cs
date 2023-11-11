@@ -172,10 +172,11 @@ public static class WebApplicationBuilderExtension
             config.Lifetime = ServiceLifetime.Scoped;
             config.RegisterServicesFromAssembly(Assembly.GetAssembly(typeof(Application.IServiceCollectionExtension))!);
             config.AddOpenBehavior(typeof(ExceptionHandlingBehavior<,>), ServiceLifetime.Singleton);
-            config.AddOpenBehavior(typeof(AuthorizationBehavior<,>), ServiceLifetime.Scoped);
+            config.AddOpenBehavior(typeof(AuthorizationBehavior<,>), ServiceLifetime.Transient);
             config.AddOpenBehavior(typeof(ValidationBehavior<,>), ServiceLifetime.Singleton);
             config.AddOpenBehavior(typeof(TransactionBehavior<,>), ServiceLifetime.Singleton);
-            config.AddOpenBehavior(typeof(MultipartFormReceivingBehavior<,>), ServiceLifetime.Scoped);
+            config.AddOpenBehavior(typeof(RestrictedAccessBehavior<,>), ServiceLifetime.Transient);
+            config.AddOpenBehavior(typeof(MultipartFormReceivingBehavior<,>), ServiceLifetime.Transient);
         });
 
         builder.Services.AddApplication();
@@ -301,6 +302,7 @@ public static class WebApplicationBuilderExtension
         var network = configuration["Ethereum:Network"]!;
         var rpcUrl = configuration[$"Ethereum:Networks:{network}:URL"]!;
         var truthserumAddress = configuration[$"Ethereum:Contracts:{network}:Truthserum:Address"]!;
+        var restrictedAccessAddress = configuration[$"Ethereum:Contracts:{network}:RestrictedAccess:Address"]!;
         var truQuestAddress = configuration[$"Ethereum:Contracts:{network}:TruQuest:Address"]!;
 
         var accountProvider = app.Services.GetRequiredService<AccountProvider>();
@@ -323,10 +325,20 @@ public static class WebApplicationBuilderExtension
 
         var web3 = new Web3(accountProvider.GetAccount("Orchestrator"), rpcUrl);
 
+        var contractCaller = app.Services.GetRequiredService<IContractCaller>();
+
+        await web3.Eth
+            .GetContractTransactionHandler<GiveAccessToManyMessage>()
+            .SendRequestAndWaitForReceiptAsync(restrictedAccessAddress, new()
+            {
+                Users = (await Task.WhenAll(
+                    users.Select(u => contractCaller.GetWalletAddressFor(accountProvider.GetAccount(u).Address))
+                )).ToList()
+            });
+
         var txnDispatcher = web3.Eth.GetContractTransactionHandler<MintToMessage>();
 
         var userOperationService = app.Services.GetRequiredService<UserOperationService>();
-        var contractCaller = app.Services.GetRequiredService<IContractCaller>();
 
         foreach (var user in users)
         {
@@ -376,6 +388,13 @@ public static class WebApplicationBuilderExtension
 
         return app;
     }
+}
+
+[Function("giveAccessToMany")]
+public class GiveAccessToManyMessage : FunctionMessage
+{
+    [Parameter("address[]", "_users", 1)]
+    public List<string> Users { get; set; }
 }
 
 [Function("mintTo")]

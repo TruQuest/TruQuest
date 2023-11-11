@@ -50,6 +50,7 @@ public static class IServiceCollectionExtension
         NpgsqlConnection.GlobalTypeMapper.MapEnum<Verdict>("truquest.verdict");
         NpgsqlConnection.GlobalTypeMapper.MapEnum<TaskType>("truquest.task_type");
         NpgsqlConnection.GlobalTypeMapper.MapEnum<WatchedItemType>("truquest.watched_item_type");
+        NpgsqlConnection.GlobalTypeMapper.MapEnum<WhitelistEntryType>("truquest.whitelist_entry_type");
         NpgsqlConnection.GlobalTypeMapper.MapEnum<ThingEventType>("truquest_events.thing_event_type");
 #pragma warning restore CS0618
 
@@ -193,6 +194,7 @@ public static class IServiceCollectionExtension
         services.AddScoped<IWatchedItemRepository, WatchedItemRepository>();
         services.AddScoped<IThingUpdateRepository, ThingUpdateRepository>();
         services.AddScoped<ISettlementProposalUpdateRepository, SettlementProposalUpdateRepository>();
+        services.AddScoped<IWhitelistRepository, WhitelistRepository>();
 
         services.AddSingleton<IBlockProgressRepository, BlockProgressRepository>();
         services.AddScoped<IActionableThingRelatedEventRepository, ActionableThingRelatedEventRepository>();
@@ -218,6 +220,8 @@ public static class IServiceCollectionExtension
         services.AddScoped<ISettlementProposalQueryable, SettlementProposalQueryable>();
         services.AddScoped<IWatchListQueryable, WatchListQueryable>();
         services.AddScoped<ITaskQueryable, TaskQueryable>();
+        services.AddScoped<IWhitelistQueryable, WhitelistQueryable>();
+        services.AddScoped<Lazy<IWhitelistQueryable>>(sp => new Lazy<IWhitelistQueryable>(sp.GetRequiredService<IWhitelistQueryable>));
 
         services.AddSingleton<IContractEventListener, ContractEventListener>();
         services.AddScoped<PublisherWrapper>();

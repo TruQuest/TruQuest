@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity >=0.8.0 <0.9.0;
 
-import "@ganache/console.log/console.sol";
-
 import "./Truthserum.sol";
+import "./RestrictedAccess.sol";
 
 error TruQuest__TheWorldIsStopped();
 error TruQuest__ThingAlreadyFunded(bytes16 thingId);
@@ -51,6 +50,7 @@ contract TruQuest {
     address private s_thingValidationPollAddress;
     address private s_settlementProposalAssessmentVerifierLotteryAddress;
     address private s_settlementProposalAssessmentPollAddress;
+    RestrictedAccess private s_restrictedAccess;
 
     address private s_orchestrator;
 
@@ -182,6 +182,13 @@ contract TruQuest {
         _;
     }
 
+    modifier onlyIfWhitelisted() {
+        if (!s_restrictedAccess.checkHasAccess(msg.sender)) {
+            revert RestrictedAccess__Forbidden();
+        }
+        _;
+    }
+
     constructor(
         address _truthserumAddress,
         uint256 _verifierStake,
@@ -236,6 +243,16 @@ contract TruQuest {
         s_settlementProposalAssessmentPollAddress = _settlementProposalAssessmentPollAddress;
     }
 
+    function setRestrictedAccess(
+        address _restrictedAccessAddress
+    ) external onlyOrchestrator {
+        s_restrictedAccess = RestrictedAccess(_restrictedAccessAddress);
+    }
+
+    function checkHasAccess(address _user) external view returns (bool) {
+        return s_restrictedAccess.checkHasAccess(_user);
+    }
+
     function stopTheWorld(bool value) external onlyOrchestrator {
         s_stopTheWorld = value;
     }
@@ -283,7 +300,7 @@ contract TruQuest {
         }
     }
 
-    function importThingSubmitters(
+    function importThingSubmitter(
         bytes16[] calldata _thingIds,
         address[] calldata _submitters
     ) external onlyOrchestrator {
@@ -320,14 +337,18 @@ contract TruQuest {
         }
     }
 
-    function deposit(uint256 _amount) external onlyWhenTheWorldIsSpinning {
+    function deposit(
+        uint256 _amount
+    ) external onlyWhenTheWorldIsSpinning onlyIfWhitelisted {
         i_truthserum.transferFrom(msg.sender, address(this), _amount);
         s_users.push(msg.sender);
         s_balanceOf[msg.sender] += _amount;
         emit FundsDeposited(msg.sender, _amount);
     }
 
-    function withdraw(uint256 _amount) external onlyWhenTheWorldIsSpinning {
+    function withdraw(
+        uint256 _amount
+    ) external onlyWhenTheWorldIsSpinning onlyIfWhitelisted {
         uint256 availableAmount = getAvailableFunds(msg.sender);
         if (availableAmount < _amount) {
             revert TruQuest__RequestedWithdrawAmountExceedsAvailable(
@@ -453,6 +474,7 @@ contract TruQuest {
     )
         external
         onlyWhenTheWorldIsSpinning
+        onlyIfWhitelisted
         onlyWhenNotFunded(_thingId)
         whenHasAtLeast(s_thingStake)
     {
@@ -511,6 +533,7 @@ contract TruQuest {
     )
         external
         onlyWhenTheWorldIsSpinning
+        onlyIfWhitelisted
         onlyWhenNoSettlementProposalUnderAssessmentFor(_thingId)
         whenHasAtLeast(s_settlementProposalStake)
     {

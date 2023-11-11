@@ -14,7 +14,11 @@ internal abstract class Queryable
         _dbContext = dbContext;
         if (DbConnectionProvider.TryGet(out DbConnection? dbConn))
         {
-            _dbContext.Database.SetDbConnection(dbConn!);
+            var dbConnToReplace = _dbContext.Database.GetDbConnection();
+            if (dbConnToReplace != dbConn!)
+            {
+                _dbContext.Database.SetDbConnection(dbConn);
+            }
         }
     }
 

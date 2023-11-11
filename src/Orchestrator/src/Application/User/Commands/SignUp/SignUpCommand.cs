@@ -31,6 +31,7 @@ public class SignUpCommand : IRequest<HandleResult<AuthResultVm>>
 internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<AuthResultVm>>
 {
     private readonly ILogger<SignUpCommandHandler> _logger;
+    private readonly IWhitelistQueryable _whitelistQueryable;
     private readonly IUserRepository _userRepository;
     private readonly IFido2 _fido2;
     private readonly IMemoryCache _memoryCache;
@@ -41,6 +42,7 @@ internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResul
 
     public SignUpCommandHandler(
         ILogger<SignUpCommandHandler> logger,
+        IWhitelistQueryable whitelistQueryable,
         IUserRepository userRepository,
         IFido2 fido2,
         IMemoryCache memoryCache,
@@ -51,6 +53,7 @@ internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResul
     )
     {
         _logger = logger;
+        _whitelistQueryable = whitelistQueryable;
         _userRepository = userRepository;
         _fido2 = fido2;
         _memoryCache = memoryCache;
@@ -62,6 +65,14 @@ internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResul
 
     public async Task<HandleResult<AuthResultVm>> Handle(SignUpCommand command, CancellationToken ct)
     {
+        if (!await _whitelistQueryable.CheckIsWhitelisted(WhitelistEntryType.Email, command.Email))
+        {
+            return new()
+            {
+                Error = new AuthorizationError("Sorry, the access is currently restricted. Email me at admin@truquest.io to get access")
+            };
+        }
+
         if (!_totpProvider.VerifyTotp(Encoding.UTF8.GetBytes(command.Email), command.ConfirmationCode))
         {
             _logger.LogWarning("Invalid confirmation code");

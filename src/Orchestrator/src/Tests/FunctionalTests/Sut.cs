@@ -231,6 +231,10 @@ public class Sut
                     ClaimValue = await ContractCaller.GetWalletAddressFor(kv.Key)
                 }
             });
+
+            appDbContext.Whitelist.Add(new WhitelistEntry(
+                WhitelistEntryType.SignerAddress, AccountProvider.GetAccount(kv.Key).Address
+            ));
         }
 
         appDbContext.Tags.AddRange(new("Politics"), new("Sport"), new("IT"));

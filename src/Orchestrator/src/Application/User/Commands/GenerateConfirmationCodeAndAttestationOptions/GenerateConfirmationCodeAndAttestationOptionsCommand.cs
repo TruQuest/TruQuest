@@ -35,6 +35,7 @@ internal class GenerateConfirmationCodeAndAttestationOptionsCommandHandler : IRe
 >
 {
     private readonly ILogger<GenerateConfirmationCodeAndAttestationOptionsCommandHandler> _logger;
+    private readonly IWhitelistQueryable _whitelistQueryable;
     private readonly IUserRepository _userRepository;
     private readonly IFido2 _fido2;
     private readonly IMemoryCache _memoryCache;
@@ -43,6 +44,7 @@ internal class GenerateConfirmationCodeAndAttestationOptionsCommandHandler : IRe
 
     public GenerateConfirmationCodeAndAttestationOptionsCommandHandler(
         ILogger<GenerateConfirmationCodeAndAttestationOptionsCommandHandler> logger,
+        IWhitelistQueryable whitelistQueryable,
         IUserRepository userRepository,
         IFido2 fido2,
         IMemoryCache memoryCache,
@@ -51,6 +53,7 @@ internal class GenerateConfirmationCodeAndAttestationOptionsCommandHandler : IRe
     )
     {
         _logger = logger;
+        _whitelistQueryable = whitelistQueryable;
         _userRepository = userRepository;
         _fido2 = fido2;
         _memoryCache = memoryCache;
@@ -60,6 +63,14 @@ internal class GenerateConfirmationCodeAndAttestationOptionsCommandHandler : IRe
 
     public async Task<HandleResult<CredentialCreateOptions>> Handle(GenerateConfirmationCodeAndAttestationOptionsCommand command, CancellationToken ct)
     {
+        if (!await _whitelistQueryable.CheckIsWhitelisted(WhitelistEntryType.Email, command.Email))
+        {
+            return new()
+            {
+                Error = new AuthorizationError("Sorry, the access is currently restricted. Email me at admin@truquest.io to get access")
+            };
+        }
+
         var user = await _userRepository.FindByEmail(command.Email); // @@TODO: Use queryable instead.
         if (user != null)
         {

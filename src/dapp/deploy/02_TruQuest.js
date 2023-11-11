@@ -7,6 +7,14 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
   let truthserum = await ethers.getContract("Truthserum");
 
+  await deploy("RestrictedAccess", {
+    from: deployer,
+    log: true,
+    waitConfirmations: 1,
+  });
+
+  let restrictedAccess = await ethers.getContract("RestrictedAccess");
+
   await deploy("TruQuest", {
     from: deployer,
     args: [
@@ -84,6 +92,9 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     truQuest.address,
     BigNumber.from("1000000000000000") // 1 000 000 TRU
   );
+  await txnResponse.wait(1);
+
+  txnResponse = await truQuest.setRestrictedAccess(restrictedAccess.address);
   await txnResponse.wait(1);
 
   txnResponse = await truQuest.setLotteryAndPollAddresses(

@@ -4,6 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import "./TruQuest.sol";
 import "./ThingValidationPoll.sol";
 import "./L1Block.sol";
+import "./RestrictedAccess.sol";
 
 error ThingValidationVerifierLottery__Unauthorized();
 error ThingValidationVerifierLottery__SubmitterCannotParticipate(
@@ -157,6 +158,13 @@ contract ThingValidationVerifierLottery {
         _;
     }
 
+    modifier onlyIfWhitelisted() {
+        if (!i_truQuest.checkHasAccess(msg.sender)) {
+            revert RestrictedAccess__Forbidden();
+        }
+        _;
+    }
+
     constructor(
         address _truQuestAddress,
         uint8 _numVerifiers,
@@ -284,6 +292,7 @@ contract ThingValidationVerifierLottery {
         bytes32 _userData
     )
         external
+        onlyIfWhitelisted
         notSubmitter(_thingId)
         whenHasEnoughFundsToStakeAsVerifier
         whenActiveAndNotExpired(_thingId)

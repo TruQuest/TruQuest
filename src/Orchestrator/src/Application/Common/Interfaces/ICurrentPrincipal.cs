@@ -5,4 +5,5 @@ public interface ICurrentPrincipal
     string? Id { get; }
     string? SignerAddress { get; }
     string? WalletAddress { get; }
+    bool IsAdmin { get; }
 }
