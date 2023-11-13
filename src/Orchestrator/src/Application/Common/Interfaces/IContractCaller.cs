@@ -2,6 +2,7 @@ using System.Numerics;
 
 using Application.Common.Attributes;
 using Application.Ethereum.Common.Models.IM;
+using Application.General.Queries.GetContractsStates.QM;
 
 namespace Application.Common.Interfaces;
 
@@ -96,4 +97,13 @@ public interface IContractCaller
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     );
     Task<IEnumerable<string>> GetVerifiersForSettlementProposal(byte[] thingId, byte[] proposalId);
+
+    Task<List<string>> GetRestrictedAccessWhitelist();
+    Task<IEnumerable<UserBalanceQm>> ExportUsersAndBalances();
+    Task<IEnumerable<ThingSubmitterQm>> ExportThingSubmitter();
+    Task<IEnumerable<SettlementProposalSubmitterQm>> ExportThingIdToSettlementProposal();
+    Task<IEnumerable<ThingValidationVerifierLotteryQm>> ExportThingValidationVerifierLotteryData();
+    Task<IEnumerable<ThingValidationPollQm>> ExportThingValidationPollData();
+    Task<IEnumerable<SettlementProposalAssessmentVerifierLotteryQm>> ExportSettlementProposalAssessmentVerifierLotteryData();
+    Task<IEnumerable<SettlementProposalAssessmentPollQm>> ExportSettlementProposalAssessmentPollData();
 }

@@ -10,16 +10,19 @@ using Microsoft.Extensions.Hosting;
 using Nethereum.Web3;
 using Nethereum.RPC.Eth.DTOs;
 using Nethereum.Contracts;
+using Nethereum.Hex.HexTypes;
 
 using Domain.Results;
 using Application;
 using Application.Common.Interfaces;
 using Application.Common.Misc;
 using Application.Ethereum.Common.Models.IM;
+using Application.General.Queries.GetContractsStates.QM;
 
 using Infrastructure.Ethereum.Messages;
 using Infrastructure.Ethereum.TypedData;
 using Infrastructure.Ethereum.Errors;
+using Infrastructure.Ethereum.Messages.Export;
 
 namespace Infrastructure.Ethereum;
 
@@ -31,6 +34,8 @@ internal class ContractCaller : IContractCaller
     private readonly Web3 _web3;
     private readonly string _entryPointAddress;
     private readonly string _simpleAccountFactoryAddress;
+    private readonly string _restrictedAccessAddress;
+    private readonly string _truquestAddress;
     private readonly string _thingValidationVerifierLotteryAddress;
     private readonly string _thingValidationPollAddress;
     private readonly string _settlementProposalAssessmentVerifierLotteryAddress;
@@ -67,6 +72,8 @@ internal class ContractCaller : IContractCaller
         _web3 = new Web3(orchestrator, configuration[$"Ethereum:Networks:{network}:URL"]);
         _entryPointAddress = configuration[$"Ethereum:Contracts:{network}:EntryPoint:Address"]!;
         _simpleAccountFactoryAddress = configuration[$"Ethereum:Contracts:{network}:SimpleAccountFactory:Address"]!;
+        _restrictedAccessAddress = configuration[$"Ethereum:Contracts:{network}:RestrictedAccess:Address"]!;
+        _truquestAddress = configuration[$"Ethereum:Contracts:{network}:TruQuest:Address"]!;
         _thingValidationVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingValidationVerifierLottery:Address"]!;
         _thingValidationPollAddress = configuration[$"Ethereum:Contracts:{network}:ThingValidationPoll:Address"]!;
         _settlementProposalAssessmentVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:SettlementProposalAssessmentVerifierLottery:Address"]!;
@@ -1047,5 +1054,200 @@ internal class ContractCaller : IContractCaller
                 result.Data!.TransactionHash
             );
         }
+    }
+
+    public Task<List<string>> GetRestrictedAccessWhitelist() => _web3.Eth
+        .GetContractQueryHandler<GetWhitelistMessage>()
+        .QueryAsync<List<string>>(_restrictedAccessAddress, new());
+
+    public async Task<IEnumerable<UserBalanceQm>> ExportUsersAndBalances()
+    {
+        var result = await _web3.Eth
+            .GetContractQueryHandler<ExportUsersAndBalancesMessage>()
+            .QueryAsync<ExportUsersAndBalancesFunctionOutput>(_truquestAddress, new());
+
+        var userBalances = new List<UserBalanceQm>();
+        for (int i = 0; i < result.Users.Count; ++i)
+        {
+            userBalances.Add(new()
+            {
+                Address = result.Users[i],
+                HexBalance = new HexBigInteger(result.Balances[i]).HexValue,
+                HexStakedBalance = new HexBigInteger(result.StakedBalances[i]).HexValue
+            });
+        }
+
+        return userBalances;
+    }
+
+    public async Task<IEnumerable<ThingSubmitterQm>> ExportThingSubmitter()
+    {
+        var result = await _web3.Eth
+            .GetContractQueryHandler<ExportThingSubmitterMessage>()
+            .QueryAsync<ExportThingSubmitterFunctionOutput>(_truquestAddress, new());
+
+        var thingSubmitters = new List<ThingSubmitterQm>();
+        for (int i = 0; i < result.ThingIds.Count; ++i)
+        {
+            thingSubmitters.Add(new()
+            {
+                ThingId = new Guid(result.ThingIds[i]),
+                Submitter = result.Submitters[i]
+            });
+        }
+
+        return thingSubmitters;
+    }
+
+    public async Task<IEnumerable<SettlementProposalSubmitterQm>> ExportThingIdToSettlementProposal()
+    {
+        var result = await _web3.Eth
+            .GetContractQueryHandler<ExportThingIdToSettlementProposalMessage>()
+            .QueryAsync<ExportThingIdToSettlementProposalFunctionOutput>(_truquestAddress, new());
+
+        var settlementProposalSubmitters = new List<SettlementProposalSubmitterQm>();
+        for (int i = 0; i < result.ThingIds.Count; ++i)
+        {
+            settlementProposalSubmitters.Add(new()
+            {
+                ThingId = new Guid(result.ThingIds[i]),
+                SettlementProposalId = new Guid(result.SettlementProposals[i].Id),
+                Submitter = result.SettlementProposals[i].Submitter
+            });
+        }
+
+        return settlementProposalSubmitters;
+    }
+
+    public async Task<IEnumerable<ThingValidationVerifierLotteryQm>> ExportThingValidationVerifierLotteryData()
+    {
+        var result = await _web3.Eth
+            .GetContractQueryHandler<ExportThingValidationVerifierLotteryDataMessage>()
+            .QueryAsync<ExportThingValidationVerifierLotteryDataFunctionOutput>(_thingValidationVerifierLotteryAddress, new());
+
+        var lotteries = new List<ThingValidationVerifierLotteryQm>();
+        for (int i = 0; i < result.ThingIds.Count; ++i)
+        {
+            lotteries.Add(new()
+            {
+                ThingId = new Guid(result.ThingIds[i]),
+                OrchestratorCommitment = new()
+                {
+                    DataHash = result.OrchestratorCommitments[i].DataHash.ToHex(prefix: true),
+                    UserXorDataHash = result.OrchestratorCommitments[i].UserXorDataHash.ToHex(prefix: true),
+                    Block = (long)result.OrchestratorCommitments[i].Block
+                },
+                Participants = result.Participants[i]
+                    .Select((p, i) => (Participant: p, Index: i))
+                    .Join(
+                        result.BlockNumbers[i].Select((b, i) => (BlockNumber: b, Index: i)),
+                        pe => pe.Index,
+                        be => be.Index,
+                        (pe, be) => new LotteryParticipantQm
+                        {
+                            Address = pe.Participant,
+                            BlockNumber = (long)be.BlockNumber
+                        }
+                    )
+            });
+        }
+
+        return lotteries;
+    }
+
+    public async Task<IEnumerable<ThingValidationPollQm>> ExportThingValidationPollData()
+    {
+        var result = await _web3.Eth
+            .GetContractQueryHandler<ExportThingValidationPollDataMessage>()
+            .QueryAsync<ExportThingValidationPollDataFunctionOutput>(_thingValidationPollAddress, new());
+
+        var polls = new List<ThingValidationPollQm>();
+        for (int i = 0; i < result.ThingIds.Count; ++i)
+        {
+            polls.Add(new()
+            {
+                ThingId = new Guid(result.ThingIds[i]),
+                InitBlockNumber = (long)result.InitBlockNumbers[i],
+                Verifiers = result.Verifiers[i]
+            });
+        }
+
+        return polls;
+    }
+
+    public async Task<IEnumerable<SettlementProposalAssessmentVerifierLotteryQm>> ExportSettlementProposalAssessmentVerifierLotteryData()
+    {
+        var result = await _web3.Eth
+            .GetContractQueryHandler<ExportSettlementProposalAssessmentVerifierLotteryDataMessage>()
+            .QueryAsync<ExportSettlementProposalAssessmentVerifierLotteryDataFunctionOutput>(
+                _settlementProposalAssessmentVerifierLotteryAddress,
+                new()
+            );
+
+        var lotteries = new List<SettlementProposalAssessmentVerifierLotteryQm>();
+        for (int i = 0; i < result.ThingProposalIds.Count; ++i)
+        {
+            lotteries.Add(new()
+            {
+                ThingId = new Guid(result.ThingProposalIds[i].Take(16).ToArray()),
+                SettlementProposalId = new Guid(result.ThingProposalIds[i].Skip(16).ToArray()),
+                OrchestratorCommitment = new()
+                {
+                    DataHash = result.OrchestratorCommitments[i].DataHash.ToHex(prefix: true),
+                    UserXorDataHash = result.OrchestratorCommitments[i].UserXorDataHash.ToHex(prefix: true),
+                    Block = (long)result.OrchestratorCommitments[i].Block
+                },
+                Participants = result.Participants[i]
+                    .Select((p, i) => (Participant: p, Index: i))
+                    .Join(
+                        result.BlockNumbers[i].Take(result.Participants[i].Count).Select((b, i) => (BlockNumber: b, Index: i)),
+                        pe => pe.Index,
+                        be => be.Index,
+                        (pe, be) => new LotteryParticipantQm
+                        {
+                            Address = pe.Participant,
+                            BlockNumber = (long)be.BlockNumber
+                        }
+                    ),
+                Claimants = result.Claimants[i]
+                    .Select((c, i) => (Claimant: c, Index: i))
+                    .Join(
+                        result.BlockNumbers[i].Skip(result.Participants[i].Count).Select((b, i) => (BlockNumber: b, Index: i)),
+                        ce => ce.Index,
+                        be => be.Index,
+                        (ce, be) => new LotteryParticipantQm
+                        {
+                            Address = ce.Claimant,
+                            BlockNumber = (long)be.BlockNumber
+                        }
+                    )
+            });
+        }
+
+        return lotteries;
+    }
+
+    public async Task<IEnumerable<SettlementProposalAssessmentPollQm>> ExportSettlementProposalAssessmentPollData()
+    {
+        var result = await _web3.Eth
+            .GetContractQueryHandler<ExportSettlementProposalAssessmentPollDataMessage>()
+            .QueryAsync<ExportSettlementProposalAssessmentPollDataFunctionOutput>(
+                _settlementProposalAssessmentPollAddress,
+                new()
+            );
+
+        var polls = new List<SettlementProposalAssessmentPollQm>();
+        for (int i = 0; i < result.ThingProposalIds.Count; ++i)
+        {
+            polls.Add(new()
+            {
+                ThingId = new Guid(result.ThingProposalIds[i].Take(16).ToArray()),
+                SettlementProposalId = new Guid(result.ThingProposalIds[i].Skip(16).ToArray()),
+                InitBlockNumber = (long)result.InitBlockNumbers[i],
+                Verifiers = result.Verifiers[i]
+            });
+        }
+
+        return polls;
     }
 }

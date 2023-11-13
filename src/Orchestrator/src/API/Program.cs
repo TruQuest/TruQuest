@@ -245,8 +245,6 @@ public static class WebApplicationBuilderExtension
 
     public static async Task<WebApplication> DeployContracts(this WebApplication app)
     {
-        // if (!app.Environment.IsDevelopment()) return app;
-
         var processInfo = new ProcessStartInfo()
         {
             FileName = "cmd.exe",
@@ -309,8 +307,6 @@ public static class WebApplicationBuilderExtension
 
     public static async Task<WebApplication> DepositFunds(this WebApplication app)
     {
-        // if (!app.Environment.IsDevelopment()) return app;
-
         var configuration = app.Configuration;
         var network = configuration["Ethereum:Network"]!;
         var rpcUrl = configuration[$"Ethereum:Networks:{network}:URL"]!;
