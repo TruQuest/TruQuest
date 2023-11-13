@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 
-using MediatR;
+using GoThataway;
 
 using Domain.Results;
 
@@ -18,7 +18,7 @@ public class CreateNewThingDraftCommand : ManuallyBoundInputModelCommand, IReque
     public CreateNewThingDraftCommand(HttpRequest request) : base(request, new NewThingIm()) { }
 }
 
-internal class CreateNewThingDraftCommandHandler : IRequestHandler<CreateNewThingDraftCommand, HandleResult<Guid>>
+public class CreateNewThingDraftCommandHandler : IRequestHandler<CreateNewThingDraftCommand, HandleResult<Guid>>
 {
     private readonly ICurrentPrincipal _currentPrincipal;
     private readonly IRequestDispatcher _requestDispatcher;

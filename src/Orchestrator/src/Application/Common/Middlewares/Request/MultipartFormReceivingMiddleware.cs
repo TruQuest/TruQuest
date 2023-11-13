@@ -1,20 +1,20 @@
-using MediatR;
+using GoThataway;
 
 using Domain.Results;
 
 using Application.Common.Interfaces;
 using Application.Common.Models.IM;
 
-namespace Application.Common.Behaviors;
+namespace Application.Common.Middlewares.Request;
 
-public class MultipartFormReceivingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+public class MultipartFormReceivingMiddleware<TRequest, TResponse> : IRequestMiddleware<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
     where TResponse : HandleResult, new()
 {
     private readonly IFileReceiver _fileReceiver;
     private readonly ICurrentPrincipal _currentPrincipal;
 
-    public MultipartFormReceivingBehavior(
+    public MultipartFormReceivingMiddleware(
         IFileReceiver fileReceiver,
         ICurrentPrincipal currentPrincipal
     )
@@ -23,9 +23,7 @@ public class MultipartFormReceivingBehavior<TRequest, TResponse> : IPipelineBeha
         _currentPrincipal = currentPrincipal;
     }
 
-    public async Task<TResponse> Handle(
-        TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct
-    )
+    public async Task<TResponse> Handle(TRequest request, Func<Task<TResponse>> next, CancellationToken ct)
     {
         if (request is ManuallyBoundInputModelCommand command)
         {

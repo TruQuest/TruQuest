@@ -1,22 +1,22 @@
 using System.Reflection;
 
-using MediatR;
+using GoThataway;
 
 using Domain.Results;
 
 using Application.Common.Attributes;
 using Application.Common.Interfaces;
 
-namespace Application.Common.Behaviors;
+namespace Application.Common.Middlewares.Request;
 
-public class AuthorizationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+public class AuthorizationMiddleware<TRequest, TResponse> : IRequestMiddleware<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
     where TResponse : HandleResult, new()
 {
     private readonly IAuthorizationService _authorizationService;
     private readonly ICurrentPrincipal _currentPrincipal;
 
-    public AuthorizationBehavior(
+    public AuthorizationMiddleware(
         IAuthorizationService authorizationService,
         ICurrentPrincipal currentPrincipal
     )
@@ -25,7 +25,7 @@ public class AuthorizationBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
         _currentPrincipal = currentPrincipal;
     }
 
-    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
+    public async Task<TResponse> Handle(TRequest request, Func<Task<TResponse>> next, CancellationToken ct)
     {
         var authorizeAttributes = request
             .GetType()

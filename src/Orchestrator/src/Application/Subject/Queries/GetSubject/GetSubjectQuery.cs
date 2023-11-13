@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 using FluentValidation;
 
 using Domain.Results;
@@ -21,7 +21,7 @@ internal class Validator : AbstractValidator<GetSubjectQuery>
     }
 }
 
-internal class GetSubjectQueryHandler : IRequestHandler<GetSubjectQuery, HandleResult<SubjectQm>>
+public class GetSubjectQueryHandler : IRequestHandler<GetSubjectQuery, HandleResult<SubjectQm>>
 {
     private readonly ISubjectQueryable _subjectQueryable;
 

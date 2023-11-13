@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 using FluentValidation;
 
 using Domain.Results;
@@ -20,7 +20,7 @@ internal class Validator : AbstractValidator<GetThingsListQuery>
     }
 }
 
-internal class GetThingsListQueryHandler : IRequestHandler<GetThingsListQuery, HandleResult<GetThingsListResultVm>>
+public class GetThingsListQueryHandler : IRequestHandler<GetThingsListQuery, HandleResult<GetThingsListResultVm>>
 {
     private readonly ICurrentPrincipal _currentPrincipal;
     private readonly IThingQueryable _thingQueryable;

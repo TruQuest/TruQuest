@@ -12,13 +12,12 @@ using Microsoft.AspNetCore.Hosting;
 using Npgsql;
 using Respawn;
 using Respawn.Graph;
-using MediatR;
+using GoThataway;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
 
 using Domain.Aggregates;
 using Domain.Aggregates.Events;
-using Application;
 using Application.Common.Interfaces;
 using Infrastructure.Persistence;
 using Infrastructure.Ethereum;
@@ -26,6 +25,7 @@ using API;
 using API.BackgroundServices;
 
 using Tests.FunctionalTests.Helpers;
+using Tests.FunctionalTests.Helpers.Middlewares;
 
 namespace Tests.FunctionalTests;
 
@@ -97,7 +97,11 @@ public class Sut
 
         var appBuilder = API.Program.CreateWebApplicationBuilder(new string[] { });
         appBuilder.Configuration.AddJsonFile("appsettings.Testing.json", optional: false);
-        appBuilder.ConfigureServices();
+        appBuilder.ConfigureServices(configureThataway: registry =>
+        {
+            registry.AddRequestMiddleware(typeof(RequestTestMiddleware<,>), ServiceLifetime.Singleton);
+            registry.AddEventMiddleware(typeof(EventTestMiddleware<>), ServiceLifetime.Singleton);
+        });
 
         ApplicationEventChannel = new ApplicationEventChannel();
         appBuilder.Services.AddSingleton<IAdditionalApplicationEventSink>(ApplicationEventChannel);
@@ -309,8 +313,8 @@ public class Sut
             context.User = user;
         }
 
-        var sender = scope.ServiceProvider.GetRequiredService<SenderWrapper>();
-        var result = await sender.Send(request);
+        var thataway = scope.ServiceProvider.GetRequiredService<Thataway>();
+        var result = await thataway.Send(request);
 
         return result;
     }

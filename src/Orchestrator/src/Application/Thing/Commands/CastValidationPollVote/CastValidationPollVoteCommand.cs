@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-using MediatR;
+using GoThataway;
 using FluentValidation;
 
 using Domain.Results;
@@ -28,7 +28,7 @@ internal class Validator : AbstractValidator<CastValidationPollVoteCommand>
     }
 }
 
-internal class CastValidationPollVoteCommandHandler : IRequestHandler<
+public class CastValidationPollVoteCommandHandler : IRequestHandler<
     CastValidationPollVoteCommand,
     HandleResult<string>
 >

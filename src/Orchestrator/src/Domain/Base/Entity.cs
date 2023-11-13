@@ -1,19 +1,19 @@
-using MediatR;
+using GoThataway;
 
 namespace Domain.Base;
 
 public abstract class Entity
 {
-    private List<INotification>? _domainEvents;
-    public IReadOnlyList<INotification>? DomainEvents => _domainEvents;
+    private List<IEvent>? _domainEvents;
+    public IReadOnlyList<IEvent>? DomainEvents => _domainEvents;
 
-    public void AddDomainEvent(INotification @event)
+    public void AddDomainEvent(IEvent @event)
     {
-        _domainEvents ??= new List<INotification>();
+        _domainEvents ??= new List<IEvent>();
         _domainEvents.Add(@event);
     }
 
-    public void RemoveDomainEvent(INotification @event)
+    public void RemoveDomainEvent(IEvent @event)
     {
         _domainEvents?.Remove(@event);
     }

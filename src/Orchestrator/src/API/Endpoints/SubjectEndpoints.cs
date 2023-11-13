@@ -1,4 +1,5 @@
-using Application;
+using GoThataway;
+
 using Application.Subject.Commands.AddNewSubject;
 using Application.Subject.Queries.GetSubject;
 using Application.Subject.Queries.GetSubjects;
@@ -14,25 +15,25 @@ public static class SubjectEndpoints
 
         group.MapPost(
             "/add",
-            (HttpRequest request, SenderWrapper sender) =>
-                sender.Send(new AddNewSubjectCommand(request))
+            (HttpRequest request, Thataway thataway) =>
+                thataway.Send(new AddNewSubjectCommand(request))
         );
 
         group.MapGet(
             "/",
-            (SenderWrapper sender) => sender.Send(new GetSubjectsQuery())
+            (Thataway thataway) => thataway.Send(new GetSubjectsQuery())
         );
 
         group.MapGet(
             "/{id}",
-            ([AsParameters] GetSubjectQuery query, SenderWrapper sender) =>
-                sender.Send(query)
+            ([AsParameters] GetSubjectQuery query, Thataway thataway) =>
+                thataway.Send(query)
         );
 
         group.MapGet(
             "/{subjectId}/things",
-            ([AsParameters] GetThingsListQuery query, SenderWrapper sender) =>
-                sender.Send(query)
+            ([AsParameters] GetThingsListQuery query, Thataway thataway) =>
+                thataway.Send(query)
         );
 
         group.AddEndpointFilter(Filters.ConvertHandleResult);

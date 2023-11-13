@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-using MediatR;
+using GoThataway;
 
 using Domain.Aggregates;
 using Domain.Results;
@@ -19,7 +19,7 @@ public class FinalizeValidationPollCommand : IRequest<VoidResult>
     public required List<string> SlashedVerifiers { get; init; }
 }
 
-internal class FinalizeValidationPollCommandHandler : IRequestHandler<FinalizeValidationPollCommand, VoidResult>
+public class FinalizeValidationPollCommandHandler : IRequestHandler<FinalizeValidationPollCommand, VoidResult>
 {
     private readonly ILogger<FinalizeValidationPollCommandHandler> _logger;
     private readonly IThingRepository _thingRepository;

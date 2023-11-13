@@ -1,28 +1,24 @@
-using MediatR;
+using GoThataway;
 using FluentValidation;
 
 using Domain.Results;
 
 using Application.Common.Errors;
 
-namespace Application.Common.Behaviors;
+namespace Application.Common.Middlewares.Request;
 
-public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+public class ValidationMiddleware<TRequest, TResponse> : IRequestMiddleware<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
     where TResponse : HandleResult, new()
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators;
 
-    public ValidationBehavior(IEnumerable<IValidator<TRequest>> validators)
+    public ValidationMiddleware(IEnumerable<IValidator<TRequest>> validators)
     {
         _validators = validators;
     }
 
-    public async Task<TResponse> Handle(
-        TRequest request,
-        RequestHandlerDelegate<TResponse> next,
-        CancellationToken ct
-    )
+    public async Task<TResponse> Handle(TRequest request, Func<Task<TResponse>> next, CancellationToken ct)
     {
         if (_validators.Any())
         {

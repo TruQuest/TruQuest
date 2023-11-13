@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-using MediatR;
+using GoThataway;
 
 using Domain.Results;
 using Domain.Aggregates;
@@ -20,7 +20,7 @@ public class NotifyWatchersCommand : IRequest<VoidResult>
     public required string? Details { get; init; }
 }
 
-internal class NotifyWatchersCommandHandler : IRequestHandler<NotifyWatchersCommand, VoidResult>
+public class NotifyWatchersCommandHandler : IRequestHandler<NotifyWatchersCommand, VoidResult>
 {
     private readonly ILogger<NotifyWatchersCommandHandler> _logger;
     private readonly IWatchListQueryable _watchListQueryable;

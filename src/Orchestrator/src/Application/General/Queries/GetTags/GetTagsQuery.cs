@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 
 using Domain.Results;
 
@@ -9,7 +9,7 @@ namespace Application.General.Queries.GetTags;
 
 public class GetTagsQuery : IRequest<HandleResult<IEnumerable<TagQm>>> { }
 
-internal class GetTagsQueryHandler : IRequestHandler<GetTagsQuery, HandleResult<IEnumerable<TagQm>>>
+public class GetTagsQueryHandler : IRequestHandler<GetTagsQuery, HandleResult<IEnumerable<TagQm>>>
 {
     private readonly ITagQueryable _tagQueryable;
 

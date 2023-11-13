@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 
-using MediatR;
+using GoThataway;
 
 using Domain.Results;
 
@@ -20,7 +20,7 @@ public class CreateNewSettlementProposalDraftCommand : ManuallyBoundInputModelCo
     { }
 }
 
-internal class CreateNewSettlementProposalDraftCommandHandler :
+public class CreateNewSettlementProposalDraftCommandHandler :
     IRequestHandler<CreateNewSettlementProposalDraftCommand, HandleResult<Guid>>
 {
     private readonly ICurrentPrincipal _currentPrincipal;

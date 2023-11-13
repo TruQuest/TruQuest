@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Threading.Channels;
 
-using MediatR;
+using GoThataway;
 
 using ThingEvents = Application.Thing.Events;
 using ThingEthEvents = Application.Ethereum.Events.ThingValidationVerifierLottery;
@@ -30,11 +30,11 @@ public class SettlementProposalAssessmentVerifierLotteryClosedWithSuccessEventAr
 
 public class EventBroadcaster
 {
-    public ChannelWriter<INotification> EventSink { get; }
-    private readonly ChannelReader<INotification> _eventStream;
+    public ChannelWriter<IEvent> EventSink { get; }
+    private readonly ChannelReader<IEvent> _eventStream;
 
-    public ChannelWriter<IBaseRequest> RequestSink { get; }
-    private readonly ChannelReader<IBaseRequest> _requestStream;
+    public ChannelWriter<object> RequestSink { get; }
+    private readonly ChannelReader<object> _requestStream;
 
     private readonly CancellationTokenSource _cts;
     private Guid _thingId;
@@ -60,11 +60,11 @@ public class EventBroadcaster
 
     public EventBroadcaster()
     {
-        var eventChannel = Channel.CreateUnbounded<INotification>();
+        var eventChannel = Channel.CreateUnbounded<IEvent>();
         EventSink = eventChannel.Writer;
         _eventStream = eventChannel.Reader;
 
-        var requestChannel = Channel.CreateUnbounded<IBaseRequest>();
+        var requestChannel = Channel.CreateUnbounded<object>();
         RequestSink = requestChannel.Writer;
         _requestStream = requestChannel.Reader;
 
@@ -173,6 +173,21 @@ public class EventBroadcaster
             try
             {
                 var request = await _requestStream.ReadAsync(_cts.Token);
+                var thingIdProp = request.GetType().GetProperty("ThingId");
+                var proposalIdProp = request.GetType().GetProperty("SettlementProposalId") ?? request.GetType().GetProperty("ProposalId");
+                if (thingIdProp != null)
+                {
+                    var thingIdObj = thingIdProp.GetValue(request);
+                    var thingId = thingIdObj is Guid ? (Guid)thingIdObj : new Guid((byte[])thingIdObj!);
+                    if (thingId != _thingId) continue;
+                }
+                if (proposalIdProp != null)
+                {
+                    var proposalIdObj = proposalIdProp.GetValue(request);
+                    var proposalId = proposalIdObj is Guid ? (Guid)proposalIdObj : new Guid((byte[])proposalIdObj!);
+                    if (proposalId != _proposalId) continue;
+                }
+
                 Debug.WriteLine($"************ {GetType().Name}: {request.GetType().Name} ************");
                 if (request is ThingCommands.ArchiveDueToFailedLottery.ArchiveDueToFailedLotteryCommand)
                 {

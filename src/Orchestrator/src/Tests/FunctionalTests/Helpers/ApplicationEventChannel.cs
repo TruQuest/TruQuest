@@ -1,6 +1,6 @@
 using System.Threading.Channels;
 
-using MediatR;
+using GoThataway;
 
 using Application.Common.Interfaces;
 
@@ -8,9 +8,9 @@ namespace Tests.FunctionalTests.Helpers;
 
 public class ApplicationEventChannel : IAdditionalApplicationEventSink
 {
-    private readonly List<ChannelWriter<INotification>> _consumerSinks = new();
+    private readonly List<ChannelWriter<IEvent>> _consumerSinks = new();
 
-    public void Add(INotification @event)
+    public void Add(IEvent @event)
     {
         lock (_consumerSinks) // @@NOTE: This is only used by tests so locking everything is fine.
         {
@@ -21,7 +21,7 @@ public class ApplicationEventChannel : IAdditionalApplicationEventSink
         }
     }
 
-    public void RegisterConsumer(ChannelWriter<INotification> consumerSink)
+    public void RegisterConsumer(ChannelWriter<IEvent> consumerSink)
     {
         lock (_consumerSinks)
         {
@@ -29,7 +29,7 @@ public class ApplicationEventChannel : IAdditionalApplicationEventSink
         }
     }
 
-    public void UnregisterConsumer(ChannelWriter<INotification> consumerSink)
+    public void UnregisterConsumer(ChannelWriter<IEvent> consumerSink)
     {
         lock (_consumerSinks)
         {

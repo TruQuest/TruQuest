@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 
 using Domain.Aggregates.Events;
 
@@ -7,7 +7,7 @@ using Application.Ethereum.Common.Models.IM;
 
 namespace Application.Ethereum.Events.SettlementProposalAssessmentVerifierLottery.ClaimedLotterySpot;
 
-public class ClaimedLotterySpotEvent : BaseContractEvent, INotification
+public class ClaimedLotterySpotEvent : BaseContractEvent, IEvent
 {
     public required byte[] ThingId { get; init; }
     public required byte[] SettlementProposalId { get; init; }
@@ -15,7 +15,7 @@ public class ClaimedLotterySpotEvent : BaseContractEvent, INotification
     public required long L1BlockNumber { get; init; }
 }
 
-internal class ClaimedLotterySpotEventHandler : INotificationHandler<ClaimedLotterySpotEvent>
+public class ClaimedLotterySpotEventHandler : IEventHandler<ClaimedLotterySpotEvent>
 {
     private readonly IThingValidationVerifierLotteryEventQueryable _thingLotteryEventQueryable;
     private readonly IClaimedSettlementProposalAssessmentVerifierLotterySpotEventRepository _claimedAssessmentVerifierLotterySpotEventRepository;

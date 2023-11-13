@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 
 using Domain.Aggregates.Events;
 
@@ -7,7 +7,7 @@ using Application.Ethereum.Common.Models.IM;
 
 namespace Application.Ethereum.Events.SettlementProposalAssessmentVerifierLottery.LotteryClosedWithSuccess;
 
-public class LotteryClosedWithSuccessEvent : BaseContractEvent, INotification
+public class LotteryClosedWithSuccessEvent : BaseContractEvent, IEvent
 {
     public required byte[] ThingId { get; init; }
     public required byte[] SettlementProposalId { get; init; }
@@ -20,7 +20,7 @@ public class LotteryClosedWithSuccessEvent : BaseContractEvent, INotification
     public required List<string> WinnerWalletAddresses { get; init; }
 }
 
-internal class LotteryClosedWithSuccessEventHandler : INotificationHandler<LotteryClosedWithSuccessEvent>
+public class LotteryClosedWithSuccessEventHandler : IEventHandler<LotteryClosedWithSuccessEvent>
 {
     private readonly IActionableThingRelatedEventRepository _actionableThingRelatedEventRepository;
 

@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 using Microsoft.Extensions.Logging;
 
-using MediatR;
+using GoThataway;
 
 using Domain.Aggregates;
 using Domain.Aggregates.Events;
@@ -14,7 +14,7 @@ using Application.Common.Models.IM;
 
 namespace Application.Settlement.Commands.CloseAssessmentPoll;
 
-internal class CloseAssessmentPollCommand : DeferredTaskCommand, IRequest<VoidResult>
+public class CloseAssessmentPollCommand : DeferredTaskCommand, IRequest<VoidResult>
 {
     public required Guid ThingId { get; init; }
     public required Guid SettlementProposalId { get; init; }
@@ -22,7 +22,7 @@ internal class CloseAssessmentPollCommand : DeferredTaskCommand, IRequest<VoidRe
     public required long TaskId { get; init; }
 }
 
-internal class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessmentPollCommand, VoidResult>
+public class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessmentPollCommand, VoidResult>
 {
     private readonly ILogger<CloseAssessmentPollCommandHandler> _logger;
     private readonly ITaskRepository _taskRepository;

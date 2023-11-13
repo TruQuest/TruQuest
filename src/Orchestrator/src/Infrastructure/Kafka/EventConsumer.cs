@@ -3,10 +3,10 @@ using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 
 using KafkaFlow;
+using GoThataway;
 
 using Domain.Aggregates;
 using Domain.Results;
-using Application;
 using Application.Common.Errors;
 using Application.Settlement.Commands.FinalizeAssessmentPoll;
 using Application.Settlement.Commands.PrepareForAssessmentPoll;
@@ -37,10 +37,10 @@ internal class EventConsumer : IMessageMiddleware
     public async Task Invoke(IMessageContext context, MiddlewareDelegate next)
     {
         using var scope = _serviceScopeFactory.CreateScope();
-        var sender = scope.ServiceProvider.GetRequiredService<SenderWrapper>();
+        var thataway = scope.ServiceProvider.GetRequiredService<Thataway>();
 
         // @@NOTE: We do this instead of using KafkaFlow's typed handler mechanism, because
-        // on every retry we need a completely new scope from which SenderWrapper, ISender, all
+        // on every retry we need a completely new scope from which Thataway, all
         // repos, etc. will get resolved, but when using typed handlers with Scoped lifetime
         // the handlers and their dependencies only get resolved once.
 
@@ -48,27 +48,25 @@ internal class EventConsumer : IMessageMiddleware
         var message = context.Message.Value;
         if (message is ThingFundedEvent)
         {
-            result = await sender.Send(
+            result = await thataway.Send(
                 new Application.Thing.Commands.InitVerifierLottery.InitVerifierLotteryCommand
                 {
                     ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key))
-                },
-                addToAdditionalSinks: true
+                }
             );
         }
         else if (message is ThingValidationVerifierLotteryClosedInFailureEvent)
         {
-            result = await sender.Send(
+            result = await thataway.Send(
                 new ArchiveDueToFailedLotteryCommand
                 {
                     ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key))
-                },
-                addToAdditionalSinks: true
+                }
             );
         }
         else if (message is ThingValidationVerifierLotteryClosedWithSuccessEvent validationLotteryClosedWithSuccessEvent)
         {
-            result = await sender.Send(
+            result = await thataway.Send(
                 new PrepareForValidationPollCommand
                 {
                     PollInitBlockNumber = long.Parse(
@@ -85,13 +83,12 @@ internal class EventConsumer : IMessageMiddleware
                     HashOfL1EndBlock = validationLotteryClosedWithSuccessEvent.HashOfL1EndBlock,
                     Nonce = validationLotteryClosedWithSuccessEvent.Nonce,
                     WinnerWalletAddresses = validationLotteryClosedWithSuccessEvent.WinnerWalletAddresses
-                },
-                addToAdditionalSinks: true
+                }
             );
         }
         else if (message is ThingValidationPollFinalizedEvent validationPollFinalizedEvent)
         {
-            result = await sender.Send(
+            result = await thataway.Send(
                 new FinalizeValidationPollCommand
                 {
                     ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
@@ -99,24 +96,22 @@ internal class EventConsumer : IMessageMiddleware
                     VoteAggIpfsCid = validationPollFinalizedEvent.VoteAggIpfsCid,
                     RewardedVerifiers = validationPollFinalizedEvent.RewardedVerifiers,
                     SlashedVerifiers = validationPollFinalizedEvent.SlashedVerifiers
-                },
-                addToAdditionalSinks: true
+                }
             );
         }
         else if (message is SettlementProposalFundedEvent proposalFundedEvent)
         {
-            result = await sender.Send(
+            result = await thataway.Send(
                 new Application.Settlement.Commands.InitVerifierLottery.InitVerifierLotteryCommand
                 {
                     ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
                     SettlementProposalId = proposalFundedEvent.SettlementProposalId
-                },
-                addToAdditionalSinks: true
+                }
             );
         }
         else if (message is SettlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent assessmentLotteryClosedWithSuccessEvent)
         {
-            result = await sender.Send(
+            result = await thataway.Send(
                 new PrepareForAssessmentPollCommand
                 {
                     InitBlockNumber = long.Parse(
@@ -135,13 +130,12 @@ internal class EventConsumer : IMessageMiddleware
                     Nonce = assessmentLotteryClosedWithSuccessEvent.Nonce,
                     ClaimantWalletAddresses = assessmentLotteryClosedWithSuccessEvent.ClaimantWalletAddresses,
                     WinnerWalletAddresses = assessmentLotteryClosedWithSuccessEvent.WinnerWalletAddresses
-                },
-                addToAdditionalSinks: true
+                }
             );
         }
         else if (message is SettlementProposalAssessmentPollFinalizedEvent assessmentPollFinalizedEvent)
         {
-            result = await sender.Send(
+            result = await thataway.Send(
                 new FinalizeAssessmentPollCommand
                 {
                     ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
@@ -150,13 +144,12 @@ internal class EventConsumer : IMessageMiddleware
                     VoteAggIpfsCid = assessmentPollFinalizedEvent.VoteAggIpfsCid,
                     RewardedVerifiers = assessmentPollFinalizedEvent.RewardedVerifiers,
                     SlashedVerifiers = assessmentPollFinalizedEvent.SlashedVerifiers
-                },
-                addToAdditionalSinks: true
+                }
             );
         }
         else if (message is ThingUpdateEvent thingUpdateEvent)
         {
-            result = await sender.Send(
+            result = await thataway.Send(
                 new NotifyWatchersCommand
                 {
                     ItemType = WatchedItemTypeIm.Thing,
@@ -165,13 +158,12 @@ internal class EventConsumer : IMessageMiddleware
                     UpdateTimestamp = thingUpdateEvent.UpdateTimestamp,
                     Title = thingUpdateEvent.Title,
                     Details = thingUpdateEvent.Details
-                },
-                addToAdditionalSinks: true
+                }
             );
         }
         else if (message is SettlementProposalUpdateEvent proposalUpdateEvent)
         {
-            result = await sender.Send(
+            result = await thataway.Send(
                 new NotifyWatchersCommand
                 {
                     ItemType = WatchedItemTypeIm.SettlementProposal,
@@ -180,8 +172,7 @@ internal class EventConsumer : IMessageMiddleware
                     UpdateTimestamp = proposalUpdateEvent.UpdateTimestamp,
                     Title = proposalUpdateEvent.Title,
                     Details = proposalUpdateEvent.Details
-                },
-                addToAdditionalSinks: true
+                }
             );
         }
         else

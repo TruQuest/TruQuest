@@ -1,4 +1,5 @@
-using Application;
+using GoThataway;
+
 using Application.General.Queries.GetTags;
 
 namespace API.Endpoints;
@@ -11,7 +12,7 @@ public static class GeneralEndpoints
         {
             app.MapGet(
                 "/tags",
-                (SenderWrapper sender) => sender.Send(new GetTagsQuery())
+                (Thataway thataway) => thataway.Send(new GetTagsQuery())
             )
         };
 

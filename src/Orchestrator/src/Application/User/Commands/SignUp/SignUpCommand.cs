@@ -5,7 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
 using Fido2NetLib;
-using MediatR;
+using GoThataway;
 
 using Domain.Aggregates;
 using Domain.Errors;
@@ -28,7 +28,7 @@ public class SignUpCommand : IRequest<HandleResult<AuthResultVm>>
     public required string KeyShare { get; init; }
 }
 
-internal class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<AuthResultVm>>
+public class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<AuthResultVm>>
 {
     private readonly ILogger<SignUpCommandHandler> _logger;
     private readonly IWhitelistQueryable _whitelistQueryable;

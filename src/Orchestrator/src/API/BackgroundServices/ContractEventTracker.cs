@@ -1,5 +1,6 @@
+using GoThataway;
+
 using Application.Common.Interfaces;
-using Infrastructure;
 
 namespace API.BackgroundServices;
 
@@ -22,8 +23,9 @@ public class ContractEventTracker : BackgroundService
         await foreach (var @event in _contractEventListener.GetNext(stoppingToken))
         {
             using var scope = _serviceProvider.CreateScope();
-            var mediator = scope.ServiceProvider.GetRequiredService<PublisherWrapper>();
-            await mediator.Publish(@event, addToAdditionalSinks: true);
+            // @@TODO!!: Retry-or-archive mechanism.
+            var thataway = scope.ServiceProvider.GetRequiredService<Thataway>();
+            await thataway.Dispatch(@event);
         }
     }
 }

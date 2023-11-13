@@ -1,4 +1,5 @@
-using Application;
+using GoThataway;
+
 using Application.Thing.Queries.GetVerifierLotteryParticipants;
 using Application.Thing.Commands.CreateNewThingDraft;
 using Application.Thing.Commands.SubmitNewThing;
@@ -18,30 +19,30 @@ public static class ThingEndpoints
 
         group.MapPost(
             "/draft",
-            (HttpRequest request, SenderWrapper sender) =>
-                sender.Send(new CreateNewThingDraftCommand(request))
+            (HttpRequest request, Thataway thataway) =>
+                thataway.Send(new CreateNewThingDraftCommand(request))
         );
 
         group.MapPost(
             "/submit",
-            (SubmitNewThingCommand command, SenderWrapper sender) => sender.Send(command)
+            (SubmitNewThingCommand command, Thataway thataway) => thataway.Send(command)
         );
 
         group.MapGet(
             "/{thingId}",
-            ([AsParameters] GetThingQuery query, SenderWrapper sender) => sender.Send(query)
+            ([AsParameters] GetThingQuery query, Thataway thataway) => thataway.Send(query)
         );
 
         group.MapGet(
             "/{thingId}/lottery-participants",
-            ([AsParameters] GetVerifierLotteryParticipantsQuery query, SenderWrapper sender) =>
-                sender.Send(query)
+            ([AsParameters] GetVerifierLotteryParticipantsQuery query, Thataway thataway) =>
+                thataway.Send(query)
         );
 
         group.MapGet(
             "/{thingId}/votes",
-            ([AsParameters] GetVotesQuery query, SenderWrapper sender) =>
-                sender.Send(query)
+            ([AsParameters] GetVotesQuery query, Thataway thataway) =>
+                thataway.Send(query)
         );
 
         group.MapPost(
@@ -49,23 +50,23 @@ public static class ThingEndpoints
             (
                 Guid thingId,
                 CastValidationPollVoteCommand command,
-                SenderWrapper sender
+                Thataway thataway
             ) =>
             {
                 command.Input.ThingId = thingId;
-                return sender.Send(command);
+                return thataway.Send(command);
             }
         );
 
         group.MapGet(
             "/{thingId}/settlement-proposals",
-            ([AsParameters] GetSettlementProposalsListQuery query, SenderWrapper sender) =>
-                sender.Send(query)
+            ([AsParameters] GetSettlementProposalsListQuery query, Thataway thataway) =>
+                thataway.Send(query)
         );
 
         group.MapPost(
             "/watch",
-            (WatchCommand command, SenderWrapper sender) => sender.Send(command)
+            (WatchCommand command, Thataway thataway) => thataway.Send(command)
         );
 
         group.AddEndpointFilter(Filters.ConvertHandleResult);

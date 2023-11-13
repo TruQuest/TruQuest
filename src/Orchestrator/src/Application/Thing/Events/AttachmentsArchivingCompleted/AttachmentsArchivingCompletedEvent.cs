@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 
 using Domain.Aggregates;
 using ThingDm = Domain.Aggregates.Thing;
@@ -10,14 +10,14 @@ using Application.Common.Attributes;
 namespace Application.Thing.Events.AttachmentsArchivingCompleted;
 
 [ExecuteInTxn]
-public class AttachmentsArchivingCompletedEvent : INotification
+public class AttachmentsArchivingCompletedEvent : IEvent
 {
     public required string SubmitterId { get; init; }
     public required Guid ThingId { get; init; }
     public required NewThingIm Input { get; init; }
 }
 
-internal class AttachmentsArchivingCompletedEventHandler : INotificationHandler<AttachmentsArchivingCompletedEvent>
+public class AttachmentsArchivingCompletedEventHandler : IEventHandler<AttachmentsArchivingCompletedEvent>
 {
     private readonly IClientNotifier _clientNotifier;
     private readonly IThingRepository _thingRepository;

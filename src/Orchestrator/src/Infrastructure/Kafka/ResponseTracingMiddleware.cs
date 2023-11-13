@@ -7,11 +7,11 @@ using Application;
 
 namespace Infrastructure.Kafka;
 
-internal class ResponseTelemetryMiddleware : IMessageMiddleware
+internal class ResponseTracingMiddleware : IMessageMiddleware
 {
     private readonly string _responseMessagesNamespace;
 
-    public ResponseTelemetryMiddleware()
+    public ResponseTracingMiddleware()
     {
         _responseMessagesNamespace = "Application.Common.Messages.Responses.";
     }

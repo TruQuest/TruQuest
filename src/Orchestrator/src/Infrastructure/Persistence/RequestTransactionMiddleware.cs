@@ -4,7 +4,7 @@ using System.Transactions;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 
-using MediatR;
+using GoThataway;
 using Npgsql;
 using OpenTelemetry.Trace;
 
@@ -15,18 +15,18 @@ using Application.Common.Errors;
 
 namespace Infrastructure.Persistence;
 
-public class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+public class RequestTransactionMiddleware<TRequest, TResponse> : IRequestMiddleware<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
     where TResponse : HandleResult, new()
 {
-    private readonly ILogger<TransactionBehavior<TRequest, TResponse>> _logger;
+    private readonly ILogger<RequestTransactionMiddleware<TRequest, TResponse>> _logger;
 
-    public TransactionBehavior(ILogger<TransactionBehavior<TRequest, TResponse>> logger)
+    public RequestTransactionMiddleware(ILogger<RequestTransactionMiddleware<TRequest, TResponse>> logger)
     {
         _logger = logger;
     }
 
-    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
+    public async Task<TResponse> Handle(TRequest request, Func<Task<TResponse>> next, CancellationToken ct)
     {
         var attr = request.GetType().GetCustomAttribute<ExecuteInTxnAttribute>();
         if (attr == null) return await next();

@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 using FluentValidation;
 
 using Domain.Aggregates;
@@ -22,7 +22,7 @@ internal class Validator : AbstractValidator<GetSettlementProposalQuery>
     }
 }
 
-internal class GetSettlementProposalQueryHandler :
+public class GetSettlementProposalQueryHandler :
     IRequestHandler<GetSettlementProposalQuery, HandleResult<GetSettlementProposalResultVm>>
 {
     private readonly ICurrentPrincipal _currentPrincipal;

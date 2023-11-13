@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 
 using Domain.Aggregates.Events;
 
@@ -6,7 +6,7 @@ using Application.Ethereum.Common.Models.IM;
 
 namespace Application.Ethereum.Events.SettlementProposalAssessmentPoll.PollFinalized;
 
-public class PollFinalizedEvent : BaseContractEvent, INotification
+public class PollFinalizedEvent : BaseContractEvent, IEvent
 {
     public required byte[] ThingId { get; init; }
     public required byte[] SettlementProposalId { get; init; }
@@ -16,7 +16,7 @@ public class PollFinalizedEvent : BaseContractEvent, INotification
     public required List<string> SlashedVerifiers { get; init; }
 }
 
-internal class PollFinalizedEventHandler : INotificationHandler<PollFinalizedEvent>
+public class PollFinalizedEventHandler : IEventHandler<PollFinalizedEvent>
 {
     private readonly IActionableThingRelatedEventRepository _actionableThingRelatedEventRepository;
 

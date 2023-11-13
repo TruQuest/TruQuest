@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 
 using Microsoft.Extensions.Logging;
 
-using MediatR;
+using GoThataway;
 
 using Domain.Aggregates;
 using Domain.Results;
@@ -19,7 +19,7 @@ public class InitVerifierLotteryCommand : IRequest<VoidResult>
     public required Guid ThingId { get; init; }
 }
 
-internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierLotteryCommand, VoidResult>
+public class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierLotteryCommand, VoidResult>
 {
     private readonly ILogger<InitVerifierLotteryCommandHandler> _logger;
     private readonly IThingRepository _thingRepository;

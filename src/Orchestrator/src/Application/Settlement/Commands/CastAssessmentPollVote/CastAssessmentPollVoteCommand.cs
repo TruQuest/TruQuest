@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 using FluentValidation;
 
 using Domain.Results;
@@ -26,7 +26,7 @@ internal class Validator : AbstractValidator<CastAssessmentPollVoteCommand>
     }
 }
 
-internal class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssessmentPollVoteCommand, HandleResult<string>>
+public class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssessmentPollVoteCommand, HandleResult<string>>
 {
     private readonly ICurrentPrincipal _currentPrincipal;
     private readonly ISigner _signer;

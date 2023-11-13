@@ -1,17 +1,17 @@
-using MediatR;
+using GoThataway;
 
 using Application.Common.Interfaces;
 
 namespace Application.Thing.Events.AttachmentsArchivingProgress;
 
-public class AttachmentsArchivingProgressEvent : INotification
+public class AttachmentsArchivingProgressEvent : IEvent
 {
     public required string SubmitterId { get; init; }
     public required Guid ThingId { get; init; }
     public required int Percent { get; init; }
 }
 
-internal class AttachmentsArchivingProgressEventHandler : INotificationHandler<AttachmentsArchivingProgressEvent>
+public class AttachmentsArchivingProgressEventHandler : IEventHandler<AttachmentsArchivingProgressEvent>
 {
     private readonly IClientNotifier _clientNotifier;
 

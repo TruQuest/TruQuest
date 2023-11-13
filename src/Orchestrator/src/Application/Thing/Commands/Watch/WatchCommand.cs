@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 using FluentValidation;
 
 using Domain.Aggregates;
@@ -24,7 +24,7 @@ internal class Validator : AbstractValidator<WatchCommand>
     }
 }
 
-internal class WatchCommandHandler : IRequestHandler<WatchCommand, VoidResult>
+public class WatchCommandHandler : IRequestHandler<WatchCommand, VoidResult>
 {
     private readonly ICurrentPrincipal _currentPrincipal;
     private readonly IWatchedItemRepository _watchedItemRepository;

@@ -1,8 +1,8 @@
-using MediatR;
+using GoThataway;
 
 namespace Application.Common.Interfaces;
 
 public interface IAdditionalApplicationEventSink
 {
-    void Add(INotification @event);
+    void Add(IEvent @event);
 }

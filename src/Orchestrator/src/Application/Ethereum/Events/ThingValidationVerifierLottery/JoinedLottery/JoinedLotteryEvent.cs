@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 
 using Domain.Aggregates.Events;
 
@@ -7,7 +7,7 @@ using Application.Ethereum.Common.Models.IM;
 
 namespace Application.Ethereum.Events.ThingValidationVerifierLottery.JoinedLottery;
 
-public class JoinedLotteryEvent : BaseContractEvent, INotification
+public class JoinedLotteryEvent : BaseContractEvent, IEvent
 {
     public required byte[] ThingId { get; init; }
     public required string WalletAddress { get; init; }
@@ -15,7 +15,7 @@ public class JoinedLotteryEvent : BaseContractEvent, INotification
     public required long L1BlockNumber { get; init; }
 }
 
-internal class JoinedLotteryEventHandler : INotificationHandler<JoinedLotteryEvent>
+public class JoinedLotteryEventHandler : IEventHandler<JoinedLotteryEvent>
 {
     private readonly IJoinedThingValidationVerifierLotteryEventRepository _joinedValidationVerifierLotteryEventRepository;
 

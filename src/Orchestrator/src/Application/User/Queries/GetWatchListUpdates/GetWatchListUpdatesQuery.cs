@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 
 using Domain.Results;
 
@@ -11,7 +11,7 @@ public class GetWatchListUpdatesQuery : IRequest<HandleResult<IEnumerable<Watche
     public required string UserId { get; init; }
 }
 
-internal class GetWatchListUpdatesQueryHandler : IRequestHandler<
+public class GetWatchListUpdatesQueryHandler : IRequestHandler<
     GetWatchListUpdatesQuery,
     HandleResult<IEnumerable<WatchedItemUpdateQm>>
 >

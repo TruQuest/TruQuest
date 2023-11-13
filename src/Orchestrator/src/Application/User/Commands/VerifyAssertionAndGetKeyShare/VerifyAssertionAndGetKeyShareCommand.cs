@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Caching.Memory;
 
 using Fido2NetLib;
-using MediatR;
+using GoThataway;
 
 using Domain.Aggregates;
 using Domain.Errors;
@@ -18,7 +18,7 @@ public class VerifyAssertionAndGetKeyShareCommand : IRequest<HandleResult<string
     public required AuthenticatorAssertionRawResponse RawAssertion { get; init; }
 }
 
-internal class VerifyAssertionAndGetKeyShareCommandHandler : IRequestHandler<
+public class VerifyAssertionAndGetKeyShareCommandHandler : IRequestHandler<
     VerifyAssertionAndGetKeyShareCommand,
     HandleResult<string>
 >

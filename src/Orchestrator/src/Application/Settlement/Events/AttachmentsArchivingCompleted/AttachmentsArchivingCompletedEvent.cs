@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 
 using Domain.Aggregates;
 
@@ -9,14 +9,14 @@ using Application.Common.Attributes;
 namespace Application.Settlement.Events.AttachmentsArchivingCompleted;
 
 [ExecuteInTxn]
-public class AttachmentsArchivingCompletedEvent : INotification
+public class AttachmentsArchivingCompletedEvent : IEvent
 {
     public required string SubmitterId { get; init; }
     public required Guid ProposalId { get; init; }
     public required NewSettlementProposalIm Input { get; init; }
 }
 
-internal class AttachmentsArchivingCompletedEventHandler : INotificationHandler<AttachmentsArchivingCompletedEvent>
+public class AttachmentsArchivingCompletedEventHandler : IEventHandler<AttachmentsArchivingCompletedEvent>
 {
     private readonly IClientNotifier _clientNotifier;
     private readonly ISettlementProposalRepository _settlementProposalRepository;

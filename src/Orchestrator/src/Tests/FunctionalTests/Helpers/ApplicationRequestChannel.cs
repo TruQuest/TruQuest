@@ -1,16 +1,14 @@
 using System.Threading.Channels;
 
-using MediatR;
-
 using Application.Common.Interfaces;
 
 namespace Tests.FunctionalTests.Helpers;
 
 public class ApplicationRequestChannel : IAdditionalApplicationRequestSink
 {
-    private readonly List<ChannelWriter<IBaseRequest>> _consumerSinks = new();
+    private readonly List<ChannelWriter<object>> _consumerSinks = new();
 
-    public void Add(IBaseRequest request)
+    public void Add(object request)
     {
         lock (_consumerSinks) // @@NOTE: This is only used by tests so locking everything is fine.
         {
@@ -21,7 +19,7 @@ public class ApplicationRequestChannel : IAdditionalApplicationRequestSink
         }
     }
 
-    public void RegisterConsumer(ChannelWriter<IBaseRequest> consumerSink)
+    public void RegisterConsumer(ChannelWriter<object> consumerSink)
     {
         lock (_consumerSinks)
         {
@@ -29,7 +27,7 @@ public class ApplicationRequestChannel : IAdditionalApplicationRequestSink
         }
     }
 
-    public void UnregisterConsumer(ChannelWriter<IBaseRequest> consumerSink)
+    public void UnregisterConsumer(ChannelWriter<object> consumerSink)
     {
         lock (_consumerSinks)
         {

@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Caching.Memory;
 
 using Fido2NetLib;
-using MediatR;
+using GoThataway;
 
 using Domain.Aggregates;
 using Domain.Errors;
@@ -17,7 +17,7 @@ public class VerifyAssertionAndSignInCommand : IRequest<HandleResult<AuthResultV
     public required AuthenticatorAssertionRawResponse RawAssertion { get; init; }
 }
 
-internal class VerifyAssertionAndSignInCommandHandler : IRequestHandler<
+public class VerifyAssertionAndSignInCommandHandler : IRequestHandler<
     VerifyAssertionAndSignInCommand,
     HandleResult<AuthResultVm>
 >

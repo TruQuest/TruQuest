@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 
-using MediatR;
+using GoThataway;
 
 using Domain.Errors;
 using Domain.Results;
@@ -22,7 +22,7 @@ public class AddNewSubjectCommand : ManuallyBoundInputModelCommand, IRequest<Han
     public AddNewSubjectCommand(HttpRequest request) : base(request, new NewSubjectIm()) { }
 }
 
-internal class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectCommand, HandleResult<Guid>>
+public class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectCommand, HandleResult<Guid>>
 {
     private readonly ILogger<AddNewSubjectCommandHandler> _logger;
     private readonly ICurrentPrincipal _currentPrincipal;

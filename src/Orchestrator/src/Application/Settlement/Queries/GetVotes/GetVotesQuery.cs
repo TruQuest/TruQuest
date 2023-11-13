@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 using FluentValidation;
 
 using Domain.Results;
@@ -20,7 +20,7 @@ internal class Validator : AbstractValidator<GetVotesQuery>
     }
 }
 
-internal class GetVotesQueryHandler : IRequestHandler<GetVotesQuery, HandleResult<GetVotesResultVm>>
+public class GetVotesQueryHandler : IRequestHandler<GetVotesQuery, HandleResult<GetVotesResultVm>>
 {
     private readonly ICurrentPrincipal _currentPrincipal;
     private readonly ISettlementProposalAssessmentPollVoteQueryable _settlementProposalAssessmentPollVoteQueryable;

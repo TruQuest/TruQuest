@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 
 using Domain.Aggregates;
 using Domain.Results;
@@ -13,7 +13,7 @@ public class ArchiveDueToFailedLotteryCommand : IRequest<VoidResult>
     public required Guid ThingId { get; init; }
 }
 
-internal class ArchiveDueToFailedLotteryCommandHandler : IRequestHandler<ArchiveDueToFailedLotteryCommand, VoidResult>
+public class ArchiveDueToFailedLotteryCommandHandler : IRequestHandler<ArchiveDueToFailedLotteryCommand, VoidResult>
 {
     private readonly IThingRepository _thingRepository;
     private readonly IThingUpdateRepository _thingUpdateRepository;

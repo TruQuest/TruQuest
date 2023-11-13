@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 using Microsoft.Extensions.Logging;
 
-using MediatR;
+using GoThataway;
 
 using Domain.Results;
 using Domain.Aggregates;
@@ -17,7 +17,7 @@ using Application.Common.Models.IM;
 namespace Application.Thing.Commands.CloseVerifierLottery;
 
 [ExecuteInTxn]
-internal class CloseVerifierLotteryCommand : DeferredTaskCommand, IRequest<VoidResult>
+public class CloseVerifierLotteryCommand : DeferredTaskCommand, IRequest<VoidResult>
 {
     public required Guid ThingId { get; init; }
     public required byte[] Data { get; init; }
@@ -26,7 +26,7 @@ internal class CloseVerifierLotteryCommand : DeferredTaskCommand, IRequest<VoidR
     public required long TaskId { get; init; }
 }
 
-internal class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifierLotteryCommand, VoidResult>
+public class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifierLotteryCommand, VoidResult>
 {
     private readonly ILogger<CloseVerifierLotteryCommandHandler> _logger;
     private readonly ITaskRepository _taskRepository;

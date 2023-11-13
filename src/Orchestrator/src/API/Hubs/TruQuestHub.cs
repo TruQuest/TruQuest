@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.SignalR;
 
+using GoThataway;
+
 using Domain.Results;
-using Application;
 using Application.User.Queries.GetWatchListUpdates;
 using Application.User.Commands.SubscribeToUpdates;
 using Application.User.Commands.UnsubscribeFromUpdates;
@@ -15,12 +16,12 @@ namespace API.Hubs;
 public class TruQuestHub : Hub<ITruQuestClient>
 {
     private readonly ILogger<TruQuestHub> _logger;
-    private readonly SenderWrapper _sender;
+    private readonly Thataway _thataway;
 
-    public TruQuestHub(ILogger<TruQuestHub> logger, SenderWrapper sender)
+    public TruQuestHub(ILogger<TruQuestHub> logger, Thataway thataway)
     {
         _logger = logger;
-        _sender = sender;
+        _thataway = thataway;
     }
 
     public override async Task OnConnectedAsync()
@@ -30,7 +31,7 @@ public class TruQuestHub : Hub<ITruQuestClient>
 
         if (Context.UserIdentifier != null)
         {
-            var result = await _sender.Send(new GetWatchListUpdatesQuery { UserId = Context.UserIdentifier });
+            var result = await _thataway.Send(new GetWatchListUpdatesQuery { UserId = Context.UserIdentifier });
             _logger.LogInformation(
                 "User {UserId}: Retrieved {Count} notifications",
                 Context.UserIdentifier,
@@ -43,13 +44,13 @@ public class TruQuestHub : Hub<ITruQuestClient>
 
     [AddConnectionIdProviderToMethodInvocationScope]
     public Task<VoidResult> SubscribeToUpdates(SubscribeToUpdatesCommand command) =>
-        _sender.Send(command);
+        _thataway.Send(command);
 
     [AddConnectionIdProviderToMethodInvocationScope]
     public Task<VoidResult> UnsubscribeFromUpdates(UnsubscribeFromUpdatesCommand command) =>
-        _sender.Send(command);
+        _thataway.Send(command);
 
     [AddConnectionIdProviderToMethodInvocationScope]
     public Task<VoidResult> UnsubThenSubToUpdates(UnsubThenSubToUpdatesCommand command) =>
-        _sender.Send(command);
+        _thataway.Send(command);
 }

@@ -1,6 +1,7 @@
+using GoThataway;
+
 using Application.Common.Interfaces;
 using Application.Ethereum.Events.BlockMined;
-using Infrastructure;
 
 namespace API.BackgroundServices;
 
@@ -63,8 +64,8 @@ public class BlockTracker : BackgroundService
 
             if (!allEventsCorrespondingToLatestL1BlockAreProcessed) continue;
 
-            var mediator = scope.ServiceProvider.GetRequiredService<PublisherWrapper>();
-            await mediator.Publish(new BlockMinedEvent { BlockNumber = latestL1block });
+            var thataway = scope.ServiceProvider.GetRequiredService<Thataway>();
+            await thataway.Dispatch(new BlockMinedEvent { BlockNumber = latestL1block });
         }
     }
 }

@@ -1,26 +1,26 @@
 using Microsoft.Extensions.Logging;
 
-using MediatR;
+using GoThataway;
 using OpenTelemetry.Trace;
 
 using Domain.Results;
 
 using Application.Common.Errors;
 
-namespace Application.Common.Behaviors;
+namespace Application.Common.Middlewares.Request;
 
-public class ExceptionHandlingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+public class ExceptionHandlingMiddleware<TRequest, TResponse> : IRequestMiddleware<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
     where TResponse : HandleResult, new()
 {
-    private readonly ILogger<ExceptionHandlingBehavior<TRequest, TResponse>> _logger;
+    private readonly ILogger<ExceptionHandlingMiddleware<TRequest, TResponse>> _logger;
 
-    public ExceptionHandlingBehavior(ILogger<ExceptionHandlingBehavior<TRequest, TResponse>> logger)
+    public ExceptionHandlingMiddleware(ILogger<ExceptionHandlingMiddleware<TRequest, TResponse>> logger)
     {
         _logger = logger;
     }
 
-    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
+    public async Task<TResponse> Handle(TRequest request, Func<Task<TResponse>> next, CancellationToken ct)
     {
         try
         {

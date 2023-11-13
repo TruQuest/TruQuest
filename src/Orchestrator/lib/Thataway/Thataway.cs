@@ -1,8 +1,8 @@
-using System.Reflection;
+﻿using System.Reflection;
 
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Application.Common.Thataway;
+namespace GoThataway;
 
 public interface IRequest<TResponse> { }
 
@@ -31,14 +31,12 @@ public interface IEventMiddleware<TEvent> where TEvent : IEvent
 public static class IServiceCollectionExtension
 {
     public static IServiceCollection AddThataway(
-        this IServiceCollection services, ServiceLifetime lifetime, Action<ThatawayRegistry> configure
+        this IServiceCollection services, Assembly requestsAndEventsAssembly,
+        ServiceLifetime lifetime, Action<ThatawayRegistry> configure
     )
     {
-        if (lifetime == ServiceLifetime.Singleton) services.AddSingleton<Thataway>();
-        else if (lifetime == ServiceLifetime.Scoped) services.AddScoped<Thataway>();
-        else services.AddTransient<Thataway>();
-
-        var registry = new ThatawayRegistry(services);
+        services.Add(new ServiceDescriptor(typeof(Thataway), typeof(Thataway), lifetime));
+        var registry = new ThatawayRegistry(requestsAndEventsAssembly, services);
         configure(registry);
         services.AddSingleton(registry);
 
@@ -55,10 +53,10 @@ public class ThatawayRegistry
     private readonly Dictionary<Type, List<Type>> _requestTypeToMiddlewareTypes = new();
     private readonly Dictionary<Type, List<Type>> _eventTypeToMiddlewareTypes = new();
 
-    public ThatawayRegistry(IServiceCollection services)
+    public ThatawayRegistry(Assembly assembly, IServiceCollection services)
     {
         _services = services;
-        var types = Assembly.GetExecutingAssembly().GetTypes();
+        var types = assembly.GetTypes();
         foreach (var type in types)
         {
             Type? interfaceType;
@@ -98,10 +96,8 @@ public class ThatawayRegistry
 
     public void AddRequestMiddleware(Type middlewareType, ServiceLifetime lifetime = ServiceLifetime.Singleton)
     {
-        if (lifetime == ServiceLifetime.Singleton) _services.AddSingleton(middlewareType);
-        else if (lifetime == ServiceLifetime.Scoped) _services.AddScoped(middlewareType);
-        else _services.AddTransient(middlewareType);
-
+        // @@TODO: Check that 'middlewareType' is actually a request middleware type.
+        _services.Add(new ServiceDescriptor(middlewareType, middlewareType, lifetime));
         foreach (var requestType in _requestTypeToHandlerInterfaceType.Keys)
         {
             var responseType = requestType.GetInterface(typeof(IRequest<>).FullName!)!.GetGenericArguments().Single();
@@ -112,10 +108,8 @@ public class ThatawayRegistry
 
     public void AddEventMiddleware(Type middlewareType, ServiceLifetime lifetime = ServiceLifetime.Singleton)
     {
-        if (lifetime == ServiceLifetime.Singleton) _services.AddSingleton(middlewareType);
-        else if (lifetime == ServiceLifetime.Scoped) _services.AddScoped(middlewareType);
-        else _services.AddTransient(middlewareType);
-
+        // @@TODO: Check that 'middlewareType' is actually an event middleware type.
+        _services.Add(new ServiceDescriptor(middlewareType, middlewareType, lifetime));
         foreach (var eventType in _eventTypeToHandlerInterfaceType.Keys)
         {
             if (!_eventTypeToMiddlewareTypes.ContainsKey(eventType)) _eventTypeToMiddlewareTypes[eventType] = new();

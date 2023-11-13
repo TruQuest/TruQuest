@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 
 using Domain.Aggregates.Events;
 
@@ -6,7 +6,7 @@ using Application.Ethereum.Common.Models.IM;
 
 namespace Application.Ethereum.Events.SettlementProposalFunded;
 
-public class SettlementProposalFundedEvent : BaseContractEvent, INotification
+public class SettlementProposalFundedEvent : BaseContractEvent, IEvent
 {
     public required byte[] ThingId { get; init; }
     public required byte[] SettlementProposalId { get; init; }
@@ -14,7 +14,7 @@ public class SettlementProposalFundedEvent : BaseContractEvent, INotification
     public required decimal Stake { get; init; }
 }
 
-internal class SettlementProposalFundedEventHandler : INotificationHandler<SettlementProposalFundedEvent>
+public class SettlementProposalFundedEventHandler : IEventHandler<SettlementProposalFundedEvent>
 {
     private readonly IActionableThingRelatedEventRepository _actionableThingRelatedEventRepository;
 

@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 
 using Domain.Aggregates.Events;
 
@@ -7,7 +7,7 @@ using Application.Ethereum.Common.Models.IM;
 
 namespace Application.Ethereum.Events.SettlementProposalAssessmentVerifierLottery.LotteryInitialized;
 
-public class LotteryInitializedEvent : BaseContractEvent, INotification
+public class LotteryInitializedEvent : BaseContractEvent, IEvent
 {
     public required long L1BlockNumber { get; init; }
     public required byte[] ThingId { get; init; }
@@ -16,7 +16,7 @@ public class LotteryInitializedEvent : BaseContractEvent, INotification
     public required byte[] UserXorDataHash { get; init; }
 }
 
-internal class LotteryInitializedEventHandler : INotificationHandler<LotteryInitializedEvent>
+public class LotteryInitializedEventHandler : IEventHandler<LotteryInitializedEvent>
 {
     private readonly ISettlementProposalAssessmentVerifierLotteryInitializedEventRepository _assessmentVerifierLotteryInitializedEventRepository;
 

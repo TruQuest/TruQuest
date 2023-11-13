@@ -6,7 +6,7 @@ using Infrastructure.Kafka.Events;
 
 namespace Infrastructure.Kafka;
 
-internal class EventTelemetryMiddleware : IMessageMiddleware
+internal class EventTracingMiddleware : IMessageMiddleware
 {
     public async Task Invoke(IMessageContext context, MiddlewareDelegate next)
     {

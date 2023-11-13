@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 using FluentValidation;
 
 using Domain.Results;
@@ -30,7 +30,7 @@ internal class Validator : AbstractValidator<SubscribeToUpdatesCommand>
     }
 }
 
-internal class SubscribeToUpdatesCommandHandler : IRequestHandler<SubscribeToUpdatesCommand, VoidResult>
+public class SubscribeToUpdatesCommandHandler : IRequestHandler<SubscribeToUpdatesCommand, VoidResult>
 {
     private readonly IConnectionIdProvider _connectionIdProvider;
     private readonly IClientNotifier _clientNotifier;

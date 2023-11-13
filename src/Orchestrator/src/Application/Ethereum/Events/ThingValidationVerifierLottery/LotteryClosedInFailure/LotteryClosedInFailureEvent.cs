@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 
 using Domain.Aggregates.Events;
 
@@ -6,14 +6,14 @@ using Application.Ethereum.Common.Models.IM;
 
 namespace Application.Ethereum.Events.ThingValidationVerifierLottery.LotteryClosedInFailure;
 
-public class LotteryClosedInFailureEvent : BaseContractEvent, INotification
+public class LotteryClosedInFailureEvent : BaseContractEvent, IEvent
 {
     public required byte[] ThingId { get; init; }
     public required int RequiredNumVerifiers { get; init; }
     public required int JoinedNumVerifiers { get; init; }
 }
 
-internal class LotteryClosedInFailureEventHandler : INotificationHandler<LotteryClosedInFailureEvent>
+public class LotteryClosedInFailureEventHandler : IEventHandler<LotteryClosedInFailureEvent>
 {
     private readonly IActionableThingRelatedEventRepository _actionableThingRelatedEventRepository;
 

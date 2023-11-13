@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 using FluentValidation;
 
 using Domain.Results;
@@ -21,7 +21,7 @@ internal class Validator : AbstractValidator<GetNonceForSiweQuery>
     }
 }
 
-internal class GetNonceForSiweQueryHandler : IRequestHandler<GetNonceForSiweQuery, HandleResult<string>>
+public class GetNonceForSiweQueryHandler : IRequestHandler<GetNonceForSiweQuery, HandleResult<string>>
 {
     private readonly ITotpProvider _totpProvider;
 

@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 using FluentValidation;
 
 using Domain.Results;
@@ -22,7 +22,7 @@ internal class Validator : AbstractValidator<GetVerifierLotteryParticipantsQuery
     }
 }
 
-internal class GetVerifierLotteryParticipantsQueryHandler :
+public class GetVerifierLotteryParticipantsQueryHandler :
     IRequestHandler<GetVerifierLotteryParticipantsQuery, HandleResult<GetVerifierLotteryParticipantsResultVm>>
 {
     private readonly ISettlementProposalAssessmentVerifierLotteryEventQueryable _settlementProposalAssessmentVerifierLotteryEventQueryable;

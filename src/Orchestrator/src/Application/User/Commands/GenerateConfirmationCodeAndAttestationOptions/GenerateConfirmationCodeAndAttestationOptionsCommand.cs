@@ -3,7 +3,7 @@ using System.Text;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
-using MediatR;
+using GoThataway;
 using Fido2NetLib;
 using Fido2NetLib.Objects;
 using FluentValidation;
@@ -29,7 +29,7 @@ internal class Validator : AbstractValidator<GenerateConfirmationCodeAndAttestat
     }
 }
 
-internal class GenerateConfirmationCodeAndAttestationOptionsCommandHandler : IRequestHandler<
+public class GenerateConfirmationCodeAndAttestationOptionsCommandHandler : IRequestHandler<
     GenerateConfirmationCodeAndAttestationOptionsCommand,
     HandleResult<CredentialCreateOptions>
 >

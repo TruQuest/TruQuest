@@ -221,10 +221,8 @@ public static class IServiceCollectionExtension
         services.AddScoped<IWatchListQueryable, WatchListQueryable>();
         services.AddScoped<ITaskQueryable, TaskQueryable>();
         services.AddScoped<IWhitelistQueryable, WhitelistQueryable>();
-        services.AddScoped<Lazy<IWhitelistQueryable>>(sp => new Lazy<IWhitelistQueryable>(sp.GetRequiredService<IWhitelistQueryable>));
 
         services.AddSingleton<IContractEventListener, ContractEventListener>();
-        services.AddScoped<PublisherWrapper>();
 
         services.AddSingleton<AccountProvider>();
         services.AddSingleton<IContractCaller, ContractCaller>();
@@ -272,7 +270,7 @@ public static class IServiceCollectionExtension
                                     .AddMiddlewares(middlewares =>
                                         middlewares
                                             .AddSerializer<MessageSerializer, MessageTypeResolver>()
-                                            .Add<EventTelemetryMiddleware>(MiddlewareLifetime.Singleton)
+                                            .Add<EventTracingMiddleware>(MiddlewareLifetime.Singleton)
                                             .Add<RetryOrArchiveMiddleware>(MiddlewareLifetime.Singleton)
                                             .Add<EventConsumer>(MiddlewareLifetime.Singleton)
                                     )
@@ -286,7 +284,7 @@ public static class IServiceCollectionExtension
                                     .WithWorkersCount(1)
                                     .AddMiddlewares(middlewares =>
                                         middlewares
-                                            .Add<ResponseTelemetryMiddleware>(MiddlewareLifetime.Singleton)
+                                            .Add<ResponseTracingMiddleware>(MiddlewareLifetime.Singleton)
                                             .Add<MessageConsumer>(MiddlewareLifetime.Scoped)
                                     )
                             )

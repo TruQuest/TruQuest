@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 using Microsoft.Extensions.Logging;
 
-using MediatR;
+using GoThataway;
 using FluentValidation;
 
 using Domain.Aggregates;
@@ -34,7 +34,7 @@ internal class Validator : AbstractValidator<SignInWithEthereumCommand>
     }
 }
 
-internal class SignInWithEthereumCommandHandler :
+public class SignInWithEthereumCommandHandler :
     IRequestHandler<SignInWithEthereumCommand, HandleResult<AuthResultVm>>
 {
     private static readonly Regex _nonceRegex = new Regex(@"\sNonce: (\d{6})\s");

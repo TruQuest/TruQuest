@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 
 using Domain.Aggregates.Events;
 
@@ -6,14 +6,14 @@ using Application.Ethereum.Common.Models.IM;
 
 namespace Application.Ethereum.Events.ThingFunded;
 
-public class ThingFundedEvent : BaseContractEvent, INotification
+public class ThingFundedEvent : BaseContractEvent, IEvent
 {
     public required byte[] ThingId { get; init; }
     public required string WalletAddress { get; init; }
     public required decimal Stake { get; init; }
 }
 
-internal class ThingFundedEventHandler : INotificationHandler<ThingFundedEvent>
+public class ThingFundedEventHandler : IEventHandler<ThingFundedEvent>
 {
     private readonly IActionableThingRelatedEventRepository _actionableThingRelatedEventRepository;
 

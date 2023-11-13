@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 using FluentValidation;
 
 using Domain.Aggregates;
@@ -24,7 +24,7 @@ internal class Validator : AbstractValidator<MarkNotificationsAsReadCommand>
     }
 }
 
-internal class MarkNotificationsAsReadCommandHandler : IRequestHandler<MarkNotificationsAsReadCommand, VoidResult>
+public class MarkNotificationsAsReadCommandHandler : IRequestHandler<MarkNotificationsAsReadCommand, VoidResult>
 {
     private readonly ICurrentPrincipal _currentPrincipal;
     private readonly IWatchedItemRepository _watchedItemRepository;

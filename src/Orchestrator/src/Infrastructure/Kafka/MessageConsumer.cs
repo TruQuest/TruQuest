@@ -5,6 +5,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging;
 
 using KafkaFlow;
+using GoThataway;
 
 using Application.Common.Interfaces;
 using Application.Common.Messages.Responses;
@@ -17,7 +18,7 @@ internal class MessageConsumer : IMessageMiddleware
 {
     private readonly ILogger<MessageConsumer> _logger;
     private readonly IRequestDispatcher _requestDispatcher;
-    private readonly PublisherWrapper _mediator;
+    private readonly Thataway _thataway;
 
     private readonly Assembly _responseMessagesAssembly;
     private readonly string _responseMessagesNamespace;
@@ -26,12 +27,12 @@ internal class MessageConsumer : IMessageMiddleware
     public MessageConsumer(
         ILogger<MessageConsumer> logger,
         IRequestDispatcher requestDispatcher,
-        PublisherWrapper mediator
+        Thataway thataway
     )
     {
         _logger = logger;
         _requestDispatcher = requestDispatcher;
-        _mediator = mediator;
+        _thataway = thataway;
 
         _responseMessagesAssembly = Assembly.GetAssembly(typeof(IRequestDispatcher))!;
         _responseMessagesNamespace = "Application.Common.Messages.Responses.";
@@ -61,7 +62,7 @@ internal class MessageConsumer : IMessageMiddleware
             // @@TODO!!: Handle failures!
             if (message is ArchiveThingAttachmentsProgress thingProgress)
             {
-                await _mediator.Publish(
+                await _thataway.Dispatch(
                     new ThingEvents.AttachmentsArchivingProgress.AttachmentsArchivingProgressEvent
                     {
                         SubmitterId = thingProgress.SubmitterId,
@@ -72,19 +73,18 @@ internal class MessageConsumer : IMessageMiddleware
             }
             else if (message is ArchiveThingAttachmentsSuccessResult thingSuccessResult)
             {
-                await _mediator.Publish(
+                await _thataway.Dispatch(
                     new ThingEvents.AttachmentsArchivingCompleted.AttachmentsArchivingCompletedEvent
                     {
                         SubmitterId = thingSuccessResult.SubmitterId,
                         ThingId = thingSuccessResult.ThingId,
                         Input = thingSuccessResult.Input
-                    },
-                    addToAdditionalSinks: true
+                    }
                 );
             }
             else if (message is ArchiveSettlementProposalAttachmentsProgress proposalProgress)
             {
-                await _mediator.Publish(
+                await _thataway.Dispatch(
                     new SettlementEvents.AttachmentsArchivingProgress.AttachmentsArchivingProgressEvent
                     {
                         SubmitterId = proposalProgress.SubmitterId,
@@ -95,14 +95,13 @@ internal class MessageConsumer : IMessageMiddleware
             }
             else if (message is ArchiveSettlementProposalAttachmentsSuccessResult proposalSuccessResult)
             {
-                await _mediator.Publish(
+                await _thataway.Dispatch(
                     new SettlementEvents.AttachmentsArchivingCompleted.AttachmentsArchivingCompletedEvent
                     {
                         SubmitterId = proposalSuccessResult.SubmitterId,
                         ProposalId = proposalSuccessResult.ProposalId,
                         Input = proposalSuccessResult.Input
-                    },
-                    addToAdditionalSinks: true
+                    }
                 );
             }
         }

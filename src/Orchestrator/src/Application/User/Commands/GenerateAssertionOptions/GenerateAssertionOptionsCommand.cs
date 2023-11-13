@@ -2,7 +2,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 using Fido2NetLib;
 using Fido2NetLib.Objects;
-using MediatR;
+using GoThataway;
 
 using Domain.Aggregates;
 using Domain.Results;
@@ -15,7 +15,7 @@ namespace Application.User.Commands.GenerateAssertionOptions;
 [RequireAuthorization]
 public class GenerateAssertionOptionsCommand : IRequest<HandleResult<AssertionOptions>> { }
 
-internal class GenerateAssertionOptionsCommandHandler : IRequestHandler<GenerateAssertionOptionsCommand, HandleResult<AssertionOptions>>
+public class GenerateAssertionOptionsCommandHandler : IRequestHandler<GenerateAssertionOptionsCommand, HandleResult<AssertionOptions>>
 {
     private readonly ICurrentPrincipal _currentPrincipal;
     private readonly IUserRepository _userRepository;

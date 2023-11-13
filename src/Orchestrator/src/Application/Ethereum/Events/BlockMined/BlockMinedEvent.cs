@@ -2,7 +2,7 @@ using System.Text.Json;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using MediatR;
+using GoThataway;
 
 using Domain.Aggregates;
 
@@ -13,19 +13,19 @@ using Application.Common.Interfaces;
 
 namespace Application.Ethereum.Events.BlockMined;
 
-public class BlockMinedEvent : INotification
+public class BlockMinedEvent : IEvent
 {
     public required long BlockNumber { get; init; }
 }
 
-internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
+public class BlockMinedEventHandler : IEventHandler<BlockMinedEvent>
 {
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ITaskQueryable _taskQueryable;
 
-    public BlockMinedEventHandler(IServiceProvider serviceProvider, ITaskQueryable taskQueryable)
+    public BlockMinedEventHandler(IServiceScopeFactory serviceScopeFactory, ITaskQueryable taskQueryable)
     {
-        _serviceProvider = serviceProvider;
+        _serviceScopeFactory = serviceScopeFactory;
         _taskQueryable = taskQueryable;
     }
 
@@ -35,15 +35,15 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
         // @@TODO??: Handle tasks in parallel ?
         foreach (var task in tasks)
         {
-            using var scope = _serviceProvider.CreateScope();
-            var sender = scope.ServiceProvider.GetRequiredService<SenderWrapper>();
+            using var scope = _serviceScopeFactory.CreateScope();
+            var thataway = scope.ServiceProvider.GetRequiredService<Thataway>();
 
             // @@TODO: Implement retry/?archive? logic.
 
             switch (task.Type)
             {
                 case TaskType.CloseThingValidationVerifierLottery:
-                    await sender.Send(new Thing.Commands.CloseVerifierLottery.CloseVerifierLotteryCommand
+                    await thataway.Send(new Thing.Commands.CloseVerifierLottery.CloseVerifierLotteryCommand
                     {
                         Traceparent = ((JsonElement)task.Payload["traceparent"]).GetString()!,
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),
@@ -54,7 +54,7 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
                     });
                     break;
                 case TaskType.CloseThingValidationPoll:
-                    await sender.Send(new CloseValidationPollCommand
+                    await thataway.Send(new CloseValidationPollCommand
                     {
                         Traceparent = ((JsonElement)task.Payload["traceparent"]).GetString()!,
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),
@@ -63,7 +63,7 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
                     });
                     break;
                 case TaskType.CloseSettlementProposalAssessmentVerifierLottery:
-                    await sender.Send(new Settlement.Commands.CloseVerifierLottery.CloseVerifierLotteryCommand
+                    await thataway.Send(new Settlement.Commands.CloseVerifierLottery.CloseVerifierLotteryCommand
                     {
                         Traceparent = ((JsonElement)task.Payload["traceparent"]).GetString()!,
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),
@@ -75,7 +75,7 @@ internal class BlockMinedEventHandler : INotificationHandler<BlockMinedEvent>
                     });
                     break;
                 case TaskType.CloseSettlementProposalAssessmentPoll:
-                    await sender.Send(new CloseAssessmentPollCommand
+                    await thataway.Send(new CloseAssessmentPollCommand
                     {
                         Traceparent = ((JsonElement)task.Payload["traceparent"]).GetString()!,
                         ThingId = Guid.Parse(((JsonElement)task.Payload["thingId"]).GetString()!),

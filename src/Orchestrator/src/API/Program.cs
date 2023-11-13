@@ -5,6 +5,7 @@ using System.Reflection;
 
 using Microsoft.AspNetCore.SignalR;
 
+using GoThataway;
 using KafkaFlow;
 using Nethereum.Web3;
 using Nethereum.ABI.FunctionEncoding.Attributes;
@@ -18,7 +19,8 @@ using Fido2NetLib;
 
 using Application;
 using Application.Common.Interfaces;
-using Application.Common.Behaviors;
+using Application.Common.Middlewares.Request;
+using Application.Common.Middlewares.Event;
 using Infrastructure;
 using Infrastructure.Ethereum;
 using Infrastructure.Persistence;
@@ -56,7 +58,9 @@ public class Program
 
 public static class WebApplicationBuilderExtension
 {
-    public static WebApplicationBuilder ConfigureServices(this WebApplicationBuilder builder)
+    public static WebApplicationBuilder ConfigureServices(
+        this WebApplicationBuilder builder, Action<ThatawayRegistry>? configureThataway = null
+    )
     {
         var configuration = builder.Configuration;
 
@@ -70,7 +74,7 @@ public static class WebApplicationBuilderExtension
         builder.Services
             .AddFido2(options =>
             {
-                options.ServerDomain = "localhost";
+                options.ServerDomain = "localhost"; // @@TODO: Config.
                 options.ServerName = "TruQuest";
                 options.Origins = new HashSet<string>() { "http://localhost:53433" };
                 options.TimestampDriftTolerance = 300000;
@@ -167,17 +171,26 @@ public static class WebApplicationBuilderExtension
             )
         );
 
-        builder.Services.AddMediatR(config =>
-        {
-            config.Lifetime = ServiceLifetime.Scoped;
-            config.RegisterServicesFromAssembly(Assembly.GetAssembly(typeof(Application.IServiceCollectionExtension))!);
-            config.AddOpenBehavior(typeof(ExceptionHandlingBehavior<,>), ServiceLifetime.Singleton);
-            config.AddOpenBehavior(typeof(AuthorizationBehavior<,>), ServiceLifetime.Transient);
-            config.AddOpenBehavior(typeof(ValidationBehavior<,>), ServiceLifetime.Singleton);
-            config.AddOpenBehavior(typeof(TransactionBehavior<,>), ServiceLifetime.Singleton);
-            config.AddOpenBehavior(typeof(RestrictedAccessBehavior<,>), ServiceLifetime.Transient);
-            config.AddOpenBehavior(typeof(MultipartFormReceivingBehavior<,>), ServiceLifetime.Transient);
-        });
+        builder.Services.AddThataway(
+            requestsAndEventsAssembly: Assembly.GetAssembly(typeof(Application.IServiceCollectionExtension))!,
+            ServiceLifetime.Scoped,
+            registry =>
+            {
+                if (configureThataway != null) configureThataway(registry);
+
+                registry.AddRequestMiddleware(typeof(TracingMiddleware<,>));
+                registry.AddRequestMiddleware(typeof(ExceptionHandlingMiddleware<,>));
+                registry.AddRequestMiddleware(typeof(AuthorizationMiddleware<,>), ServiceLifetime.Transient);
+                registry.AddRequestMiddleware(typeof(ValidationMiddleware<,>));
+                registry.AddRequestMiddleware(typeof(RequestTransactionMiddleware<,>));
+                registry.AddRequestMiddleware(typeof(RestrictedAccessMiddleware<,>), ServiceLifetime.Transient);
+                registry.AddRequestMiddleware(typeof(MultipartFormReceivingMiddleware<,>), ServiceLifetime.Transient);
+
+                registry.AddEventMiddleware(typeof(TracingMiddleware<>));
+                registry.AddEventMiddleware(typeof(ExceptionLoggingMiddleware<>));
+                registry.AddEventMiddleware(typeof(EventTransactionMiddleware<>));
+            }
+        );
 
         builder.Services.AddApplication();
         builder.Services.AddInfrastructure(builder.Environment, builder.Configuration);

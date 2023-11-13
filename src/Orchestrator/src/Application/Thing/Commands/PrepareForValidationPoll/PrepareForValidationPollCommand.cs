@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-using MediatR;
+using GoThataway;
 
 using Domain.Results;
 using Domain.Aggregates;
@@ -25,7 +25,7 @@ public class PrepareForValidationPollCommand : IRequest<VoidResult>
     public required List<string> WinnerWalletAddresses { get; init; }
 }
 
-internal class PrepareForValidationPollCommandHandler : IRequestHandler<PrepareForValidationPollCommand, VoidResult>
+public class PrepareForValidationPollCommandHandler : IRequestHandler<PrepareForValidationPollCommand, VoidResult>
 {
     private readonly IThingRepository _thingRepository;
     private readonly IUserRepository _userRepository;

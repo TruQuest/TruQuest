@@ -1,4 +1,5 @@
-using Application;
+using GoThataway;
+
 using Application.User.Commands.MarkNotificationsAsRead;
 using Application.User.Commands.SignInWithEthereum;
 using Application.User.Queries.GetNonceForSiwe;
@@ -19,55 +20,55 @@ public static class UserEndpoints
 
         group.MapGet(
             "/siwe/{address}",
-            ([AsParameters] GetNonceForSiweQuery query, SenderWrapper sender) =>
-                sender.Send(query)
+            ([AsParameters] GetNonceForSiweQuery query, Thataway thataway) =>
+                thataway.Send(query)
         );
 
         group.MapPost(
             "/siwe",
-            (SignInWithEthereumCommand command, SenderWrapper sender) =>
-                sender.Send(command)
+            (SignInWithEthereumCommand command, Thataway thataway) =>
+                thataway.Send(command)
         );
 
         group.MapPost(
             "/watch-list",
-            (MarkNotificationsAsReadCommand command, SenderWrapper sender) =>
-                sender.Send(command)
+            (MarkNotificationsAsReadCommand command, Thataway thataway) =>
+                thataway.Send(command)
         );
 
         group.MapPost(
             "/generate-code-and-attestation-options",
-            (GenerateConfirmationCodeAndAttestationOptionsCommand command, SenderWrapper sender) =>
-                sender.Send(command)
+            (GenerateConfirmationCodeAndAttestationOptionsCommand command, Thataway thataway) =>
+                thataway.Send(command)
         );
 
         group.MapPost(
             "/sign-up",
-            (SignUpCommand command, SenderWrapper sender) => sender.Send(command)
+            (SignUpCommand command, Thataway thataway) => thataway.Send(command)
         );
 
         group.MapPost(
             "/generate-assertion-options",
-            (GenerateAssertionOptionsCommand command, SenderWrapper sender) =>
-                sender.Send(command)
+            (GenerateAssertionOptionsCommand command, Thataway thataway) =>
+                thataway.Send(command)
         );
 
         group.MapPost(
             "/verify-assertion-and-get-key-share",
-            (VerifyAssertionAndGetKeyShareCommand command, SenderWrapper sender) =>
-                sender.Send(command)
+            (VerifyAssertionAndGetKeyShareCommand command, Thataway thataway) =>
+                thataway.Send(command)
         );
 
         group.MapPost(
             "/generate-assertion-options-for-sign-in",
-            (GenerateAssertionOptionsForSignInCommand command, SenderWrapper sender) =>
-                sender.Send(command)
+            (GenerateAssertionOptionsForSignInCommand command, Thataway thataway) =>
+                thataway.Send(command)
         );
 
         group.MapPost(
             "/verify-assertion-and-sign-in",
-            (VerifyAssertionAndSignInCommand command, SenderWrapper sender) =>
-                sender.Send(command)
+            (VerifyAssertionAndSignInCommand command, Thataway thataway) =>
+                thataway.Send(command)
         );
 
         group.AddEndpointFilter(Filters.ConvertHandleResult);

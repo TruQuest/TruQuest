@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 
-using MediatR;
+using GoThataway;
 using Nethereum.Util;
 using Nethereum.Web3;
 using Nethereum.Contracts;
@@ -70,7 +70,7 @@ internal class ContractEventListener : IContractEventListener
         _sink = channel.Writer;
     }
 
-    public async IAsyncEnumerable<INotification> GetNext([EnumeratorCancellation] CancellationToken stoppingToken)
+    public async IAsyncEnumerable<IEvent> GetNext([EnumeratorCancellation] CancellationToken stoppingToken)
     {
         new Thread(async () =>
         {

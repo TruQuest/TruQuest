@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 
 using Domain.Aggregates;
 using Domain.Aggregates.Events;
@@ -7,7 +7,7 @@ using Application.Ethereum.Common.Models.IM;
 
 namespace Application.Ethereum.Events.ThingValidationPoll.CastedVote;
 
-public class CastedVoteEvent : BaseContractEvent, INotification
+public class CastedVoteEvent : BaseContractEvent, IEvent
 {
     public required byte[] ThingId { get; init; }
     public required string WalletAddress { get; init; }
@@ -16,7 +16,7 @@ public class CastedVoteEvent : BaseContractEvent, INotification
     public required long L1BlockNumber { get; init; }
 }
 
-internal class CastedVoteEventHandler : INotificationHandler<CastedVoteEvent>
+public class CastedVoteEventHandler : IEventHandler<CastedVoteEvent>
 {
     private readonly ICastedThingValidationPollVoteEventRepository _castedValidationPollVoteEventRepository;
 

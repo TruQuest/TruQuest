@@ -1,4 +1,5 @@
-using Application;
+using GoThataway;
+
 using Application.Settlement.Commands.CastAssessmentPollVote;
 using Application.Settlement.Commands.CreateNewSettlementProposalDraft;
 using Application.Settlement.Commands.SubmitNewSettlementProposal;
@@ -16,34 +17,34 @@ public static class SettlementProposalEndpoints
 
         group.MapPost(
             "/draft",
-            (HttpRequest request, SenderWrapper sender) =>
-                sender.Send(new CreateNewSettlementProposalDraftCommand(request))
+            (HttpRequest request, Thataway thataway) =>
+                thataway.Send(new CreateNewSettlementProposalDraftCommand(request))
         );
 
         group.MapGet(
             "/{proposalId}",
-            ([AsParameters] GetSettlementProposalQuery query, SenderWrapper sender) =>
-                sender.Send(query)
+            ([AsParameters] GetSettlementProposalQuery query, Thataway thataway) =>
+                thataway.Send(query)
         );
 
         group.MapPost(
             "/submit",
-            (SubmitNewSettlementProposalCommand command, SenderWrapper sender) =>
-                sender.Send(command)
+            (SubmitNewSettlementProposalCommand command, Thataway thataway) =>
+                thataway.Send(command)
         );
 
         app
             .MapGet(
                 "/things/{thingId}/proposals/{proposalId}/lottery-participants",
-                ([AsParameters] GetVerifierLotteryParticipantsQuery query, SenderWrapper sender) =>
-                    sender.Send(query)
+                ([AsParameters] GetVerifierLotteryParticipantsQuery query, Thataway thataway) =>
+                    thataway.Send(query)
             )
             .AddEndpointFilter(Filters.ConvertHandleResult);
 
         group.MapGet(
             "/{proposalId}/votes",
-            ([AsParameters] GetVotesQuery query, SenderWrapper sender) =>
-                sender.Send(query)
+            ([AsParameters] GetVotesQuery query, Thataway thataway) =>
+                thataway.Send(query)
         );
 
         group.MapPost(
@@ -51,11 +52,11 @@ public static class SettlementProposalEndpoints
             (
                 Guid proposalId,
                 CastAssessmentPollVoteCommand command,
-                SenderWrapper sender
+                Thataway thataway
             ) =>
             {
                 command.Input.SettlementProposalId = proposalId;
-                return sender.Send(command);
+                return thataway.Send(command);
             }
         );
 

@@ -2,7 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.Json;
 
-using MediatR;
+using GoThataway;
 
 using Tests.FunctionalTests.Helpers;
 

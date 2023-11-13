@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 using Microsoft.Extensions.Logging;
 
-using MediatR;
+using GoThataway;
 
 using Domain.Results;
 using Domain.Aggregates;
@@ -15,14 +15,14 @@ using Application.Common.Models.IM;
 
 namespace Application.Thing.Commands.CloseValidationPoll;
 
-internal class CloseValidationPollCommand : DeferredTaskCommand, IRequest<VoidResult>
+public class CloseValidationPollCommand : DeferredTaskCommand, IRequest<VoidResult>
 {
     public required Guid ThingId { get; init; }
     public required long EndBlock { get; init; }
     public required long TaskId { get; init; }
 }
 
-internal class CloseValidationPollCommandHandler : IRequestHandler<CloseValidationPollCommand, VoidResult>
+public class CloseValidationPollCommandHandler : IRequestHandler<CloseValidationPollCommand, VoidResult>
 {
     private readonly ILogger<CloseValidationPollCommandHandler> _logger;
     private readonly ITaskRepository _taskRepository;

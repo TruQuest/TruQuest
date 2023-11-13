@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-using MediatR;
+using GoThataway;
 using FluentValidation;
 
 using Domain.Results;
@@ -26,7 +26,7 @@ internal class Validator : AbstractValidator<SubmitNewThingCommand>
     }
 }
 
-internal class SubmitNewThingCommandHandler : IRequestHandler<SubmitNewThingCommand, HandleResult<SubmitNewThingResultVm>>
+public class SubmitNewThingCommandHandler : IRequestHandler<SubmitNewThingCommand, HandleResult<SubmitNewThingResultVm>>
 {
     private readonly ILogger<SubmitNewThingCommandHandler> _logger;
     private readonly ICurrentPrincipal _currentPrincipal;

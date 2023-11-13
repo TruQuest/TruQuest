@@ -7,8 +7,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="MediatR" Version="11.0.0" />
         <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="7.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../../lib/Thataway/Thataway.csproj" />
     </ItemGroup>
 
 </Project>

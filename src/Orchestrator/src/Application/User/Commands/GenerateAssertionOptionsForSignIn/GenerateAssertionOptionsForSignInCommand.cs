@@ -2,7 +2,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 using Fido2NetLib;
 using Fido2NetLib.Objects;
-using MediatR;
+using GoThataway;
 
 using Domain.Results;
 
@@ -10,7 +10,7 @@ namespace Application.User.Commands.GenerateAssertionOptionsForSignIn;
 
 public class GenerateAssertionOptionsForSignInCommand : IRequest<HandleResult<AssertionOptions>> { }
 
-internal class GenerateAssertionOptionsForSignInCommandHandler : IRequestHandler<
+public class GenerateAssertionOptionsForSignInCommandHandler : IRequestHandler<
     GenerateAssertionOptionsForSignInCommand,
     HandleResult<AssertionOptions>
 >

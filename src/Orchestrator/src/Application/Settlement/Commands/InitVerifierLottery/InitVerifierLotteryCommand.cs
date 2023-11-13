@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 
-using MediatR;
+using GoThataway;
 
 using Domain.Aggregates;
 using Domain.Results;
@@ -18,7 +18,7 @@ public class InitVerifierLotteryCommand : IRequest<VoidResult>
     public required Guid SettlementProposalId { get; init; }
 }
 
-internal class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierLotteryCommand, VoidResult>
+public class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierLotteryCommand, VoidResult>
 {
     private readonly ISettlementProposalRepository _settlementProposalRepository;
     private readonly ITaskRepository _taskRepository;

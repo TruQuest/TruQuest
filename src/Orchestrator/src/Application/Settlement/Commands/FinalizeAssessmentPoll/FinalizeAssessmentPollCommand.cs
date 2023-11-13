@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 
 using Domain.Aggregates;
 using Domain.Results;
@@ -18,7 +18,7 @@ public class FinalizeAssessmentPollCommand : IRequest<VoidResult>
     public required List<string> SlashedVerifiers { get; init; }
 }
 
-internal class FinalizeAssessmentPollCommandHandler : IRequestHandler<FinalizeAssessmentPollCommand, VoidResult>
+public class FinalizeAssessmentPollCommandHandler : IRequestHandler<FinalizeAssessmentPollCommand, VoidResult>
 {
     private readonly ISubjectRepository _subjectRepository;
     private readonly IThingRepository _thingRepository;

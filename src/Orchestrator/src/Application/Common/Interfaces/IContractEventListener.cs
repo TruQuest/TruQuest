@@ -1,8 +1,8 @@
-using MediatR;
+using GoThataway;
 
 namespace Application.Common.Interfaces;
 
 public interface IContractEventListener
 {
-    IAsyncEnumerable<INotification> GetNext(CancellationToken stoppingToken);
+    IAsyncEnumerable<IEvent> GetNext(CancellationToken stoppingToken);
 }

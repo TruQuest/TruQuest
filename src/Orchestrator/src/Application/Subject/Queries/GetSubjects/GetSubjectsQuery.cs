@@ -1,4 +1,4 @@
-using MediatR;
+using GoThataway;
 
 using Domain.Results;
 
@@ -8,7 +8,7 @@ namespace Application.Subject.Queries.GetSubjects;
 
 public class GetSubjectsQuery : IRequest<HandleResult<IEnumerable<SubjectPreviewQm>>> { }
 
-internal class GetSubjectsQueryHandler :
+public class GetSubjectsQueryHandler :
     IRequestHandler<GetSubjectsQuery, HandleResult<IEnumerable<SubjectPreviewQm>>>
 {
     private readonly ISubjectQueryable _subjectQueryable;
