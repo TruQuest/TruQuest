@@ -51,6 +51,8 @@ public static class IServiceCollectionExtension
         NpgsqlConnection.GlobalTypeMapper.MapEnum<TaskType>("truquest.task_type");
         NpgsqlConnection.GlobalTypeMapper.MapEnum<WatchedItemType>("truquest.watched_item_type");
         NpgsqlConnection.GlobalTypeMapper.MapEnum<WhitelistEntryType>("truquest.whitelist_entry_type");
+        NpgsqlConnection.GlobalTypeMapper.MapEnum<DeadLetterSource>("truquest.dead_letter_source");
+        NpgsqlConnection.GlobalTypeMapper.MapEnum<DeadLetterState>("truquest.dead_letter_state");
         NpgsqlConnection.GlobalTypeMapper.MapEnum<ThingEventType>("truquest_events.thing_event_type");
 #pragma warning restore CS0618
 
@@ -195,6 +197,7 @@ public static class IServiceCollectionExtension
         services.AddScoped<IThingUpdateRepository, ThingUpdateRepository>();
         services.AddScoped<ISettlementProposalUpdateRepository, SettlementProposalUpdateRepository>();
         services.AddScoped<IWhitelistRepository, WhitelistRepository>();
+        services.AddScoped<IDeadLetterRepository, DeadLetterRepository>();
 
         services.AddSingleton<IBlockProgressRepository, BlockProgressRepository>();
         services.AddScoped<IActionableThingRelatedEventRepository, ActionableThingRelatedEventRepository>();
@@ -249,7 +252,6 @@ public static class IServiceCollectionExtension
         });
 
         services.AddSingleton<IRequestDispatcher, RequestDispatcher>();
-        services.AddSingleton<IDeadLetterArchiver, DeadLetterArchiver>();
 
         // @@TODO: Check if still need this.
         if (!configuration.GetValue<bool>("DbMigrator"))
@@ -295,12 +297,6 @@ public static class IServiceCollectionExtension
                                     .AddMiddlewares(middlewares =>
                                         middlewares.AddSerializer<MessageSerializer, MessageTypeResolver>()
                                     )
-                            )
-                            .AddProducer<DeadLetterArchiver>(producer =>
-                                producer
-                                    .DefaultTopic(configuration["Kafka:DeadLetterProducer:Topic"])
-                                    .WithAcks(Acks.All)
-                                    .AddMiddlewares(middlewares => middlewares.AddSerializer<MessageSerializer>())
                             )
                     )
             );

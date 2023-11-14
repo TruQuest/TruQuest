@@ -22,6 +22,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
     public DbSet<ThingUpdate> ThingUpdates { get; set; }
     public DbSet<SettlementProposalUpdate> SettlementProposalUpdates { get; set; }
     public DbSet<WhitelistEntry> Whitelist { get; set; }
+    public DbSet<DeadLetter> DeadLetters { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -37,7 +38,9 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             .HasPostgresEnum<Verdict>(schema: "truquest", name: "verdict")
             .HasPostgresEnum<TaskType>(schema: "truquest", name: "task_type")
             .HasPostgresEnum<WatchedItemType>(schema: "truquest", name: "watched_item_type")
-            .HasPostgresEnum<WhitelistEntryType>(schema: "truquest", name: "whitelist_entry_type");
+            .HasPostgresEnum<WhitelistEntryType>(schema: "truquest", name: "whitelist_entry_type")
+            .HasPostgresEnum<DeadLetterSource>(schema: "truquest", name: "dead_letter_source")
+            .HasPostgresEnum<DeadLetterState>(schema: "truquest", name: "dead_letter_state");
 
         modelBuilder.Entity<UserDm>(builder =>
         {
@@ -367,6 +370,20 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.Property(e => e.Id).UseIdentityAlwaysColumn();
             builder.Property(e => e.Type).IsRequired();
             builder.Property(e => e.Value).IsRequired();
+        });
+
+        modelBuilder.Entity<DeadLetter>(builder =>
+        {
+            builder.HasKey(l => l.Id);
+            builder.Property(l => l.Id).UseIdentityAlwaysColumn();
+            builder.Property(l => l.Source).IsRequired();
+            builder.Property(l => l.ArchivedAt).IsRequired();
+            builder.Property(l => l.State).IsRequired();
+            builder
+                .Property(l => l.Payload)
+                .HasColumnType("jsonb")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .IsRequired();
         });
     }
 }

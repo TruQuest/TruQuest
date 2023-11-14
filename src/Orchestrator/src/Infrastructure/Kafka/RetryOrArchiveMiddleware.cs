@@ -1,23 +1,29 @@
+using System.Text;
+
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 using KafkaFlow;
+using GoThataway;
 
-using Application.Common.Interfaces;
+using Domain.Aggregates;
+using Application;
+using Application.General.Commands.ArchiveDeadLetter;
 
 namespace Infrastructure.Kafka;
 
 internal class RetryOrArchiveMiddleware : IMessageMiddleware
 {
     private readonly ILogger<RetryOrArchiveMiddleware> _logger;
-    private readonly IDeadLetterArchiver _deadLetterArchiver;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
     public RetryOrArchiveMiddleware(
         ILogger<RetryOrArchiveMiddleware> logger,
-        IDeadLetterArchiver deadLetterArchiver
+        IServiceScopeFactory serviceScopeFactory
     )
     {
         _logger = logger;
-        _deadLetterArchiver = deadLetterArchiver;
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     public async Task Invoke(IMessageContext context, MiddlewareDelegate next)
@@ -45,15 +51,33 @@ internal class RetryOrArchiveMiddleware : IMessageMiddleware
                     }
                 }
 
-                _logger.LogWarning(
-                    "An unretryable (or a retryable with max attempts exhausted) error occured. Putting into Dead-letter topic"
+                _logger.LogError("An unretryable (or a retryable with max attempts exhausted) error occured. Archiving...");
+
+                using var scope = _serviceScopeFactory.CreateScope();
+                var thataway = scope.ServiceProvider.GetRequiredService<Thataway>();
+
+                var deadLetter = new DeadLetter(
+                    source: DeadLetterSource.ActionableEventFromKafka,
+                    archivedAt: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
                 );
+                var payload = new Dictionary<string, object>()
+                {
+                    ["Key"] = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
+                    ["Headers"] = new Dictionary<string, string>(
+                        ((IEnumerable<KeyValuePair<string, byte[]>>)context.Headers)
+                            .Where(h => h.Key != "traceparent" && h.Key != "HandleError" && h.Key != "AttemptsMade")
+                            .Select(h => KeyValuePair.Create(h.Key, Encoding.UTF8.GetString(h.Value)))
+                    ),
+                    ["Body"] = context.Message.Value
+                };
 
-                // @@TODO: Dead letters should be archived to Postgres, so that we can have a bg job monitoring how
-                // many unhandled dead letters there are, plus so that we can pick and choose the order in which to
-                // handle the letters.
+                Telemetry.CurrentActivity!.AddTraceparentTo(payload);
+                deadLetter.SetPayload(payload);
 
-                await _deadLetterArchiver.Archive(context.Message.Value, context.Headers);
+                await thataway.Send(new ArchiveDeadLetterCommand
+                {
+                    DeadLetter = deadLetter
+                });
             }
 
             return;

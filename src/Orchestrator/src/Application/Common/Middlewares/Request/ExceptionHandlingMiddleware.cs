@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 
 using GoThataway;
-using OpenTelemetry.Trace;
 
 using Domain.Results;
 
@@ -28,9 +27,7 @@ public class ExceptionHandlingMiddleware<TRequest, TResponse> : IRequestMiddlewa
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, ex.Message);
-            Telemetry.CurrentActivity!.RecordException(ex);
-
+            _logger.LogError(ex, ex.Message);
             return new TResponse
             {
                 Error = new ServerError(ex.Message, isRetryable: false)

@@ -6,10 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 using GoThataway;
 using Npgsql;
-using OpenTelemetry.Trace;
 
 using Domain.Results;
-using Application;
 using Application.Common.Attributes;
 using Application.Common.Errors;
 
@@ -60,7 +58,6 @@ public class RequestTransactionMiddleware<TRequest, TResponse> : IRequestMiddlew
         catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.SerializationFailure)
         {
             _logger.LogWarning(ex, ex.Message);
-            Telemetry.CurrentActivity!.RecordException(ex);
         }
         catch (DbUpdateException ex) when
         (
@@ -69,7 +66,6 @@ public class RequestTransactionMiddleware<TRequest, TResponse> : IRequestMiddlew
         )
         {
             _logger.LogWarning(pgEx, pgEx.Message);
-            Telemetry.CurrentActivity!.RecordException(pgEx);
         }
         // @@??: Why DbUpdateException gets wrapped into InvalidOperationException ?
         catch (InvalidOperationException ex) when
@@ -80,7 +76,6 @@ public class RequestTransactionMiddleware<TRequest, TResponse> : IRequestMiddlew
         )
         {
             _logger.LogWarning(pgEx, pgEx.Message);
-            Telemetry.CurrentActivity!.RecordException(pgEx);
         }
 
         return new TResponse
