@@ -71,7 +71,11 @@ contract TruQuest {
     // and some fields that are only maintained for migration purposes) from the mainnet version.
     bool public s_stopTheWorld;
 
+    // @@??: Use it to deposit ephemeral funds for new users? Cannot withdraw, only use on the platform?
+    uint256 private s_treasury;
+
     address[] private s_users;
+    mapping(address => bool) private s_onboardedUsers;
     mapping(address => uint256) public s_balanceOf;
     mapping(address => uint256) public s_stakedBalanceOf;
 
@@ -227,6 +231,58 @@ contract TruQuest {
         i_settlementProposalTdHash = keccak256(SETTLEMENT_PROPOSAL_TD);
     }
 
+    function setThingStake(uint256 _thingStake) external onlyOrchestrator {
+        s_thingStake = _thingStake;
+    }
+
+    function setVerifierStake(
+        uint256 _verifierStake
+    ) external onlyOrchestrator {
+        s_verifierStake = _verifierStake;
+    }
+
+    function setSettlementProposalStake(
+        uint256 _settlementProposalStake
+    ) external onlyOrchestrator {
+        s_settlementProposalStake = _settlementProposalStake;
+    }
+
+    function setThingAcceptedReward(
+        uint256 _thingAcceptedReward
+    ) external onlyOrchestrator {
+        s_thingAcceptedReward = _thingAcceptedReward;
+    }
+
+    function setThingRejectedPenalty(
+        uint256 _thingRejectedPenalty
+    ) external onlyOrchestrator {
+        s_thingRejectedPenalty = _thingRejectedPenalty;
+    }
+
+    function setVerifierReward(
+        uint256 _verifierReward
+    ) external onlyOrchestrator {
+        s_verifierReward = _verifierReward;
+    }
+
+    function setVerifierPenalty(
+        uint256 _verifierPenalty
+    ) external onlyOrchestrator {
+        s_verifierPenalty = _verifierPenalty;
+    }
+
+    function setSettlementProposalAcceptedReward(
+        uint256 _settlementProposalAcceptedReward
+    ) external onlyOrchestrator {
+        s_settlementProposalAcceptedReward = _settlementProposalAcceptedReward;
+    }
+
+    function setSettlementProposalRejectedPenalty(
+        uint256 _settlementProposalRejectedPenalty
+    ) external onlyOrchestrator {
+        s_settlementProposalRejectedPenalty = _settlementProposalRejectedPenalty;
+    }
+
     function getVersion() external pure returns (string memory) {
         return string(VERSION);
     }
@@ -283,6 +339,7 @@ contract TruQuest {
         s_users = _users;
         for (uint256 i = 0; i < _users.length; ++i) {
             address user = _users[i];
+            s_onboardedUsers[user] = true;
             s_balanceOf[user] = _balances[i];
             s_stakedBalanceOf[user] = _stakedBalances[i];
         }
@@ -337,11 +394,27 @@ contract TruQuest {
         }
     }
 
+    function mintAndDepositTruthserumTo(
+        address _user,
+        uint256 _amount
+    ) external onlyOrchestrator {
+        i_truthserum.mint(_amount);
+        if (!s_onboardedUsers[_user]) {
+            s_onboardedUsers[_user] = true;
+            s_users.push(_user);
+        }
+        s_balanceOf[_user] += _amount;
+        emit FundsDeposited(_user, _amount);
+    }
+
     function deposit(
         uint256 _amount
     ) external onlyWhenTheWorldIsSpinning onlyIfWhitelisted {
         i_truthserum.transferFrom(msg.sender, address(this), _amount);
-        s_users.push(msg.sender);
+        if (!s_onboardedUsers[msg.sender]) {
+            s_onboardedUsers[msg.sender] = true;
+            s_users.push(msg.sender);
+        }
         s_balanceOf[msg.sender] += _amount;
         emit FundsDeposited(msg.sender, _amount);
     }
@@ -357,9 +430,6 @@ contract TruQuest {
             );
         }
 
-        // @@!!: With current dummy implementation it's possible for transfer
-        // to fail due to insufficient balance. Ignore it for now since the entire
-        // token design and emittance strategy will be rewritten before going live on mainnet.
         i_truthserum.transfer(msg.sender, _amount);
         s_balanceOf[msg.sender] -= _amount;
 
@@ -374,12 +444,22 @@ contract TruQuest {
         s_stakedBalanceOf[_user] -= _amount;
     }
 
+    function _reward(address _user, uint256 _amount) private {
+        i_truthserum.mint(_amount);
+        s_balanceOf[_user] += _amount;
+    }
+
+    function _slash(address _user, uint256 _amount) private {
+        s_treasury += _amount;
+        s_balanceOf[_user] -= _amount;
+    }
+
     function stakeAsVerifier(address _user) external onlyVerifierLottery {
-        s_stakedBalanceOf[_user] += s_verifierStake;
+        _stake(_user, s_verifierStake);
     }
 
     function unstakeAsVerifier(address _user) external onlyLotteryOrPoll {
-        s_stakedBalanceOf[_user] -= s_verifierStake;
+        _unstake(_user, s_verifierStake);
     }
 
     function unstakeThingSubmitter(address _user) external onlyLotteryOrPoll {
@@ -396,38 +476,38 @@ contract TruQuest {
         address _user
     ) external onlyThingValidationPoll {
         _unstake(_user, s_thingStake);
-        s_balanceOf[_user] += s_thingAcceptedReward;
+        _reward(_user, s_thingAcceptedReward);
     }
 
     function unstakeAndSlashThingSubmitter(
         address _user
     ) external onlyThingValidationPoll {
         _unstake(_user, s_thingStake);
-        s_balanceOf[_user] -= s_thingRejectedPenalty;
+        _slash(_user, s_thingRejectedPenalty);
     }
 
     function unstakeAndRewardVerifier(address _user) external onlyPoll {
         _unstake(_user, s_verifierStake);
-        s_balanceOf[_user] += s_verifierReward;
+        _reward(_user, s_verifierReward);
     }
 
     function unstakeAndSlashVerifier(address _user) external onlyPoll {
         _unstake(_user, s_verifierStake);
-        s_balanceOf[_user] -= s_verifierPenalty;
+        _slash(_user, s_verifierPenalty);
     }
 
     function unstakeAndRewardSettlementProposalSubmitter(
         address _user
     ) external onlySettlementProposalAssessmentPoll {
         _unstake(_user, s_settlementProposalStake);
-        s_balanceOf[_user] += s_settlementProposalAcceptedReward;
+        _reward(_user, s_settlementProposalAcceptedReward);
     }
 
     function unstakeAndSlashSettlementProposalSubmitter(
         address _user
     ) external onlySettlementProposalAssessmentPoll {
         _unstake(_user, s_settlementProposalStake);
-        s_balanceOf[_user] -= s_settlementProposalRejectedPenalty;
+        _slash(_user, s_settlementProposalRejectedPenalty);
     }
 
     function getAvailableFunds(address _user) public view returns (uint256) {

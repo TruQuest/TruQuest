@@ -139,6 +139,7 @@ public class Sut
                         "AspNetUsers",
                         "AspNetUserClaims",
                         "AuthCredentials",
+                        "Whitelist",
                         "BlockProcessedEvent"
                     },
                     DbAdapter = DbAdapter.Postgres

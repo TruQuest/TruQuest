@@ -310,7 +310,6 @@ public static class WebApplicationBuilderExtension
         var configuration = app.Configuration;
         var network = configuration["Ethereum:Network"]!;
         var rpcUrl = configuration[$"Ethereum:Networks:{network}:URL"]!;
-        var truthserumAddress = configuration[$"Ethereum:Contracts:{network}:Truthserum:Address"]!;
         var restrictedAccessAddress = configuration[$"Ethereum:Contracts:{network}:RestrictedAccess:Address"]!;
         var truQuestAddress = configuration[$"Ethereum:Contracts:{network}:TruQuest:Address"]!;
 
@@ -336,56 +335,26 @@ public static class WebApplicationBuilderExtension
 
         var contractCaller = app.Services.GetRequiredService<IContractCaller>();
 
+        var walletAddresses = await Task.WhenAll(
+            users.Select(u => contractCaller.GetWalletAddressFor(accountProvider.GetAccount(u).Address))
+        );
+
         await web3.Eth
             .GetContractTransactionHandler<GiveAccessToManyMessage>()
             .SendRequestAndWaitForReceiptAsync(restrictedAccessAddress, new()
             {
-                Users = (await Task.WhenAll(
-                    users.Select(u => contractCaller.GetWalletAddressFor(accountProvider.GetAccount(u).Address))
-                )).ToList()
+                Users = walletAddresses.ToList()
             });
 
-        var txnDispatcher = web3.Eth.GetContractTransactionHandler<MintToMessage>();
-
-        var userOperationService = app.Services.GetRequiredService<UserOperationService>();
-
-        foreach (var user in users)
+        var txnDispatcher = web3.Eth.GetContractTransactionHandler<MintAndDepositTruthserumToMessage>();
+        foreach (var address in walletAddresses)
         {
-            var account = accountProvider.GetAccount(user);
-
             var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
-                truthserumAddress,
+                truQuestAddress,
                 new()
                 {
-                    To = await contractCaller.GetWalletAddressFor(account.Address),
+                    User = address,
                     Amount = BigInteger.Parse("1000000000") // 1 TRU
-                }
-            );
-
-            if (network == "Ganache")
-            {
-                await web3.Client.SendRequestAsync(new RpcRequest(Guid.NewGuid().ToString(), "evm_mine"));
-            }
-
-            await userOperationService.SendBatch(
-                signer: account,
-                actions: new()
-                {
-                    (
-                        truthserumAddress,
-                        new ApproveMessage
-                        {
-                            Spender = truQuestAddress,
-                            Amount = BigInteger.Parse("500000000") // 0.5 TRU
-                        }
-                    ),
-                    (
-                        truQuestAddress,
-                        new DepositMessage
-                        {
-                            Amount = BigInteger.Parse("500000000") // 0.5 TRU
-                        }
-                    )
                 }
             );
 
@@ -406,27 +375,11 @@ public class GiveAccessToManyMessage : FunctionMessage
     public List<string> Users { get; set; }
 }
 
-[Function("mintTo")]
-public class MintToMessage : FunctionMessage
+[Function("mintAndDepositTruthserumTo")]
+public class MintAndDepositTruthserumToMessage : FunctionMessage
 {
-    [Parameter("address", "_to", 1)]
-    public string To { get; init; }
+    [Parameter("address", "_user", 1)]
+    public string User { get; init; }
     [Parameter("uint256", "_amount", 2)]
-    public BigInteger Amount { get; init; }
-}
-
-[Function("approve", "bool")]
-public class ApproveMessage : FunctionMessage
-{
-    [Parameter("address", "spender", 1)]
-    public string Spender { get; init; }
-    [Parameter("uint256", "amount", 2)]
-    public BigInteger Amount { get; init; }
-}
-
-[Function("deposit")]
-public class DepositMessage : FunctionMessage
-{
-    [Parameter("uint256", "_amount", 1)]
     public BigInteger Amount { get; init; }
 }
