@@ -117,7 +117,7 @@ public class GenerateConfirmationCodeAndAttestationOptionsCommandHandler : IRequ
         _memoryCache.Set($"fido2.attestationOptions.{challenge}", options.ToJson()); // @@TODO: Expiration.
 
         var totp = _totpProvider.GenerateTotpFor(Encoding.UTF8.GetBytes(command.Email));
-        await _emailSender.Send(
+        await _emailSender.SendConfirmationEmail(
             recipient: command.Email,
             subject: "Welcome to TruQuest!",
             body: $"Your confirmation code is {totp}"

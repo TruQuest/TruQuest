@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 
 using Application.Common.Interfaces;
 
-namespace Infrastructure.User;
+namespace Infrastructure.Email;
 
 internal class DummyEmailSender : IEmailSender
 {
@@ -13,9 +13,14 @@ internal class DummyEmailSender : IEmailSender
         _logger = logger;
     }
 
-    public Task Send(string recipient, string subject, string body)
+    public Task SendConfirmationEmail(string recipient, string subject, string body)
     {
         _logger.LogInformation($"Sending email to {recipient}:\n{subject}\n\t{body}");
         return Task.CompletedTask;
+    }
+
+    public Task ForwardEmail(string recipient, string filePath)
+    {
+        throw new NotImplementedException();
     }
 }

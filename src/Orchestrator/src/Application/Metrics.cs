@@ -10,22 +10,32 @@ public static class Metrics
 {
     public static IReadOnlyDictionary<string, Histogram<int>> FunctionNameToGasUsedHistogram { get; }
 
-    private static Func<double> _onOrchestratorBalanceObserved;
     public static Func<double> OnOrchestratorBalanceObserved
     {
         set
         {
-            _onOrchestratorBalanceObserved = value;
             _orchestratorBalanceGauge = Telemetry.Meter.CreateObservableGauge<double>(
                 name: "orchestrator.balance.in-ether",
-                observeValue: _onOrchestratorBalanceObserved,
+                observeValue: value,
                 unit: "ether",
                 description: "Orchestrator balance on L2"
             );
         }
     }
-
     private static ObservableGauge<double> _orchestratorBalanceGauge;
+
+    public static Func<int> OnDeadLetterCountObserved
+    {
+        set
+        {
+            _deadLetterCountGauge = Telemetry.Meter.CreateObservableGauge<int>(
+                name: "dead-letter.count",
+                observeValue: value,
+                description: "Number of archived unhandled dead letters"
+            );
+        }
+    }
+    private static ObservableGauge<int> _deadLetterCountGauge;
 
     static Metrics()
     {

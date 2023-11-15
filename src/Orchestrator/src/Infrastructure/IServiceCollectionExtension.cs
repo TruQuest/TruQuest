@@ -15,6 +15,9 @@ using KafkaFlow;
 using Nethereum.Signer;
 using Nethereum.Signer.EIP712;
 using Nethereum.BlockchainProcessing.ProgressRepositories;
+using Amazon.S3;
+using Amazon.Runtime;
+using Amazon.Extensions.NETCore.Setup;
 
 using Domain.Aggregates;
 using Domain.Aggregates.Events;
@@ -30,6 +33,7 @@ using Infrastructure.Persistence.Repositories.Events;
 using Infrastructure.Kafka;
 using Infrastructure.Persistence.Queryables;
 using Infrastructure.Ethereum.ERC4337;
+using Infrastructure.Email;
 
 namespace Infrastructure;
 
@@ -100,10 +104,12 @@ public static class IServiceCollectionExtension
         if (environment.IsStaging() || environment.IsProduction())
         {
             services.AddSingleton<IEmailSender, EmailSender>();
+            services.AddSingleton<IEmailForwarder, EmailForwarder>();
         }
         else
         {
             services.AddSingleton<IEmailSender, DummyEmailSender>();
+            services.AddSingleton<IEmailForwarder, DummyEmailForwarder>();
         }
 
         services
@@ -224,6 +230,7 @@ public static class IServiceCollectionExtension
         services.AddScoped<IWatchListQueryable, WatchListQueryable>();
         services.AddScoped<ITaskQueryable, TaskQueryable>();
         services.AddScoped<IWhitelistQueryable, WhitelistQueryable>();
+        services.AddScoped<IDeadLetterQueryable, DeadLetterQueryable>();
 
         services.AddSingleton<IContractEventListener, ContractEventListener>();
 
@@ -301,6 +308,16 @@ public static class IServiceCollectionExtension
                     )
             );
         }
+
+        if (!(environment.IsStaging() || environment.IsProduction()))
+        {
+            var awsOptions = new AWSOptions
+            {
+                Credentials = new BasicAWSCredentials(configuration["AWS_ACCESS_KEY_ID"], configuration["AWS_SECRET_ACCESS_KEY"])
+            };
+            services.AddDefaultAWSOptions(awsOptions);
+        }
+        services.AddAWSService<IAmazonS3>();
 
         return services;
     }
