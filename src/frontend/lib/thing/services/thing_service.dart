@@ -264,9 +264,7 @@ class ThingService {
     return result;
   }
 
-  Future<GetSettlementProposalsListRvm> getSettlementProposalsList(
-    String thingId,
-  ) async {
+  Future<GetSettlementProposalsListRvm> getSettlementProposalsList(String thingId) async {
     var result = await _thingApiService.getSettlementProposalsList(thingId);
     return result;
   }

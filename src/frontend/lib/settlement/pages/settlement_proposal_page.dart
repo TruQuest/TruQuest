@@ -1,7 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:contained_tab_bar_view/contained_tab_bar_view.dart' show TabBarProperties, ContainerTabIndicator;
+import 'package:contained_tab_bar_view/contained_tab_bar_view.dart'
+    show TabBarProperties, TabBarViewProperties, ContainerTabIndicator;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
@@ -227,6 +228,9 @@ class _SettlementProposalPageState extends StateX<SettlementProposalPage> {
               ),
               labelColor: Colors.white,
               unselectedLabelColor: Colors.grey,
+            ),
+            tabBarViewProperties: const TabBarViewProperties(
+              physics: NeverScrollableScrollPhysics(),
             ),
             views: _buildTabContents(vm),
           ),

@@ -30,7 +30,7 @@ class ThingBloc extends Bloc<ThingAction> {
   final _votesChannel = BehaviorSubject<GetVotesRvm>();
   Stream<GetVotesRvm> get votes$ => _votesChannel.stream;
 
-  final _proposalsListChannel = StreamController<List<SettlementProposalPreviewVm>>.broadcast();
+  final _proposalsListChannel = BehaviorSubject<List<SettlementProposalPreviewVm>>();
   Stream<List<SettlementProposalPreviewVm>> get proposalsList$ => _proposalsListChannel.stream;
 
   ThingBloc(super.toastMessenger, this._thingService) {

@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:rxdart/rxdart.dart';
+
 import '../models/rvm/subject_preview_vm.dart';
 import '../models/rvm/subject_vm.dart';
 import '../models/rvm/thing_preview_vm.dart';
@@ -16,7 +18,7 @@ class SubjectBloc extends Bloc<SubjectAction> {
   final _subjectChannel = StreamController<SubjectVm>.broadcast();
   Stream<SubjectVm> get subject$ => _subjectChannel.stream;
 
-  final _thingsListChannel = StreamController<List<ThingPreviewVm>>.broadcast();
+  final _thingsListChannel = BehaviorSubject<List<ThingPreviewVm>>();
   Stream<List<ThingPreviewVm>> get thingsList$ => _thingsListChannel.stream;
 
   SubjectBloc(super.toastMessenger, this._subjectService) {

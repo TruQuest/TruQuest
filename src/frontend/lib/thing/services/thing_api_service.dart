@@ -215,9 +215,7 @@ class ThingApiService {
     }
   }
 
-  Future<GetSettlementProposalsListRvm> getSettlementProposalsList(
-    String thingId,
-  ) async {
+  Future<GetSettlementProposalsListRvm> getSettlementProposalsList(String thingId) async {
     var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.get(

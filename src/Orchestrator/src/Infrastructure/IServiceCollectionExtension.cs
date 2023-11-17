@@ -260,54 +260,50 @@ public static class IServiceCollectionExtension
 
         services.AddSingleton<IRequestDispatcher, RequestDispatcher>();
 
-        // @@TODO: Check if still need this.
-        if (!configuration.GetValue<bool>("DbMigrator"))
-        {
-            services.AddKafka(kafka =>
-                kafka
-                    .UseMicrosoftLog()
-                    .AddCluster(cluster =>
-                        cluster
-                            .WithBrokers(configuration.GetSection("Kafka:Brokers").Get<List<string>>())
-                            .AddConsumer(consumer =>
-                                consumer
-                                    .Topics(configuration.GetSection("Kafka:EventConsumer:Topics").Get<List<string>>())
-                                    .WithGroupId(configuration["Kafka:EventConsumer:GroupId"])
-                                    .WithAutoOffsetReset(AutoOffsetReset.Latest)
-                                    .WithBufferSize(1)
-                                    .WithWorkersCount(4)
-                                    .AddMiddlewares(middlewares =>
-                                        middlewares
-                                            .AddSerializer<MessageSerializer, MessageTypeResolver>()
-                                            .Add<EventTracingMiddleware>(MiddlewareLifetime.Singleton)
-                                            .Add<RetryOrArchiveMiddleware>(MiddlewareLifetime.Singleton)
-                                            .Add<EventConsumer>(MiddlewareLifetime.Singleton)
-                                    )
-                            )
-                            .AddConsumer(consumer =>
-                                consumer
-                                    .Topics(configuration.GetSection("Kafka:ResponseConsumer:Topics").Get<List<string>>())
-                                    .WithGroupId(configuration["Kafka:ResponseConsumer:GroupId"])
-                                    .WithAutoOffsetReset(AutoOffsetReset.Latest)
-                                    .WithBufferSize(1)
-                                    .WithWorkersCount(1)
-                                    .AddMiddlewares(middlewares =>
-                                        middlewares
-                                            .Add<ResponseTracingMiddleware>(MiddlewareLifetime.Singleton)
-                                            .Add<MessageConsumer>(MiddlewareLifetime.Scoped)
-                                    )
-                            )
-                            .AddProducer<RequestDispatcher>(producer =>
-                                producer
-                                    .DefaultTopic(configuration["Kafka:RequestProducer:Topic"])
-                                    .WithAcks(Acks.All)
-                                    .AddMiddlewares(middlewares =>
-                                        middlewares.AddSerializer<MessageSerializer, MessageTypeResolver>()
-                                    )
-                            )
-                    )
-            );
-        }
+        services.AddKafka(kafka =>
+            kafka
+                .UseMicrosoftLog()
+                .AddCluster(cluster =>
+                    cluster
+                        .WithBrokers(configuration.GetSection("Kafka:Brokers").Get<List<string>>())
+                        .AddConsumer(consumer =>
+                            consumer
+                                .Topics(configuration.GetSection("Kafka:EventConsumer:Topics").Get<List<string>>())
+                                .WithGroupId(configuration["Kafka:EventConsumer:GroupId"])
+                                .WithAutoOffsetReset(AutoOffsetReset.Latest)
+                                .WithBufferSize(1)
+                                .WithWorkersCount(4)
+                                .AddMiddlewares(middlewares =>
+                                    middlewares
+                                        .AddSerializer<MessageSerializer, MessageTypeResolver>()
+                                        .Add<EventTracingMiddleware>(MiddlewareLifetime.Singleton)
+                                        .Add<RetryOrArchiveMiddleware>(MiddlewareLifetime.Singleton)
+                                        .Add<EventConsumer>(MiddlewareLifetime.Singleton)
+                                )
+                        )
+                        .AddConsumer(consumer =>
+                            consumer
+                                .Topics(configuration.GetSection("Kafka:ResponseConsumer:Topics").Get<List<string>>())
+                                .WithGroupId(configuration["Kafka:ResponseConsumer:GroupId"])
+                                .WithAutoOffsetReset(AutoOffsetReset.Latest)
+                                .WithBufferSize(1)
+                                .WithWorkersCount(1)
+                                .AddMiddlewares(middlewares =>
+                                    middlewares
+                                        .Add<ResponseTracingMiddleware>(MiddlewareLifetime.Singleton)
+                                        .Add<MessageConsumer>(MiddlewareLifetime.Scoped)
+                                )
+                        )
+                        .AddProducer<RequestDispatcher>(producer =>
+                            producer
+                                .DefaultTopic(configuration["Kafka:RequestProducer:Topic"])
+                                .WithAcks(Acks.All)
+                                .AddMiddlewares(middlewares =>
+                                    middlewares.AddSerializer<MessageSerializer, MessageTypeResolver>()
+                                )
+                        )
+                )
+        );
 
         if (!(environment.IsStaging() || environment.IsProduction()))
         {

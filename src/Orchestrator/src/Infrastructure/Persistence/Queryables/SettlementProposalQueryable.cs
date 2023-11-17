@@ -20,7 +20,6 @@ internal class SettlementProposalQueryable : Queryable, ISettlementProposalQuery
 
     public async Task<List<SettlementProposalPreviewQm>> GetForThing(Guid thingId, string? userId)
     {
-        // @@TODO!!: This stuff is broken!
         var proposals = await _dbContext.SettlementProposals
             .AsNoTracking()
             .Where(p => p.ThingId == thingId && (p.State != SettlementProposalState.Draft || p.SubmitterId == userId))

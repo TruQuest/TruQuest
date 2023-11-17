@@ -71,11 +71,9 @@ using API;
 
 // Console.WriteLine("Migrations applied");
 
-var builder = API.Program.CreateWebApplicationBuilder(new[] { "DbMigrator=true" });
+var builder = API.Program.CreateWebApplicationBuilder(new string[] { });
 builder.Host.UseDefaultServiceProvider(options => options.ValidateOnBuild = false);
-var app = builder
-    .ConfigureServices()
-    .Build();
+var app = builder.ConfigureServices().Build();
 using var scope = app.Services.CreateScope();
 
 var appDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -236,7 +234,8 @@ var subject9 = new Subject(
 );
 subject9.AddTags(new[] { 6, 10 });
 
-appDbContext.Subjects.AddRange(new[] {
+appDbContext.Subjects.AddRange(new[]
+{
     subject1, subject2, subject3,
     subject4, subject5, subject6,
     subject7, subject8, subject9
@@ -393,7 +392,8 @@ thing5.AddEvidence(new[]
 thing5.AddTags(new[] { 3, 7 });
 thing5.SetState(ThingState.AwaitingFunding);
 
-appDbContext.Things.AddRange(new[] {
+appDbContext.Things.AddRange(new[]
+{
     thing1, thing2, thing3,
     thing4, thing5
 });
@@ -555,7 +555,8 @@ proposal5.AddEvidence(new[]
 proposal5.SetState(SettlementProposalState.AwaitingFunding);
 proposal5.SetState(SettlementProposalState.Accepted);
 
-appDbContext.SettlementProposals.AddRange(new[] {
+appDbContext.SettlementProposals.AddRange(new[]
+{
     proposal1, proposal2, proposal3,
     proposal4, proposal5
 });

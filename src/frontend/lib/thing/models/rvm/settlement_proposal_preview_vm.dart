@@ -13,26 +13,8 @@ class SettlementProposalPreviewVm {
   final String submitterId;
   final DateTime? displayedTimestamp;
 
-  String get displayedTimestampFormatted => displayedTimestamp != null
-      ? DateFormat('EEE, M/d/y').format(displayedTimestamp!)
-      : 'Not submitted yet';
-
-  Color get verdictColor {
-    switch (verdict) {
-      case VerdictVm.delivered:
-        return Colors.green;
-      case VerdictVm.guessItCounts:
-        return const Color.fromARGB(255, 136, 193, 93);
-      case VerdictVm.aintGoodEnough:
-        return const Color.fromARGB(255, 238, 255, 83);
-      case VerdictVm.motionNotAction:
-        return const Color.fromARGB(255, 255, 209, 84);
-      case VerdictVm.noEffortWhatsoever:
-        return const Color.fromARGB(255, 255, 108, 108);
-      case VerdictVm.asGoodAsMaliciousIntent:
-        return const Color.fromARGB(255, 145, 0, 0);
-    }
-  }
+  String get displayedTimestampFormatted =>
+      displayedTimestamp != null ? DateFormat('EEE, M/d/y').format(displayedTimestamp!) : 'Not submitted yet';
 
   IconData get stateIcon {
     switch (state) {
@@ -62,7 +44,6 @@ class SettlementProposalPreviewVm {
         verdict = VerdictVm.values[map['verdict']],
         croppedImageIpfsCid = map['croppedImageIpfsCid'],
         submitterId = map['submitterId'],
-        displayedTimestamp = map['displayedTimestamp'] != null
-            ? DateTime.fromMillisecondsSinceEpoch(map['displayedTimestamp'])
-            : null;
+        displayedTimestamp =
+            map['displayedTimestamp'] != null ? DateTime.fromMillisecondsSinceEpoch(map['displayedTimestamp']) : null;
 }
