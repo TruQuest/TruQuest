@@ -375,6 +375,11 @@ contract TruQuest {
             SettlementProposal[] memory settlementProposals
         )
     {
+        // @@!!: Keep in mind that we don't remove the thing from s_thingsWithFundedSettlementProposal array
+        // when a proposal gets archived/declined/etc, but we /do/ remove the corresponding entry from
+        // s_thingIdToSettlementProposal mapping to allow for future proposals. This means that there could
+        // be duplicates in s_thingsWithFundedSettlementProposal array. This is fine so long as we take care
+        // of them on the client side.
         thingIds = s_thingsWithFundedSettlementProposal;
         settlementProposals = new SettlementProposal[](thingIds.length);
         for (uint256 i = 0; i < settlementProposals.length; ++i) {
@@ -645,6 +650,12 @@ contract TruQuest {
             msg.sender,
             s_settlementProposalStake
         );
+    }
+
+    function setThingNoLongerHasSettlementProposalUnderAssessment(
+        bytes16 _thingId
+    ) external onlyLotteryOrPoll {
+        delete s_thingIdToSettlementProposal[_thingId];
     }
 
     function getSettlementProposalId(

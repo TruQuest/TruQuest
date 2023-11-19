@@ -20,6 +20,7 @@ public class SettlementProposalQm
     public required string ThingTitle { get; init; }
     public required string? ThingCroppedImageIpfsCid { get; init; }
     public HashSet<SettlementProposalEvidenceQm> Evidence { get; } = new();
+    public required Dictionary<string, string>? RelatedProposals { get; init; }
 
     public bool Watched { get; set; }
 

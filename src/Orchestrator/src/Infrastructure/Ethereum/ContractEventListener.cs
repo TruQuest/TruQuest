@@ -99,7 +99,7 @@ internal class ContractEventListener : IContractEventListener
                 new EventLogProcessorHandler<SettlementProposalAssessmentVerifierLottery.ClaimedLotterySpotEvent>(WriteToChannel),
                 new EventLogProcessorHandler<SettlementProposalAssessmentVerifierLottery.JoinedLotteryEvent>(WriteToChannel),
                 new EventLogProcessorHandler<SettlementProposalAssessmentVerifierLottery.LotteryClosedWithSuccessEvent>(WriteToChannel),
-                // @@TODO: LotteryClosedInFailure
+                new EventLogProcessorHandler<SettlementProposalAssessmentVerifierLottery.LotteryClosedInFailureEvent>(WriteToChannel),
                 new EventLogProcessorHandler<SettlementProposalAssessmentPoll.CastedVoteEvent>(WriteToChannel),
                 new EventLogProcessorHandler<SettlementProposalAssessmentPoll.CastedVoteWithReasonEvent>(WriteToChannel),
                 new EventLogProcessorHandler<SettlementProposalAssessmentPoll.PollFinalizedEvent>(WriteToChannel),
@@ -373,6 +373,23 @@ internal class ContractEventListener : IContractEventListener
                     Nonce = (long)settlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent.Event.Nonce,
                     ClaimantWalletAddresses = settlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent.Event.Claimants,
                     WinnerWalletAddresses = settlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent.Event.Winners
+                };
+            }
+            else if (
+                @event is EventLog<SettlementProposalAssessmentVerifierLottery.LotteryClosedInFailureEvent>
+                    settlementProposalAssessmentVerifierLotteryClosedInFailureEvent
+            )
+            {
+                yield return new AppEvents.SettlementProposalAssessmentVerifierLottery.LotteryClosedInFailure.LotteryClosedInFailureEvent
+                {
+                    BlockNumber = (long)settlementProposalAssessmentVerifierLotteryClosedInFailureEvent.Log.BlockNumber.Value,
+                    TxnIndex = (int)settlementProposalAssessmentVerifierLotteryClosedInFailureEvent.Log.TransactionIndex.Value,
+                    TxnHash = settlementProposalAssessmentVerifierLotteryClosedInFailureEvent.Log.TransactionHash,
+                    LogIndex = (int)settlementProposalAssessmentVerifierLotteryClosedInFailureEvent.Log.LogIndex.Value,
+                    ThingId = settlementProposalAssessmentVerifierLotteryClosedInFailureEvent.Event.ThingId,
+                    SettlementProposalId = settlementProposalAssessmentVerifierLotteryClosedInFailureEvent.Event.SettlementProposalId,
+                    RequiredNumVerifiers = settlementProposalAssessmentVerifierLotteryClosedInFailureEvent.Event.RequiredNumVerifiers,
+                    JoinedNumVerifiers = settlementProposalAssessmentVerifierLotteryClosedInFailureEvent.Event.JoinedNumVerifiers
                 };
             }
             else if (@event is EventLog<SettlementProposalAssessmentPoll.CastedVoteEvent> castedSettlementProposalAssessmentPollVoteEvent)

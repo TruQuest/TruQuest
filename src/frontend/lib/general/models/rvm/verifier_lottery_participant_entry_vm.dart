@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 
 class VerifierLotteryParticipantEntryVm {
@@ -21,8 +19,6 @@ class VerifierLotteryParticipantEntryVm {
     Color(0xffD9376D),
   ];
 
-  static final _random = Random();
-
   final int l1BlockNumber;
   final String txnHash;
   final String userId;
@@ -38,8 +34,8 @@ class VerifierLotteryParticipantEntryVm {
   String get walletAddressShort =>
       '${walletAddress.substring(0, 6)}..${walletAddress.substring(walletAddress.length - 4)}';
 
-  Color get coldCardColor => _coldColors[_random.nextInt(_coldColors.length)];
-  Color get warmCardColor => _warmColors[_random.nextInt(_warmColors.length)];
+  Color get coldCardColor => _coldColors[int.parse(walletAddress.substring(0, 6)) % _coldColors.length];
+  Color get warmCardColor => _warmColors[int.parse(walletAddress.substring(0, 6)) % _warmColors.length];
 
   VerifierLotteryParticipantEntryVm.fromMap(Map<String, dynamic> map)
       : l1BlockNumber = map['l1BlockNumber'],

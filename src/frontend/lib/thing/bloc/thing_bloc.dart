@@ -96,9 +96,7 @@ class ThingBloc extends Bloc<ThingAction> {
 
     var getThingResult = result.right;
     if (getThingResult.thing.state == ThingStateVm.awaitingFunding) {
-      bool thingFunded = await _thingService.checkThingAlreadyFunded(
-        action.thingId,
-      );
+      bool thingFunded = await _thingService.checkThingAlreadyFunded(action.thingId);
       getThingResult = GetThingRvm(
         thing: getThingResult.thing.copyWith(fundedAwaitingConfirmation: thingFunded),
         signature: getThingResult.signature,

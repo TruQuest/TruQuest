@@ -333,6 +333,12 @@ contract SettlementProposalAssessmentPoll {
             _verifiersToSlashIndices
         );
 
+        delete s_settlementProposalVerifiers[_thingProposalId];
+
+        i_truQuest.setThingNoLongerHasSettlementProposalUnderAssessment(
+            thingId
+        );
+
         emit PollFinalized(
             thingId,
             proposalId,
@@ -400,6 +406,8 @@ contract SettlementProposalAssessmentPoll {
             address[] memory slashedVerifiers
         ) = _rewardOrSlashVerifiers(_thingProposalId, _verifiersToSlashIndices);
 
+        delete s_settlementProposalVerifiers[_thingProposalId];
+
         emit PollFinalized(
             thingId,
             proposalId,
@@ -434,6 +442,12 @@ contract SettlementProposalAssessmentPoll {
             address[] memory slashedVerifiers
         ) = _rewardOrSlashVerifiers(_thingProposalId, _verifiersToSlashIndices);
 
+        delete s_settlementProposalVerifiers[_thingProposalId];
+
+        i_truQuest.setThingNoLongerHasSettlementProposalUnderAssessment(
+            thingId
+        );
+
         emit PollFinalized(
             thingId,
             proposalId,
@@ -467,6 +481,12 @@ contract SettlementProposalAssessmentPoll {
             address[] memory rewardedVerifiers,
             address[] memory slashedVerifiers
         ) = _rewardOrSlashVerifiers(_thingProposalId, _verifiersToSlashIndices);
+
+        delete s_settlementProposalVerifiers[_thingProposalId];
+
+        i_truQuest.setThingNoLongerHasSettlementProposalUnderAssessment(
+            thingId
+        );
 
         emit PollFinalized(
             thingId,

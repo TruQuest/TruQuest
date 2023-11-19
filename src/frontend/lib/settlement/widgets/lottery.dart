@@ -220,7 +220,9 @@ class _LotteryState extends StateX<Lottery> {
                                   text: TextSpan(
                                     children: [
                                       TextSpan(
-                                        text: lotteryClosedEvent?.nonce?.toString() ?? 'No nonce yet',
+                                        text: lotteryClosedEvent == null
+                                            ? 'No nonce yet'
+                                            : lotteryClosedEvent.nonce?.toString() ?? 'Lottery failed',
                                         style: GoogleFonts.righteous(
                                           color: Colors.black.withOpacity(0.7),
                                           fontSize: 16,

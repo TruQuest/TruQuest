@@ -129,10 +129,7 @@ class ThingService {
     );
   }
 
-  Stream<Object> joinLottery(
-    String thingId,
-    MultiStageOperationContext ctx,
-  ) async* {
+  Stream<Object> joinLottery(String thingId, MultiStageOperationContext ctx) async* {
     // @@??: Need to refresh the info after joining because otherwise imagine this:
     // User joins and stays on the lottery page waiting for it to complete.
     // Once it does the swipe button's value key, which has the form

@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+
 using Dapper;
 
 using Domain.Aggregates;
@@ -10,7 +12,12 @@ namespace Infrastructure.Persistence.Queryables;
 
 internal class ThingQueryable : Queryable, IThingQueryable
 {
-    public ThingQueryable(AppDbContext dbContext) : base(dbContext) { }
+    private readonly new AppDbContext _dbContext;
+
+    public ThingQueryable(AppDbContext dbContext) : base(dbContext)
+    {
+        _dbContext = dbContext;
+    }
 
     public async Task<IEnumerable<ThingPreviewQm>> GetForSubject(Guid subjectId, string? userId)
     {
@@ -109,4 +116,7 @@ internal class ThingQueryable : Queryable, IThingQueryable
 
         return thing;
     }
+
+    public Task<ThingState> GetStateFor(Guid thingId) =>
+        _dbContext.Things.Where(t => t.Id == thingId).Select(t => t.State).SingleAsync();
 }

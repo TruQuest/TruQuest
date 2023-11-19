@@ -262,6 +262,8 @@ contract ThingValidationPoll {
             i_truQuest.unstakeAsVerifier(verifiers[j]);
         }
 
+        delete s_thingVerifiers[_thingId];
+
         emit PollFinalized(
             _thingId,
             _decision,
@@ -319,6 +321,10 @@ contract ThingValidationPoll {
             address[] memory slashedVerifiers
         ) = _rewardOrSlashVerifiers(_thingId, _verifiersToSlashIndices);
 
+        // @@NOTE: We don't do 'delete s_thingVerifiers[_thingId]' here since we'll need this
+        // information later when SettlementProposalAssessmentVerifierLottery checks that
+        // a claim is valid.
+
         emit PollFinalized(
             _thingId,
             Decision.Accepted,
@@ -345,6 +351,8 @@ contract ThingValidationPoll {
             address[] memory slashedVerifiers
         ) = _rewardOrSlashVerifiers(_thingId, _verifiersToSlashIndices);
 
+        delete s_thingVerifiers[_thingId];
+
         emit PollFinalized(
             _thingId,
             Decision.Declined__Soft,
@@ -370,6 +378,8 @@ contract ThingValidationPoll {
             address[] memory rewardedVerifiers,
             address[] memory slashedVerifiers
         ) = _rewardOrSlashVerifiers(_thingId, _verifiersToSlashIndices);
+
+        delete s_thingVerifiers[_thingId];
 
         emit PollFinalized(
             _thingId,

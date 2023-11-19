@@ -36,7 +36,7 @@ class RestrictWhenUnauthorizedButton extends StatelessWidgetX {
                         ),
                       ),
                       content: Text(
-                        'Please sign-in to get access:',
+                        'Please sign-in to get access',
                         style: GoogleFonts.raleway(
                           color: Colors.white,
                         ),

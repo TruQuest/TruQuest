@@ -31,7 +31,7 @@ internal class MessageTypeResolver : IMessageTypeResolver
                 case ThingEventType.SettlementProposalFunded:
                     return typeof(SettlementProposalFundedEvent);
                 case ThingEventType.SettlementProposalAssessmentVerifierLotteryFailed:
-                    throw new NotImplementedException(); // @@TODO!!
+                    return typeof(SettlementProposalAssessmentVerifierLotteryClosedInFailureEvent);
                 case ThingEventType.SettlementProposalAssessmentVerifierLotterySucceeded:
                     return typeof(SettlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent);
                 case ThingEventType.SettlementProposalAssessmentPollFinalized:

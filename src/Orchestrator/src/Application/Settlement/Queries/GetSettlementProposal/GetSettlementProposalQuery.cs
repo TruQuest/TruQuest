@@ -62,7 +62,6 @@ public class GetSettlementProposalQueryHandler :
 
         string? signature = null;
         if (
-            _currentPrincipal.Id != null &&
             proposal.SubmitterId == _currentPrincipal.Id &&
             proposal.State == SettlementProposalState.AwaitingFunding
         )

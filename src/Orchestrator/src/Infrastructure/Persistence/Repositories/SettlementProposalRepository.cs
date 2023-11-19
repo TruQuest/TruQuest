@@ -61,4 +61,45 @@ internal class SettlementProposalRepository : Repository, ISettlementProposalRep
 
         return proposal.Verifiers.Any();
     }
+
+    public async Task<Guid> DeepCopyFromWith(Guid sourceProposalId, SettlementProposalState state)
+    {
+        var sourceProposalIdParam = new NpgsqlParameter<Guid>("SourceProposalId", NpgsqlDbType.Uuid)
+        {
+            TypedValue = sourceProposalId
+        };
+        var destProposalIdParam = new NpgsqlParameter<Guid>("DestProposalId", NpgsqlDbType.Uuid)
+        {
+            TypedValue = Guid.NewGuid()
+        };
+        var stateParam = new NpgsqlParameter("State", state);
+
+        await _dbContext.Database.ExecuteSqlRawAsync(
+            @"
+                INSERT INTO truquest.""SettlementProposals"" (
+                    ""Id"", ""ThingId"", ""State"", ""SubmittedAt"",
+                    ""Title"", ""Verdict"", ""Details"", ""ImageIpfsCid"",
+                    ""CroppedImageIpfsCid"", ""SubmitterId"",
+                    ""RelatedProposals""
+                )
+                    SELECT
+                        @DestProposalId, ""ThingId"", @State, ""SubmittedAt"",
+                        ""Title"", ""Verdict"", ""Details"", ""ImageIpfsCid"",
+                        ""CroppedImageIpfsCid"", ""SubmitterId"",
+                        jsonb_build_object('prev', ""Id""::TEXT)
+                    FROM truquest.""SettlementProposals""
+                    WHERE ""Id"" = @SourceProposalId;
+
+                INSERT INTO truquest.""SettlementProposalEvidence"" (
+                    ""Id"", ""SettlementProposalId"", ""OriginUrl"", ""IpfsCid"", ""PreviewImageIpfsCid""
+                )
+                    SELECT gen_random_uuid(), @DestProposalId, ""OriginUrl"", ""IpfsCid"", ""PreviewImageIpfsCid""
+                    FROM truquest.""SettlementProposalEvidence""
+                    WHERE ""SettlementProposalId"" = @SourceProposalId;
+            ",
+            sourceProposalIdParam, destProposalIdParam, stateParam
+        );
+
+        return destProposalIdParam.TypedValue;
+    }
 }

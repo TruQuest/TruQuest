@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Http;
 using GoThataway;
 
 using Domain.Results;
+using Domain.Aggregates;
+using Domain.Errors;
 
 using Application.Common.Interfaces;
 using Application.Common.Attributes;
@@ -24,23 +26,35 @@ public class CreateNewSettlementProposalDraftCommandHandler :
     IRequestHandler<CreateNewSettlementProposalDraftCommand, HandleResult<Guid>>
 {
     private readonly ICurrentPrincipal _currentPrincipal;
+    private readonly IThingQueryable _thingQueryable;
     private readonly IRequestDispatcher _requestDispatcher;
 
     public CreateNewSettlementProposalDraftCommandHandler(
         ICurrentPrincipal currentPrincipal,
+        IThingQueryable thingQueryable,
         IRequestDispatcher requestDispatcher
     )
     {
         _currentPrincipal = currentPrincipal;
+        _thingQueryable = thingQueryable;
         _requestDispatcher = requestDispatcher;
     }
 
-    public async Task<HandleResult<Guid>> Handle(
-        CreateNewSettlementProposalDraftCommand command, CancellationToken ct
-    )
+    public async Task<HandleResult<Guid>> Handle(CreateNewSettlementProposalDraftCommand command, CancellationToken ct)
     {
-        // @@TODO: Check that the thing is actually awaiting settlement.
-        // @@TODO??: Check that there isn't an already funded proposal? Or allow new drafts event if there is one?
+        // @@NOTE: We allow new proposals so long as the corresponding thing is still awaiting settlement, even if there
+        // are other proposals that are in a more advanced stage, since they still could be rejected.
+
+        var input = (NewSettlementProposalIm)command.Input;
+
+        var thingState = await _thingQueryable.GetStateFor(input.ThingId);
+        if (thingState != ThingState.AwaitingSettlement)
+        {
+            return new()
+            {
+                Error = new SettlementError("The specified promise is not awaiting settlement")
+            };
+        }
 
         var proposalId = Guid.NewGuid();
 
@@ -48,7 +62,7 @@ public class CreateNewSettlementProposalDraftCommandHandler :
         {
             SubmitterId = _currentPrincipal.Id!,
             ProposalId = proposalId,
-            Input = (NewSettlementProposalIm)command.Input
+            Input = input
         });
 
         return new()

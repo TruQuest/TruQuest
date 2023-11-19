@@ -361,7 +361,6 @@ contract ThingValidationVerifierLottery {
             i_truQuest.unstakeAsVerifier(participants[j]);
         }
 
-        s_thingIdToParticipants[_thingId] = new address[](0); // @@??: Unnecessary?
         delete s_thingIdToParticipants[_thingId];
 
         s_thingValidationPoll.initPoll(_thingId, winners);
@@ -396,7 +395,10 @@ contract ThingValidationVerifierLottery {
             i_truQuest.unstakeAsVerifier(participants[i]);
         }
 
-        s_thingIdToParticipants[_thingId] = new address[](0); // @@??: Unnecessary?
+        // @@NOTE: Can't do this:
+        // delete s_thingIdToParticipantJoinedBlockNo[_thingId];
+        // @@??: Should iterate over all participants and delete one by one?
+
         delete s_thingIdToParticipants[_thingId];
 
         emit LotteryClosedInFailure(

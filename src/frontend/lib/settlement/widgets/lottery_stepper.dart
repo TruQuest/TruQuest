@@ -28,6 +28,7 @@ class LotteryStepper extends StatelessWidgetX {
 
   bool _checkButtonShouldBeEnabled(int step) =>
       info.initBlock != null &&
+      info.initBlock! > 0 &&
       info.alreadyJoined != null &&
       !info.alreadyJoined! &&
       info.alreadyClaimedASpot != null &&

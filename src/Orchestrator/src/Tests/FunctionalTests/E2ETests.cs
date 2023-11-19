@@ -392,6 +392,16 @@ public class E2ETests : BaseTests
 
         var thingLotteryClosedWithSuccessEvent = await thingLotteryClosedTcs.Task;
 
+        int participantsArrayLength = await _thingValidationVerifierLotteryContract
+            .WalkStorage()
+            .Field("s_thingIdToParticipants")
+            .AsMapping()
+            .Key(new SolBytes16(thingIdBytes))
+            .AsArrayOf<SolAddress>()
+            .Length();
+
+        participantsArrayLength.Should().Be(0);
+
         var maxNonce = await _sut.ExecWithService<IContractCaller, BigInteger>(
             contractCaller => contractCaller.GetThingValidationVerifierLotteryMaxNonce()
         );

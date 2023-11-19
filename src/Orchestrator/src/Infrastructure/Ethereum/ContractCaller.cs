@@ -297,6 +297,7 @@ internal class ContractCaller : IContractCaller
             }
             catch (SmartContractCustomErrorRevertException ex)
             {
+                // @@TODO!!
                 throw new NotImplementedException();
             }
         });

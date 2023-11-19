@@ -251,6 +251,11 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
             builder.Property(p => p.CroppedImageIpfsCid).IsRequired(false);
             builder.Property(p => p.VoteAggIpfsCid).IsRequired(false);
             builder.Property(p => p.AssessmentPronouncedAt).IsRequired(false);
+            builder
+                .Property(p => p.RelatedProposals)
+                .HasColumnType("jsonb")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .IsRequired(false);
 
             builder
                 .HasOne<UserDm>()

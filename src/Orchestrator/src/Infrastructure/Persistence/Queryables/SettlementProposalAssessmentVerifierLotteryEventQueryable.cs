@@ -31,7 +31,7 @@ internal class SettlementProposalAssessmentVerifierLotteryEventQueryable :
                 SELECT
                     ""TxnHash"", ""Payload"",
                     CASE
-                        WHEN ""Type"" = @LotteryClosedWithSuccessType
+                        WHEN ""Type"" = @LotteryClosedWithSuccessType::truquest_events.thing_event_type
                             THEN (""Payload""->>'nonce')::BIGINT
                         ELSE NULL
                     END AS ""Nonce""

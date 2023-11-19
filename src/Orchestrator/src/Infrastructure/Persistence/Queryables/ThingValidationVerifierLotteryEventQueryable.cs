@@ -41,7 +41,7 @@ internal class ThingValidationVerifierLotteryEventQueryable : Queryable, IThingV
                 SELECT
                     ""TxnHash"", ""Payload"",
                     CASE
-                        WHEN ""Type"" = @LotteryClosedWithSuccessType
+                        WHEN ""Type"" = @LotteryClosedWithSuccessType::truquest_events.thing_event_type
                             THEN (""Payload""->>'nonce')::BIGINT
                         ELSE NULL
                     END AS ""Nonce""

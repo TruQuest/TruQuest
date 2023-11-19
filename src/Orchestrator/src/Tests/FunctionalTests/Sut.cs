@@ -94,6 +94,7 @@ public class Sut
     public async Task InitializeAsync()
     {
         DotNetEnv.Env.TraversePath().Load();
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Testing");
 
         var appBuilder = API.Program.CreateWebApplicationBuilder(new string[] { });
         appBuilder.Configuration.AddJsonFile("appsettings.Testing.json", optional: false);

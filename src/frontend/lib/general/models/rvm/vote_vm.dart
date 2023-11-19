@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -15,8 +13,6 @@ class VoteVm {
     Color(0xff5390d9),
   ];
 
-  static final _random = Random();
-
   final String userId;
   final String walletAddress;
   final int? castedAtMs;
@@ -27,7 +23,7 @@ class VoteVm {
   final String? ipfsCid;
   final String? txnHash;
 
-  Color get cardColor => _colors[_random.nextInt(_colors.length)];
+  Color get cardColor => _colors[int.parse(walletAddress.substring(0, 6)) % _colors.length];
 
   String get decisionString => decision?.getString() ?? 'Hidden';
 

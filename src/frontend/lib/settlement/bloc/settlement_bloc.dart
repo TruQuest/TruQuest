@@ -16,8 +16,8 @@ import '../services/settlement_service.dart';
 class SettlementBloc extends Bloc<SettlementAction> {
   final SettlementService _settlementService;
 
-  final _proposalChannel = StreamController<GetSettlementProposalRvm>.broadcast();
-  Stream<GetSettlementProposalRvm> get proposal$ => _proposalChannel.stream;
+  final _proposalChannel = StreamController<GetSettlementProposalRvm?>.broadcast();
+  Stream<GetSettlementProposalRvm?> get proposal$ => _proposalChannel.stream;
 
   final _verifierLotteryInfoChannel = StreamController<VerifierLotteryInfoVm>.broadcast();
   Stream<VerifierLotteryInfoVm> get verifierLotteryInfo$ => _verifierLotteryInfoChannel.stream;
@@ -57,10 +57,7 @@ class SettlementBloc extends Bloc<SettlementAction> {
   }
 
   @override
-  Stream<Object> handleMultiStageExecute(
-    SettlementAction action,
-    MultiStageOperationContext ctx,
-  ) {
+  Stream<Object> handleMultiStageExecute(SettlementAction action, MultiStageOperationContext ctx) {
     if (action is FundSettlementProposal) {
       return _fundSettlementProposal(action, ctx);
     } else if (action is ClaimLotterySpot) {
@@ -76,31 +73,29 @@ class SettlementBloc extends Bloc<SettlementAction> {
     throw UnimplementedError();
   }
 
-  Future<bool> _createNewSettlementProposalDraft(
-    CreateNewSettlementProposalDraft action,
-  ) async {
-    await _settlementService.createNewSettlementProposalDraft(
-      action.documentContext,
-    );
+  Future<bool> _createNewSettlementProposalDraft(CreateNewSettlementProposalDraft action) async {
+    await _settlementService.createNewSettlementProposalDraft(action.documentContext);
     return true;
   }
 
   void _getSettlementProposal(GetSettlementProposal action) async {
-    var result = await _settlementService.getSettlementProposal(
-      action.proposalId,
-    );
-    if (result.proposal.state == SettlementProposalStateVm.awaitingFunding) {
-      bool aProposalAlreadyBeingAssessed =
-          await _settlementService.checkThingAlreadyHasSettlementProposalUnderAssessment(result.proposal.thingId);
-      result = GetSettlementProposalRvm(
-        proposal: result.proposal.copyWith(
-          canBeFunded: !aProposalAlreadyBeingAssessed,
-        ),
-        signature: result.signature,
+    var result = await _settlementService.getSettlementProposal(action.proposalId);
+    if (result.isLeft) {
+      _proposalChannel.add(null);
+      return;
+    }
+
+    var getProposalResult = result.right;
+    if (getProposalResult.proposal.state == SettlementProposalStateVm.awaitingFunding) {
+      bool otherProposalAlreadyBeingAssessed = await _settlementService
+          .checkThingAlreadyHasSettlementProposalUnderAssessment(getProposalResult.proposal.thingId);
+      getProposalResult = GetSettlementProposalRvm(
+        proposal: getProposalResult.proposal.copyWith(canBeFunded: !otherProposalAlreadyBeingAssessed),
+        signature: getProposalResult.signature,
       );
     }
 
-    _proposalChannel.add(result);
+    _proposalChannel.add(getProposalResult);
   }
 
   Future<bool> _submitNewSettlementProposal(SubmitNewSettlementProposal action) async {
@@ -109,10 +104,7 @@ class SettlementBloc extends Bloc<SettlementAction> {
     return true;
   }
 
-  Stream<Object> _fundSettlementProposal(
-    FundSettlementProposal action,
-    MultiStageOperationContext ctx,
-  ) =>
+  Stream<Object> _fundSettlementProposal(FundSettlementProposal action, MultiStageOperationContext ctx) =>
       _settlementService.fundSettlementProposal(
         action.thingId,
         action.proposalId,

@@ -1,9 +1,12 @@
 import 'dart:async';
 
+import 'package:either_dart/either.dart';
+
 import '../../ethereum/errors/wallet_action_declined_error.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
 import '../../ethereum/services/user_operation_service.dart';
 import '../../general/errors/insufficient_balance_error.dart';
+import '../errors/settlement_error.dart';
 import '../models/im/new_settlement_proposal_assessment_poll_vote_im.dart';
 import '../../user/services/user_service.dart';
 import '../../general/contracts/thing_validation_poll_contract.dart';
@@ -40,9 +43,7 @@ class SettlementService {
     this._settlementProposalAssessmentPollContract,
   );
 
-  Future createNewSettlementProposalDraft(
-    DocumentContext documentContext,
-  ) async {
+  Future createNewSettlementProposalDraft(DocumentContext documentContext) async {
     var progress$ = await _settlementApiService.createNewSettlementProposalDraft(
       documentContext.thingId!,
       documentContext.nameOrTitle!,
@@ -57,25 +58,24 @@ class SettlementService {
     _progress$Channel.add(progress$);
   }
 
-  Future<GetSettlementProposalRvm> getSettlementProposal(
-    String proposalId,
-  ) async {
-    var result = await _settlementApiService.getSettlementProposal(proposalId);
-    print('ProposalId: ${result.proposal.id}');
-    return result;
+  Future<Either<SettlementError, GetSettlementProposalRvm>> getSettlementProposal(String proposalId) async {
+    try {
+      var result = await _settlementApiService.getSettlementProposal(proposalId);
+      print('ProposalId: ${result.proposal.id}');
+      return Right(result);
+    } on SettlementError catch (e) {
+      print(e);
+      return Left(e);
+    }
   }
 
-  Future<bool> checkThingAlreadyHasSettlementProposalUnderAssessment(
-    String thingId,
-  ) =>
+  Future<bool> checkThingAlreadyHasSettlementProposalUnderAssessment(String thingId) =>
       _truQuestContract.checkThingAlreadyHasSettlementProposalUnderAssessment(
         thingId,
       );
 
   Future submitNewSettlementProposal(String proposalId) async {
-    await _settlementApiService.submitNewSettlementProposal(
-      proposalId,
-    );
+    await _settlementApiService.submitNewSettlementProposal(proposalId);
   }
 
   Stream<Object> fundSettlementProposal(
@@ -247,10 +247,7 @@ class SettlementService {
     return result;
   }
 
-  Future<(String?, int?, int, int)> getAssessmentPollInfo(
-    String thingId,
-    String proposalId,
-  ) async {
+  Future<(String?, int?, int, int)> getAssessmentPollInfo(String thingId, String proposalId) async {
     var currentUserId = _userService.latestCurrentUser?.id;
     var currentWalletAddress = _userService.latestCurrentUser?.walletAddress;
 

@@ -4,20 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:contained_tab_bar_view/contained_tab_bar_view.dart'
     show TabBarProperties, TabBarViewProperties, ContainerTabIndicator;
 import 'package:google_fonts/google_fonts.dart';
-import 'package:rounded_loading_button/rounded_loading_button.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
-import '../../general/utils/utils.dart';
 import '../../general/widgets/contained_tab_bar_view.dart';
-import '../../general/widgets/restrict_when_unauthorized_button.dart';
-import '../../general/contexts/document_context.dart';
 import '../../general/contexts/page_context.dart';
-import '../../general/widgets/document_composer.dart';
-import '../../general/widgets/evidence_block.dart';
-import '../../general/widgets/image_block_with_crop.dart';
-import '../../settlement/bloc/settlement_actions.dart';
-import '../../settlement/bloc/settlement_bloc.dart';
-import '../../settlement/widgets/verdict_selection_block.dart';
 import '../../user/models/vm/user_vm.dart';
 import '../widgets/status_stepper_block.dart';
 import '../../general/widgets/watch_button.dart';
@@ -56,7 +46,6 @@ class _ThingPageState extends StateX<ThingPage> {
   late final _pageContext = use<PageContext>();
   late final _userBloc = use<UserBloc>();
   late final _thingBloc = use<ThingBloc>();
-  late final _settlementBloc = use<SettlementBloc>();
 
   late final StreamSubscription<UserVm> _currentUser$$;
 
@@ -312,9 +301,7 @@ class _ThingPageState extends StateX<ThingPage> {
                     ? 'Consensus not reached'
                     : 'Not enough lottery participants',
                 child: InkWell(
-                  onTap: () => _pageContext.goto(
-                    '/things/${vm.thing.relatedThings!['next']}',
-                  ),
+                  onTap: () => _pageContext.goto('/things/${vm.thing.relatedThings!['next']}'),
                   child: Card(
                     margin: EdgeInsets.zero,
                     color: Colors.redAccent,
@@ -332,79 +319,7 @@ class _ThingPageState extends StateX<ThingPage> {
                 ),
               ),
             ),
-          if (vm.thing.state == ThingStateVm.awaitingSettlement)
-            Positioned(
-              top: 30,
-              left: 24,
-              child: RestrictWhenUnauthorizedButton(
-                child: InkWell(
-                  child: Card(
-                    margin: EdgeInsets.zero,
-                    color: Colors.redAccent,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                      child: Text(
-                        'Awaiting settlement',
-                        style: GoogleFonts.righteous(
-                          color: Colors.white,
-                          fontSize: 20,
-                        ),
-                      ),
-                    ),
-                  ),
-                  onTap: () {
-                    var documentContext = DocumentContext();
-                    documentContext.thingId = widget.thingId;
-
-                    var btnController = RoundedLoadingButtonController();
-
-                    showDialog(
-                      context: context,
-                      barrierDismissible: false,
-                      builder: (context) => ScopeX(
-                        useInstances: [documentContext],
-                        child: DocumentComposer(
-                          title: 'New settlement proposal',
-                          nameFieldLabel: 'Title',
-                          submitButton: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: RoundedLoadingButton(
-                              child: const Text('Prepare draft'),
-                              controller: btnController,
-                              onPressed: () async {
-                                var success = await _settlementBloc.execute<bool>(
-                                  CreateNewSettlementProposalDraft(
-                                    documentContext: DocumentContext.fromEditable(documentContext),
-                                  ),
-                                );
-
-                                if (!success.isTrue) {
-                                  btnController.error();
-                                  await Future.delayed(const Duration(milliseconds: 1500));
-                                  btnController.reset();
-
-                                  return;
-                                }
-
-                                btnController.success();
-                                await Future.delayed(const Duration(milliseconds: 1500));
-                                if (context.mounted) Navigator.of(context).pop();
-                              },
-                            ),
-                          ),
-                          sideBlocks: const [
-                            VerdictSelectionBlock(),
-                            ImageBlockWithCrop(cropCircle: false),
-                            EvidenceBlock(),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          if (vm.thing.state == ThingStateVm.declined)
+          if (vm.thing.state == ThingStateVm.awaitingSettlement || vm.thing.state == ThingStateVm.declined)
             Positioned(
               top: 30,
               left: 24,
@@ -414,7 +329,7 @@ class _ThingPageState extends StateX<ThingPage> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                   child: Text(
-                    'Declined',
+                    vm.thing.state.getString(),
                     style: GoogleFonts.righteous(
                       color: Colors.white,
                       fontSize: 20,

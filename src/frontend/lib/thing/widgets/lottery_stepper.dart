@@ -27,7 +27,11 @@ class LotteryStepper extends StatelessWidgetX {
   });
 
   bool _checkButtonShouldBeEnabled() =>
-      info.initBlock != null && info.alreadyJoined != null && !info.alreadyJoined! && currentBlock < endBlock;
+      info.initBlock != null &&
+      info.initBlock! > 0 &&
+      info.alreadyJoined != null &&
+      !info.alreadyJoined! &&
+      currentBlock < endBlock;
 
   bool _checkButtonShouldBeSwiped() => info.alreadyJoined != null && info.alreadyJoined!;
 

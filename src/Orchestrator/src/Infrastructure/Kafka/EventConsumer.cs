@@ -58,7 +58,7 @@ internal class EventConsumer : IMessageMiddleware
         else if (message is ThingValidationVerifierLotteryClosedInFailureEvent)
         {
             result = await thataway.Send(
-                new ArchiveDueToFailedLotteryCommand
+                new Application.Thing.Commands.ArchiveDueToFailedLottery.ArchiveDueToFailedLotteryCommand
                 {
                     ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key))
                 }
@@ -106,6 +106,16 @@ internal class EventConsumer : IMessageMiddleware
                 {
                     ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
                     SettlementProposalId = proposalFundedEvent.SettlementProposalId
+                }
+            );
+        }
+        else if (message is SettlementProposalAssessmentVerifierLotteryClosedInFailureEvent assessmentLotteryClosedInFailureEvent)
+        {
+            result = await thataway.Send(
+                new Application.Settlement.Commands.ArchiveDueToFailedLottery.ArchiveDueToFailedLotteryCommand
+                {
+                    ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
+                    SettlementProposalId = assessmentLotteryClosedInFailureEvent.SettlementProposalId
                 }
             );
         }

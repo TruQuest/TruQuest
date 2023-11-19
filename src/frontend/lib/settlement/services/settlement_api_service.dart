@@ -130,9 +130,7 @@ class SettlementApiService {
     }
   }
 
-  Future<GetSettlementProposalRvm> getSettlementProposal(
-    String proposalId,
-  ) async {
+  Future<GetSettlementProposalRvm> getSettlementProposal(String proposalId) async {
     var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.get(
@@ -150,9 +148,7 @@ class SettlementApiService {
     }
   }
 
-  Future<SubmitNewSettlementProposalRvm> submitNewSettlementProposal(
-    String proposalId,
-  ) async {
+  Future<SubmitNewSettlementProposalRvm> submitNewSettlementProposal(String proposalId) async {
     var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.post(

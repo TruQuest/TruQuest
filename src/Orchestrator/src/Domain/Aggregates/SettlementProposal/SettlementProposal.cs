@@ -23,6 +23,9 @@ public class SettlementProposal : Entity, IAggregateRoot
     private List<SettlementProposalVerifier> _verifiers = new();
     public IReadOnlyList<SettlementProposalVerifier> Verifiers => _verifiers;
 
+    private Dictionary<string, string>? _relatedProposals;
+    public IReadOnlyDictionary<string, string>? RelatedProposals => _relatedProposals;
+
     public SettlementProposal(
         Guid id, Guid thingId, string title, Verdict verdict, string details,
         string? imageIpfsCid, string? croppedImageIpfsCid, string submitterId
@@ -69,5 +72,11 @@ public class SettlementProposal : Entity, IAggregateRoot
     public void SetVoteAggIpfsCid(string voteAggIpfsCid)
     {
         VoteAggIpfsCid = voteAggIpfsCid;
+    }
+
+    public void AddRelatedProposalAs(Guid proposalId, string relation)
+    {
+        _relatedProposals ??= new();
+        _relatedProposals[relation] = proposalId.ToString();
     }
 }

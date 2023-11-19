@@ -32,6 +32,7 @@ public class SubmitNewSettlementProposalCommandHandler :
     private readonly ILogger<SubmitNewSettlementProposalCommandHandler> _logger;
     private readonly ICurrentPrincipal _currentPrincipal;
     private readonly ISigner _signer;
+    private readonly IThingQueryable _thingQueryable;
     private readonly ISettlementProposalRepository _settlementProposalRepository;
     private readonly ISettlementProposalUpdateRepository _settlementProposalUpdateRepository;
 
@@ -39,6 +40,7 @@ public class SubmitNewSettlementProposalCommandHandler :
         ILogger<SubmitNewSettlementProposalCommandHandler> logger,
         ICurrentPrincipal currentPrincipal,
         ISigner signer,
+        IThingQueryable thingQueryable,
         ISettlementProposalRepository settlementProposalRepository,
         ISettlementProposalUpdateRepository settlementProposalUpdateRepository
     )
@@ -46,6 +48,7 @@ public class SubmitNewSettlementProposalCommandHandler :
         _logger = logger;
         _currentPrincipal = currentPrincipal;
         _signer = signer;
+        _thingQueryable = thingQueryable;
         _settlementProposalRepository = settlementProposalRepository;
         _settlementProposalUpdateRepository = settlementProposalUpdateRepository;
     }
@@ -55,7 +58,6 @@ public class SubmitNewSettlementProposalCommandHandler :
     )
     {
         var proposal = await _settlementProposalRepository.FindById(command.ProposalId);
-        // @@??: Should check using resource-based authorization?
         if (proposal.SubmitterId != _currentPrincipal.Id!)
         {
             return new()
@@ -68,6 +70,15 @@ public class SubmitNewSettlementProposalCommandHandler :
             return new()
             {
                 Error = new SettlementError("Already submitted")
+            };
+        }
+
+        var thingState = await _thingQueryable.GetStateFor(proposal.ThingId);
+        if (thingState != ThingState.AwaitingSettlement)
+        {
+            return new()
+            {
+                Error = new SettlementError("The specified promise is not awaiting settlement")
             };
         }
 

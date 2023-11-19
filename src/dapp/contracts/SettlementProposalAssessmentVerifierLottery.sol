@@ -540,7 +540,6 @@ contract SettlementProposalAssessmentVerifierLottery {
             i_truQuest.unstakeAsVerifier(claimants[j]);
         }
 
-        s_thingProposalIdToClaimants[_thingProposalId] = new address[](0); // @@??: Unnecessary?
         delete s_thingProposalIdToClaimants[_thingProposalId];
 
         return winners;
@@ -567,7 +566,6 @@ contract SettlementProposalAssessmentVerifierLottery {
             i_truQuest.unstakeAsVerifier(participants[j]);
         }
 
-        s_thingProposalIdToParticipants[_thingProposalId] = new address[](0); // @@??: Unnecessary?
         delete s_thingProposalIdToParticipants[_thingProposalId];
 
         return winners;
@@ -713,14 +711,12 @@ contract SettlementProposalAssessmentVerifierLottery {
             i_truQuest.unstakeAsVerifier(participants[i]);
         }
 
-        s_thingProposalIdToClaimants[_thingProposalId] = new address[](0); // @@??: Unnecessary?
         delete s_thingProposalIdToClaimants[_thingProposalId];
-
-        s_thingProposalIdToParticipants[_thingProposalId] = new address[](0); // @@??: Unnecessary?
         delete s_thingProposalIdToParticipants[_thingProposalId];
 
-        // @@TODO!!: Must remove proposal from s_thingIdToSettlementProposal mapping, cause only one proposal
-        // per thing is permitted at any given time.
+        i_truQuest.setThingNoLongerHasSettlementProposalUnderAssessment(
+            thingId
+        );
 
         emit LotteryClosedInFailure(
             thingId,

@@ -1,3 +1,5 @@
+using Domain.Aggregates;
+
 using Application.Subject.Common.Models.QM;
 using Application.Thing.Queries.GetThing;
 
@@ -7,4 +9,5 @@ public interface IThingQueryable
 {
     Task<IEnumerable<ThingPreviewQm>> GetForSubject(Guid subjectId, string? userId);
     Task<ThingQm?> GetById(Guid id, string? userId);
+    Task<ThingState> GetStateFor(Guid thingId);
 }

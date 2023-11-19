@@ -58,11 +58,7 @@ public class GetThingQueryHandler : IRequestHandler<GetThingQuery, HandleResult<
         }
 
         string? signature = null;
-        if (
-            _currentPrincipal.Id != null &&
-            thing.SubmitterId == _currentPrincipal.Id &&
-            thing.State == ThingStateQm.AwaitingFunding
-        )
+        if (thing.SubmitterId == _currentPrincipal.Id && thing.State == ThingStateQm.AwaitingFunding)
         {
             signature = _signer.SignThing(thing.Id);
         }
