@@ -45,35 +45,35 @@ public class E2ETests : BaseTests
         var rpcUrl = _sut.GetConfigurationValue<string>($"Ethereum:Networks:{network}:URL");
 
         _truQuestContract = ContractFinder.Create()
-            .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
+            .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/layout")
             .WithName("TruQuest")
             .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:TruQuest:Address"))
             .OnNetwork(rpcUrl)
             .Find();
 
         _thingValidationVerifierLotteryContract = ContractFinder.Create()
-            .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
+            .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/layout")
             .WithName("ThingValidationVerifierLottery")
             .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:ThingValidationVerifierLottery:Address"))
             .OnNetwork(rpcUrl)
             .Find();
 
         _thingValidationPollContract = ContractFinder.Create()
-            .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
+            .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/layout")
             .WithName("ThingValidationPoll")
             .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:ThingValidationPoll:Address"))
             .OnNetwork(rpcUrl)
             .Find();
 
         _settlementProposalAssessmentVerifierLotteryContract = ContractFinder.Create()
-            .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
+            .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/layout")
             .WithName("SettlementProposalAssessmentVerifierLottery")
             .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:SettlementProposalAssessmentVerifierLottery:Address"))
             .OnNetwork(rpcUrl)
             .Find();
 
         _settlementProposalAssessmentPollContract = ContractFinder.Create()
-            .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
+            .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/layout")
             .WithName("SettlementProposalAssessmentPoll")
             .DeployedAt(_sut.GetConfigurationValue<string>($"Ethereum:Contracts:{network}:SettlementProposalAssessmentPoll:Address"))
             .OnNetwork(rpcUrl)

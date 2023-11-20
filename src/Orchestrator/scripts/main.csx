@@ -50,7 +50,7 @@ Console.WriteLine(block.ToString());
 // var thingId = Guid.Parse("ef39bb1b-2558-4a95-b274-5b9e4af9290f").ToByteArray();
 
 // var _thingSubmissionVerifierLotteryContract = ContractFinder.Create()
-//     .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/contracts/layout")
+//     .WithLayoutDirectory("c:/chekh/projects/truquest/src/dapp/layout")
 //     .WithName("ThingSubmissionVerifierLottery")
 //     .DeployedAt("0x05797936947e92b35438F3fcc0562fDbDA01E6ac")
 //     .OnNetwork("http://localhost:7545")

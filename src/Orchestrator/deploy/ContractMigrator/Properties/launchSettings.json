@@ -1,10 +1,13 @@
 {
     "$schema": "https://json.schemastore.org/launchsettings.json",
     "profiles": {
-        "DbMigrator": {
+        "ContractMigrator": {
             "commandName": "Project",
             "environmentVariables": {
-                "MNEMONIC": "atom traffic guard castle father vendor modify sauce rebuild true mixture van"
+                "DOTNET_ENVIRONMENT": "Development",
+                "ETHEREUM_RPC_URL": "http://localhost:9545/",
+                "MNEMONIC": "atom traffic guard castle father vendor modify sauce rebuild true mixture van",
+                "ACCOUNT_FACTORY_ADDRESS": "0xb1EaA64169E7C4b9642C3298F9756f0e969eB7f1"
             }
         }
     }

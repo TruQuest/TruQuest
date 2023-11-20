@@ -1,115 +1,255 @@
-﻿using Nethereum.HdWallet;
-using Nethereum.Hex.HexConvertors.Extensions;
+﻿using System.Text.Json;
+
+using Nethereum.HdWallet;
 using Nethereum.Web3;
+using Nethereum.Web3.Accounts;
 
-var wallet = new Wallet(Environment.GetEnvironmentVariable("MNEMONIC")!, seedPassword: null);
-
-var web3 = new Web3(wallet.GetAccount(0), "http://localhost:9545");
-
-var txnReceipt = await web3.Eth
-    .GetContractTransactionHandler<ImportSettlementProposalAssessmentVerifierLotteryDataMessage>()
-    .SendRequestAndWaitForReceiptAsync("0xf30A5359475787464FEd1a6378ca25972bD64f6e", new()
-    {
-        ThingProposalIds = new()
-        {
-            "0x7878787878787878787878787878787878787878787878787878787878787878".HexToByteArray(),
-            "0x5656565656565656565656565656565656565656565656565656565656565656".HexToByteArray()
-        },
-        OrchestratorCommitments = new()
-        {
-            new Commitment
-            {
-                DataHash = "0x1234567812345678123456781234567812345678123456781234567812345678".HexToByteArray(),
-                UserXorDataHash = "0x1234567812345678123456781234567812345678123456781237777777777777".HexToByteArray(),
-                Block = 78
-            },
-            new Commitment
-            {
-                DataHash = "0x1234567812345678123456781234567812345678123458888888888888888888".HexToByteArray(),
-                UserXorDataHash = "0x1234567812345678123456781234567812345699999999999999999999999999".HexToByteArray(),
-                Block = 333
-            }
-        },
-        Participants = new()
-        {
-            new()
-            {
-                "0x1234512345123451234512345123451234512345",
-                "0x9898989898989898989898989898888888888888"
-            },
-            new()
-            {
-                "0x5432154321543215432154321543215432154321"
-            }
-        },
-        Claimants = new()
-        {
-            new()
-            {
-                "0x8888888888888888888888888888888888888888",
-            },
-            new()
-            {
-                "0x1111111111111111111111111111111111111111",
-                "0x2222222222222222222222222222222222222222",
-                "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-            }
-        },
-        BlockNumbers = new()
-        {
-            new()
-            {
-                5,
-                58,
-                17
-            },
-            new()
-            {
-                22,
-                98,
-                15,
-                899
-            }
-        }
-    });
-
-// var result = await web3.Eth
-//     .GetContractQueryHandler<ExportThingIdToSettlementProposalMappingAsArraysOfKeysAndValuesMessage>()
-//     .QueryAsync<ExportThingIdToSettlementProposalMappingAsArraysOfKeysAndValuesFunctionOutput>("0x32D41E4e24F97ec7D52e3c43F8DbFe209CBd0e4c");
-
-// for (int i = 0; i < result.ThingIds.Count; ++i)
-// {
-//     Console.WriteLine($"Thing {new Guid(result.ThingIds[i])}: Proposal {new Guid(result.SettlementProposals[i].Id)}");
-// }
-
-// var txnReceipt = await 
-
-var otherRes = await web3.Eth
-    .GetContractQueryHandler<ExportSettlementProposalAssessmentVerifierLotteryDataMessage>()
-    .QueryAsync<ExportSettlementProposalAssessmentVerifierLotteryDataFunctionOutput>("0xf30A5359475787464FEd1a6378ca25972bD64f6e");
-
-for (int i = 0; i < otherRes.ThingProposalIds.Count; ++i)
+var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")!;
+var rpcUrl = Environment.GetEnvironmentVariable("ETHEREUM_RPC_URL")!;
+Account orchestrator;
+if (environment == "Development")
 {
-    Console.WriteLine(
-        $"{otherRes.ThingProposalIds[i].ToHex(prefix: true)}: {otherRes.OrchestratorCommitments[i].DataHash.ToHex(prefix: true)}"
-    );
-    int k = 0;
-    for (int j = 0; j < otherRes.Participants[i].Count; ++j)
+    var faucet = new Account("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80");
+    var web3Faucet = new Web3(faucet, rpcUrl);
+
+    var wallet = new Wallet(Environment.GetEnvironmentVariable("MNEMONIC")!, seedPassword: null);
+    var accountFactoryAddress = Environment.GetEnvironmentVariable("ACCOUNT_FACTORY_ADDRESS")!;
+
+    var addressesToFund = (await Task.WhenAll(
+        Enumerable
+            .Range(1, 8)
+            .Select(i => web3Faucet.Eth
+                .GetContractQueryHandler<GetAddressMessage>()
+                .QueryAsync<string>(
+                    accountFactoryAddress,
+                    new()
+                    {
+                        Owner = wallet.GetAccount(i).Address,
+                        Salt = 0
+                    }
+                )
+            )
+    )).ToList();
+
+    orchestrator = wallet.GetAccount(0);
+    addressesToFund.Insert(0, orchestrator.Address);
+    addressesToFund.Insert(0, "0x48e60BBb664aEfAc9f14aDB42e5FB5b4a119EB66"); // entrypoint
+
+    foreach (var address in addressesToFund)
     {
-        Console.WriteLine($"\t\tParticipant {otherRes.Participants[i][j]}: {otherRes.BlockNumbers[i][k++]}");
-    }
-    for (int j = 0; j < otherRes.Claimants[i].Count; ++j)
-    {
-        Console.WriteLine($"\t\tClaimant {otherRes.Claimants[i][j]}: {otherRes.BlockNumbers[i][k++]}");
+        var txnReceipt = await web3Faucet.Eth
+            .GetEtherTransferService()
+            .TransferEtherAndWaitForReceiptAsync(
+                toAddress: address,
+                etherAmount: 1.0m
+            );
+
+        Console.WriteLine($"Funded {address}. Txn hash: {txnReceipt.TransactionHash}");
     }
 }
+else
+{
+    orchestrator = new Account(Environment.GetEnvironmentVariable("ORCHESTRATOR_PRIVATE_KEY")!);
+}
 
-// using var f = new FileStream("artifacts/TruQuest.bin", FileMode.Open, FileAccess.Read);
-// using var r = new StreamReader(f);
+var web3 = new Web3(orchestrator, rpcUrl);
 
-// using var ff = new FileStream("artifacts/TruQuest-clone.bin", FileMode.CreateNew, FileAccess.Write);
-// using var w = new StreamWriter(ff);
-// await w.WriteAsync("**************************************");
-// await w.WriteAsync(await r.ReadToEndAsync());
-// await w.WriteAsync("**************************************");
-// await w.FlushAsync();
+var contractNameToAddress = new Dictionary<string, string>();
+
+{
+    using var fsr = new FileStream("artifacts/Truthserum.bin", FileMode.Open, FileAccess.Read);
+    using var sr = new StreamReader(fsr);
+
+    TruthserumDeploymentMessage.Bytecode = await sr.ReadToEndAsync();
+
+    var txnReceipt = await web3.Eth
+        .GetContractDeploymentHandler<TruthserumDeploymentMessage>()
+        .SendRequestAndWaitForReceiptAsync(new());
+
+    Console.WriteLine($"Deployed Truthserum at {txnReceipt.ContractAddress}. Txn hash: {txnReceipt.TransactionHash}");
+    contractNameToAddress["Truthserum"] = txnReceipt.ContractAddress;
+}
+
+{
+    using var fsr = new FileStream("artifacts/RestrictedAccess.bin", FileMode.Open, FileAccess.Read);
+    using var sr = new StreamReader(fsr);
+
+    RestrictedAccessDeploymentMessage.Bytecode = await sr.ReadToEndAsync();
+
+    var txnReceipt = await web3.Eth
+        .GetContractDeploymentHandler<RestrictedAccessDeploymentMessage>()
+        .SendRequestAndWaitForReceiptAsync(new());
+
+    Console.WriteLine($"Deployed RestrictedAccess at {txnReceipt.ContractAddress}. Txn hash: {txnReceipt.TransactionHash}");
+    contractNameToAddress["RestrictedAccess"] = txnReceipt.ContractAddress;
+}
+
+{
+    using var fsr = new FileStream("artifacts/TruQuest.bin", FileMode.Open, FileAccess.Read);
+    using var sr = new StreamReader(fsr);
+
+    TruQuestDeploymentMessage.Bytecode = await sr.ReadToEndAsync();
+
+    var txnReceipt = await web3.Eth
+        .GetContractDeploymentHandler<TruQuestDeploymentMessage>()
+        .SendRequestAndWaitForReceiptAsync(new()
+        {
+            TruthserumAddress = contractNameToAddress["Truthserum"],
+            VerifierStake = 5 * 1000000,
+            VerifierReward = 2 * 1000000,
+            VerifierPenalty = 1 * 1000000,
+            ThingStake = 25 * 1000000,
+            ThingAcceptedReward = 7 * 1000000,
+            ThingRejectedPenalty = 3 * 1000000,
+            SettlementProposalStake = 25 * 1000000,
+            SettlementProposalAcceptedReward = 7 * 1000000,
+            SettlementProposalRejectedPenalty = 3 * 1000000
+        });
+
+    Console.WriteLine($"Deployed TruQuest at {txnReceipt.ContractAddress}. Txn hash: {txnReceipt.TransactionHash}");
+    contractNameToAddress["TruQuest"] = txnReceipt.ContractAddress;
+}
+
+{
+    using var fsr = new FileStream("artifacts/ThingValidationVerifierLottery.bin", FileMode.Open, FileAccess.Read);
+    using var sr = new StreamReader(fsr);
+
+    ThingValidationVerifierLotteryDeploymentMessage.Bytecode = await sr.ReadToEndAsync();
+
+    var txnReceipt = await web3.Eth
+        .GetContractDeploymentHandler<ThingValidationVerifierLotteryDeploymentMessage>()
+        .SendRequestAndWaitForReceiptAsync(new()
+        {
+            TruQuestAddress = contractNameToAddress["TruQuest"],
+            NumVerifiers = 3,
+            DurationBlocks = 30
+        });
+
+    Console.WriteLine($"Deployed ThingValidationVerifierLottery at {txnReceipt.ContractAddress}. Txn hash: {txnReceipt.TransactionHash}");
+    contractNameToAddress["ThingValidationVerifierLottery"] = txnReceipt.ContractAddress;
+}
+
+{
+    using var fsr = new FileStream("artifacts/ThingValidationPoll.bin", FileMode.Open, FileAccess.Read);
+    using var sr = new StreamReader(fsr);
+
+    ThingValidationPollDeploymentMessage.Bytecode = await sr.ReadToEndAsync();
+
+    var txnReceipt = await web3.Eth
+        .GetContractDeploymentHandler<ThingValidationPollDeploymentMessage>()
+        .SendRequestAndWaitForReceiptAsync(new()
+        {
+            TruQuestAddress = contractNameToAddress["TruQuest"],
+            DurationBlocks = 30,
+            VotingVolumeThresholdPercent = 50,
+            MajorityThresholdPercent = 51
+        });
+
+    Console.WriteLine($"Deployed ThingValidationPoll at {txnReceipt.ContractAddress}. Txn hash: {txnReceipt.TransactionHash}");
+    contractNameToAddress["ThingValidationPoll"] = txnReceipt.ContractAddress;
+}
+
+{
+    using var fsr = new FileStream("artifacts/SettlementProposalAssessmentVerifierLottery.bin", FileMode.Open, FileAccess.Read);
+    using var sr = new StreamReader(fsr);
+
+    SettlementProposalAssessmentVerifierLotteryDeploymentMessage.Bytecode = await sr.ReadToEndAsync();
+
+    var txnReceipt = await web3.Eth
+        .GetContractDeploymentHandler<SettlementProposalAssessmentVerifierLotteryDeploymentMessage>()
+        .SendRequestAndWaitForReceiptAsync(new()
+        {
+            TruQuestAddress = contractNameToAddress["TruQuest"],
+            NumVerifiers = 3,
+            DurationBlocks = 30
+        });
+
+    Console.WriteLine($"Deployed SettlementProposalAssessmentVerifierLottery at {txnReceipt.ContractAddress}. Txn hash: {txnReceipt.TransactionHash}");
+    contractNameToAddress["SettlementProposalAssessmentVerifierLottery"] = txnReceipt.ContractAddress;
+}
+
+{
+    using var fsr = new FileStream("artifacts/SettlementProposalAssessmentPoll.bin", FileMode.Open, FileAccess.Read);
+    using var sr = new StreamReader(fsr);
+
+    SettlementProposalAssessmentPollDeploymentMessage.Bytecode = await sr.ReadToEndAsync();
+
+    var txnReceipt = await web3.Eth
+        .GetContractDeploymentHandler<SettlementProposalAssessmentPollDeploymentMessage>()
+        .SendRequestAndWaitForReceiptAsync(new()
+        {
+            TruQuestAddress = contractNameToAddress["TruQuest"],
+            DurationBlocks = 30,
+            VotingVolumeThresholdPercent = 50,
+            MajorityThresholdPercent = 51
+        });
+
+    Console.WriteLine($"Deployed SettlementProposalAssessmentPoll at {txnReceipt.ContractAddress}. Txn hash: {txnReceipt.TransactionHash}");
+    contractNameToAddress["SettlementProposalAssessmentPoll"] = txnReceipt.ContractAddress;
+}
+
+await web3.Eth
+    .GetContractTransactionHandler<SetTruQuestAddressMessage>()
+    .SendRequestAndWaitForReceiptAsync(
+        contractNameToAddress["Truthserum"],
+        new() { TruQuestAddress = contractNameToAddress["TruQuest"] }
+    );
+
+await web3.Eth
+    .GetContractTransactionHandler<SetRestrictedAccessMessage>()
+    .SendRequestAndWaitForReceiptAsync(
+        contractNameToAddress["TruQuest"],
+        new() { RestrictedAccessAddress = contractNameToAddress["RestrictedAccess"] }
+    );
+
+await web3.Eth
+    .GetContractTransactionHandler<SetLotteryAndPollAddressesMessage>()
+    .SendRequestAndWaitForReceiptAsync(
+        contractNameToAddress["TruQuest"],
+        new()
+        {
+            ThingValidationVerifierLotteryAddress = contractNameToAddress["ThingValidationVerifierLottery"],
+            ThingValidationPollAddress = contractNameToAddress["ThingValidationPoll"],
+            SettlementProposalAssessmentVerifierLotteryAddress = contractNameToAddress["SettlementProposalAssessmentVerifierLottery"],
+            SettlementProposalAssessmentPollAddress = contractNameToAddress["SettlementProposalAssessmentPoll"]
+        }
+    );
+
+await web3.Eth
+    .GetContractTransactionHandler<SetThingValidationPollMessage>()
+    .SendRequestAndWaitForReceiptAsync(
+        contractNameToAddress["ThingValidationVerifierLottery"],
+        new() { ThingValidationPollAddress = contractNameToAddress["ThingValidationPoll"] }
+    );
+
+await web3.Eth
+    .GetContractTransactionHandler<SetThingValidationVerifierLotteryAddressMessage>()
+    .SendRequestAndWaitForReceiptAsync(
+        contractNameToAddress["ThingValidationPoll"],
+        new() { ThingValidationVerifierLotteryAddress = contractNameToAddress["ThingValidationVerifierLottery"] }
+    );
+
+await web3.Eth
+    .GetContractTransactionHandler<SetPollsMessage>()
+    .SendRequestAndWaitForReceiptAsync(
+        contractNameToAddress["SettlementProposalAssessmentVerifierLottery"],
+        new()
+        {
+            ThingValidationPollAddress = contractNameToAddress["ThingValidationPoll"],
+            SettlementProposalAssessmentPollAddress = contractNameToAddress["SettlementProposalAssessmentPoll"]
+        }
+    );
+
+await web3.Eth
+    .GetContractTransactionHandler<SetSettlementProposalAssessmentVerifierLotteryAddressMessage>()
+    .SendRequestAndWaitForReceiptAsync(
+        contractNameToAddress["SettlementProposalAssessmentPoll"],
+        new() { SettlementProposalAssessmentVerifierLotteryAddress = contractNameToAddress["SettlementProposalAssessmentVerifierLottery"] }
+    );
+
+using var fsw = new FileStream("artifacts/contract_addresses.json", FileMode.Create, FileAccess.Write);
+await JsonSerializer.SerializeAsync<Dictionary<string, string>>(fsw, contractNameToAddress, new JsonSerializerOptions
+{
+    WriteIndented = true
+});
+await fsw.FlushAsync();

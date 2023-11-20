@@ -245,40 +245,56 @@ public static class WebApplicationBuilderExtension
 
     public static async Task<WebApplication> DeployContracts(this WebApplication app)
     {
-        var processInfo = new ProcessStartInfo()
         {
-            FileName = "cmd.exe",
-            Arguments = "/c cd c:/chekh/projects/truquest/src/dapp && rm -rf deployments/ && yarn hardhat deploy",
-            UseShellExecute = false,
-            RedirectStandardOutput = true
-        };
-        var process = new Process
-        {
-            StartInfo = processInfo
-        };
-        process.Start();
-
-        var network = app.Configuration["Ethereum:Network"]!;
-
-        string? line;
-        while ((line = await process.StandardOutput.ReadLineAsync()) != null)
-        {
-            if (line.StartsWith("deploying"))
+            var processInfo = new ProcessStartInfo()
             {
-                var lineSplit = line.Split(' ');
-                var contractName = lineSplit[1].Substring(1, lineSplit[1].Length - 2);
-                var contractAddress = lineSplit[lineSplit.Length - 4];
-                app.Configuration[$"Ethereum:Contracts:{network}:{contractName}:Address"] = contractAddress;
+                FileName = "cmd.exe",
+                Arguments =
+                    "/c docker run --rm -v C:/chekh/Projects/TruQuest/src/dapp:/src ethereum/solc:0.8.17" +
+                    " --bin --overwrite -o /src/artifacts --base-path /src/contracts --include-path /src/node_modules" +
+                    " /src/contracts/Truthserum.sol /src/contracts/RestrictedAccess.sol /src/contracts/TruQuest.sol" +
+                    " /src/contracts/ThingValidationVerifierLottery.sol /src/contracts/ThingValidationPoll.sol" +
+                    " /src/contracts/SettlementProposalAssessmentVerifierLottery.sol /src/contracts/SettlementProposalAssessmentPoll.sol",
+                UseShellExecute = false,
+                RedirectStandardError = true
+            };
+            var process = new Process
+            {
+                StartInfo = processInfo
+            };
+            process.Start();
 
-                app.Logger.LogInformation("Contract {ContractName}: {ContractAddress}", contractName, contractAddress);
-            }
-            else
+            string? line;
+            while ((line = await process.StandardError.ReadLineAsync()) != null)
             {
                 app.Logger.LogInformation(line);
             }
+
+            await process.WaitForExitAsync();
         }
 
-        await process.WaitForExitAsync();
+        {
+            var processInfo = new ProcessStartInfo()
+            {
+                FileName = "cmd.exe",
+                Arguments = "/c cd C:/chekh/Projects/TruQuest/src/Orchestrator/deploy/ContractMigrator && dotnet run",
+                UseShellExecute = false,
+                RedirectStandardOutput = true
+            };
+            var process = new Process
+            {
+                StartInfo = processInfo
+            };
+            process.Start();
+
+            string? line;
+            while ((line = await process.StandardOutput.ReadLineAsync()) != null)
+            {
+                app.Logger.LogInformation(line);
+            }
+
+            await process.WaitForExitAsync();
+        }
 
         return app;
     }
