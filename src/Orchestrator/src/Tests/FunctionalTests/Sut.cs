@@ -1,6 +1,5 @@
 using System.Security.Claims;
 
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,15 +8,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
 
-using Npgsql;
 using Respawn;
 using Respawn.Graph;
 using GoThataway;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
 
-using Domain.Aggregates;
-using Domain.Aggregates.Events;
 using Application.Common.Interfaces;
 using Infrastructure.Persistence;
 using Infrastructure.Ethereum;
@@ -111,21 +107,13 @@ public class Sut
 
         _app = appBuilder.Build().ConfigurePipeline();
 
-        AccountProvider = _app.Services.GetRequiredService<AccountProvider>();
-        Signer = new Signer(AccountProvider);
-        BlockchainManipulator = new BlockchainManipulator(_app.Configuration);
-        ContractCaller = new ContractCaller(
-            _app.Logger,
-            _app.Configuration,
-            AccountProvider,
-            _app.Services.GetRequiredService<UserOperationService>(),
-            BlockchainManipulator
-        );
+        await _app.DeployContracts();
+        await _app.ApplyDbMigrations();
+        await _app.ConfigureContractAddresses();
+        await _app.RegisterDebeziumConnector();
 
         using (var scope = _app.Services.CreateScope())
         {
-            await _applyMigrations(scope);
-
             var appDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             await appDbContext.Database.OpenConnectionAsync();
 
@@ -141,17 +129,12 @@ public class Sut
                         "AspNetUserClaims",
                         "AuthCredentials",
                         "Whitelist",
+                        "ContractAddresses",
                         "BlockProcessedEvent"
                     },
                     DbAdapter = DbAdapter.Postgres
                 });
         }
-
-        _hostEnvironment = _app.Services.GetRequiredService<IWebHostEnvironment>();
-
-        await _app.DeployContracts();
-        await _app.RegisterDebeziumConnector();
-        await _app.DepositFunds();
 
         // @@NOTE: Activity listener gets registered by a hosted service, which during testing we don't
         // actually start, so, instead, we resolve these providers, which accomplishes the same thing.
@@ -162,6 +145,19 @@ public class Sut
         await StartHostedService<BlockTracker>();
         await StartHostedService<ContractEventTracker>();
         await StartHostedService<OrchestratorStatusTracker>();
+
+        AccountProvider = _app.Services.GetRequiredService<AccountProvider>();
+        Signer = new Signer(AccountProvider);
+        BlockchainManipulator = new BlockchainManipulator(_app.Configuration);
+        ContractCaller = new ContractCaller(
+            _app.Logger,
+            _app.Configuration,
+            AccountProvider,
+            _app.Services.GetRequiredService<UserOperationService>(),
+            BlockchainManipulator
+        );
+
+        _hostEnvironment = _app.Services.GetRequiredService<IWebHostEnvironment>();
     }
 
     // @@!!: There is no way to actually call it right now.
@@ -197,64 +193,6 @@ public class Sut
             .OfType<T>()
             .First()
             .StopAsync(CancellationToken.None);
-
-    private async Task _applyMigrations(IServiceScope scope)
-    {
-        var appDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await appDbContext.Database.MigrateAsync();
-        var dbConn = (NpgsqlConnection)appDbContext.Database.GetDbConnection();
-        // Connection gets closed after applying migrations fsr.
-        await dbConn.OpenAsync();
-        // @@NOTE: Required for Npgsql to pick up newly created enums.
-        await dbConn.ReloadTypesAsync();
-
-        foreach (var kv in AccountNameToUserId)
-        {
-            appDbContext.Users.Add(new User
-            {
-                Id = kv.Value,
-                UserName = AccountProvider.GetAccount(kv.Key).Address,
-                NormalizedUserName = AccountProvider.GetAccount(kv.Key).Address.ToUpper(),
-                WalletAddress = await ContractCaller.GetWalletAddressFor(kv.Key)
-            });
-        }
-        await appDbContext.SaveChangesAsync();
-
-        foreach (var kv in AccountNameToUserId)
-        {
-            appDbContext.UserClaims.AddRange(new IdentityUserClaim<string>[]
-            {
-                new()
-                {
-                    UserId = kv.Value,
-                    ClaimType = "signer_address",
-                    ClaimValue = AccountProvider.GetAccount(kv.Key).Address
-                },
-                new()
-                {
-                    UserId = kv.Value,
-                    ClaimType = "wallet_address",
-                    ClaimValue = await ContractCaller.GetWalletAddressFor(kv.Key)
-                }
-            });
-
-            appDbContext.Whitelist.Add(new WhitelistEntry(
-                WhitelistEntryType.SignerAddress, AccountProvider.GetAccount(kv.Key).Address
-            ));
-        }
-
-        appDbContext.Tags.AddRange(new("Politics"), new("Sport"), new("IT"));
-        await appDbContext.SaveChangesAsync();
-
-        var eventDbContext = scope.ServiceProvider.GetRequiredService<EventDbContext>();
-        await eventDbContext.Database.MigrateAsync();
-        dbConn = (NpgsqlConnection)eventDbContext.Database.GetDbConnection();
-        await dbConn.OpenAsync();
-        await dbConn.ReloadTypesAsync();
-
-        eventDbContext.BlockProcessedEvent.Add(new BlockProcessedEvent(id: 1, blockNumber: null));
-        await eventDbContext.SaveChangesAsync();
-    }
 
     public async Task ResetState()
     {

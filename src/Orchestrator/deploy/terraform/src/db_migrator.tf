@@ -20,6 +20,8 @@
 #   # If true, then the container will be automatically removed when it exits.
 #   # rm = true # Error: No such container XXX
 #   env = [
+#     "DOTNET_ENVIRONMENT=Staging",
+#     "APPLICATION_VERSION=${var.application_version}",
 #     "BASTION_HOST=${aws_elastic_beanstalk_environment.backend_staging.cname}", # should tunnel through a separate bastion host
 #     "BASTION_USER=ec2-user",
 #     "BASTION_PRIVATE_KEY=${var.bastion_private_key}",

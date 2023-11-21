@@ -23,6 +23,7 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
     public DbSet<SettlementProposalUpdate> SettlementProposalUpdates { get; set; }
     public DbSet<WhitelistEntry> Whitelist { get; set; }
     public DbSet<DeadLetter> DeadLetters { get; set; }
+    public DbSet<ContractAddress> ContractAddresses { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -389,6 +390,12 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
                 .HasColumnType("jsonb")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .IsRequired();
+        });
+
+        modelBuilder.Entity<ContractAddress>(builder =>
+        {
+            builder.HasKey(c => new { c.Name, c.Version });
+            builder.Property(c => c.Address).IsRequired();
         });
     }
 }

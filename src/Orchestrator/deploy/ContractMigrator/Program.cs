@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Numerics;
+using System.Text.Json;
 
 using Nethereum.HdWallet;
 using Nethereum.Web3;
@@ -122,7 +123,7 @@ var contractNameToAddress = new Dictionary<string, string>();
         {
             TruQuestAddress = contractNameToAddress["TruQuest"],
             NumVerifiers = 3,
-            DurationBlocks = 30
+            DurationBlocks = 70
         });
 
     Console.WriteLine($"Deployed ThingValidationVerifierLottery at {txnReceipt.ContractAddress}. Txn hash: {txnReceipt.TransactionHash}");
@@ -161,7 +162,7 @@ var contractNameToAddress = new Dictionary<string, string>();
         {
             TruQuestAddress = contractNameToAddress["TruQuest"],
             NumVerifiers = 3,
-            DurationBlocks = 30
+            DurationBlocks = 70
         });
 
     Console.WriteLine($"Deployed SettlementProposalAssessmentVerifierLottery at {txnReceipt.ContractAddress}. Txn hash: {txnReceipt.TransactionHash}");
@@ -246,6 +247,50 @@ await web3.Eth
         contractNameToAddress["SettlementProposalAssessmentPoll"],
         new() { SettlementProposalAssessmentVerifierLotteryAddress = contractNameToAddress["SettlementProposalAssessmentVerifierLottery"] }
     );
+
+if (environment == "Development")
+{
+    var wallet = new Wallet(Environment.GetEnvironmentVariable("MNEMONIC")!, seedPassword: null);
+    var accountFactoryAddress = Environment.GetEnvironmentVariable("ACCOUNT_FACTORY_ADDRESS")!;
+
+    var addressesToWhitelistAndFund = (await Task.WhenAll(
+        Enumerable
+            .Range(1, 8)
+            .Select(i => web3.Eth
+                .GetContractQueryHandler<GetAddressMessage>()
+                .QueryAsync<string>(
+                    accountFactoryAddress,
+                    new()
+                    {
+                        Owner = wallet.GetAccount(i).Address,
+                        Salt = 0
+                    }
+                )
+            )
+    )).ToList();
+
+    await web3.Eth
+        .GetContractTransactionHandler<GiveAccessToManyMessage>()
+        .SendRequestAndWaitForReceiptAsync(contractNameToAddress["RestrictedAccess"], new()
+        {
+            Users = addressesToWhitelistAndFund
+        });
+
+    var txnDispatcher = web3.Eth.GetContractTransactionHandler<MintAndDepositTruthserumToMessage>();
+    foreach (var address in addressesToWhitelistAndFund)
+    {
+        var txnReceipt = await txnDispatcher.SendRequestAndWaitForReceiptAsync(
+            contractNameToAddress["TruQuest"],
+            new()
+            {
+                User = address,
+                Amount = BigInteger.Parse("1000000000") // 1 TRU
+            }
+        );
+    }
+
+    Console.WriteLine($"Funded and gave restricted access to:\n\t{string.Join("\n\t", addressesToWhitelistAndFund)}");
+}
 
 using var fsw = new FileStream("artifacts/contract_addresses.json", FileMode.Create, FileAccess.Write);
 await JsonSerializer.SerializeAsync<Dictionary<string, string>>(fsw, contractNameToAddress, new JsonSerializerOptions

@@ -38,6 +38,7 @@
 
     <ItemGroup>
         <ProjectReference Include="../../API/API.csproj" />
+        <ProjectReference Include="../../../lib/ContractStorageExplorer/src/ContractStorageExplorer.csproj" />
     </ItemGroup>
 
 </Project>
