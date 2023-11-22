@@ -83,6 +83,109 @@ class ThingValidationVerifierLotteryContract {
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "RestrictedAccess__Forbidden",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes16",
+          "name": "thingId",
+          "type": "bytes16"
+        }
+      ],
+      "name": "ThingValidationVerifierLottery__AlreadyInitialized",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes16",
+          "name": "thingId",
+          "type": "bytes16"
+        }
+      ],
+      "name": "ThingValidationVerifierLottery__AlreadyJoined",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes16",
+          "name": "thingId",
+          "type": "bytes16"
+        }
+      ],
+      "name": "ThingValidationVerifierLottery__Expired",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes16",
+          "name": "thingId",
+          "type": "bytes16"
+        }
+      ],
+      "name": "ThingValidationVerifierLottery__InvalidNumberOfWinners",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes16",
+          "name": "thingId",
+          "type": "bytes16"
+        }
+      ],
+      "name": "ThingValidationVerifierLottery__InvalidReveal",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes16",
+          "name": "thingId",
+          "type": "bytes16"
+        }
+      ],
+      "name": "ThingValidationVerifierLottery__NotActive",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ThingValidationVerifierLottery__NotEnoughFunds",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes16",
+          "name": "thingId",
+          "type": "bytes16"
+        }
+      ],
+      "name": "ThingValidationVerifierLottery__StillInProgress",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes16",
+          "name": "thingId",
+          "type": "bytes16"
+        }
+      ],
+      "name": "ThingValidationVerifierLottery__SubmitterCannotParticipate",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ThingValidationVerifierLottery__Unauthorized",
+      "type": "error"
     }
   ]''';
 
@@ -91,9 +194,7 @@ class ThingValidationVerifierLotteryContract {
   late final Abi _interface;
   late final Contract _contract;
 
-  ThingValidationVerifierLotteryContract(
-    EthereumRpcProvider ethereumRpcProvider,
-  ) {
+  ThingValidationVerifierLotteryContract(EthereumRpcProvider ethereumRpcProvider) {
     _interface = Abi(_abi);
     _contract = Contract(
       address,
@@ -101,6 +202,8 @@ class ThingValidationVerifierLotteryContract {
       ethereumRpcProvider.provider,
     );
   }
+
+  ErrorDescription parseError(String data) => _interface.parseError(data);
 
   Future<int> getLotteryDurationBlocks() => _contract.read<int>('s_durationBlocks');
 

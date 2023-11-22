@@ -2,6 +2,7 @@ import '../../general/errors/error.dart';
 
 class UserOperationError extends Error {
   final int? code;
+  final bool extractedFromEvent;
 
   bool get isPreVerificationGasTooLow => code == -32602 && message.startsWith('preVerificationGas too low');
 
@@ -12,11 +13,17 @@ class UserOperationError extends Error {
 
   bool get isRetryable => !isPastOrFutureExecutionRevertError;
 
-  const UserOperationError(String? reason)
-      : code = null,
-        super(reason ?? 'Unspecified reason');
+  const UserOperationError({this.code, String message = 'Something went wrong'})
+      : extractedFromEvent = false,
+        super(message);
+
+  const UserOperationError.customContractError(String message)
+      : code = -32521,
+        extractedFromEvent = true,
+        super(message);
 
   UserOperationError.fromMap(Map<String, dynamic> map)
       : code = map['code'],
+        extractedFromEvent = false,
         super(map['message']);
 }

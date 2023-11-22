@@ -228,6 +228,80 @@ class TruQuestContract {
           ],
           "stateMutability": "view",
           "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "RestrictedAccess__Forbidden",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "TruQuest__InvalidSignature",
+          "type": "error"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "requiredAmount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "availableAmount",
+              "type": "uint256"
+            }
+          ],
+          "name": "TruQuest__NotEnoughFunds",
+          "type": "error"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "requestedAmount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "availableAmount",
+              "type": "uint256"
+            }
+          ],
+          "name": "TruQuest__RequestedWithdrawAmountExceedsAvailable",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "TruQuest__TheWorldIsStopped",
+          "type": "error"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes16",
+              "name": "thingId",
+              "type": "bytes16"
+            }
+          ],
+          "name": "TruQuest__ThingAlreadyFunded",
+          "type": "error"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes16",
+              "name": "thingId",
+              "type": "bytes16"
+            }
+          ],
+          "name": "TruQuest__ThingAlreadyHasSettlementProposalUnderAssessment",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "TruQuest__Unauthorized",
+          "type": "error"
         }
       ]''';
 
@@ -238,6 +312,8 @@ class TruQuestContract {
     _interface = Abi(_abi);
     _contract = Contract(address, _abi, ethereumRpcProvider.provider);
   }
+
+  ErrorDescription parseError(String data) => _interface.parseError(data);
 
   Future<BigInt> getThingStake() => _contract.read<BigInt>('s_thingStake');
 

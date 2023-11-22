@@ -106,6 +106,10 @@ class EthereumApiService {
         },
       );
 
+      print('==================== estimateUserOperationGas ========================');
+      print(response);
+      print('======================================================================');
+
       if (response.data.containsKey('error')) {
         throw UserOperationError.fromMap(response.data['error']);
       }
@@ -119,7 +123,7 @@ class EthereumApiService {
         BigInt.parse(result['callGasLimit']),
       );
     } on DioError catch (error) {
-      throw UserOperationError('Estimate user op gas error: ${error.message}');
+      throw UserOperationError(message: 'Estimate user op gas error: ${error.message}');
     }
   }
 
@@ -135,13 +139,17 @@ class EthereumApiService {
         },
       );
 
+      print('==================== sendUserOperation ========================');
+      print(response);
+      print('===============================================================');
+
       if (response.data.containsKey('error')) {
         throw UserOperationError.fromMap(response.data['error']);
       }
 
       return response.data['result'] as String;
     } on DioError catch (error) {
-      throw UserOperationError('Send user op error: ${error.message}');
+      throw UserOperationError(message: 'Send user op error: ${error.message}');
     }
   }
 

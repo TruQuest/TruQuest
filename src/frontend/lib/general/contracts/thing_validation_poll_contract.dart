@@ -114,6 +114,55 @@ class ThingValidationPollContract {
       ],
       "stateMutability": "view",
       "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes16",
+          "name": "thingId",
+          "type": "bytes16"
+        }
+      ],
+      "name": "ThingValidationPoll__Expired",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes16",
+          "name": "thingId",
+          "type": "bytes16"
+        }
+      ],
+      "name": "ThingValidationPoll__NotActive",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes16",
+          "name": "thingId",
+          "type": "bytes16"
+        }
+      ],
+      "name": "ThingValidationPoll__NotDesignatedVerifier",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes16",
+          "name": "thingId",
+          "type": "bytes16"
+        }
+      ],
+      "name": "ThingValidationPoll__StillInProgress",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ThingValidationPoll__Unauthorized",
+      "type": "error"
     }
   ]''';
 
@@ -128,6 +177,8 @@ class ThingValidationPollContract {
       ethereumRpcProvider.provider,
     );
   }
+
+  ErrorDescription parseError(String data) => _interface.parseError(data);
 
   Future<int> getPollDurationBlocks() => _contract.read<int>('s_durationBlocks');
 

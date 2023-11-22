@@ -31,7 +31,7 @@ if (environment == "Development")
     await dbConn.OpenAsync();
     await dbConn.ReloadTypesAsync();
 
-    using var fs = new FileStream("../ContractMigrator/artifacts/contract_addresses.json", FileMode.Open, FileAccess.Read);
+    using var fs = new FileStream("C:/chekh/Projects/TruQuest/src/Orchestrator/deploy/ContractMigrator/artifacts/contract_addresses.json", FileMode.Open, FileAccess.Read);
     var contractNameToAddress = await JsonSerializer.DeserializeAsync<Dictionary<string, string>>(fs);
 
     var version = app.Configuration["Ethereum:Domain:Version"]!;

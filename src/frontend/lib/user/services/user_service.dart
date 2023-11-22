@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:rxdart/rxdart.dart';
 
+import '../../ethereum/errors/user_operation_error.dart';
 import '../../ethereum/services/embedded_wallet_service.dart';
 import '../../ethereum/services/ethereum_api_service.dart';
 import '../../general/utils/utils.dart';
@@ -105,14 +106,17 @@ class UserService {
       ),
     );
 
-    _refreshSmartWalletInfo(currentSignerAddress, userInfo?['walletAddress']);
+    _refreshSmartWalletInfo();
   }
 
   Future<String> personalSign(String message) => _walletService.personalSign(message);
 
   Future<String> personalSignDigest(String digest) => _walletService.personalSignDigest(digest);
 
-  void _refreshSmartWalletInfo(String? signerAddress, String? walletAddress) async {
+  void _refreshSmartWalletInfo() async {
+    var signerAddress = latestCurrentUser?.signerAddress;
+    var walletAddress = latestCurrentUser?.walletAddress;
+
     if (walletAddress == null) {
       var info = SmartWalletInfoVm.placeholder();
       _smartWalletInfoChannel.add(info);
@@ -170,13 +174,13 @@ class UserService {
     var error = await _userOperationService.send(userOp);
     if (error != null) yield error;
 
-    _refreshSmartWalletInfo(latestCurrentUser!.signerAddress!, latestCurrentUser!.walletAddress!);
+    _refreshSmartWalletInfo();
   }
 
   Stream<Object> withdrawFunds(int amount, MultiStageOperationContext ctx) async* {
     print('**************** Withdraw funds ****************');
 
-    BigInt availableFunds = await _truQuestContract.getAvailableFunds(currentWalletAddress);
+    BigInt availableFunds = await getAvailableFundsForCurrentUser();
     if (availableFunds < BigInt.from(amount)) {
       yield const InsufficientBalanceError();
       return;
@@ -189,15 +193,22 @@ class UserService {
     );
 
     var userOp = await ctx.approveUserOpTask.future;
-    if (userOp == null) {
-      return;
-    }
+    if (userOp == null) return;
 
     var error = await _userOperationService.send(userOp);
     if (error != null) {
-      yield error;
+      if (error.isPastOrFutureExecutionRevertError) {
+        if (error.extractedFromEvent) {
+          var errorDescription = _truQuestContract.parseError(error.message);
+          yield UserOperationError.customContractError(errorDescription.name);
+        } else {
+          yield UserOperationError(code: error.code);
+        }
+      } else {
+        yield error;
+      }
     }
 
-    _refreshSmartWalletInfo(currentOwnerAddress, currentWalletAddress);
+    _refreshSmartWalletInfo();
   }
 }

@@ -164,16 +164,12 @@ class UserOperationBuilder {
   }
 
   UserOperationBuilder action((String, String) targetAndCallData) {
-    _callData = _accountFactoryContract.accountContract.execute(
-      targetAndCallData,
-    );
+    _callData = _accountFactoryContract.accountContract.execute(targetAndCallData);
     return this;
   }
 
   UserOperationBuilder actions(List<(String, String)> targetAndCallDataList) {
-    _callData = _accountFactoryContract.accountContract.executeBatch(
-      targetAndCallDataList,
-    );
+    _callData = _accountFactoryContract.accountContract.executeBatch(targetAndCallDataList);
     return this;
   }
 
@@ -238,6 +234,7 @@ class UserOperationBuilder {
 
   UserOperationBuilder _withCurrentGasPrice() {
     _tasks.add(() async {
+      // @@TODO!!: Use Alchemy's API for fees data.
       var minPriorityFeeBid = BigInt.parse('1000000000'); // 1 GWEI
 
       var baseFee = await _ethereumApiService.getBaseFee();

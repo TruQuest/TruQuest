@@ -125,6 +125,120 @@ class SettlementProposalAssessmentVerifierLotteryContract {
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "RestrictedAccess__Forbidden",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "thingProposalId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "SettlementProposalAssessmentVerifierLottery__AlreadyInitialized",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "thingProposalId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "SettlementProposalAssessmentVerifierLottery__AlreadyJoined",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "thingProposalId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "SettlementProposalAssessmentVerifierLottery__Expired",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "thingProposalId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "SettlementProposalAssessmentVerifierLottery__InvalidClaim",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "thingProposalId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "SettlementProposalAssessmentVerifierLottery__InvalidNumberOfWinners",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "thingProposalId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "SettlementProposalAssessmentVerifierLottery__InvalidReveal",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "thingProposalId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "SettlementProposalAssessmentVerifierLottery__NotActive",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "SettlementProposalAssessmentVerifierLottery__NotEnoughFunds",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "thingProposalId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "SettlementProposalAssessmentVerifierLottery__StillInProgress",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "thingProposalId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "SettlementProposalAssessmentVerifierLottery__SubmitterCannotParticipate",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "SettlementProposalAssessmentVerifierLottery__Unauthorized",
+      "type": "error"
     }
   ]''';
 
@@ -133,9 +247,7 @@ class SettlementProposalAssessmentVerifierLotteryContract {
   late final Abi _interface;
   late final Contract _contract;
 
-  SettlementProposalAssessmentVerifierLotteryContract(
-    EthereumRpcProvider ethereumRpcProvider,
-  ) {
+  SettlementProposalAssessmentVerifierLotteryContract(EthereumRpcProvider ethereumRpcProvider) {
     _interface = Abi(_abi);
     _contract = Contract(
       address,
@@ -143,6 +255,8 @@ class SettlementProposalAssessmentVerifierLotteryContract {
       ethereumRpcProvider.provider,
     );
   }
+
+  ErrorDescription parseError(String data) => _interface.parseError(data);
 
   Future<int> getLotteryDurationBlocks() => _contract.read<int>('s_durationBlocks');
 

@@ -83,74 +83,57 @@ public static class WebApplicationBuilderExtension
                 config.AddFidoMetadataRepository(delegate { });
             });
 
-        if (!configuration.GetValue<bool>("DbMigrator"))
-        {
-            Action<ResourceBuilder> configureResource = resource =>
-                resource.AddService(
-                    serviceName: Telemetry.ServiceName,
-                    serviceVersion: "0.1.0",
-                    serviceInstanceId: Environment.MachineName
-                );
+        Action<ResourceBuilder> configureResource = resource =>
+            resource.AddService(
+                serviceName: Telemetry.ServiceName,
+                serviceVersion: "0.1.0",
+                serviceInstanceId: Environment.MachineName
+            );
 
-            builder.Services.AddOpenTelemetry()
-                .ConfigureResource(configureResource)
-                .WithTracing(builder =>
-                    builder
-                        .AddSource(Telemetry.ActivitySource.Name)
-                        .SetSampler(new AlwaysOnSampler()) // @@??: Use this in conjunction with OTEL collector tail sampling?
-                        .AddOtlpExporter(otlpOptions =>
-                        {
-                            otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
-                        })
-                )
-                .WithMetrics(builder =>
-                    builder
-                        .AddMeter(Telemetry.Meter.Name)
-                        .AddView(metric =>
-                        {
-                            if (metric.Name.StartsWith("contract-call."))
-                            {
-                                return new ExplicitBucketHistogramConfiguration
-                                {
-                                    Boundaries = new double[]
-                                    {
-                                        50000,
-                                        100000,
-                                        150000,
-                                        200000,
-                                        250000,
-                                        300000,
-                                        350000,
-                                        400000,
-                                        450000,
-                                        500000
-                                    }
-                                };
-                            }
-
-                            return null;
-                        })
-                        .AddConsoleExporter(options =>
-                            options.Targets = OpenTelemetry.Exporter.ConsoleExporterOutputTargets.Debug
-                        )
-                        .AddOtlpExporter(otlpOptions =>
-                        {
-                            otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
-                        })
-                );
-
-            builder.Logging.AddOpenTelemetry(options =>
-            {
-                var resourceBuilder = ResourceBuilder.CreateDefault();
-                configureResource(resourceBuilder);
-                options.SetResourceBuilder(resourceBuilder);
-
-                options.AddOtlpExporter(otlpOptions =>
+        builder.Services.AddOpenTelemetry()
+            .ConfigureResource(configureResource)
+            .WithTracing(builder => builder
+                .AddSource(Telemetry.ActivitySource.Name)
+                .SetSampler(new AlwaysOnSampler()) // @@??: Use this in conjunction with OTEL collector tail sampling?
+                .AddOtlpExporter(otlpOptions => otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!))
+            )
+            .WithMetrics(builder => builder
+                .AddMeter(Telemetry.Meter.Name)
+                .AddView(metric =>
                 {
-                    otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
-                });
-            });
-        }
+                    if (metric.Name.StartsWith("contract-call."))
+                    {
+                        return new ExplicitBucketHistogramConfiguration
+                        {
+                            Boundaries = new double[]
+                            {
+                                50000,
+                                100000,
+                                150000,
+                                200000,
+                                250000,
+                                300000,
+                                350000,
+                                400000,
+                                450000,
+                                500000
+                            }
+                        };
+                    }
+
+                    return null;
+                })
+                .AddConsoleExporter(options => options.Targets = OpenTelemetry.Exporter.ConsoleExporterOutputTargets.Debug)
+                .AddOtlpExporter(otlpOptions => otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!))
+            );
+
+        builder.Logging.AddOpenTelemetry(options =>
+        {
+            var resourceBuilder = ResourceBuilder.CreateDefault();
+            configureResource(resourceBuilder);
+            options.SetResourceBuilder(resourceBuilder);
+            options.AddOtlpExporter(otlpOptions => otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!));
+        });
 
         builder.Services.ConfigureHttpJsonOptions(options =>
         {
@@ -241,6 +224,8 @@ public static class WebApplicationBuilderExtension
 
     public static async Task<WebApplication> DeployContracts(this WebApplication app)
     {
+        if (!(app.Environment.EnvironmentName == "Development" || app.Environment.EnvironmentName == "Testing")) return app;
+
         {
             var processInfo = new ProcessStartInfo()
             {
@@ -297,13 +282,19 @@ public static class WebApplicationBuilderExtension
 
     public static async Task<WebApplication> ApplyDbMigrations(this WebApplication app)
     {
+        if (!(app.Environment.EnvironmentName == "Development" || app.Environment.EnvironmentName == "Testing")) return app;
+
         var processInfo = new ProcessStartInfo()
         {
             FileName = "cmd.exe",
-            Arguments = "/c cd C:/chekh/Projects/TruQuest/src/Orchestrator/deploy/DbMigrator && dotnet run",
+            // @@NOTE: We run the dll instead of doing "dotnet run" on DbMigrator, because "dotnet run"ning both the orchestrator and
+            // DbMigrator at the same time results in file locking problems.
+            Arguments = "/c cd C:/chekh/Projects/TruQuest/src/Orchestrator/deploy/DbMigrator/bin/Debug/net7.0 && dotnet DbMigrator.dll",
             UseShellExecute = false,
             RedirectStandardOutput = true
         };
+        processInfo.EnvironmentVariables.Add("DOTNET_ENVIRONMENT", "Development");
+
         var process = new Process
         {
             StartInfo = processInfo

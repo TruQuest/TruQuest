@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import '../../ethereum_js_interop.dart';
+import '../../general/contracts/erc4337/ientrypoint_contract.dart';
 import '../errors/wallet_action_declined_error.dart';
 import '../models/vm/user_operation_vm.dart';
 import 'ethereum_api_service.dart';
@@ -9,8 +11,9 @@ import '../models/vm/get_user_operation_receipt_rvm.dart';
 
 class UserOperationService {
   final EthereumApiService _ethereumApiService;
+  final IEntryPointContract _entryPointContract;
 
-  UserOperationService(this._ethereumApiService);
+  UserOperationService(this._ethereumApiService, this._entryPointContract);
 
   Stream<UserOperationVm> prepareOneWithRealTimeFeeUpdates({
     required List<(String, String)> actions,
@@ -86,7 +89,7 @@ class UserOperationService {
     try {
       return await userOpBuilder.unsigned();
     } on UserOperationError catch (error) {
-      print(error);
+      print('[${error.code}] $error');
       return null;
     }
   }
@@ -116,7 +119,7 @@ class UserOperationService {
         userOpHash = await _ethereumApiService.sendUserOperation(userOp);
       } on WalletActionDeclinedError catch (e) {
         print(e);
-        error = UserOperationError(e.message);
+        error = UserOperationError(message: e.message);
         break;
       } on UserOperationError catch (e) {
         print(e);
@@ -142,14 +145,24 @@ class UserOperationService {
     do {
       await Future.delayed(const Duration(seconds: 2)); // @@TODO: Config.
       receipt = await _ethereumApiService.getUserOperationReceipt(userOpHash!);
-      // @@??: Break waiting if !success ?
     } while (receipt == null || receipt.receipt.confirmations < confirmations);
 
     print('Receipt:\n$receipt');
 
     if (!receipt.success) {
-      print('UserOp Execution Failed. Reason: ${receipt.reason ?? 'Unspecified'}');
-      return UserOperationError(receipt.reason);
+      var entryPointLogs = receipt.logs.where((l) => l.address == _entryPointContract.address).toList();
+      for (int i = 0; i < entryPointLogs.length; ++i) {
+        var log = entryPointLogs[i];
+        var logDescription = _entryPointContract.parseLog(log.topics, log.data);
+        if (logDescription.name == _entryPointContract.userOperationRevertedEventName) {
+          var revertReason = retrieveRevertReasonFromEvent(log.topics, log.data);
+          print('UserOp Execution Failed. Reason: <CUSTOM ERROR>');
+          return UserOperationError.customContractError(revertReason);
+        }
+      }
+
+      print('UserOp Execution Failed. Reason: Unspecified');
+      return UserOperationError();
     }
 
     return null;

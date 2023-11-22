@@ -206,9 +206,7 @@ class ThirdPartyWalletService implements IWalletService {
       digest,
     );
     if (result.error != null) {
-      print(
-        'Personal sign message error: [${result.error!.code}] ${result.error!.message}',
-      );
+      print('Personal sign message error: [${result.error!.code}] ${result.error!.message}');
       throw const WalletActionDeclinedError();
     }
 

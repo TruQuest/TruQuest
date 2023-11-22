@@ -179,6 +179,36 @@ class Signer {
 class _Interface {
   external _Interface(dynamic abi);
   external String encodeFunctionData(String fragment, [dynamic values]);
+  external LogDescription parseLog(EncodedLog log);
+  external ErrorDescription parseError(String data);
+}
+
+@JS()
+@anonymous
+class EncodedLog {
+  external factory EncodedLog({
+    List<String> topics,
+    String data,
+  });
+
+  external List<String> get topics;
+  external String get data;
+}
+
+@JS()
+@anonymous
+class LogDescription {
+  external String get name;
+  external String get signature;
+}
+
+external String retrieveRevertReasonFromEvent(List<String> topics, String data);
+
+@JS()
+@anonymous
+class ErrorDescription {
+  external String get name;
+  external String get signature;
 }
 
 class Abi {
@@ -187,6 +217,8 @@ class Abi {
   Abi(dynamic abi) : _interface = _Interface(abi);
 
   String encodeFunctionData(String fragment, [dynamic values]) => _interface.encodeFunctionData(fragment, values);
+  LogDescription parseLog(EncodedLog log) => _interface.parseLog(log);
+  ErrorDescription parseError(String data) => _interface.parseError(data);
 }
 
 @JS('ethers.utils.formatUnits')

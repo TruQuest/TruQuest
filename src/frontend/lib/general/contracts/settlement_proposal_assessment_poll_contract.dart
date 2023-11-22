@@ -114,6 +114,55 @@ class SettlementProposalAssessmentPollContract {
       ],
       "stateMutability": "view",
       "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "thingProposalId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "SettlementProposalAssessmentPoll__Expired",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "thingProposalId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "SettlementProposalAssessmentPoll__NotActive",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "thingProposalId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "SettlementProposalAssessmentPoll__NotDesignatedVerifier",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "thingProposalId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "SettlementProposalAssessmentPoll__StillInProgress",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "SettlementProposalAssessmentPoll__Unauthorized",
+      "type": "error"
     }
   ]''';
 
@@ -128,6 +177,8 @@ class SettlementProposalAssessmentPollContract {
       ethereumRpcProvider.provider,
     );
   }
+
+  ErrorDescription parseError(String data) => _interface.parseError(data);
 
   Future<int> getPollDurationBlocks() => _contract.read<int>('s_durationBlocks');
 

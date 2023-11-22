@@ -189,6 +189,47 @@ async function fetchAndResizeImage(url) {
 //   return { colors: colors };
 // }
 
+function retrieveRevertReasonFromEvent(topics, data) {
+  // @@HACK: ethers.utils.Interface.parseLog returns some unholy half-array half-map contraption,
+  // which I have no idea how to bind to a Dart object, so do this instead...
+  var abi = new ethers.utils.Interface(`[
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "userOpHash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "nonce",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes",
+          "name": "revertReason",
+          "type": "bytes"
+        }
+      ],
+      "name": "UserOperationRevertReason",
+      "type": "event"
+    }
+  ]`);
+
+  var log = abi.parseLog({ topics, data });
+  return log.args.revertReason;
+}
+
 class EthereumWallet {
   provider;
   name;
