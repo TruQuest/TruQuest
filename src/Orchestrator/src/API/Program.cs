@@ -11,7 +11,6 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Logs;
-using Fido2NetLib;
 
 using Application;
 using Application.Common.Interfaces;
@@ -63,25 +62,6 @@ public static class WebApplicationBuilderExtension
         builder.Logging.ClearProviders();
         builder.Logging.AddDebug();
         builder.Logging.AddConsole();
-
-        builder.Services.AddMemoryCache();
-        builder.Services.AddDistributedMemoryCache();
-
-        builder.Services
-            .AddFido2(options =>
-            {
-                options.ServerDomain = "localhost"; // @@TODO: Config.
-                options.ServerName = "TruQuest";
-                options.Origins = new HashSet<string>() { "http://localhost:53433" };
-                options.TimestampDriftTolerance = 300000;
-                options.MDSCacheDirPath = "C:/Users/chekh/Desktop/mds";
-                options.BackupEligibleCredentialPolicy = Fido2Configuration.CredentialBackupPolicy.Allowed;
-                options.BackedUpCredentialPolicy = Fido2Configuration.CredentialBackupPolicy.Allowed;
-            })
-            .AddCachedMetadataService(config => // @@TODO: Check if this is necessary.
-            {
-                config.AddFidoMetadataRepository(delegate { });
-            });
 
         Action<ResourceBuilder> configureResource = resource =>
             resource.AddService(
@@ -171,7 +151,7 @@ public static class WebApplicationBuilderExtension
             }
         );
 
-        builder.Services.AddApplication();
+        builder.Services.AddApplication(builder.Configuration);
         builder.Services.AddInfrastructure(builder.Environment, builder.Configuration);
 
         builder.Services

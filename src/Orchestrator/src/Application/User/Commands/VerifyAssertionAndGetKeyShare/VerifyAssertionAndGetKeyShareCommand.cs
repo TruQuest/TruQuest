@@ -1,7 +1,9 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Caching.Memory;
 
-using Fido2NetLib;
 using GoThataway;
+using Fido2NetLib;
+using Fido2NetLib.Objects;
 
 using Domain.Aggregates;
 using Domain.Errors;
@@ -23,18 +25,21 @@ public class VerifyAssertionAndGetKeyShareCommandHandler : IRequestHandler<
     HandleResult<string>
 >
 {
+    private readonly ILogger<VerifyAssertionAndGetKeyShareCommandHandler> _logger;
     private readonly ICurrentPrincipal _currentPrincipal;
     private readonly IFido2 _fido2;
     private readonly IMemoryCache _memoryCache;
     private readonly IUserRepository _userRepository;
 
     public VerifyAssertionAndGetKeyShareCommandHandler(
+        ILogger<VerifyAssertionAndGetKeyShareCommandHandler> logger,
         ICurrentPrincipal currentPrincipal,
         IFido2 fido2,
         IMemoryCache memoryCache,
         IUserRepository userRepository
     )
     {
+        _logger = logger;
         _currentPrincipal = currentPrincipal;
         _fido2 = fido2;
         _memoryCache = memoryCache;
@@ -77,16 +82,27 @@ public class VerifyAssertionAndGetKeyShareCommandHandler : IRequestHandler<
         IsUserHandleOwnerOfCredentialIdAsync checkUserOwnsCredential = (args, ct) =>
             Task.FromResult(credential.UserId == new Guid(args.UserHandle).ToString());
 
-        // @@TODO!!: Handle exceptions.
-        var result = await _fido2.MakeAssertionAsync(
-            command.RawAssertion,
-            options,
-            Base64Url.Decode(credential.PublicKey),
-            new(),
-            (uint)credential.SignCount,
-            checkUserOwnsCredential,
-            cancellationToken: ct
-        );
+        VerifyAssertionResult result;
+        try
+        {
+            result = await _fido2.MakeAssertionAsync(
+                command.RawAssertion,
+                options,
+                Base64Url.Decode(credential.PublicKey),
+                new(),
+                (uint)credential.SignCount,
+                checkUserOwnsCredential,
+                cancellationToken: ct
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error trying to make assertion");
+            return new()
+            {
+                Error = new UserError("Invalid credential")
+            };
+        }
 
         credential.SetSignCount((int)result.SignCount);
 

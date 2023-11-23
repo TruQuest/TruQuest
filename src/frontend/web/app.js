@@ -72,21 +72,36 @@ async function createCredential(options) {
   //   options.extensions.prf.eval.first
   // );
 
-  var credential = await navigator.credentials.create({
-    publicKey: options,
-  });
+  var credential = null;
+  try {
+    credential = await navigator.credentials.create({
+      publicKey: options,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+
+  if (credential == null) {
+    return {
+      attestation: null,
+      error: "Something went wrong",
+    };
+  }
 
   var attestationObject = new Uint8Array(credential.response.attestationObject);
   var clientDataJSON = new Uint8Array(credential.response.clientDataJSON);
 
   return {
-    id: credential.id,
-    type: credential.type,
-    // extensions: credential.getClientExtensionResults(),
-    response: {
-      attestationObject: coerceToBase64Url(attestationObject),
-      clientDataJSON: coerceToBase64Url(clientDataJSON),
+    attestation: {
+      id: credential.id,
+      type: credential.type,
+      // extensions: credential.getClientExtensionResults(),
+      response: {
+        attestationObject: coerceToBase64Url(attestationObject),
+        clientDataJSON: coerceToBase64Url(clientDataJSON),
+      },
     },
+    error: null,
   };
 }
 
@@ -96,9 +111,21 @@ async function getCredential(options) {
     allowCredential.id = coerceToArrayBuffer(allowCredential.id);
   });
 
-  var credential = await navigator.credentials.get({
-    publicKey: options,
-  });
+  var credential = null;
+  try {
+    credential = await navigator.credentials.get({
+      publicKey: options,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+
+  if (credential == null) {
+    return {
+      assertion: null,
+      error: "Something went wrong",
+    };
+  }
 
   var authenticatorData = new Uint8Array(credential.response.authenticatorData);
   var clientDataJSON = new Uint8Array(credential.response.clientDataJSON);
@@ -106,15 +133,18 @@ async function getCredential(options) {
   var userHandle = new Uint8Array(credential.response.userHandle);
 
   return {
-    id: credential.id,
-    type: credential.type,
-    // extensions: credential.getClientExtensionResults(),
-    response: {
-      authenticatorData: coerceToBase64Url(authenticatorData),
-      clientDataJSON: coerceToBase64Url(clientDataJSON),
-      signature: coerceToBase64Url(signature),
-      userHandle: coerceToBase64Url(userHandle),
+    assertion: {
+      id: credential.id,
+      type: credential.type,
+      // extensions: credential.getClientExtensionResults(),
+      response: {
+        authenticatorData: coerceToBase64Url(authenticatorData),
+        clientDataJSON: coerceToBase64Url(clientDataJSON),
+        signature: coerceToBase64Url(signature),
+        userHandle: coerceToBase64Url(userHandle),
+      },
     },
+    error: null,
   };
 }
 

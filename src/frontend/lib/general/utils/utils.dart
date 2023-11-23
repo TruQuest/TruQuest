@@ -8,6 +8,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../ethereum/models/vm/user_operation_vm.dart';
 import '../../ethereum_js_interop.dart';
+import '../../user/errors/get_credential_error.dart';
 import '../../user/errors/local_key_share_not_present_error.dart';
 import '../errors/validation_error.dart';
 import '../../ethereum/models/vm/wallet_connect_uri_vm.dart';
@@ -205,6 +206,9 @@ Future<bool> multiStageOffChainFlow(
         context: context,
         builder: (_) => QrCodeDialog(uri: stageResult.uri),
       );
+    } else if (stageResult is GetCredentialError) {
+      BotToast.showText(text: stageResult.message);
+      proceededTilTheEndWithoutErrors = false;
     } else if (stageResult is LocalKeyShareNotPresentError) {
       if (stageResult.scanRequestId != null) {
         await showDialog(

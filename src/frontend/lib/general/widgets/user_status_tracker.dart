@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../user/bloc/user_actions.dart';
-import '../utils/utils.dart';
+// import '../../user/bloc/user_actions.dart';
+// import '../utils/utils.dart';
 import 'onboarding_dialog.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../../widget_extensions.dart';
@@ -47,21 +47,23 @@ class UserStatusTracker extends StatelessWidgetX {
           );
         }
 
+        throw UnsupportedError('Extension wallets are not currently supported');
+
         // This could only happen with a third party wallet, not embedded one.
 
-        return IconButton(
-          icon: Icon(
-            Icons.login,
-            color: Colors.white,
-          ),
-          onPressed: () => multiStageOffChainFlow(
-            context,
-            (ctx) => _userBloc.executeMultiStage(
-              SignInWithThirdPartyWallet(),
-              ctx,
-            ),
-          ),
-        );
+        // return IconButton(
+        //   icon: Icon(
+        //     Icons.login,
+        //     color: Colors.white,
+        //   ),
+        //   onPressed: () => multiStageOffChainFlow(
+        //     context,
+        //     (ctx) => _userBloc.executeMultiStage(
+        //       SignInWithThirdPartyWallet(),
+        //       ctx,
+        //     ),
+        //   ),
+        // );
       },
     );
   }

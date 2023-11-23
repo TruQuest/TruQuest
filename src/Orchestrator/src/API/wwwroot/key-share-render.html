@@ -35,6 +35,16 @@
             `view-key-share-render|${requestId}|ok`,
             "http://localhost:53433"
           );
+        } else if (command == "save") {
+          var link = document.createElement("a");
+          link.download = "truquest-key-share.png";
+          link.href = document.querySelector("#qrcode canvas").toDataURL();
+          link.click();
+
+          e.source.postMessage(
+            `view-key-share-render|${requestId}|ok`,
+            "http://localhost:53433"
+          );
         }
       });
     </script>

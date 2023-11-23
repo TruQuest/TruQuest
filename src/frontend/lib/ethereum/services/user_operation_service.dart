@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../../ethereum_js_interop.dart';
 import '../../general/contracts/erc4337/ientrypoint_contract.dart';
+import '../../user/errors/get_credential_error.dart';
 import '../errors/wallet_action_declined_error.dart';
 import '../models/vm/user_operation_vm.dart';
 import 'ethereum_api_service.dart';
@@ -118,6 +119,10 @@ class UserOperationService {
 
         userOpHash = await _ethereumApiService.sendUserOperation(userOp);
       } on WalletActionDeclinedError catch (e) {
+        print(e);
+        error = UserOperationError(message: e.message);
+        break;
+      } on GetCredentialError catch (e) {
         print(e);
         error = UserOperationError(message: e.message);
         break;

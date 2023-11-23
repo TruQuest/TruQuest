@@ -96,6 +96,8 @@ public static class IServiceCollectionExtension
         services.AddDataProtection();
         services.AddHttpContextAccessor();
 
+        services.AddMemoryCache();
+
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddSingleton<IAuthTokenProvider, AuthTokenProvider>();
         services.AddSingleton<Eip712TypedDataSigner>();

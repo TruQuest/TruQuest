@@ -673,6 +673,13 @@ class AuthenticatorAttestationResponse {
 
 @JS()
 @anonymous
+class CreateCredentialResult {
+  external RawAttestation? get attestation;
+  external String? get error;
+}
+
+@JS()
+@anonymous
 class RawAttestation {
   external String get id;
   external String get type;
@@ -695,6 +702,13 @@ class AssertionOptions {
   external List<PublicKeyCredentialDescriptor> get allowCredentials;
   external String get userVerification;
   external int get timeout;
+}
+
+@JS()
+@anonymous
+class GetCredentialResult {
+  external RawAssertion? get assertion;
+  external String? get error;
 }
 
 external dynamic getCredential(AssertionOptions options);

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:html' as html;
 import 'dart:ui' as ui;
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:uuid/uuid.dart';
 
 class IFrameManager {
@@ -14,7 +15,7 @@ class IFrameManager {
   IFrameManager()
       : iframePrivateKeyGen = IFrame(
           viewId: 'view-private-key-gen',
-          url: 'http://localhost:5223/private-key-gen.html',
+          url: 'http://localhost:5223/private-key-gen${dotenv.env['ENVIRONMENT'] == 'Development' ? '-dev' : ''}.html',
         ),
         iframeKeyShareRender = IFrame(
           viewId: 'view-key-share-render',

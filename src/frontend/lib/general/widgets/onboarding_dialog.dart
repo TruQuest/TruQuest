@@ -23,7 +23,7 @@ class _OnboardingDialogState extends StateX<OnboardingDialog> {
   final _emailController = TextEditingController();
   final _confirmationCodeController = TextEditingController();
 
-  bool _signUpMode = true;
+  bool _signInMode = false;
 
   AttestationOptions? _options;
 
@@ -34,34 +34,34 @@ class _OnboardingDialogState extends StateX<OnboardingDialog> {
     super.dispose();
   }
 
-  Widget _buildThirdPartyWalletButton(String walletName) {
-    return InkWell(
-      onTap: () => multiStageOffChainFlow(
-        context,
-        (ctx) => _userBloc.executeMultiStage(
-          SignInWithThirdPartyWallet(walletName: walletName),
-          ctx,
-        ),
-      ),
-      child: Card(
-        color: const Color(0xffF8F9FA),
-        shadowColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        elevation: 5,
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Image.asset(
-            'assets/images/${walletName.toLowerCase()}.png',
-            width: 300,
-            height: 50,
-            fit: BoxFit.contain,
-          ),
-        ),
-      ),
-    );
-  }
+  // Widget _buildThirdPartyWalletButton(String walletName) {
+  //   return InkWell(
+  //     onTap: () => multiStageOffChainFlow(
+  //       context,
+  //       (ctx) => _userBloc.executeMultiStage(
+  //         SignInWithThirdPartyWallet(walletName: walletName),
+  //         ctx,
+  //       ),
+  //     ),
+  //     child: Card(
+  //       color: const Color(0xffF8F9FA),
+  //       shadowColor: Colors.white,
+  //       shape: RoundedRectangleBorder(
+  //         borderRadius: BorderRadius.circular(8),
+  //       ),
+  //       elevation: 5,
+  //       child: Padding(
+  //         padding: const EdgeInsets.all(8),
+  //         child: Image.asset(
+  //           'assets/images/${walletName.toLowerCase()}.png',
+  //           width: 300,
+  //           height: 50,
+  //           fit: BoxFit.contain,
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   @override
   Widget buildX(BuildContext context) {
@@ -70,10 +70,14 @@ class _OnboardingDialogState extends StateX<OnboardingDialog> {
       title: SizedBox(
         width: 400,
         child: SwitchListTile(
-          value: _signUpMode,
-          onChanged: (value) => setState(() => _signUpMode = value),
+          value: _signInMode,
+          onChanged: (value) => setState(() => _signInMode = value),
+          activeColor: Colors.blueAccent[700],
+          inactiveThumbColor: Colors.blueAccent[700],
+          activeTrackColor: Colors.white,
+          inactiveTrackColor: Colors.white,
           title: Text(
-            _signUpMode ? 'Sign-up' : 'Sign-in',
+            _signInMode ? 'Sign-in' : 'Sign-up',
             style: GoogleFonts.philosopher(
               color: Colors.white,
               fontSize: 24,
@@ -91,9 +95,46 @@ class _OnboardingDialogState extends StateX<OnboardingDialog> {
       children: [
         SizedBox(
           width: 400,
-          height: _signUpMode ? 450 : 200,
-          child: _signUpMode
-              ? Theme(
+          height: _signInMode ? 200 : 350,
+          child: _signInMode
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ListTile(
+                        tileColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        leading: Icon(Icons.devices),
+                        title: Text('Signed-in from this device before'),
+                        onTap: () async {
+                          var success = await multiStageOffChainFlow(
+                            context,
+                            (ctx) => _userBloc.executeMultiStage(
+                              const SignInFromExistingDevice(),
+                              ctx,
+                            ),
+                          );
+                          if (success && context.mounted) Navigator.of(context).pop();
+                        },
+                      ),
+                      SizedBox(height: 16),
+                      ListTile(
+                        tileColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        leading: Icon(Icons.device_unknown),
+                        title: Text('First time from this device'),
+                        subtitle: Text('Scan a QR-code from an already signed-in device'), // @@TODO: Help message.
+                        onTap: () {},
+                      ),
+                    ],
+                  ),
+                )
+              : Theme(
                   data: getThemeDataForSteppers(context),
                   child: Stepper(
                     currentStep: _currentStep,
@@ -131,8 +172,7 @@ class _OnboardingDialogState extends StateX<OnboardingDialog> {
                               );
                               if (success.isTrue) details.onStepContinue!();
                             } else {
-                              // @@TODO: Implement saving image.
-                              throw UnimplementedError();
+                              _userBloc.dispatch(const SaveKeyShareQrCodeImage());
                             }
                           },
                         ),
@@ -200,68 +240,41 @@ class _OnboardingDialogState extends StateX<OnboardingDialog> {
                           ),
                         ),
                         content: Container(
-                          width: 300,
-                          height: 300,
                           padding: const EdgeInsets.only(bottom: 12),
-                          // @@TODO: Check if putting a transparent container on top of the view would prevent it
-                          // from interfering with scrolling.
-                          child: HtmlElementView(viewType: _iframeManager.iframeKeyShareRender.viewId),
+                          alignment: Alignment.centerLeft,
+                          child: Container(
+                            color: Colors.white,
+                            width: 273,
+                            height: 273,
+                            alignment: Alignment.center,
+                            child: SizedBox(
+                              width: 268,
+                              height: 268,
+                              child: HtmlElementView(viewType: _iframeManager.iframeKeyShareRender.viewId),
+                              // @@NOTE: HtmlElementView expands as much as possible. That's why, if we remove the SizedBox,
+                              // it will expand to take whatever size the container allows it, and, therefore, alignment will have
+                              // no effect.
+                            ),
+                          ),
                         ),
                         isActive: true,
                       ),
                     ],
                   ),
-                )
-              : Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ListTile(
-                        tileColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        leading: Icon(Icons.devices),
-                        title: Text('Signed-in from this device before'),
-                        onTap: () async {
-                          var success = await multiStageOffChainFlow(
-                            context,
-                            (ctx) => _userBloc.executeMultiStage(
-                              const SignInFromExistingDevice(),
-                              ctx,
-                            ),
-                          );
-                          if (success && context.mounted) Navigator.of(context).pop();
-                        },
-                      ),
-                      SizedBox(height: 16),
-                      ListTile(
-                        tileColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        leading: Icon(Icons.device_unknown),
-                        title: Text('First time from this device'),
-                        subtitle: Text('Scan a QR-code from an already signed-in device'), // @@TODO: Help message.
-                        onTap: () {},
-                      ),
-                    ],
-                  ),
                 ),
         ),
-        SizedBox(height: 8),
-        Divider(color: Colors.white),
-        SizedBox(height: 8),
-        Column(
-          children: [
-            _buildThirdPartyWalletButton('Metamask'),
-            SizedBox(width: 6),
-            _buildThirdPartyWalletButton('CoinbaseWallet'),
-            SizedBox(width: 6),
-            _buildThirdPartyWalletButton('WalletConnect'),
-          ],
-        ),
+        // SizedBox(height: 8),
+        // Divider(color: Colors.white),
+        // SizedBox(height: 8),
+        // Column(
+        //   children: [
+        //     _buildThirdPartyWalletButton('Metamask'),
+        //     SizedBox(width: 6),
+        //     _buildThirdPartyWalletButton('CoinbaseWallet'),
+        //     SizedBox(width: 6),
+        //     _buildThirdPartyWalletButton('WalletConnect'),
+        //   ],
+        // ),
       ],
     );
   }

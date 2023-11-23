@@ -309,8 +309,8 @@ contract TruQuest {
         return s_restrictedAccess.checkHasAccess(_user);
     }
 
-    function stopTheWorld(bool value) external onlyOrchestrator {
-        s_stopTheWorld = value;
+    function stopTheWorld(bool _value) external onlyOrchestrator {
+        s_stopTheWorld = _value;
     }
 
     function exportUsersAndBalances()

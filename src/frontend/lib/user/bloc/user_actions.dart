@@ -23,6 +23,10 @@ class SignUp extends UserAction {
   });
 }
 
+class SaveKeyShareQrCodeImage extends UserAction {
+  const SaveKeyShareQrCodeImage();
+}
+
 class SignInWithThirdPartyWallet extends UserAction {
   final String? walletName;
 

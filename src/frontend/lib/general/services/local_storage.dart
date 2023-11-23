@@ -4,6 +4,7 @@ class LocalStorage {
   late final SharedPreferences _prefs;
 
   Future init() async {
+    SharedPreferences.setPrefix('truquest.');
     _prefs = await SharedPreferences.getInstance();
   }
 
@@ -13,6 +14,5 @@ class LocalStorage {
 
   Future setString(String key, String value) => _prefs.setString(key, value);
 
-  Future setStrings(String key, List<String> value) =>
-      _prefs.setStringList(key, value);
+  Future setStrings(String key, List<String> value) => _prefs.setStringList(key, value);
 }

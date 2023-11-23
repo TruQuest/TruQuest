@@ -5,6 +5,7 @@ import 'package:either_dart/either.dart';
 import '../../ethereum/errors/wallet_action_declined_error.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
 import '../../general/errors/insufficient_balance_error.dart';
+import '../../user/errors/get_credential_error.dart';
 import '../../user/services/user_service.dart';
 import '../../ethereum/services/user_operation_service.dart';
 import '../models/im/new_thing_validation_poll_vote_im.dart';
@@ -211,6 +212,10 @@ class ThingService {
     try {
       signature = await _userService.personalSign(vote.toMessageForSigning());
     } on WalletActionDeclinedError catch (error) {
+      print(error.message);
+      yield error;
+      return;
+    } on GetCredentialError catch (error) {
       print(error.message);
       yield error;
       return;

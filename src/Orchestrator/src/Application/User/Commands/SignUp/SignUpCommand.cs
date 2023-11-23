@@ -99,13 +99,24 @@ public class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<
         IsCredentialIdUniqueToUserAsyncDelegate checkCredentialIdUnique = (args, ct) =>
             _userRepository.CheckCredentialIdUnique(Base64Url.Encode(args.CredentialId));
 
-        // @@TODO!!: Handle exceptions.
-        var result = await _fido2.MakeNewCredentialAsync(command.RawAttestation, options, checkCredentialIdUnique, ct);
+        Fido2.CredentialMakeResult result;
+        try
+        {
+            result = await _fido2.MakeNewCredentialAsync(command.RawAttestation, options, checkCredentialIdUnique, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error trying to make new credential");
+            return new()
+            {
+                Error = new UserError("Invalid credential")
+            };
+        }
 
         var signerAddress = _signer.RecoverFromMessage(command.ConfirmationCode, command.SignatureOverCode);
         var walletAddress = await _contractCaller.GetWalletAddressFor(signerAddress);
 
-        _logger.LogInformation("***** Signer: {Signer}\nWallet: {Wallet} *****", signerAddress, walletAddress);
+        _logger.LogInformation("***** Signer: {Signer}. Wallet: {Wallet} *****", signerAddress, walletAddress);
 
         var user = new UserDm
         {

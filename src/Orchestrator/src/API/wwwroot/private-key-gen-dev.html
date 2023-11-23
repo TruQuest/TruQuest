@@ -24,9 +24,12 @@
         var command = messageSplit[1];
 
         if (command == "gen") {
-          var wallet = ethers.Wallet.createRandom();
+          var wallet = ethers.Wallet.fromMnemonic(
+            "atom traffic guard castle father vendor modify sauce rebuild true mixture van",
+            `m/44'/60'/0'/0/${messageSplit[2].split(" ")[1]}`
+          );
           var keyShares = secrets.share(wallet.privateKey.substring(2), 2, 2);
-          var confirmationCode = messageSplit[2];
+          var confirmationCode = messageSplit[2].split(" ")[0];
           var signatureOverCode = await wallet.signMessage(confirmationCode);
           wallet = null;
 

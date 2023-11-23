@@ -72,24 +72,37 @@ if (environment == "Development")
     {
         appDbContext.UserClaims.AddRange(new IdentityUserClaim<string>[]
         {
-        new()
-        {
-            UserId = kv.Value,
-            ClaimType = "signer_address",
-            ClaimValue = accountProvider.GetAccount(kv.Key).Address
-        },
-        new()
-        {
-            UserId = kv.Value,
-            ClaimType = "wallet_address",
-            ClaimValue = await contractCaller.GetWalletAddressFor(accountProvider.GetAccount(kv.Key).Address)
-        }
+            new()
+            {
+                UserId = kv.Value,
+                ClaimType = "signer_address",
+                ClaimValue = accountProvider.GetAccount(kv.Key).Address
+            },
+            new()
+            {
+                UserId = kv.Value,
+                ClaimType = "wallet_address",
+                ClaimValue = await contractCaller.GetWalletAddressFor(accountProvider.GetAccount(kv.Key).Address)
+            }
         });
 
         appDbContext.Whitelist.Add(new WhitelistEntry(
             WhitelistEntryType.SignerAddress, accountProvider.GetAccount(kv.Key).Address
         ));
     }
+
+    var emailsToWhitelist = new[]
+    {
+        "submitter@gmail.com",
+        "proposer@gmail.com",
+        "verifier1@gmail.com",
+        "verifier2@gmail.com",
+        "verifier3@gmail.com",
+        "verifier4@gmail.com",
+        "verifier5@gmail.com",
+        "verifier6@gmail.com",
+    };
+    appDbContext.Whitelist.AddRange(emailsToWhitelist.Select(e => new WhitelistEntry(WhitelistEntryType.Email, e)));
 
     appDbContext.Tags.AddRange(
         new Tag("Politics"), new Tag("Sport"), new Tag("IT"),

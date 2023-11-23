@@ -6,6 +6,7 @@ import '../../ethereum/errors/wallet_action_declined_error.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
 import '../../ethereum/services/user_operation_service.dart';
 import '../../general/errors/insufficient_balance_error.dart';
+import '../../user/errors/get_credential_error.dart';
 import '../errors/settlement_error.dart';
 import '../models/im/new_settlement_proposal_assessment_poll_vote_im.dart';
 import '../../user/services/user_service.dart';
@@ -295,6 +296,10 @@ class SettlementService {
     try {
       signature = await _userService.personalSign(vote.toMessageForSigning());
     } on WalletActionDeclinedError catch (error) {
+      print(error.message);
+      yield error;
+      return;
+    } on GetCredentialError catch (error) {
       print(error.message);
       yield error;
       return;
