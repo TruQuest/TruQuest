@@ -97,7 +97,7 @@ class EthereumApiService {
   Future<(BigInt, BigInt, BigInt)> estimateUserOperationGas(UserOperation userOp) async {
     try {
       var response = await _dioBundler.post(
-        '/1337',
+        '/901',
         data: <String, dynamic>{
           'jsonrpc': '2.0',
           'method': 'eth_estimateUserOperationGas',
@@ -117,9 +117,7 @@ class EthereumApiService {
       var result = response.data['result'];
       return (
         BigInt.parse(result['preVerificationGas']),
-        BigInt.parse(
-          result.containsKey('verificationGasLimit') ? result['verificationGasLimit'] : result['verificationGas'],
-        ),
+        BigInt.parse(result['verificationGasLimit']),
         BigInt.parse(result['callGasLimit']),
       );
     } on DioError catch (error) {
@@ -130,7 +128,7 @@ class EthereumApiService {
   Future<String> sendUserOperation(UserOperation userOp) async {
     try {
       var response = await _dioBundler.post(
-        '/1337',
+        '/901',
         data: <String, dynamic>{
           'jsonrpc': '2.0',
           'method': 'eth_sendUserOperation',
@@ -156,7 +154,7 @@ class EthereumApiService {
   Future<GetUserOperationReceiptRvm?> getUserOperationReceipt(String userOpHash) async {
     try {
       var response = await _dioBundler.post(
-        '/1337',
+        '/901',
         data: <String, dynamic>{
           'jsonrpc': '2.0',
           'method': 'eth_getUserOperationReceipt',
