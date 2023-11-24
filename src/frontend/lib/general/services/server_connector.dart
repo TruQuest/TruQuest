@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:logging/logging.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:signalr_netcore/signalr_client.dart';
@@ -51,11 +52,7 @@ class ServerConnector {
       print('[${rec.level.name}]: ${rec.time}: ${rec.message}');
     });
 
-    dio = Dio(
-      BaseOptions(
-        baseUrl: 'http://localhost:5223',
-      ),
-    );
+    dio = Dio(BaseOptions(baseUrl: dotenv.env['ORCHESTRATOR_HOST']!));
   }
 
   Future<(HubConnection, String?)> _connectToHub(String? userId, String? token) async {
@@ -64,7 +61,7 @@ class ServerConnector {
 
     var hubConnection = HubConnectionBuilder()
         .withUrl(
-          'http://localhost:5223/hub', // @@TODO: Config.
+          '${dotenv.env['ORCHESTRATOR_HOST']}/hub',
           options: HttpConnectionOptions(
             transport: HttpTransportType.WebSockets,
             logger: transportLogger,

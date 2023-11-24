@@ -61,7 +61,7 @@ public class LotteryTests : BaseTests
     {
         Guid subjectId;
         using (var request = _sut.PrepareHttpRequestForFileUpload(
-            fileNames: new[] { "full-image.jpg", "cropped-image-circle.png" },
+            fileNames: new[] { "scooby-doo.jpg", "scooby-doo-cropped.jpg" },
             ("type", $"{(int)SubjectTypeIm.Person}"),
             ("name", "Alex Wurtz"),
             ("details", _dummyQuillContentJson),
@@ -82,7 +82,7 @@ public class LotteryTests : BaseTests
         };
 
         using (var request = _sut.PrepareHttpRequestForFileUpload(
-            fileNames: new[] { "full-image.jpg", "cropped-image-rect.png" },
+            fileNames: new[] { "magneto.jpg", "magneto-cropped.jpg" },
             ("subjectId", subjectId.ToString()),
             ("title", "Go to the Moooooon..."),
             ("details", _dummyQuillContentJson),

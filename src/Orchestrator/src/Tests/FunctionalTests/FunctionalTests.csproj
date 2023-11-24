@@ -13,13 +13,22 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Update="TestData\full-image.jpg">
+        <None Update="TestData\scooby-doo.jpg">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="TestData\cropped-image-circle.png">
+        <None Update="TestData\scooby-doo-cropped.jpg">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="TestData\cropped-image-rect.png">
+        <None Update="TestData\magneto.jpg">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="TestData\magneto-cropped.jpg">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="TestData\magneto-2.jpg">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="TestData\magneto-2-cropped.jpg">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>

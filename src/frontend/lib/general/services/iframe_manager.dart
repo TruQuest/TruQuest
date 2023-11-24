@@ -15,15 +15,16 @@ class IFrameManager {
   IFrameManager()
       : iframePrivateKeyGen = IFrame(
           viewId: 'view-private-key-gen',
-          url: 'http://localhost:5223/private-key-gen${dotenv.env['ENVIRONMENT'] == 'Development' ? '-dev' : ''}.html',
+          url:
+              '${dotenv.env['ORCHESTRATOR_HOST']}/private-key-gen${dotenv.env['ENVIRONMENT'] == 'Development' ? '-dev' : ''}.html',
         ),
         iframeKeyShareRender = IFrame(
           viewId: 'view-key-share-render',
-          url: 'http://localhost:5223/key-share-render.html',
+          url: '${dotenv.env['ORCHESTRATOR_HOST']}/key-share-render.html',
         ),
         iframeQrCodeScan = IFrame(
           viewId: 'view-qr-code-scan',
-          url: 'http://localhost:5223/qr-code-scan.html',
+          url: '${dotenv.env['ORCHESTRATOR_HOST']}/qr-code-scan.html',
           allowCamera: true,
         ) {
     iframePrivateKeyGen._init();
@@ -38,7 +39,7 @@ class IFrameManager {
   }
 
   void _handleMessage(html.Event e) {
-    if (e is html.MessageEvent && e.origin == 'http://localhost:5223') {
+    if (e is html.MessageEvent && e.origin == dotenv.env['ORCHESTRATOR_HOST']) {
       var message = e.data as String;
       var messageSplit = message.split('|');
       var originViewId = messageSplit[0];
@@ -91,7 +92,7 @@ class IFrame {
 
   // @@NOTE: _iframe.contentWindow will be null unless we actually render the frame with
   // HtmlElementView.
-  void _postMessage(String message) => _iframe.contentWindow!.postMessage(message, 'http://localhost:5223');
+  void _postMessage(String message) => _iframe.contentWindow!.postMessage(message, dotenv.env['ORCHESTRATOR_HOST']!);
 
   Future<String> postMessageAndAwaitResponse(String message) {
     var requestId = _uuid.v4();

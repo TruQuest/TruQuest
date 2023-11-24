@@ -251,7 +251,7 @@ public class E2ETests : BaseTests
     {
         Guid subjectId;
         using (var request = _sut.PrepareHttpRequestForFileUpload(
-            fileNames: new[] { "full-image.jpg", "cropped-image-circle.png" },
+            fileNames: new[] { "scooby-doo.jpg", "scooby-doo-cropped.jpg" },
             ("type", $"{(int)SubjectTypeIm.Person}"),
             ("name", "Alex Wurtz"),
             ("details", _dummyQuillContentJson),
@@ -273,7 +273,7 @@ public class E2ETests : BaseTests
 
         Guid thingId;
         using (var request = _sut.PrepareHttpRequestForFileUpload(
-            fileNames: new[] { "full-image.jpg", "cropped-image-rect.png" },
+            fileNames: new[] { "magneto.jpg", "magneto-cropped.jpg" },
             ("subjectId", subjectId.ToString()),
             ("title", "Go to the Moooooon..."),
             ("details", _dummyQuillContentJson),
@@ -627,7 +627,7 @@ public class E2ETests : BaseTests
 
         Guid proposalId;
         using (var request = _sut.PrepareHttpRequestForFileUpload(
-            fileNames: new[] { "full-image.jpg", "cropped-image-rect.png" },
+            fileNames: new[] { "magneto-2.jpg", "magneto-2-cropped.jpg" },
             ("thingId", thingId.ToString()),
             ("title", "Go to the Moooooon..."),
             ("verdict", $"{(int)VerdictIm.NoEffortWhatsoever}"),

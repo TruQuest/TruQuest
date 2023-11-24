@@ -1,6 +1,7 @@
 import 'dart:html' as html;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../widget_extensions.dart';
@@ -31,7 +32,7 @@ class _ScanKeyShareDialogState extends StateX<ScanKeyShareDialog> {
   }
 
   void _handleMessage(html.Event e) {
-    if (e is html.MessageEvent && e.origin == 'http://localhost:5223') {
+    if (e is html.MessageEvent && e.origin == dotenv.env['ORCHESTRATOR_HOST']) {
       var message = e.data as String;
       var messageSplit = message.split('|');
       var originViewId = messageSplit[0];
