@@ -3,11 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../bloc/settlement_actions.dart';
 import '../../general/utils/utils.dart';
-import '../models/rvm/settlement_proposal_vm.dart';
+import '../models/vm/settlement_proposal_vm.dart';
 import '../../general/widgets/swipe_button.dart';
 import '../../widget_extensions.dart';
 import '../bloc/settlement_bloc.dart';
-import '../models/rvm/verifier_lottery_info_vm.dart';
+import '../models/vm/verifier_lottery_info_vm.dart';
 
 // ignore: must_be_immutable
 class LotteryStepper extends StatelessWidgetX {

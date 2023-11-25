@@ -7,8 +7,8 @@ import '../../general/widgets/vote_dialog.dart';
 import '../../widget_extensions.dart';
 import '../bloc/thing_bloc.dart';
 import '../models/im/decision_im.dart';
-import '../models/rvm/validation_poll_info_vm.dart';
-import '../models/rvm/thing_vm.dart';
+import '../models/vm/validation_poll_info_vm.dart';
+import '../models/vm/thing_vm.dart';
 import '../../general/widgets/swipe_button.dart';
 
 class PollStepper extends StatefulWidget {

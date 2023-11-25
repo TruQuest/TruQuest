@@ -6,8 +6,8 @@ import 'package:logging/logging.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:signalr_netcore/signalr_client.dart';
 
-import '../models/rvm/notification_vm.dart';
-import '../models/rvm/watched_item_type_vm.dart';
+import '../models/vm/notification_vm.dart';
+import '../models/vm/watched_item_type_vm.dart';
 
 enum ServerEventType {
   notification,

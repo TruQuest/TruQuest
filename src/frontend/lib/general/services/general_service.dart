@@ -1,4 +1,4 @@
-import '../models/rvm/tag_vm.dart';
+import '../models/vm/tag_vm.dart';
 import 'general_api_service.dart';
 
 class GeneralService {

@@ -73,7 +73,7 @@ public class SignInWithEthereumCommandHandler :
         {
             return new()
             {
-                Error = new AuthorizationError("Sorry, the access is currently restricted. Email me at admin@truquest.io to get access")
+                Error = new HandleError("Sorry, the access is currently restricted. Email me at admin@truquest.io to get access")
             };
         }
 
@@ -83,7 +83,7 @@ public class SignInWithEthereumCommandHandler :
             _logger.LogWarning("Invalid nonce");
             return new()
             {
-                Error = new UserError("Invalid nonce")
+                Error = new HandleError("Invalid nonce")
             };
         }
 

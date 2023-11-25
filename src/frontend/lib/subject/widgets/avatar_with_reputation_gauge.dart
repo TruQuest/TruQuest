@@ -3,7 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
-import '../../settlement/models/rvm/verdict_vm.dart';
+import '../../settlement/models/vm/verdict_vm.dart';
 
 enum AvatarSize {
   small,

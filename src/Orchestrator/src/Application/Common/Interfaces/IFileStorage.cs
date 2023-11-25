@@ -1,10 +1,10 @@
 using Domain.Results;
 
-using Application.Common.Errors;
+using Domain.Errors;
 
 namespace Application.Common.Interfaces;
 
 public interface IFileStorage
 {
-    Task<Either<FileError, string>> UploadJson(object obj);
+    Task<Either<HandleError, string>> UploadJson(object obj);
 }

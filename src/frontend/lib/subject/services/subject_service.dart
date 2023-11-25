@@ -1,7 +1,7 @@
-import '../models/rvm/get_things_list_rvm.dart';
+import '../models/vm/get_things_list_rvm.dart';
 import '../../general/contexts/document_context.dart';
-import '../models/rvm/subject_preview_vm.dart';
-import '../models/rvm/subject_vm.dart';
+import '../models/vm/subject_preview_vm.dart';
+import '../models/vm/subject_vm.dart';
 import 'subject_api_service.dart';
 
 class SubjectService {

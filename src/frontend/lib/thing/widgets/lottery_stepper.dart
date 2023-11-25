@@ -4,10 +4,10 @@ import 'package:google_fonts/google_fonts.dart';
 import '../bloc/thing_actions.dart';
 import '../../general/utils/utils.dart';
 import '../bloc/thing_bloc.dart';
-import '../models/rvm/thing_vm.dart';
+import '../models/vm/thing_vm.dart';
 import '../../general/widgets/swipe_button.dart';
 import '../../widget_extensions.dart';
-import '../models/rvm/verifier_lottery_info_vm.dart';
+import '../models/vm/verifier_lottery_info_vm.dart';
 
 // ignore: must_be_immutable
 class LotteryStepper extends StatelessWidgetX {

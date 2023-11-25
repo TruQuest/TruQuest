@@ -72,7 +72,7 @@ public class CastValidationPollVoteCommandHandler : IRequestHandler<
         {
             return new()
             {
-                Error = new VoteError($"Not a designated verifier for thing {command.Input.ThingId}")
+                Error = new HandleError($"Not a designated verifier for thing {command.Input.ThingId}")
             };
         }
 
@@ -82,7 +82,7 @@ public class CastValidationPollVoteCommandHandler : IRequestHandler<
         {
             return new()
             {
-                Error = new VoteError("Invalid request")
+                Error = new HandleError("Invalid request")
             };
         }
 
@@ -95,7 +95,7 @@ public class CastValidationPollVoteCommandHandler : IRequestHandler<
         {
             return new()
             {
-                Error = new VoteError("Invalid timestamp. Check your system clock")
+                Error = new HandleError("Invalid timestamp. Check your system clock")
             };
         }
 

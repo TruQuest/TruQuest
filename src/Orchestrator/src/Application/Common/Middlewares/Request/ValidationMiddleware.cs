@@ -2,8 +2,7 @@ using GoThataway;
 using FluentValidation;
 
 using Domain.Results;
-
-using Application.Common.Errors;
+using Domain.Errors;
 
 namespace Application.Common.Middlewares.Request;
 
@@ -35,7 +34,7 @@ public class ValidationMiddleware<TRequest, TResponse> : IRequestMiddleware<TReq
             {
                 return new TResponse
                 {
-                    Error = new ValidationError(failures)
+                    Error = new HandleError(string.Join(";\n", failures.Select(f => $"[{f.PropertyName}]: {f.ErrorMessage}")))
                 };
             }
         }

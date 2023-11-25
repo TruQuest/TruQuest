@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../models/rvm/decision_vm.dart';
-import '../models/rvm/vote_vm.dart';
+import '../models/vm/decision_vm.dart';
+import '../models/vm/vote_vm.dart';
 
 class VoteViewDialog extends StatelessWidget {
   final VoteVm vote;

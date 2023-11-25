@@ -1,5 +1,5 @@
 import 'settlement_proposal_state_vm.dart';
-import '../../../general/models/rvm/vote_vm.dart';
+import '../../../general/models/vm/vote_vm.dart';
 
 class GetVotesRvm {
   final String proposalId;

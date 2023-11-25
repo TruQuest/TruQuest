@@ -67,7 +67,7 @@ public class GenerateConfirmationCodeAndAttestationOptionsCommandHandler : IRequ
         {
             return new()
             {
-                Error = new AuthorizationError("Sorry, the access is currently restricted. Email me at admin@truquest.io to get access")
+                Error = new HandleError("Sorry, the access is currently restricted. Email me at admin@truquest.io to get access")
             };
         }
 
@@ -76,7 +76,7 @@ public class GenerateConfirmationCodeAndAttestationOptionsCommandHandler : IRequ
         {
             return new()
             {
-                Error = new UserError($"User with email {command.Email} already exists")
+                Error = new HandleError($"User with email {command.Email} already exists")
             };
         }
 

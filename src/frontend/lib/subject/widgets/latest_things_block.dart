@@ -7,29 +7,26 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../general/contexts/page_context.dart';
-import '../../thing/models/rvm/thing_state_vm.dart';
+import '../../thing/models/vm/thing_state_vm.dart';
 import '../../general/contexts/document_view_context.dart';
 import '../../widget_extensions.dart';
-import '../models/rvm/thing_preview_vm.dart';
-import '../../settlement/models/rvm/verdict_vm.dart';
+import '../models/vm/thing_preview_vm.dart';
+import '../../settlement/models/vm/verdict_vm.dart';
 
 // ignore: must_be_immutable
 class LatestThingsBlock extends StatelessWidgetX {
   late final _pageContext = use<PageContext>();
   late final _documentViewContext = useScoped<DocumentViewContext>();
 
-  late final List<ThingPreviewVm> _latestSettledThings =
-      _documentViewContext.subject!.latestSettledThings;
-  late final List<ThingPreviewVm> _latestUnsettledThings =
-      _documentViewContext.subject!.latestUnsettledThings;
+  late final List<ThingPreviewVm> _latestSettledThings = _documentViewContext.subject!.latestSettledThings;
+  late final List<ThingPreviewVm> _latestUnsettledThings = _documentViewContext.subject!.latestUnsettledThings;
 
   LatestThingsBlock({super.key});
 
   Widget _buildThingPreviewCard(ThingPreviewVm? thing, String placeholderText) {
     return InkWell(
       borderRadius: BorderRadius.circular(10),
-      onTap:
-          thing != null ? () => _pageContext.goto('/things/${thing.id}') : null,
+      onTap: thing != null ? () => _pageContext.goto('/things/${thing.id}') : null,
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
@@ -149,9 +146,7 @@ class LatestThingsBlock extends StatelessWidgetX {
                 child: CardSwiper(
                   isDisabled: _latestSettledThings.isEmpty,
                   cardBuilder: (context, index) {
-                    var thing = _latestSettledThings.isNotEmpty
-                        ? _latestSettledThings[index]
-                        : null;
+                    var thing = _latestSettledThings.isNotEmpty ? _latestSettledThings[index] : null;
 
                     return _buildThingPreviewCard(
                       thing,
@@ -189,9 +184,7 @@ class LatestThingsBlock extends StatelessWidgetX {
                 child: CardSwiper(
                   isDisabled: _latestUnsettledThings.isEmpty,
                   cardBuilder: (context, index) {
-                    var thing = _latestUnsettledThings.isNotEmpty
-                        ? _latestUnsettledThings[index]
-                        : null;
+                    var thing = _latestUnsettledThings.isNotEmpty ? _latestUnsettledThings[index] : null;
 
                     return _buildThingPreviewCard(
                       thing,

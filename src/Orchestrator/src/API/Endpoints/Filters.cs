@@ -20,9 +20,8 @@ public static class Filters
                 case AuthorizationError:
                     return TypedResults.Json(
                         handleResult,
-                        statusCode: handleResult.Error.Errors.Values.First().First() == "Forbidden" ?
-                            StatusCodes.Status403Forbidden :
-                            StatusCodes.Status401Unauthorized
+                        statusCode: handleResult.Error.Message == "Forbidden" ?
+                            StatusCodes.Status403Forbidden : StatusCodes.Status401Unauthorized
                     );
                 default:
                     return TypedResults.BadRequest(handleResult);

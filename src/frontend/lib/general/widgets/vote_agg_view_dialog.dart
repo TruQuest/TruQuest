@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../thing/models/rvm/get_votes_rvm.dart';
+import '../../thing/models/vm/get_votes_rvm.dart';
 
 class VoteAggViewDialog extends StatelessWidget {
   final GetVotesRvm result;

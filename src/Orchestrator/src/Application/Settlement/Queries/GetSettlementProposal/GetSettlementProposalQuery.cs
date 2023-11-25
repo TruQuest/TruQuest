@@ -49,14 +49,14 @@ public class GetSettlementProposalQueryHandler :
         {
             return new()
             {
-                Error = new SettlementError("Not Found")
+                Error = new HandleError("Not Found")
             };
         }
         if (proposal.State == SettlementProposalState.Draft && _currentPrincipal.Id != proposal.SubmitterId)
         {
             return new()
             {
-                Error = new SettlementError("Invalid request")
+                Error = new HandleError("Invalid request")
             };
         }
 

@@ -1,15 +1,24 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:convert/convert.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
+import '../errors/api_error.dart';
+import '../errors/connection_error.dart';
+import '../errors/error.dart';
 import '../../ethereum/models/vm/user_operation_vm.dart';
 import '../../ethereum_js_interop.dart';
 import '../../user/errors/get_credential_error.dart';
 import '../../user/errors/local_key_share_not_present_error.dart';
+import '../errors/forbidden_error.dart';
+import '../errors/handle_error.dart';
+import '../errors/invalid_authentication_token_error.dart';
+import '../errors/server_error.dart';
+import '../errors/unhandled_error.dart';
 import '../errors/validation_error.dart';
 import '../../ethereum/models/vm/wallet_connect_uri_vm.dart';
 import '../../ethereum/errors/wallet_action_declined_error.dart';
@@ -20,6 +29,38 @@ import '../errors/insufficient_balance_error.dart';
 import '../widgets/qr_code_dialog.dart';
 import '../widgets/scan_key_share_dialog.dart';
 import '../widgets/user_operation_dialog.dart';
+
+Error wrapError(DioError dioError) {
+  switch (dioError.type) {
+    case DioErrorType.connectTimeout:
+    case DioErrorType.sendTimeout:
+    case DioErrorType.receiveTimeout:
+      return ConnectionError();
+    case DioErrorType.response:
+      var response = dioError.response!;
+      var statusCode = response.statusCode!;
+      if (statusCode >= 500) return ServerError();
+
+      switch (statusCode) {
+        case 400:
+          var error = response.data['error'];
+          if (error.containsKey('isUnhandled')) return UnhandledError(error['message'], error['traceId']);
+          return HandleError(error['message']);
+        case 401:
+          var errorMessage = response.data['error']['message'];
+          // if (errorMessage.contains('token expired at')) {
+          //   return AuthenticationTokenExpiredError();
+          // }
+          return InvalidAuthenticationTokenError(errorMessage);
+        case 403:
+          return ForbiddenError();
+      }
+    default:
+  }
+
+  print(dioError);
+  return ApiError();
+}
 
 double degreesToRadians(double degrees) => (pi / 180) * degrees;
 

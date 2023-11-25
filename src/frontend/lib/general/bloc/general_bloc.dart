@@ -1,4 +1,4 @@
-import '../models/rvm/tag_vm.dart';
+import '../models/vm/tag_vm.dart';
 import 'bloc.dart';
 import 'general_actions.dart';
 import '../services/general_service.dart';

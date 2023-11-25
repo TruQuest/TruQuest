@@ -7,8 +7,8 @@ import '../../general/widgets/swipe_button.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../bloc/thing_actions.dart';
 import '../bloc/thing_bloc.dart';
-import '../models/rvm/thing_state_vm.dart';
-import '../models/rvm/thing_vm.dart';
+import '../models/vm/thing_state_vm.dart';
+import '../models/vm/thing_vm.dart';
 import '../../widget_extensions.dart';
 
 // ignore: must_be_immutable

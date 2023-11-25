@@ -3,8 +3,7 @@ using Microsoft.Extensions.Logging;
 using GoThataway;
 
 using Domain.Results;
-
-using Application.Common.Errors;
+using Domain.Errors;
 
 namespace Application.Common.Middlewares.Request;
 
@@ -30,7 +29,11 @@ public class ExceptionHandlingMiddleware<TRequest, TResponse> : IRequestMiddlewa
             _logger.LogError(ex, ex.Message);
             return new TResponse
             {
-                Error = new ServerError(ex.Message, isRetryable: false)
+                Error = new UnhandledError(
+                    ex.Message,
+                    Telemetry.CurrentActivity!.TraceId.ToHexString(),
+                    isRetryable: false
+                )
             };
         }
     }

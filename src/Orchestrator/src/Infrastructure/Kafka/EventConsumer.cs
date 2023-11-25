@@ -7,10 +7,9 @@ using GoThataway;
 
 using Domain.Aggregates;
 using Domain.Results;
-using Application.Common.Errors;
+using Domain.Errors;
 using Application.Settlement.Commands.FinalizeAssessmentPoll;
 using Application.Settlement.Commands.PrepareForAssessmentPoll;
-using Application.Thing.Commands.ArchiveDueToFailedLottery;
 using Application.Thing.Commands.FinalizeValidationPoll;
 using Application.Thing.Commands.PrepareForValidationPoll;
 using Application.User.Commands.NotifyWatchers;
@@ -192,7 +191,7 @@ internal class EventConsumer : IMessageMiddleware
 
         if (result.Error != null)
         {
-            context.Headers["HandleError"] = ((ServerError)result.Error).IsRetryable ? new byte[1] { 1 } : new byte[1] { 0 };
+            context.Headers["HandleError"] = ((UnhandledError)result.Error).IsRetryable ? new byte[1] { 1 } : new byte[1] { 0 };
         }
 
         await next(context);

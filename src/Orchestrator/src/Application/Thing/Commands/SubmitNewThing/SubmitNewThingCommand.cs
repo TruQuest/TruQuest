@@ -59,14 +59,14 @@ public class SubmitNewThingCommandHandler : IRequestHandler<SubmitNewThingComman
         {
             return new()
             {
-                Error = new ThingError("Invalid request")
+                Error = new HandleError("Invalid request")
             };
         }
         if (thing.State != ThingState.Draft)
         {
             return new()
             {
-                Error = new ThingError("Already submitted")
+                Error = new HandleError("Already submitted")
             };
         }
 

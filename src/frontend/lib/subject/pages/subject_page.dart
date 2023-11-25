@@ -5,10 +5,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
 import '../../general/widgets/contained_tab_bar_view.dart';
-import '../models/rvm/subject_type_vm.dart';
+import '../models/vm/subject_type_vm.dart';
 import '../widgets/things_list.dart';
 import '../../general/widgets/document_view.dart';
-import '../models/rvm/subject_vm.dart';
+import '../models/vm/subject_vm.dart';
 import '../widgets/avatar_with_reputation_gauge.dart';
 import '../widgets/latest_things_block.dart';
 import '../../general/contexts/document_view_context.dart';

@@ -10,7 +10,6 @@ using Microsoft.Net.Http.Headers;
 using Domain.Errors;
 using Domain.Results;
 using Application;
-using Application.Common.Errors;
 using Application.Common.Interfaces;
 
 namespace Infrastructure.Files;
@@ -40,7 +39,7 @@ internal class FileReceiver : IFileReceiver
 
         if (!_multipartRequestHelper.IsMultipartContentType(request.ContentType))
         {
-            return new ValidationError("multipart/form-data request expected");
+            return new HandleError("multipart/form-data request expected");
         }
 
         var filePaths = new List<string>();
@@ -56,7 +55,7 @@ internal class FileReceiver : IFileReceiver
         }
         catch (InvalidDataException e)
         {
-            return new ValidationError(e.Message);
+            return new HandleError(e.Message);
         }
 
         var reader = new MultipartReader(boundary, request.Body);
@@ -83,7 +82,7 @@ internal class FileReceiver : IFileReceiver
                         );
                     }
 
-                    if (!valid) return new ValidationError("Invalid file format");
+                    if (!valid) return new HandleError("Invalid file format");
 
                     var fileName = $"{Guid.NewGuid()}{ext}";
                     var containerFilePath = $"/user_files/{filePrefix}/{fileName}";
@@ -122,7 +121,7 @@ internal class FileReceiver : IFileReceiver
                             fileDisposed = true;
                             File.Delete(filePath);
 
-                            return new FileError(ex.Message);
+                            return new HandleError(ex.Message);
                         }
                         finally
                         {
@@ -132,17 +131,17 @@ internal class FileReceiver : IFileReceiver
                     }
                     // catch (IOException)
                     // {
-                    //     return new FileError("File uploading already in progress");
+                    //     return new HandleError("File uploading already in progress");
                     // }
                     catch (Exception ex)
                     {
-                        return new FileError(ex.Message);
+                        return new HandleError(ex.Message);
                     }
 
                     if (maxSizeExceeded)
                     {
                         File.Delete(filePath);
-                        return new ValidationError("Max file size limit exceeded");
+                        return new HandleError("Max file size limit exceeded");
                     }
 
                     filePaths.Add(containerFilePath); // @@!!: Doesn't work for deletions!

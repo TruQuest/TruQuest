@@ -34,25 +34,25 @@ internal class UserRepository : Repository, IUserRepository
             .Select(c => c.UserId)
             .ToListAsync();
 
-    public async Task<UserError?> Create(UserDm user)
+    public async Task<HandleError?> Create(UserDm user)
     {
         var result = await _userManager.CreateAsync(user);
         if (!result.Succeeded)
         {
             // @@NOTE: Since auto-saving is enabled by default, a possible
             // error (like duplicate email/username) is detected right away.
-            return new UserError(result.ToErrorDictionary());
+            return new HandleError(result.ToErrorMessage());
         }
 
         return null;
     }
 
-    public async Task<UserError?> AddClaimsTo(UserDm user, IList<Claim> claims)
+    public async Task<HandleError?> AddClaimsTo(UserDm user, IList<Claim> claims)
     {
         var result = await _userManager.AddClaimsAsync(user, claims);
         if (!result.Succeeded)
         {
-            return new UserError(result.ToErrorDictionary());
+            return new HandleError(result.ToErrorMessage());
         }
 
         return null;

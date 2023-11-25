@@ -1,19 +1,11 @@
-using System.Text.Json;
-
 namespace Domain.Errors;
 
-public abstract class HandleError
+public class HandleError
 {
-    public string Type { get; }
-    public IReadOnlyDictionary<string, string[]> Errors { get; protected set; }
+    public string Message { get; }
 
-    protected HandleError(string type)
+    public HandleError(string message)
     {
-        Type = type;
-    }
-
-    public override string ToString()
-    {
-        return JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
+        Message = message;
     }
 }

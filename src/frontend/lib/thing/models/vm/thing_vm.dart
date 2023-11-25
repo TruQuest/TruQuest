@@ -1,7 +1,7 @@
 import 'package:intl/intl.dart';
 
-import '../../../general/models/rvm/evidence_vm.dart';
-import '../../../general/models/rvm/tag_vm.dart';
+import '../../../general/models/vm/evidence_vm.dart';
+import '../../../general/models/vm/tag_vm.dart';
 import 'thing_state_vm.dart';
 
 class ThingVm {

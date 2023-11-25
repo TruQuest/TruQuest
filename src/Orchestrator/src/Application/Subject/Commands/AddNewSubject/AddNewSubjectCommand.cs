@@ -55,7 +55,7 @@ public class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectCommand,
             // @@TODO: Delete files.
             return new()
             {
-                Error = new SubjectError(failureResult.ErrorMessage)
+                Error = new HandleError(failureResult.ErrorMessage)
             };
         }
 

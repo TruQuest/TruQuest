@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../../general/models/rvm/tag_vm.dart';
-import '../../../settlement/models/rvm/verdict_vm.dart';
-import '../../../thing/models/rvm/thing_state_vm.dart';
+import '../../../general/models/vm/tag_vm.dart';
+import '../../../settlement/models/vm/verdict_vm.dart';
+import '../../../thing/models/vm/thing_state_vm.dart';
 
 class ThingPreviewVm {
   final String id;
@@ -37,9 +37,8 @@ class ThingPreviewVm {
     }
   }
 
-  String get displayedTimestampFormatted => displayedTimestamp != null
-      ? DateFormat('EEE, M/d/y').format(displayedTimestamp!)
-      : 'Not submitted yet';
+  String get displayedTimestampFormatted =>
+      displayedTimestamp != null ? DateFormat('EEE, M/d/y').format(displayedTimestamp!) : 'Not submitted yet';
 
   Color get verdictColor {
     switch (verdict!) {
@@ -63,11 +62,9 @@ class ThingPreviewVm {
         state = ThingStateVm.values[map['state']],
         title = map['title'],
         croppedImageIpfsCid = map['croppedImageIpfsCid'],
-        displayedTimestamp = map['displayedTimestamp'] != null
-            ? DateTime.fromMillisecondsSinceEpoch(map['displayedTimestamp'])
-            : null,
-        verdict =
-            map['verdict'] != null ? VerdictVm.values[map['verdict']] : null,
+        displayedTimestamp =
+            map['displayedTimestamp'] != null ? DateTime.fromMillisecondsSinceEpoch(map['displayedTimestamp']) : null,
+        verdict = map['verdict'] != null ? VerdictVm.values[map['verdict']] : null,
         tags = List.unmodifiable(
           (map['tags'] as List<dynamic>).map((submap) => TagVm.fromMap(submap)),
         );

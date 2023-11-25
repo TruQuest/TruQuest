@@ -52,7 +52,7 @@ public class CreateNewSettlementProposalDraftCommandHandler :
         {
             return new()
             {
-                Error = new SettlementError("The specified promise is not awaiting settlement")
+                Error = new HandleError("The specified promise is not awaiting settlement")
             };
         }
 

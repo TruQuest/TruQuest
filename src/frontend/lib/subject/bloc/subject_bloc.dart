@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:rxdart/rxdart.dart';
 
-import '../models/rvm/subject_preview_vm.dart';
-import '../models/rvm/subject_vm.dart';
-import '../models/rvm/thing_preview_vm.dart';
+import '../models/vm/subject_preview_vm.dart';
+import '../models/vm/subject_vm.dart';
+import '../models/vm/thing_preview_vm.dart';
 import 'subject_actions.dart';
 import '../services/subject_service.dart';
 import '../../general/bloc/bloc.dart';

@@ -4,8 +4,8 @@ using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 
 using Domain.Results;
+using Domain.Errors;
 using Application.Common.Interfaces;
-using Application.Common.Errors;
 using Application;
 
 namespace Infrastructure.Files;
@@ -24,7 +24,7 @@ internal class FileStorage : IFileStorage
         _clientFactory = clientFactory;
     }
 
-    public async Task<Either<FileError, string>> UploadJson(object obj)
+    public async Task<Either<HandleError, string>> UploadJson(object obj)
     {
         using var span = Telemetry.StartActivity($"{GetType().FullName}.{nameof(UploadJson)}", kind: ActivityKind.Client);
 
@@ -49,7 +49,7 @@ internal class FileStorage : IFileStorage
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogWarning(response.ReasonPhrase);
-            return new FileError(response.ReasonPhrase!);
+            return new HandleError(response.ReasonPhrase!);
         }
 
         var responseMap = await JsonSerializer.DeserializeAsync<Dictionary<string, string>>(

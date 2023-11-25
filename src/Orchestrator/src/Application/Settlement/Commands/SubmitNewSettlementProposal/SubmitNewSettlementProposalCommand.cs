@@ -62,14 +62,14 @@ public class SubmitNewSettlementProposalCommandHandler :
         {
             return new()
             {
-                Error = new SettlementError("Invalid request")
+                Error = new HandleError("Invalid request")
             };
         }
         if (proposal.State != SettlementProposalState.Draft)
         {
             return new()
             {
-                Error = new SettlementError("Already submitted")
+                Error = new HandleError("Already submitted")
             };
         }
 
@@ -78,7 +78,7 @@ public class SubmitNewSettlementProposalCommandHandler :
         {
             return new()
             {
-                Error = new SettlementError("The specified promise is not awaiting settlement")
+                Error = new HandleError("The specified promise is not awaiting settlement")
             };
         }
 

@@ -46,14 +46,14 @@ public class GetThingQueryHandler : IRequestHandler<GetThingQuery, HandleResult<
         {
             return new()
             {
-                Error = new ThingError("Not Found")
+                Error = new HandleError("Not Found")
             };
         }
         if (thing.State == ThingStateQm.Draft && _currentPrincipal.Id != thing.SubmitterId)
         {
             return new()
             {
-                Error = new ThingError("Invalid request")
+                Error = new HandleError("Invalid request")
             };
         }
 

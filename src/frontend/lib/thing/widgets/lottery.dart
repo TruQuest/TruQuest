@@ -8,12 +8,12 @@ import '../../general/widgets/clipped_rect.dart';
 import '../../general/widgets/corner_banner.dart';
 import '../../general/widgets/block_countdown.dart';
 import '../../user/bloc/user_bloc.dart';
-import '../models/rvm/verifier_lottery_info_vm.dart';
+import '../models/vm/verifier_lottery_info_vm.dart';
 import 'lottery_stepper.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';
 import '../bloc/thing_actions.dart';
 import '../bloc/thing_bloc.dart';
-import '../models/rvm/thing_vm.dart';
+import '../models/vm/thing_vm.dart';
 import '../../widget_extensions.dart';
 
 class Lottery extends StatefulWidget {

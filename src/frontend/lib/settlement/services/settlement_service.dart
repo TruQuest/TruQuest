@@ -1,25 +1,23 @@
 import 'dart:async';
 
-import 'package:either_dart/either.dart';
-
 import '../../ethereum/errors/wallet_action_declined_error.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
 import '../../ethereum/services/user_operation_service.dart';
+import '../../general/errors/handle_error.dart';
 import '../../general/errors/insufficient_balance_error.dart';
 import '../../user/errors/get_credential_error.dart';
-import '../errors/settlement_error.dart';
 import '../models/im/new_settlement_proposal_assessment_poll_vote_im.dart';
 import '../../user/services/user_service.dart';
 import '../../general/contracts/thing_validation_poll_contract.dart';
 import '../../general/utils/utils.dart';
 import '../models/im/decision_im.dart';
 import '../../general/contracts/settlement_proposal_assessment_poll_contract.dart';
-import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
+import '../models/vm/get_verifier_lottery_participants_rvm.dart';
 import '../../general/contracts/settlement_proposal_assessment_verifier_lottery_contract.dart';
 import '../../general/contracts/truquest_contract.dart';
-import '../models/rvm/get_settlement_proposal_rvm.dart';
+import '../models/vm/get_settlement_proposal_rvm.dart';
 import '../../general/contexts/document_context.dart';
-import '../models/rvm/get_votes_rvm.dart';
+import '../models/vm/get_votes_rvm.dart';
 import 'settlement_api_service.dart';
 
 class SettlementService {
@@ -59,14 +57,14 @@ class SettlementService {
     _progress$Channel.add(progress$);
   }
 
-  Future<Either<SettlementError, GetSettlementProposalRvm>> getSettlementProposal(String proposalId) async {
+  Future<GetSettlementProposalRvm?> getSettlementProposal(String proposalId) async {
     try {
       var result = await _settlementApiService.getSettlementProposal(proposalId);
       print('ProposalId: ${result.proposal.id}');
-      return Right(result);
-    } on SettlementError catch (e) {
+      return result;
+    } on HandleError catch (e) {
       print(e);
-      return Left(e);
+      return null;
     }
   }
 

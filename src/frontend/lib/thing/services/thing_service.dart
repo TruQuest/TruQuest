@@ -1,26 +1,24 @@
 import 'dart:async';
 
-import 'package:either_dart/either.dart';
-
 import '../../ethereum/errors/wallet_action_declined_error.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
+import '../../general/errors/handle_error.dart';
 import '../../general/errors/insufficient_balance_error.dart';
 import '../../user/errors/get_credential_error.dart';
 import '../../user/services/user_service.dart';
 import '../../ethereum/services/user_operation_service.dart';
 import '../models/im/new_thing_validation_poll_vote_im.dart';
-import '../errors/thing_error.dart';
-import '../models/rvm/get_settlement_proposals_list_rvm.dart';
+import '../models/vm/get_settlement_proposals_list_rvm.dart';
 import '../../general/utils/utils.dart';
 import '../../general/contracts/thing_validation_poll_contract.dart';
 import '../../general/contracts/thing_validation_verifier_lottery_contract.dart';
 import '../models/im/decision_im.dart';
-import '../models/rvm/get_thing_rvm.dart';
+import '../models/vm/get_thing_rvm.dart';
 import '../../general/contracts/truquest_contract.dart';
 import '../../general/contexts/document_context.dart';
-import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
-import '../models/rvm/get_votes_rvm.dart';
-import '../models/rvm/submit_new_thing_rvm.dart';
+import '../models/vm/get_verifier_lottery_participants_rvm.dart';
+import '../models/vm/get_votes_rvm.dart';
+import '../models/vm/submit_new_thing_rvm.dart';
 import 'thing_api_service.dart';
 
 class ThingService {
@@ -58,14 +56,14 @@ class ThingService {
     _progress$Channel.add(progress$);
   }
 
-  Future<Either<ThingError, GetThingRvm>> getThing(String thingId) async {
+  Future<GetThingRvm?> getThing(String thingId) async {
     try {
       var result = await _thingApiService.getThing(thingId);
       print('ThingId: ${result.thing.id}');
-      return Right(result);
-    } on ThingError catch (e) {
+      return result;
+    } on HandleError catch (e) {
       print(e);
-      return Left(e);
+      return null;
     }
   }
 

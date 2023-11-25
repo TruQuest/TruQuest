@@ -4,28 +4,19 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 
 import '../../general/models/im/watch_command.dart';
-import '../models/rvm/get_settlement_proposals_list_rvm.dart';
-import '../../general/errors/vote_error.dart';
+import '../../general/utils/utils.dart';
+import '../models/vm/get_settlement_proposals_list_rvm.dart';
 import '../models/im/cast_validation_poll_vote_command.dart';
 import '../models/im/new_thing_validation_poll_vote_im.dart';
-import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
-import '../models/rvm/get_thing_rvm.dart';
+import '../models/vm/get_verifier_lottery_participants_rvm.dart';
+import '../models/vm/get_thing_rvm.dart';
 import '../models/im/submit_new_thing_command.dart';
-import '../models/rvm/get_votes_rvm.dart';
-import '../models/rvm/submit_new_thing_rvm.dart';
-import '../../general/errors/api_error.dart';
-import '../../general/errors/file_error.dart';
+import '../models/vm/get_votes_rvm.dart';
+import '../models/vm/submit_new_thing_rvm.dart';
 import '../../general/models/im/tag_im.dart';
 import '../models/im/thing_evidence_im.dart';
-import '../../general/errors/connection_error.dart';
-import '../../general/errors/error.dart';
 import '../../general/services/server_connector.dart';
 import '../models/im/new_thing_im.dart';
-import '../../general/errors/forbidden_error.dart';
-import '../../general/errors/invalid_authentication_token_error.dart';
-import '../../general/errors/server_error.dart';
-import '../../general/errors/validation_error.dart';
-import '../errors/thing_error.dart';
 
 class ThingApiService {
   final ServerConnector _serverConnector;
@@ -48,46 +39,6 @@ class ThingApiService {
         }
       },
     );
-  }
-
-  Error _wrapError(DioError dioError) {
-    switch (dioError.type) {
-      case DioErrorType.connectTimeout:
-      case DioErrorType.sendTimeout:
-      case DioErrorType.receiveTimeout:
-        return ConnectionError();
-      case DioErrorType.response:
-        var statusCode = dioError.response!.statusCode!;
-        if (statusCode >= 500) {
-          return ServerError();
-        }
-
-        switch (statusCode) {
-          case 400:
-            var error = dioError.response!.data['error'];
-            if (error['type'] == 'Validation') {
-              return const ValidationError();
-            } else if (error['type'] == 'File') {
-              return FileError(error['errors'].values.first.first);
-            } else if (error['type'] == 'Thing') {
-              return ThingError(error['errors'].values.first.first);
-            } else if (error['type'] == 'Vote') {
-              return VoteError(error['errors'].values.first.first);
-            }
-            // @@TODO: Handle ServerError.
-            break;
-          case 401:
-            var errorMessage = dioError.response!.data['error']['errors'].values.first.first;
-            return InvalidAuthenticationTokenError(errorMessage);
-          case 403:
-            return ForbiddenError();
-        }
-
-        throw UnimplementedError();
-      default:
-        print(dioError);
-        return ApiError();
-    }
   }
 
   Future<Stream<int>> createNewThingDraft(
@@ -129,7 +80,7 @@ class ThingApiService {
 
       return progressChannel.stream;
     } on DioError catch (error) {
-      throw _wrapError(error);
+      throw wrapError(error);
     }
   }
 
@@ -147,7 +98,7 @@ class ThingApiService {
 
       return GetThingRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
-      throw _wrapError(error);
+      throw wrapError(error);
     }
   }
 
@@ -164,7 +115,7 @@ class ThingApiService {
 
       return SubmitNewThingRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
-      throw _wrapError(error);
+      throw wrapError(error);
     }
   }
 
@@ -175,7 +126,7 @@ class ThingApiService {
       var response = await _dio.get('/things/$thingId/lottery-participants');
       return GetVerifierLotteryParticipantsRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
-      throw _wrapError(error);
+      throw wrapError(error);
     }
   }
 
@@ -198,7 +149,7 @@ class ThingApiService {
 
       return response.data['data'] as String;
     } on DioError catch (error) {
-      throw _wrapError(error);
+      throw wrapError(error);
     }
   }
 
@@ -211,7 +162,7 @@ class ThingApiService {
       );
       return GetVotesRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
-      throw _wrapError(error);
+      throw wrapError(error);
     }
   }
 
@@ -229,7 +180,7 @@ class ThingApiService {
 
       return GetSettlementProposalsListRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
-      throw _wrapError(error);
+      throw wrapError(error);
     }
   }
 
@@ -247,7 +198,7 @@ class ThingApiService {
         ).toJson(),
       );
     } on DioError catch (error) {
-      throw _wrapError(error);
+      throw wrapError(error);
     }
   }
 }

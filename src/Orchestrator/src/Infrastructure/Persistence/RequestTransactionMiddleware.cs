@@ -8,8 +8,9 @@ using GoThataway;
 using Npgsql;
 
 using Domain.Results;
+using Domain.Errors;
+using Application;
 using Application.Common.Attributes;
-using Application.Common.Errors;
 
 namespace Infrastructure.Persistence;
 
@@ -80,7 +81,11 @@ public class RequestTransactionMiddleware<TRequest, TResponse> : IRequestMiddlew
 
         return new TResponse
         {
-            Error = new ServerError("Transaction serialization failure", isRetryable: true)
+            Error = new UnhandledError(
+                "Transaction serialization failure",
+                Telemetry.CurrentActivity!.TraceId.ToHexString(),
+                isRetryable: true
+            )
         };
     }
 }

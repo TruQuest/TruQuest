@@ -37,7 +37,7 @@ public class GetSubjectQueryHandler : IRequestHandler<GetSubjectQuery, HandleRes
         {
             return new()
             {
-                Error = new SubjectError("Not found")
+                Error = new HandleError("Not found")
             };
         }
 

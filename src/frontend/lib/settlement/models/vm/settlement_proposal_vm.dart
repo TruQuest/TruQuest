@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 
-import '../../../general/models/rvm/evidence_vm.dart';
+import '../../../general/models/vm/evidence_vm.dart';
 import 'settlement_proposal_state_vm.dart';
 import 'verdict_vm.dart';
 

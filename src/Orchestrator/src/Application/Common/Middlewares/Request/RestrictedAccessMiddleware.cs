@@ -42,7 +42,7 @@ public class RestrictedAccessMiddleware<TRequest, TResponse> : IRequestMiddlewar
         {
             return new()
             {
-                Error = new AuthorizationError("Sorry, the access is currently restricted. Email me at admin@truquest.io to get access")
+                Error = new HandleError("Sorry, the access is currently restricted. Email me at admin@truquest.io to get access")
             };
         }
 

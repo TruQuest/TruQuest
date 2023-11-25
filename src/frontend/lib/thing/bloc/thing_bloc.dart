@@ -3,13 +3,13 @@ import 'dart:async';
 import 'package:rxdart/rxdart.dart';
 
 import '../../general/contexts/multi_stage_operation_context.dart';
-import '../models/rvm/validation_poll_info_vm.dart';
-import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
-import '../models/rvm/get_votes_rvm.dart';
-import '../models/rvm/settlement_proposal_preview_vm.dart';
-import '../models/rvm/thing_state_vm.dart';
-import '../models/rvm/get_thing_rvm.dart';
-import '../models/rvm/verifier_lottery_info_vm.dart';
+import '../models/vm/validation_poll_info_vm.dart';
+import '../models/vm/get_verifier_lottery_participants_rvm.dart';
+import '../models/vm/get_votes_rvm.dart';
+import '../models/vm/settlement_proposal_preview_vm.dart';
+import '../models/vm/thing_state_vm.dart';
+import '../models/vm/get_thing_rvm.dart';
+import '../models/vm/verifier_lottery_info_vm.dart';
 import '../../general/bloc/bloc.dart';
 import '../services/thing_service.dart';
 import 'thing_actions.dart';
@@ -89,21 +89,20 @@ class ThingBloc extends Bloc<ThingAction> {
 
   void _getThing(GetThing action) async {
     var result = await _thingService.getThing(action.thingId);
-    if (result.isLeft) {
+    if (result == null) {
       _thingChannel.add(null);
       return;
     }
 
-    var getThingResult = result.right;
-    if (getThingResult.thing.state == ThingStateVm.awaitingFunding) {
+    if (result.thing.state == ThingStateVm.awaitingFunding) {
       bool thingFunded = await _thingService.checkThingAlreadyFunded(action.thingId);
-      getThingResult = GetThingRvm(
-        thing: getThingResult.thing.copyWith(fundedAwaitingConfirmation: thingFunded),
-        signature: getThingResult.signature,
+      result = GetThingRvm(
+        thing: result.thing.copyWith(fundedAwaitingConfirmation: thingFunded),
+        signature: result.signature,
       );
     }
 
-    _thingChannel.add(getThingResult);
+    _thingChannel.add(result);
   }
 
   Future<bool> _submitNewThing(SubmitNewThing action) async {

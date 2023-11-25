@@ -1,12 +1,12 @@
 import 'dart:async';
 
 import '../contexts/page_context.dart';
+import '../errors/api_error.dart';
+import '../errors/unhandled_error.dart';
 import '../models/im/unsub_then_sub_to_updates_command.dart';
 import '../models/im/unsubscribe_from_updates_command.dart';
 import 'server_connector.dart';
 import '../errors/error.dart';
-import '../errors/server_error.dart';
-import '../errors/validation_error.dart';
 import '../models/im/subscribe_to_updates_command.dart';
 
 class SubscriptionManager {
@@ -46,13 +46,17 @@ class SubscriptionManager {
 
   Error _wrapHubException(Exception ex) {
     var errorMessage = ex.toString();
-    if (errorMessage.contains('[ValidationError]')) {
-      return const ValidationError();
+    if (errorMessage.contains('[Unhandled]')) {
+      // [<TRACE_ID>] [Unhandled] <MESSAGE>
+      var errorMessageSplit = errorMessage.split(' [Unhandled] ');
+      return UnhandledError(
+        errorMessageSplit.last,
+        errorMessageSplit.first.substring(1, errorMessageSplit.first.length - 1),
+      );
     }
 
     print(ex);
-
-    return ServerError();
+    return ApiError();
   }
 
   bool _isSimpleRoute(String route) => route.lastIndexOf('/') == 0;

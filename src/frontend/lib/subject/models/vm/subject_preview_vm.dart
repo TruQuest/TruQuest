@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../../general/models/rvm/tag_vm.dart';
+import '../../../general/models/vm/tag_vm.dart';
 import 'subject_type_vm.dart';
 
 class SubjectPreviewVm {

@@ -5,10 +5,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
 import '../../general/widgets/clipped_rect.dart';
-import '../models/rvm/assessment_poll_info_vm.dart';
+import '../models/vm/assessment_poll_info_vm.dart';
 import '../../general/widgets/block_countdown.dart';
-import '../models/rvm/settlement_proposal_state_vm.dart';
-import '../models/rvm/settlement_proposal_vm.dart';
+import '../models/vm/settlement_proposal_state_vm.dart';
+import '../models/vm/settlement_proposal_vm.dart';
 import '../bloc/settlement_bloc.dart';
 import '../bloc/settlement_actions.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';

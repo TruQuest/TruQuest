@@ -17,13 +17,13 @@ import '../../general/widgets/image_block_with_crop.dart';
 import '../../general/widgets/restrict_when_unauthorized_button.dart';
 import '../../settlement/bloc/settlement_actions.dart';
 import '../../settlement/bloc/settlement_bloc.dart';
-import '../../settlement/models/rvm/settlement_proposal_state_vm.dart';
-import '../../settlement/models/rvm/verdict_vm.dart';
+import '../../settlement/models/vm/settlement_proposal_state_vm.dart';
+import '../../settlement/models/vm/verdict_vm.dart';
 import '../../settlement/widgets/verdict_selection_block.dart';
 import '../../widget_extensions.dart';
 import '../bloc/thing_actions.dart';
 import '../bloc/thing_bloc.dart';
-import '../models/rvm/settlement_proposal_preview_vm.dart';
+import '../models/vm/settlement_proposal_preview_vm.dart';
 import '../../general/utils/utils.dart';
 
 class SettlementProposalsList extends StatefulWidget {

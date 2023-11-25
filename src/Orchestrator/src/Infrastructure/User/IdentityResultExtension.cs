@@ -4,10 +4,6 @@ namespace Infrastructure.User;
 
 internal static class IdentityResultExtension
 {
-    public static Dictionary<string, string[]> ToErrorDictionary(
-        this IdentityResult result
-    ) => result.Errors.ToDictionary(
-        error => error.Code,
-        error => new[] { error.Description }
-    );
+    public static string ToErrorMessage(this IdentityResult result) =>
+        string.Join(";\n", result.Errors.Select(e => $"[{e.Code}]: {e.Description}"));
 }

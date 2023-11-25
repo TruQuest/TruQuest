@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:rxdart/rxdart.dart';
 
-import '../models/rvm/notification_vm.dart';
+import '../models/vm/notification_vm.dart';
 import '../services/notifications_cache.dart';
 import 'notification_actions.dart';
 import '../../settlement/services/settlement_service.dart';

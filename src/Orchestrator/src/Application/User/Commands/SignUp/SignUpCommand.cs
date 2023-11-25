@@ -69,7 +69,7 @@ public class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<
         {
             return new()
             {
-                Error = new AuthorizationError("Sorry, the access is currently restricted. Email me at admin@truquest.io to get access")
+                Error = new HandleError("Sorry, the access is currently restricted. Email me at admin@truquest.io to get access")
             };
         }
 
@@ -78,7 +78,7 @@ public class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<
             _logger.LogWarning("Invalid confirmation code");
             return new()
             {
-                Error = new UserError("Invalid confirmation code")
+                Error = new HandleError("Invalid confirmation code")
             };
         }
 
@@ -89,7 +89,7 @@ public class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<
         {
             return new()
             {
-                Error = new UserError("Challenge expired")
+                Error = new HandleError("Challenge expired")
             };
         }
 
@@ -109,7 +109,7 @@ public class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<
             _logger.LogWarning(ex, "Error trying to make new credential");
             return new()
             {
-                Error = new UserError("Invalid credential")
+                Error = new HandleError("Invalid credential")
             };
         }
 

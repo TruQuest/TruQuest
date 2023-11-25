@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../models/rvm/verdict_vm.dart';
+import '../models/vm/verdict_vm.dart';
 import '../../general/contexts/document_view_context.dart';
 import '../../widget_extensions.dart';
 

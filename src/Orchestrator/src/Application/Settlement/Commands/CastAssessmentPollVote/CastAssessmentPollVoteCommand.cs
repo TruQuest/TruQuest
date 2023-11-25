@@ -64,7 +64,7 @@ public class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssessme
         {
             return new()
             {
-                Error = new VoteError(
+                Error = new HandleError(
                     $"Not a designated verifier for proposal {command.Input.SettlementProposalId}"
                 )
             };
@@ -76,7 +76,7 @@ public class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssessme
         {
             return new()
             {
-                Error = new VoteError("Invalid request")
+                Error = new HandleError("Invalid request")
             };
         }
 
@@ -89,7 +89,7 @@ public class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssessme
         {
             return new()
             {
-                Error = new VoteError("Invalid timestamp. Check your system clock")
+                Error = new HandleError("Invalid timestamp. Check your system clock")
             };
         }
 

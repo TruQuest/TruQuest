@@ -1,4 +1,4 @@
-import '../models/rvm/notification_vm.dart';
+import '../models/vm/notification_vm.dart';
 import 'actions.dart';
 
 abstract class NotificationAction extends Action {

@@ -4,8 +4,8 @@ import 'package:rxdart/rxdart.dart';
 
 import '../../user/services/user_service.dart';
 import '../../user/services/user_api_service.dart';
-import '../models/rvm/notification_vm.dart';
-import '../models/rvm/watched_item_type_vm.dart';
+import '../models/vm/notification_vm.dart';
+import '../models/vm/watched_item_type_vm.dart';
 import 'server_connector.dart';
 
 class NotificationsCache {

@@ -7,12 +7,12 @@ using GoThataway;
 
 using Domain.Aggregates;
 using Domain.Results;
+using Domain.Errors;
 
 using Application.Thing.Commands.CloseValidationPoll;
 using Application.Settlement.Commands.CloseAssessmentPoll;
 using Application.Common.Misc;
 using Application.Common.Interfaces;
-using Application.Common.Errors;
 using Application.Common.Models.IM;
 using Application.General.Commands.ArchiveDeadLetter;
 
@@ -104,7 +104,7 @@ public class BlockMinedEventHandler : IEventHandler<BlockMinedEvent>
                 var result = await thataway.Send((IRequest<VoidResult>)command);
                 if (result.Error != null)
                 {
-                    if (((ServerError)result.Error).IsRetryable)
+                    if (((UnhandledError)result.Error).IsRetryable)
                     {
                         if (++command.AttemptsMade < maxAttempts)
                         {

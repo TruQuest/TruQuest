@@ -5,14 +5,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
 import '../../general/widgets/clipped_rect.dart';
-import '../models/rvm/validation_poll_info_vm.dart';
+import '../models/vm/validation_poll_info_vm.dart';
 import '../../general/widgets/block_countdown.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../bloc/thing_actions.dart';
 import '../bloc/thing_bloc.dart';
-import '../models/rvm/thing_state_vm.dart';
-import '../models/rvm/thing_vm.dart';
+import '../models/vm/thing_state_vm.dart';
+import '../models/vm/thing_vm.dart';
 import '../../widget_extensions.dart';
 import 'poll_stepper.dart';
 

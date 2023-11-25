@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../general/contexts/document_view_context.dart';
 import '../../general/contexts/page_context.dart';
-import '../models/rvm/settlement_proposal_vm.dart';
+import '../models/vm/settlement_proposal_vm.dart';
 import '../../subject/widgets/clipped_image.dart';
 import '../../widget_extensions.dart';
 

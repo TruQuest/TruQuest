@@ -54,7 +54,7 @@ public class VerifyAssertionAndSignInCommandHandler : IRequestHandler<
         {
             return new()
             {
-                Error = new UserError("Challenge expired")
+                Error = new HandleError("Challenge expired")
             };
         }
 
@@ -66,7 +66,7 @@ public class VerifyAssertionAndSignInCommandHandler : IRequestHandler<
         {
             return new()
             {
-                Error = new UserError("The specified credential not found")
+                Error = new HandleError("The specified credential not found")
             };
         }
 
@@ -91,7 +91,7 @@ public class VerifyAssertionAndSignInCommandHandler : IRequestHandler<
             _logger.LogWarning(ex, "Error trying to make assertion");
             return new()
             {
-                Error = new UserError("Invalid credential")
+                Error = new HandleError("Invalid credential")
             };
         }
 

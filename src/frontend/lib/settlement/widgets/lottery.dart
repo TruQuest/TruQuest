@@ -4,17 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
-import '../../general/models/rvm/verifier_lottery_participant_entry_vm.dart';
+import '../../general/models/vm/verifier_lottery_participant_entry_vm.dart';
 import '../../general/widgets/block_countdown.dart';
 import '../../general/widgets/clipped_rect.dart';
 import '../../general/widgets/corner_banner.dart';
 import '../bloc/settlement_actions.dart';
 import '../bloc/settlement_bloc.dart';
-import '../models/rvm/settlement_proposal_vm.dart';
+import '../models/vm/settlement_proposal_vm.dart';
 import '../../ethereum/bloc/ethereum_bloc.dart';
 import '../../user/bloc/user_bloc.dart';
 import '../../widget_extensions.dart';
-import '../models/rvm/verifier_lottery_info_vm.dart';
+import '../models/vm/verifier_lottery_info_vm.dart';
 import 'lottery_stepper.dart';
 
 class Lottery extends StatefulWidget {

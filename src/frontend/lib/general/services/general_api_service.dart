@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 
-import '../models/rvm/tag_vm.dart';
+import '../models/vm/tag_vm.dart';
 import 'server_connector.dart';
 import '../errors/api_error.dart';
 import '../errors/error.dart';
@@ -10,8 +10,7 @@ import '../errors/server_error.dart';
 class GeneralApiService {
   final Dio _dio;
 
-  GeneralApiService(ServerConnector serverConnector)
-      : _dio = serverConnector.dio;
+  GeneralApiService(ServerConnector serverConnector) : _dio = serverConnector.dio;
 
   Error _wrapError(DioError dioError) {
     switch (dioError.type) {
@@ -36,8 +35,7 @@ class GeneralApiService {
     try {
       var response = await _dio.get('/tags');
       return List.unmodifiable(
-        (response.data['data'] as List<dynamic>)
-            .map((map) => TagVm.fromMap(map)),
+        (response.data['data'] as List<dynamic>).map((map) => TagVm.fromMap(map)),
       );
     } on DioError catch (error) {
       throw _wrapError(error);

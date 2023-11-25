@@ -2,14 +2,14 @@ import 'dart:async';
 
 import 'package:rxdart/rxdart.dart';
 
-import '../models/rvm/assessment_poll_info_vm.dart';
+import '../models/vm/assessment_poll_info_vm.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
-import '../models/rvm/get_verifier_lottery_participants_rvm.dart';
-import '../models/rvm/get_votes_rvm.dart';
-import '../models/rvm/settlement_proposal_state_vm.dart';
-import '../models/rvm/get_settlement_proposal_rvm.dart';
+import '../models/vm/get_verifier_lottery_participants_rvm.dart';
+import '../models/vm/get_votes_rvm.dart';
+import '../models/vm/settlement_proposal_state_vm.dart';
+import '../models/vm/get_settlement_proposal_rvm.dart';
 import '../../general/bloc/bloc.dart';
-import '../models/rvm/verifier_lottery_info_vm.dart';
+import '../models/vm/verifier_lottery_info_vm.dart';
 import 'settlement_actions.dart';
 import '../services/settlement_service.dart';
 
@@ -80,22 +80,21 @@ class SettlementBloc extends Bloc<SettlementAction> {
 
   void _getSettlementProposal(GetSettlementProposal action) async {
     var result = await _settlementService.getSettlementProposal(action.proposalId);
-    if (result.isLeft) {
+    if (result == null) {
       _proposalChannel.add(null);
       return;
     }
 
-    var getProposalResult = result.right;
-    if (getProposalResult.proposal.state == SettlementProposalStateVm.awaitingFunding) {
-      bool otherProposalAlreadyBeingAssessed = await _settlementService
-          .checkThingAlreadyHasSettlementProposalUnderAssessment(getProposalResult.proposal.thingId);
-      getProposalResult = GetSettlementProposalRvm(
-        proposal: getProposalResult.proposal.copyWith(canBeFunded: !otherProposalAlreadyBeingAssessed),
-        signature: getProposalResult.signature,
+    if (result.proposal.state == SettlementProposalStateVm.awaitingFunding) {
+      bool otherProposalAlreadyBeingAssessed =
+          await _settlementService.checkThingAlreadyHasSettlementProposalUnderAssessment(result.proposal.thingId);
+      result = GetSettlementProposalRvm(
+        proposal: result.proposal.copyWith(canBeFunded: !otherProposalAlreadyBeingAssessed),
+        signature: result.signature,
       );
     }
 
-    _proposalChannel.add(getProposalResult);
+    _proposalChannel.add(result);
   }
 
   Future<bool> _submitNewSettlementProposal(SubmitNewSettlementProposal action) async {

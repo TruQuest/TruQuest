@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../thing/models/rvm/get_votes_rvm.dart';
+import '../../thing/models/vm/get_votes_rvm.dart';
 import 'clipped_block_number_container.dart';
 import 'corner_banner.dart';
 import 'vote_agg_view_dialog.dart';

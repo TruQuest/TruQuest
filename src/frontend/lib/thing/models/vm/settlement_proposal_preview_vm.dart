@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../../settlement/models/rvm/settlement_proposal_state_vm.dart';
-import '../../../settlement/models/rvm/verdict_vm.dart';
+import '../../../settlement/models/vm/settlement_proposal_state_vm.dart';
+import '../../../settlement/models/vm/verdict_vm.dart';
 
 class SettlementProposalPreviewVm {
   final String id;
