@@ -24,16 +24,16 @@ provider "aws" {
 }
 
 provider "docker" {
-  host = "tcp://docker:2376"
-  # host = "tcp://host.docker.internal:2375"
+  # host = "tcp://docker:2376"
+  host = "tcp://host.docker.internal:2375"
 
-  ca_material   = file("/certs/client/ca.pem")
-  cert_material = file("/certs/client/cert.pem")
-  key_material  = file("/certs/client/key.pem")
+  # ca_material   = file("/certs/client/ca.pem")
+  # cert_material = file("/certs/client/cert.pem")
+  # key_material  = file("/certs/client/key.pem")
 
-  registry_auth {
-    address = var.image_registry_uri
-  }
+  # registry_auth {
+  #   address = var.image_registry_uri
+  # }
 }
 
 data "aws_region" "current" {}

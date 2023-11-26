@@ -2,3 +2,4 @@
 **/obj/
 **/.vscode/
 **/Dockerfile*
+**/docker-compose*

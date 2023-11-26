@@ -19,7 +19,6 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+:80
       - ASPNETCORE_ENVIRONMENT=Development
-      - DB_HOST=${db_host}
     ports:
       - '80:80'
     networks:
