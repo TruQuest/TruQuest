@@ -184,7 +184,18 @@ public static class WebApplicationBuilderExtension
 
     public static WebApplication ConfigurePipeline(this WebApplication app)
     {
-        app.UseStaticFiles();
+        app.Use(async (HttpContext context, RequestDelegate next) =>
+        {
+            if (context.Request.Path == "/") context.Response.Redirect("/index.html", true);
+            else await next(context);
+        });
+
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            // @@??: Fsr static images are not being served without this. Why?
+            // Because of Flutter's default (hash) url strategy?
+            ServeUnknownFileTypes = true
+        });
 
         app.UseCors();
         app.UseAuthentication();

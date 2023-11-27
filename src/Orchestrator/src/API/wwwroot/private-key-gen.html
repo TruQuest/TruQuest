@@ -16,9 +16,14 @@
 
     <script>
       window.addEventListener("message", async function (e) {
-        if (e.origin != "http://localhost:53433") return;
+        if (
+          e.origin != "http://localhost:5223" &&
+          e.origin != "http://localhost:53433"
+        ) {
+          return;
+        }
 
-        var message = e.data;
+        var message = e.data.toString();
         var messageSplit = message.split("|");
         var requestId = messageSplit[0];
         var command = messageSplit[1];
@@ -34,7 +39,7 @@
 
           e.source.postMessage(
             `view-private-key-gen|${requestId}|${keyShares[0]}|${signatureOverCode}`,
-            "http://localhost:53433"
+            e.origin
           );
           keyShares = null;
         } else if (command == "sign-digest") {
@@ -65,7 +70,7 @@
 
           e.source.postMessage(
             `view-private-key-gen|${requestId}|${serializedSignature}`,
-            "http://localhost:53433"
+            e.origin
           );
         } else if (command == "sign-message") {
           var serverKeyShare = messageSplit[2];
@@ -85,7 +90,7 @@
 
           e.source.postMessage(
             `view-private-key-gen|${requestId}|${signature}`,
-            "http://localhost:53433"
+            e.origin
           );
         } else if (command == "check-local-key-share") {
           var present = localStorage.getItem("keyShare") != null;
@@ -95,7 +100,7 @@
 
           e.source.postMessage(
             `view-private-key-gen|${requestId}|${present ? 1 : 0}`,
-            "http://localhost:53433"
+            e.origin
           );
         } else if (command == "check-local-key-share-again") {
           var scanRequestId = messageSplit[2];
@@ -109,7 +114,7 @@
 
           e.source.postMessage(
             `view-private-key-gen|${requestId}|${keyShare != null ? 1 : 0}`,
-            "http://localhost:53433"
+            e.origin
           );
         }
       });

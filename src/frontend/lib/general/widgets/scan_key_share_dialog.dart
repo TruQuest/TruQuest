@@ -33,6 +33,8 @@ class _ScanKeyShareDialogState extends StateX<ScanKeyShareDialog> {
 
   void _handleMessage(html.Event e) {
     if (e is html.MessageEvent && e.origin == dotenv.env['ORCHESTRATOR_HOST']) {
+      if (e.data is! String) return;
+
       var message = e.data as String;
       var messageSplit = message.split('|');
       var originViewId = messageSplit[0];

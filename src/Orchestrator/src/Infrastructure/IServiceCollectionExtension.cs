@@ -34,6 +34,7 @@ using Infrastructure.Kafka;
 using Infrastructure.Persistence.Queryables;
 using Infrastructure.Ethereum.ERC4337;
 using Infrastructure.Email;
+using Infrastructure.Misc;
 
 namespace Infrastructure;
 
@@ -96,6 +97,7 @@ public static class IServiceCollectionExtension
         services.AddDataProtection();
         services.AddHttpContextAccessor();
 
+        services.AddSingleton<IFrontendEnvFileProvider, FrontendEnvFileProvider>();
         services.AddMemoryCache();
 
         services.AddScoped<IUserRepository, UserRepository>();
@@ -257,7 +259,9 @@ public static class IServiceCollectionExtension
 
         services.AddHttpClient("bundler", (sp, client) =>
         {
-            client.BaseAddress = new Uri(configuration[$"Ethereum:Bundler:{network}:URL"]!);
+            client.BaseAddress = new Uri(
+                configuration[$"Ethereum:Bundler:{network}:Host"] + configuration[$"Ethereum:Bundler:{network}:Path"]
+            );
         });
 
         services.AddSingleton<IRequestDispatcher, RequestDispatcher>();

@@ -40,6 +40,10 @@ class IFrameManager {
 
   void _handleMessage(html.Event e) {
     if (e is html.MessageEvent && e.origin == dotenv.env['ORCHESTRATOR_HOST']) {
+      // @@HACK: Metamask sends a message with data == {target: metamask-inpage, data: {name: metamask-provider, data: {method: metamask_chainChanged, params: {chainId: 0x1, networkVersion: 1}}}}
+      // on startup, so we check that e.data is not a String and return if it is.
+      if (e.data is! String) return;
+
       var message = e.data as String;
       var messageSplit = message.split('|');
       var originViewId = messageSplit[0];

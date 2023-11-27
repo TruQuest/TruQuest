@@ -13,9 +13,14 @@
 
     <script>
       window.addEventListener("message", async function (e) {
-        if (e.origin != "http://localhost:53433") return;
+        if (
+          e.origin != "http://localhost:5223" &&
+          e.origin != "http://localhost:53433"
+        ) {
+          return;
+        }
 
-        var message = e.data;
+        var message = e.data.toString();
         var messageSplit = message.split("|");
         var requestId = messageSplit[0];
         var command = messageSplit[1];
@@ -33,7 +38,7 @@
 
           e.source.postMessage(
             `view-key-share-render|${requestId}|ok`,
-            "http://localhost:53433"
+            e.origin
           );
         } else if (command == "save") {
           var link = document.createElement("a");
@@ -43,7 +48,7 @@
 
           e.source.postMessage(
             `view-key-share-render|${requestId}|ok`,
-            "http://localhost:53433"
+            e.origin
           );
         }
       });
