@@ -1,7 +1,6 @@
 using System.Net.Http.Headers;
 
 using KafkaFlow;
-using KafkaFlow.TypedHandler;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -95,6 +94,8 @@ IHost host = Host.CreateDefaultBuilder(args)
                 .AddCluster(cluster =>
                     cluster
                         .WithBrokers(configuration.GetSection("Kafka:Brokers").Get<List<string>>())
+                        .CreateTopicIfNotExists(configuration["Kafka:Consumer:Topic"], 1, 1)
+                        .CreateTopicIfNotExists(configuration["Kafka:Producer:Topic"], 1, 1)
                         .AddConsumer(consumer =>
                             consumer
                                 .Topic(configuration["Kafka:Consumer:Topic"])
@@ -104,7 +105,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                                 .WithWorkersCount(4)
                                 .AddMiddlewares(middlewares =>
                                     middlewares
-                                        .AddSerializer<MessageSerializer, MessageTypeResolver>()
+                                        .AddDeserializer<MessageSerializer, MessageTypeResolver>()
                                         .Add<TelemetryMiddleware>(MiddlewareLifetime.Singleton)
                                         .AddTypedHandlers(handlers =>
                                             handlers

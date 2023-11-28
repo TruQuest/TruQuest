@@ -2,7 +2,7 @@ version: '2'
 
 services:
   pg:
-    image: bitnami/postgresql:14.2.0
+    image: bitnami/postgresql:15.5.0
     environment:
       POSTGRESQL_WAL_LEVEL: logical
       POSTGRESQL_DATABASE: TruQuest
@@ -10,37 +10,36 @@ services:
       POSTGRESQL_SHARED_PRELOAD_LIBRARIES: pgaudit,pg_stat_statements
     ports:
       - '5433:5432'
-    networks:
-      - truquest
-
-  zookeeper:
-    image: wurstmeister/zookeeper
-    ports:
-      - '2181:2181'
-    networks:
-      - truquest
-    restart: unless-stopped
-
-  kafka-1:
-    image: wurstmeister/kafka:2.12-2.5.0
-    ports:
-      - '9092:9092'
-    environment:
-      DOCKER_API_VERSION: 1.22
-      KAFKA_BROKER_ID: 1
-      KAFKA_ADVERTISED_HOST_NAME: host.docker.internal
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_CREATE_TOPICS: 'thing.events:1:1,updates:1:1,requests:1:1,responses:1:1'
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - pg_data:/bitnami/postgresql
     networks:
       - truquest
-    restart: unless-stopped
+
+  kafka:
+    image: bitnami/kafka:3.6
+    ports:
+      - '9092'
+      - '9094:9094'
+    volumes:
+      - kafka_data:/bitnami/kafka
+    environment:
+      # KRaft settings
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      # Listeners
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+    networks:
+      - truquest
 
   debezium:
-    image: debezium/connect
+    image: debezium/connect:2.4.1.Final
     environment:
-      BOOTSTRAP_SERVERS: 'kafka-1:9092'
+      BOOTSTRAP_SERVERS: 'kafka:9092'
       GROUP_ID: debez
       CONFIG_STORAGE_TOPIC: debez_connect_configs
       OFFSET_STORAGE_TOPIC: debez_connect_offsets
@@ -51,8 +50,7 @@ services:
       - truquest
     depends_on:
       - pg
-      - zookeeper
-      - kafka-1
+      - kafka
 
   ipfs:
     image: ipfs/kubo
@@ -79,17 +77,16 @@ services:
       - truquest
 
   kafka-ui:
-    image: provectuslabs/kafka-ui
+    image: provectuslabs/kafka-ui:53a6553765a806eda9905c43bfcfe09da6812035
     environment:
       KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-1:9092
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
     ports:
       - '7777:8080'
     networks:
       - truquest
     depends_on:
-      - zookeeper
-      - kafka-1
+      - kafka
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.80.0
@@ -118,8 +115,7 @@ services:
     networks:
       - truquest
     depends_on:
-      - zookeeper
-      - kafka-1
+      - kafka
       - ipfs
       - otel-collector
 
@@ -154,16 +150,9 @@ services:
     networks:
       - truquest
 
-  mailhog:
-    image: mailhog/mailhog:v1.0.1
-    restart: on-failure
-    ports:
-      - '8025:8025'
-    networks:
-      - truquest
-
 volumes:
-  jaeger_data:
+  pg_data:
+  kafka_data:
   clickhouse_data:
 
 networks:

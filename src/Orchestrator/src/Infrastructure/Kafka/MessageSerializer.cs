@@ -4,7 +4,7 @@ using KafkaFlow;
 
 namespace Infrastructure.Kafka;
 
-internal class MessageSerializer : ISerializer
+internal class MessageSerializer : ISerializer, IDeserializer
 {
     private readonly JsonSerializerOptions _options = new()
     {

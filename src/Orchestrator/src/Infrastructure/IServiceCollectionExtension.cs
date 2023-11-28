@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Dapper;
 using KafkaFlow;
+using KafkaFlow.Configuration;
 using Nethereum.Signer;
 using Nethereum.Signer.EIP712;
 using Nethereum.BlockchainProcessing.ProgressRepositories;
@@ -272,16 +273,23 @@ public static class IServiceCollectionExtension
                 .AddCluster(cluster =>
                     cluster
                         .WithBrokers(configuration.GetSection("Kafka:Brokers").Get<List<string>>())
+                        .WithAutoCreateTopics(
+                            configuration.GetSection("Kafka:EventConsumer:Topics").Get<List<string>>()!
+                                .Concat(configuration.GetSection("Kafka:ResponseConsumer:Topics").Get<List<string>>()!)
+                                .Concat(new[] { configuration["Kafka:RequestProducer:Topic"]! })
+                                .Select(topic => (Name: topic, Partitions: 1, ReplicationFactor: (short)1))
+                        )
                         .AddConsumer(consumer =>
                             consumer
                                 .Topics(configuration.GetSection("Kafka:EventConsumer:Topics").Get<List<string>>())
                                 .WithGroupId(configuration["Kafka:EventConsumer:GroupId"])
-                                .WithAutoOffsetReset(AutoOffsetReset.Latest)
+                                // @@!!: Fsr setting this to 'Latest' results in the first new message being missed. Why?
+                                .WithAutoOffsetReset(AutoOffsetReset.Earliest)
                                 .WithBufferSize(1)
-                                .WithWorkersCount(4)
+                                .WithWorkersCount(1)
                                 .AddMiddlewares(middlewares =>
                                     middlewares
-                                        .AddSerializer<MessageSerializer, MessageTypeResolver>()
+                                        .AddDeserializer<MessageSerializer, MessageTypeResolver>()
                                         .Add<EventTracingMiddleware>(MiddlewareLifetime.Singleton)
                                         .Add<RetryOrArchiveMiddleware>(MiddlewareLifetime.Singleton)
                                         .Add<EventConsumer>(MiddlewareLifetime.Singleton)
@@ -291,13 +299,13 @@ public static class IServiceCollectionExtension
                             consumer
                                 .Topics(configuration.GetSection("Kafka:ResponseConsumer:Topics").Get<List<string>>())
                                 .WithGroupId(configuration["Kafka:ResponseConsumer:GroupId"])
-                                .WithAutoOffsetReset(AutoOffsetReset.Latest)
+                                .WithAutoOffsetReset(AutoOffsetReset.Earliest)
                                 .WithBufferSize(1)
                                 .WithWorkersCount(1)
                                 .AddMiddlewares(middlewares =>
                                     middlewares
                                         .Add<ResponseTracingMiddleware>(MiddlewareLifetime.Singleton)
-                                        .Add<MessageConsumer>(MiddlewareLifetime.Scoped)
+                                        .Add<MessageConsumer>(MiddlewareLifetime.Message)
                                 )
                         )
                         .AddProducer<RequestDispatcher>(producer =>
@@ -322,5 +330,20 @@ public static class IServiceCollectionExtension
         services.AddAWSService<IAmazonS3>();
 
         return services;
+    }
+}
+
+public static class IClusterConfigurationBuilderExtension
+{
+    public static IClusterConfigurationBuilder WithAutoCreateTopics(
+        this IClusterConfigurationBuilder builder,
+        IEnumerable<(string Name, int Partitions, short ReplicationFactor)> topics
+    )
+    {
+        foreach (var topic in topics)
+        {
+            builder.CreateTopicIfNotExists(topic.Name, topic.Partitions, topic.ReplicationFactor);
+        }
+        return builder;
     }
 }

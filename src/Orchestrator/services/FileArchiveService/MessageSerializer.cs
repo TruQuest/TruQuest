@@ -2,7 +2,7 @@ using System.Text.Json;
 
 using KafkaFlow;
 
-internal class MessageSerializer : ISerializer
+internal class MessageSerializer : ISerializer, IDeserializer
 {
     private readonly JsonSerializerOptions _options = new()
     {

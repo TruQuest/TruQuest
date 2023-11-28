@@ -9,6 +9,7 @@
         "database.password": "password",
         "database.dbname": "TruQuest",
         "database.server.name": "debez",
+        "topic.prefix": "debez",
         "heartbeat.interval.ms": "5000",
         "key.converter": "org.apache.kafka.connect.storage.StringConverter",
         "key.converter.schemas.enable": "false",

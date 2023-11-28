@@ -2,18 +2,20 @@ using System.Reflection;
 using System.Text;
 
 using KafkaFlow;
+using KafkaFlow.Middlewares.Serializer.Resolvers;
 
 internal class MessageTypeResolver : IMessageTypeResolver
 {
-    public Type OnConsume(IMessageContext context)
+    public ValueTask<Type> OnConsumeAsync(IMessageContext context)
     {
-        return Assembly.GetExecutingAssembly().GetType(
+        return ValueTask.FromResult(Assembly.GetExecutingAssembly().GetType(
             $"Messages.Requests.{Encoding.UTF8.GetString(context.Headers["trq.requestType"])}"
-        )!;
+        )!);
     }
 
-    public void OnProduce(IMessageContext context)
+    public ValueTask OnProduceAsync(IMessageContext context)
     {
         context.Headers.SetString("trq.responseType", context.Message.Value.GetType().Name);
+        return ValueTask.CompletedTask;
     }
 }

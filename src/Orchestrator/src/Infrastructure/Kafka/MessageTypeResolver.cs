@@ -1,6 +1,7 @@
 using System.Text;
 
 using KafkaFlow;
+using KafkaFlow.Middlewares.Serializer.Resolvers;
 
 using Domain.Aggregates.Events;
 
@@ -12,8 +13,9 @@ internal class MessageTypeResolver : IMessageTypeResolver
 {
     private const string _messageTypeHeaderName = "Type";
 
-    public Type OnConsume(IMessageContext context)
+    public ValueTask<Type> OnConsumeAsync(IMessageContext context)
     {
+        Type? type = null;
         if (context.ConsumerContext.Topic == "thing.events")
         {
             var messageTypeBytes = context.Headers[_messageTypeHeaderName];
@@ -21,21 +23,29 @@ internal class MessageTypeResolver : IMessageTypeResolver
             switch (eventType)
             {
                 case ThingEventType.Funded:
-                    return typeof(ThingFundedEvent);
+                    type = typeof(ThingFundedEvent);
+                    break;
                 case ThingEventType.ValidationVerifierLotteryFailed:
-                    return typeof(ThingValidationVerifierLotteryClosedInFailureEvent);
+                    type = typeof(ThingValidationVerifierLotteryClosedInFailureEvent);
+                    break;
                 case ThingEventType.ValidationVerifierLotterySucceeded:
-                    return typeof(ThingValidationVerifierLotteryClosedWithSuccessEvent);
+                    type = typeof(ThingValidationVerifierLotteryClosedWithSuccessEvent);
+                    break;
                 case ThingEventType.ValidationPollFinalized:
-                    return typeof(ThingValidationPollFinalizedEvent);
+                    type = typeof(ThingValidationPollFinalizedEvent);
+                    break;
                 case ThingEventType.SettlementProposalFunded:
-                    return typeof(SettlementProposalFundedEvent);
+                    type = typeof(SettlementProposalFundedEvent);
+                    break;
                 case ThingEventType.SettlementProposalAssessmentVerifierLotteryFailed:
-                    return typeof(SettlementProposalAssessmentVerifierLotteryClosedInFailureEvent);
+                    type = typeof(SettlementProposalAssessmentVerifierLotteryClosedInFailureEvent);
+                    break;
                 case ThingEventType.SettlementProposalAssessmentVerifierLotterySucceeded:
-                    return typeof(SettlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent);
+                    type = typeof(SettlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent);
+                    break;
                 case ThingEventType.SettlementProposalAssessmentPollFinalized:
-                    return typeof(SettlementProposalAssessmentPollFinalizedEvent);
+                    type = typeof(SettlementProposalAssessmentPollFinalizedEvent);
+                    break;
             }
         }
         else if (context.ConsumerContext.Topic == "updates")
@@ -43,19 +53,25 @@ internal class MessageTypeResolver : IMessageTypeResolver
             var table = Encoding.UTF8.GetString(context.Headers["__table"]);
             if (table == "ThingUpdates")
             {
-                return typeof(ThingUpdateEvent);
+                type = typeof(ThingUpdateEvent);
             }
             else if (table == "SettlementProposalUpdates")
             {
-                return typeof(SettlementProposalUpdateEvent);
+                type = typeof(SettlementProposalUpdateEvent);
             }
+        }
+
+        if (type != null)
+        {
+            return ValueTask.FromResult(type);
         }
 
         throw new InvalidOperationException();
     }
 
-    public void OnProduce(IMessageContext context)
+    public ValueTask OnProduceAsync(IMessageContext context)
     {
         context.Headers.SetString("trq.requestType", context.Message.Value.GetType().Name);
+        return ValueTask.CompletedTask;
     }
 }

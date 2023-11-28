@@ -1,7 +1,6 @@
 using System.Text;
 
 using KafkaFlow;
-using KafkaFlow.TypedHandler;
 
 using Services;
 using Messages.Responses;
