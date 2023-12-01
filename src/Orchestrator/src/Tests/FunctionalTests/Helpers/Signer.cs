@@ -9,9 +9,9 @@ namespace Tests.FunctionalTests.Helpers;
 public class Signer
 {
     private readonly EthereumMessageSigner _personalSigner;
-    private readonly AccountProvider _accountProvider;
+    private readonly IAccountProvider _accountProvider;
 
-    public Signer(AccountProvider accountProvider)
+    public Signer(IAccountProvider accountProvider)
     {
         _personalSigner = new();
         _accountProvider = accountProvider;

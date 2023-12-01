@@ -41,7 +41,7 @@ if (environment == "Development")
     );
     await appDbContext.SaveChangesAsync();
 
-    var accountProvider = scope.ServiceProvider.GetRequiredService<AccountProvider>();
+    var accountProvider = scope.ServiceProvider.GetRequiredService<IAccountProvider>();
     var contractCaller = scope.ServiceProvider.GetRequiredService<IContractCaller>();
 
     Dictionary<string, string> accountNameToUserId = new()
@@ -560,7 +560,7 @@ if (environment == "Development")
     eventDbContext.BlockProcessedEvent.Add(new BlockProcessedEvent(id: 1, blockNumber: null));
     await eventDbContext.SaveChangesAsync();
 }
-else if (environment == "Staging")
+else if (environment == "Staging" && Environment.GetEnvironmentVariable("USE_TUNNEL") == "1")
 {
     using var ms = new MemoryStream();
     using var sw = new StreamWriter(ms);
@@ -609,8 +609,6 @@ else if (environment == "Staging")
     builder.Host.UseDefaultServiceProvider(options => options.ValidateOnBuild = false);
     var app = builder.ConfigureServices().Build();
 
-    Console.WriteLine($"ConnectionString: {app.Configuration["ConnectionStrings:Postgres"]!.Substring(0, 20)}");
-
     using var scope = app.Services.CreateScope();
 
     var appDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -645,5 +643,63 @@ else if (environment == "Staging")
     client.Disconnect();
 
     Console.WriteLine("Tunnel closed and disconnected from bastion");
+    Console.WriteLine("Migrations applied");
+}
+else if (environment == "Staging" && Environment.GetEnvironmentVariable("USE_TUNNEL") == "0")
+{
+    Console.WriteLine("Applying db migrations directly (not through a tunnel)...");
+
+    var dbHost = Environment.GetEnvironmentVariable("DB_HOST")!;
+    var dbPort = uint.Parse(Environment.GetEnvironmentVariable("DB_PORT")!);
+    var dbName = Environment.GetEnvironmentVariable("DB_NAME")!;
+    var dbUser = Environment.GetEnvironmentVariable("DB_USERNAME")!;
+    var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD")!;
+
+    var builder = API.Program.CreateWebApplicationBuilder(new string[]
+    {
+        "--ConnectionStrings:Postgres",
+        $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword};"
+    });
+    builder.Host.UseDefaultServiceProvider(options => options.ValidateOnBuild = false);
+    var app = builder.ConfigureServices().Build();
+
+    using var scope = app.Services.CreateScope();
+
+    var appDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await appDbContext.Database.MigrateAsync();
+    var dbConn = (NpgsqlConnection)appDbContext.Database.GetDbConnection();
+    await dbConn.OpenAsync();
+    await dbConn.ReloadTypesAsync();
+
+    var contractNameToAddress = new Dictionary<string, string>
+    {
+        ["Truthserum"] = "0x19cfc85e3dffb66295695bf48e06386cb1b5f320",
+        ["RestrictedAccess"] = "0x32d41e4e24f97ec7d52e3c43f8dbfe209cbd0e4c",
+        ["TruQuest"] = "0x25893ab0c6bb808e0857593684954ae4679931d1",
+        ["ThingValidationVerifierLottery"] = "0x15a15209e23205cf2e3d3c65349243b545549d65",
+        ["ThingValidationPoll"] = "0xf30a5359475787464fed1a6378ca25972bd64f6e",
+        ["SettlementProposalAssessmentVerifierLottery"] = "0x83c35a54679f5cac061ba68d51c053dfd47c59ae",
+        ["SettlementProposalAssessmentPoll"] = "0x1cf6f69441996615df4370e09a2885f2448b9234"
+    };
+
+    var version = Environment.GetEnvironmentVariable("APPLICATION_VERSION")!;
+
+    appDbContext.ContractAddresses.AddRange(
+        contractNameToAddress!.Select(kv => new ContractAddress(kv.Key, version, kv.Value))
+    );
+    await appDbContext.SaveChangesAsync();
+
+    var eventDbContext = scope.ServiceProvider.GetRequiredService<EventDbContext>();
+    await eventDbContext.Database.MigrateAsync();
+    dbConn = (NpgsqlConnection)eventDbContext.Database.GetDbConnection();
+    await dbConn.OpenAsync();
+    await dbConn.ReloadTypesAsync();
+
+    if (await eventDbContext.BlockProcessedEvent.CountAsync() == 0)
+    {
+        eventDbContext.BlockProcessedEvent.Add(new BlockProcessedEvent(id: 1, blockNumber: null));
+        await eventDbContext.SaveChangesAsync();
+    }
+
     Console.WriteLine("Migrations applied");
 }

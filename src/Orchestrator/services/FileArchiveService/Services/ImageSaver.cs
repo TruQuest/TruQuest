@@ -40,10 +40,7 @@ internal class ImageSaver : IImageSaver
         using var client = _httpClientFactory.CreateClient("image");
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         var response = await client.SendAsync(request);
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new Exception(response.ReasonPhrase!);
-        }
+        if (!response.IsSuccessStatusCode) throw new Exception(response.ReasonPhrase!);
 
         string? contentType;
         if (

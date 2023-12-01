@@ -50,37 +50,37 @@ resource "aws_route" "public_a_route_to_igw" {
   gateway_id             = aws_internet_gateway.main.id
 }
 
-# resource "aws_subnet" "public_b" {
-#   cidr_block              = "10.1.2.0/24"
-#   map_public_ip_on_launch = true
-#   vpc_id                  = aws_vpc.main.id
-#   availability_zone       = "${data.aws_region.current.name}b"
+resource "aws_subnet" "public_b" {
+  cidr_block              = "10.1.2.0/24"
+  map_public_ip_on_launch = true
+  vpc_id                  = aws_vpc.main.id
+  availability_zone       = "${data.aws_region.current.name}b"
 
-#   tags = merge(
-#     local.common_tags,
-#     tomap({ "Name" = "${local.prefix}-public-b" })
-#   )
-# }
+  tags = merge(
+    local.common_tags,
+    tomap({ "Name" = "${local.prefix}-public-b" })
+  )
+}
 
-# resource "aws_route_table" "public_b" {
-#   vpc_id = aws_vpc.main.id
+resource "aws_route_table" "public_b" {
+  vpc_id = aws_vpc.main.id
 
-#   tags = merge(
-#     local.common_tags,
-#     tomap({ "Name" = "${local.prefix}-public-b" })
-#   )
-# }
+  tags = merge(
+    local.common_tags,
+    tomap({ "Name" = "${local.prefix}-public-b" })
+  )
+}
 
-# resource "aws_route_table_association" "public_b" {
-#   subnet_id      = aws_subnet.public_b.id
-#   route_table_id = aws_route_table.public_b.id
-# }
+resource "aws_route_table_association" "public_b" {
+  subnet_id      = aws_subnet.public_b.id
+  route_table_id = aws_route_table.public_b.id
+}
 
-# resource "aws_route" "public_b_route_to_igw" {
-#   route_table_id         = aws_route_table.public_b.id
-#   destination_cidr_block = "0.0.0.0/0"
-#   gateway_id             = aws_internet_gateway.main.id
-# }
+resource "aws_route" "public_b_route_to_igw" {
+  route_table_id         = aws_route_table.public_b.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.main.id
+}
 
 # resource "aws_subnet" "private_a" {
 #   cidr_block        = "10.1.10.0/24"

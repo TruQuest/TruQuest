@@ -15,16 +15,15 @@ class IFrameManager {
   IFrameManager()
       : iframePrivateKeyGen = IFrame(
           viewId: 'view-private-key-gen',
-          url:
-              '${dotenv.env['ORCHESTRATOR_HOST']}/private-key-gen${dotenv.env['ENVIRONMENT'] == 'Development' ? '-dev' : ''}.html',
+          url: '${dotenv.env['ORCHESTRATOR_HOST']}/private-key-gen-${dotenv.env['ENVIRONMENT']!.toLowerCase()}.html',
         ),
         iframeKeyShareRender = IFrame(
           viewId: 'view-key-share-render',
-          url: '${dotenv.env['ORCHESTRATOR_HOST']}/key-share-render.html',
+          url: '${dotenv.env['ORCHESTRATOR_HOST']}/key-share-render-${dotenv.env['ENVIRONMENT']!.toLowerCase()}.html',
         ),
         iframeQrCodeScan = IFrame(
           viewId: 'view-qr-code-scan',
-          url: '${dotenv.env['ORCHESTRATOR_HOST']}/qr-code-scan.html',
+          url: '${dotenv.env['ORCHESTRATOR_HOST']}/qr-code-scan-${dotenv.env['ENVIRONMENT']!.toLowerCase()}.html',
           allowCamera: true,
         ) {
     iframePrivateKeyGen._init();

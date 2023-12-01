@@ -18,7 +18,7 @@ public class OrchestratorStatusTracker : BackgroundService
         IL2BlockchainQueryable l2BlockchainQueryable,
         IEmailForwarder emailForwarder,
         IServiceScopeFactory serviceScopeFactory,
-        AccountProvider accountProvider
+        IAccountProvider accountProvider
     )
     {
         _l2BlockchainQueryable = l2BlockchainQueryable;

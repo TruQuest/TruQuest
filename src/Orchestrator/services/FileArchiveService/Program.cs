@@ -11,7 +11,7 @@ using Services;
 Action<ResourceBuilder> configureResource = resource =>
     resource.AddService(
         serviceName: Telemetry.ServiceName,
-        serviceVersion: "0.1.0",
+        serviceVersion: "0.1.0", // @@TODO: Config.
         serviceInstanceId: Environment.MachineName
     );
 
@@ -21,19 +21,18 @@ IHost host = Host.CreateDefaultBuilder(args)
         var configuration = hostContext.Configuration;
 
         loggingBuilder.ClearProviders();
-        loggingBuilder.AddDebug();
-        loggingBuilder.AddConsole();
+        if (hostContext.HostingEnvironment.EnvironmentName is "Development" or "Testing")
+        {
+            loggingBuilder.AddDebug();
+            loggingBuilder.AddConsole();
+        }
 
         loggingBuilder.AddOpenTelemetry(options =>
         {
             var resourceBuilder = ResourceBuilder.CreateDefault();
             configureResource(resourceBuilder);
             options.SetResourceBuilder(resourceBuilder);
-
-            options.AddOtlpExporter(otlpOptions =>
-            {
-                otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
-            });
+            options.AddOtlpExporter(otlpOptions => otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!));
         });
     })
     .ConfigureServices((hostContext, services) =>
@@ -45,18 +44,12 @@ IHost host = Host.CreateDefaultBuilder(args)
             .WithTracing(builder =>
                 builder
                     .AddSource(Telemetry.ActivitySource.Name)
-                    .AddOtlpExporter(otlpOptions =>
-                    {
-                        otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
-                    })
+                    .AddOtlpExporter(otlpOptions => otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!))
             )
             .WithMetrics(builder =>
                 builder
                     .AddMeter(Telemetry.Meter.Name)
-                    .AddOtlpExporter(otlpOptions =>
-                    {
-                        otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!);
-                    })
+                    .AddOtlpExporter(otlpOptions => otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!))
             );
 
         var mimeTypes = configuration["Images:AcceptableMimeTypes"]!.Split(',');
@@ -102,7 +95,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                                 .WithGroupId(configuration["Kafka:Consumer:GroupId"])
                                 .WithAutoOffsetReset(AutoOffsetReset.Earliest)
                                 .WithBufferSize(1)
-                                .WithWorkersCount(4)
+                                .WithWorkersCount(1)
                                 .AddMiddlewares(middlewares =>
                                     middlewares
                                         .AddDeserializer<MessageSerializer, MessageTypeResolver>()

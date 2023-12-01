@@ -1,30 +1,142 @@
-version: '3.7'
+version: '2'
 
 services:
+  kafka:
+    image: bitnami/kafka:3.6
+    user: root
+    ports:
+      - '9092'
+      - '9094:9094'
+    volumes:
+      - /backend/kafka:/bitnami/kafka
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://${hostname}:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+    networks:
+      - truquest
+
+  debezium:
+    image: debezium/connect:2.4.1.Final
+    environment:
+      BOOTSTRAP_SERVERS: 'kafka:9092'
+      GROUP_ID: debez
+      CONFIG_STORAGE_TOPIC: debez_connect_configs
+      OFFSET_STORAGE_TOPIC: debez_connect_offsets
+      STATUS_STORAGE_TOPIC: debez_connect_statuses
+    ports:
+      - '8083'
+    networks:
+      - truquest
+    depends_on:
+      - kafka
+
   ipfs:
-    image: ipfs/kubo:v0.20.0
+    image: ipfs/kubo
     ports:
       - '4001'
       - '4001/udp'
       - '8080:8080'
       - '5001:5001'
     volumes:
-      - /backend/ipfs/data:/data/ipfs
+      - /backend/ipfs:/data/ipfs
     networks:
       - truquest
-    restart: unless-stopped
 
-  dummy:
-    image: ${dummy_image_uri}
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.80.0
+    command: [ --config=/etc/otel-collector-config.yml ]
+    volumes:
+      - ./otel-collector-config.yml:/etc/otel-collector-config.yml
+    ports:
+      - '4317'
+    networks:
+      - truquest
+    depends_on:
+      - uptrace
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.4
     environment:
-      - ASPNETCORE_URLS=http://+:80
-      - ASPNETCORE_ENVIRONMENT=Development
+      CLICKHOUSE_DB: uptrace
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'localhost:8123/ping']
+      interval: 1s
+      timeout: 1s
+      retries: 30
+    volumes:
+      - /backend/clickhouse:/var/lib/clickhouse
+    ports:
+      - '8123'
+      - '9000'
+    networks:
+      - truquest
+
+  uptrace:
+    image: 'uptrace/uptrace:1.5.6'
+    volumes:
+      - ./uptrace.yml:/etc/uptrace/uptrace.yml
+      - ./truquest.crt:/etc/uptrace/tls/uptrace.crt
+      - ./truquest.key:/etc/uptrace/tls/uptrace.key
+    ports:
+      - '14317'
+      - '14318:14318'
+    networks:
+      - truquest
+    depends_on:
+      - clickhouse
+
+  file-archive:
+    image: ${file_archive_image_uri}
+    environment:
+      DOTNET_ENVIRONMENT: Staging
+      ASPNETCORE_ENVIRONMENT: Staging
+    volumes:
+      - '/backend/user_files:/user_files'
+    networks:
+      - truquest
+    depends_on:
+      - kafka
+      - ipfs
+      - otel-collector
+
+  orchestrator:
+    image: ${orchestrator_image_uri}
+    environment:
+      ASPNETCORE_ENVIRONMENT: Staging
+      ASPNETCORE_URLS: 'https://+:443;http://+:80'
+      ASPNETCORE_Kestrel__Certificates__Default__Path: /https/truquest.crt
+      ASPNETCORE_Kestrel__Certificates__Default__KeyPath: /https/truquest.key
+      AdvertisedHost: 'https://${hostname}'
+      ConnectionStrings__Postgres: ${db_connection_string}
+      Fido__ServerDomain: ${hostname}
+      Fido__Origins__0: 'https://${hostname}'
+      Ethereum__Networks__OptimismLocal__URL: ${ethereum_rpc_url}
+      Ethereum__Networks__OptimismLocal__ChainId: ${ethereum_chain_id}
+      Ethereum__Networks__OptimismLocal__SettlementNetwork__URL: ${ethereum_l1_rpc_url}
+      Ethereum__Networks__OptimismLocal__SettlementNetwork__ChainId: ${ethereum_l1_chain_id}
+      Ethereum__Bundler__OptimismLocal__Host: ${erc4337_bundler_host}
+      IPFS__GatewayHost: 'http://${hostname}:8080'
+    env_file:
+      - .env
+    volumes:
+      - ./truquest.crt:/https/truquest.crt
+      - ./truquest.key:/https/truquest.key
+      - '/backend/user_files:/user_files'
     ports:
       - '80:80'
+      - '443:443'
     networks:
       - truquest
-    restart: unless-stopped
-    
+    depends_on:
+      - file-archive
+      - debezium
+
 networks:
   truquest:
     driver: bridge

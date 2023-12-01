@@ -521,8 +521,5 @@ deploy/terraform/docker-compose.tf.yml
 
 *.zip
 
-wwwroot/
-!**/wwwroot/key-share-render.html
-!**/wwwroot/private-key-gen-dev.html
-!**/wwwroot/private-key-gen.html
-!**/wwwroot/qr-code-scan.html
+truquest.crt
+truquest.key

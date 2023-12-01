@@ -30,7 +30,6 @@ internal class ContractCaller : IContractCaller
 {
     private readonly ILogger<ContractCaller> _logger;
     private readonly IMemoryCache _memoryCache;
-    private readonly AccountProvider _accountProvider;
     private readonly Web3 _web3;
     private readonly string _entryPointAddress;
     private readonly string _simpleAccountFactoryAddress;
@@ -59,16 +58,15 @@ internal class ContractCaller : IContractCaller
         ILogger<ContractCaller> logger,
         IMemoryCache memoryCache,
         IConfiguration configuration,
-        AccountProvider accountProvider,
+        IAccountProvider accountProvider,
         IHostApplicationLifetime appLifetime
     )
     {
         _logger = logger;
         _memoryCache = memoryCache;
-        _accountProvider = accountProvider;
 
         var network = configuration["Ethereum:Network"]!;
-        var orchestrator = _accountProvider.GetAccount("Orchestrator");
+        var orchestrator = accountProvider.GetAccount("Orchestrator");
         _web3 = new Web3(orchestrator, configuration[$"Ethereum:Networks:{network}:URL"]);
         _entryPointAddress = configuration[$"Ethereum:Contracts:{network}:EntryPoint:Address"]!;
         _simpleAccountFactoryAddress = configuration[$"Ethereum:Contracts:{network}:SimpleAccountFactory:Address"]!;

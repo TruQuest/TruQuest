@@ -32,7 +32,7 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        DotNetEnv.Env.TraversePath().Load();
+        if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development") DotNetEnv.Env.TraversePath().Load();
 
         var app = await CreateWebApplicationBuilder(args)
             .ConfigureServices()
@@ -60,13 +60,16 @@ public static class WebApplicationBuilderExtension
         var configuration = builder.Configuration;
 
         builder.Logging.ClearProviders();
-        builder.Logging.AddDebug();
-        builder.Logging.AddConsole();
+        if (builder.Environment.EnvironmentName is "Development" or "Testing")
+        {
+            builder.Logging.AddDebug();
+            builder.Logging.AddConsole();
+        }
 
         Action<ResourceBuilder> configureResource = resource =>
             resource.AddService(
                 serviceName: Telemetry.ServiceName,
-                serviceVersion: "0.1.0",
+                serviceVersion: "0.1.0", // @@TODO: Config.
                 serviceInstanceId: Environment.MachineName
             );
 
@@ -103,7 +106,7 @@ public static class WebApplicationBuilderExtension
 
                     return null;
                 })
-                .AddConsoleExporter(options => options.Targets = OpenTelemetry.Exporter.ConsoleExporterOutputTargets.Debug)
+                // .AddConsoleExporter(options => options.Targets = OpenTelemetry.Exporter.ConsoleExporterOutputTargets.Debug)
                 .AddOtlpExporter(otlpOptions => otlpOptions.Endpoint = new Uri(configuration["Otlp:Endpoint"]!))
             );
 
@@ -121,6 +124,7 @@ public static class WebApplicationBuilderExtension
             options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
         });
 
+        // @@TODO!!: Configure for Staging and Prod.
         builder.Services.AddCors(options =>
             options.AddDefaultPolicy(builder =>
                 builder
@@ -158,7 +162,7 @@ public static class WebApplicationBuilderExtension
             .AddSignalR()
             .AddHubOptions<TruQuestHub>(options =>
             {
-                options.KeepAliveInterval = TimeSpan.FromSeconds(90);
+                options.KeepAliveInterval = TimeSpan.FromSeconds(90); // @@TODO: Config.
                 options.ClientTimeoutInterval = TimeSpan.FromSeconds(180);
 
                 options.AddFilter<ConvertHandleErrorToHubExceptionFilter>();
@@ -197,6 +201,8 @@ public static class WebApplicationBuilderExtension
             ServeUnknownFileTypes = true
         });
 
+        // @@TODO: Https redirect for prod and staging.
+
         app.UseCors();
         app.UseAuthentication();
 
@@ -215,7 +221,7 @@ public static class WebApplicationBuilderExtension
 
     public static async Task<WebApplication> DeployContracts(this WebApplication app)
     {
-        if (!(app.Environment.EnvironmentName == "Development" || app.Environment.EnvironmentName == "Testing")) return app;
+        if (app.Environment.EnvironmentName is not ("Development" or "Testing")) return app;
 
         {
             var processInfo = new ProcessStartInfo()
@@ -273,7 +279,7 @@ public static class WebApplicationBuilderExtension
 
     public static async Task<WebApplication> ApplyDbMigrations(this WebApplication app)
     {
-        if (!(app.Environment.EnvironmentName == "Development" || app.Environment.EnvironmentName == "Testing")) return app;
+        if (app.Environment.EnvironmentName is not ("Development" or "Testing")) return app;
 
         var processInfo = new ProcessStartInfo()
         {
@@ -285,6 +291,7 @@ public static class WebApplicationBuilderExtension
             RedirectStandardOutput = true
         };
         processInfo.EnvironmentVariables.Add("DOTNET_ENVIRONMENT", "Development");
+        processInfo.EnvironmentVariables.Add("ASPNETCORE_ENVIRONMENT", "Development");
 
         var process = new Process
         {
@@ -326,15 +333,45 @@ public static class WebApplicationBuilderExtension
 
     public static async Task<WebApplication> RegisterDebeziumConnector(this WebApplication app)
     {
-        using var client = new HttpClient();
-        var body = await File.ReadAllTextAsync("pg-connector.conf.json");
-        using var request = new HttpRequestMessage(HttpMethod.Post, "http://localhost:8083/connectors");
-        request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
-        var response = await client.SendAsync(request);
-        if (!(response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.Conflict))
+        var builder = new Npgsql.NpgsqlConnectionStringBuilder(app.Configuration.GetConnectionString("Postgres"));
+        var payload = await File.ReadAllTextAsync("pg-connector.conf.json");
+        payload = payload
+            .Replace("${database.hostname}", builder.Host!)
+            .Replace("${database.port}", builder.Port.ToString())
+            .Replace("${database.user}", builder.Username!)
+            .Replace("${database.password}", builder.Password!)
+            .Replace("${database.dbname}", builder.Database!);
+
+        Exception? e;
+        int attempts = 15;
+        do
         {
-            throw new Exception("Debez");
-        }
+            e = null;
+            try
+            {
+                using var client = new HttpClient();
+                using var request = new HttpRequestMessage(HttpMethod.Post, app.Configuration["Debezium:RegisterEndpoint"]);
+                request.Content = new StringContent(payload, System.Text.Encoding.UTF8, "application/json");
+                var response = await client.SendAsync(request);
+                if (!(response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.Conflict))
+                {
+                    throw new Exception(
+                        $"Error trying to register debezium connector: [{response.StatusCode}] {await response.Content.ReadAsStringAsync()}"
+                    );
+                }
+
+                app.Logger.LogInformation("Successfully registered debezium connector");
+                break;
+            }
+            catch (Exception ex)
+            {
+                e = ex;
+                app.Logger.LogWarning(ex, "Error trying to register debezium connector");
+                await Task.Delay(5000);
+            }
+        } while (--attempts > 0);
+
+        if (e != null) throw e;
 
         return app;
     }

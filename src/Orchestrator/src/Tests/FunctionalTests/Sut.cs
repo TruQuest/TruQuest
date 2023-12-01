@@ -56,7 +56,7 @@ public class Sut
 
     public ApplicationEventChannel ApplicationEventChannel { get; private set; }
     public ApplicationRequestChannel ApplicationRequestChannel { get; private set; }
-    public AccountProvider AccountProvider { get; private set; }
+    public IAccountProvider AccountProvider { get; private set; }
     public Signer Signer { get; private set; }
     public BlockchainManipulator BlockchainManipulator { get; private set; }
     public ContractCaller ContractCaller { get; private set; }
@@ -146,7 +146,7 @@ public class Sut
         await StartHostedService<ContractEventTracker>();
         await StartHostedService<OrchestratorStatusTracker>();
 
-        AccountProvider = _app.Services.GetRequiredService<AccountProvider>();
+        AccountProvider = _app.Services.GetRequiredService<IAccountProvider>();
         Signer = new Signer(AccountProvider);
         BlockchainManipulator = new BlockchainManipulator(_app.Configuration);
         ContractCaller = new ContractCaller(

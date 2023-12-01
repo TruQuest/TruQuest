@@ -1,0 +1,95 @@
+ch:
+  addr: clickhouse:9000
+  user: default
+  password:
+  database: uptrace
+  max_execution_time: 30s
+
+pg:
+  addr: ${db_host}:${db_port}
+  user: ${db_username}
+  password: ${db_password}
+  database: ${db_name}
+  tls:
+    insecure_skip_verify: true
+
+projects:
+  - id: 1
+    name: Uptrace
+    token: ${uptrace_default_project_secret_token}
+    pinned_attrs:
+      - service
+      - host.name
+      - deployment.environment
+    group_by_env: false
+    group_funcs_by_service: false
+
+  - id: 2
+    name: TruQuest
+    token: ${uptrace_truquest_project_secret_token}
+    pinned_attrs:
+      - service
+      - host.name
+      - deployment.environment
+    group_by_env: false
+    group_funcs_by_service: false
+
+auth:
+  users:
+    - name: Sergey
+      email: ${uptrace_user_email}
+      password: ${uptrace_user_password}
+      notify_by_email: true
+
+ch_schema:
+  compression: ZSTD(3)
+  replicated: false
+  spans:
+    ttl_delete: 30 DAY
+    storage_policy: "default"
+  metrics:
+    ttl_delete: 90 DAY
+    storage_policy: "default"
+
+listen:
+  grpc:
+    addr: ":14317"
+    tls:
+      cert_file: /etc/uptrace/tls/uptrace.crt
+      key_file: /etc/uptrace/tls/uptrace.key
+
+  http:
+    addr: ":14318"
+    tls:
+      cert_file: /etc/uptrace/tls/uptrace.crt
+      key_file: /etc/uptrace/tls/uptrace.key
+
+site:
+
+spans:
+
+metrics:
+  drop_attrs:
+    - telemetry.sdk.language
+    - telemetry.sdk.name
+    - telemetry.sdk.version
+
+uptrace_go:
+  dsn: https://${uptrace_default_project_secret_token}@localhost:14317/1
+  tls:
+    insecure_skip_verify: true
+
+smtp_mailer:
+  enabled: false
+  host: mailhog
+  port: 1025
+  username: mailhog
+  password: mailhog
+  from: "uptrace@localhost"
+
+logs:
+  level: INFO
+
+secret_key: ${uptrace_secret_key}
+
+debug: false

@@ -90,6 +90,7 @@ public static class IServiceCollectionExtension
             .AddIdentityCore<UserDm>(options =>
             {
                 options.ClaimsIdentity.UserIdClaimType = JwtRegisteredClaimNames.Sub;
+                // @@TODO!!
                 options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -_.@";
             })
             .AddEntityFrameworkStores<AppDbContext>()
@@ -106,15 +107,15 @@ public static class IServiceCollectionExtension
         services.AddSingleton<Eip712TypedDataSigner>();
         services.AddSingleton<EthereumMessageSigner>();
         services.AddSingleton<ISigner, Signer>();
-        if (environment.IsStaging() || environment.IsProduction())
-        {
-            services.AddSingleton<IEmailSender, EmailSender>();
-            services.AddSingleton<IEmailForwarder, EmailForwarder>();
-        }
-        else
+        if (environment.EnvironmentName is "Development" or "Testing")
         {
             services.AddSingleton<IEmailSender, DummyEmailSender>();
             services.AddSingleton<IEmailForwarder, DummyEmailForwarder>();
+        }
+        else
+        {
+            services.AddSingleton<IEmailSender, EmailSender>();
+            services.AddSingleton<IEmailForwarder, EmailForwarder>();
         }
 
         services
@@ -239,7 +240,14 @@ public static class IServiceCollectionExtension
 
         services.AddSingleton<IContractEventListener, ContractEventListener>();
 
-        services.AddSingleton<AccountProvider>();
+        if (environment.EnvironmentName is "Development" or "Testing")
+        {
+            services.AddSingleton<IAccountProvider, AccountProviderDev>();
+        }
+        else
+        {
+            services.AddSingleton<IAccountProvider, AccountProvider>();
+        }
         services.AddSingleton<IContractCaller, ContractCaller>();
         var network = configuration["Ethereum:Network"]!;
         if (network == "Ganache")
@@ -253,17 +261,21 @@ public static class IServiceCollectionExtension
         services.AddSingleton<IL1BlockchainQueryable, L1BlockchainQueryable>();
         services.AddSingleton<IL2BlockchainQueryable, L2BlockchainQueryable>();
         services.AddSingleton<IEthereumAddressFormatter, EthereumAddressFormatter>();
-        services.AddSingleton<AbiEncoder>();
-        services.AddSingleton<BundlerApi>();
-        services.AddTransient<UserOperationBuilder>();
-        services.AddSingleton<UserOperationService>();
 
-        services.AddHttpClient("bundler", (sp, client) =>
+        if (environment.EnvironmentName is "Development" or "Testing")
         {
-            client.BaseAddress = new Uri(
-                configuration[$"Ethereum:Bundler:{network}:Host"] + configuration[$"Ethereum:Bundler:{network}:Path"]
-            );
-        });
+            services.AddSingleton<AbiEncoder>();
+            services.AddSingleton<BundlerApi>();
+            services.AddTransient<UserOperationBuilder>();
+            services.AddSingleton<UserOperationService>();
+
+            services.AddHttpClient("bundler", (sp, client) =>
+            {
+                client.BaseAddress = new Uri(
+                    configuration[$"Ethereum:Bundler:{network}:Host"] + configuration[$"Ethereum:Bundler:{network}:Path"]
+                );
+            });
+        }
 
         services.AddSingleton<IRequestDispatcher, RequestDispatcher>();
 
@@ -319,7 +331,7 @@ public static class IServiceCollectionExtension
                 )
         );
 
-        if (!(environment.IsStaging() || environment.IsProduction()))
+        if (environment.EnvironmentName is "Development" or "Testing")
         {
             var awsOptions = new AWSOptions
             {

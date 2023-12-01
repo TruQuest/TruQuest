@@ -1,0 +1,32 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+
+exporters:
+  logging:
+    verbosity: detailed
+  otlp/uptrace:
+    endpoint: uptrace:14317
+    tls:
+      insecure_skip_verify: true
+    headers:
+      uptrace-dsn: "https://${uptrace_truquest_project_secret_token}@localhost:14317/2"
+
+processors:
+  batch:
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [otlp/uptrace]
+      processors: [batch]
+    metrics:
+      receivers: [otlp]
+      exporters: [logging, otlp/uptrace]
+      processors: [batch]
+    logs:
+      receivers: [otlp]
+      exporters: [otlp/uptrace]
+      processors: [batch]

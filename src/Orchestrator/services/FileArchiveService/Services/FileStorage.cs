@@ -8,10 +8,7 @@ internal class FileStorage : IFileStorage
     private readonly ILogger<FileStorage> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
 
-    public FileStorage(
-        ILogger<FileStorage> logger,
-        IHttpClientFactory httpClientFactory
-    )
+    public FileStorage(ILogger<FileStorage> logger, IHttpClientFactory httpClientFactory)
     {
         _logger = logger;
         _httpClientFactory = httpClientFactory;

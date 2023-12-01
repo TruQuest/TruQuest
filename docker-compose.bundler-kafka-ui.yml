@@ -1,0 +1,20 @@
+version: '2'
+
+services:
+  bundler:
+    image: etherspot/skandha:1.0.22-alpha
+    command: 'standalone --unsafeMode'
+    volumes:
+      - type: bind
+        source: ${PWD}/bundler-config.json
+        target: /usr/app/config.json
+    ports:
+      - 3000:14337
+
+  # kafka-ui:
+  #   image: provectuslabs/kafka-ui:53a6553765a806eda9905c43bfcfe09da6812035
+  #   environment:
+  #     KAFKA_CLUSTERS_0_NAME: local
+  #     KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: something
+  #   ports:
+  #     - '7777:8080'

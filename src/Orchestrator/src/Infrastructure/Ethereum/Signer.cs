@@ -20,7 +20,6 @@ namespace Infrastructure.Ethereum;
 
 internal class Signer : ISigner
 {
-    private readonly AccountProvider _accountProvider;
     private readonly EthereumMessageSigner _personalSigner;
     private readonly Eip712TypedDataSigner _eip712Signer;
     private readonly DomainWithSalt _domain;
@@ -30,12 +29,11 @@ internal class Signer : ISigner
 
     public Signer(
         IConfiguration configuration,
-        AccountProvider accountProvider,
+        IAccountProvider accountProvider,
         EthereumMessageSigner personalSigner,
         Eip712TypedDataSigner eip712Signer
     )
     {
-        _accountProvider = accountProvider;
         _personalSigner = personalSigner;
         _eip712Signer = eip712Signer;
 

@@ -1,37 +1,44 @@
-# data "docker_registry_image" "migrator" {
-#   name = var.migrator_image_uri
-# }
+data "docker_registry_image" "db_migrator" {
+  name = "${var.db_migrator_image_uri}:${var.application_version_index_to_tag[var.application_version_count - 1]}"
+}
 
-# resource "docker_image" "migrator" {
-#   name          = data.docker_registry_image.migrator.name
-#   pull_triggers = [data.docker_registry_image.migrator.sha256_digest]
-# }
+resource "docker_image" "db_migrator" {
+  name          = data.docker_registry_image.db_migrator.name
+  pull_triggers = [data.docker_registry_image.db_migrator.sha256_digest]
+}
 
-# resource "docker_container" "migrator" {
-#   name  = "${local.prefix}-migrator"
-#   image = docker_image.migrator.image_id
-#   # If true attaches to the container after its creation and waits the end of its execution.
-#   attach = true
-#   # Save the container logs (attach must be enabled).
-#   logs = true
-#   # If true, then the container will be kept running.
-#   # If false, then as long as the container exists, Terraform assumes it is successful.
-#   must_run = false
-#   # If true, then the container will be automatically removed when it exits.
-#   # rm = true # Error: No such container XXX
-#   env = [
-#     "DOTNET_ENVIRONMENT=Staging",
-#     "APPLICATION_VERSION=${var.application_version}",
-#     "BASTION_HOST=${aws_elastic_beanstalk_environment.backend_staging.cname}", # should tunnel through a separate bastion host
-#     "BASTION_USER=ec2-user",
-#     "BASTION_PRIVATE_KEY=${var.bastion_private_key}",
-#     "DB_HOST=${aws_db_instance.main.address}",
-#     "DB_PORT=5432",
-#     "DB_NAME=TruQuest",
-#     "DB_USERNAME=${var.db_username}",
-#     "DB_PASSWORD=${var.db_password}"
-#   ]
-# }
+resource "docker_container" "db_migrator" {
+  name  = "${local.prefix}-db-migrator"
+  image = docker_image.db_migrator.image_id
+  # If true attaches to the container after its creation and waits the end of its execution.
+  attach = true
+  # Save the container logs (attach must be enabled).
+  logs = true
+  # If true, then the container will be kept running.
+  # If false, then as long as the container exists, Terraform assumes it is successful.
+  must_run = false
+  # If true, then the container will be automatically removed when it exits.
+  # rm = true # Error: No such container XXX
+  env = [
+    "DOTNET_ENVIRONMENT=Staging",
+    "USE_TUNNEL=0",
+    "APPLICATION_VERSION=${var.application_version_index_to_tag[var.application_version_count - 1]}",
+    # "BASTION_HOST=${aws_elastic_beanstalk_environment.backend_staging.cname}", # should tunnel through a separate bastion host
+    # "BASTION_USER=ec2-user",
+    # "BASTION_PRIVATE_KEY=${var.bastion_private_key}",
+    "DB_HOST=${aws_db_instance.main.address}",
+    "DB_PORT=${aws_db_instance.main.port}",
+    "DB_NAME=${var.db_name}",
+    "DB_USERNAME=${var.db_username}",
+    "DB_PASSWORD=${var.db_password}"
+  ]
+
+  # mounts {
+  #   type   = "bind"
+  #   source = var.artifacts_host_path
+  #   target = "/app/artifacts"
+  # }
+}
 
 # Docker provider stores the info about the current docker_image in the terraform state,
 # but the info about the current docker_container is obtained from docker API, meaning

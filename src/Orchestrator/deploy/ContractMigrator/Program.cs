@@ -45,7 +45,7 @@ if (environment == "Development")
                 etherAmount: 1.0m
             );
 
-        Console.WriteLine($"Funded {address}. Txn hash: {txnReceipt.TransactionHash}");
+        Console.WriteLine($"Funded with Eth {address}. Txn hash: {txnReceipt.TransactionHash}");
     }
 }
 else
@@ -289,7 +289,7 @@ if (environment == "Development")
         );
     }
 
-    Console.WriteLine($"Funded and gave restricted access to:\n\t{string.Join("\n\t", addressesToWhitelistAndFund)}");
+    Console.WriteLine($"Funded with Tru and gave restricted access to:\n\t{string.Join("\n\t", addressesToWhitelistAndFund)}");
 }
 
 using var fsw = new FileStream("artifacts/contract_addresses.json", FileMode.Create, FileAccess.Write);

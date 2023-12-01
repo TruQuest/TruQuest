@@ -17,7 +17,7 @@ public class ContractCaller
 {
     private readonly ILogger _logger;
     private readonly IConfiguration _configuration;
-    private readonly AccountProvider _accountProvider;
+    private readonly IAccountProvider _accountProvider;
     private readonly UserOperationService _userOperationService;
     private readonly BlockchainManipulator _blockchainManipulator;
 
@@ -34,7 +34,7 @@ public class ContractCaller
     public ContractCaller(
         ILogger logger,
         IConfiguration configuration,
-        AccountProvider accountProvider,
+        IAccountProvider accountProvider,
         UserOperationService userOperationService,
         BlockchainManipulator blockchainManipulator
     )

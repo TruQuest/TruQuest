@@ -16,11 +16,62 @@ data "archive_file" "backend_source" {
     content = templatefile(
       "./eb/docker-compose.tftpl",
       {
-        dummy_image_uri = "chekhenkho/truquest_dummy:${var.application_version_index_to_tag[var.application_version_count - 1]}"
-        # db_host         = aws_db_instance.main.address
+        hostname               = var.hostname
+        file_archive_image_uri = "${var.file_archive_image_uri}:${var.application_version_index_to_tag[var.application_version_count - 1]}"
+        orchestrator_image_uri = "${var.orchestrator_image_uri}:${var.application_version_index_to_tag[var.application_version_count - 1]}"
+        db_connection_string   = "Host=${aws_db_instance.main.address};Port=${aws_db_instance.main.port};Database=${var.db_name};Username=${var.db_username};Password=${var.db_password};"
+        ethereum_rpc_url       = var.ethereum_rpc_url
+        ethereum_chain_id      = var.ethereum_chain_id
+        ethereum_l1_rpc_url    = var.ethereum_l1_rpc_url
+        ethereum_l1_chain_id   = var.ethereum_l1_chain_id
+        erc4337_bundler_host   = var.erc4337_bundler_host
       }
     )
     filename = "docker-compose.yml"
+  }
+
+  source {
+    content  = file("./eb/.env")
+    filename = ".env"
+  }
+
+  source {
+    content = templatefile(
+      "./eb/otel-collector-config.tftpl",
+      {
+        uptrace_truquest_project_secret_token = var.uptrace_truquest_project_secret_token
+      }
+    )
+    filename = "otel-collector-config.yml"
+  }
+
+  source {
+    content  = file("./eb/truquest.crt")
+    filename = "truquest.crt"
+  }
+
+  source {
+    content  = file("./eb/truquest.key")
+    filename = "truquest.key"
+  }
+
+  source {
+    content = templatefile(
+      "./eb/uptrace.tftpl",
+      {
+        db_host                               = aws_db_instance.main.address
+        db_port                               = aws_db_instance.main.port
+        db_username                           = var.db_username
+        db_password                           = var.db_password
+        db_name                               = var.db_name
+        uptrace_default_project_secret_token  = var.uptrace_default_project_secret_token
+        uptrace_truquest_project_secret_token = var.uptrace_truquest_project_secret_token
+        uptrace_user_email                    = var.uptrace_user_email
+        uptrace_user_password                 = var.uptrace_user_password
+        uptrace_secret_key                    = var.uptrace_secret_key
+      }
+    )
+    filename = "uptrace.yml"
   }
 
   source {
@@ -102,37 +153,65 @@ resource "aws_iam_role_policy_attachment" "eb_health" {
 
 resource "aws_security_group" "backend" {
   name        = "${local.prefix}-backend"
-  description = "Allows SSH, HTTP, and IPFS gateway access from anywhere"
+  description = "Allows access from local machine"
   vpc_id      = aws_vpc.main.id
 
   ingress {
     protocol    = "tcp"
     from_port   = 22
     to_port     = 22
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${var.local_public_ip}/32"]
   }
 
   ingress {
     protocol    = "tcp"
     from_port   = 80
     to_port     = 80
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${var.local_public_ip}/32"]
+  }
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = 443
+    to_port     = 443
+    cidr_blocks = ["${var.local_public_ip}/32"]
   }
 
   ingress {
     protocol    = "tcp"
     from_port   = 8080
     to_port     = 8080
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${var.local_public_ip}/32"]
   }
 
-  # egress {
-  #   protocol         = "-1"
-  #   from_port        = 0
-  #   to_port          = 0
-  #   cidr_blocks      = ["0.0.0.0/0"]
-  #   ipv6_cidr_blocks = ["::/0"]
-  # }
+  ingress {
+    protocol    = "tcp"
+    from_port   = 5001
+    to_port     = 5001
+    cidr_blocks = ["${var.local_public_ip}/32"]
+  }
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = 9094
+    to_port     = 9094
+    cidr_blocks = ["${var.local_public_ip}/32"]
+  }
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = 14318
+    to_port     = 14318
+    cidr_blocks = ["${var.local_public_ip}/32"]
+  }
+
+  egress {
+    protocol         = "-1"
+    from_port        = 0
+    to_port          = 0
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
 
   tags = local.common_tags
 }
@@ -169,8 +248,8 @@ resource "aws_elastic_beanstalk_application_version" "backend" {
   tags = local.common_tags
 }
 
-resource "aws_elastic_beanstalk_environment" "backend_staging" {
-  # depends_on          = [docker_container.migrator]
+resource "aws_elastic_beanstalk_environment" "backend" {
+  depends_on          = [docker_container.db_migrator]
   name                = "${local.prefix}-backend"
   application         = aws_elastic_beanstalk_application.backend.name
   tier                = "WebServer"
@@ -198,7 +277,7 @@ resource "aws_elastic_beanstalk_environment" "backend_staging" {
   setting {
     namespace = "aws:ec2:instances"
     name      = "InstanceTypes"
-    value     = "t3.micro"
+    value     = "t3a.large"
   }
 
   setting {
@@ -217,6 +296,12 @@ resource "aws_elastic_beanstalk_environment" "backend_staging" {
     namespace = "aws:autoscaling:launchconfiguration"
     name      = "EC2KeyName"
     value     = "${local.prefix}-backend"
+  }
+
+  setting {
+    namespace = "aws:autoscaling:launchconfiguration"
+    name      = "RootVolumeSize"
+    value     = "16"
   }
 
   setting {

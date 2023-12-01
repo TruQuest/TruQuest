@@ -15,10 +15,7 @@ internal class FrontendEnvFileProvider : IFrontendEnvFileProvider
         var contractsConfig = configuration.GetSection($"Ethereum:Contracts:{network}")!;
         _envFileContents =
             $"ENVIRONMENT={hostEnvironment.EnvironmentName}\n" +
-            $"WALLET_CONNECT_PROJECT_ID={configuration["WALLET_CONNECT_PROJECT_ID"]}\n" +
-            $"ALCHEMY_DUMMY_API_KEY={configuration["ALCHEMY_DUMMY_API_KEY"]}\n" +
-            $"DUMMY_OWNER_PRIVATE_KEY={configuration["DUMMY_OWNER_PRIVATE_KEY"]}\n" +
-            $"ORCHESTRATOR_HOST=http://localhost:5223\n" + // @@TODO
+            $"ORCHESTRATOR_HOST={configuration["AdvertisedHost"]}\n" +
             $"ETHEREUM_RPC_URL={configuration[$"Ethereum:Networks:{network}:URL"]}\n" +
             $"ETHEREUM_L1_RPC_URL={configuration[$"Ethereum:Networks:{network}:SettlementNetwork:URL"]}\n" +
             $"ERC4337_BUNDLER_BASE_URL={configuration[$"Ethereum:Bundler:{network}:Host"]}\n" +

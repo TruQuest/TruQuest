@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>TruQuest</title>
+
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+      integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+
+    <script>
+      window.addEventListener("message", async function (e) {
+        if (
+          e.origin !=
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ) {
+          console.log(`Invalid origin: ${e.origin}`);
+          return;
+        }
+
+        var message = e.data.toString();
+        var messageSplit = message.split("|");
+        var requestId = messageSplit[0];
+        var command = messageSplit[1];
+
+        if (command == "render") {
+          // @@TODO: Add center logo.
+          new QRCode(document.getElementById("qrcode"), {
+            text: localStorage.getItem("keyShare"),
+            width: 250,
+            height: 250,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H,
+          });
+
+          e.source.postMessage(
+            `view-key-share-render|${requestId}|ok`,
+            e.origin
+          );
+        } else if (command == "save") {
+          var link = document.createElement("a");
+          link.download = "truquest-key-share.png";
+          link.href = document.querySelector("#qrcode canvas").toDataURL();
+          link.click();
+
+          e.source.postMessage(
+            `view-key-share-render|${requestId}|ok`,
+            e.origin
+          );
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <div id="qrcode"></div>
+  </body>
+</html>

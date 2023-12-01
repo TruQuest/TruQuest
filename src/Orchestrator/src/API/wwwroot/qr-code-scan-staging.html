@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>TruQuest</title>
+
+    <script
+      src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"
+      type="application/javascript"
+    ></script>
+
+    <script>
+      window.onload = function () {
+        var codeScanned = false;
+
+        async function onScanSuccess(decodedText, decodedResult) {
+          if (codeScanned) return;
+
+          codeScanned = true;
+          var scanRequestId = localStorage.getItem("scanRequestId");
+          localStorage.setItem(scanRequestId, decodedText);
+
+          await html5QrcodeScanner.clear();
+          window.top.postMessage(
+            `view-qr-code-scan|00000000-0000-0000-0000-000000000000|${scanRequestId}`,
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          );
+          codeScanned = false; // @@??: Don't need to reset it since new iframe is loaded every time HtmlElementView is rendered ?
+        }
+
+        var html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", {
+          fps: 1,
+          qrbox: 250,
+        });
+        html5QrcodeScanner.render(onScanSuccess);
+      };
+    </script>
+  </head>
+  <body>
+    <div id="qr-reader" style="width: 600px"></div>
+  </body>
+</html>

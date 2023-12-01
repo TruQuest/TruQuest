@@ -4,7 +4,8 @@
         "DbMigrator": {
             "commandName": "Project",
             "environmentVariables": {
-                "DOTNET_ENVIRONMENT": "Development"
+                "DOTNET_ENVIRONMENT": "Development",
+                "ASPNETCORE_ENVIRONMENT": "Development"
             }
         }
     }
