@@ -33,7 +33,7 @@ class GeneralApiService {
 
   Future<List<TagVm>> getTags() async {
     try {
-      var response = await _dio.get('/tags');
+      var response = await _dio.get('/api/tags');
       return List.unmodifiable(
         (response.data['data'] as List<dynamic>).map((map) => TagVm.fromMap(map)),
       );

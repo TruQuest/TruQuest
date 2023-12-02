@@ -21,9 +21,11 @@ COPY ./src/API ./src/API
 
 RUN dotnet publish ./src/API/API.csproj --no-restore -c Release -o /build/release
 
+# @@??: Do not copy wwwroot?
+
 FROM mcr.microsoft.com/dotnet/aspnet:7.0
+RUN apt-get update -y && apt-get install -y curl
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
+EXPOSE 5223
 COPY --from=build /build/release .
 ENTRYPOINT ["dotnet", "API.dll"]

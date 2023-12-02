@@ -22,8 +22,8 @@
 
           await html5QrcodeScanner.clear();
           window.top.postMessage(
-            `view-qr-code-scan|00000000-0000-0000-0000-000000000000|${scanRequestId}`,
-            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            "view-qr-code-scan|00000000-0000-0000-0000-000000000000|" + scanRequestId,
+            "https://${hostname}"
           );
           codeScanned = false; // @@??: Don't need to reset it since new iframe is loaded every time HtmlElementView is rendered ?
         }

@@ -1,5 +1,10 @@
 **/bin/
 **/obj/
 **/.vscode/
+**/.dockerignore
 **/Dockerfile*
 **/docker-compose*
+nginx.conf
+truquest.crt
+truquest.key
+**/static_files/

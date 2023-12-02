@@ -1,7 +1,9 @@
 using System.Text.Json;
 using System.Diagnostics;
 using System.Reflection;
+using System.Net;
 
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
@@ -179,6 +181,14 @@ public static class WebApplicationBuilderExtension
         builder.Services.AddSingleton<IClientNotifier, ClientNotifier>();
         builder.Services.AddScoped<IConnectionIdProvider, ConnectionIdProvider>();
 
+        if (builder.Environment.EnvironmentName is "Staging" && builder.Configuration["DbMigrator"] == null)
+        {
+            builder.Services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.KnownNetworks.Add(new IPNetwork(Dns.GetHostEntry(Dns.GetHostName()).AddressList.First(), 16)); // @@??: 24?
+            });
+        }
+
         builder.Services.AddHostedService<ContractEventTracker>();
         builder.Services.AddHostedService<BlockTracker>();
         builder.Services.AddHostedService<OrchestratorStatusTracker>();
@@ -188,23 +198,20 @@ public static class WebApplicationBuilderExtension
 
     public static WebApplication ConfigurePipeline(this WebApplication app)
     {
-        app.Use(async (HttpContext context, RequestDelegate next) =>
+        if (app.Environment.EnvironmentName is "Staging")
         {
-            if (context.Request.Path == "/") context.Response.Redirect("/index.html", true);
-            else await next(context);
-        });
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            });
+        }
 
-        app.UseStaticFiles(new StaticFileOptions
-        {
-            // @@??: Fsr static images are not being served without this. Why?
-            // Because of Flutter's default (hash) url strategy?
-            ServeUnknownFileTypes = true
-        });
-
-        // @@TODO: Https redirect for prod and staging.
+        if (app.Environment.EnvironmentName is "Development" or "Testing") app.UseStaticFiles();
 
         app.UseCors();
         app.UseAuthentication();
+
+        app.MapGet("/health", () => Task.FromResult("Ok!")); // @@TODO
 
         // @@TODO: Figure out how to add endpoint filter to all groups and endpoints at once.
         // app.MapGroup("").AddEndpointFilter(...) doesn't work.
@@ -214,7 +221,7 @@ public static class WebApplicationBuilderExtension
         app.MapSettlementProposalEndpoints();
         app.MapGeneralEndpoints();
 
-        app.MapHub<TruQuestHub>("/hub");
+        app.MapHub<TruQuestHub>("/api/hub");
 
         return app;
     }

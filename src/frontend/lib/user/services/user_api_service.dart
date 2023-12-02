@@ -22,7 +22,7 @@ class UserApiService {
 
   Future<String> getNonceForSiwe(String account) async {
     try {
-      var response = await _dio.get('/user/siwe/$account');
+      var response = await _dio.get('/api/user/siwe/$account');
       return response.data['data'] as String;
     } on DioError catch (error) {
       throw wrapError(error);
@@ -32,7 +32,7 @@ class UserApiService {
   Future<AuthRvm> signInWithEthereum(String message, String signature) async {
     try {
       var response = await _dio.post(
-        '/user/siwe',
+        '/api/user/siwe',
         data: SignInWithEthereumCommand(
           message: message,
           signature: signature,
@@ -49,7 +49,7 @@ class UserApiService {
     var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       await _dio.post(
-        '/user/watch-list',
+        '/api/user/watch-list',
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
         ),
@@ -74,7 +74,7 @@ class UserApiService {
   Future<AttestationOptions> generateConfirmationCodeAndAttestationOptions(String email) async {
     try {
       var response = await _dio.post(
-        '/user/generate-code-and-attestation-options',
+        '/api/user/generate-code-and-attestation-options',
         data: GenerateConfirmationCodeAndAttestationOptionsCommand(email: email).toJson(),
       );
 
@@ -138,7 +138,7 @@ class UserApiService {
   ) async {
     try {
       var response = await _dio.post(
-        '/user/sign-up',
+        '/api/user/sign-up',
         data: SignUpCommand(
           email: email,
           confirmationCode: confirmationCode,
@@ -158,7 +158,7 @@ class UserApiService {
     var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.post(
-        '/user/generate-assertion-options',
+        '/api/user/generate-assertion-options',
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
         ),
@@ -191,7 +191,7 @@ class UserApiService {
     var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.post(
-        '/user/verify-assertion-and-get-key-share',
+        '/api/user/verify-assertion-and-get-key-share',
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
         ),
@@ -207,7 +207,7 @@ class UserApiService {
   Future<AssertionOptions> generateAssertionOptionsForSignIn() async {
     try {
       var response = await _dio.post(
-        '/user/generate-assertion-options-for-sign-in',
+        '/api/user/generate-assertion-options-for-sign-in',
         data: {},
       );
 
@@ -238,7 +238,7 @@ class UserApiService {
   Future<AuthRvm> verifyAssertionAndSignIn(RawAssertion assertion) async {
     try {
       var response = await _dio.post(
-        '/user/verify-assertion-and-sign-in',
+        '/api/user/verify-assertion-and-sign-in',
         data: VerifyAssertionAndSignInCommand(rawAssertion: assertion).toJson(),
       );
 

@@ -66,7 +66,7 @@ class ThingApiService {
       );
 
       var response = await _dio.post(
-        '/things/draft',
+        '/api/things/draft',
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
         ),
@@ -88,7 +88,7 @@ class ThingApiService {
     var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.get(
-        '/things/$thingId',
+        '/api/things/$thingId',
         options: accessToken != null
             ? Options(
                 headers: {'Authorization': 'Bearer $accessToken'},
@@ -106,7 +106,7 @@ class ThingApiService {
     var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.post(
-        '/things/submit',
+        '/api/things/submit',
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
         ),
@@ -123,7 +123,7 @@ class ThingApiService {
     String thingId,
   ) async {
     try {
-      var response = await _dio.get('/things/$thingId/lottery-participants');
+      var response = await _dio.get('/api/things/$thingId/lottery-participants');
       return GetVerifierLotteryParticipantsRvm.fromMap(response.data['data']);
     } on DioError catch (error) {
       throw wrapError(error);
@@ -137,7 +137,7 @@ class ThingApiService {
     var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.post(
-        '/things/${vote.thingId}/vote',
+        '/api/things/${vote.thingId}/vote',
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
         ),
@@ -157,7 +157,7 @@ class ThingApiService {
     var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.get(
-        '/things/$thingId/votes',
+        '/api/things/$thingId/votes',
         options: accessToken != null ? Options(headers: {'Authorization': 'Bearer $accessToken'}) : null,
       );
       return GetVotesRvm.fromMap(response.data['data']);
@@ -170,7 +170,7 @@ class ThingApiService {
     var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.get(
-        '/things/$thingId/settlement-proposals',
+        '/api/things/$thingId/settlement-proposals',
         options: accessToken != null
             ? Options(
                 headers: {'Authorization': 'Bearer $accessToken'},
@@ -188,7 +188,7 @@ class ThingApiService {
     var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       await _dio.post(
-        '/things/watch',
+        '/api/things/watch',
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
         ),

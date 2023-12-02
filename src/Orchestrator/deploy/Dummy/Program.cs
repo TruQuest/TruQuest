@@ -1,28 +1,33 @@
+using System.Net;
+using System.Text.Json;
+
+using Microsoft.AspNetCore.HttpOverrides;
+
 var builder = WebApplication.CreateBuilder(args);
-
-// var dbHost = "";
-
-// using var client = new HttpClient();
-// var body = await File.ReadAllTextAsync("pg-connector.conf.json");
-// body = body.Replace("${db_host}", dbHost);
-// // Console.WriteLine(body);
-
-// using var request = new HttpRequestMessage(HttpMethod.Post, "http://localhost:8083/connectors");
-// request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
-// var response = await client.SendAsync(request);
-// if (!(response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.Conflict))
-// {
-//     Console.WriteLine($"Error registering debezium connector: {response.ReasonPhrase}");
-//     return;
-// }
-
-// Console.WriteLine("Registered debezium connector!");
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services
+    .AddSignalR()
+    .AddJsonProtocol(options =>
+    {
+        options.PayloadSerializerOptions.PropertyNameCaseInsensitive = true;
+        options.PayloadSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    });
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.KnownNetworks.Add(new IPNetwork(Dns.GetHostEntry(Dns.GetHostName()).AddressList.First(), 16));
+});
+
 var app = builder.Build();
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
 if (app.Environment.IsDevelopment())
 {
@@ -30,6 +35,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.MapGet("/health", () => Task.FromResult("Ok!"));
 app.MapControllers();
+app.MapHub<DummyHub>("/api/hub");
+
+await Task.Delay(4000);
 
 app.Run();

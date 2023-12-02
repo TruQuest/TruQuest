@@ -61,7 +61,7 @@ class ServerConnector {
 
     var hubConnection = HubConnectionBuilder()
         .withUrl(
-          '${dotenv.env['ORCHESTRATOR_HOST']}/hub',
+          '${dotenv.env['ORCHESTRATOR_HOST']}/api/hub',
           options: HttpConnectionOptions(
             transport: HttpTransportType.WebSockets,
             logger: transportLogger,

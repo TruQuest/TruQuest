@@ -64,7 +64,7 @@ class SettlementApiService {
       );
 
       var response = await _dio.post(
-        '/proposals/draft',
+        '/api/proposals/draft',
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
         ),
@@ -86,7 +86,7 @@ class SettlementApiService {
     var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.get(
-        '/proposals/$proposalId',
+        '/api/proposals/$proposalId',
         options: accessToken != null
             ? Options(
                 headers: {'Authorization': 'Bearer $accessToken'},
@@ -104,7 +104,7 @@ class SettlementApiService {
     var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.post(
-        '/proposals/submit',
+        '/api/proposals/submit',
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
         ),
@@ -125,7 +125,7 @@ class SettlementApiService {
   ) async {
     try {
       var response = await _dio.get(
-        '/things/$thingId/proposals/$proposalId/lottery-participants',
+        '/api/things/$thingId/proposals/$proposalId/lottery-participants',
       );
 
       return GetVerifierLotteryParticipantsRvm.fromMap(response.data['data']);
@@ -141,7 +141,7 @@ class SettlementApiService {
     var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.post(
-        '/proposals/${vote.proposalId}/vote',
+        '/api/proposals/${vote.proposalId}/vote',
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
         ),
@@ -161,7 +161,7 @@ class SettlementApiService {
     var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.get(
-        '/proposals/$proposalId/votes',
+        '/api/proposals/$proposalId/votes',
         options: accessToken != null ? Options(headers: {'Authorization': 'Bearer $accessToken'}) : null,
       );
       return GetVotesRvm.fromMap(response.data['data']);

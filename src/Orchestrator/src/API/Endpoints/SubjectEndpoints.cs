@@ -11,7 +11,7 @@ public static class SubjectEndpoints
 {
     public static RouteGroupBuilder MapSubjectEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/subjects");
+        var group = app.MapGroup("/api/subjects");
 
         group.MapPost(
             "/add",

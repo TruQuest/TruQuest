@@ -1,6 +1,6 @@
 resource "aws_ebs_volume" "backend" {
   availability_zone = "${data.aws_region.current.name}a"
-  size              = 10
+  size              = 20
 
   tags = merge(
     local.common_tags,
@@ -8,88 +8,132 @@ resource "aws_ebs_volume" "backend" {
   )
 }
 
+resource "local_file" "key_share_render" {
+  content = templatefile(
+    "./eb/iframes/key-share-render-staging.tftpl",
+    {
+      hostname = var.hostname
+    }
+  )
+  filename = "./eb/backend_source/static_files/key-share-render-staging.html"
+}
+
+resource "local_file" "private_key_gen" {
+  content = templatefile(
+    "./eb/iframes/private-key-gen-staging.tftpl",
+    {
+      hostname = var.hostname
+    }
+  )
+  filename = "./eb/backend_source/static_files/private-key-gen-staging.html"
+}
+
+resource "local_file" "qr_code_scan" {
+  content = templatefile(
+    "./eb/iframes/qr-code-scan-staging.tftpl",
+    {
+      hostname = var.hostname
+    }
+  )
+  filename = "./eb/backend_source/static_files/qr-code-scan-staging.html"
+}
+
+resource "local_file" "frontend_env" {
+  content = templatefile(
+    "./eb/frontend-env.tftpl",
+    {
+      hostname             = var.hostname
+      ethereum_rpc_url     = var.ethereum_rpc_url
+      ethereum_l1_rpc_url  = var.ethereum_l1_rpc_url
+      erc4337_bundler_host = var.erc4337_bundler_host
+    }
+  )
+  filename = "./eb/backend_source/static_files/assets/.env"
+}
+
+resource "local_file" "otel_collector_config" {
+  content = templatefile(
+    "./eb/otel-collector-config.tftpl",
+    {
+      uptrace_truquest_project_secret_token = var.uptrace_truquest_project_secret_token
+    }
+  )
+  filename = "./eb/backend_source/otel-collector-config.yml"
+}
+
+resource "local_file" "uptrace" {
+  content = templatefile(
+    "./eb/uptrace.tftpl",
+    {
+      db_host                               = aws_db_instance.main.address
+      db_port                               = aws_db_instance.main.port
+      db_username                           = var.db_username
+      db_password                           = var.db_password
+      db_name                               = var.db_name
+      uptrace_default_project_secret_token  = var.uptrace_default_project_secret_token
+      uptrace_truquest_project_secret_token = var.uptrace_truquest_project_secret_token
+      uptrace_user_email                    = var.uptrace_user_email
+      uptrace_user_password                 = var.uptrace_user_password
+      uptrace_secret_key                    = var.uptrace_secret_key
+    }
+  )
+  filename = "./eb/backend_source/uptrace.yml"
+}
+
+resource "local_file" "nginx" {
+  content = templatefile(
+    "./eb/nginx.tftpl",
+    {
+      hostname = var.hostname
+    }
+  )
+  filename = "./eb/backend_source/nginx.conf"
+}
+
+resource "local_file" "docker_compose" {
+  content = templatefile(
+    "./eb/docker-compose.tftpl",
+    {
+      hostname               = var.hostname
+      file_archive_image_uri = "${var.file_archive_image_uri}:${var.application_version_index_to_tag[var.application_version_count - 1]}"
+      orchestrator_image_uri = "${var.orchestrator_image_uri}:${var.application_version_index_to_tag[var.application_version_count - 1]}"
+      db_connection_string   = "Host=${aws_db_instance.main.address};Port=${aws_db_instance.main.port};Database=${var.db_name};Username=${var.db_username};Password=${var.db_password};"
+      ethereum_rpc_url       = var.ethereum_rpc_url
+      ethereum_chain_id      = var.ethereum_chain_id
+      ethereum_l1_rpc_url    = var.ethereum_l1_rpc_url
+      ethereum_l1_chain_id   = var.ethereum_l1_chain_id
+    }
+  )
+  filename = "./eb/backend_source/docker-compose.yml"
+}
+
+resource "local_file" "mount_volume" {
+  content = templatefile(
+    "./eb/mount-volume.tftpl",
+    {
+      mount_dir = "/backend"
+      volume_id = aws_ebs_volume.backend.id
+      region    = data.aws_region.current.name
+    }
+  )
+  filename = "./eb/backend_source/.platform/hooks/predeploy/mount-volume.sh"
+}
+
 data "archive_file" "backend_source" {
+  depends_on = [
+    local_file.key_share_render,
+    local_file.private_key_gen,
+    local_file.qr_code_scan,
+    local_file.frontend_env,
+    local_file.otel_collector_config,
+    local_file.uptrace,
+    local_file.nginx,
+    local_file.docker_compose,
+    local_file.mount_volume
+  ]
   type        = "zip"
+  source_dir  = "./eb/backend_source"
   output_path = "./backend_source.zip"
-
-  source {
-    content = templatefile(
-      "./eb/docker-compose.tftpl",
-      {
-        hostname               = var.hostname
-        file_archive_image_uri = "${var.file_archive_image_uri}:${var.application_version_index_to_tag[var.application_version_count - 1]}"
-        orchestrator_image_uri = "${var.orchestrator_image_uri}:${var.application_version_index_to_tag[var.application_version_count - 1]}"
-        db_connection_string   = "Host=${aws_db_instance.main.address};Port=${aws_db_instance.main.port};Database=${var.db_name};Username=${var.db_username};Password=${var.db_password};"
-        ethereum_rpc_url       = var.ethereum_rpc_url
-        ethereum_chain_id      = var.ethereum_chain_id
-        ethereum_l1_rpc_url    = var.ethereum_l1_rpc_url
-        ethereum_l1_chain_id   = var.ethereum_l1_chain_id
-        erc4337_bundler_host   = var.erc4337_bundler_host
-      }
-    )
-    filename = "docker-compose.yml"
-  }
-
-  source {
-    content  = file("./eb/.env")
-    filename = ".env"
-  }
-
-  source {
-    content = templatefile(
-      "./eb/otel-collector-config.tftpl",
-      {
-        uptrace_truquest_project_secret_token = var.uptrace_truquest_project_secret_token
-      }
-    )
-    filename = "otel-collector-config.yml"
-  }
-
-  source {
-    content  = file("./eb/truquest.crt")
-    filename = "truquest.crt"
-  }
-
-  source {
-    content  = file("./eb/truquest.key")
-    filename = "truquest.key"
-  }
-
-  source {
-    content = templatefile(
-      "./eb/uptrace.tftpl",
-      {
-        db_host                               = aws_db_instance.main.address
-        db_port                               = aws_db_instance.main.port
-        db_username                           = var.db_username
-        db_password                           = var.db_password
-        db_name                               = var.db_name
-        uptrace_default_project_secret_token  = var.uptrace_default_project_secret_token
-        uptrace_truquest_project_secret_token = var.uptrace_truquest_project_secret_token
-        uptrace_user_email                    = var.uptrace_user_email
-        uptrace_user_password                 = var.uptrace_user_password
-        uptrace_secret_key                    = var.uptrace_secret_key
-      }
-    )
-    filename = "uptrace.yml"
-  }
-
-  source {
-    content  = file("./eb/commands.config")
-    filename = ".ebextensions/commands.config"
-  }
-
-  source {
-    content = templatefile(
-      "./eb/mount-volume.tftpl",
-      {
-        mount_dir = "/backend"
-        volume_id = aws_ebs_volume.backend.id
-        region    = data.aws_region.current.name
-      }
-    )
-    filename = ".platform/hooks/predeploy/mount-volume.sh"
-  }
 }
 
 resource "aws_s3_bucket" "backend_source" {
@@ -165,22 +209,8 @@ resource "aws_security_group" "backend" {
 
   ingress {
     protocol    = "tcp"
-    from_port   = 80
-    to_port     = 80
-    cidr_blocks = ["${var.local_public_ip}/32"]
-  }
-
-  ingress {
-    protocol    = "tcp"
     from_port   = 443
     to_port     = 443
-    cidr_blocks = ["${var.local_public_ip}/32"]
-  }
-
-  ingress {
-    protocol    = "tcp"
-    from_port   = 8080
-    to_port     = 8080
     cidr_blocks = ["${var.local_public_ip}/32"]
   }
 

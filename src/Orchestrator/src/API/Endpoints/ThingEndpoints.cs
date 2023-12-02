@@ -15,7 +15,7 @@ public static class ThingEndpoints
 {
     public static RouteGroupBuilder MapThingEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/things");
+        var group = app.MapGroup("/api/things");
 
         group.MapPost(
             "/draft",

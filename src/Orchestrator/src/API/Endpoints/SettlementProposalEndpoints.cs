@@ -13,7 +13,7 @@ public static class SettlementProposalEndpoints
 {
     public static RouteGroupBuilder MapSettlementProposalEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/proposals");
+        var group = app.MapGroup("/api/proposals");
 
         group.MapPost(
             "/draft",
@@ -35,7 +35,7 @@ public static class SettlementProposalEndpoints
 
         app
             .MapGet(
-                "/things/{thingId}/proposals/{proposalId}/lottery-participants",
+                "/api/things/{thingId}/proposals/{proposalId}/lottery-participants",
                 ([AsParameters] GetVerifierLotteryParticipantsQuery query, Thataway thataway) =>
                     thataway.Send(query)
             )

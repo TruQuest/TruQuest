@@ -16,11 +16,8 @@
 
     <script>
       window.addEventListener("message", async function (e) {
-        if (
-          e.origin !=
-          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        ) {
-          console.log(`Invalid origin: ${e.origin}`);
+        if (e.origin != "https://${hostname}") {
+          console.log("Invalid origin: " + e.origin);
           return;
         }
 
@@ -39,7 +36,7 @@
           localStorage.setItem("keyShare", keyShares[1]);
 
           e.source.postMessage(
-            `view-private-key-gen|${requestId}|${keyShares[0]}|${signatureOverCode}`,
+            "view-private-key-gen|" + requestId + "|" + keyShares[0] + "|" + signatureOverCode,
             e.origin
           );
           keyShares = null;
@@ -70,7 +67,7 @@
             (signature.v == 27 ? "1b" : "1c");
 
           e.source.postMessage(
-            `view-private-key-gen|${requestId}|${serializedSignature}`,
+            "view-private-key-gen|" + requestId + "|" + serializedSignature,
             e.origin
           );
         } else if (command == "sign-message") {
@@ -90,7 +87,7 @@
           wallet = null;
 
           e.source.postMessage(
-            `view-private-key-gen|${requestId}|${signature}`,
+            "view-private-key-gen|" + requestId + "|" + signature,
             e.origin
           );
         } else if (command == "check-local-key-share") {
@@ -100,7 +97,7 @@
           }
 
           e.source.postMessage(
-            `view-private-key-gen|${requestId}|${present ? 1 : 0}`,
+            "view-private-key-gen|" + requestId + "|" + (present ? "1" : "0"),
             e.origin
           );
         } else if (command == "check-local-key-share-again") {
@@ -114,7 +111,7 @@
           localStorage.removeItem("scanRequestId");
 
           e.source.postMessage(
-            `view-private-key-gen|${requestId}|${keyShare != null ? 1 : 0}`,
+            "view-private-key-gen|" + requestId + "|" + (keyShare != null ? "1" : "0"),
             e.origin
           );
         }

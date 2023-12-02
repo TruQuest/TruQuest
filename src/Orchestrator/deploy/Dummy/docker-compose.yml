@@ -1,58 +1,47 @@
-version: '2'
+version: "2"
 
 services:
-  zookeeper:
-    image: wurstmeister/zookeeper
+  ipfs:
+    image: ipfs/kubo
     ports:
-      - '2181'
+      - "4001:4001"
+      - "4001:4001/udp"
+      - "8080"
+      - "5001:5001"
     networks:
       - dummy
-    restart: unless-stopped
 
-  kafka-1:
-    image: wurstmeister/kafka:2.12-2.5.0
-    ports:
-      - '9092:9092'
+  dummy:
+    image: dummy-dummy:latest
+    build:
+      context: .
     environment:
-      DOCKER_API_VERSION: 1.22
-      KAFKA_BROKER_ID: 1
-      KAFKA_ADVERTISED_HOST_NAME: host.docker.internal
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_CREATE_TOPICS: 'testtest:1:1'
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: "http://+:5223"
+    ports:
+      - "5223"
+    networks:
+      - dummy
+    healthcheck:
+      test: curl --fail http://localhost:5223/health || exit 1
+      interval: 3s
+      timeout: 60s
+      start_period: 3s
+
+  nginx:
+    image: nginx:1.25.3-alpine3.18-slim
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - dummy
-    restart: unless-stopped
-
-  debezium:
-    image: debezium/connect
-    environment:
-      BOOTSTRAP_SERVERS: 'kafka-1:9092'
-      GROUP_ID: debez
-      CONFIG_STORAGE_TOPIC: debez_connect_configs
-      OFFSET_STORAGE_TOPIC: debez_connect_offsets
-      STATUS_STORAGE_TOPIC: debez_connect_statuses
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./truquest.crt:/etc/nginx/ssl/truquest.crt
+      - ./truquest.key:/etc/nginx/ssl/truquest.key
+      - ./static_files:/static_files
     ports:
-      - '8083:8083'
+      - "443:443"
     networks:
       - dummy
     depends_on:
-      - zookeeper
-      - kafka-1
-
-  kafka-ui:
-    image: provectuslabs/kafka-ui
-    environment:
-      KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-1:9092
-    ports:
-      - '7777:8080'
-    networks:
-      - dummy
-    depends_on:
-      - zookeeper
-      - kafka-1
+      dummy:
+        condition: service_healthy
 
 networks:
   dummy:

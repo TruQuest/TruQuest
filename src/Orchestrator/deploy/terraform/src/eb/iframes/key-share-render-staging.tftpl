@@ -13,11 +13,8 @@
 
     <script>
       window.addEventListener("message", async function (e) {
-        if (
-          e.origin !=
-          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        ) {
-          console.log(`Invalid origin: ${e.origin}`);
+        if (e.origin != "https://${hostname}") {
+          console.log("Invalid origin: " + e.origin);
           return;
         }
 
@@ -38,7 +35,7 @@
           });
 
           e.source.postMessage(
-            `view-key-share-render|${requestId}|ok`,
+            "view-key-share-render|" + requestId + "|ok",
             e.origin
           );
         } else if (command == "save") {
@@ -48,7 +45,7 @@
           link.click();
 
           e.source.postMessage(
-            `view-key-share-render|${requestId}|ok`,
+            "view-key-share-render|" + requestId + "|ok",
             e.origin
           );
         }

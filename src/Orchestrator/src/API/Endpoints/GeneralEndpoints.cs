@@ -1,7 +1,6 @@
 using GoThataway;
 
 using Application.General.Queries.GetTags;
-using Application.General.Queries.GetFrontendEnvFile;
 
 namespace API.Endpoints;
 
@@ -12,20 +11,12 @@ public static class GeneralEndpoints
         var endpoints = new List<RouteHandlerBuilder>()
         {
             app.MapGet(
-                "/tags",
+                "/api/tags",
                 (Thataway thataway) => thataway.Send(new GetTagsQuery())
-            ),
-            app.MapGet(
-                "/assets/.env",
-                async (Thataway thataway) =>
-                {
-                    var result = await thataway.Send(new GetFrontendEnvFileQuery());
-                    return result.Data;
-                }
             )
         };
 
-        foreach (var endpoint in endpoints.SkipLast(1)) endpoint.AddEndpointFilter(Filters.ConvertHandleResult);
+        foreach (var endpoint in endpoints) endpoint.AddEndpointFilter(Filters.ConvertHandleResult);
 
         return endpoints;
     }

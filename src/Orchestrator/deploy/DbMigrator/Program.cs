@@ -603,6 +603,8 @@ else if (environment == "Staging" && Environment.GetEnvironmentVariable("USE_TUN
 
     var builder = API.Program.CreateWebApplicationBuilder(new string[]
     {
+        "--DbMigrator",
+        "1",
         "--ConnectionStrings:Postgres",
         $"Host={localhost};Port={localPort};Database={dbName};Username={dbUser};Password={dbPassword};"
     });
@@ -657,6 +659,8 @@ else if (environment == "Staging" && Environment.GetEnvironmentVariable("USE_TUN
 
     var builder = API.Program.CreateWebApplicationBuilder(new string[]
     {
+        "--DbMigrator",
+        "1",
         "--ConnectionStrings:Postgres",
         $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword};"
     });

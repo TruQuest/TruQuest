@@ -142,7 +142,7 @@ public static class IServiceCollectionExtension
                 {
                     OnMessageReceived = context =>
                     {
-                        if (context.Request.Path.StartsWithSegments("/hub"))
+                        if (context.Request.Path.StartsWithSegments("/api/hub"))
                         {
                             var accessToken = context.Request.Query["access_token"];
                             if (!string.IsNullOrEmpty(accessToken))
@@ -162,7 +162,7 @@ public static class IServiceCollectionExtension
 
                         authenticationContext.User = context.Principal;
 
-                        if (context.Request.Path.StartsWithSegments("/hub"))
+                        if (context.Request.Path.StartsWithSegments("/api/hub"))
                         {
                             authenticationContext.Token = context.SecurityToken;
                         }

@@ -41,7 +41,7 @@ services:
     ports:
       - '4001'
       - '4001/udp'
-      - '8080:8080'
+      - '8080'
       - '5001:5001'
     volumes:
       - /backend/ipfs:/data/ipfs
@@ -91,6 +91,23 @@ services:
     depends_on:
       - clickhouse
 
+  nginx:
+    image: nginx:1.25.3-alpine3.18-slim
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./truquest.crt:/etc/nginx/ssl/truquest.crt
+      - ./truquest.key:/etc/nginx/ssl/truquest.key
+      - ./static_files:/static_files
+    ports:
+      - "443:443"
+    networks:
+      - truquest
+    depends_on:
+      - orchestrator
+    # depends_on:
+    #   orchestrator:
+    #     condition: service_healthy
+
   file-archive:
     image: ${file_archive_image_uri}
     environment:
@@ -109,10 +126,7 @@ services:
     image: ${orchestrator_image_uri}
     environment:
       ASPNETCORE_ENVIRONMENT: Staging
-      ASPNETCORE_URLS: 'https://+:443;http://+:80'
-      ASPNETCORE_Kestrel__Certificates__Default__Path: /https/truquest.crt
-      ASPNETCORE_Kestrel__Certificates__Default__KeyPath: /https/truquest.key
-      AdvertisedHost: 'https://${hostname}'
+      ASPNETCORE_URLS: 'http://+:5223'
       ConnectionStrings__Postgres: ${db_connection_string}
       Fido__ServerDomain: ${hostname}
       Fido__Origins__0: 'https://${hostname}'
@@ -120,22 +134,22 @@ services:
       Ethereum__Networks__OptimismLocal__ChainId: ${ethereum_chain_id}
       Ethereum__Networks__OptimismLocal__SettlementNetwork__URL: ${ethereum_l1_rpc_url}
       Ethereum__Networks__OptimismLocal__SettlementNetwork__ChainId: ${ethereum_l1_chain_id}
-      Ethereum__Bundler__OptimismLocal__Host: ${erc4337_bundler_host}
-      IPFS__GatewayHost: 'http://${hostname}:8080'
     env_file:
       - .env
     volumes:
-      - ./truquest.crt:/https/truquest.crt
-      - ./truquest.key:/https/truquest.key
       - '/backend/user_files:/user_files'
     ports:
-      - '80:80'
-      - '443:443'
+      - '5223'
     networks:
       - truquest
     depends_on:
       - file-archive
       - debezium
+    # healthcheck:
+    #   test: curl --fail http://localhost:5223/health || exit 1
+    #   interval: 3s
+    #   timeout: 2m
+    #   start_period: 2s
 
 networks:
   truquest:

@@ -16,7 +16,7 @@ public static class UserEndpoints
 {
     public static RouteGroupBuilder MapUserEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/user");
+        var group = app.MapGroup("/api/user");
 
         group.MapGet(
             "/siwe/{address}",

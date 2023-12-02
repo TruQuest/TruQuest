@@ -40,7 +40,7 @@ class SubjectApiService {
       );
 
       var response = await _dio.post(
-        '/subjects/add',
+        '/api/subjects/add',
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
         ),
@@ -55,7 +55,7 @@ class SubjectApiService {
 
   Future<List<SubjectPreviewVm>> getSubjects() async {
     try {
-      var response = await _dio.get('/subjects');
+      var response = await _dio.get('/api/subjects');
       return List.unmodifiable(
         (response.data['data'] as List<dynamic>).map((map) => SubjectPreviewVm.fromMap(map)),
       );
@@ -66,7 +66,7 @@ class SubjectApiService {
 
   Future<SubjectVm> getSubject(String subjectId) async {
     try {
-      var response = await _dio.get('/subjects/$subjectId');
+      var response = await _dio.get('/api/subjects/$subjectId');
       return SubjectVm.fromMap(response.data['data']);
     } on DioError catch (error) {
       throw wrapError(error);
@@ -77,7 +77,7 @@ class SubjectApiService {
     var accessToken = (await _serverConnector.latestConnection).$2;
     try {
       var response = await _dio.get(
-        '/subjects/$subjectId/things',
+        '/api/subjects/$subjectId/things',
         options: accessToken != null
             ? Options(
                 headers: {'Authorization': 'Bearer $accessToken'},
