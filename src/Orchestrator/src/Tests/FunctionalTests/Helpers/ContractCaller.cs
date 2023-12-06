@@ -23,7 +23,7 @@ public class ContractCaller
 
     private readonly Web3 _web3;
     private readonly string _rpcUrl;
-    private readonly string _simpleAccountFactoryAddress;
+    private readonly string _accountFactoryAddress;
     private readonly string _truthserumAddress;
     private readonly string _truQuestAddress;
     private readonly string _thingValidationVerifierLotteryAddress;
@@ -47,7 +47,7 @@ public class ContractCaller
 
         var network = configuration["Ethereum:Network"]!;
         _web3 = new Web3(configuration[$"Ethereum:Networks:{network}:URL"]!);
-        _simpleAccountFactoryAddress = configuration[$"Ethereum:Contracts:{network}:SimpleAccountFactory:Address"]!;
+        _accountFactoryAddress = configuration[$"Ethereum:Contracts:{network}:AccountFactory:Address"]!;
         _truthserumAddress = configuration[$"Ethereum:Contracts:{network}:Truthserum:Address"]!;
         _truQuestAddress = configuration[$"Ethereum:Contracts:{network}:TruQuest:Address"]!;
         _thingValidationVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingValidationVerifierLottery:Address"]!;
@@ -59,7 +59,7 @@ public class ContractCaller
     public Task<string> GetWalletAddressFor(string accountName) => _web3.Eth
         .GetContractQueryHandler<GetAddressMessage>()
         .QueryAsync<string>(
-            _simpleAccountFactoryAddress,
+            _accountFactoryAddress,
             new()
             {
                 Owner = _accountProvider.GetAccount(accountName).Address,

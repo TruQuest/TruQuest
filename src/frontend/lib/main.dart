@@ -11,7 +11,7 @@ import 'general/pages/home_page.dart';
 
 Future main() async {
   await dotenv.load();
-  setup(dotenv.env['ENVIRONMENT']!);
+  setup();
 
   var localStorage = resolveDependency<LocalStorage>();
   await localStorage.init();

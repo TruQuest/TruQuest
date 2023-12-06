@@ -6,7 +6,7 @@ services:
     command: 'standalone --unsafeMode'
     volumes:
       - type: bind
-        source: ${PWD}/bundler-config.json
+        source: ./bundler-config-dev.json
         target: /usr/app/config.json
     ports:
       - 3000:14337

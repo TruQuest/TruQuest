@@ -26,7 +26,7 @@ internal class UserOperationBuilder
     private readonly AbiEncoder _abiEncoder;
     private readonly EthereumMessageSigner _personalSigner;
 
-    private readonly string _simpleAccountFactoryAddress;
+    private readonly string _accountFactoryAddress;
 
     private Account _signer;
     private string _sender;
@@ -61,7 +61,7 @@ internal class UserOperationBuilder
         _personalSigner = personalSigner;
 
         var network = configuration["Ethereum:Network"]!;
-        _simpleAccountFactoryAddress = configuration[$"Ethereum:Contracts:{network}:SimpleAccountFactory:Address"]!;
+        _accountFactoryAddress = configuration[$"Ethereum:Contracts:{network}:AccountFactory:Address"]!;
     }
 
     public UserOperationBuilder From(Account account)
@@ -78,7 +78,7 @@ internal class UserOperationBuilder
                     Owner = _signer.Address,
                     Salt = 0
                 });
-                _initCode = _simpleAccountFactoryAddress + data.Substring(2);
+                _initCode = _accountFactoryAddress + data.Substring(2);
             }
             else
             {

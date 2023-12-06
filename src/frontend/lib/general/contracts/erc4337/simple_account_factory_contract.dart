@@ -7,7 +7,7 @@ import 'iaccount_factory_contract.dart';
 import '../../../ethereum_js_interop.dart';
 
 class SimpleAccountFactoryContract implements IAccountFactoryContract {
-  static final String _address = dotenv.env['SimpleAccountFactoryAddress']!;
+  static final String _address = dotenv.env['AccountFactoryAddress']!;
   static const String _abi = '''
     [
         {

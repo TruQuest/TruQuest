@@ -7,7 +7,7 @@ import '../../../ethereum_js_interop.dart';
 import '../../../ethereum/services/ethereum_rpc_provider.dart';
 
 class LightAccountFactoryContract implements IAccountFactoryContract {
-  static final String _address = dotenv.env['LightAccountFactoryAddress']!;
+  static final String _address = dotenv.env['AccountFactoryAddress']!;
   static const String _abi = '''
   [
     {

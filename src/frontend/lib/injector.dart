@@ -1,4 +1,5 @@
 import 'package:kiwi/kiwi.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'ethereum/models/im/user_operation.dart';
 import 'ethereum/services/embedded_wallet_service.dart';
@@ -107,12 +108,14 @@ abstract class Injector {
   void configureStaging();
 }
 
-void setup(String environment) {
+void setup() {
   var injector = _$Injector();
   injector.configure();
-  if (environment == 'Development') {
+
+  var environment = dotenv.env['ENVIRONMENT']!;
+  if (environment == 'Development' || dotenv.env['ETHEREUM_RPC_URL'] != dotenv.env['ERC4337_BUNDLER_URL']) {
     injector.configureDevelopment();
-  } else if (environment == 'Staging') {
+  } else {
     injector.configureStaging();
   }
 }

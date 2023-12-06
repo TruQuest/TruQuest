@@ -4,7 +4,7 @@ import 'entrypoint_contract.dart';
 import '../../../ethereum/services/ethereum_rpc_provider.dart';
 
 class EntryPointV060Contract extends EntryPointContract {
-  late final String _address = dotenv.env['BaseGoerliEntryPointAddress']!;
+  late final String _address = dotenv.env['EntryPointAddress']!;
   @override
   String get address => _address;
 

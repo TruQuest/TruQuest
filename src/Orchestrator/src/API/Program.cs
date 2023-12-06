@@ -71,7 +71,7 @@ public static class WebApplicationBuilderExtension
         Action<ResourceBuilder> configureResource = resource =>
             resource.AddService(
                 serviceName: Telemetry.ServiceName,
-                serviceVersion: "0.1.0", // @@TODO: Config.
+                serviceVersion: configuration["Ethereum:Domain:Version"]!,
                 serviceInstanceId: Environment.MachineName
             );
 
@@ -126,15 +126,17 @@ public static class WebApplicationBuilderExtension
             options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
         });
 
-        // @@TODO!!: Configure for Staging and Prod.
-        builder.Services.AddCors(options =>
-            options.AddDefaultPolicy(builder =>
-                builder
-                    .AllowAnyOrigin()
-                    .AllowAnyMethod()
-                    .AllowAnyHeader()
-            )
-        );
+        if (builder.Environment.EnvironmentName is "Development" or "Testing")
+        {
+            builder.Services.AddCors(options =>
+                options.AddDefaultPolicy(builder =>
+                    builder
+                        .AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                )
+            );
+        }
 
         builder.Services.AddThataway(
             requestsAndEventsAssembly: Assembly.GetAssembly(typeof(Application.IServiceCollectionExtension))!,
@@ -206,9 +208,12 @@ public static class WebApplicationBuilderExtension
             });
         }
 
-        if (app.Environment.EnvironmentName is "Development" or "Testing") app.UseStaticFiles();
+        if (app.Environment.EnvironmentName is "Development" or "Testing")
+        {
+            app.UseCors();
+            app.UseStaticFiles();
+        }
 
-        app.UseCors();
         app.UseAuthentication();
 
         app.MapGet("/health", () => Task.FromResult("Ok!")); // @@TODO
@@ -298,7 +303,6 @@ public static class WebApplicationBuilderExtension
             RedirectStandardOutput = true
         };
         processInfo.EnvironmentVariables.Add("DOTNET_ENVIRONMENT", "Development");
-        processInfo.EnvironmentVariables.Add("ASPNETCORE_ENVIRONMENT", "Development");
 
         var process = new Process
         {
@@ -343,8 +347,8 @@ public static class WebApplicationBuilderExtension
         var builder = new Npgsql.NpgsqlConnectionStringBuilder(app.Configuration.GetConnectionString("Postgres"));
         var payload = await File.ReadAllTextAsync("pg-connector.conf.json");
         payload = payload
-            .Replace("${database.hostname}", builder.Host!)
-            .Replace("${database.port}", builder.Port.ToString())
+            .Replace("${database.hostname}", app.Environment.EnvironmentName is "Development" or "Testing" ? "pg" : builder.Host!)
+            .Replace("${database.port}", app.Environment.EnvironmentName is "Development" or "Testing" ? "5432" : builder.Port.ToString())
             .Replace("${database.user}", builder.Username!)
             .Replace("${database.password}", builder.Password!)
             .Replace("${database.dbname}", builder.Database!);

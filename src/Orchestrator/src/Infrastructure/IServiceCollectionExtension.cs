@@ -69,7 +69,7 @@ public static class IServiceCollectionExtension
                         "__EFMigrationsHistory", "truquest"
                     )
                 )
-                .EnableSensitiveDataLogging(environment.IsDevelopment())
+                .EnableSensitiveDataLogging(environment.EnvironmentName is "Development" or "Testing")
         );
 
         services.AddDbContext<EventDbContext>(optionsBuilder =>
@@ -80,7 +80,7 @@ public static class IServiceCollectionExtension
                         "__EFMigrationsHistory", "truquest_events"
                     )
                 )
-                .EnableSensitiveDataLogging(environment.IsDevelopment())
+                .EnableSensitiveDataLogging(environment.EnvironmentName is "Development" or "Testing")
         );
 
         JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
@@ -89,8 +89,7 @@ public static class IServiceCollectionExtension
             .AddIdentityCore<UserDm>(options =>
             {
                 options.ClaimsIdentity.UserIdClaimType = JwtRegisteredClaimNames.Sub;
-                // @@TODO!!
-                options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -_.@";
+                options.User.AllowedUserNameCharacters = "0x123456789aAbBcCdDeEfF";
             })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
@@ -124,7 +123,7 @@ public static class IServiceCollectionExtension
                 rsa.FromXmlString(configuration["JWT:PublicKey"]!);
 
                 options.MapInboundClaims = false;
-                options.RequireHttpsMetadata = false; // @@TODO: Depend on environment.
+                options.RequireHttpsMetadata = environment.EnvironmentName is not ("Development" or "Testing");
                 options.SaveToken = false;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
@@ -269,9 +268,7 @@ public static class IServiceCollectionExtension
 
             services.AddHttpClient("bundler", (sp, client) =>
             {
-                client.BaseAddress = new Uri(
-                    configuration[$"Ethereum:Bundler:{network}:Host"] + configuration[$"Ethereum:Bundler:{network}:Path"]
-                );
+                client.BaseAddress = new Uri(configuration[$"Ethereum:Bundler:{network}:URL"]!);
             });
         }
 

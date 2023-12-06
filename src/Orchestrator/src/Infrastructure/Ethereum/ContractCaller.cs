@@ -32,7 +32,7 @@ internal class ContractCaller : IContractCaller
     private readonly IMemoryCache _memoryCache;
     private readonly Web3 _web3;
     private readonly string _entryPointAddress;
-    private readonly string _simpleAccountFactoryAddress;
+    private readonly string _accountFactoryAddress;
     private readonly string _restrictedAccessAddress;
     private readonly string _truquestAddress;
     private readonly string _thingValidationVerifierLotteryAddress;
@@ -69,7 +69,7 @@ internal class ContractCaller : IContractCaller
         var orchestrator = accountProvider.GetAccount("Orchestrator");
         _web3 = new Web3(orchestrator, configuration[$"Ethereum:Networks:{network}:URL"]);
         _entryPointAddress = configuration[$"Ethereum:Contracts:{network}:EntryPoint:Address"]!;
-        _simpleAccountFactoryAddress = configuration[$"Ethereum:Contracts:{network}:SimpleAccountFactory:Address"]!;
+        _accountFactoryAddress = configuration[$"Ethereum:Contracts:{network}:AccountFactory:Address"]!;
         _restrictedAccessAddress = configuration[$"Ethereum:Contracts:{network}:RestrictedAccess:Address"]!;
         _truquestAddress = configuration[$"Ethereum:Contracts:{network}:TruQuest:Address"]!;
         _thingValidationVerifierLotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingValidationVerifierLottery:Address"]!;
@@ -126,7 +126,7 @@ internal class ContractCaller : IContractCaller
     public Task<string> GetWalletAddressFor(string ownerAddress) => _web3.Eth
         .GetContractQueryHandler<GetAddressMessage>()
         .QueryAsync<string>(
-            _simpleAccountFactoryAddress,
+            _accountFactoryAddress,
             new()
             {
                 Owner = ownerAddress,

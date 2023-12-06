@@ -26,10 +26,4 @@ internal class AccountProviderDev : IAccountProvider
     }
 
     public Account GetAccount(string name) => _wallet.GetAccount(_accountNameToIndex[name]);
-
-    public string? LookupNameByAddress(string address)
-    {
-        _addressToAccountName.TryGetValue(address.ToLower(), out string? name);
-        return name;
-    }
 }
