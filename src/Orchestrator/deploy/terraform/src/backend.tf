@@ -42,10 +42,10 @@ resource "local_file" "frontend_env" {
   content = templatefile(
     "./eb/frontend-env.tftpl",
     {
-      hostname             = var.hostname
-      ethereum_rpc_url     = var.ethereum_rpc_url
-      ethereum_l1_rpc_url  = var.ethereum_l1_rpc_url
-      erc4337_bundler_host = var.erc4337_bundler_host
+      hostname            = var.hostname
+      ethereum_rpc_url    = var.ethereum_rpc_url
+      ethereum_l1_rpc_url = var.ethereum_l1_rpc_url
+      erc4337_bundler_url = var.erc4337_bundler_url
     }
   )
   filename = "./eb/backend_source/static_files/assets/.env"

@@ -4,11 +4,11 @@ import 'package:convert/convert.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../ethereum/services/ethereum_rpc_provider.dart';
-import '../../ethereum_js_interop.dart';
 import '../utils/utils.dart';
+import 'base_contract.dart';
 
-class ThingValidationVerifierLotteryContract {
-  static final String address = dotenv.env['ThingValidationVerifierLotteryAddress']!;
+class ThingValidationVerifierLotteryContract extends BaseContract {
+  static final String _address = dotenv.env['ThingValidationVerifierLotteryAddress']!;
   static const String _abi = '''[
     {
       "inputs": [],
@@ -191,24 +191,13 @@ class ThingValidationVerifierLotteryContract {
 
   final _random = Random.secure();
 
-  late final Abi _interface;
-  late final Contract _contract;
+  ThingValidationVerifierLotteryContract(EthereumRpcProvider ethereumRpcProvider)
+      : super(_address, _abi, ethereumRpcProvider.provider);
 
-  ThingValidationVerifierLotteryContract(EthereumRpcProvider ethereumRpcProvider) {
-    _interface = Abi(_abi);
-    _contract = Contract(
-      address,
-      _abi,
-      ethereumRpcProvider.provider,
-    );
-  }
-
-  ErrorDescription parseError(String data) => _interface.parseError(data);
-
-  Future<int> getLotteryDurationBlocks() => _contract.read<int>('s_durationBlocks');
+  Future<int> getLotteryDurationBlocks() => contract.read<int>('s_durationBlocks');
 
   Future<int?> getLotteryInitBlock(String thingId) async {
-    var initBlock = await _contract.read<BigInt>(
+    var initBlock = await contract.read<BigInt>(
       'getLotteryInitBlock',
       args: [thingId.toSolInputFormat()],
     );
@@ -219,7 +208,7 @@ class ThingValidationVerifierLotteryContract {
     String thingId,
     String walletAddress,
   ) =>
-      _contract.read<bool>(
+      contract.read<bool>(
         'checkAlreadyJoinedLottery',
         args: [thingId.toSolInputFormat(), walletAddress],
       );
@@ -229,7 +218,7 @@ class ThingValidationVerifierLotteryContract {
     var userData = List<int>.generate(32, (_) => _random.nextInt(256));
     var userDataHex = '0x' + hex.encode(userData);
 
-    return _interface.encodeFunctionData(
+    return interface.encodeFunctionData(
       'joinLottery',
       [thingIdHex, userDataHex],
     );

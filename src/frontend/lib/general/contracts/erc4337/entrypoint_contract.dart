@@ -360,7 +360,10 @@ class EntryPointContract implements IEntryPointContract {
   String get address => _address;
 
   @override
-  String get userOperationRevertedEventName => 'UserOperationRevertReason';
+  String get userOperationEventName => 'UserOperationEvent';
+
+  @override
+  String get userOperationRevertReasonEventName => 'UserOperationRevertReason';
 
   EntryPointContract(EthereumRpcProvider ethereumRpcProvider) {
     _interface = Abi(_abi);
@@ -372,16 +375,11 @@ class EntryPointContract implements IEntryPointContract {
   }
 
   @override
-  Future<BigInt> getNonce(String sender) => _contract.read<BigInt>(
-        'getNonce',
-        args: [sender, 0],
-      );
+  Future<BigInt> getNonce(String sender) => _contract.read<BigInt>('getNonce', args: [sender, 0]);
 
   @override
-  Future<String> getUserOpHash(UserOperation userOp) => _contract.read<String>(
-        'getUserOpHash',
-        args: [userOp.toList()],
-      );
+  Future<String> getUserOpHash(UserOperation userOp) =>
+      _contract.read<String>('getUserOpHash', args: [userOp.toList()]);
 
   @override
   LogDescription parseLog(List<String> topics, String data) =>

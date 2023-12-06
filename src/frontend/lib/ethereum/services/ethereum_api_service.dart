@@ -7,13 +7,16 @@ import '../models/im/user_operation.dart';
 import '../../general/contracts/erc4337/ientrypoint_contract.dart';
 
 class EthereumApiService {
+  final String _environment;
   final String _entryPointAddress;
   late final Dio _dio;
   late final Dio _dioBundler;
 
-  EthereumApiService(IEntryPointContract entryPointContract) : _entryPointAddress = entryPointContract.address {
+  EthereumApiService(IEntryPointContract entryPointContract)
+      : _environment = dotenv.env['ENVIRONMENT']!,
+        _entryPointAddress = entryPointContract.address {
     _dio = Dio(BaseOptions(baseUrl: dotenv.env['ETHEREUM_RPC_URL']!));
-    _dioBundler = Dio(BaseOptions(baseUrl: dotenv.env['ERC4337_BUNDLER_BASE_URL']!));
+    _dioBundler = Dio(BaseOptions(baseUrl: dotenv.env['ERC4337_BUNDLER_URL']!));
   }
 
   Future<BigInt?> getBaseFee() async {
@@ -42,7 +45,11 @@ class EthereumApiService {
         '/',
         data: <String, dynamic>{
           'jsonrpc': '2.0',
-          'method': 'eth_maxPriorityFeePerGas',
+          // @@NOTE: _dio and _dioBundler in true Staging environment (meaning, the one targeting real
+          // testnet) point to the same baseUrl.
+          'method': _environment == 'Development' || _dio.options.baseUrl != _dioBundler.options.baseUrl
+              ? 'eth_maxPriorityFeePerGas'
+              : 'rundler_maxPriorityFeePerGas',
           'params': [],
           'id': 0,
         },
@@ -97,7 +104,7 @@ class EthereumApiService {
   Future<(BigInt, BigInt, BigInt)> estimateUserOperationGas(UserOperation userOp) async {
     try {
       var response = await _dioBundler.post(
-        '/901',
+        '/',
         data: <String, dynamic>{
           'jsonrpc': '2.0',
           'method': 'eth_estimateUserOperationGas',
@@ -110,9 +117,7 @@ class EthereumApiService {
       print(response);
       print('======================================================================');
 
-      if (response.data.containsKey('error')) {
-        throw UserOperationError.fromMap(response.data['error']);
-      }
+      if (response.data.containsKey('error')) throw UserOperationError.fromMap(response.data['error']);
 
       var result = response.data['result'];
       return (
@@ -128,7 +133,7 @@ class EthereumApiService {
   Future<String> sendUserOperation(UserOperation userOp) async {
     try {
       var response = await _dioBundler.post(
-        '/901',
+        '/',
         data: <String, dynamic>{
           'jsonrpc': '2.0',
           'method': 'eth_sendUserOperation',
@@ -141,9 +146,7 @@ class EthereumApiService {
       print(response);
       print('===============================================================');
 
-      if (response.data.containsKey('error')) {
-        throw UserOperationError.fromMap(response.data['error']);
-      }
+      if (response.data.containsKey('error')) throw UserOperationError.fromMap(response.data['error']);
 
       return response.data['result'] as String;
     } on DioError catch (error) {
@@ -154,7 +157,7 @@ class EthereumApiService {
   Future<GetUserOperationReceiptRvm?> getUserOperationReceipt(String userOpHash) async {
     try {
       var response = await _dioBundler.post(
-        '/901',
+        '/',
         data: <String, dynamic>{
           'jsonrpc': '2.0',
           'method': 'eth_getUserOperationReceipt',
@@ -163,9 +166,7 @@ class EthereumApiService {
         },
       );
 
-      if (response.data['result'] == null) {
-        return null;
-      }
+      if (response.data['result'] == null) return null;
 
       return GetUserOperationReceiptRvm.fromMap(response.data['result']);
     } on DioError catch (error) {

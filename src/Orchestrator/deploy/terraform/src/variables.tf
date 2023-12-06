@@ -77,7 +77,7 @@ variable "ethereum_l1_chain_id" {
   default = "900"
 }
 
-variable "erc4337_bundler_host" {
+variable "erc4337_bundler_url" {
   default = ""
 }
 

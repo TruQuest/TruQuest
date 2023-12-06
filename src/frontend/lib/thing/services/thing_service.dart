@@ -90,7 +90,7 @@ class ThingService {
 
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [
-        (TruQuestContract.address, _truQuestContract.fundThing(thingId, signature)),
+        (_truQuestContract, _truQuestContract.fundThing(thingId, signature)),
       ],
       functionSignature: 'TruQuest.fundPromise(promiseId: $thingId)',
       description: 'Fund the promise to kick-start an evaluation process.',
@@ -148,7 +148,7 @@ class ThingService {
 
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [
-        (ThingValidationVerifierLotteryContract.address, _thingValidationVerifierLotteryContract.joinLottery(thingId)),
+        (_thingValidationVerifierLotteryContract, _thingValidationVerifierLotteryContract.joinLottery(thingId)),
       ],
       functionSignature: 'PromiseValidationVerifierLotery.join(promiseId: $thingId)',
       description: 'Join the verifier selection lottery.',
@@ -239,7 +239,7 @@ class ThingService {
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [
         (
-          ThingValidationPollContract.address,
+          _thingValidationPollContract,
           _thingValidationPollContract.castVote(
             thingId,
             thingVerifiersArrayIndex,

@@ -5,11 +5,12 @@ import 'ethereum/services/embedded_wallet_service.dart';
 // import 'ethereum/services/third_party_wallet_service.dart';
 import 'ethereum/services/user_operation_service.dart';
 import 'ethereum/services/ethereum_rpc_provider.dart';
-import 'general/contracts/dummy_contract.dart';
 import 'general/contracts/erc4337/entrypoint_contract.dart';
 import 'ethereum/services/ethereum_api_service.dart';
+import 'general/contracts/erc4337/entrypoint_v0_6_0_contract.dart';
 import 'general/contracts/erc4337/iaccount_factory_contract.dart';
 import 'general/contracts/erc4337/ientrypoint_contract.dart';
+import 'general/contracts/erc4337/light_account_factory_contract.dart';
 import 'general/contracts/erc4337/simple_account_factory_contract.dart';
 import 'general/contracts/truthserum_contract.dart';
 import 'general/services/general_api_service.dart';
@@ -77,6 +78,14 @@ abstract class Injector {
   @Register.singleton(GeneralService)
   @Register.singleton(GeneralBloc)
   @Register.singleton(EthereumRpcProvider)
+  @Register.singleton(EthereumApiService)
+  @Register.singleton(UserOperationService)
+  // @Register.singleton(ThirdPartyWalletService)
+  @Register.factory(UserOperationBuilder)
+  @Register.singleton(IFrameManager)
+  @Register.singleton(EmbeddedWalletService)
+  void configure();
+
   @Register.singleton(
     IEntryPointContract,
     from: EntryPointContract,
@@ -85,17 +94,25 @@ abstract class Injector {
     IAccountFactoryContract,
     from: SimpleAccountFactoryContract,
   )
-  @Register.singleton(DummyContract)
-  @Register.singleton(EthereumApiService)
-  @Register.singleton(UserOperationService)
-  // @Register.singleton(ThirdPartyWalletService)
-  @Register.factory(UserOperationBuilder)
-  @Register.singleton(IFrameManager)
-  @Register.singleton(EmbeddedWalletService)
-  void configure();
+  void configureDevelopment();
+
+  @Register.singleton(
+    IEntryPointContract,
+    from: EntryPointV060Contract,
+  )
+  @Register.singleton(
+    IAccountFactoryContract,
+    from: LightAccountFactoryContract,
+  )
+  void configureStaging();
 }
 
-void setup() {
+void setup(String environment) {
   var injector = _$Injector();
   injector.configure();
+  if (environment == 'Development') {
+    injector.configureDevelopment();
+  } else if (environment == 'Staging') {
+    injector.configureStaging();
+  }
 }

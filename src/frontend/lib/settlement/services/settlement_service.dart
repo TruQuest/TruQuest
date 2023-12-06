@@ -95,7 +95,7 @@ class SettlementService {
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [
         (
-          TruQuestContract.address,
+          _truQuestContract,
           _truQuestContract.fundSettlementProposal(
             thingId,
             proposalId,
@@ -179,7 +179,7 @@ class SettlementService {
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [
         (
-          SettlementProposalAssessmentVerifierLotteryContract.address,
+          _settlementProposalAssessmentVerifierLotteryContract,
           _settlementProposalAssessmentVerifierLotteryContract.claimLotterySpot(
             thingId,
             proposalId,
@@ -216,7 +216,7 @@ class SettlementService {
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [
         (
-          SettlementProposalAssessmentVerifierLotteryContract.address,
+          _settlementProposalAssessmentVerifierLotteryContract,
           _settlementProposalAssessmentVerifierLotteryContract.joinLottery(
             thingId,
             proposalId,
@@ -321,7 +321,7 @@ class SettlementService {
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [
         (
-          SettlementProposalAssessmentPollContract.address,
+          _settlementProposalAssessmentPollContract,
           _settlementProposalAssessmentPollContract.castVote(
             thingId,
             proposalId,

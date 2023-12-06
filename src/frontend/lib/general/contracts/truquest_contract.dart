@@ -4,9 +4,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../ethereum/services/ethereum_rpc_provider.dart';
 import '../utils/utils.dart';
 import '../../ethereum_js_interop.dart';
+import 'base_contract.dart';
 
-class TruQuestContract {
-  static final String address = dotenv.env['TruQuestAddress']!;
+class TruQuestContract extends BaseContract {
+  static final String _address = dotenv.env['TruQuestAddress']!;
   static const String _abi = '''[
         {
           "inputs": [],
@@ -305,29 +306,21 @@ class TruQuestContract {
         }
       ]''';
 
-  late final Abi _interface;
-  late final Contract _contract;
+  TruQuestContract(EthereumRpcProvider ethereumRpcProvider) : super(_address, _abi, ethereumRpcProvider.provider);
 
-  TruQuestContract(EthereumRpcProvider ethereumRpcProvider) {
-    _interface = Abi(_abi);
-    _contract = Contract(address, _abi, ethereumRpcProvider.provider);
-  }
+  Future<BigInt> getThingStake() => contract.read<BigInt>('s_thingStake');
 
-  ErrorDescription parseError(String data) => _interface.parseError(data);
+  Future<BigInt> getSettlementProposalStake() => contract.read<BigInt>('s_settlementProposalStake');
 
-  Future<BigInt> getThingStake() => _contract.read<BigInt>('s_thingStake');
+  Future<BigInt> getVerifierStake() => contract.read<BigInt>('s_verifierStake');
 
-  Future<BigInt> getSettlementProposalStake() => _contract.read<BigInt>('s_settlementProposalStake');
+  Future<BigInt> balanceOf(String address) => contract.read<BigInt>('s_balanceOf', args: [address]);
 
-  Future<BigInt> getVerifierStake() => _contract.read<BigInt>('s_verifierStake');
+  Future<BigInt> stakedBalanceOf(String address) => contract.read<BigInt>('s_stakedBalanceOf', args: [address]);
 
-  Future<BigInt> balanceOf(String address) => _contract.read<BigInt>('s_balanceOf', args: [address]);
+  Future<BigInt> getAvailableFunds(String address) => contract.read<BigInt>('getAvailableFunds', args: [address]);
 
-  Future<BigInt> stakedBalanceOf(String address) => _contract.read<BigInt>('s_stakedBalanceOf', args: [address]);
-
-  Future<BigInt> getAvailableFunds(String address) => _contract.read<BigInt>('getAvailableFunds', args: [address]);
-
-  Future<bool> checkThingAlreadyFunded(String thingId) => _contract.read<bool>(
+  Future<bool> checkThingAlreadyFunded(String thingId) => contract.read<bool>(
         'checkThingAlreadyFunded',
         args: [thingId.toSolInputFormat()],
       );
@@ -339,7 +332,7 @@ class TruQuestContract {
     var s = '0x' + signature.substring(64, 128);
     var v = hex.decode(signature.substring(128, 130)).first;
 
-    return _interface.encodeFunctionData(
+    return interface.encodeFunctionData(
       'fundThing',
       [
         thingIdHex,
@@ -353,7 +346,7 @@ class TruQuestContract {
   Future<bool> checkThingAlreadyHasSettlementProposalUnderAssessment(
     String thingId,
   ) =>
-      _contract.read<bool>(
+      contract.read<bool>(
         'checkThingAlreadyHasSettlementProposalUnderAssessment',
         args: [thingId.toSolInputFormat()],
       );
@@ -370,7 +363,7 @@ class TruQuestContract {
     var s = '0x' + signature.substring(64, 128);
     var v = hex.decode(signature.substring(128, 130)).first;
 
-    return _interface.encodeFunctionData(
+    return interface.encodeFunctionData(
       'fundSettlementProposal',
       [
         thingIdHex,
@@ -382,12 +375,12 @@ class TruQuestContract {
     );
   }
 
-  String depositFunds(int amount) => _interface.encodeFunctionData(
+  String depositFunds(int amount) => interface.encodeFunctionData(
         'deposit',
         [BigNumber.from(amount.toString())],
       );
 
-  String withdrawFunds(int amount) => _interface.encodeFunctionData(
+  String withdrawFunds(int amount) => interface.encodeFunctionData(
         'withdraw',
         [BigNumber.from(amount.toString())],
       );

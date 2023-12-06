@@ -76,13 +76,8 @@ class _$Injector extends Injector {
       ..registerSingleton(
           (c) => GeneralBloc(c<ToastMessenger>(), c<GeneralService>()))
       ..registerSingleton((c) => EthereumRpcProvider())
-      ..registerSingleton<IEntryPointContract>(
-          (c) => EntryPointContract(c<EthereumRpcProvider>()))
-      ..registerSingleton<IAccountFactoryContract>(
-          (c) => SimpleAccountFactoryContract(c<EthereumRpcProvider>()))
-      ..registerSingleton((c) => DummyContract(c<EthereumRpcProvider>()))
       ..registerSingleton((c) => EthereumApiService(c<IEntryPointContract>()))
-      ..registerSingleton((c) => UserOperationService(
+      ..registerSingleton((c) => UserOperationService(c<EthereumRpcProvider>(),
           c<EthereumApiService>(), c<IEntryPointContract>()))
       ..registerFactory((c) => UserOperationBuilder(
           c<UserService>(),
@@ -92,5 +87,25 @@ class _$Injector extends Injector {
       ..registerSingleton((c) => IFrameManager())
       ..registerSingleton((c) => EmbeddedWalletService(
           c<UserApiService>(), c<IFrameManager>(), c<LocalStorage>()));
+  }
+
+  @override
+  void configureDevelopment() {
+    final KiwiContainer container = KiwiContainer();
+    container
+      ..registerSingleton<IEntryPointContract>(
+          (c) => EntryPointContract(c<EthereumRpcProvider>()))
+      ..registerSingleton<IAccountFactoryContract>(
+          (c) => SimpleAccountFactoryContract(c<EthereumRpcProvider>()));
+  }
+
+  @override
+  void configureStaging() {
+    final KiwiContainer container = KiwiContainer();
+    container
+      ..registerSingleton<IEntryPointContract>(
+          (c) => EntryPointV060Contract(c<EthereumRpcProvider>()))
+      ..registerSingleton<IAccountFactoryContract>(
+          (c) => LightAccountFactoryContract(c<EthereumRpcProvider>()));
   }
 }

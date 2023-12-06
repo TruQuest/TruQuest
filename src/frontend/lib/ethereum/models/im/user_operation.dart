@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import '../../../user/services/user_service.dart';
+import '../../errors/user_operation_error.dart';
 import '../../services/ethereum_api_service.dart';
 import '../../../ethereum_js_interop.dart';
 import '../../../widget_extensions.dart';
@@ -25,6 +26,8 @@ class UserOperation {
   BigInt get totalProvisionedGas => callGasLimit + verificationGasLimit + preVerificationGas;
 
   late final UserOperationBuilder builder;
+
+  ErrorDescription? Function(String data)? parseError;
 
   UserOperation({
     required this.sender,
@@ -120,13 +123,6 @@ class UserOperationBuilder {
 
   late UserOperation _userOp;
 
-  double _preVerificationGasMultiplier = 1;
-  double get preVerificationGasMultiplier => _preVerificationGasMultiplier;
-  double _verificationGasLimitMultiplier = 1;
-  double get verificationGasLimitMultiplier => _verificationGasLimitMultiplier;
-  double _callGasLimitMultiplier = 1;
-  double get callGasLimitMultiplier => _callGasLimitMultiplier;
-
   final List<Future Function()> _tasks = [];
 
   late final BigInt estimatedGasCost;
@@ -173,18 +169,6 @@ class UserOperationBuilder {
     return this;
   }
 
-  UserOperationBuilder withEstimatedGasLimitsMultipliers({
-    double preVerificationGasMultiplier = 1,
-    double verificationGasLimitMultiplier = 1,
-    double callGasLimitMultiplier = 1,
-  }) {
-    _preVerificationGasMultiplier = preVerificationGasMultiplier;
-    _verificationGasLimitMultiplier = verificationGasLimitMultiplier;
-    _callGasLimitMultiplier = callGasLimitMultiplier;
-
-    return this;
-  }
-
   UserOperationBuilder _withEstimatedGasLimits() {
     _tasks.add(() async {
       _userOp = UserOperation(
@@ -205,22 +189,8 @@ class UserOperationBuilder {
       var (preVerificationGas, verificationGasLimit, callGasLimit) = fees;
 
       print('PreVerificationGas: $preVerificationGas');
-      preVerificationGas = BigInt.from(
-        preVerificationGas.toDouble() * _preVerificationGasMultiplier,
-      );
-      print('PreVerificationGas [Provisioned]: $preVerificationGas');
-
       print('VerificationGasLimit: $verificationGasLimit');
-      verificationGasLimit = BigInt.from(
-        verificationGasLimit.toDouble() * _verificationGasLimitMultiplier,
-      );
-      print('VerificationGasLimit [Provisioned]: $verificationGasLimit');
-
       print('CallGasLimit: $callGasLimit');
-      callGasLimit = BigInt.from(
-        callGasLimit.toDouble() * _callGasLimitMultiplier,
-      );
-      print('CallGasLimit [Provisioned]: $callGasLimit');
 
       _userOp = _userOp.copyWith(
         callGasLimit: callGasLimit,
@@ -234,30 +204,40 @@ class UserOperationBuilder {
 
   UserOperationBuilder _withCurrentGasPrice() {
     _tasks.add(() async {
-      // @@TODO!!: Use Alchemy's API for fees data.
-      var minPriorityFeeBid = BigInt.parse('1000000000'); // 1 GWEI
+      /*
+        Source: https://docs.alchemy.com/reference/bundler-api-fee-logic
+
+        Recommended Actions for Calculating maxFeePerGas:
+            - Fetch Current Base Fee: Use the method eth_getBlockByNumber with the 'latest' parameter to get the current baseFeePerGas.
+            - Apply Buffer on Base Fee: To account for potential fee changes, apply a buffer on the current base fee
+            based on the requirements in the table shown above (5% for Arbitrum Mainnet and 50% for all other mainnets)
+            - Fetch Current Priority Fee with Rundler: Use the rundler_maxPriorityFeePerGas method to query the current priority fee for the network.
+            - Apply Buffer on Priority Fee: Once you have the current priority fee using rundler_maxPriorityFeePerGas,
+            increase it according to the fee requirement table shown above for any unexpected changes (No buffer for Arbitrum Mainnet and
+            25% buffer for all other mainnets).
+            - Determine maxFeePerGas: Add the buffered values from steps 2 and 4 together to obtain the maxFeePerGas for your user operation.
+      */
 
       var baseFee = await _ethereumApiService.getBaseFee();
-      print('Base fee: 0x${baseFee!.toRadixString(16)} WEI');
+      if (baseFee == null) throw UserOperationError(message: 'Error trying to get current base fee');
+
+      print('Base fee: 0x${baseFee.toRadixString(16)} WEI');
+      baseFee = BigInt.from((baseFee * BigInt.from(3)) / BigInt.two);
+      print('Base fee bid (+ 50% buffer): 0x${baseFee.toRadixString(16)} WEI');
 
       var maxPriorityFee = await _ethereumApiService.getMaxPriorityFee();
-      print('Max priority fee: 0x${maxPriorityFee!.toRadixString(16)} WEI');
+      if (maxPriorityFee == null) throw UserOperationError(message: 'Error trying to get current max priority fee');
 
-      var maxPriorityFeeBid = BigInt.from(
-        (maxPriorityFee * BigInt.from(4)) / BigInt.from(3),
-      );
-      if (maxPriorityFeeBid < minPriorityFeeBid) {
-        maxPriorityFeeBid = minPriorityFeeBid;
-      }
+      print('Max priority fee: 0x${maxPriorityFee.toRadixString(16)} WEI');
+      maxPriorityFee = BigInt.from((maxPriorityFee * BigInt.from(5)) / BigInt.from(4));
+      print('Max priority fee bid (+ 25% buffer): 0x${maxPriorityFee.toRadixString(16)} WEI');
 
-      print('Max priority fee bid: 0x${maxPriorityFeeBid.toRadixString(16)} WEI');
-
-      var maxFeeBid = baseFee * BigInt.two + maxPriorityFeeBid;
+      var maxFeeBid = baseFee + maxPriorityFee;
       print('Max fee bid: 0x${maxFeeBid.toRadixString(16)} WEI');
 
       _userOp = _userOp.copyWith(
         maxFeePerGas: maxFeeBid,
-        maxPriorityFeePerGas: maxPriorityFeeBid,
+        maxPriorityFeePerGas: maxPriorityFee,
       );
 
       estimatedGasCost = _userOp.totalProvisionedGas * _userOp.maxFeePerGas;

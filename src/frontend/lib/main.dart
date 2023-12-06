@@ -10,9 +10,8 @@ import 'injector.dart';
 import 'general/pages/home_page.dart';
 
 Future main() async {
-  setup();
-
   await dotenv.load();
+  setup(dotenv.env['ENVIRONMENT']!);
 
   var localStorage = resolveDependency<LocalStorage>();
   await localStorage.init();

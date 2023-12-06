@@ -4,11 +4,11 @@ import 'package:convert/convert.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../ethereum/services/ethereum_rpc_provider.dart';
-import '../../ethereum_js_interop.dart';
 import '../utils/utils.dart';
+import 'base_contract.dart';
 
-class SettlementProposalAssessmentVerifierLotteryContract {
-  static final String address = dotenv.env['SettlementProposalAssessmentVerifierLotteryAddress']!;
+class SettlementProposalAssessmentVerifierLotteryContract extends BaseContract {
+  static final String _address = dotenv.env['SettlementProposalAssessmentVerifierLotteryAddress']!;
   static const String _abi = '''[
     {
       "inputs": [],
@@ -244,28 +244,17 @@ class SettlementProposalAssessmentVerifierLotteryContract {
 
   final _random = Random.secure();
 
-  late final Abi _interface;
-  late final Contract _contract;
+  SettlementProposalAssessmentVerifierLotteryContract(EthereumRpcProvider ethereumRpcProvider)
+      : super(_address, _abi, ethereumRpcProvider.provider);
 
-  SettlementProposalAssessmentVerifierLotteryContract(EthereumRpcProvider ethereumRpcProvider) {
-    _interface = Abi(_abi);
-    _contract = Contract(
-      address,
-      _abi,
-      ethereumRpcProvider.provider,
-    );
-  }
-
-  ErrorDescription parseError(String data) => _interface.parseError(data);
-
-  Future<int> getLotteryDurationBlocks() => _contract.read<int>('s_durationBlocks');
+  Future<int> getLotteryDurationBlocks() => contract.read<int>('s_durationBlocks');
 
   Future<int?> getLotteryInitBlock(String thingId, String proposalId) async {
     var thingIdHex = thingId.toSolInputFormat(prefix: false);
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    var block = await _contract.read<BigInt>(
+    var block = await contract.read<BigInt>(
       'getLotteryInitBlock',
       args: [thingProposalIdHex],
     );
@@ -282,7 +271,7 @@ class SettlementProposalAssessmentVerifierLotteryContract {
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    return _contract.read<bool>(
+    return contract.read<bool>(
       'checkAlreadyClaimedLotterySpot',
       args: [
         thingProposalIdHex,
@@ -300,7 +289,7 @@ class SettlementProposalAssessmentVerifierLotteryContract {
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    return _contract.read<bool>(
+    return contract.read<bool>(
       'checkAlreadyJoinedLottery',
       args: [
         thingProposalIdHex,
@@ -318,7 +307,7 @@ class SettlementProposalAssessmentVerifierLotteryContract {
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    return _interface.encodeFunctionData(
+    return interface.encodeFunctionData(
       'claimLotterySpot',
       [thingProposalIdHex, thingVerifiersArrayIndex],
     );
@@ -332,7 +321,7 @@ class SettlementProposalAssessmentVerifierLotteryContract {
     var userData = List<int>.generate(32, (_) => _random.nextInt(256));
     var userDataHex = '0x' + hex.encode(userData);
 
-    return _interface.encodeFunctionData(
+    return interface.encodeFunctionData(
       'joinLottery',
       [thingProposalIdHex, userDataHex],
     );

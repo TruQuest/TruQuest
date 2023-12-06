@@ -1,12 +1,12 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../ethereum/services/ethereum_rpc_provider.dart';
-import '../../ethereum_js_interop.dart';
 import '../../thing/models/im/decision_im.dart';
 import '../utils/utils.dart';
+import 'base_contract.dart';
 
-class ThingValidationPollContract {
-  static final String address = dotenv.env['ThingValidationPollAddress']!;
+class ThingValidationPollContract extends BaseContract {
+  static final String _address = dotenv.env['ThingValidationPollAddress']!;
   static const String _abi = '''[
     {
       "inputs": [],
@@ -166,24 +166,13 @@ class ThingValidationPollContract {
     }
   ]''';
 
-  late final Abi _interface;
-  late final Contract _contract;
+  ThingValidationPollContract(EthereumRpcProvider ethereumRpcProvider)
+      : super(_address, _abi, ethereumRpcProvider.provider);
 
-  ThingValidationPollContract(EthereumRpcProvider ethereumRpcProvider) {
-    _interface = Abi(_abi);
-    _contract = Contract(
-      address,
-      _abi,
-      ethereumRpcProvider.provider,
-    );
-  }
-
-  ErrorDescription parseError(String data) => _interface.parseError(data);
-
-  Future<int> getPollDurationBlocks() => _contract.read<int>('s_durationBlocks');
+  Future<int> getPollDurationBlocks() => contract.read<int>('s_durationBlocks');
 
   Future<int?> getPollInitBlock(String thingId) async {
-    var initBlock = await _contract.read<BigInt>(
+    var initBlock = await contract.read<BigInt>(
       'getPollInitBlock',
       args: [thingId.toSolInputFormat()],
     );
@@ -198,7 +187,7 @@ class ThingValidationPollContract {
   ) {
     var thingIdHex = thingId.toSolInputFormat();
     return reason.isEmpty
-        ? _interface.encodeFunctionData(
+        ? interface.encodeFunctionData(
             'castVote',
             [
               thingIdHex,
@@ -206,7 +195,7 @@ class ThingValidationPollContract {
               decision.index,
             ],
           )
-        : _interface.encodeFunctionData(
+        : interface.encodeFunctionData(
             'castVoteWithReason',
             [
               thingIdHex,
@@ -221,7 +210,7 @@ class ThingValidationPollContract {
     String thingId,
     String walletAddress,
   ) async {
-    var index = await _contract.read<BigInt>(
+    var index = await contract.read<BigInt>(
       'getUserIndexAmongThingVerifiers',
       args: [thingId.toSolInputFormat(), walletAddress],
     );

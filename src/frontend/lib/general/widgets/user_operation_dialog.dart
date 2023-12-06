@@ -29,11 +29,11 @@ class UserOperationDialog extends StatelessWidget {
         child: StreamBuilder(
           stream: stream,
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasError) {
               _userOp = null;
               return Center(
                 child: Text(
-                  'An error occurred. Please try again later',
+                  snapshot.error.toString(),
                   style: GoogleFonts.raleway(
                     color: Colors.white,
                     fontSize: 18,

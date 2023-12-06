@@ -1,8 +1,8 @@
 import 'iaccount_contract.dart';
 import '../../../ethereum_js_interop.dart';
 
-class SimpleAccountContract implements IAccountContract {
-  static final instance = SimpleAccountContract();
+class LightAccountContract implements IAccountContract {
+  static final instance = LightAccountContract();
   static const String _abi = '''
     [
         {
@@ -36,11 +36,6 @@ class SimpleAccountContract implements IAccountContract {
               "type": "address[]"
             },
             {
-              "internalType": "uint256[]",
-              "name": "value",
-              "type": "uint256[]"
-            },
-            {
               "internalType": "bytes[]",
               "name": "func",
               "type": "bytes[]"
@@ -55,7 +50,7 @@ class SimpleAccountContract implements IAccountContract {
 
   final Abi _interface;
 
-  SimpleAccountContract() : _interface = Abi(_abi);
+  LightAccountContract() : _interface = Abi(_abi);
 
   @override
   String execute((String, String) targetAndCallData) {
@@ -69,7 +64,6 @@ class SimpleAccountContract implements IAccountContract {
       'executeBatch',
       [
         targetAndCallDataList.map((e) => e.$1).toList(),
-        targetAndCallDataList.map((_) => BigNumber.from('0')).toList(),
         targetAndCallDataList.map((e) => e.$2).toList(),
       ],
     );

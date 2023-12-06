@@ -202,7 +202,17 @@ class LogDescription {
   external String get signature;
 }
 
-external String retrieveRevertReasonFromEvent(List<String> topics, String data);
+external UserOpStatus retrieveUserOpStatusFromEvent(List<String> topics, String data);
+
+@JS()
+@anonymous
+class UserOpStatus {
+  external bool get success;
+  external String get actualGasCost;
+  external String get actualGasUsed;
+}
+
+external String retrieveUserOpRevertReasonFromEvent(List<String> topics, String data);
 
 @JS()
 @anonymous
@@ -729,3 +739,5 @@ class RawAssertion {
   external String get type;
   external AuthenticatorAssertionResponse get response;
 }
+
+external String signDigest(String privateKey, String digest);

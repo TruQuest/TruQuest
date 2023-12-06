@@ -1,12 +1,12 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../ethereum/services/ethereum_rpc_provider.dart';
-import '../../ethereum_js_interop.dart';
 import '../../settlement/models/im/decision_im.dart';
 import '../utils/utils.dart';
+import 'base_contract.dart';
 
-class SettlementProposalAssessmentPollContract {
-  static final String address = dotenv.env['SettlementProposalAssessmentPollAddress']!;
+class SettlementProposalAssessmentPollContract extends BaseContract {
+  static final String _address = dotenv.env['SettlementProposalAssessmentPollAddress']!;
   static const String _abi = '''[
     {
       "inputs": [
@@ -166,28 +166,17 @@ class SettlementProposalAssessmentPollContract {
     }
   ]''';
 
-  late final Abi _interface;
-  late final Contract _contract;
+  SettlementProposalAssessmentPollContract(EthereumRpcProvider ethereumRpcProvider)
+      : super(_address, _abi, ethereumRpcProvider.provider);
 
-  SettlementProposalAssessmentPollContract(EthereumRpcProvider ethereumRpcProvider) {
-    _interface = Abi(_abi);
-    _contract = Contract(
-      address,
-      _abi,
-      ethereumRpcProvider.provider,
-    );
-  }
-
-  ErrorDescription parseError(String data) => _interface.parseError(data);
-
-  Future<int> getPollDurationBlocks() => _contract.read<int>('s_durationBlocks');
+  Future<int> getPollDurationBlocks() => contract.read<int>('s_durationBlocks');
 
   Future<int?> getPollInitBlock(String thingId, String proposalId) async {
     var thingIdHex = thingId.toSolInputFormat(prefix: false);
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    var block = await _contract.read<BigInt>(
+    var block = await contract.read<BigInt>(
       'getPollInitBlock',
       args: [thingProposalIdHex],
     );
@@ -204,7 +193,7 @@ class SettlementProposalAssessmentPollContract {
     var proposalIdHex = proposalId.toSolInputFormat(prefix: false);
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
-    var index = await _contract.read<BigInt>(
+    var index = await contract.read<BigInt>(
       'getUserIndexAmongSettlementProposalVerifiers',
       args: [
         thingProposalIdHex,
@@ -227,7 +216,7 @@ class SettlementProposalAssessmentPollContract {
     var thingProposalIdHex = '0x' + thingIdHex + proposalIdHex;
 
     return reason.isEmpty
-        ? _interface.encodeFunctionData(
+        ? interface.encodeFunctionData(
             'castVote',
             [
               thingProposalIdHex,
@@ -235,7 +224,7 @@ class SettlementProposalAssessmentPollContract {
               decision.index,
             ],
           )
-        : _interface.encodeFunctionData(
+        : interface.encodeFunctionData(
             'castVoteWithReason',
             [
               thingProposalIdHex,

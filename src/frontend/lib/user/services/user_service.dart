@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:rxdart/rxdart.dart';
 
-import '../../ethereum/errors/user_operation_error.dart';
 import '../../ethereum/services/embedded_wallet_service.dart';
 import '../../ethereum/services/ethereum_api_service.dart';
 import '../../general/utils/utils.dart';
@@ -158,8 +157,8 @@ class UserService {
 
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [
-        (TruthserumContract.address, _truthserumContract.approve(amount)),
-        (TruQuestContract.address, _truQuestContract.depositFunds(amount)),
+        (_truthserumContract, _truthserumContract.approve(amount)),
+        (_truQuestContract, _truQuestContract.depositFunds(amount)),
       ],
       functionSignature: 'Truthserum.approve(TruQuest, ${getMinLengthAmount(BigInt.from(amount), 'TRU')} TRU)\n'
           'TruQuest.deposit(${getMinLengthAmount(BigInt.from(amount), 'TRU')} TRU)',
@@ -188,7 +187,7 @@ class UserService {
     }
 
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
-      actions: [(TruQuestContract.address, _truQuestContract.withdrawFunds(amount))],
+      actions: [(_truQuestContract, _truQuestContract.withdrawFunds(amount))],
       functionSignature: 'TruQuest.withdraw(${getMinLengthAmount(BigInt.from(amount), 'TRU')} TRU)',
       description: 'Withdraw ${getMinLengthAmount(BigInt.from(amount), 'TRU')} TRU from TruQuest back to the wallet.',
     );
@@ -197,18 +196,7 @@ class UserService {
     if (userOp == null) return;
 
     var error = await _userOperationService.send(userOp);
-    if (error != null) {
-      if (error.isPastOrFutureExecutionRevertError) {
-        if (error.extractedFromEvent) {
-          var errorDescription = _truQuestContract.parseError(error.message);
-          yield UserOperationError.customContractError(errorDescription.name);
-        } else {
-          yield UserOperationError(code: error.code);
-        }
-      } else {
-        yield error;
-      }
-    }
+    if (error != null) yield error;
 
     _refreshSmartWalletInfo();
   }

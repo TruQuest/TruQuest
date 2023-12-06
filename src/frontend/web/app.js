@@ -219,7 +219,70 @@ async function fetchAndResizeImage(url) {
 //   return { colors: colors };
 // }
 
-function retrieveRevertReasonFromEvent(topics, data) {
+function retrieveUserOpStatusFromEvent(topics, data) {
+  // @@HACK: ethers.utils.Interface.parseLog returns some unholy half-array half-map contraption,
+  // which I have no idea how to bind to a Dart object, so do this instead...
+  var abi = new ethers.utils.Interface(`[
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "userOpHash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "paymaster",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "nonce",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "success",
+          "type": "bool"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "actualGasCost",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "actualGasUsed",
+          "type": "uint256"
+        }
+      ],
+      "name": "UserOperationEvent",
+      "type": "event"
+    }
+  ]`);
+
+  var log = abi.parseLog({ topics, data });
+  return {
+    success: log.args.success,
+    actualGasCost: log.args.actualGasCost.toHexString(),
+    actualGasUsed: log.args.actualGasUsed.toHexString(),
+  };
+}
+
+function retrieveUserOpRevertReasonFromEvent(topics, data) {
   // @@HACK: ethers.utils.Interface.parseLog returns some unholy half-array half-map contraption,
   // which I have no idea how to bind to a Dart object, so do this instead...
   var abi = new ethers.utils.Interface(`[
@@ -439,3 +502,19 @@ class EthereumWallet {
 }
 
 window.EthereumWallet = EthereumWallet;
+
+function signDigest(privateKey, digest) {
+  var signingKey = new ethers.utils.SigningKey(privateKey);
+  var hashedEthereumPrefixedMessage = ethers.utils.hashMessage(
+    ethers.utils.arrayify(digest)
+  );
+  var signature = signingKey.signDigest(hashedEthereumPrefixedMessage);
+
+  var serializedSignature =
+    "0x" +
+    signature.r.substring(2) +
+    signature.s.substring(2) +
+    (signature.v == 27 ? "1b" : "1c");
+
+  return serializedSignature;
+}

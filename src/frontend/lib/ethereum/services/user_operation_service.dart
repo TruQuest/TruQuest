@@ -1,6 +1,9 @@
 import 'dart:async';
 
+import 'package:either_dart/either.dart';
+
 import '../../ethereum_js_interop.dart';
+import '../../general/contracts/base_contract.dart';
 import '../../general/contracts/erc4337/ientrypoint_contract.dart';
 import '../../user/errors/get_credential_error.dart';
 import '../errors/wallet_action_declined_error.dart';
@@ -9,15 +12,21 @@ import 'ethereum_api_service.dart';
 import '../errors/user_operation_error.dart';
 import '../models/im/user_operation.dart';
 import '../models/vm/get_user_operation_receipt_rvm.dart';
+import 'ethereum_rpc_provider.dart';
 
 class UserOperationService {
+  final EthereumRpcProvider _ethereumRpcProvider;
   final EthereumApiService _ethereumApiService;
   final IEntryPointContract _entryPointContract;
 
-  UserOperationService(this._ethereumApiService, this._entryPointContract);
+  UserOperationService(
+    this._ethereumRpcProvider,
+    this._ethereumApiService,
+    this._entryPointContract,
+  );
 
   Stream<UserOperationVm> prepareOneWithRealTimeFeeUpdates({
-    required List<(String, String)> actions,
+    required List<(BaseContract, String)> actions,
     String functionSignature = '',
     String description = '',
     BigInt? stakeSize,
@@ -29,7 +38,7 @@ class UserOperationService {
           description,
           functionSignature,
           stakeSize,
-          channel.sink,
+          channel,
           canceled,
         );
 
@@ -37,23 +46,52 @@ class UserOperationService {
   }
 
   void _keepRefreshingUserOpUntilCanceled(
-    List<(String, String)> actions,
+    List<(BaseContract, String)> actions,
     String description,
     String functionSignature,
     BigInt? stakeSize,
-    Sink<UserOperationVm> sink,
+    StreamController<UserOperationVm> channel,
     Completer canceled,
   ) async {
+    var parseError = (String data) {
+      var contractsAlreadyTriedParsing = <BaseContract>{};
+      for (var (contract, _) in actions) {
+        if (contractsAlreadyTriedParsing.contains(contract)) continue;
+        try {
+          contractsAlreadyTriedParsing.add(contract);
+          return contract.parseError(data);
+        } catch (e) {
+          // Error: no matching error (argument="sighash", value="0x...", code=INVALID_ARGUMENT, version=abi/5.7.0)
+        }
+      }
+
+      return null;
+    };
+
+    var addressAndCallDataPairs = actions.map((action) => (action.$1.address, action.$2)).toList();
+
     while (!canceled.isCompleted) {
-      var userOp = await _createUnsignedFromBatch(actions: actions);
-      if (userOp == null) {
-        sink.close();
+      var result = await _createUnsignedFromBatch(actions: addressAndCallDataPairs);
+      if (result.isLeft) {
+        var error = result.left;
+        if (error.isFurtherDecodable) {
+          var errorDescription = parseError(error.message);
+          if (errorDescription != null)
+            error = UserOperationError(message: errorDescription.name);
+          else
+            error = UserOperationError();
+        }
+
+        channel.addError(error);
         return;
       }
 
       if (canceled.isCompleted) return;
 
-      sink.add(
+      var userOp = result.right;
+      userOp.parseError = parseError;
+
+      channel.add(
         UserOperationVm(
           userOp,
           userOp.sender,
@@ -70,16 +108,12 @@ class UserOperationService {
     }
   }
 
-  Future<UserOperation?> _createUnsignedFromBatch({required List<(String, String)> actions}) async {
+  Future<Either<UserOperationError, UserOperation>> _createUnsignedFromBatch({
+    required List<(String, String)> actions,
+  }) async {
     assert(actions.isNotEmpty);
 
-    double preVerificationGasMultiplier = 1, verificationGasLimitMultiplier = 1, callGasLimitMultiplier = 1;
-
-    var userOpBuilder = UserOperation.create().withEstimatedGasLimitsMultipliers(
-      preVerificationGasMultiplier: preVerificationGasMultiplier,
-      verificationGasLimitMultiplier: verificationGasLimitMultiplier,
-      callGasLimitMultiplier: callGasLimitMultiplier,
-    );
+    var userOpBuilder = UserOperation.create();
 
     if (actions.length == 1) {
       userOpBuilder = userOpBuilder.action((actions.first.$1, actions.first.$2));
@@ -88,57 +122,37 @@ class UserOperationService {
     }
 
     try {
-      return await userOpBuilder.unsigned();
+      return Right(await userOpBuilder.unsigned());
     } on UserOperationError catch (error) {
       print('[${error.code}] $error');
-      return null;
+      return Left(error);
     }
   }
 
-  Future<UserOperationError?> send(UserOperation userOp, {int confirmations = 1}) async {
-    int attempts = 5; // @@TODO: Config.
+  Future<UserOperationError?> send(UserOperation approvedUserOp, {int confirmations = 1}) async {
     UserOperationError? error;
     String? userOpHash;
-    double preVerificationGasMultiplier = userOp.builder.preVerificationGasMultiplier;
-    double verificationGasLimitMultiplier = userOp.builder.verificationGasLimitMultiplier;
-    double callGasLimitMultiplier = userOp.builder.callGasLimitMultiplier;
-
-    do {
-      error = null;
-
-      try {
-        userOp = await UserOperation.createFrom(userOp)
-            .withEstimatedGasLimitsMultipliers(
-              preVerificationGasMultiplier: preVerificationGasMultiplier,
-              verificationGasLimitMultiplier: verificationGasLimitMultiplier,
-              callGasLimitMultiplier: callGasLimitMultiplier,
-            )
-            .signed();
-
-        print('UserOp[$attempts]:\n$userOp');
-
-        userOpHash = await _ethereumApiService.sendUserOperation(userOp);
-      } on WalletActionDeclinedError catch (e) {
-        print(e);
-        error = UserOperationError(message: e.message);
-        break;
-      } on GetCredentialError catch (e) {
-        print(e);
-        error = UserOperationError(message: e.message);
-        break;
-      } on UserOperationError catch (e) {
-        print(e);
-        error = e;
-        if (e.isPreVerificationGasTooLow) {
-          preVerificationGasMultiplier += 0.05; // @@TODO: Config.
-        } else if (e.isOverVerificationGasLimit) {
-          verificationGasLimitMultiplier += 0.2; // @@TODO: Config.
-        } else if (!e.isRetryable) {
-          // e.g. e.isPastOrFutureExecutionRevertError
-          break;
-        }
+    try {
+      var userOp = await UserOperation.createFrom(approvedUserOp).signed();
+      print('UserOp:\n$userOp');
+      userOpHash = await _ethereumApiService.sendUserOperation(userOp);
+    } on WalletActionDeclinedError catch (e) {
+      print(e);
+      error = UserOperationError(message: e.message);
+    } on GetCredentialError catch (e) {
+      print(e);
+      error = UserOperationError(message: e.message);
+    } on UserOperationError catch (e) {
+      print('[${e.code}] $e');
+      error = e;
+      if (error.isFurtherDecodable) {
+        var errorDescription = approvedUserOp.parseError!(error.message);
+        if (errorDescription != null)
+          error = UserOperationError(message: errorDescription.name);
+        else
+          error = UserOperationError();
       }
-    } while (userOpHash == null && --attempts > 0);
+    }
 
     assert(userOpHash != null && error == null || userOpHash == null && error != null);
 
@@ -150,24 +164,51 @@ class UserOperationService {
     do {
       await Future.delayed(const Duration(seconds: 2)); // @@TODO: Config.
       receipt = await _ethereumApiService.getUserOperationReceipt(userOpHash!);
-    } while (receipt == null || receipt.receipt.confirmations < confirmations);
+    } while (receipt == null);
+
+    while ((await _ethereumRpcProvider.provider.getBlockNumber() - receipt.receipt.blockNumber) < confirmations) {
+      await Future.delayed(const Duration(seconds: 2)); // @@TODO: Config.
+    }
 
     print('Receipt:\n$receipt');
 
+    var entryPointLogs = receipt.logs
+        .where(
+          // @@NOTE: Alchemy: l.address is all lower-case for some reason.
+          (l) => l.address.toLowerCase() == _entryPointContract.address.toLowerCase(),
+        )
+        .toList();
+
     if (!receipt.success) {
-      var entryPointLogs = receipt.logs.where((l) => l.address == _entryPointContract.address).toList();
       for (int i = 0; i < entryPointLogs.length; ++i) {
         var log = entryPointLogs[i];
         var logDescription = _entryPointContract.parseLog(log.topics, log.data);
-        if (logDescription.name == _entryPointContract.userOperationRevertedEventName) {
-          var revertReason = retrieveRevertReasonFromEvent(log.topics, log.data);
-          print('UserOp Execution Failed. Reason: <CUSTOM ERROR>');
-          return UserOperationError.customContractError(revertReason);
+        if (logDescription.name == _entryPointContract.userOperationRevertReasonEventName) {
+          var revertReason = retrieveUserOpRevertReasonFromEvent(log.topics, log.data);
+          var errorDescription = approvedUserOp.parseError!(revertReason);
+          if (errorDescription != null) {
+            print('UserOp Execution Failed. Reason: ${errorDescription.name}');
+            return UserOperationError(message: errorDescription.name);
+          } else {
+            print('UserOp Execution Failed. Reason: $revertReason');
+            return UserOperationError();
+          }
         }
       }
 
       print('UserOp Execution Failed. Reason: Unspecified');
       return UserOperationError();
+    }
+
+    for (int i = 0; i < entryPointLogs.length; ++i) {
+      var log = entryPointLogs[i];
+      var logDescription = _entryPointContract.parseLog(log.topics, log.data);
+      if (logDescription.name == _entryPointContract.userOperationEventName) {
+        var status = retrieveUserOpStatusFromEvent(log.topics, log.data);
+        print(
+          'UserOp succeeded: ${status.success}. Actual gas used: ${status.actualGasUsed}. Actual gas cost: ${status.actualGasCost}',
+        );
+      }
     }
 
     return null;
