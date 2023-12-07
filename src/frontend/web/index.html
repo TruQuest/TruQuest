@@ -51,7 +51,9 @@
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="favicon.png" />
 
-    <title>truquest_ui</title>
+    <title>
+      A promise/trustworthiness tracker powered by Ethereum and Base
+    </title>
     <link rel="manifest" href="manifest.json" />
 
     <script>
@@ -60,8 +62,32 @@
     </script>
     <!-- This script adds the flutter initialization JS code -->
     <script src="flutter.js" defer></script>
+
+    <style>
+      html,
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      .flutter-loader {
+        display: none;
+      }
+      .container {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .indicator {
+        width: 10vw;
+      }
+    </style>
   </head>
   <body>
+    <div id="loading_indicator" class="container">
+      <img class="indicator" src="loading.gif" />
+    </div>
     <script>
       window.addEventListener("load", function (ev) {
         // Download main.dart.js
@@ -77,6 +103,11 @@
           .then(function (appRunner) {
             return appRunner.runApp();
           });
+      });
+
+      window.addEventListener("flutter-first-frame", function () {
+        var indicator = document.getElementById("loading_indicator");
+        if (indicator) indicator.remove();
       });
     </script>
   </body>
