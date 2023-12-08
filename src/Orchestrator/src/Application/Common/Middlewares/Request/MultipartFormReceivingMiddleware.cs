@@ -30,7 +30,7 @@ public class MultipartFormReceivingMiddleware<TRequest, TResponse> : IRequestMid
             var result = await _fileReceiver.ReceiveFilesAndFormValues(
                 command.Request,
                 maxSize: 10 * 1024 * 1024, // @@TODO: Config.
-                filePrefix: _currentPrincipal.Id!
+                filePrefix: command.RequestId
             );
             if (result.IsError)
             {

@@ -4,5 +4,5 @@ namespace Services;
 
 internal interface IFileArchiver
 {
-    Task<Error?> ArchiveAllAttachments(object input, IProgress<int>? progress = null);
+    Task<Error?> ArchiveAllAttachments(string requestId, object input, IProgress<int>? progress = null);
 }

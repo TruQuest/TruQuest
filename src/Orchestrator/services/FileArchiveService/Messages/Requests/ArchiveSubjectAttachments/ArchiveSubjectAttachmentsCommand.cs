@@ -32,8 +32,10 @@ internal class ArchiveSubjectAttachmentsCommandHandler : IMessageHandler<Archive
 
     public async Task Handle(IMessageContext context, ArchiveSubjectAttachmentsCommand message)
     {
+        var requestId = Encoding.UTF8.GetString(context.Headers["trq.requestId"]);
+
         object response;
-        var error = await _fileArchiver.ArchiveAllAttachments(message.Input);
+        var error = await _fileArchiver.ArchiveAllAttachments(requestId, message.Input);
         if (error != null)
         {
             response = new ArchiveSubjectAttachmentsFailureResult
@@ -50,9 +52,6 @@ internal class ArchiveSubjectAttachmentsCommandHandler : IMessageHandler<Archive
             };
         }
 
-        await _responseDispatcher.Reply(
-            Encoding.UTF8.GetString(context.Headers["trq.requestId"]),
-            response
-        );
+        await _responseDispatcher.Reply(requestId, response);
     }
 }

@@ -7,6 +7,7 @@ namespace Services;
 
 internal class ResponseDispatcher : IResponseDispatcher
 {
+    private readonly string _topicName;
     private readonly byte[] _isResponseHeaderValue = { 1 };
 
     private readonly ILogger<ResponseDispatcher> _logger;
@@ -14,10 +15,12 @@ internal class ResponseDispatcher : IResponseDispatcher
 
     public ResponseDispatcher(
         ILogger<ResponseDispatcher> logger,
+        IConfiguration configuration,
         IMessageProducer<ResponseDispatcher> producer
     )
     {
         _logger = logger;
+        _topicName = configuration["Kafka:Producer:Topic"]!;
         _producer = producer;
     }
 
@@ -27,7 +30,7 @@ internal class ResponseDispatcher : IResponseDispatcher
 
         var messageKey = Guid.NewGuid().ToString();
 
-        span.SetKafkaTags(requestId, messageKey, destinationName: "responses");
+        span.SetKafkaTags(requestId, messageKey, destinationName: _topicName);
 
         var headers = new MessageHeaders
         {
@@ -53,7 +56,7 @@ internal class ResponseDispatcher : IResponseDispatcher
 
         var messageKey = key ?? Guid.NewGuid().ToString();
 
-        span.SetKafkaTags(requestId, messageKey, destinationName: "responses");
+        span.SetKafkaTags(requestId, messageKey, destinationName: _topicName);
 
         var headers = new MessageHeaders
         {
@@ -78,7 +81,7 @@ internal class ResponseDispatcher : IResponseDispatcher
 
         var messageKey = key ?? Guid.NewGuid().ToString();
 
-        span.SetKafkaTags(requestId, messageKey, destinationName: "responses");
+        span.SetKafkaTags(requestId, messageKey, destinationName: _topicName);
 
         var headers = new MessageHeaders
         {

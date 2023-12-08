@@ -476,9 +476,7 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-/services/FileArchiveService/images
 /services/FileArchiveService/user_files
-/services/FileArchiveService/screenshots
 /deploy/ContractMigrator/artifacts
 
 # Local .terraform directories

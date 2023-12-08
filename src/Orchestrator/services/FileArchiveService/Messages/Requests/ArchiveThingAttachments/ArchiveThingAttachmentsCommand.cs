@@ -51,11 +51,13 @@ internal class ArchiveThingAttachmentsCommandHandler : IMessageHandler<ArchiveTh
         });
 
         object response;
-        var error = await _fileArchiver.ArchiveAllAttachments(message.Input, progress);
+        var error = await _fileArchiver.ArchiveAllAttachments(requestId, message.Input, progress);
         if (error != null)
         {
             response = new ArchiveThingAttachmentsFailureResult
             {
+                SubmitterId = message.SubmitterId,
+                ThingId = message.ThingId,
                 ErrorMessage = error.ToString()
             };
         }

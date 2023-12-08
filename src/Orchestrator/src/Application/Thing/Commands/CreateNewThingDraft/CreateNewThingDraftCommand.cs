@@ -36,12 +36,15 @@ public class CreateNewThingDraftCommandHandler : IRequestHandler<CreateNewThingD
     {
         var thingId = Guid.NewGuid();
 
-        await _requestDispatcher.Send(new ArchiveThingAttachmentsCommand
-        {
-            SubmitterId = _currentPrincipal.Id!,
-            ThingId = thingId,
-            Input = (NewThingIm)command.Input
-        });
+        await _requestDispatcher.Send(
+            new ArchiveThingAttachmentsCommand
+            {
+                SubmitterId = _currentPrincipal.Id!,
+                ThingId = thingId,
+                Input = (NewThingIm)command.Input
+            },
+            requestId: command.RequestId
+        );
 
         return new()
         {

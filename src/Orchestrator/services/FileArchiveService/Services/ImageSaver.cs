@@ -9,6 +9,7 @@ internal class ImageSaver : IImageSaver
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IImageSignatureVerifier _imageSignatureVerifier;
 
+    private readonly string _path;
     private readonly HashSet<string> _acceptableMimeTypes;
     private readonly int _userImageMaxSizeBytes;
     private readonly int _webPageScreenshotMaxSizeBytes;
@@ -25,13 +26,14 @@ internal class ImageSaver : IImageSaver
         _httpClientFactory = httpClientFactory;
         _imageSignatureVerifier = imageSignatureVerifier;
 
+        _path = configuration["UserFiles:Path"]!;
         _acceptableMimeTypes = new(configuration["Images:AcceptableMimeTypes"]!.Split(','));
         _userImageMaxSizeBytes = configuration.GetValue<int>("Images:MaxSizeKb") * 1024;
         _webPageScreenshotMaxSizeBytes = configuration.GetValue<int>("WebPageScreenshots:ApiFlash:MaxSizeKb") * 1024;
         _fetchBufferSizeBytes = configuration.GetValue<int>("Images:FetchBufferSizeBytes");
     }
 
-    public async Task<string> SaveLocalCopy(string url, bool isWebPageScreenshot = false)
+    public async Task<string> SaveLocalCopy(string requestId, string url, bool isWebPageScreenshot = false)
     {
         using var span = Telemetry.StartActivity(
             $"{GetType().FullName}.{nameof(SaveLocalCopy)}", kind: ActivityKind.Client
@@ -52,7 +54,7 @@ internal class ImageSaver : IImageSaver
         }
 
         var fileExt = contentType.Split('/').Last();
-        var filePath = $"/images/{Guid.NewGuid()}.{fileExt}";
+        var filePath = $"{_path}/{requestId}/{Guid.NewGuid()}.{fileExt}";
 
         long? contentLength = response.Content.Headers.ContentLength;
         var maxSizeBytes = isWebPageScreenshot ? _webPageScreenshotMaxSizeBytes : _userImageMaxSizeBytes;

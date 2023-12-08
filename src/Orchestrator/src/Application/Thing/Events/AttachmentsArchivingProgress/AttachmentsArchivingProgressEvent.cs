@@ -21,7 +21,5 @@ public class AttachmentsArchivingProgressEventHandler : IEventHandler<Attachment
     }
 
     public Task Handle(AttachmentsArchivingProgressEvent @event, CancellationToken ct) =>
-        _clientNotifier.TellAboutNewThingDraftCreationProgress(
-            @event.SubmitterId, @event.ThingId, @event.Percent
-        );
+        _clientNotifier.TellAboutNewThingDraftCreationProgress(@event.SubmitterId, @event.ThingId, @event.Percent);
 }

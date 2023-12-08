@@ -4,12 +4,15 @@ internal class ImageCropper : IImageCropper
 {
     private readonly ILogger<ImageCropper> _logger;
 
-    public ImageCropper(ILogger<ImageCropper> logger)
+    private readonly string _path;
+
+    public ImageCropper(ILogger<ImageCropper> logger, IConfiguration configuration)
     {
         _logger = logger;
+        _path = configuration["UserFiles:Path"]!;
     }
 
-    public async Task<string> Crop(string filePath)
+    public async Task<string> Crop(string requestId, string filePath)
     {
         using var originFs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
         using var image = await Image.LoadAsync(originFs);
@@ -22,7 +25,7 @@ internal class ImageCropper : IImageCropper
 
         image.Mutate(ctx => ctx.Crop(new Rectangle(0, 0, targetWidth, targetHeight)));
 
-        var croppedImagePath = $"{Path.GetDirectoryName(filePath)}/{Path.GetFileNameWithoutExtension(filePath)}-cropped.png";
+        var croppedImagePath = $"{_path}/{requestId}/{Path.GetFileNameWithoutExtension(filePath)}-cropped.png";
         using var targetFs = new FileStream(croppedImagePath, FileMode.CreateNew, FileAccess.Write);
         await image.SaveAsPngAsync(targetFs);
 

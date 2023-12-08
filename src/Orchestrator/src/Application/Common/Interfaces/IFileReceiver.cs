@@ -10,6 +10,4 @@ public interface IFileReceiver
     Task<Either<HandleError, FormCollection>> ReceiveFilesAndFormValues(
         HttpRequest request, int maxSize, string filePrefix
     );
-
-    void DeleteFile(string filePath);
 }

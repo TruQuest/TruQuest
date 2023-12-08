@@ -21,7 +21,7 @@ internal class WebPageScreenshotTakerUsingApiFlash : IWebPageScreenshotTaker
         _apiFlashAccessKey = configuration["WebPageScreenshots:ApiFlash:AccessKey"]!;
     }
 
-    public async Task<List<string>?> Take(IEnumerable<string> urls)
+    public async Task<List<string>?> Take(string requestId, IEnumerable<string> urls)
     {
         var fullUrls = new List<string>(urls.Count());
         foreach (var url in urls)
@@ -42,7 +42,7 @@ internal class WebPageScreenshotTakerUsingApiFlash : IWebPageScreenshotTaker
             fullUrls.Add($"{_apiFlashUrl}?{queryString}");
         }
 
-        var tasks = fullUrls.Select(url => _imageSaver.SaveLocalCopy(url, isWebPageScreenshot: true));
+        var tasks = fullUrls.Select(url => _imageSaver.SaveLocalCopy(requestId, url, isWebPageScreenshot: true));
 
         List<string>? filePaths = null;
         try
@@ -51,7 +51,7 @@ internal class WebPageScreenshotTakerUsingApiFlash : IWebPageScreenshotTaker
         }
         catch (Exception e)
         {
-            _logger.LogWarning(e, "Error taking webpage screenshots");
+            _logger.LogWarning(e, "Error trying to take webpage screenshots");
             foreach (var task in tasks)
             {
                 if (task.Status == TaskStatus.RanToCompletion)

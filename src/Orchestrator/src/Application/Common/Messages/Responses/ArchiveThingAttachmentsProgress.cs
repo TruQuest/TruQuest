@@ -2,7 +2,7 @@ namespace Application.Common.Messages.Responses;
 
 public class ArchiveThingAttachmentsProgress
 {
-    public string SubmitterId { get; set; }
-    public Guid ThingId { get; set; }
-    public int Percent { get; set; }
+    public required string SubmitterId { get; init; }
+    public required Guid ThingId { get; init; }
+    public required int Percent { get; init; }
 }

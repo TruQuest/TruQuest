@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Channels;
 
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
 
 using KafkaFlow;
 
@@ -14,6 +15,7 @@ namespace Infrastructure.Kafka;
 
 internal class RequestDispatcher : IRequestDispatcher
 {
+    private readonly string _topicName;
     private readonly IMessageProducer<RequestDispatcher> _producer;
 
     private readonly ConcurrentDictionary<string, TaskCompletionSource<object>> _requestIdToResponseReceivedTcs = new();
@@ -21,8 +23,13 @@ internal class RequestDispatcher : IRequestDispatcher
     private readonly ChannelReader<(string RequestId, object Message)> _responseStream;
     public ChannelWriter<(string RequestId, object Message)> ResponseSink { get; }
 
-    public RequestDispatcher(IMessageProducer<RequestDispatcher> producer, IHostApplicationLifetime appLifetime)
+    public RequestDispatcher(
+        IConfiguration configuration,
+        IMessageProducer<RequestDispatcher> producer,
+        IHostApplicationLifetime appLifetime
+    )
     {
+        _topicName = configuration["Kafka:RequestProducer:Topic"]!;
         _producer = producer;
 
         var responseChannel = Channel.CreateUnbounded<(string RequestId, object Message)>(
@@ -56,14 +63,14 @@ internal class RequestDispatcher : IRequestDispatcher
         }
     }
 
-    public async Task<object> GetResult(object request)
+    public async Task<object> GetResult(object request, string? requestId = null)
     {
         using var span = Telemetry.StartActivity(request.GetType().FullName!, kind: ActivityKind.Producer)!;
 
-        var requestId = Guid.NewGuid().ToString();
+        requestId ??= Guid.NewGuid().ToString();
         var messageKey = Guid.NewGuid().ToString();
 
-        span.SetKafkaTags(requestId, messageKey, destinationName: "requests");
+        span.SetKafkaTags(requestId, messageKey, destinationName: _topicName);
 
         var headers = new MessageHeaders
         {
@@ -88,14 +95,14 @@ internal class RequestDispatcher : IRequestDispatcher
         return result;
     }
 
-    public async Task Send(object request)
+    public async Task Send(object request, string? requestId = null)
     {
         using var span = Telemetry.StartActivity(request.GetType().FullName!, kind: ActivityKind.Producer)!;
 
-        var requestId = Guid.NewGuid().ToString();
+        requestId ??= Guid.NewGuid().ToString();
         var messageKey = Guid.NewGuid().ToString();
 
-        span.SetKafkaTags(requestId, messageKey, destinationName: "requests");
+        span.SetKafkaTags(requestId, messageKey, destinationName: _topicName);
 
         var headers = new MessageHeaders
         {

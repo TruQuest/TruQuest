@@ -33,8 +33,11 @@ internal class FileArchiver : IFileArchiver
     private readonly IWebPageScreenshotTaker _webPageScreenshotTaker;
     private readonly IFileStorage _fileStorage;
 
+    private readonly string _path;
+
     public FileArchiver(
         ILogger<FileArchiver> logger,
+        IConfiguration configuration,
         IImageSaver imageSaver,
         IImageCropper imageCropper,
         IWebPageScreenshotTaker webPageScreenshotTaker,
@@ -46,10 +49,25 @@ internal class FileArchiver : IFileArchiver
         _imageCropper = imageCropper;
         _webPageScreenshotTaker = webPageScreenshotTaker;
         _fileStorage = fileStorage;
+
+        _path = configuration["UserFiles:Path"]!;
     }
 
-    public Task<Error?> ArchiveAllAttachments(object input, IProgress<int>? progress = null) =>
-        _archiveAllAttachments(input, progress);
+    public async Task<Error?> ArchiveAllAttachments(string requestId, object input, IProgress<int>? progress = null)
+    {
+        var error = await _archiveAllAttachments(requestId, input, progress);
+        try
+        {
+            var dir = new DirectoryInfo($"{_path}/{requestId}");
+            if (dir.Exists) dir.Delete(recursive: true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, $"Error trying to delete directory {_path}/{requestId}");
+        }
+
+        return error;
+    }
 
     private void _collectArchiveTasks(object input, List<ArchiveTask> archiveTasks)
     {
@@ -131,20 +149,23 @@ internal class FileArchiver : IFileArchiver
         }
     }
 
-    private async Task<Error?> _archiveAllAttachments(object input, IProgress<int>? progress)
+    private async Task<Error?> _archiveAllAttachments(string requestId, object input, IProgress<int>? progress)
     {
         var archiveTasks = new List<ArchiveTask>();
         _collectArchiveTasks(input, archiveTasks);
 
         if (archiveTasks.Any())
         {
-            // @@TODO!!: Delete local files after upload.
+            // @@NOTE: In the future it will be possible for user to, for example, do not send
+            // any images and only provide evidence urls, meaning, the orchestrator wouldn't have
+            // any files to receive and, therefore, wouldn't create this directory.
+            Directory.CreateDirectory($"{_path}/{requestId}");
 
             progress?.Report(20);
 
             var saveImageTasks = archiveTasks
                 .Where(t => t.AttachmentType == AttachmentType.ImageUrl)
-                .Select(t => _imageSaver.SaveLocalCopy(t.Uri))
+                .Select(t => _imageSaver.SaveLocalCopy(requestId, t.Uri))
                 .ToList();
 
             List<string> filePaths;
@@ -154,17 +175,8 @@ internal class FileArchiver : IFileArchiver
             }
             catch (Exception e)
             {
-                _logger.LogWarning(e, "Error saving images to local drive");
-                foreach (var task in saveImageTasks)
-                {
-                    if (task.Status == TaskStatus.RanToCompletion)
-                    {
-                        var filePath = await task;
-                        File.Delete(filePath);
-                    }
-                }
-
-                return new Error("Error saving images to local drive");
+                _logger.LogWarning(e, "Error trying to save images to local drive");
+                return new Error("Error trying to save images to local drive");
             }
 
             filePaths.AddRange(archiveTasks
@@ -173,27 +185,23 @@ internal class FileArchiver : IFileArchiver
             );
 
             List<string> ipfsCids;
+            string? imageFolderIpfsCid;
             if (filePaths.Any())
             {
                 try
                 {
-                    ipfsCids = await _fileStorage.Upload(filePaths);
+                    (ipfsCids, imageFolderIpfsCid) = await _fileStorage.Upload($"{requestId}-images", filePaths);
                 }
                 catch (Exception e)
                 {
-                    _logger.LogWarning(e, "Error adding images to ipfs");
-                    foreach (var task in saveImageTasks)
-                    {
-                        var filePath = await task;
-                        File.Delete(filePath);
-                    }
-
-                    return new Error("Error adding images to ipfs");
+                    _logger.LogWarning(e, "Error trying to add images to ipfs");
+                    return new Error("Error trying to add images to ipfs");
                 }
             }
             else
             {
                 ipfsCids = new();
+                imageFolderIpfsCid = null;
             }
 
             progress?.Report(40);
@@ -221,16 +229,20 @@ internal class FileArchiver : IFileArchiver
 
             if (webPagesToArchive.Any())
             {
-                List<string>? webPageScreenshotFilePaths = await _webPageScreenshotTaker.Take(webPagesToArchive);
+                List<string>? webPageScreenshotFilePaths = await _webPageScreenshotTaker.Take(requestId, webPagesToArchive);
                 if (webPageScreenshotFilePaths == null)
                 {
-                    return new Error("Error taking webpage screenshots");
+                    _logger.LogWarning("Error trying to take webpage screenshots");
+
+                    if (imageFolderIpfsCid != null) await _fileStorage.Delete(imageFolderIpfsCid);
+
+                    return new Error("Error trying to take webpage screenshots");
                 }
 
                 progress?.Report(75);
 
                 var cropImageTasks = webPageScreenshotFilePaths
-                    .Select(path => _imageCropper.Crop(path))
+                    .Select(path => _imageCropper.Crop(requestId, path))
                     .ToList(); // @@??: Semaphore?
 
                 string[] previewImageFilePaths;
@@ -240,15 +252,11 @@ internal class FileArchiver : IFileArchiver
                 }
                 catch (Exception e)
                 {
-                    _logger.LogWarning(e, "Error cropping webpage screenshots");
-                    for (int j = 0; j < cropImageTasks.Count; ++j)
-                    {
-                        var filePath = webPageScreenshotFilePaths[j];
-                        File.Delete(filePath);
-                        File.Delete($"{Path.GetDirectoryName(filePath)}/{Path.GetFileNameWithoutExtension(filePath)}-cropped.jpeg");
-                    }
+                    _logger.LogWarning(e, "Error trying to crop webpage screenshots");
 
-                    return new Error("Error cropping webpage screenshots");
+                    if (imageFolderIpfsCid != null) await _fileStorage.Delete(imageFolderIpfsCid);
+
+                    return new Error("Error trying to crop webpage screenshots");
                 }
 
                 Debug.Assert(webPageScreenshotFilePaths.Count == previewImageFilePaths.Length);
@@ -257,18 +265,17 @@ internal class FileArchiver : IFileArchiver
 
                 try
                 {
-                    ipfsCids = await _fileStorage.Upload(webPageScreenshotFilePaths.Concat(previewImageFilePaths));
+                    (ipfsCids, _) = await _fileStorage.Upload(
+                        $"{requestId}-screenshots", webPageScreenshotFilePaths.Concat(previewImageFilePaths)
+                    );
                 }
                 catch (Exception e)
                 {
-                    _logger.LogWarning(e, "Error adding webpage image files to ipfs");
+                    _logger.LogWarning(e, "Error trying to add webpage screenshots to ipfs");
 
-                    foreach (var filePath in webPageScreenshotFilePaths.Concat(previewImageFilePaths))
-                    {
-                        File.Delete(filePath);
-                    }
+                    if (imageFolderIpfsCid != null) await _fileStorage.Delete(imageFolderIpfsCid);
 
-                    return new Error("Error adding webpage image files to ipfs");
+                    return new Error("Error trying to add webpage screenshots to ipfs");
                 }
 
                 var webPageScreenshotIpfsCids = ipfsCids.Take(ipfsCids.Count / 2).ToList();

@@ -14,20 +14,20 @@ internal class FileStorage : IFileStorage
         _httpClientFactory = httpClientFactory;
     }
 
-    public async Task<List<string>> Upload(IEnumerable<string> filePaths)
+    public async Task<(List<string> FileIpfsCids, string FolderIpfsCid)> Upload(string folderName, IEnumerable<string> filePaths)
     {
         using var span = Telemetry.StartActivity($"{GetType().FullName}.{nameof(Upload)}", kind: ActivityKind.Client);
 
-        var folder = Guid.NewGuid();
         using var client = _httpClientFactory.CreateClient("ipfs");
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v0/add?to-files=/");
-        var content = new MultipartFormDataContent(); // @@NOTE: Gets disposed by the request and in turn disposes of inner http contents, which dispose of file streams.
+        // @@NOTE: Gets disposed by the request and in turn disposes of inner http contents, which dispose of file streams.
+        var content = new MultipartFormDataContent();
         int i = 1;
         foreach (var filePath in filePaths)
         {
             var file = File.OpenRead(filePath);
-            content.Add(new StreamContent(file), $"file{i++}", $"{folder}/{Path.GetFileName(filePath)}");
+            content.Add(new StreamContent(file), $"file{i++}", $"{folderName}/{Path.GetFileName(filePath)}");
         }
         request.Content = content;
 
@@ -71,8 +71,20 @@ internal class FileStorage : IFileStorage
             throw;
         }
 
-        return cids.SkipLast(1).ToList();
+        return (FileIpfsCids: cids.SkipLast(1).ToList(), FolderIpfsCid: cids.Last());
     }
 
-    public async Task Delete(IEnumerable<string> ipfsCids) { }
+    public async Task Delete(string folderIpfsCid)
+    {
+        try
+        {
+            using var client = _httpClientFactory.CreateClient("ipfs");
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/v0/pin/rm?arg={folderIpfsCid}&recursive=true");
+            await client.SendAsync(request);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error trying to unpin folder {IpfsCid} from IPFS", folderIpfsCid);
+        }
+    }
 }

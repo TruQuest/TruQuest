@@ -58,12 +58,15 @@ public class CreateNewSettlementProposalDraftCommandHandler :
 
         var proposalId = Guid.NewGuid();
 
-        await _requestDispatcher.Send(new ArchiveSettlementProposalAttachmentsCommand
-        {
-            SubmitterId = _currentPrincipal.Id!,
-            ProposalId = proposalId,
-            Input = input
-        });
+        await _requestDispatcher.Send(
+            new ArchiveSettlementProposalAttachmentsCommand
+            {
+                SubmitterId = _currentPrincipal.Id!,
+                ProposalId = proposalId,
+                Input = input
+            },
+            requestId: command.RequestId
+        );
 
         return new()
         {

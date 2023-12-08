@@ -59,7 +59,6 @@ internal class MessageConsumer : IMessageMiddleware
         }
         else
         {
-            // @@TODO!!: Handle failures!
             if (message is ArchiveThingAttachmentsProgress thingProgress)
             {
                 await _thataway.Dispatch(
@@ -82,6 +81,17 @@ internal class MessageConsumer : IMessageMiddleware
                     }
                 );
             }
+            else if (message is ArchiveThingAttachmentsFailureResult thingFailureResult)
+            {
+                await _thataway.Dispatch(
+                    new ThingEvents.AttachmentsArchivingFailed.AttachmentsArchivingFailedEvent
+                    {
+                        SubmitterId = thingFailureResult.SubmitterId,
+                        ThingId = thingFailureResult.ThingId,
+                        ErrorMessage = thingFailureResult.ErrorMessage
+                    }
+                );
+            }
             else if (message is ArchiveSettlementProposalAttachmentsProgress proposalProgress)
             {
                 await _thataway.Dispatch(
@@ -101,6 +111,17 @@ internal class MessageConsumer : IMessageMiddleware
                         SubmitterId = proposalSuccessResult.SubmitterId,
                         ProposalId = proposalSuccessResult.ProposalId,
                         Input = proposalSuccessResult.Input
+                    }
+                );
+            }
+            else if (message is ArchiveSettlementProposalAttachmentsFailureResult proposalFailureResult)
+            {
+                await _thataway.Dispatch(
+                    new SettlementEvents.AttachmentsArchivingFailed.AttachmentsArchivingFailedEvent
+                    {
+                        SubmitterId = proposalFailureResult.SubmitterId,
+                        ProposalId = proposalFailureResult.ProposalId,
+                        ErrorMessage = proposalFailureResult.ErrorMessage
                     }
                 );
             }

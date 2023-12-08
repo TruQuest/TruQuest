@@ -52,11 +52,13 @@ internal class ArchiveSettlementProposalAttachmentsCommandHandler :
         });
 
         object response;
-        var error = await _fileArchiver.ArchiveAllAttachments(message.Input, progress);
+        var error = await _fileArchiver.ArchiveAllAttachments(requestId, message.Input, progress);
         if (error != null)
         {
             response = new ArchiveSettlementProposalAttachmentsFailureResult
             {
+                SubmitterId = message.SubmitterId,
+                ProposalId = message.ProposalId,
                 ErrorMessage = error.ToString()
             };
         }

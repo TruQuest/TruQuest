@@ -17,10 +17,12 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
 
     private readonly ILogger<WebPageScreenshotTakerUsingPlaywright> _logger;
 
-    private readonly ChannelWriter<(IEnumerable<string> Urls, TaskCompletionSource<List<string>?> Tcs)> _sink;
-    private readonly ChannelReader<(IEnumerable<string> Urls, TaskCompletionSource<List<string>?> Tcs)> _stream;
+    private readonly string _path;
 
-    private readonly BlockingCollection<(IEnumerable<string> Urls, TaskCompletionSource<List<string>> Tcs)>[] _workerQueues;
+    private readonly ChannelWriter<(string RequestId, IEnumerable<string> Urls, TaskCompletionSource<List<string>?> Tcs)> _sink;
+    private readonly ChannelReader<(string RequestId, IEnumerable<string> Urls, TaskCompletionSource<List<string>?> Tcs)> _stream;
+
+    private readonly BlockingCollection<(string RequestId, IEnumerable<string> Urls, TaskCompletionSource<List<string>> Tcs)>[] _workerQueues;
     private readonly int[] _workerQueueSizes;
 
     private readonly int _targetAvgLoad;
@@ -35,18 +37,20 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
     {
         _logger = logger;
 
+        _path = configuration["UserFiles:Path"]!;
+
         var workerCount = configuration.GetValue<int>("WebPageScreenshots:Playwright:WorkerCount");
         _targetAvgLoad = configuration.GetValue<int>("WebPageScreenshots:Playwright:TargetAvgLoadPerWorker");
         _scrollTimeoutMs = configuration.GetValue<int>("WebPageScreenshots:Playwright:ScrollTimeoutSec") * 1000;
         _screenshotTimeoutMs = configuration.GetValue<int>("WebPageScreenshots:Playwright:ScreenshotTimeoutSec") * 1000;
 
-        var channel = Channel.CreateUnbounded<(IEnumerable<string> Urls, TaskCompletionSource<List<string>?> Tcs)>(
+        var channel = Channel.CreateUnbounded<(string RequestId, IEnumerable<string> Urls, TaskCompletionSource<List<string>?> Tcs)>(
             new() { SingleReader = true }
         );
         _sink = channel.Writer;
         _stream = channel.Reader;
 
-        _workerQueues = new BlockingCollection<(IEnumerable<string> Urls, TaskCompletionSource<List<string>> Tcs)>[workerCount];
+        _workerQueues = new BlockingCollection<(string RequestId, IEnumerable<string> Urls, TaskCompletionSource<List<string>> Tcs)>[workerCount];
         _workerQueueSizes = new int[workerCount];
         for (int i = 0; i < _workerQueues.Length; ++i)
         {
@@ -85,7 +89,7 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
                         var tcs = new TaskCompletionSource<List<string>>();
                         tasks.Add(tcs.Task);
 
-                        _workerQueues[workerAssignment.WorkerIndex].Add((Urls: urls, Tcs: tcs));
+                        _workerQueues[workerAssignment.WorkerIndex].Add((RequestId: request.RequestId, Urls: urls, Tcs: tcs));
                         urlsTakenCount += urlsToTake;
                     }
 
@@ -106,10 +110,7 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
                                 if (!task.IsFaulted)
                                 {
                                     var filePaths = task.Result;
-                                    foreach (var filePath in filePaths)
-                                    {
-                                        File.Delete(filePath);
-                                    }
+                                    foreach (var filePath in filePaths) File.Delete(filePath);
                                 }
                             }
 
@@ -253,7 +254,7 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
                         }
                     );
 
-                    var filePath = $"/screenshots/{Guid.NewGuid()}.png";
+                    var filePath = $"{_path}/{request.RequestId}/{Guid.NewGuid()}.png";
                     filePaths.Add(filePath);
 
                     await page.ScreenshotAsync(new()
@@ -273,10 +274,7 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
             {
                 _logger.LogError(ex, "Error trying to take a webpage screenshot");
 
-                foreach (var filePath in filePaths)
-                {
-                    File.Delete(filePath);
-                }
+                foreach (var filePath in filePaths) File.Delete(filePath);
                 request.Tcs.SetException(ex);
             }
 
@@ -284,12 +282,12 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
         }
     }
 
-    public async Task<List<string>?> Take(IEnumerable<string> urls)
+    public async Task<List<string>?> Take(string requestId, IEnumerable<string> urls)
     {
         using var span = Telemetry.StartActivity($"{GetType().FullName}.{nameof(Take)}");
 
         var tcs = new TaskCompletionSource<List<string>?>();
-        await _sink.WriteAsync((Urls: urls, Tcs: tcs));
+        await _sink.WriteAsync((RequestId: requestId, Urls: urls, Tcs: tcs));
         return await tcs.Task;
     }
 }

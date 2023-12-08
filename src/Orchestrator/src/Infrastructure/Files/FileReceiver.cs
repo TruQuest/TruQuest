@@ -77,9 +77,7 @@ internal class FileReceiver : IFileReceiver
 
                     if (_imageFileValidator.IsFileDeclaredAsImage(contentDisposition!))
                     {
-                        (valid, ext, header) = await _imageFileValidator.ValidateSignature(
-                            section, contentDisposition!
-                        );
+                        (valid, ext, header) = await _imageFileValidator.ValidateSignature(section, contentDisposition!);
                     }
 
                     if (!valid) return new HandleError("Invalid file format");
@@ -144,7 +142,7 @@ internal class FileReceiver : IFileReceiver
                         return new HandleError("Max file size limit exceeded");
                     }
 
-                    filePaths.Add(containerFilePath); // @@!!: Doesn't work for deletions!
+                    filePaths.Add(containerFilePath);
                 }
                 else if (_multipartRequestHelper.HasFormDataContentDisposition(contentDisposition))
                 {
@@ -172,10 +170,7 @@ internal class FileReceiver : IFileReceiver
             section = await reader.ReadNextSectionAsync();
         }
 
-        for (int i = 0; i < filePaths.Count; ++i)
-        {
-            formAccumulator.Append($"file{i + 1}", filePaths[i]);
-        }
+        for (int i = 0; i < filePaths.Count; ++i) formAccumulator.Append($"file{i + 1}", filePaths[i]);
 
         return new FormCollection(formAccumulator.GetResults());
     }
@@ -191,10 +186,5 @@ internal class FileReceiver : IFileReceiver
         }
 
         return contentType.Encoding;
-    }
-
-    public void DeleteFile(string filePath)
-    {
-        File.Delete(filePath); // no exception if does not exist
     }
 }

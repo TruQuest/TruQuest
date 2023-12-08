@@ -4,7 +4,7 @@ namespace Application.Common.Messages.Responses;
 
 public class ArchiveThingAttachmentsSuccessResult
 {
-    public string SubmitterId { get; set; }
-    public Guid ThingId { get; set; }
-    public NewThingIm Input { get; set; }
+    public required string SubmitterId { get; init; }
+    public required Guid ThingId { get; init; }
+    public required NewThingIm Input { get; init; }
 }

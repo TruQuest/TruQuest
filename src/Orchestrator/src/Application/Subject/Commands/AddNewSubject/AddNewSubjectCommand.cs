@@ -44,15 +44,17 @@ public class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectCommand,
 
     public async Task<HandleResult<Guid>> Handle(AddNewSubjectCommand command, CancellationToken ct)
     {
-        var result = await _requestDispatcher.GetResult(new ArchiveSubjectAttachmentsCommand
-        {
-            SubmitterId = _currentPrincipal.Id!,
-            Input = (NewSubjectIm)command.Input
-        });
+        var result = await _requestDispatcher.GetResult(
+            new ArchiveSubjectAttachmentsCommand
+            {
+                SubmitterId = _currentPrincipal.Id!,
+                Input = (NewSubjectIm)command.Input
+            },
+            requestId: command.RequestId
+        );
 
         if (result is ArchiveSubjectAttachmentsFailureResult failureResult)
         {
-            // @@TODO: Delete files.
             return new()
             {
                 Error = new HandleError(failureResult.ErrorMessage)
