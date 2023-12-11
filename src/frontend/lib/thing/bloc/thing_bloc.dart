@@ -34,19 +34,19 @@ class ThingBloc extends Bloc<ThingAction> {
   Stream<List<SettlementProposalPreviewVm>> get proposalsList$ => _proposalsListChannel.stream;
 
   ThingBloc(super.toastMessenger, this._thingService) {
-    actionChannel.stream.listen((action) {
+    onAction = (action) async {
       if (action is GetThing) {
-        _getThing(action);
+        await _getThing(action);
       } else if (action is GetVerifierLotteryParticipants) {
-        _getVerifierLotteryParticipants(action);
+        await _getVerifierLotteryParticipants(action);
       } else if (action is GetVotes) {
-        _getVotes(action);
+        await _getVotes(action);
       } else if (action is GetSettlementProposalsList) {
-        _getSettlementProposalsList(action);
+        await _getSettlementProposalsList(action);
       } else if (action is Watch) {
-        _watch(action);
+        await _watch(action);
       }
-    });
+    };
   }
 
   @override
@@ -87,7 +87,7 @@ class ThingBloc extends Bloc<ThingAction> {
     return true;
   }
 
-  void _getThing(GetThing action) async {
+  Future _getThing(GetThing action) async {
     var result = await _thingService.getThing(action.thingId);
     if (result == null) {
       _thingChannel.add(null);
@@ -130,7 +130,7 @@ class ThingBloc extends Bloc<ThingAction> {
   Stream<Object> _joinLottery(JoinLottery action, MultiStageOperationContext ctx) =>
       _thingService.joinLottery(action.thingId, ctx);
 
-  void _getVerifierLotteryParticipants(GetVerifierLotteryParticipants action) async {
+  Future _getVerifierLotteryParticipants(GetVerifierLotteryParticipants action) async {
     var result = await _thingService.getVerifierLotteryParticipants(action.thingId);
     _verifierLotteryParticipantsChannel.add(result);
   }
@@ -162,17 +162,17 @@ class ThingBloc extends Bloc<ThingAction> {
         ctx,
       );
 
-  void _getVotes(GetVotes action) async {
+  Future _getVotes(GetVotes action) async {
     var result = await _thingService.getVotes(action.thingId);
     _votesChannel.add(result);
   }
 
-  void _getSettlementProposalsList(GetSettlementProposalsList action) async {
+  Future _getSettlementProposalsList(GetSettlementProposalsList action) async {
     var result = await _thingService.getSettlementProposalsList(action.thingId);
     _proposalsListChannel.add(result.proposals);
   }
 
-  void _watch(Watch action) async {
+  Future _watch(Watch action) async {
     await _thingService.watch(action.thingId, action.markedAsWatched);
   }
 }

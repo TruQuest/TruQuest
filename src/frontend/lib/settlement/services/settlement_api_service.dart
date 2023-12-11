@@ -77,8 +77,8 @@ class SettlementApiService {
       _proposalIdToProgressChannel[proposalId] = progressChannel;
 
       return progressChannel.stream;
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -95,8 +95,8 @@ class SettlementApiService {
       );
 
       return GetSettlementProposalRvm.fromMap(response.data['data']);
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -114,8 +114,8 @@ class SettlementApiService {
       );
 
       return SubmitNewSettlementProposalRvm.fromMap(response.data['data']);
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -129,8 +129,8 @@ class SettlementApiService {
       );
 
       return GetVerifierLotteryParticipantsRvm.fromMap(response.data['data']);
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -152,8 +152,8 @@ class SettlementApiService {
       );
 
       return response.data['data'] as String;
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -165,8 +165,8 @@ class SettlementApiService {
         options: accessToken != null ? Options(headers: {'Authorization': 'Bearer $accessToken'}) : null,
       );
       return GetVotesRvm.fromMap(response.data['data']);
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 }

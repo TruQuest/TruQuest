@@ -7,6 +7,7 @@ import 'package:rxdart/rxdart.dart';
 import 'package:universal_html/html.dart' as html;
 
 import '../../general/services/local_storage.dart';
+import '../../general/utils/logger.dart';
 import '../../user/services/user_api_service.dart';
 import '../models/vm/wallet_connect_uri_vm.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
@@ -102,7 +103,7 @@ class ThirdPartyWalletService implements IWalletService {
     if (name == 'WalletConnect') {
       var uriGenerated = Completer<String>();
       _ethereumWallet.onDisplayUriOnce((uri) {
-        print('************* WalletConnect URI: $uri *************');
+        logger.info('************* WalletConnect URI: $uri *************');
         uriGenerated.complete(uri);
       });
 
@@ -116,7 +117,7 @@ class ThirdPartyWalletService implements IWalletService {
     var result = await _ethereumWallet.requestAccounts();
     if (result.isLeft) {
       var error = result.left;
-      print('Request accounts error: [${error.code}] ${error.message}');
+      logger.info('Request accounts error: [${error.code}] ${error.message}');
       yield const WalletActionDeclinedError();
       return;
     }
@@ -156,7 +157,7 @@ class ThirdPartyWalletService implements IWalletService {
     try {
       signature = await personalSign(message);
     } on WalletActionDeclinedError catch (error) {
-      print(error.message);
+      logger.info(error.message);
       yield error;
       return;
     }
@@ -178,13 +179,6 @@ class ThirdPartyWalletService implements IWalletService {
     _connectedAccountChangedEventChannel.add(_connectedAccount);
   }
 
-  void watchTruthserum() async {
-    var error = await _ethereumWallet.watchTruthserum();
-    if (error != null) {
-      print('Watch Truthserum error: [${error.code}] ${error.message}');
-    }
-  }
-
   @override
   Future<String> personalSign(String message) async {
     var result = await _ethereumWallet.personalSign(
@@ -192,7 +186,7 @@ class ThirdPartyWalletService implements IWalletService {
       '0x' + hex.encode(utf8.encode(message)),
     );
     if (result.error != null) {
-      print('Personal sign message error: [${result.error!.code}] ${result.error!.message}');
+      logger.info('Personal sign message error: [${result.error!.code}] ${result.error!.message}');
       throw const WalletActionDeclinedError();
     }
 
@@ -206,7 +200,7 @@ class ThirdPartyWalletService implements IWalletService {
       digest,
     );
     if (result.error != null) {
-      print('Personal sign message error: [${result.error!.code}] ${result.error!.message}');
+      logger.info('Personal sign message error: [${result.error!.code}] ${result.error!.message}');
       throw const WalletActionDeclinedError();
     }
 

@@ -48,8 +48,8 @@ class SubjectApiService {
       );
 
       return response.data['data'] as String;
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -59,8 +59,8 @@ class SubjectApiService {
       return List.unmodifiable(
         (response.data['data'] as List<dynamic>).map((map) => SubjectPreviewVm.fromMap(map)),
       );
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -68,8 +68,8 @@ class SubjectApiService {
     try {
       var response = await _dio.get('/api/subjects/$subjectId');
       return SubjectVm.fromMap(response.data['data']);
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -86,8 +86,8 @@ class SubjectApiService {
       );
 
       return GetThingsListRvm.fromMap(response.data['data']);
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 }

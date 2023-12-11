@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import '../../../general/utils/logger.dart';
 import '../../../user/services/user_service.dart';
 import '../../errors/user_operation_error.dart';
 import '../../services/ethereum_api_service.dart';
@@ -188,9 +189,9 @@ class UserOperationBuilder {
       var fees = await _ethereumApiService.estimateUserOperationGas(_userOp);
       var (preVerificationGas, verificationGasLimit, callGasLimit) = fees;
 
-      print('PreVerificationGas: $preVerificationGas');
-      print('VerificationGasLimit: $verificationGasLimit');
-      print('CallGasLimit: $callGasLimit');
+      logger.info('PreVerificationGas: $preVerificationGas');
+      logger.info('VerificationGasLimit: $verificationGasLimit');
+      logger.info('CallGasLimit: $callGasLimit');
 
       _userOp = _userOp.copyWith(
         callGasLimit: callGasLimit,
@@ -221,19 +222,19 @@ class UserOperationBuilder {
       var baseFee = await _ethereumApiService.getBaseFee();
       if (baseFee == null) throw UserOperationError(message: 'Error trying to get current base fee');
 
-      print('Base fee: 0x${baseFee.toRadixString(16)} WEI');
+      logger.info('Base fee: 0x${baseFee.toRadixString(16)} WEI');
       baseFee = BigInt.from((baseFee * BigInt.from(3)) / BigInt.two);
-      print('Base fee bid (+ 50% buffer): 0x${baseFee.toRadixString(16)} WEI');
+      logger.info('Base fee bid (+ 50% buffer): 0x${baseFee.toRadixString(16)} WEI');
 
       var maxPriorityFee = await _ethereumApiService.getMaxPriorityFee();
       if (maxPriorityFee == null) throw UserOperationError(message: 'Error trying to get current max priority fee');
 
-      print('Max priority fee: 0x${maxPriorityFee.toRadixString(16)} WEI');
+      logger.info('Max priority fee: 0x${maxPriorityFee.toRadixString(16)} WEI');
       maxPriorityFee = BigInt.from((maxPriorityFee * BigInt.from(5)) / BigInt.from(4));
-      print('Max priority fee bid (+ 25% buffer): 0x${maxPriorityFee.toRadixString(16)} WEI');
+      logger.info('Max priority fee bid (+ 25% buffer): 0x${maxPriorityFee.toRadixString(16)} WEI');
 
       var maxFeeBid = baseFee + maxPriorityFee;
-      print('Max fee bid: 0x${maxFeeBid.toRadixString(16)} WEI');
+      logger.info('Max fee bid: 0x${maxFeeBid.toRadixString(16)} WEI');
 
       _userOp = _userOp.copyWith(
         maxFeePerGas: maxFeeBid,
@@ -242,7 +243,7 @@ class UserOperationBuilder {
 
       estimatedGasCost = _userOp.totalProvisionedGas * _userOp.maxFeePerGas;
 
-      print('Estimated gas cost: ${formatUnits(BigNumber.from(estimatedGasCost.toString()))} ETH');
+      logger.info('Estimated gas cost: ${formatUnits(BigNumber.from(estimatedGasCost.toString()))} ETH');
     });
 
     return this;

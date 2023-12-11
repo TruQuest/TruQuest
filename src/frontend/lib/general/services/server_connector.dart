@@ -8,6 +8,7 @@ import 'package:signalr_netcore/signalr_client.dart';
 
 import '../models/vm/notification_vm.dart';
 import '../models/vm/watched_item_type_vm.dart';
+import '../utils/logger.dart';
 
 enum ServerEventType {
   notification,
@@ -31,6 +32,8 @@ enum SettlementEventType {
 class ServerConnector {
   late final Dio dio;
 
+  late final Logger _logger;
+
   final Completer _initialConnectionEstablished = Completer();
 
   final BehaviorSubject<Future<(HubConnection, String?)>> _connectionTaskQueue =
@@ -47,35 +50,34 @@ class ServerConnector {
   Stream<(ServerEventType, Object)> get serverEvent$ => _serverEventChannel.stream;
 
   ServerConnector() {
-    Logger.root.level = Level.ALL;
-    Logger.root.onRecord.listen((LogRecord rec) {
-      print('[${rec.level.name}]: ${rec.time}: ${rec.message}');
-    });
-
     dio = Dio(BaseOptions(baseUrl: dotenv.env['ORCHESTRATOR_HOST']!));
+    _logger = Logger('SignalR');
+    _logger.level = Level.ALL;
+    _logger.onRecord.listen((LogRecord record) => logger.info('${record.loggerName}: ${record.message}'));
   }
 
   Future<(HubConnection, String?)> _connectToHub(String? userId, String? token) async {
-    var hubLogger = Logger('Hub');
-    var transportLogger = Logger('Transport');
-
     var hubConnection = HubConnectionBuilder()
         .withUrl(
           '${dotenv.env['ORCHESTRATOR_HOST']}/api/hub',
           options: HttpConnectionOptions(
             transport: HttpTransportType.WebSockets,
-            logger: transportLogger,
+            logger: _logger,
             logMessageContent: true,
             accessTokenFactory: token != null ? () => Future.value(token) : null,
           ),
         )
-        .configureLogging(hubLogger)
+        .configureLogging(_logger)
         .build();
 
     hubConnection.keepAliveIntervalInMilliseconds = 90 * 1000;
     hubConnection.serverTimeoutInMilliseconds = 180 * 1000;
 
-    hubConnection.onclose(({error}) => print('HubConnection closed. Error: $error'));
+    hubConnection.onclose(
+      ({error}) => error == null
+          ? _logger.info('HubConnection closed')
+          : _logger.warning('HubConnection closed with error: $error'),
+    );
 
     hubConnection.on(
       'TellAboutNewThingDraftCreationProgress',
@@ -175,7 +177,7 @@ class ServerConnector {
         try {
           await prevConnection.$1.stop();
         } catch (e) {
-          print(e);
+          _logger.warning('Error trying to stop hub connection: $e');
         }
       }
 

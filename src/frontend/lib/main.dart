@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:talker_flutter/talker_flutter.dart';
+import 'package:logging/logging.dart' as logging;
 
 import 'ethereum/services/ethereum_rpc_provider.dart';
 import 'general/services/local_storage.dart';
 import 'widget_extensions.dart';
-import 'injector.dart';
 import 'general/pages/home_page.dart';
+import 'injector.dart';
+import 'general/utils/logger.dart';
 
 Future main() async {
   await dotenv.load();
@@ -18,6 +21,10 @@ Future main() async {
 
   var ethereumRpcProvider = resolveDependency<EthereumRpcProvider>();
   await ethereumRpcProvider.init();
+
+  logging.hierarchicalLoggingEnabled = true;
+
+  logger = TalkerFlutter.init();
 
   runApp(const App());
 }

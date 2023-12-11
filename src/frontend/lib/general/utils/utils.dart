@@ -14,6 +14,7 @@ import '../../ethereum/models/vm/user_operation_vm.dart';
 import '../../ethereum_js_interop.dart';
 import '../../user/errors/get_credential_error.dart';
 import '../../user/errors/local_key_share_not_present_error.dart';
+import '../errors/failed_multi_stage_execution_error.dart';
 import '../errors/forbidden_error.dart';
 import '../errors/handle_error.dart';
 import '../errors/invalid_authentication_token_error.dart';
@@ -29,36 +30,52 @@ import '../errors/insufficient_balance_error.dart';
 import '../widgets/qr_code_dialog.dart';
 import '../widgets/scan_key_share_dialog.dart';
 import '../widgets/user_operation_dialog.dart';
+import 'logger.dart';
 
-Error wrapError(DioError dioError) {
-  switch (dioError.type) {
-    case DioErrorType.connectTimeout:
-    case DioErrorType.sendTimeout:
-    case DioErrorType.receiveTimeout:
+Error wrapDioException(DioException ex) {
+  switch (ex.type) {
+    case DioExceptionType.connectionError:
+    case DioExceptionType.connectionTimeout:
+    case DioExceptionType.sendTimeout:
+    case DioExceptionType.receiveTimeout:
+      logger.warning('Connection error', ex);
       return ConnectionError();
-    case DioErrorType.response:
-      var response = dioError.response!;
+    case DioExceptionType.badCertificate:
+      logger.warning('Connection error', ex);
+      return ServerError(message: 'Bad certificate');
+    case DioExceptionType.unknown:
+      var response = ex.response!;
       var statusCode = response.statusCode!;
-      if (statusCode >= 500) return ServerError();
+      if (statusCode >= 500) {
+        logger.warning('Server error', ex);
+        return ServerError();
+      }
 
       switch (statusCode) {
         case 400:
           var error = response.data['error'];
-          if (error.containsKey('isUnhandled')) return UnhandledError(error['message'], error['traceId']);
+          if (error.containsKey('isUnhandled')) {
+            logger.warning('Server unhandled error (traceId: ${error['traceId']}): ${error['message']}');
+            return UnhandledError(error['message'], error['traceId']);
+          }
+
+          logger.info('Server handled error: ${error['message']}');
           return HandleError(error['message']);
         case 401:
           var errorMessage = response.data['error']['message'];
           // if (errorMessage.contains('token expired at')) {
           //   return AuthenticationTokenExpiredError();
           // }
+          logger.warning('Auth error: $errorMessage');
           return InvalidAuthenticationTokenError(errorMessage);
         case 403:
+          logger.warning('Auth error: forbidden');
           return ForbiddenError();
       }
     default:
   }
 
-  print(dioError);
+  logger.error('Unknown error', ex);
   return ApiError();
 }
 
@@ -222,6 +239,8 @@ Future<bool> multiStageFlow(
       // @@NOTE: WalletActionDeclinedError is wrapped into this.
       BotToast.showText(text: stageResult.message);
       proceededTilTheEndWithoutErrors = false;
+    } else if (stageResult is FailedMultiStageExecutionError) {
+      proceededTilTheEndWithoutErrors = false;
     } else {
       throw UnimplementedError();
     }
@@ -261,6 +280,8 @@ Future<bool> multiStageOffChainFlow(
         BotToast.showText(text: stageResult.message);
         proceededTilTheEndWithoutErrors = false;
       }
+    } else if (stageResult is FailedMultiStageExecutionError) {
+      proceededTilTheEndWithoutErrors = false;
     } else {
       throw UnimplementedError();
     }

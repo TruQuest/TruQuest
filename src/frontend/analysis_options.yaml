@@ -26,7 +26,6 @@ linter:
     prefer_const_constructors_in_immutables: false
     prefer_const_literals_to_create_immutables: false
     sort_child_properties_last: false
-    avoid_print: false
     prefer_interpolation_to_compose_strings: false
     avoid_web_libraries_in_flutter: false
     prefer_conditional_assignment: false

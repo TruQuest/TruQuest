@@ -26,11 +26,11 @@ class UserBloc extends Bloc<UserAction> {
     this._embeddedWalletService,
     // this._thirdPartyWalletService,
   ) {
-    actionChannel.stream.listen((action) {
+    onAction = (action) async {
       if (action is SaveKeyShareQrCodeImage) {
-        _saveKeyShareQrCodeImage(action);
+        await _saveKeyShareQrCodeImage(action);
       }
-    });
+    };
   }
 
   @override
@@ -69,7 +69,7 @@ class UserBloc extends Bloc<UserAction> {
   Future<bool> _signUp(SignUp action) =>
       _embeddedWalletService.signUp(action.email, action.confirmationCode, action.options);
 
-  void _saveKeyShareQrCodeImage(SaveKeyShareQrCodeImage action) => _embeddedWalletService.saveKeyShareQrCodeImage();
+  Future _saveKeyShareQrCodeImage(SaveKeyShareQrCodeImage action) => _embeddedWalletService.saveKeyShareQrCodeImage();
 
   // Stream<Object> _signInWithThirdPartyWallet(SignInWithThirdPartyWallet action, MultiStageOperationContext ctx) =>
   //     _thirdPartyWalletService.signIn(action.walletName, ctx);

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import '../../general/utils/logger.dart';
 import '../errors/user_operation_error.dart';
 import '../models/vm/get_user_operation_receipt_rvm.dart';
 import '../models/im/user_operation.dart';
@@ -33,8 +34,8 @@ class EthereumApiService {
 
       var fee = response.data['result']['baseFeePerGas'];
       return BigInt.parse(fee);
-    } on DioError catch (error) {
-      print(error);
+    } on DioException catch (ex) {
+      logger.error('Error trying to get base fee', ex);
       return null;
     }
   }
@@ -45,9 +46,7 @@ class EthereumApiService {
         '/',
         data: <String, dynamic>{
           'jsonrpc': '2.0',
-          // @@NOTE: _dio and _dioBundler in true Staging environment (meaning, the one targeting real
-          // testnet) point to the same baseUrl.
-          'method': _environment == 'Development' || _dio.options.baseUrl != _dioBundler.options.baseUrl
+          'method': _environment == 'Development' || dotenv.env['USING_SIMULATED_BLOCKCHAIN'] == '1'
               ? 'eth_maxPriorityFeePerGas'
               : 'rundler_maxPriorityFeePerGas',
           'params': [],
@@ -57,8 +56,8 @@ class EthereumApiService {
 
       var fee = response.data['result'];
       return BigInt.parse(fee);
-    } on DioError catch (error) {
-      print(error);
+    } on DioException catch (ex) {
+      logger.error('Error trying to get max priority fee', ex);
       return null;
     }
   }
@@ -76,8 +75,8 @@ class EthereumApiService {
       );
 
       return response.data['result'] as String;
-    } on DioError catch (error) {
-      print(error);
+    } on DioException catch (ex) {
+      logger.error('Error trying to get contract code', ex);
       return null;
     }
   }
@@ -95,8 +94,8 @@ class EthereumApiService {
       );
 
       return BigInt.parse(response.data['result'] as String);
-    } on DioError catch (error) {
-      print(error);
+    } on DioException catch (ex) {
+      logger.error('Error trying to get Eth balance', ex);
       return null;
     }
   }
@@ -113,9 +112,7 @@ class EthereumApiService {
         },
       );
 
-      print('==================== estimateUserOperationGas ========================');
-      print(response);
-      print('======================================================================');
+      logger.info('===== estimateUserOperationGas =====\n$response');
 
       if (response.data.containsKey('error')) throw UserOperationError.fromMap(response.data['error']);
 
@@ -125,8 +122,9 @@ class EthereumApiService {
         BigInt.parse(result['verificationGasLimit']),
         BigInt.parse(result['callGasLimit']),
       );
-    } on DioError catch (error) {
-      throw UserOperationError(message: 'Estimate user op gas error: ${error.message}');
+    } on DioException catch (ex) {
+      logger.error('Error trying to estimate user operation gas', ex);
+      throw UserOperationError(message: 'Estimate user op gas error: ${ex.message}');
     }
   }
 
@@ -142,15 +140,14 @@ class EthereumApiService {
         },
       );
 
-      print('==================== sendUserOperation ========================');
-      print(response);
-      print('===============================================================');
+      logger.info('===== sendUserOperation =====\n$response');
 
       if (response.data.containsKey('error')) throw UserOperationError.fromMap(response.data['error']);
 
       return response.data['result'] as String;
-    } on DioError catch (error) {
-      throw UserOperationError(message: 'Send user op error: ${error.message}');
+    } on DioException catch (ex) {
+      logger.error('Error trying to send user operation', ex);
+      throw UserOperationError(message: 'Send user op error: ${ex.message}');
     }
   }
 
@@ -169,8 +166,8 @@ class EthereumApiService {
       if (response.data['result'] == null) return null;
 
       return GetUserOperationReceiptRvm.fromMap(response.data['result']);
-    } on DioError catch (error) {
-      print(error);
+    } on DioException catch (ex) {
+      logger.error('Error trying to get user operation receipt', ex);
       return null;
     }
   }

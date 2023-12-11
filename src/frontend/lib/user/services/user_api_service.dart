@@ -24,8 +24,8 @@ class UserApiService {
     try {
       var response = await _dio.get('/api/user/siwe/$account');
       return response.data['data'] as String;
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -40,8 +40,8 @@ class UserApiService {
       );
 
       return AuthRvm.fromMap(response.data['data']);
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -66,8 +66,8 @@ class UserApiService {
               .toList(),
         ).toJson(),
       );
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -124,8 +124,8 @@ class UserApiService {
         //   ),
         // ),
       );
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -149,8 +149,8 @@ class UserApiService {
       );
 
       return AuthRvm.fromMap(response.data['data']);
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -182,8 +182,8 @@ class UserApiService {
         userVerification: map['userVerification'],
         timeout: map['timeout'],
       );
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -199,8 +199,8 @@ class UserApiService {
       );
 
       return response.data['data'] as String;
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -230,8 +230,8 @@ class UserApiService {
         userVerification: map['userVerification'],
         timeout: map['timeout'],
       );
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -243,8 +243,8 @@ class UserApiService {
       );
 
       return AuthRvm.fromMap(response.data['data']);
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 }

@@ -29,11 +29,11 @@ class NotificationBloc extends Bloc<NotificationAction> {
     this._thingService,
     this._settlementService,
   ) {
-    actionChannel.stream.listen((action) {
+    onAction = (action) async {
       if (action is Dismiss) {
-        _dismiss(action);
+        await _dismiss(action);
       }
-    });
+    };
 
     _thingService.progress$$.listen((progress$) {
       _progress$Channel.add(progress$);
@@ -64,7 +64,7 @@ class NotificationBloc extends Bloc<NotificationAction> {
     toastMessenger.toast$.listen((toast) => _toastChannel.add(toast));
   }
 
-  void _dismiss(Dismiss action) async {
+  Future _dismiss(Dismiss action) async {
     await _notificationsCache.remove(action.notifications, action.userId);
   }
 }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:talker_flutter/talker_flutter.dart';
 
 import '../services/iframe_manager.dart';
+import '../utils/logger.dart';
 import '../widgets/fixed_width.dart';
 import '../widgets/clipped_rect.dart';
 import '../widgets/nav_panel.dart';
@@ -56,13 +58,30 @@ class _HomePageState extends StateX<HomePage> {
               snap: false,
               backgroundColor: const Color(0xffF8F9FA),
               leadingWidth: 120,
-              leading: ClippedRect(
-                height: 70,
-                color: Colors.black,
-                fromNarrowToWide: true,
-                narrowSideFraction: 0.55,
-                child: SizedBox.shrink(
-                  child: HtmlElementView(viewType: _iframeManager.iframePrivateKeyGen.viewId),
+              leading: GestureDetector(
+                onDoubleTap: () => showDialog(
+                  context: context,
+                  builder: (_) => SimpleDialog(
+                    children: [
+                      SizedBox(
+                        width: 1000,
+                        height: 600,
+                        child: TalkerScreen(
+                          appBarTitle: 'Logs',
+                          talker: logger,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                child: ClippedRect(
+                  height: 70,
+                  color: Colors.black,
+                  fromNarrowToWide: true,
+                  narrowSideFraction: 0.55,
+                  child: SizedBox.shrink(
+                    child: HtmlElementView(viewType: _iframeManager.iframePrivateKeyGen.viewId),
+                  ),
                 ),
               ),
               title: Image.asset(

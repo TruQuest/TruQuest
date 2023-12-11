@@ -9,6 +9,7 @@ import '../../ethereum/services/iwallet_service.dart';
 import '../../ethereum_js_interop.dart';
 import '../../general/services/iframe_manager.dart';
 import '../../general/services/local_storage.dart';
+import '../../general/utils/logger.dart';
 import '../../user/errors/get_credential_error.dart';
 import '../../user/errors/local_key_share_not_present_error.dart';
 import '../../user/services/user_api_service.dart';
@@ -44,7 +45,7 @@ class EmbeddedWalletService implements IWalletService {
 
     var result = await promiseToFuture<CreateCredentialResult>(createCredential(options));
     if (result.error != null) {
-      print('Error trying to create credential');
+      logger.info('Error trying to create credential');
       return false;
     }
 
@@ -86,16 +87,15 @@ class EmbeddedWalletService implements IWalletService {
     return true;
   }
 
-  void saveKeyShareQrCodeImage() async {
-    var result = await _iframeManager.iframeKeyShareRender.postMessageAndAwaitResponse('save');
-    print('Save key share image result: $result');
+  Future saveKeyShareQrCodeImage() async {
+    await _iframeManager.iframeKeyShareRender.postMessageAndAwaitResponse('save');
   }
 
   Stream<Object> signInFromExistingDevice(MultiStageOperationContext ctx) async* {
     var options = await _userApiService.generateAssertionOptionsForSignIn();
     var result = await promiseToFuture<GetCredentialResult>(getCredential(options));
     if (result.error != null) {
-      print('Error trying to get credential');
+      logger.info('Error trying to get credential');
       yield const GetCredentialError();
       return;
     }
@@ -145,7 +145,7 @@ class EmbeddedWalletService implements IWalletService {
     var options = await _userApiService.generateAssertionOptions();
     var result = await promiseToFuture<GetCredentialResult>(getCredential(options));
     if (result.error != null) {
-      print('Error trying to get credential');
+      logger.info('Error trying to get credential');
       throw GetCredentialError();
     }
 
@@ -161,7 +161,7 @@ class EmbeddedWalletService implements IWalletService {
     var options = await _userApiService.generateAssertionOptions();
     var result = await promiseToFuture<GetCredentialResult>(getCredential(options));
     if (result.error != null) {
-      print('Error trying to get credential');
+      logger.info('Error trying to get credential');
       throw GetCredentialError();
     }
 

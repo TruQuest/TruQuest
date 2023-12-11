@@ -61,6 +61,10 @@ variable "uptrace_secret_key" {
   default = ""
 }
 
+variable "using_simulated_blockchain" {
+  default = "1"
+}
+
 variable "ethereum_rpc_url" {
   default = ""
 }

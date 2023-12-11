@@ -5,6 +5,8 @@ import 'dart:ui' as ui;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:uuid/uuid.dart';
 
+import '../utils/logger.dart';
+
 class IFrameManager {
   final IFrame iframePrivateKeyGen;
   final IFrame iframeKeyShareRender;
@@ -52,7 +54,7 @@ class IFrameManager {
       var requestId = messageSplit[1];
       // @@NOTE: Zero uuid means not a /response/ but a simple message from iframe.
       if (requestId != '00000000-0000-0000-0000-000000000000') {
-        print('***** MessageEvent from ${e.origin}: ${e.data} *****');
+        logger.debug('***** MessageEvent from ${e.origin}: ${e.data} *****');
         var content = messageSplit.skip(2).join('|');
         var recepient = _viewIdToIframe[originViewId]!;
         recepient._receiveMessage(requestId, content);

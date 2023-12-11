@@ -30,15 +30,15 @@ class SettlementBloc extends Bloc<SettlementAction> {
   Stream<GetVotesRvm> get votes$ => _votesChannel.stream;
 
   SettlementBloc(super.toastMessenger, this._settlementService) {
-    actionChannel.stream.listen((action) {
+    onAction = (action) async {
       if (action is GetSettlementProposal) {
-        _getSettlementProposal(action);
+        await _getSettlementProposal(action);
       } else if (action is GetVerifierLotteryParticipants) {
-        _getVerifierLotteryParticipants(action);
+        await _getVerifierLotteryParticipants(action);
       } else if (action is GetVotes) {
-        _getVotes(action);
+        await _getVotes(action);
       }
-    });
+    };
   }
 
   @override
@@ -78,7 +78,7 @@ class SettlementBloc extends Bloc<SettlementAction> {
     return true;
   }
 
-  void _getSettlementProposal(GetSettlementProposal action) async {
+  Future _getSettlementProposal(GetSettlementProposal action) async {
     var result = await _settlementService.getSettlementProposal(action.proposalId);
     if (result == null) {
       _proposalChannel.add(null);
@@ -143,7 +143,7 @@ class SettlementBloc extends Bloc<SettlementAction> {
         ctx,
       );
 
-  void _getVerifierLotteryParticipants(GetVerifierLotteryParticipants action) async {
+  Future _getVerifierLotteryParticipants(GetVerifierLotteryParticipants action) async {
     var result = await _settlementService.getVerifierLotteryParticipants(
       action.thingId,
       action.proposalId,
@@ -184,7 +184,7 @@ class SettlementBloc extends Bloc<SettlementAction> {
         ctx,
       );
 
-  void _getVotes(GetVotes action) async {
+  Future _getVotes(GetVotes action) async {
     var result = await _settlementService.getVotes(action.proposalId);
     _votesChannel.add(result);
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import 'logger.dart';
 import 'utils.dart';
 import '../../ethereum/errors/user_operation_error.dart';
 import '../../ethereum/models/im/user_operation.dart';
@@ -41,7 +42,7 @@ class _DummyState extends StateX<Dummy> {
   void _init() async {
     var signerAddress = dotenv.env['DUMMY_OWNER_ADDRESS']!;
     var walletAddress = await _accountFactoryContract.getAddress(signerAddress);
-    print('******** Signer: $signerAddress. Wallet: $walletAddress ***************');
+    logger.info('******** Signer: $signerAddress. Wallet: $walletAddress ***************');
 
     _userServiceDummy.setUser(
       UserVm(
@@ -54,7 +55,7 @@ class _DummyState extends StateX<Dummy> {
   }
 
   Stream<Object> _foo(String name, int age, String data, MultiStageOperationContext ctx) async* {
-    print('+++++++++++++++++++++++++++++ foo +++++++++++++++++++++++++++++++++++++++');
+    logger.info('+++++++++++++++++++++++++++++ foo +++++++++++++++++++++++++++++++++++++++');
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [(_dummyContract, _dummyContract.foo(name, age, data))],
       functionSignature: 'foo(...)',
@@ -69,7 +70,7 @@ class _DummyState extends StateX<Dummy> {
   }
 
   Stream<Object> _mooFoo(String name, int age, String data, MultiStageOperationContext ctx) async* {
-    print('+++++++++++++++++++++++++++++ mooFoo +++++++++++++++++++++++++++++++++++++++');
+    logger.info('+++++++++++++++++++++++++++++ mooFoo +++++++++++++++++++++++++++++++++++++++');
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [
         (_dummyContract, _dummyContract.moo(age)),
@@ -118,7 +119,7 @@ class _DummyState extends StateX<Dummy> {
               onPressed: () async {
                 if (_name == null || _age == null) return;
 
-                print('Foo: $_name $_age');
+                logger.info('Foo: $_name $_age');
 
                 var success = await multiStageFlow(
                   context,
@@ -130,9 +131,9 @@ class _DummyState extends StateX<Dummy> {
                   ),
                 );
                 if (!success)
-                  print('---------------------- FOO FAILED ------------------------');
+                  logger.info('---------------------- FOO FAILED ------------------------');
                 else
-                  print('name: ${await _dummyContract.name()}');
+                  logger.info('name: ${await _dummyContract.name()}');
               },
             ),
             SizedBox(height: 20),
@@ -141,7 +142,7 @@ class _DummyState extends StateX<Dummy> {
               onPressed: () async {
                 if (_name == null || _age == null) return;
 
-                print('MooFoo: $_name $_age');
+                logger.info('MooFoo: $_name $_age');
 
                 var success = await multiStageFlow(
                   context,
@@ -153,9 +154,9 @@ class _DummyState extends StateX<Dummy> {
                   ),
                 );
                 if (!success)
-                  print('---------------------- MOOFOO FAILED ------------------------');
+                  logger.info('---------------------- MOOFOO FAILED ------------------------');
                 else
-                  print('age: ${await _dummyContract.age()}');
+                  logger.info('age: ${await _dummyContract.age()}');
               },
             ),
           ],
@@ -541,9 +542,9 @@ class UserOperationBuilderDummy {
       var fees = await _ethereumApiService.estimateUserOperationGas(_userOp);
       var (preVerificationGas, verificationGasLimit, callGasLimit) = fees;
 
-      print('PreVerificationGas:\n\t$preVerificationGas');
-      print('VerificationGasLimit:\n\t$verificationGasLimit');
-      print('CallGasLimit:\n\t$callGasLimit');
+      logger.info('PreVerificationGas:\n\t$preVerificationGas');
+      logger.info('VerificationGasLimit:\n\t$verificationGasLimit');
+      logger.info('CallGasLimit:\n\t$callGasLimit');
 
       _userOp = _userOp.copyWith(
         callGasLimit: callGasLimit,
@@ -574,19 +575,19 @@ class UserOperationBuilderDummy {
       var baseFee = await _ethereumApiService.getBaseFee();
       if (baseFee == null) throw UserOperationError(message: 'Error trying to get current base fee');
 
-      print('Base fee:\n\t0x${baseFee.toRadixString(16)} WEI');
+      logger.info('Base fee:\n\t0x${baseFee.toRadixString(16)} WEI');
       baseFee = BigInt.from((baseFee * BigInt.from(3)) / BigInt.two);
-      print('Base fee bid (+ 50% buffer):\n\t0x${baseFee.toRadixString(16)} WEI');
+      logger.info('Base fee bid (+ 50% buffer):\n\t0x${baseFee.toRadixString(16)} WEI');
 
       var maxPriorityFee = await _ethereumApiService.getMaxPriorityFee();
       if (maxPriorityFee == null) throw UserOperationError(message: 'Error trying to get current max priority fee');
 
-      print('Max priority fee:\n\t0x${maxPriorityFee.toRadixString(16)} WEI');
+      logger.info('Max priority fee:\n\t0x${maxPriorityFee.toRadixString(16)} WEI');
       maxPriorityFee = BigInt.from((maxPriorityFee * BigInt.from(5)) / BigInt.from(4));
-      print('Max priority fee bid (+ 25% buffer):\n\t0x${maxPriorityFee.toRadixString(16)} WEI');
+      logger.info('Max priority fee bid (+ 25% buffer):\n\t0x${maxPriorityFee.toRadixString(16)} WEI');
 
       var maxFeeBid = baseFee + maxPriorityFee;
-      print('Max fee bid:\n\t0x${maxFeeBid.toRadixString(16)} WEI');
+      logger.info('Max fee bid:\n\t0x${maxFeeBid.toRadixString(16)} WEI');
 
       _userOp = _userOp.copyWith(
         maxFeePerGas: maxFeeBid,
@@ -595,7 +596,7 @@ class UserOperationBuilderDummy {
 
       estimatedGasCost = _userOp.totalProvisionedGas * _userOp.maxFeePerGas;
 
-      print('Estimated gas cost: ${formatUnits(BigNumber.from(estimatedGasCost.toString()))} ETH');
+      logger.info('Estimated gas cost: ${formatUnits(BigNumber.from(estimatedGasCost.toString()))} ETH');
     });
 
     return this;

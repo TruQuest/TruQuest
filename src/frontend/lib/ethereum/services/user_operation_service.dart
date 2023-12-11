@@ -5,6 +5,7 @@ import 'package:either_dart/either.dart';
 import '../../ethereum_js_interop.dart';
 import '../../general/contracts/base_contract.dart';
 import '../../general/contracts/erc4337/ientrypoint_contract.dart';
+import '../../general/utils/logger.dart';
 import '../../user/errors/get_credential_error.dart';
 import '../errors/wallet_action_declined_error.dart';
 import '../models/vm/user_operation_vm.dart';
@@ -124,7 +125,7 @@ class UserOperationService {
     try {
       return Right(await userOpBuilder.unsigned());
     } on UserOperationError catch (error) {
-      print('[${error.code}] $error');
+      logger.warning('[${error.code}] $error');
       return Left(error);
     }
   }
@@ -134,16 +135,16 @@ class UserOperationService {
     String? userOpHash;
     try {
       var userOp = await UserOperation.createFrom(approvedUserOp).signed();
-      print('UserOp:\n$userOp');
+      logger.info('UserOp:\n$userOp');
       userOpHash = await _ethereumApiService.sendUserOperation(userOp);
     } on WalletActionDeclinedError catch (e) {
-      print(e);
+      logger.info(e);
       error = UserOperationError(message: e.message);
     } on GetCredentialError catch (e) {
-      print(e);
+      logger.info(e);
       error = UserOperationError(message: e.message);
     } on UserOperationError catch (e) {
-      print('[${e.code}] $e');
+      logger.warning('[${e.code}] $e');
       error = e;
       if (error.isFurtherDecodable) {
         var errorDescription = approvedUserOp.parseError!(error.message);
@@ -158,7 +159,7 @@ class UserOperationService {
 
     if (error != null) return error;
 
-    print('UserOp Hash: $userOpHash');
+    logger.info('UserOp Hash: $userOpHash');
 
     GetUserOperationReceiptRvm? receipt;
     do {
@@ -170,7 +171,7 @@ class UserOperationService {
       await Future.delayed(const Duration(seconds: 2)); // @@TODO: Config.
     }
 
-    print('Receipt:\n$receipt');
+    logger.info('Receipt:\n$receipt');
 
     var entryPointLogs = receipt.logs
         .where(
@@ -187,16 +188,16 @@ class UserOperationService {
           var revertReason = retrieveUserOpRevertReasonFromEvent(log.topics, log.data);
           var errorDescription = approvedUserOp.parseError!(revertReason);
           if (errorDescription != null) {
-            print('UserOp Execution Failed. Reason: ${errorDescription.name}');
+            logger.warning('UserOp Execution Failed. Reason: ${errorDescription.name}');
             return UserOperationError(message: errorDescription.name);
           } else {
-            print('UserOp Execution Failed. Reason: $revertReason');
+            logger.warning('UserOp Execution Failed. Reason: $revertReason');
             return UserOperationError();
           }
         }
       }
 
-      print('UserOp Execution Failed. Reason: Unspecified');
+      logger.warning('UserOp Execution Failed. Reason: Unspecified');
       return UserOperationError();
     }
 
@@ -205,7 +206,7 @@ class UserOperationService {
       var logDescription = _entryPointContract.parseLog(log.topics, log.data);
       if (logDescription.name == _entryPointContract.userOperationEventName) {
         var status = retrieveUserOpStatusFromEvent(log.topics, log.data);
-        print(
+        logger.info(
           'UserOp succeeded: ${status.success}. Actual gas used: ${status.actualGasUsed}. Actual gas cost: ${status.actualGasCost}',
         );
       }

@@ -22,15 +22,15 @@ class SubjectBloc extends Bloc<SubjectAction> {
   Stream<List<ThingPreviewVm>> get thingsList$ => _thingsListChannel.stream;
 
   SubjectBloc(super.toastMessenger, this._subjectService) {
-    actionChannel.stream.listen((action) {
+    onAction = (action) async {
       if (action is GetSubjects) {
-        _getSubjects(action);
+        await _getSubjects(action);
       } else if (action is GetSubject) {
-        _getSubject(action);
+        await _getSubject(action);
       } else if (action is GetThingsList) {
-        _getThingsList(action);
+        await _getThingsList(action);
       }
-    });
+    };
   }
 
   @override
@@ -47,17 +47,17 @@ class SubjectBloc extends Bloc<SubjectAction> {
     return subjectId;
   }
 
-  void _getSubjects(GetSubjects action) async {
+  Future _getSubjects(GetSubjects action) async {
     var subjects = await _subjectService.getSubjects();
     _subjectsChannel.add(subjects);
   }
 
-  void _getSubject(GetSubject action) async {
+  Future _getSubject(GetSubject action) async {
     var subject = await _subjectService.getSubject(action.subjectId);
     _subjectChannel.add(subject);
   }
 
-  void _getThingsList(GetThingsList action) async {
+  Future _getThingsList(GetThingsList action) async {
     var result = await _subjectService.getThingsList(action.subjectId);
     _thingsListChannel.add(result.things);
   }

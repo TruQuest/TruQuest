@@ -4,6 +4,7 @@ import '../../ethereum/errors/wallet_action_declined_error.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
 import '../../general/errors/handle_error.dart';
 import '../../general/errors/insufficient_balance_error.dart';
+import '../../general/utils/logger.dart';
 import '../../user/errors/get_credential_error.dart';
 import '../../user/services/user_service.dart';
 import '../../ethereum/services/user_operation_service.dart';
@@ -59,10 +60,9 @@ class ThingService {
   Future<GetThingRvm?> getThing(String thingId) async {
     try {
       var result = await _thingApiService.getThing(thingId);
-      print('ThingId: ${result.thing.id}');
+      logger.info('ThingId: ${result.thing.id}');
       return result;
-    } on HandleError catch (e) {
-      print(e);
+    } on HandleError {
       return null;
     }
   }
@@ -79,7 +79,7 @@ class ThingService {
     String signature,
     MultiStageOperationContext ctx,
   ) async* {
-    print('**************** Fund thing ****************');
+    logger.info('**************** Fund thing ****************');
 
     BigInt thingStake = await _truQuestContract.getThingStake();
     BigInt availableFunds = await _userService.getAvailableFundsForCurrentUser();
@@ -137,7 +137,7 @@ class ThingService {
     // the 'swiped' property is still 'false', which results in the button being
     // disabled but unswiped, whereas it would be more logical for it to be swiped.
 
-    print('******************** Join Lottery ********************');
+    logger.info('******************** Join Lottery ********************');
 
     BigInt verifierStake = await _truQuestContract.getVerifierStake();
     BigInt availableFunds = await _userService.getAvailableFundsForCurrentUser();
@@ -197,7 +197,7 @@ class ThingService {
     String reason,
     MultiStageOperationContext ctx,
   ) async* {
-    print('********************** Cast Vote Off-chain **********************');
+    logger.info('********************** Cast Vote Off-chain **********************');
 
     var vote = NewThingValidationPollVoteIm(
       thingId: thingId,
@@ -210,11 +210,9 @@ class ThingService {
     try {
       signature = await _userService.personalSign(vote.toMessageForSigning());
     } on WalletActionDeclinedError catch (error) {
-      print(error.message);
       yield error;
       return;
     } on GetCredentialError catch (error) {
-      print(error.message);
       yield error;
       return;
     }
@@ -224,7 +222,7 @@ class ThingService {
       signature,
     );
 
-    print('**************** Vote cid: $ipfsCid ****************');
+    logger.info('**************** Vote cid: $ipfsCid ****************');
   }
 
   Stream<Object> castVoteOnChain(
@@ -234,7 +232,7 @@ class ThingService {
     String reason,
     MultiStageOperationContext ctx,
   ) async* {
-    print('********************** Cast Vote On-chain **********************');
+    logger.info('********************** Cast Vote On-chain **********************');
 
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [

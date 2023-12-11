@@ -1,16 +1,27 @@
 import 'dart:async';
 
 import 'actions.dart';
+import '../utils/logger.dart';
 import '../errors/validation_error.dart';
 import '../services/toast_messenger.dart';
 import '../contexts/multi_stage_operation_context.dart';
+import '../errors/failed_multi_stage_execution_error.dart';
 
 abstract class Bloc<TAction extends Action> {
   final ToastMessenger toastMessenger;
 
-  final actionChannel = StreamController<TAction>();
+  final _actionChannel = StreamController<TAction>();
+  late final Future Function(TAction action) onAction;
 
-  Bloc(this.toastMessenger);
+  Bloc(this.toastMessenger) {
+    _actionChannel.stream.listen((action) async {
+      try {
+        await onAction(action);
+      } catch (e) {
+        logger.warning('Error trying to handle action: $action');
+      }
+    });
+  }
 
   void dispatch(TAction action) {
     List<String>? validationErrors;
@@ -19,7 +30,7 @@ abstract class Bloc<TAction extends Action> {
       return;
     }
 
-    actionChannel.add(action);
+    _actionChannel.add(action);
   }
 
   Future<TResult?> execute<TResult>(TAction action) async {
@@ -29,19 +40,30 @@ abstract class Bloc<TAction extends Action> {
       return null;
     }
 
-    return await handleExecute(action) as TResult;
+    try {
+      return await handleExecute(action) as TResult;
+    } catch (e) {
+      logger.warning('Error trying to handle action: $action');
+      return null;
+    }
   }
 
   Future<Object?> handleExecute(TAction action) => throw UnimplementedError();
 
-  Stream<Object> executeMultiStage(TAction action, MultiStageOperationContext ctx) {
+  Stream<Object> executeMultiStage(TAction action, MultiStageOperationContext ctx) async* {
     List<String>? validationErrors;
     if ((validationErrors = action.validate()) != null) {
       toastMessenger.add('• ' + validationErrors!.join('\n• '));
-      return Stream<Object>.value(const ValidationError());
+      yield const ValidationError();
+      return;
     }
 
-    return handleMultiStageExecute(action, ctx);
+    try {
+      yield* handleMultiStageExecute(action, ctx);
+    } catch (e) {
+      logger.warning('Error trying to handle action: $action');
+      yield const FailedMultiStageExecutionError();
+    }
   }
 
   Stream<Object> handleMultiStageExecute(TAction action, MultiStageOperationContext ctx) => throw UnimplementedError();

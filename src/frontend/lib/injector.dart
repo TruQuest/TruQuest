@@ -113,7 +113,7 @@ void setup() {
   injector.configure();
 
   var environment = dotenv.env['ENVIRONMENT']!;
-  if (environment == 'Development' || dotenv.env['ETHEREUM_RPC_URL'] != dotenv.env['ERC4337_BUNDLER_URL']) {
+  if (environment == 'Development' || dotenv.env['USING_SIMULATED_BLOCKCHAIN'] == '1') {
     injector.configureDevelopment();
   } else {
     injector.configureStaging();

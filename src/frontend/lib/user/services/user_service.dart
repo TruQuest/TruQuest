@@ -5,6 +5,7 @@ import 'package:rxdart/rxdart.dart';
 
 import '../../ethereum/services/embedded_wallet_service.dart';
 import '../../ethereum/services/ethereum_api_service.dart';
+import '../../general/utils/logger.dart';
 import '../../general/utils/utils.dart';
 import '../models/vm/smart_wallet_info_vm.dart';
 import '../../general/errors/insufficient_balance_error.dart';
@@ -147,7 +148,7 @@ class UserService {
       _truQuestContract.getAvailableFunds(latestCurrentUser!.walletAddress!);
 
   Stream<Object> depositFunds(int amount, MultiStageOperationContext ctx) async* {
-    print('**************** Deposit funds ****************');
+    logger.info('**************** Deposit funds ****************');
 
     BigInt balance = await _truthserumContract.balanceOf(latestCurrentUser!.walletAddress!);
     if (balance < BigInt.from(amount)) {
@@ -178,7 +179,7 @@ class UserService {
   }
 
   Stream<Object> withdrawFunds(int amount, MultiStageOperationContext ctx) async* {
-    print('**************** Withdraw funds ****************');
+    logger.info('**************** Withdraw funds ****************');
 
     BigInt availableFunds = await getAvailableFundsForCurrentUser();
     if (availableFunds < BigInt.from(amount)) {

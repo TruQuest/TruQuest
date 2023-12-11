@@ -8,6 +8,8 @@ import 'dart:js_util';
 import 'package:js/js.dart';
 import 'package:either_dart/either.dart';
 
+import 'general/utils/logger.dart';
+
 @JS()
 @anonymous
 class EthereumWalletError {
@@ -282,11 +284,11 @@ class Contract {
         ),
       );
     } catch (jsError) {
-      print('Contract.read JS error: $jsError');
+      logger.error('Contract.read JS error: $jsError');
       dynamic error;
       try {
         error = _dartify(jsError);
-        print('Contract.read error: $error');
+        logger.error('Contract.read error: $error');
       } catch (_) {
         error = 'Contract.read error';
       }
@@ -356,11 +358,11 @@ class Contract {
 
       return TransactionResponse._(response);
     } catch (jsError) {
-      print('Contract.write JS error: $jsError');
+      logger.error('Contract.write JS error: $jsError');
       dynamic error;
       try {
         error = _dartify(jsError);
-        print('Contract.write error: $error');
+        logger.error('Contract.write error: $error');
       } catch (_) {
         error = 'Contract.write error';
       }
@@ -431,11 +433,11 @@ class TransactionResponse {
         _transactionResponse.wait(confirms),
       );
     } catch (jsError) {
-      print('TransactionResponse.wait JS error: $jsError');
+      logger.error('TransactionResponse.wait JS error: $jsError');
       dynamic error;
       try {
         error = _dartify(jsError);
-        print('TransactionResponse.wait error: $error');
+        logger.error('TransactionResponse.wait error: $error');
       } catch (_) {
         error = 'TransactionResponse.wait error';
       }

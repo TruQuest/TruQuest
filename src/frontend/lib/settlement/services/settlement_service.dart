@@ -5,6 +5,7 @@ import '../../general/contexts/multi_stage_operation_context.dart';
 import '../../ethereum/services/user_operation_service.dart';
 import '../../general/errors/handle_error.dart';
 import '../../general/errors/insufficient_balance_error.dart';
+import '../../general/utils/logger.dart';
 import '../../user/errors/get_credential_error.dart';
 import '../models/im/new_settlement_proposal_assessment_poll_vote_im.dart';
 import '../../user/services/user_service.dart';
@@ -60,10 +61,9 @@ class SettlementService {
   Future<GetSettlementProposalRvm?> getSettlementProposal(String proposalId) async {
     try {
       var result = await _settlementApiService.getSettlementProposal(proposalId);
-      print('ProposalId: ${result.proposal.id}');
+      logger.info('ProposalId: ${result.proposal.id}');
       return result;
-    } on HandleError catch (e) {
-      print(e);
+    } on HandleError {
       return null;
     }
   }
@@ -83,7 +83,7 @@ class SettlementService {
     String signature,
     MultiStageOperationContext ctx,
   ) async* {
-    print('**************** Fund Proposal ****************');
+    logger.info('**************** Fund Proposal ****************');
 
     BigInt settlementProposalStake = await _truQuestContract.getSettlementProposalStake();
     BigInt availableFunds = await _userService.getAvailableFundsForCurrentUser();
@@ -167,7 +167,7 @@ class SettlementService {
     int thingVerifiersArrayIndex,
     MultiStageOperationContext ctx,
   ) async* {
-    print('**************** Claim Lottery Spot ****************');
+    logger.info('**************** Claim Lottery Spot ****************');
 
     BigInt verifierStake = await _truQuestContract.getVerifierStake();
     BigInt availableFunds = await _userService.getAvailableFundsForCurrentUser();
@@ -204,7 +204,7 @@ class SettlementService {
     String proposalId,
     MultiStageOperationContext ctx,
   ) async* {
-    print('**************** Join Lottery ****************');
+    logger.info('**************** Join Lottery ****************');
 
     BigInt verifierStake = await _truQuestContract.getVerifierStake();
     BigInt availableFunds = await _userService.getAvailableFundsForCurrentUser();
@@ -280,7 +280,7 @@ class SettlementService {
     String reason,
     MultiStageOperationContext ctx,
   ) async* {
-    print('**************** Cast Vote Off-chain ****************');
+    logger.info('**************** Cast Vote Off-chain ****************');
 
     var vote = NewSettlementProposalAssessmentPollVoteIm(
       thingId: thingId,
@@ -294,18 +294,16 @@ class SettlementService {
     try {
       signature = await _userService.personalSign(vote.toMessageForSigning());
     } on WalletActionDeclinedError catch (error) {
-      print(error.message);
       yield error;
       return;
     } on GetCredentialError catch (error) {
-      print(error.message);
       yield error;
       return;
     }
 
     var ipfsCid = await _settlementApiService.castSettlementProposalAssessmentPollVote(vote, signature);
 
-    print('**************** Vote cid: $ipfsCid ****************');
+    logger.info('**************** Vote cid: $ipfsCid ****************');
   }
 
   Stream<Object> castVoteOnChain(
@@ -316,7 +314,7 @@ class SettlementService {
     String reason,
     MultiStageOperationContext ctx,
   ) async* {
-    print('**************** Cast Vote On-chain ****************');
+    logger.info('**************** Cast Vote On-chain ****************');
 
     yield _userOperationService.prepareOneWithRealTimeFeeUpdates(
       actions: [

@@ -79,8 +79,8 @@ class ThingApiService {
       _thingIdToProgressChannel[thingId] = progressChannel;
 
       return progressChannel.stream;
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -97,8 +97,8 @@ class ThingApiService {
       );
 
       return GetThingRvm.fromMap(response.data['data']);
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -114,8 +114,8 @@ class ThingApiService {
       );
 
       return SubmitNewThingRvm.fromMap(response.data['data']);
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -125,8 +125,8 @@ class ThingApiService {
     try {
       var response = await _dio.get('/api/things/$thingId/lottery-participants');
       return GetVerifierLotteryParticipantsRvm.fromMap(response.data['data']);
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -148,8 +148,8 @@ class ThingApiService {
       );
 
       return response.data['data'] as String;
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -161,8 +161,8 @@ class ThingApiService {
         options: accessToken != null ? Options(headers: {'Authorization': 'Bearer $accessToken'}) : null,
       );
       return GetVotesRvm.fromMap(response.data['data']);
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -179,8 +179,8 @@ class ThingApiService {
       );
 
       return GetSettlementProposalsListRvm.fromMap(response.data['data']);
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 
@@ -197,8 +197,8 @@ class ThingApiService {
           markedAsWatched: markedAsWatched,
         ).toJson(),
       );
-    } on DioError catch (error) {
-      throw wrapError(error);
+    } on DioException catch (ex) {
+      throw wrapDioException(ex);
     }
   }
 }

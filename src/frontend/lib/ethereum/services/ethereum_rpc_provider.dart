@@ -2,6 +2,7 @@ import 'package:rxdart/rxdart.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../ethereum_js_interop.dart';
+import '../../general/utils/logger.dart';
 
 class EthereumRpcProvider {
   late final JsonRpcProvider provider;
@@ -22,7 +23,7 @@ class EthereumRpcProvider {
     _latestL1BlockNumberChannel.add(blockNumber);
 
     l1Provider.onBlockMined((blockNumber) {
-      print('Latest L1 block: $blockNumber');
+      logger.debug('Latest L1 block: $blockNumber');
       _latestL1BlockNumberChannel.add(blockNumber);
     });
   }
