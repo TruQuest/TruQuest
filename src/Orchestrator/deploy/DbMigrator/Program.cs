@@ -34,7 +34,7 @@ if (environment == "Development")
     using var fs = new FileStream("C:/chekh/Projects/TruQuest/src/Orchestrator/deploy/ContractMigrator/artifacts/contract_addresses.json", FileMode.Open, FileAccess.Read);
     var contractNameToAddress = await JsonSerializer.DeserializeAsync<Dictionary<string, string>>(fs);
 
-    var version = app.Configuration["Ethereum:Domain:Version"]!;
+    var version = app.Configuration["ApplicationVersion"]!;
 
     appDbContext.ContractAddresses.AddRange(
         contractNameToAddress!.Select(kv => new ContractAddress(kv.Key, version, kv.Value))
@@ -622,7 +622,7 @@ else if (environment == "Staging" && Environment.GetEnvironmentVariable("USE_TUN
     using var fs = new FileStream("artifacts/contract_addresses.json", FileMode.Open, FileAccess.Read);
     var contractNameToAddress = await JsonSerializer.DeserializeAsync<Dictionary<string, string>>(fs);
 
-    var version = Environment.GetEnvironmentVariable("APPLICATION_VERSION")!;
+    var version = Environment.GetEnvironmentVariable("ApplicationVersion")!;
 
     appDbContext.ContractAddresses.AddRange(
         contractNameToAddress!.Select(kv => new ContractAddress(kv.Key, version, kv.Value))
@@ -686,7 +686,7 @@ else if (environment == "Staging" && Environment.GetEnvironmentVariable("USE_TUN
         ["SettlementProposalAssessmentPoll"] = "0x1cf6f69441996615df4370e09a2885f2448b9234"
     };
 
-    var version = Environment.GetEnvironmentVariable("APPLICATION_VERSION")!;
+    var version = Environment.GetEnvironmentVariable("ApplicationVersion")!;
 
     appDbContext.ContractAddresses.AddRange(
         contractNameToAddress!.Select(kv => new ContractAddress(kv.Key, version, kv.Value))

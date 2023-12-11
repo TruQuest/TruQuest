@@ -7,18 +7,21 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 using Services;
+using Common.Monitoring;
 
-Action<ResourceBuilder> configureResource = resource =>
-    resource.AddService(
-        serviceName: Telemetry.ServiceName,
-        serviceVersion: "0.1.0", // @@TODO: Config.
-        serviceInstanceId: Environment.MachineName
-    );
+Action<ResourceBuilder>? configureResource = null;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureLogging((hostContext, loggingBuilder) =>
     {
         var configuration = hostContext.Configuration;
+
+        configureResource = resource =>
+            resource.AddService(
+                serviceName: Telemetry.ServiceName,
+                serviceVersion: configuration["ApplicationVersion"]!,
+                serviceInstanceId: Environment.MachineName
+            );
 
         loggingBuilder.ClearProviders();
         if (hostContext.HostingEnvironment.EnvironmentName is "Development" or "Testing")
@@ -40,7 +43,7 @@ IHost host = Host.CreateDefaultBuilder(args)
         var configuration = hostContext.Configuration;
 
         services.AddOpenTelemetry()
-            .ConfigureResource(configureResource)
+            .ConfigureResource(configureResource!)
             .WithTracing(builder =>
                 builder
                     .AddSource(Telemetry.ActivitySource.Name)
@@ -70,13 +73,9 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<IImageSaver, ImageSaver>();
         services.AddSingleton<IImageCropper, ImageCropper>();
         if (configuration.GetValue<string>("WebPageScreenshots:Backend") == "Playwright")
-        {
             services.AddSingleton<IWebPageScreenshotTaker, WebPageScreenshotTakerUsingPlaywright>();
-        }
         else
-        {
             services.AddSingleton<IWebPageScreenshotTaker, WebPageScreenshotTakerUsingApiFlash>();
-        }
         services.AddSingleton<IFileStorage, FileStorage>();
         services.AddSingleton<IFileArchiver, FileArchiver>();
         services.AddSingleton<IResponseDispatcher, ResponseDispatcher>();

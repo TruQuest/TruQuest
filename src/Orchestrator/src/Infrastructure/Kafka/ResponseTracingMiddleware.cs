@@ -3,19 +3,13 @@ using System.Text;
 
 using KafkaFlow;
 
-using Application;
+using Application.Common.Monitoring;
+using Application.Common.Messages.Responses;
 
 namespace Infrastructure.Kafka;
 
 internal class ResponseTracingMiddleware : IMessageMiddleware
 {
-    private readonly string _responseMessagesNamespace;
-
-    public ResponseTracingMiddleware()
-    {
-        _responseMessagesNamespace = "Application.Common.Messages.Responses.";
-    }
-
     public async Task Invoke(IMessageContext context, MiddlewareDelegate next)
     {
         var parentSpanContext = Telemetry.ExtractContextFrom(
@@ -30,11 +24,14 @@ internal class ResponseTracingMiddleware : IMessageMiddleware
         // @@??: Should add messaging tags here to connect both ends of communication ?
 
         using var span = Telemetry.StartActivity(
-            _responseMessagesNamespace + Encoding.UTF8.GetString(context.Headers["trq.responseType"]),
+            context.Message.Value.GetType().FullName!,
             parentContext: parentSpanContext,
             kind: ActivityKind.Consumer
-        );
+        )!;
 
         await next(context);
+
+        var message = (BaseResponse)context.Message.Value;
+        foreach (var tag in message.GetActivityTags()) span.AddTag(tag.Name, tag.Value);
     }
 }

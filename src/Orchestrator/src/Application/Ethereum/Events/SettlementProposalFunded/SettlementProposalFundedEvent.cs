@@ -2,6 +2,7 @@ using GoThataway;
 
 using Domain.Aggregates.Events;
 
+using Application.Common.Monitoring;
 using Application.Ethereum.Common.Models.IM;
 
 namespace Application.Ethereum.Events.SettlementProposalFunded;
@@ -12,15 +13,24 @@ public class SettlementProposalFundedEvent : BaseContractEvent, IEvent
     public required byte[] SettlementProposalId { get; init; }
     public required string WalletAddress { get; init; }
     public required decimal Stake { get; init; }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags()
+    {
+        return new (string Name, object? Value)[]
+        {
+            (ActivityTags.ThingId, new Guid(ThingId)),
+            (ActivityTags.SettlementProposalId, new Guid(SettlementProposalId)),
+            (ActivityTags.WalletAddress, WalletAddress),
+            (ActivityTags.TxnHash, TxnHash)
+        };
+    }
 }
 
 public class SettlementProposalFundedEventHandler : IEventHandler<SettlementProposalFundedEvent>
 {
     private readonly IActionableThingRelatedEventRepository _actionableThingRelatedEventRepository;
 
-    public SettlementProposalFundedEventHandler(
-        IActionableThingRelatedEventRepository actionableThingRelatedEventRepository
-    )
+    public SettlementProposalFundedEventHandler(IActionableThingRelatedEventRepository actionableThingRelatedEventRepository)
     {
         _actionableThingRelatedEventRepository = actionableThingRelatedEventRepository;
     }

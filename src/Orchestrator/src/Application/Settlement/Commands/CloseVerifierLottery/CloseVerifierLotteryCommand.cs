@@ -13,6 +13,8 @@ using Application.Common.Interfaces;
 using Application.Common.Misc;
 using Application.Common.Attributes;
 using Application.Common.Models.IM;
+using Application.Common.Monitoring;
+using static Application.Common.Monitoring.LogMessagePlaceholders;
 
 namespace Application.Settlement.Commands.CloseVerifierLottery;
 
@@ -25,6 +27,17 @@ public class CloseVerifierLotteryCommand : DeferredTaskCommand, IRequest<VoidRes
     public required byte[] UserXorData { get; init; }
     public required long EndBlock { get; init; }
     public required long TaskId { get; init; }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags(VoidResult _)
+    {
+        return new (string, object?)[]
+        {
+            (ActivityTags.ThingId, ThingId),
+            (ActivityTags.SettlementProposalId, SettlementProposalId),
+            (ActivityTags.EndBlockNum, EndBlock),
+            (ActivityTags.TaskId, TaskId)
+        };
+    }
 }
 
 public class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifierLotteryCommand, VoidResult>
@@ -123,19 +136,7 @@ public class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifierL
         await _claimedLotterySpotEventRepository.UpdateNoncesFor(spotClaimedEvents);
         await _claimedLotterySpotEventRepository.SaveChanges();
 
-        _logger.LogInformation(
-            "Proposal {ProposalId} verifier lottery: {NumClaimants} spots claimed",
-            command.SettlementProposalId,
-            winnerClaimants.Count
-        );
-
         int numRequiredParticipants = numVerifiers - winnerClaimants.Count;
-
-        _logger.LogInformation(
-            "Proposal {ProposalId} verifier lottery: {NumRequiredParticipants} participants required",
-            command.SettlementProposalId,
-            numRequiredParticipants
-        );
 
         // ordered from oldest to newest
         var joinedEvents = await _joinedLotteryEventRepository.FindAllFor(command.ThingId, command.SettlementProposalId);
@@ -191,18 +192,33 @@ public class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifierL
                 winnerClaimantIndices: winnerClaimants.Select(w => (ulong)w.Index).ToList(),
                 winnerIndices: winnerParticipants.Select(e => (ulong)e.Index).ToList()
             );
+
+            _logger.LogInformation(
+                $"Closed settlement proposal {SettlementProposalId} assessment verifier lottery with success.\n" +
+                $"Orchestrator nonce: {Nonce}\n" +
+                $"Claimants: {JoinedNumClaimants}\n" +
+                $"Claimants selected: {WinnerNumClaimants}\n" +
+                $"Participants: {JoinedNumParticipants}\n" +
+                $"Participants selected: {WinnerNumParticipants}",
+                command.SettlementProposalId, nonce, spotClaimedEvents.Count, winnerClaimants.Count,
+                joinedEvents.Count, winnerParticipants.Count
+            );
         }
         else
         {
-            _logger.LogInformation(
-                "Proposal {ProposalId} Verifier Selection Lottery: Not enough participants.\n" +
-                "Required: {RequiredNumVerifiers}.\n" +
-                "Joined: {JoinedNumVerifiers}.",
-                command.SettlementProposalId, numVerifiers, winnerClaimants.Count + winnerParticipants.Count
-            );
-
             await _contractCaller.CloseSettlementProposalAssessmentVerifierLotteryInFailure(
                 thingId, proposalId, winnerClaimants.Count + winnerParticipants.Count
+            );
+
+            _logger.LogInformation(
+                $"Closed settlement proposal {SettlementProposalId} assessment verifier lottery in failure. Not enough participants.\n" +
+                $"Required: {RequiredNumVerifiers}\n" +
+                $"Claimants: {JoinedNumClaimants}\n" +
+                $"Claimants selected: {WinnerNumClaimants}\n" +
+                $"Participants: {JoinedNumParticipants}\n" +
+                $"Participants selected: {WinnerNumParticipants}",
+                command.SettlementProposalId, numVerifiers, spotClaimedEvents.Count,
+                winnerClaimants.Count, joinedEvents.Count, winnerParticipants.Count
             );
         }
 

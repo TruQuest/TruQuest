@@ -5,6 +5,9 @@ using GoThataway;
 using Domain.Results;
 using Domain.Errors;
 
+using Application.Common.Monitoring;
+using static Application.Common.Monitoring.LogMessagePlaceholders;
+
 namespace Application.Common.Middlewares.Request;
 
 public class ExceptionHandlingMiddleware<TRequest, TResponse> : IRequestMiddleware<TRequest, TResponse>
@@ -26,7 +29,7 @@ public class ExceptionHandlingMiddleware<TRequest, TResponse> : IRequestMiddlewa
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, ex.Message);
+            _logger.LogError(ex, $"Error trying to handle request: {RequestName}", request.GetType().FullName);
             return new TResponse
             {
                 Error = new UnhandledError(

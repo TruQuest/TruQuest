@@ -6,6 +6,7 @@ using Domain.Results;
 
 using Application.Common.Attributes;
 using Application.Common.Interfaces;
+using Application.Common.Monitoring;
 
 namespace Application.Common.Middlewares.Request;
 
@@ -40,8 +41,7 @@ public class AuthorizationMiddleware<TRequest, TResponse> : IRequestMiddleware<T
             };
         }
 
-        var span = Telemetry.CurrentActivity!;
-        span.SetTag("UserId", _currentPrincipal.Id);
+        Telemetry.CurrentActivity?.SetTag(ActivityTags.UserId, _currentPrincipal.Id);
 
         return await next();
     }

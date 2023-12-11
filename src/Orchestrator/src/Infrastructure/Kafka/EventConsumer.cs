@@ -68,13 +68,13 @@ internal class EventConsumer : IMessageMiddleware
             result = await thataway.Send(
                 new PrepareForValidationPollCommand
                 {
-                    PollInitBlockNumber = long.Parse(
+                    InitBlockNumber = long.Parse(
                         Encoding.UTF8.GetString((byte[])context.Headers[_blockNumberHeaderName])
                     ),
-                    PollInitTxnIndex = int.Parse(
+                    InitTxnIndex = int.Parse(
                         Encoding.UTF8.GetString((byte[])context.Headers[_txnIndexHeaderName])
                     ),
-                    PollInitTxnHash = Encoding.UTF8.GetString((byte[])context.Headers[_txnHashHeaderName]),
+                    InitTxnHash = Encoding.UTF8.GetString((byte[])context.Headers[_txnHashHeaderName]),
                     ThingId = Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key)),
                     Orchestrator = validationLotteryClosedWithSuccessEvent.Orchestrator,
                     Data = validationLotteryClosedWithSuccessEvent.Data,

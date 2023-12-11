@@ -1,6 +1,7 @@
 using GoThataway;
 
 using Application.Common.Interfaces;
+using Application.Common.Monitoring;
 
 namespace Application.Thing.Events.AttachmentsArchivingProgress;
 
@@ -9,6 +10,15 @@ public class AttachmentsArchivingProgressEvent : IEvent
     public required string SubmitterId { get; init; }
     public required Guid ThingId { get; init; }
     public required int Percent { get; init; }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags()
+    {
+        return new (string Name, object? Value)[]
+        {
+            (ActivityTags.UserId, SubmitterId),
+            (ActivityTags.ThingId, ThingId)
+        };
+    }
 }
 
 public class AttachmentsArchivingProgressEventHandler : IEventHandler<AttachmentsArchivingProgressEvent>

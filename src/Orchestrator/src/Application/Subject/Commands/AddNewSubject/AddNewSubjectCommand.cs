@@ -13,6 +13,8 @@ using Application.Common.Attributes;
 using Application.Common.Messages.Requests;
 using Application.Common.Messages.Responses;
 using Application.Common.Models.IM;
+using Application.Common.Monitoring;
+using static Application.Common.Monitoring.LogMessagePlaceholders;
 
 namespace Application.Subject.Commands.AddNewSubject;
 
@@ -20,6 +22,13 @@ namespace Application.Subject.Commands.AddNewSubject;
 public class AddNewSubjectCommand : ManuallyBoundInputModelCommand, IRequest<HandleResult<Guid>>
 {
     public AddNewSubjectCommand(HttpRequest request) : base(request, new NewSubjectIm()) { }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags(HandleResult<Guid> response)
+    {
+        var tags = new List<(string, object?)>();
+        if (response.Error == null) tags.Add((ActivityTags.SubjectId, response.Data));
+        return tags;
+    }
 }
 
 public class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectCommand, HandleResult<Guid>>
@@ -55,6 +64,10 @@ public class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectCommand,
 
         if (result is ArchiveSubjectAttachmentsFailureResult failureResult)
         {
+            _logger.LogWarning(
+                $"Error trying to archive attachments for subject {SubjectName}: {failureResult.ErrorMessage}",
+                ((NewSubjectIm)command.Input).Name
+            );
             return new()
             {
                 Error = new HandleError(failureResult.ErrorMessage)
@@ -75,6 +88,8 @@ public class AddNewSubjectCommandHandler : IRequestHandler<AddNewSubjectCommand,
 
         _subjectRepository.Create(subject);
         await _subjectRepository.SaveChanges();
+
+        _logger.LogInformation($"Subject (Id: {SubjectId}, Name: {SubjectName}) created", subject.Id!.Value, subject.Name);
 
         return new()
         {

@@ -11,9 +11,11 @@ using Domain.Results;
 
 using Application.Common.Interfaces;
 using Application.User.Common.Models.VM;
+using static Application.Common.Monitoring.LogMessagePlaceholders;
 
 namespace Application.User.Commands.VerifyAssertionAndSignIn;
 
+// @@TODO??: ExecuteInTxn?
 public class VerifyAssertionAndSignInCommand : IRequest<HandleResult<AuthResultVm>>
 {
     public required AuthenticatorAssertionRawResponse RawAssertion { get; init; }
@@ -52,6 +54,7 @@ public class VerifyAssertionAndSignInCommandHandler : IRequestHandler<
         var cacheKey = $"fido2.assertionOptions.{Base64Url.Encode(assertion.Challenge)}";
         if (!_memoryCache.TryGetValue<string>(cacheKey, out string? optionsJson))
         {
+            _logger.LogInformation($"User {UserId} provided assertion for challenge that has expired", new Guid(assertion.UserHandle!));
             return new()
             {
                 Error = new HandleError("Challenge expired")
@@ -64,6 +67,7 @@ public class VerifyAssertionAndSignInCommandHandler : IRequestHandler<
         var credential = await _userRepository.GetAuthCredential(Base64Url.Encode(command.RawAssertion.Id));
         if (credential == null)
         {
+            _logger.LogInformation($"User {UserId} provided assertion using non-existent credential", new Guid(assertion.UserHandle!));
             return new()
             {
                 Error = new HandleError("The specified credential not found")
@@ -88,7 +92,7 @@ public class VerifyAssertionAndSignInCommandHandler : IRequestHandler<
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Error trying to make assertion");
+            _logger.LogWarning(ex, $"Error trying to make assertion for user {UserId}", credential.UserId);
             return new()
             {
                 Error = new HandleError("Invalid credential")
@@ -100,6 +104,8 @@ public class VerifyAssertionAndSignInCommandHandler : IRequestHandler<
         await _userRepository.SaveChanges();
 
         var claims = await _userRepository.GetClaimsExcept(credential.UserId, new[] { "key_share" });
+
+        _logger.LogInformation($"User {UserId} signed-in", credential.UserId);
 
         return new()
         {

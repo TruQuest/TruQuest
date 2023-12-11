@@ -4,9 +4,15 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace GoThataway;
 
-public interface IRequest<TResponse> { }
+public interface IRequest<TResponse>
+{
+    IEnumerable<(string Name, object? Value)> GetActivityTags(TResponse response) => Enumerable.Empty<(string, object?)>();
+}
 
-public interface IEvent { }
+public interface IEvent
+{
+    IEnumerable<(string Name, object? Value)> GetActivityTags() => Enumerable.Empty<(string, object?)>();
+}
 
 public interface IRequestHandler<TRequest, TResponse> where TRequest : IRequest<TResponse>
 {

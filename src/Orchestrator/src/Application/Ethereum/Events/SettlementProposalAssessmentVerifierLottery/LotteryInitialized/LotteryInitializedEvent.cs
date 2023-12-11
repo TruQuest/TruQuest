@@ -4,6 +4,7 @@ using Domain.Aggregates.Events;
 
 using Application.Common.Misc;
 using Application.Ethereum.Common.Models.IM;
+using Application.Common.Monitoring;
 
 namespace Application.Ethereum.Events.SettlementProposalAssessmentVerifierLottery.LotteryInitialized;
 
@@ -14,17 +15,25 @@ public class LotteryInitializedEvent : BaseContractEvent, IEvent
     public required byte[] SettlementProposalId { get; init; }
     public required byte[] DataHash { get; init; }
     public required byte[] UserXorDataHash { get; init; }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags()
+    {
+        return new (string Name, object? Value)[]
+        {
+            (ActivityTags.ThingId, new Guid(ThingId)),
+            (ActivityTags.SettlementProposalId, new Guid(SettlementProposalId)),
+            (ActivityTags.TxnHash, TxnHash)
+        };
+    }
 }
 
 public class LotteryInitializedEventHandler : IEventHandler<LotteryInitializedEvent>
 {
-    private readonly ISettlementProposalAssessmentVerifierLotteryInitializedEventRepository _assessmentVerifierLotteryInitializedEventRepository;
+    private readonly ISettlementProposalAssessmentVerifierLotteryInitializedEventRepository _lotteryEventRepository;
 
-    public LotteryInitializedEventHandler(
-        ISettlementProposalAssessmentVerifierLotteryInitializedEventRepository assessmentVerifierLotteryInitializedEventRepository
-    )
+    public LotteryInitializedEventHandler(ISettlementProposalAssessmentVerifierLotteryInitializedEventRepository lotteryEventRepository)
     {
-        _assessmentVerifierLotteryInitializedEventRepository = assessmentVerifierLotteryInitializedEventRepository;
+        _lotteryEventRepository = lotteryEventRepository;
     }
 
     public async Task Handle(LotteryInitializedEvent @event, CancellationToken ct)
@@ -39,9 +48,9 @@ public class LotteryInitializedEventHandler : IEventHandler<LotteryInitializedEv
             dataHash: @event.DataHash.ToHex(prefix: true),
             userXorDataHash: @event.UserXorDataHash.ToHex(prefix: true)
         );
-        _assessmentVerifierLotteryInitializedEventRepository.Create(lotteryInitializedEvent);
+        _lotteryEventRepository.Create(lotteryInitializedEvent);
 
-        await _assessmentVerifierLotteryInitializedEventRepository.SaveChanges();
+        await _lotteryEventRepository.SaveChanges();
     }
 }
 

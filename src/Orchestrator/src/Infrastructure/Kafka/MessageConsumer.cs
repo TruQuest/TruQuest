@@ -1,6 +1,4 @@
 using System.Text;
-using System.Reflection;
-using System.Text.Json;
 
 using Microsoft.Extensions.Logging;
 
@@ -20,10 +18,6 @@ internal class MessageConsumer : IMessageMiddleware
     private readonly IRequestDispatcher _requestDispatcher;
     private readonly Thataway _thataway;
 
-    private readonly Assembly _responseMessagesAssembly;
-    private readonly string _responseMessagesNamespace;
-    private readonly JsonSerializerOptions _options;
-
     public MessageConsumer(
         ILogger<MessageConsumer> logger,
         IRequestDispatcher requestDispatcher,
@@ -33,24 +27,11 @@ internal class MessageConsumer : IMessageMiddleware
         _logger = logger;
         _requestDispatcher = requestDispatcher;
         _thataway = thataway;
-
-        _responseMessagesAssembly = Assembly.GetAssembly(typeof(IRequestDispatcher))!;
-        _responseMessagesNamespace = "Application.Common.Messages.Responses.";
-        _options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
     }
 
     public async Task Invoke(IMessageContext context, MiddlewareDelegate next)
     {
-        // @@TODO: Refactor. Use MessageTypeResolver and MessageSerializer instead of this manual stuff.
-
-        var responseType = _responseMessagesAssembly.GetType(
-            _responseMessagesNamespace + Encoding.UTF8.GetString(context.Headers["trq.responseType"])
-        )!;
-        var messageBytes = (byte[])context.Message.Value;
-        var message = JsonSerializer.Deserialize(messageBytes, responseType, _options)!;
+        var message = context.Message.Value;
 
         if (context.Headers.Any(kv => kv.Key == "trq.isResponse"))
         {

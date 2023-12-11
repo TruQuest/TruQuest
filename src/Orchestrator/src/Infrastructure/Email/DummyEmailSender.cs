@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 
 using Application.Common.Interfaces;
+using Application.Common.Monitoring;
 
 namespace Infrastructure.Email;
 
@@ -15,7 +16,7 @@ internal class DummyEmailSender : IEmailSender
 
     public Task SendConfirmationEmail(string recipient, string subject, string body)
     {
-        _logger.LogInformation($"Sending email to {recipient}:\n{subject}\n\t{body}");
+        _logger.LogInformation($"Sending email to {LogMessagePlaceholders.Email}:\n{subject}\n\t{body}", recipient);
         return Task.CompletedTask;
     }
 

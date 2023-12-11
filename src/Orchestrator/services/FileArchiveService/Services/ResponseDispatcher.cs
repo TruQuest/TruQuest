@@ -3,6 +3,9 @@ using System.Text;
 
 using KafkaFlow;
 
+using Common.Monitoring;
+using Messages.Responses;
+
 namespace Services;
 
 internal class ResponseDispatcher : IResponseDispatcher
@@ -27,6 +30,9 @@ internal class ResponseDispatcher : IResponseDispatcher
     public async Task Reply(string requestId, object message)
     {
         using var span = Telemetry.StartActivity(message.GetType().FullName!, kind: ActivityKind.Producer)!;
+
+        foreach (var tag in ((BaseResponse)message).GetActivityTags())
+            span.AddTag(tag.Name, tag.Value);
 
         var messageKey = Guid.NewGuid().ToString();
 
@@ -54,6 +60,9 @@ internal class ResponseDispatcher : IResponseDispatcher
     {
         using var span = Telemetry.StartActivity(message.GetType().FullName!, kind: ActivityKind.Producer)!;
 
+        foreach (var tag in ((BaseResponse)message).GetActivityTags())
+            span.AddTag(tag.Name, tag.Value);
+
         var messageKey = key ?? Guid.NewGuid().ToString();
 
         span.SetKafkaTags(requestId, messageKey, destinationName: _topicName);
@@ -78,6 +87,9 @@ internal class ResponseDispatcher : IResponseDispatcher
     public void SendSync(string requestId, object message, string? key = null)
     {
         using var span = Telemetry.StartActivity(message.GetType().FullName!, kind: ActivityKind.Producer)!;
+
+        foreach (var tag in ((BaseResponse)message).GetActivityTags())
+            span.AddTag(tag.Name, tag.Value);
 
         var messageKey = key ?? Guid.NewGuid().ToString();
 

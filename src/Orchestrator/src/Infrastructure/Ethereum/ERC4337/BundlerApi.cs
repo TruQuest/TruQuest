@@ -57,14 +57,14 @@ public class BundlerApi
         var response = await client.SendAsync(request);
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogWarning("Error estimating user operation gas: {Reason}", response.ReasonPhrase);
+            _logger.LogWarning($"Error estimating user operation gas: {response.ReasonPhrase}");
             return null;
         }
 
         var doc = JsonSerializer.Deserialize<JsonDocument>(await response.Content.ReadAsStringAsync());
         if (doc!.RootElement.TryGetProperty("error", out JsonElement error))
         {
-            _logger.LogWarning("Error estimating user operation gas: {Reason}", error.GetProperty("message").GetString());
+            _logger.LogWarning($"Error estimating user operation gas: {error.GetProperty("message").GetString()}");
             return null;
         }
 
@@ -96,7 +96,7 @@ public class BundlerApi
         var response = await client.SendAsync(request);
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogWarning("Error sending user operation: {Reason}", response.ReasonPhrase);
+            _logger.LogWarning($"Error sending user operation: {response.ReasonPhrase}");
             return new UserOperationError(response.ReasonPhrase);
         }
 
@@ -104,7 +104,7 @@ public class BundlerApi
         if (doc!.RootElement.TryGetProperty("error", out JsonElement error))
         {
             var errorMessage = error.GetProperty("message").GetString()!;
-            _logger.LogWarning("Error sending user operation: {Reason}", errorMessage);
+            _logger.LogWarning($"Error sending user operation: {errorMessage}");
 
             return new UserOperationError(error.GetProperty("code").GetInt32(), errorMessage);
         }
@@ -132,14 +132,14 @@ public class BundlerApi
         var response = await client.SendAsync(request);
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogWarning("Error retrieving user operation receipt: {Reason}", response.ReasonPhrase);
+            _logger.LogWarning($"Error retrieving user operation receipt: {response.ReasonPhrase}");
             return null;
         }
 
         var doc = JsonSerializer.Deserialize<JsonDocument>(await response.Content.ReadAsStringAsync());
         if (doc!.RootElement.TryGetProperty("error", out JsonElement error))
         {
-            _logger.LogWarning("Error retrieving user operation receipt: {Reason}", error.GetProperty("message").GetString());
+            _logger.LogWarning($"Error retrieving user operation receipt: {error.GetProperty("message").GetString()}");
             return null;
         }
 

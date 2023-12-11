@@ -12,13 +12,9 @@ internal class MessageSerializer : ISerializer, IDeserializer
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public async Task<object> DeserializeAsync(Stream input, Type type, ISerializerContext context)
-    {
-        return (await JsonSerializer.DeserializeAsync(input, type, _options).ConfigureAwait(false))!;
-    }
+    public async Task<object> DeserializeAsync(Stream input, Type type, ISerializerContext context) =>
+        (await JsonSerializer.DeserializeAsync(input, type, _options).ConfigureAwait(false))!;
 
-    public async Task SerializeAsync(object message, Stream output, ISerializerContext context)
-    {
+    public async Task SerializeAsync(object message, Stream output, ISerializerContext context) =>
         await JsonSerializer.SerializeAsync(output, message, _options);
-    }
 }

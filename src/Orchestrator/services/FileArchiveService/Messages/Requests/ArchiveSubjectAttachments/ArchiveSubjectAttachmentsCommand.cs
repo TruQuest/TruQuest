@@ -2,15 +2,24 @@ using System.Text;
 
 using KafkaFlow;
 
-using Messages.Responses;
 using Services;
+using Messages.Responses;
+using Common.Monitoring;
 
 namespace Messages.Requests;
 
-internal class ArchiveSubjectAttachmentsCommand
+internal class ArchiveSubjectAttachmentsCommand : BaseRequest
 {
     public required string SubmitterId { get; init; }
     public required NewSubjectIm Input { get; init; }
+
+    public override IEnumerable<(string Name, object? Value)> GetActivityTags()
+    {
+        return new (string Name, object? Value)[]
+        {
+            (ActivityTags.UserId, SubmitterId)
+        };
+    }
 }
 
 internal class ArchiveSubjectAttachmentsCommandHandler : IMessageHandler<ArchiveSubjectAttachmentsCommand>

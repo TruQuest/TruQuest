@@ -1,6 +1,6 @@
 using System.Numerics;
 
-using Application;
+using Application.Common.Monitoring;
 using Application.Common.Interfaces;
 using Infrastructure.Ethereum;
 

@@ -1,6 +1,8 @@
 using System.Buffers;
 using System.Diagnostics;
 
+using Common.Monitoring;
+
 namespace Services;
 
 internal class ImageSaver : IImageSaver

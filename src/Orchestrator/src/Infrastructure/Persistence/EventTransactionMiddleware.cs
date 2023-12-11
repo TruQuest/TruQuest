@@ -8,6 +8,7 @@ using Npgsql;
 using GoThataway;
 
 using Application.Common.Attributes;
+using static Application.Common.Monitoring.LogMessagePlaceholders;
 
 namespace Infrastructure.Persistence;
 
@@ -47,8 +48,8 @@ public class EventTransactionMiddleware<TEvent> : IEventMiddleware<TEvent> where
         {
             _logger.LogWarning(
                 ex,
-                "Unique constraint violation while processing {Event}. Skipping...",
-                @event.GetType().Name
+                $"Unique constraint violation while processing {EventName}. Skipping...",
+                @event.GetType().FullName
             );
         }
         catch (DbUpdateException ex) when (
@@ -58,8 +59,8 @@ public class EventTransactionMiddleware<TEvent> : IEventMiddleware<TEvent> where
         {
             _logger.LogWarning(
                 pgEx,
-                "Unique constraint violation while processing {Event}. Skipping...",
-                @event.GetType().Name
+                $"Unique constraint violation while processing {EventName}. Skipping...",
+                @event.GetType().FullName
             );
         }
     }

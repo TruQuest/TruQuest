@@ -9,6 +9,8 @@ using Domain.Aggregates;
 
 using Application.Common.Attributes;
 using Application.Common.Interfaces;
+using Application.Common.Monitoring;
+using static Application.Common.Monitoring.LogMessagePlaceholders;
 
 namespace Application.Thing.Commands.CastValidationPollVote;
 
@@ -17,6 +19,21 @@ public class CastValidationPollVoteCommand : IRequest<HandleResult<string>>
 {
     public required NewThingValidationPollVoteIm Input { get; init; }
     public required string Signature { get; init; }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags(HandleResult<string> response)
+    {
+        if (response.Error == null)
+        {
+            return new (string Name, object? Value)[]
+            {
+                (ActivityTags.ThingId, Input.ThingId),
+                (ActivityTags.Decision, Input.Decision.GetString()),
+                (ActivityTags.IpfsCid, response.Data!)
+            };
+        }
+
+        return Enumerable.Empty<(string Name, object? Value)>();
+    }
 }
 
 internal class Validator : AbstractValidator<CastValidationPollVoteCommand>
@@ -70,6 +87,10 @@ public class CastValidationPollVoteCommandHandler : IRequestHandler<
 
         if (!isDesignatedVerifier)
         {
+            _logger.LogWarning(
+                $"User {UserId} trying to cast a vote for thing {ThingId}, even though he is not a designated verifier",
+                _currentPrincipal.Id!, command.Input.ThingId.Value
+            );
             return new()
             {
                 Error = new HandleError($"Not a designated verifier for thing {command.Input.ThingId}")
@@ -80,6 +101,10 @@ public class CastValidationPollVoteCommandHandler : IRequestHandler<
 
         if (_currentPrincipal.SignerAddress != recoveredAddress)
         {
+            _logger.LogWarning(
+                $"Current principal's signer address {SignerAddress} and recovered address {RecoveredAddress} do not match",
+                _currentPrincipal.SignerAddress!, recoveredAddress
+            );
             return new()
             {
                 Error = new HandleError("Invalid request")
@@ -93,6 +118,10 @@ public class CastValidationPollVoteCommandHandler : IRequestHandler<
             .ToUniversalTime();
         if ((DateTimeOffset.UtcNow - castedAtUtc).Duration() > TimeSpan.FromMinutes(5)) // @@TODO: Config.
         {
+            _logger.LogInformation(
+                $"Thing {ThingId} validation poll vote's timestamp does not approximately match server time",
+                command.Input.ThingId.Value
+            );
             return new()
             {
                 Error = new HandleError("Invalid timestamp. Check your system clock")
@@ -118,6 +147,10 @@ public class CastValidationPollVoteCommandHandler : IRequestHandler<
         });
         if (uploadResult.IsError)
         {
+            _logger.LogWarning(
+                $"Error trying to upload thing {ThingId} validation poll vote to IPFS: {uploadResult.Error}",
+                command.Input.ThingId.Value
+            );
             return new()
             {
                 Error = uploadResult.Error
@@ -137,6 +170,11 @@ public class CastValidationPollVoteCommandHandler : IRequestHandler<
         _voteRepository.Create(vote);
 
         await _voteRepository.SaveChanges();
+
+        _logger.LogInformation(
+            $"User {UserId} casted an off-chain thing {ThingId} validation poll vote",
+            _currentPrincipal.Id!, command.Input.ThingId.Value
+        );
 
         return new()
         {

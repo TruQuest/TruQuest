@@ -4,6 +4,7 @@ using Domain.Aggregates.Events;
 
 using Application.Common.Misc;
 using Application.Ethereum.Common.Models.IM;
+using Application.Common.Monitoring;
 
 namespace Application.Ethereum.Events.SettlementProposalAssessmentVerifierLottery.JoinedLottery;
 
@@ -14,17 +15,25 @@ public class JoinedLotteryEvent : BaseContractEvent, IEvent
     public required string WalletAddress { get; init; }
     public required byte[] UserData { get; init; }
     public required long L1BlockNumber { get; init; }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags()
+    {
+        return new (string Name, object? Value)[]
+        {
+            (ActivityTags.SettlementProposalId, new Guid(SettlementProposalId)),
+            (ActivityTags.WalletAddress, WalletAddress),
+            (ActivityTags.TxnHash, TxnHash)
+        };
+    }
 }
 
 public class JoinedLotteryEventHandler : IEventHandler<JoinedLotteryEvent>
 {
-    private readonly IJoinedSettlementProposalAssessmentVerifierLotteryEventRepository _joinedAssessmentVerifierLotteryEventRepository;
+    private readonly IJoinedSettlementProposalAssessmentVerifierLotteryEventRepository _lotteryEventRepository;
 
-    public JoinedLotteryEventHandler(
-        IJoinedSettlementProposalAssessmentVerifierLotteryEventRepository joinedAssessmentVerifierLotteryEventRepository
-    )
+    public JoinedLotteryEventHandler(IJoinedSettlementProposalAssessmentVerifierLotteryEventRepository lotteryEventRepository)
     {
-        _joinedAssessmentVerifierLotteryEventRepository = joinedAssessmentVerifierLotteryEventRepository;
+        _lotteryEventRepository = lotteryEventRepository;
     }
 
     public async Task Handle(JoinedLotteryEvent @event, CancellationToken ct)
@@ -40,8 +49,8 @@ public class JoinedLotteryEventHandler : IEventHandler<JoinedLotteryEvent>
             l1BlockNumber: @event.L1BlockNumber,
             userData: @event.UserData.ToHex(prefix: true)
         );
-        _joinedAssessmentVerifierLotteryEventRepository.Create(joinedLotteryEvent);
+        _lotteryEventRepository.Create(joinedLotteryEvent);
 
-        await _joinedAssessmentVerifierLotteryEventRepository.SaveChanges();
+        await _lotteryEventRepository.SaveChanges();
     }
 }

@@ -62,7 +62,7 @@ public class GenerateAssertionOptionsCommandHandler : IRequestHandler<GenerateAs
             UserVerificationRequirement.Discouraged
         );
 
-        _memoryCache.Set($"fido2.assertionOptions.{Base64Url.Encode(options.Challenge)}", options.ToJson()); // @@TODO: Expiration.
+        _memoryCache.Set($"fido2.assertionOptions.{Base64Url.Encode(options.Challenge)}", options.ToJson(), TimeSpan.FromMinutes(5));
 
         return new()
         {

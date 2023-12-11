@@ -45,7 +45,7 @@ internal class L2BlockchainQueryable : IL2BlockchainQueryable
 
     public async Task<long> GetCorrespondingL1BlockNumberFor(long l2Block) =>
         (long)await _web3.Eth
-            .GetContractQueryHandler<GetOptimismL1BlockNumberMessage>()
+            .GetContractQueryHandler<GetOPL1BlockNumberMessage>()
             .QueryAsync<ulong>(
                 _l1BlockContractAddress,
                 new(),

@@ -4,14 +4,25 @@ using KafkaFlow;
 
 using Services;
 using Messages.Responses;
+using Common.Monitoring;
 
 namespace Messages.Requests;
 
-internal class ArchiveThingAttachmentsCommand
+internal class ArchiveThingAttachmentsCommand : BaseRequest
 {
     public required string SubmitterId { get; init; }
     public required Guid ThingId { get; init; }
     public required NewThingIm Input { get; init; }
+
+    public override IEnumerable<(string Name, object? Value)> GetActivityTags()
+    {
+        return new (string Name, object? Value)[]
+        {
+            (ActivityTags.UserId, SubmitterId),
+            (ActivityTags.SubjectId, Input.SubjectId),
+            (ActivityTags.ThingId, ThingId)
+        };
+    }
 }
 
 internal class ArchiveThingAttachmentsCommandHandler : IMessageHandler<ArchiveThingAttachmentsCommand>
@@ -37,7 +48,7 @@ internal class ArchiveThingAttachmentsCommandHandler : IMessageHandler<ArchiveTh
 
         var progress = new Progress<int>(percent =>
         {
-            _logger.LogInformation($"Archive Progress: {percent}%");
+            _logger.LogDebug($"Archive Progress: {percent}%");
             _responseDispatcher.SendSync(
                 requestId,
                 new ArchiveThingAttachmentsProgress

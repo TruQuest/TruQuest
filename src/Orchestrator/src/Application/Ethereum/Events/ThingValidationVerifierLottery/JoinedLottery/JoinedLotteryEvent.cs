@@ -4,6 +4,7 @@ using Domain.Aggregates.Events;
 
 using Application.Common.Misc;
 using Application.Ethereum.Common.Models.IM;
+using Application.Common.Monitoring;
 
 namespace Application.Ethereum.Events.ThingValidationVerifierLottery.JoinedLottery;
 
@@ -13,17 +14,25 @@ public class JoinedLotteryEvent : BaseContractEvent, IEvent
     public required string WalletAddress { get; init; }
     public required byte[] UserData { get; init; }
     public required long L1BlockNumber { get; init; }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags()
+    {
+        return new (string Name, object? Value)[]
+        {
+            (ActivityTags.ThingId, new Guid(ThingId)),
+            (ActivityTags.WalletAddress, WalletAddress),
+            (ActivityTags.TxnHash, TxnHash)
+        };
+    }
 }
 
 public class JoinedLotteryEventHandler : IEventHandler<JoinedLotteryEvent>
 {
-    private readonly IJoinedThingValidationVerifierLotteryEventRepository _joinedValidationVerifierLotteryEventRepository;
+    private readonly IJoinedThingValidationVerifierLotteryEventRepository _lotteryEventRepository;
 
-    public JoinedLotteryEventHandler(
-        IJoinedThingValidationVerifierLotteryEventRepository joinedValidationVerifierLotteryEventRepository
-    )
+    public JoinedLotteryEventHandler(IJoinedThingValidationVerifierLotteryEventRepository lotteryEventRepository)
     {
-        _joinedValidationVerifierLotteryEventRepository = joinedValidationVerifierLotteryEventRepository;
+        _lotteryEventRepository = lotteryEventRepository;
     }
 
     public async Task Handle(JoinedLotteryEvent @event, CancellationToken ct)
@@ -38,8 +47,8 @@ public class JoinedLotteryEventHandler : IEventHandler<JoinedLotteryEvent>
             l1BlockNumber: @event.L1BlockNumber,
             userData: @event.UserData.ToHex(prefix: true)
         );
-        _joinedValidationVerifierLotteryEventRepository.Create(joinedLotteryEvent);
+        _lotteryEventRepository.Create(joinedLotteryEvent);
 
-        await _joinedValidationVerifierLotteryEventRepository.SaveChanges();
+        await _lotteryEventRepository.SaveChanges();
     }
 }

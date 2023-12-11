@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Threading.Channels;
 using System.Runtime.CompilerServices;
+using System.Diagnostics;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
@@ -13,11 +14,12 @@ using Nethereum.Contracts;
 using Nethereum.Hex.HexTypes;
 
 using Domain.Results;
-using Application;
+using Application.Common.Monitoring;
 using Application.Common.Interfaces;
 using Application.Common.Misc;
 using Application.Ethereum.Common.Models.IM;
 using Application.General.Queries.GetContractsStates.QM;
+using static Application.Common.Monitoring.LogMessagePlaceholders;
 
 using Infrastructure.Ethereum.Messages;
 using Infrastructure.Ethereum.TypedData;
@@ -195,6 +197,11 @@ internal class ContractCaller : IContractCaller
 
     public async Task<long> InitThingValidationVerifierLottery(byte[] thingId, byte[] dataHash, byte[] userXorDataHash)
     {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().FullName}.{nameof(InitThingValidationVerifierLottery)}",
+            kind: ActivityKind.Client
+        )!;
+
         var result = await _sendTxn(async () =>
         {
             try
@@ -230,13 +237,14 @@ internal class ContractCaller : IContractCaller
         if (result.IsError)
         {
             _logger.LogWarning(
-                "Error trying to initialize thing {ThingId} validation verifier lottery: {ContractError}", new Guid(thingId), result.Error
+                $"Error trying to initialize thing {ThingId} validation verifier lottery: {result.Error}", new Guid(thingId)
             );
         }
         else
         {
             _logger.LogInformation(
-                "=============== InitThingValidationVerifierLottery: Txn hash {TxnHash} ===============", result.Data!.TransactionHash
+                $"Initialized thing {ThingId} validation verifier lottery.\nTxn hash: {TxnHash}",
+                new Guid(thingId), result.Data!.TransactionHash
             );
         }
 
@@ -275,6 +283,11 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, byte[] data, byte[] userXorData, byte[] hashOfL1EndBlock, List<ulong> winnerIndices
     )
     {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().FullName}.{nameof(CloseThingValidationVerifierLotteryWithSuccess)}",
+            kind: ActivityKind.Client
+        )!;
+
         var result = await _sendTxn(async () =>
         {
             try
@@ -303,19 +316,25 @@ internal class ContractCaller : IContractCaller
         if (result.IsError)
         {
             _logger.LogWarning(
-                "Error trying to close thing {ThingId} validation verifier lottery with success: {ContractError}", new Guid(thingId), result.Error
+                $"Error trying to close thing {ThingId} validation verifier lottery with success: {result.Error}", new Guid(thingId)
             );
         }
         else
         {
             _logger.LogInformation(
-                "=============== CloseThingValidationVerifierLotteryWithSuccess: Txn hash {TxnHash} ===============", result.Data!.TransactionHash
+                $"Closed thing {ThingId} validation verifier lottery with success.\nTxn hash: {TxnHash}",
+                new Guid(thingId), result.Data!.TransactionHash
             );
         }
     }
 
     public async Task CloseThingValidationVerifierLotteryInFailure(byte[] thingId, int joinedNumVerifiers)
     {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().FullName}.{nameof(CloseThingValidationVerifierLotteryInFailure)}",
+            kind: ActivityKind.Client
+        )!;
+
         var result = await _sendTxn(async () =>
         {
             try
@@ -340,13 +359,14 @@ internal class ContractCaller : IContractCaller
         if (result.IsError)
         {
             _logger.LogWarning(
-                "Error trying to close thing {ThingId} validation verifier lottery in failure: {ContractError}", new Guid(thingId), result.Error
+                $"Error trying to close thing {ThingId} validation verifier lottery in failure: {result.Error}", new Guid(thingId)
             );
         }
         else
         {
             _logger.LogInformation(
-                "=============== CloseThingValidationVerifierLotteryInFailure: Txn hash {TxnHash} ===============", result.Data!.TransactionHash
+                $"Closed thing {ThingId} validation verifier lottery in failure.\nTxn hash: {TxnHash}",
+                new Guid(thingId), result.Data!.TransactionHash
             );
         }
     }
@@ -379,6 +399,11 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().FullName}.{nameof(FinalizeThingValidationPollAsUnsettledDueToInsufficientVotingVolume)}",
+            kind: ActivityKind.Client
+        )!;
+
         var result = await _sendTxn(async () =>
         {
             try
@@ -391,7 +416,7 @@ internal class ContractCaller : IContractCaller
                         {
                             ThingId = thingId,
                             VoteAggIpfsCid = voteAggIpfsCid,
-                            Decision = Decision.UnsettledDueToInsufficientVotingVolume,
+                            Decision = Infrastructure.Ethereum.Messages.Decision.UnsettledDueToInsufficientVotingVolume,
                             VerifiersToSlashIndices = verifiersToSlashIndices
                         }
                     );
@@ -405,15 +430,16 @@ internal class ContractCaller : IContractCaller
         if (result.IsError)
         {
             _logger.LogWarning(
-                "Error trying to finalize thing {ThingId} validation poll as unsettled due to insufficient voting volume: {ContractError}",
-                new Guid(thingId),
-                result.Error
+                $"Error trying to finalize thing {ThingId} validation poll as unsettled due to insufficient voting volume: {result.Error}",
+                new Guid(thingId)
             );
         }
         else
         {
             _logger.LogInformation(
-                "=============== FinalizeThingValidationPollAsUnsettled: Txn hash {TxnHash} ===============", result.Data!.TransactionHash
+                $"Finalized thing {ThingId} validation poll as unsettled due to insufficient voting volume.\nTxn hash: {TxnHash}",
+                new Guid(thingId),
+                result.Data!.TransactionHash
             );
         }
     }
@@ -422,6 +448,11 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().FullName}.{nameof(FinalizeThingValidationPollAsUnsettledDueToMajorityThresholdNotReached)}",
+            kind: ActivityKind.Client
+        )!;
+
         var result = await _sendTxn(async () =>
         {
             try
@@ -434,7 +465,7 @@ internal class ContractCaller : IContractCaller
                         {
                             ThingId = thingId,
                             VoteAggIpfsCid = voteAggIpfsCid,
-                            Decision = Decision.UnsettledDueToMajorityThresholdNotReached,
+                            Decision = Infrastructure.Ethereum.Messages.Decision.UnsettledDueToMajorityThresholdNotReached,
                             VerifiersToSlashIndices = verifiersToSlashIndices
                         }
                     );
@@ -448,15 +479,16 @@ internal class ContractCaller : IContractCaller
         if (result.IsError)
         {
             _logger.LogWarning(
-                "Error trying to finalize thing {ThingId} validation poll as unsettled due to majority threshold not reached: {ContractError}",
-                new Guid(thingId),
-                result.Error
+                $"Error trying to finalize thing {ThingId} validation poll as unsettled due to majority threshold not reached: {result.Error}",
+                new Guid(thingId)
             );
         }
         else
         {
             _logger.LogInformation(
-                "=============== FinalizeThingValidationPollAsUnsettled: Txn hash {TxnHash} ===============", result.Data!.TransactionHash
+                $"Finalized thing {ThingId} validation poll as unsettled due to majority threshold not reached.\nTxn hash: {TxnHash}",
+                new Guid(thingId),
+                result.Data!.TransactionHash
             );
         }
     }
@@ -465,6 +497,11 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().FullName}.{nameof(FinalizeThingValidationPollAsAccepted)}",
+            kind: ActivityKind.Client
+        )!;
+
         var result = await _sendTxn(async () =>
         {
             try
@@ -490,15 +527,16 @@ internal class ContractCaller : IContractCaller
         if (result.IsError)
         {
             _logger.LogWarning(
-                "Error trying to finalize thing {ThingId} validation poll as accepted: {ContractError}",
-                new Guid(thingId),
-                result.Error
+                $"Error trying to finalize thing {ThingId} validation poll as accepted: {result.Error}",
+                new Guid(thingId)
             );
         }
         else
         {
             _logger.LogInformation(
-                "=============== FinalizeThingValidationPollAsAccepted: Txn hash {TxnHash} ===============", result.Data!.TransactionHash
+                $"Finalized thing {ThingId} validation poll as accepted.\nTxn hash: {TxnHash}",
+                new Guid(thingId),
+                result.Data!.TransactionHash
             );
         }
     }
@@ -507,6 +545,11 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().FullName}.{nameof(FinalizeThingValidationPollAsSoftDeclined)}",
+            kind: ActivityKind.Client
+        )!;
+
         var result = await _sendTxn(async () =>
         {
             try
@@ -532,15 +575,16 @@ internal class ContractCaller : IContractCaller
         if (result.IsError)
         {
             _logger.LogWarning(
-                "Error trying to finalize thing {ThingId} validation poll as soft declined: {ContractError}",
-                new Guid(thingId),
-                result.Error
+                $"Error trying to finalize thing {ThingId} validation poll as soft declined: {result.Error}",
+                new Guid(thingId)
             );
         }
         else
         {
             _logger.LogInformation(
-                "=============== FinalizeThingValidationPollAsSoftDeclined: Txn hash {TxnHash} ===============", result.Data!.TransactionHash
+                $"Finalized thing {ThingId} validation poll as soft declined.\nTxn hash: {TxnHash}",
+                new Guid(thingId),
+                result.Data!.TransactionHash
             );
         }
     }
@@ -549,6 +593,11 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().FullName}.{nameof(FinalizeThingValidationPollAsHardDeclined)}",
+            kind: ActivityKind.Client
+        )!;
+
         var result = await _sendTxn(async () =>
         {
             try
@@ -574,15 +623,16 @@ internal class ContractCaller : IContractCaller
         if (result.IsError)
         {
             _logger.LogWarning(
-                "Error trying to finalize thing {ThingId} validation poll as hard declined: {ContractError}",
-                new Guid(thingId),
-                result.Error
+                $"Error trying to finalize thing {ThingId} validation poll as hard declined: {result.Error}",
+                new Guid(thingId)
             );
         }
         else
         {
             _logger.LogInformation(
-                "=============== FinalizeThingValidationPollAsHardDeclined: Txn hash {TxnHash} ===============", result.Data!.TransactionHash
+                $"Finalized thing {ThingId} validation poll as hard declined.\nTxn hash: {TxnHash}",
+                new Guid(thingId),
+                result.Data!.TransactionHash
             );
         }
     }
@@ -628,6 +678,11 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, byte[] proposalId, byte[] dataHash, byte[] userXorDataHash
     )
     {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().FullName}.{nameof(InitSettlementProposalAssessmentVerifierLottery)}",
+            kind: ActivityKind.Client
+        )!;
+
         var result = await _sendTxn(async () =>
         {
             try
@@ -653,16 +708,16 @@ internal class ContractCaller : IContractCaller
         if (result.IsError)
         {
             _logger.LogWarning(
-                "Error trying to initialize settlement proposal {ProposalId} (for thing {ThingId}) assessment verifier lottery: {ContractError}",
+                $"Error trying to initialize settlement proposal {SettlementProposalId} (for thing {ThingId}) assessment verifier lottery: {result.Error}",
                 new Guid(proposalId),
-                new Guid(thingId),
-                result.Error
+                new Guid(thingId)
             );
         }
         else
         {
             _logger.LogInformation(
-                "=============== InitSettlementProposalAssessmentVerifierLottery: Txn hash {TxnHash} ===============",
+                $"Initialized settlement proposal {SettlementProposalId} assessment verifier lottery.\nTxn hash: {TxnHash}",
+                new Guid(proposalId),
                 result.Data!.TransactionHash
             );
         }
@@ -713,6 +768,11 @@ internal class ContractCaller : IContractCaller
         byte[] hashOfL1EndBlock, List<ulong> winnerClaimantIndices, List<ulong> winnerIndices
     )
     {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().FullName}.{nameof(CloseSettlementProposalAssessmentVerifierLotteryWithSuccess)}",
+            kind: ActivityKind.Client
+        )!;
+
         var result = await _sendTxn(async () =>
         {
             try
@@ -741,16 +801,16 @@ internal class ContractCaller : IContractCaller
         if (result.IsError)
         {
             _logger.LogWarning(
-                "Error trying to close settlement proposal {ProposalId} (for thing {ThingId}) assessment verifier lottery with success: {ContractError}",
+                $"Error trying to close settlement proposal {SettlementProposalId} (for thing {ThingId}) assessment verifier lottery with success: {result.Error}",
                 new Guid(proposalId),
-                new Guid(thingId),
-                result.Error
+                new Guid(thingId)
             );
         }
         else
         {
             _logger.LogInformation(
-                "=============== CloseSettlementProposalAssessmentVerifierLotteryWithSuccess: Txn hash {TxnHash} ===============",
+                $"Closed settlement proposal {SettlementProposalId} assessment verifier lottery with success.\nTxn hash: {TxnHash}",
+                new Guid(proposalId),
                 result.Data!.TransactionHash
             );
         }
@@ -758,6 +818,11 @@ internal class ContractCaller : IContractCaller
 
     public async Task CloseSettlementProposalAssessmentVerifierLotteryInFailure(byte[] thingId, byte[] proposalId, int joinedNumVerifiers)
     {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().FullName}.{nameof(CloseSettlementProposalAssessmentVerifierLotteryInFailure)}",
+            kind: ActivityKind.Client
+        )!;
+
         var result = await _sendTxn(async () =>
         {
             try
@@ -782,16 +847,16 @@ internal class ContractCaller : IContractCaller
         if (result.IsError)
         {
             _logger.LogWarning(
-                "Error trying to close settlement proposal {ProposalId} (for thing {ThingId}) assessment verifier lottery in failure: {ContractError}",
+                $"Error trying to close settlement proposal {SettlementProposalId} (for thing {ThingId}) assessment verifier lottery in failure: {result.Error}",
                 new Guid(proposalId),
-                new Guid(thingId),
-                result.Error
+                new Guid(thingId)
             );
         }
         else
         {
             _logger.LogInformation(
-                "=============== CloseSettlementProposalAssessmentVerifierLotteryInFailure: Txn hash {TxnHash} ===============",
+                $"Closed settlement proposal {SettlementProposalId} assessment verifier lottery in failure.\nTxn hash: {TxnHash}",
+                new Guid(proposalId),
                 result.Data!.TransactionHash
             );
         }
@@ -837,6 +902,11 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().FullName}.{nameof(FinalizeSettlementProposalAssessmentPollAsUnsettledDueToInsufficientVotingVolume)}",
+            kind: ActivityKind.Client
+        )!;
+
         var result = await _sendTxn(async () =>
         {
             try
@@ -849,7 +919,7 @@ internal class ContractCaller : IContractCaller
                         {
                             ThingProposalId = thingId.Concat(proposalId).ToArray(),
                             VoteAggIpfsCid = voteAggIpfsCid,
-                            Decision = Decision.UnsettledDueToInsufficientVotingVolume,
+                            Decision = Infrastructure.Ethereum.Messages.Decision.UnsettledDueToInsufficientVotingVolume,
                             VerifiersToSlashIndices = verifiersToSlashIndices
                         }
                     );
@@ -863,16 +933,16 @@ internal class ContractCaller : IContractCaller
         if (result.IsError)
         {
             _logger.LogWarning(
-                "Error trying to finalize settlement proposal {ProposalId} (for thing {ThingId}) assessment poll as unsettled due to insufficient voting volume: {ContractError}",
+                $"Error trying to finalize settlement proposal {SettlementProposalId} (for thing {ThingId}) assessment poll as unsettled due to insufficient voting volume: {result.Error}",
                 new Guid(proposalId),
-                new Guid(thingId),
-                result.Error
+                new Guid(thingId)
             );
         }
         else
         {
             _logger.LogInformation(
-                "=============== FinalizeSettlementProposalAssessmentPollAsUnsettled: Txn hash {TxnHash} ===============",
+                $"Finalized settlement proposal {SettlementProposalId} assessment poll as unsettled due to insufficient voting volume.\nTxn hash: {TxnHash}",
+                new Guid(proposalId),
                 result.Data!.TransactionHash
             );
         }
@@ -882,6 +952,11 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().FullName}.{nameof(FinalizeSettlementProposalAssessmentPollAsUnsettledDueToMajorityThresholdNotReached)}",
+            kind: ActivityKind.Client
+        )!;
+
         var result = await _sendTxn(async () =>
         {
             try
@@ -894,7 +969,7 @@ internal class ContractCaller : IContractCaller
                         {
                             ThingProposalId = thingId.Concat(proposalId).ToArray(),
                             VoteAggIpfsCid = voteAggIpfsCid,
-                            Decision = Decision.UnsettledDueToMajorityThresholdNotReached,
+                            Decision = Infrastructure.Ethereum.Messages.Decision.UnsettledDueToMajorityThresholdNotReached,
                             VerifiersToSlashIndices = verifiersToSlashIndices
                         }
                     );
@@ -908,16 +983,16 @@ internal class ContractCaller : IContractCaller
         if (result.IsError)
         {
             _logger.LogWarning(
-                "Error trying to finalize settlement proposal {ProposalId} (for thing {ThingId}) assessment poll as unsettled due to majority threshold not reached: {ContractError}",
+                $"Error trying to finalize settlement proposal {SettlementProposalId} (for thing {ThingId}) assessment poll as unsettled due to majority threshold not reached: {result.Error}",
                 new Guid(proposalId),
-                new Guid(thingId),
-                result.Error
+                new Guid(thingId)
             );
         }
         else
         {
             _logger.LogInformation(
-                "=============== FinalizeSettlementProposalAssessmentPollAsUnsettled: Txn hash {TxnHash} ===============",
+                $"Finalized settlement proposal {SettlementProposalId} assessment poll as unsettled due to majority threshold not reached.\nTxn hash: {TxnHash}",
+                new Guid(proposalId),
                 result.Data!.TransactionHash
             );
         }
@@ -927,6 +1002,11 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().FullName}.{nameof(FinalizeSettlementProposalAssessmentPollAsAccepted)}",
+            kind: ActivityKind.Client
+        )!;
+
         var result = await _sendTxn(async () =>
         {
             try
@@ -952,16 +1032,16 @@ internal class ContractCaller : IContractCaller
         if (result.IsError)
         {
             _logger.LogWarning(
-                "Error trying to finalize settlement proposal {ProposalId} (for thing {ThingId}) assessment poll as accepted: {ContractError}",
+                $"Error trying to finalize settlement proposal {SettlementProposalId} (for thing {ThingId}) assessment poll as accepted: {result.Error}",
                 new Guid(proposalId),
-                new Guid(thingId),
-                result.Error
+                new Guid(thingId)
             );
         }
         else
         {
             _logger.LogInformation(
-                "=============== FinalizeSettlementProposalAssessmentPollAsAccepted: Txn hash {TxnHash} ===============",
+                $"Finalized settlement proposal {SettlementProposalId} assessment poll as accepted.\nTxn hash: {TxnHash}",
+                new Guid(proposalId),
                 result.Data!.TransactionHash
             );
         }
@@ -971,6 +1051,11 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().FullName}.{nameof(FinalizeSettlementProposalAssessmentPollAsSoftDeclined)}",
+            kind: ActivityKind.Client
+        )!;
+
         var result = await _sendTxn(async () =>
         {
             try
@@ -996,16 +1081,16 @@ internal class ContractCaller : IContractCaller
         if (result.IsError)
         {
             _logger.LogWarning(
-                "Error trying to finalize settlement proposal {ProposalId} (for thing {ThingId}) assessment poll as soft declined: {ContractError}",
+                $"Error trying to finalize settlement proposal {SettlementProposalId} (for thing {ThingId}) assessment poll as soft declined: {result.Error}",
                 new Guid(proposalId),
-                new Guid(thingId),
-                result.Error
+                new Guid(thingId)
             );
         }
         else
         {
             _logger.LogInformation(
-                "=============== FinalizeSettlementProposalAssessmentPollAsSoftDeclined: Txn hash {TxnHash} ===============",
+                $"Finalized settlement proposal {SettlementProposalId} assessment poll as soft declined.\nTxn hash: {TxnHash}",
+                new Guid(proposalId),
                 result.Data!.TransactionHash
             );
         }
@@ -1015,6 +1100,11 @@ internal class ContractCaller : IContractCaller
         byte[] thingId, byte[] proposalId, string voteAggIpfsCid, List<ulong> verifiersToSlashIndices
     )
     {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().FullName}.{nameof(FinalizeSettlementProposalAssessmentPollAsHardDeclined)}",
+            kind: ActivityKind.Client
+        )!;
+
         var result = await _sendTxn(async () =>
         {
             try
@@ -1040,16 +1130,16 @@ internal class ContractCaller : IContractCaller
         if (result.IsError)
         {
             _logger.LogWarning(
-                "Error trying to finalize settlement proposal {ProposalId} (for thing {ThingId}) assessment poll as hard declined: {ContractError}",
+                $"Error trying to finalize settlement proposal {SettlementProposalId} (for thing {ThingId}) assessment poll as hard declined: {result.Error}",
                 new Guid(proposalId),
-                new Guid(thingId),
-                result.Error
+                new Guid(thingId)
             );
         }
         else
         {
             _logger.LogInformation(
-                "=============== FinalizeSettlementProposalAssessmentPollAsHardDeclined: Txn hash {TxnHash} ===============",
+                $"Finalized settlement proposal {SettlementProposalId} assessment poll as hard declined.\nTxn hash: {TxnHash}",
+                new Guid(proposalId),
                 result.Data!.TransactionHash
             );
         }

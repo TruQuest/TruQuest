@@ -7,7 +7,7 @@ using KafkaFlow;
 using GoThataway;
 
 using Domain.Aggregates;
-using Application;
+using Application.Common.Monitoring;
 using Application.General.Commands.ArchiveDeadLetter;
 
 namespace Infrastructure.Kafka;

@@ -2,6 +2,8 @@ using Microsoft.Extensions.Logging;
 
 using GoThataway;
 
+using static Application.Common.Monitoring.LogMessagePlaceholders;
+
 namespace Application.Common.Middlewares.Event;
 
 public class ExceptionLoggingMiddleware<TEvent> : IEventMiddleware<TEvent> where TEvent : IEvent
@@ -22,7 +24,7 @@ public class ExceptionLoggingMiddleware<TEvent> : IEventMiddleware<TEvent> where
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error handing event: {Event}", @event.GetType().FullName);
+            _logger.LogError(ex, $"Error trying to handle event: {EventName}", @event.GetType().FullName);
             throw;
             // @@TODO!!: What to do if an exception gets thrown during event processing? It could mean,
             // for example, an ethereum event not being stored in the db (and, consequently, it not

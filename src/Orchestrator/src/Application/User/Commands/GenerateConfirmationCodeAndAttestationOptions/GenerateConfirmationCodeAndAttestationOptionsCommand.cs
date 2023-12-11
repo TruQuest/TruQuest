@@ -13,6 +13,7 @@ using Domain.Errors;
 using Domain.Results;
 
 using Application.Common.Interfaces;
+using static Application.Common.Monitoring.LogMessagePlaceholders;
 
 namespace Application.User.Commands.GenerateConfirmationCodeAndAttestationOptions;
 
@@ -65,6 +66,7 @@ public class GenerateConfirmationCodeAndAttestationOptionsCommandHandler : IRequ
     {
         if (!await _whitelistQueryable.CheckIsWhitelisted(WhitelistEntryType.Email, command.Email))
         {
+            _logger.LogInformation($"User with non-whitelisted email {Email} attempted to initiate sign-up process", command.Email);
             return new()
             {
                 Error = new HandleError("Sorry, the access is currently restricted. Email me at admin@truquest.io to get access")
@@ -74,6 +76,7 @@ public class GenerateConfirmationCodeAndAttestationOptionsCommandHandler : IRequ
         var user = await _userRepository.FindByEmail(command.Email); // @@TODO: Use queryable instead.
         if (user != null)
         {
+            _logger.LogInformation($"User with email {Email} already exists", command.Email);
             return new()
             {
                 Error = new HandleError($"User with email {command.Email} already exists")
@@ -106,6 +109,7 @@ public class GenerateConfirmationCodeAndAttestationOptionsCommandHandler : IRequ
         //     }
         // };
 
+        // @@TODO??: Can this fail?
         var options = _fido2.RequestNewCredential(
             fido2User,
             new(),
@@ -114,7 +118,7 @@ public class GenerateConfirmationCodeAndAttestationOptionsCommandHandler : IRequ
         );
 
         var challenge = Base64Url.Encode(options.Challenge);
-        _memoryCache.Set($"fido2.attestationOptions.{challenge}", options.ToJson()); // @@TODO: Expiration.
+        _memoryCache.Set($"fido2.attestationOptions.{challenge}", options.ToJson(), TimeSpan.FromMinutes(5));
 
         var totp = _totpProvider.GenerateTotpFor(Encoding.UTF8.GetBytes(command.Email));
         await _emailSender.SendConfirmationEmail(

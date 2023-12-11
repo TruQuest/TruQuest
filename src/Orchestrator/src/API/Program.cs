@@ -15,6 +15,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Logs;
 
 using Application;
+using Application.Common.Monitoring;
 using Application.Common.Interfaces;
 using Application.Common.Middlewares.Request;
 using Application.Common.Middlewares.Event;
@@ -71,7 +72,7 @@ public static class WebApplicationBuilderExtension
         Action<ResourceBuilder> configureResource = resource =>
             resource.AddService(
                 serviceName: Telemetry.ServiceName,
-                serviceVersion: configuration["Ethereum:Domain:Version"]!,
+                serviceVersion: configuration["ApplicationVersion"]!,
                 serviceInstanceId: Environment.MachineName
             );
 
@@ -326,7 +327,7 @@ public static class WebApplicationBuilderExtension
         using var scope = app.Services.CreateScope();
         var appDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        var version = app.Configuration["Ethereum:Domain:Version"]!;
+        var version = app.Configuration["ApplicationVersion"]!;
         var contractAddresses = await appDbContext.ContractAddresses
             .AsNoTracking()
             .Where(ca => ca.Version == version)

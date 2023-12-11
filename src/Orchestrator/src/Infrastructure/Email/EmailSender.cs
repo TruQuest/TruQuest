@@ -1,5 +1,6 @@
 using System.Diagnostics;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 
 using MimeKit;
@@ -7,13 +8,15 @@ using MimeKit.Utils;
 using MailKit.Security;
 using MailKit.Net.Smtp;
 
-using Application;
 using Application.Common.Interfaces;
+using Application.Common.Monitoring;
 
 namespace Infrastructure.Email;
 
 internal class EmailSender : IEmailSender
 {
+    private readonly ILogger<EmailSender> _logger;
+
     private readonly string _smtpHost;
     private readonly int _smtpPort;
     private readonly string _smtpUsername;
@@ -21,8 +24,10 @@ internal class EmailSender : IEmailSender
     private readonly string _senderDisplayName;
     private readonly string _senderAddress;
 
-    public EmailSender(IConfiguration configuration)
+    public EmailSender(ILogger<EmailSender> logger, IConfiguration configuration)
     {
+        _logger = logger;
+
         var smtpConfig = configuration.GetSection("Email:Smtp");
         _smtpHost = smtpConfig["Host"]!;
         _smtpPort = smtpConfig.GetValue<int>("Port");
@@ -56,6 +61,8 @@ internal class EmailSender : IEmailSender
         email.Body = builder.ToMessageBody();
 
         await _sendEmail(email);
+
+        _logger.LogInformation($"Sent confirmation email to {LogMessagePlaceholders.Email}", recipient);
     }
 
     public async Task ForwardEmail(string recipient, string filePath)

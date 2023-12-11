@@ -143,9 +143,7 @@ public static class IServiceCollectionExtension
                         {
                             var accessToken = context.Request.Query["access_token"];
                             if (!string.IsNullOrEmpty(accessToken))
-                            {
                                 context.Token = accessToken;
-                            }
                         }
 
                         return Task.CompletedTask;
@@ -160,9 +158,7 @@ public static class IServiceCollectionExtension
                         authenticationContext.User = context.Principal;
 
                         if (context.Request.Path.StartsWithSegments("/api/hub"))
-                        {
                             authenticationContext.Token = context.SecurityToken;
-                        }
 
                         return Task.CompletedTask;
                     },
@@ -238,23 +234,18 @@ public static class IServiceCollectionExtension
         services.AddSingleton<IContractEventListener, ContractEventListener>();
 
         if (environment.EnvironmentName is "Development" or "Testing")
-        {
             services.AddSingleton<IAccountProvider, AccountProviderDev>();
-        }
         else
-        {
             services.AddSingleton<IAccountProvider, AccountProvider>();
-        }
+
         services.AddSingleton<IContractCaller, ContractCaller>();
+
         var network = configuration["Ethereum:Network"]!;
         if (network == "Ganache")
-        {
             services.AddSingleton<IBlockListener, BlockListener>();
-        }
-        else if (network == "OptimismLocal")
-        {
-            services.AddSingleton<IBlockListener, OptimismL1BlockListener>();
-        }
+        else if (network == "OPL2")
+            services.AddSingleton<IBlockListener, OPL1BlockListener>();
+
         services.AddSingleton<IL1BlockchainQueryable, L1BlockchainQueryable>();
         services.AddSingleton<IL2BlockchainQueryable, L2BlockchainQueryable>();
         services.AddSingleton<IEthereumAddressFormatter, EthereumAddressFormatter>();
@@ -296,7 +287,7 @@ public static class IServiceCollectionExtension
                                 .WithWorkersCount(1)
                                 .AddMiddlewares(middlewares =>
                                     middlewares
-                                        .AddDeserializer<MessageSerializer, MessageTypeResolver>()
+                                        .AddDeserializer<MessageSerializer, EventTypeResolver>()
                                         .Add<EventTracingMiddleware>(MiddlewareLifetime.Singleton)
                                         .Add<RetryOrArchiveMiddleware>(MiddlewareLifetime.Singleton)
                                         .Add<EventConsumer>(MiddlewareLifetime.Singleton)
@@ -311,6 +302,7 @@ public static class IServiceCollectionExtension
                                 .WithWorkersCount(1)
                                 .AddMiddlewares(middlewares =>
                                     middlewares
+                                        .AddDeserializer<MessageSerializer, MessageTypeResolver>()
                                         .Add<ResponseTracingMiddleware>(MiddlewareLifetime.Singleton)
                                         .Add<MessageConsumer>(MiddlewareLifetime.Message)
                                 )
@@ -348,9 +340,8 @@ public static class IClusterConfigurationBuilderExtension
     )
     {
         foreach (var topic in topics)
-        {
             builder.CreateTopicIfNotExists(topic.Name, topic.Partitions, topic.ReplicationFactor);
-        }
+
         return builder;
     }
 }

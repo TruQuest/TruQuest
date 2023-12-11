@@ -9,7 +9,7 @@ using Microsoft.Net.Http.Headers;
 
 using Domain.Errors;
 using Domain.Results;
-using Application;
+using Application.Common.Monitoring;
 using Application.Common.Interfaces;
 
 namespace Infrastructure.Files;

@@ -4,6 +4,9 @@ using System.Threading.Channels;
 
 using Microsoft.Playwright;
 
+using Common.Monitoring;
+using static Common.Monitoring.LogMessagePlaceholders;
+
 namespace Services;
 
 internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
@@ -138,7 +141,7 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
         // @@TODO: Reports metrics.
         for (int i = 0; i < _workerQueueSizes.Length; ++i)
         {
-            _logger.LogInformation("Worker {WorkerIndex} Load: {WorkerQueueSize}", i, _workerQueueSizes[i]);
+            _logger.LogInformation($"Worker {WorkerIndex} Load: {WorkerQueueSize}", i, _workerQueueSizes[i]);
         }
     }
 
@@ -188,7 +191,7 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
 
     private async void _processRequests(int workerIndex)
     {
-        _logger.LogInformation("Worker {WorkerIndex}: Awaiting requests...", workerIndex);
+        _logger.LogInformation($"Worker {WorkerIndex}: Awaiting requests...", workerIndex);
 
         var queue = _workerQueues[workerIndex];
         while (true)

@@ -13,6 +13,8 @@ using Application.Common.Interfaces;
 using Application.Common.Misc;
 using Application.Common.Attributes;
 using Application.Common.Models.IM;
+using Application.Common.Monitoring;
+using static Application.Common.Monitoring.LogMessagePlaceholders;
 
 namespace Application.Thing.Commands.CloseVerifierLottery;
 
@@ -24,6 +26,16 @@ public class CloseVerifierLotteryCommand : DeferredTaskCommand, IRequest<VoidRes
     public required byte[] UserXorData { get; init; }
     public required long EndBlock { get; init; }
     public required long TaskId { get; init; }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags(VoidResult _)
+    {
+        return new (string, object?)[]
+        {
+            (ActivityTags.ThingId, ThingId),
+            (ActivityTags.EndBlockNum, EndBlock),
+            (ActivityTags.TaskId, TaskId)
+        };
+    }
 }
 
 public class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifierLotteryCommand, VoidResult>
@@ -64,8 +76,6 @@ public class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifierL
                 new BigInteger(endBlockHash, isUnsigned: true, isBigEndian: true)
             ) % maxNonce
         );
-
-        _logger.LogInformation("Thing {ThingId} Lottery: Orchestrator nonce = {Nonce}", command.ThingId, nonce);
 
         int numVerifiers = await _contractCaller.GetThingValidationVerifierLotteryNumVerifiers();
 
@@ -117,17 +127,24 @@ public class CloseVerifierLotteryCommandHandler : IRequestHandler<CloseVerifierL
                 hashOfL1EndBlock: endBlockHash,
                 winnerIndices: winnerEventsIndexed.Select(e => e.Index).ToList()
             );
+
+            _logger.LogInformation(
+                $"Closed thing {ThingId} validation verifier lottery with success.\n" +
+                $"Orchestrator nonce: {Nonce}\n" +
+                $"Participants: {JoinedNumParticipants}",
+                command.ThingId, nonce, joinedEvents.Count
+            );
         }
         else
         {
+            await _contractCaller.CloseThingValidationVerifierLotteryInFailure(thingId, joinedEvents.Count);
+
             _logger.LogInformation(
-                "Thing {ThingId} Verifier Selection Lottery: Not enough participants.\n" +
-                "Required: {RequiredNumVerifiers}.\n" +
-                "Joined: {JoinedNumVerifiers}.",
+                $"Closed thing {ThingId} validation verifier lottery in failure. Not enough participants.\n" +
+                $"Required: {RequiredNumVerifiers}\n" +
+                $"Joined: {JoinedNumParticipants}",
                 command.ThingId, numVerifiers, joinedEvents.Count
             );
-
-            await _contractCaller.CloseThingValidationVerifierLotteryInFailure(thingId, joinedEvents.Count);
         }
 
         await _taskRepository.SetCompletedStateFor(command.TaskId);

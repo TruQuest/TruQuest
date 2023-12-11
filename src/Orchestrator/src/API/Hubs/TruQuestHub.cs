@@ -7,6 +7,7 @@ using Application.User.Queries.GetWatchListUpdates;
 using Application.User.Commands.SubscribeToUpdates;
 using Application.User.Commands.UnsubscribeFromUpdates;
 using Application.User.Commands.UnsubThenSubToUpdates;
+using static Application.Common.Monitoring.LogMessagePlaceholders;
 
 using API.Hubs.Clients;
 using API.Hubs.Filters;
@@ -27,15 +28,12 @@ public class TruQuestHub : Hub<ITruQuestClient>
     public override async Task OnConnectedAsync()
     {
         await base.OnConnectedAsync();
-        _logger.LogInformation($"{Context.UserIdentifier ?? "Guest"} connected!");
-
         if (Context.UserIdentifier != null)
         {
             var result = await _thataway.Send(new GetWatchListUpdatesQuery { UserId = Context.UserIdentifier });
-            _logger.LogInformation(
-                "User {UserId}: Retrieved {Count} notifications",
-                Context.UserIdentifier,
-                result.Data!.Count()
+            _logger.LogDebug(
+                $"Retrieved {result.Data!.Count()} notifications for user {UserId}",
+                Context.UserIdentifier
             );
 
             await Clients.Caller.OnInitialNotificationRetrieve(result.Data!);

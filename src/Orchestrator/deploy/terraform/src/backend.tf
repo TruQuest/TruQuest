@@ -94,9 +94,10 @@ resource "local_file" "docker_compose" {
   content = templatefile(
     "./eb/docker-compose.tftpl",
     {
+      application_version    = var.application_version_index_to_tag[var.application_version_count - 1]
       hostname               = var.hostname
-      file_archive_image_uri = "${var.file_archive_image_uri}:${var.application_version_index_to_tag[var.application_version_count - 1]}"
-      orchestrator_image_uri = "${var.orchestrator_image_uri}:${var.application_version_index_to_tag[var.application_version_count - 1]}"
+      file_archive_image_uri = var.file_archive_image_uri
+      orchestrator_image_uri = var.orchestrator_image_uri
       db_connection_string   = "Host=${aws_db_instance.main.address};Port=${aws_db_instance.main.port};Database=${var.db_name};Username=${var.db_username};Password=${var.db_password};"
       ethereum_rpc_url       = var.ethereum_rpc_url
       ethereum_chain_id      = var.ethereum_chain_id

@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+
 using GoThataway;
 
 using Domain.Aggregates;
@@ -5,6 +7,8 @@ using Domain.Aggregates;
 using Application.Common.Interfaces;
 using Application.Settlement.Common.Models.IM;
 using Application.Common.Attributes;
+using Application.Common.Monitoring;
+using static Application.Common.Monitoring.LogMessagePlaceholders;
 
 namespace Application.Settlement.Events.AttachmentsArchivingCompleted;
 
@@ -14,22 +18,34 @@ public class AttachmentsArchivingCompletedEvent : IEvent
     public required string SubmitterId { get; init; }
     public required Guid ProposalId { get; init; }
     public required NewSettlementProposalIm Input { get; init; }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags()
+    {
+        return new (string Name, object? Value)[]
+        {
+            (ActivityTags.UserId, SubmitterId),
+            (ActivityTags.SettlementProposalId, ProposalId)
+        };
+    }
 }
 
 public class AttachmentsArchivingCompletedEventHandler : IEventHandler<AttachmentsArchivingCompletedEvent>
 {
+    private readonly ILogger<AttachmentsArchivingCompletedEventHandler> _logger;
     private readonly IClientNotifier _clientNotifier;
     private readonly ISettlementProposalRepository _settlementProposalRepository;
     private readonly ISettlementProposalUpdateRepository _settlementProposalUpdateRepository;
     private readonly IWatchedItemRepository _watchedItemRepository;
 
     public AttachmentsArchivingCompletedEventHandler(
+        ILogger<AttachmentsArchivingCompletedEventHandler> logger,
         IClientNotifier clientNotifier,
         ISettlementProposalRepository settlementProposalRepository,
         ISettlementProposalUpdateRepository settlementProposalUpdateRepository,
         IWatchedItemRepository watchedItemRepository
     )
     {
+        _logger = logger;
         _clientNotifier = clientNotifier;
         _settlementProposalRepository = settlementProposalRepository;
         _settlementProposalUpdateRepository = settlementProposalUpdateRepository;
@@ -83,5 +99,10 @@ public class AttachmentsArchivingCompletedEventHandler : IEventHandler<Attachmen
         await _settlementProposalRepository.SaveChanges();
         await _watchedItemRepository.SaveChanges();
         await _settlementProposalUpdateRepository.SaveChanges();
+
+        _logger.LogInformation(
+            $"Settlement proposal (Id: {SettlementProposalId}, Title: {SettlementProposalTitle}) created",
+            proposal.Id, proposal.Title
+        );
     }
 }

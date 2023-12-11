@@ -5,9 +5,11 @@ using System.Runtime.CompilerServices;
 using OpenTelemetry;
 using OpenTelemetry.Context.Propagation;
 
+namespace Application.Common.Monitoring;
+
 public static class Telemetry
 {
-    public const string ServiceName = "FileArchiveService";
+    public const string ServiceName = "Orchestrator";
     public static readonly ActivitySource ActivitySource = new(ServiceName);
     public static readonly Meter Meter = new(ServiceName);
 

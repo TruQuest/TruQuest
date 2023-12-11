@@ -11,6 +11,8 @@ using Domain.Results;
 using Application.Common.Interfaces;
 using Application.Common.Misc;
 using Application.Common.Models.IM;
+using Application.Common.Monitoring;
+using static Application.Common.Monitoring.LogMessagePlaceholders;
 
 namespace Application.Settlement.Commands.CloseAssessmentPoll;
 
@@ -20,6 +22,17 @@ public class CloseAssessmentPollCommand : DeferredTaskCommand, IRequest<VoidResu
     public required Guid SettlementProposalId { get; init; }
     public required long EndBlock { get; init; }
     public required long TaskId { get; init; }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags(VoidResult _)
+    {
+        return new (string, object?)[]
+        {
+            (ActivityTags.ThingId, ThingId),
+            (ActivityTags.SettlementProposalId, SettlementProposalId),
+            (ActivityTags.EndBlockNum, EndBlock),
+            (ActivityTags.TaskId, TaskId)
+        };
+    }
 }
 
 public class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessmentPollCommand, VoidResult>
@@ -98,6 +111,10 @@ public class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessment
 
         if (result.IsError)
         {
+            _logger.LogWarning(
+                $"Error trying to upload settlement proposal {SettlementProposalId} assessment poll's aggregate vote to IPFS: {result.Error}",
+                command.SettlementProposalId
+            );
             return new()
             {
                 Error = result.Error
@@ -140,33 +157,26 @@ public class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessment
         var verifierAddressesIndexed = verifierAddresses
             .Select((address, i) => (Address: address, Index: i))
             .ToList();
-        _logger.LogDebug("Proposal {ProposalId} Poll: {NumVerifiers} verifiers", command.SettlementProposalId, verifierAddresses.Count());
 
         var notVotedVerifierIndices = verifierAddressesIndexed
             .Where(vi => accountedVotes.SingleOrDefault(v => v.VoterWalletAddress == vi.Address) == null)
             .Select(vi => (ulong)vi.Index)
             .ToList();
 
-        _logger.LogDebug(
-            "Proposal {ProposalId} Poll: {NumVerifiers} not voted",
-            command.SettlementProposalId, notVotedVerifierIndices.Count
-        );
-
         int votingVolumeThresholdPercent = await _contractCaller.GetSettlementProposalAssessmentPollVotingVolumeThresholdPercent();
 
         var requiredVoterCount = Math.Ceiling(votingVolumeThresholdPercent / 100f * verifierAddresses.Count());
-        _logger.LogDebug("Required voter count: {VoterCount}", requiredVoterCount);
-
         if (accountedVotes.Count < requiredVoterCount)
         {
-            _logger.LogInformation(
-                "Proposal {ProposalId} Lottery: Insufficient voting volume. " +
-                "Required at least {RequiredVoterCount} voters out of {NumVerifiers} to vote; Got {ActualVoterCount}",
-                command.SettlementProposalId, requiredVoterCount, verifierAddresses.Count(), accountedVotes.Count
-            );
             await _contractCaller.FinalizeSettlementProposalAssessmentPollAsUnsettledDueToInsufficientVotingVolume(
                 command.ThingId.ToByteArray(), command.SettlementProposalId.ToByteArray(),
                 result.Data!, notVotedVerifierIndices
+            );
+
+            _logger.LogInformation(
+                $"Finalized settlement proposal {SettlementProposalId} assessment poll as unsettled: insufficient voting volume.\n" +
+                $"Required at least {RequiredVoterCount} voters out of {NumVerifiers} to vote, but got {ActualVoterCount}",
+                command.SettlementProposalId, requiredVoterCount, verifierAddresses.Count(), accountedVotes.Count
             );
 
             return VoidResult.Instance;
@@ -177,7 +187,6 @@ public class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessment
         int majorityThresholdPercent = await _contractCaller.GetSettlementProposalAssessmentPollMajorityThresholdPercent();
         Debug.Assert(majorityThresholdPercent >= 51);
         var acceptedDecisionRequiredVoteCount = Math.Ceiling(majorityThresholdPercent / 100f * accountedVotes.Count);
-        _logger.LogDebug("Accepted decision required vote count: {VoteCount}", acceptedDecisionRequiredVoteCount);
 
         var votesGroupedByDecision = accountedVotes.GroupBy(v => v.VoteDecision);
         Debug.Assert(accountedVotes.Count == votesGroupedByDecision.Aggregate(0, (count, group) => count + group.Count()));
@@ -185,14 +194,15 @@ public class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessment
 
         if (acceptedDecision.Count() < acceptedDecisionRequiredVoteCount)
         {
-            _logger.LogInformation(
-                "Proposal {ProposalId} Lottery: Majority threshold not reached. " +
-                "Required at least {RequiredVoteCount} votes out of {TotalVoteCount}; Got {ActualVoteCount}",
-                command.SettlementProposalId, acceptedDecisionRequiredVoteCount, accountedVotes.Count, acceptedDecision.Count()
-            );
             await _contractCaller.FinalizeSettlementProposalAssessmentPollAsUnsettledDueToMajorityThresholdNotReached(
                 command.ThingId.ToByteArray(), command.SettlementProposalId.ToByteArray(),
                 result.Data!, notVotedVerifierIndices
+            );
+
+            _logger.LogInformation(
+                $"Finalized settlement proposal {SettlementProposalId} assessment poll as unsettled: majority threshold not reached.\n" +
+                $"Required at least {RequiredVoteCount} votes out of {TotalVoteCount} to be in concord, but got {ActualVoteCount} at most",
+                command.SettlementProposalId, acceptedDecisionRequiredVoteCount, accountedVotes.Count, acceptedDecision.Count()
             );
 
             return VoidResult.Instance;
@@ -204,17 +214,6 @@ public class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessment
             .Select(v => v.VoterWalletAddress)
             .ToList();
 
-        _logger.LogInformation(
-            "Proposal {ProposalId} Lottery Decision: {Decision}.\n" +
-            "Accept: {NumAcceptedVotes} votes.\n" +
-            "Soft Decline: {NumSoftDeclinedVotes} votes.\n" +
-            "Hard Decline: {NumHardDeclinedVotes} votes.",
-            command.SettlementProposalId, acceptedDecision.Key,
-            votesGroupedByDecision.SingleOrDefault(v => v.Key == AccountedVote.Decision.Accept)?.Count() ?? 0,
-            votesGroupedByDecision.SingleOrDefault(v => v.Key == AccountedVote.Decision.SoftDecline)?.Count() ?? 0,
-            votesGroupedByDecision.SingleOrDefault(v => v.Key == AccountedVote.Decision.HardDecline)?.Count() ?? 0
-        );
-
         var indicesOfVerifiersThatDisagreedWithAcceptedDecisionDirection = verifierAddressesIndexed
             .Where(vi => verifiersThatDisagreedWithAcceptedDecisionDirection
                 .SingleOrDefault(verifier => verifier == vi.Address) != null
@@ -225,11 +224,6 @@ public class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessment
             .Concat(indicesOfVerifiersThatDisagreedWithAcceptedDecisionDirection)
             .Order()
             .ToList();
-
-        _logger.LogInformation(
-            "Proposal {ProposalId} Lottery: Slashing {VerifierCount} verifiers...",
-            command.SettlementProposalId, verifiersToSlashIndices.Count
-        );
 
         if (acceptedDecision.Key == AccountedVote.Decision.Accept)
         {
@@ -260,6 +254,17 @@ public class CloseAssessmentPollCommandHandler : IRequestHandler<CloseAssessment
         }
 
         await _taskRepository.SetCompletedStateFor(command.TaskId);
+
+        _logger.LogInformation(
+            $"Finalized settlement proposal {SettlementProposalId} assessment poll. Decision: {Decision}.\n" +
+            $"Accept: {NumAcceptVotes} vote(s)\n" +
+            $"Soft Decline: {NumSoftDeclineVotes} vote(s)\n" +
+            $"Hard Decline: {NumHardDeclineVotes} vote(s)",
+            command.SettlementProposalId, acceptedDecision.Key,
+            votesGroupedByDecision.SingleOrDefault(v => v.Key == AccountedVote.Decision.Accept)?.Count() ?? 0,
+            votesGroupedByDecision.SingleOrDefault(v => v.Key == AccountedVote.Decision.SoftDecline)?.Count() ?? 0,
+            votesGroupedByDecision.SingleOrDefault(v => v.Key == AccountedVote.Decision.HardDecline)?.Count() ?? 0
+        );
 
         return VoidResult.Instance;
     }

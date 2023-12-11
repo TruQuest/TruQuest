@@ -1,3 +1,9 @@
+using System.Text;
+
+using KafkaFlow;
+
+using Application.Common.Monitoring;
+
 namespace Infrastructure.Kafka.Events;
 
 internal class SettlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent : TraceableEvent
@@ -13,4 +19,13 @@ internal class SettlementProposalAssessmentVerifierLotteryClosedWithSuccessEvent
     // json deserialization fails.
     public List<string> ClaimantWalletAddresses { get; init; } = new();
     public required List<string> WinnerWalletAddresses { get; init; }
+
+    public override IEnumerable<(string Name, object? Value)> GetActivityTags(IMessageContext context)
+    {
+        return new (string Name, object? Value)[]
+        {
+            (ActivityTags.ThingId, Guid.Parse(Encoding.UTF8.GetString((byte[])context.Message.Key))),
+            (ActivityTags.SettlementProposalId, SettlementProposalId)
+        };
+    }
 }

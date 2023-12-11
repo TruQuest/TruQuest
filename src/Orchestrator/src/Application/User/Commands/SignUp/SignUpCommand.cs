@@ -15,6 +15,7 @@ using UserDm = Domain.Aggregates.User;
 using Application.Common.Attributes;
 using Application.Common.Interfaces;
 using Application.User.Common.Models.VM;
+using static Application.Common.Monitoring.LogMessagePlaceholders;
 
 namespace Application.User.Commands.SignUp;
 
@@ -67,6 +68,7 @@ public class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<
     {
         if (!await _whitelistQueryable.CheckIsWhitelisted(WhitelistEntryType.Email, command.Email))
         {
+            _logger.LogInformation($"User with non-whitelisted email {Email} attempted to sign-up", command.Email);
             return new()
             {
                 Error = new HandleError("Sorry, the access is currently restricted. Email me at admin@truquest.io to get access")
@@ -75,7 +77,7 @@ public class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<
 
         if (!_totpProvider.VerifyTotp(Encoding.UTF8.GetBytes(command.Email), command.ConfirmationCode))
         {
-            _logger.LogWarning("Invalid confirmation code");
+            _logger.LogInformation($"User {Email} provided invalid confirmation code", command.Email);
             return new()
             {
                 Error = new HandleError("Invalid confirmation code")
@@ -87,6 +89,7 @@ public class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<
         var cacheKey = $"fido2.attestationOptions.{Base64Url.Encode(attestation.Challenge)}";
         if (!_memoryCache.TryGetValue<string>(cacheKey, out string? optionsJson))
         {
+            _logger.LogInformation($"User {Email} provided attestation for challenge that has expired", command.Email);
             return new()
             {
                 Error = new HandleError("Challenge expired")
@@ -106,7 +109,7 @@ public class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Error trying to make new credential");
+            _logger.LogWarning(ex, $"Error trying to make new credential for user {Email}", command.Email);
             return new()
             {
                 Error = new HandleError("Invalid credential")
@@ -115,8 +118,6 @@ public class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<
 
         var signerAddress = _signer.RecoverFromMessage(command.ConfirmationCode, command.SignatureOverCode);
         var walletAddress = await _contractCaller.GetWalletAddressFor(signerAddress);
-
-        _logger.LogInformation("***** Signer: {Signer}. Wallet: {Wallet} *****", signerAddress, walletAddress);
 
         var user = new UserDm
         {
@@ -148,6 +149,7 @@ public class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<
         var error = await _userRepository.Create(user);
         if (error != null)
         {
+            _logger.LogInformation($"Error trying to create user with email {Email}: {error}", user.Email);
             return new()
             {
                 Error = error
@@ -164,6 +166,7 @@ public class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<
         error = await _userRepository.AddClaimsTo(user, claims);
         if (error != null)
         {
+            _logger.LogInformation($"Error trying to add claims to user with email {Email}: {error}", user.Email);
             return new()
             {
                 Error = error
@@ -171,6 +174,11 @@ public class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<
         }
 
         await _userRepository.SaveChanges();
+
+        _logger.LogInformation(
+            $"User {Email} signed-up.\nSignerAddress: {SignerAddress}\nWalletAddress: {WalletAddress}",
+            command.Email, signerAddress, walletAddress
+        );
 
         return new()
         {

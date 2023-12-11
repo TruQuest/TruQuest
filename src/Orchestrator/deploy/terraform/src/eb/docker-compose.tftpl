@@ -109,10 +109,11 @@ services:
     #     condition: service_healthy
 
   file-archive:
-    image: ${file_archive_image_uri}
+    image: ${file_archive_image_uri}:${application_version}
     environment:
       DOTNET_ENVIRONMENT: Staging
       ASPNETCORE_ENVIRONMENT: Staging
+      ApplicationVersion: ${application_version}
     volumes:
       - '/backend/user_files:/user_files'
     networks:
@@ -123,17 +124,18 @@ services:
       - otel-collector
 
   orchestrator:
-    image: ${orchestrator_image_uri}
+    image: ${orchestrator_image_uri}:${application_version}
     environment:
       ASPNETCORE_ENVIRONMENT: Staging
       ASPNETCORE_URLS: 'http://+:5223'
+      ApplicationVersion: ${application_version}
       ConnectionStrings__Postgres: ${db_connection_string}
       Fido__ServerDomain: ${hostname}
       Fido__Origins__0: 'https://${hostname}'
-      Ethereum__Networks__OptimismLocal__URL: ${ethereum_rpc_url}
-      Ethereum__Networks__OptimismLocal__ChainId: ${ethereum_chain_id}
-      Ethereum__Networks__OptimismLocal__SettlementNetwork__URL: ${ethereum_l1_rpc_url}
-      Ethereum__Networks__OptimismLocal__SettlementNetwork__ChainId: ${ethereum_l1_chain_id}
+      Ethereum__Networks__OPL2__URL: ${ethereum_rpc_url}
+      Ethereum__Networks__OPL2__ChainId: ${ethereum_chain_id}
+      Ethereum__Networks__OPL2__SettlementNetwork__URL: ${ethereum_l1_rpc_url}
+      Ethereum__Networks__OPL2__SettlementNetwork__ChainId: ${ethereum_l1_chain_id}
     env_file:
       - .env
     volumes:

@@ -3,6 +3,9 @@ using System.Text;
 
 using KafkaFlow;
 
+using Common.Monitoring;
+using Messages.Requests;
+
 internal class TelemetryMiddleware : IMessageMiddleware
 {
     public async Task Invoke(IMessageContext context, MiddlewareDelegate next)
@@ -17,11 +20,14 @@ internal class TelemetryMiddleware : IMessageMiddleware
         );
 
         using var span = Telemetry.StartActivity(
-            "Messages.Requests." + Encoding.UTF8.GetString(context.Headers["trq.requestType"]),
+            context.Message.Value.GetType().FullName!,
             parentContext: parentSpanContext,
             kind: ActivityKind.Consumer
-        );
+        )!;
 
         await next(context);
+
+        var message = (BaseRequest)context.Message.Value;
+        foreach (var tag in message.GetActivityTags()) span.AddTag(tag.Name, tag.Value);
     }
 }

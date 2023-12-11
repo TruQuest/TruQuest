@@ -10,12 +10,12 @@ using Infrastructure.Ethereum.Messages;
 
 namespace Infrastructure.Ethereum;
 
-internal class OptimismL1BlockListener : IBlockListener
+internal class OPL1BlockListener : IBlockListener
 {
     private readonly Web3 _web3;
     private readonly string _l1BlockContractAddress;
 
-    public OptimismL1BlockListener(IConfiguration configuration)
+    public OPL1BlockListener(IConfiguration configuration)
     {
         var network = configuration["Ethereum:Network"]!;
         _web3 = new Web3(configuration[$"Ethereum:Networks:{network}:URL"]);
@@ -28,7 +28,7 @@ internal class OptimismL1BlockListener : IBlockListener
         while (!stoppingToken.IsCancellationRequested)
         {
             var blockNumber = (long)await _web3.Eth
-                .GetContractQueryHandler<GetOptimismL1BlockNumberMessage>()
+                .GetContractQueryHandler<GetOPL1BlockNumberMessage>()
                 .QueryAsync<ulong>(_l1BlockContractAddress, new());
 
             // @@NOTE: Don't need block confirmations here since in BlockTracker we wait til

@@ -15,6 +15,7 @@ using Application.Common.Attributes;
 using Application.Common.Interfaces;
 using Application.User.Common.Models.VM;
 using Application.Common.Misc;
+using static Application.Common.Monitoring.LogMessagePlaceholders;
 
 namespace Application.User.Commands.SignInWithEthereum;
 
@@ -71,6 +72,7 @@ public class SignInWithEthereumCommandHandler :
         var signerAddress = _signer.RecoverFromMessage(command.Message, command.Signature);
         if (!await _whitelistQueryable.CheckIsWhitelisted(WhitelistEntryType.SignerAddress, signerAddress))
         {
+            _logger.LogInformation($"User with non-whitelisted signer address {SignerAddress} attempted to sign-in", signerAddress);
             return new()
             {
                 Error = new HandleError("Sorry, the access is currently restricted. Email me at admin@truquest.io to get access")
@@ -80,7 +82,7 @@ public class SignInWithEthereumCommandHandler :
         var nonce = _nonceRegex.Match(command.Message).Groups[1].Value;
         if (!_totpProvider.VerifyTotp(signerAddress.HexToByteArray(), nonce))
         {
-            _logger.LogWarning("Invalid nonce");
+            _logger.LogInformation($"User {SignerAddress} provided invalid nonce", signerAddress);
             return new()
             {
                 Error = new HandleError("Invalid nonce")
@@ -88,13 +90,16 @@ public class SignInWithEthereumCommandHandler :
         }
 
         var walletAddress = await _contractCaller.GetWalletAddressFor(signerAddress);
-        _logger.LogInformation("***** Signer: {Signer}. Wallet: {Wallet} *****", signerAddress, walletAddress);
 
         IList<Claim> claims;
         var user = await _userRepository.FindByUsername(signerAddress);
         if (user != null)
         {
             claims = await _userRepository.GetClaimsExcept(user.Id, new[] { "key_share" });
+            _logger.LogInformation(
+                $"User signed-in-with-ethereum.\nSignerAddress: {SignerAddress}\nWalletAddress: {WalletAddress}",
+                signerAddress, walletAddress
+            );
         }
         else
         {
@@ -108,6 +113,7 @@ public class SignInWithEthereumCommandHandler :
             var error = await _userRepository.Create(user);
             if (error != null)
             {
+                _logger.LogInformation($"Error trying to create user with signer address {SignerAddress}: {error}", signerAddress);
                 return new()
                 {
                     Error = error
@@ -123,6 +129,7 @@ public class SignInWithEthereumCommandHandler :
             error = await _userRepository.AddClaimsTo(user, claims);
             if (error != null)
             {
+                _logger.LogInformation($"Error trying to add claims to user with signer address {SignerAddress}: {error}", signerAddress);
                 return new()
                 {
                     Error = error
@@ -130,6 +137,11 @@ public class SignInWithEthereumCommandHandler :
             }
 
             await _userRepository.SaveChanges();
+
+            _logger.LogInformation(
+                $"User signed-in-with-ethereum for the first time.\nSignerAddress: {SignerAddress}\nWalletAddress: {WalletAddress}",
+                signerAddress, walletAddress
+            );
         }
 
         return new()

@@ -11,10 +11,11 @@ using Domain.Results;
 
 using Application.Common.Attributes;
 using Application.Common.Interfaces;
+using static Application.Common.Monitoring.LogMessagePlaceholders;
 
 namespace Application.User.Commands.VerifyAssertionAndGetKeyShare;
 
-[RequireAuthorization]
+[RequireAuthorization] // @@TODO??: ExecuteInTxn?
 public class VerifyAssertionAndGetKeyShareCommand : IRequest<HandleResult<string>>
 {
     public required AuthenticatorAssertionRawResponse RawAssertion { get; init; }
@@ -53,6 +54,7 @@ public class VerifyAssertionAndGetKeyShareCommandHandler : IRequestHandler<
         var cacheKey = $"fido2.assertionOptions.{Base64Url.Encode(assertion.Challenge)}";
         if (!_memoryCache.TryGetValue<string>(cacheKey, out string? optionsJson))
         {
+            _logger.LogInformation($"User {UserId} provided assertion for challenge that has expired", _currentPrincipal.Id!);
             return new()
             {
                 Error = new HandleError("Challenge expired")
@@ -65,6 +67,7 @@ public class VerifyAssertionAndGetKeyShareCommandHandler : IRequestHandler<
         var credential = await _userRepository.GetAuthCredential(Base64Url.Encode(command.RawAssertion.Id));
         if (credential == null)
         {
+            _logger.LogInformation($"User {UserId} provided assertion using non-existent credential", _currentPrincipal.Id!);
             return new()
             {
                 Error = new HandleError("The specified credential not found")
@@ -73,6 +76,10 @@ public class VerifyAssertionAndGetKeyShareCommandHandler : IRequestHandler<
 
         if (_currentPrincipal.Id! != credential.UserId)
         {
+            _logger.LogWarning(
+                $"Current principal {UserId} and credential's owner {CredentialOwnerId} do not match",
+                _currentPrincipal.Id!, credential.UserId
+            );
             return new()
             {
                 Error = new HandleError("Invalid request")
@@ -97,7 +104,7 @@ public class VerifyAssertionAndGetKeyShareCommandHandler : IRequestHandler<
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Error trying to make assertion");
+            _logger.LogWarning(ex, $"Error trying to make assertion for user {UserId}", _currentPrincipal.Id!);
             return new()
             {
                 Error = new HandleError("Invalid credential")

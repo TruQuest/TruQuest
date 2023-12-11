@@ -32,6 +32,7 @@ public class GetNonceForSiweQueryHandler : IRequestHandler<GetNonceForSiweQuery,
 
     public Task<HandleResult<string>> Handle(GetNonceForSiweQuery query, CancellationToken ct)
     {
+        // @@TODO??: Check whitelisted?
         var nonce = _totpProvider.GenerateTotpFor(query.Address.HexToByteArray());
         return Task.FromResult(new HandleResult<string> { Data = nonce });
     }

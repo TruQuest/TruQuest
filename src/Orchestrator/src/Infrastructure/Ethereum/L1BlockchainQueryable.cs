@@ -16,13 +16,9 @@ internal class L1BlockchainQueryable : IL1BlockchainQueryable
     {
         var network = configuration["Ethereum:Network"]!;
         if (network == "Ganache")
-        {
             _web3 = new Web3(configuration[$"Ethereum:Networks:{network}:URL"]);
-        }
         else
-        {
             _web3 = new Web3(configuration[$"Ethereum:Networks:{network}:SettlementNetwork:URL"]);
-        }
     }
 
     public async Task<byte[]> GetBlockHash(long blockNumber)

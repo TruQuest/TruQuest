@@ -10,6 +10,8 @@ using Domain.Results;
 using Application.Common.Interfaces;
 using Application.Common.Attributes;
 using Application.Common.Misc;
+using Application.Common.Monitoring;
+using static Application.Common.Monitoring.LogMessagePlaceholders;
 
 namespace Application.Thing.Commands.InitVerifierLottery;
 
@@ -17,6 +19,14 @@ namespace Application.Thing.Commands.InitVerifierLottery;
 public class InitVerifierLotteryCommand : IRequest<VoidResult>
 {
     public required Guid ThingId { get; init; }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags(VoidResult _)
+    {
+        return new (string, object?)[]
+        {
+            (ActivityTags.ThingId, ThingId)
+        };
+    }
 }
 
 public class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierLotteryCommand, VoidResult>
@@ -45,57 +55,63 @@ public class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierLot
     public async Task<VoidResult> Handle(InitVerifierLotteryCommand command, CancellationToken ct)
     {
         var state = await _thingRepository.GetStateFor(command.ThingId);
-        if (state == ThingState.AwaitingFunding)
+        if (state != ThingState.AwaitingFunding)
         {
-            var data = RandomNumberGenerator.GetBytes(32);
-            var userXorData = RandomNumberGenerator.GetBytes(32);
-            // @@TODO!!: Compute on the server!
-            var dataHash = await _contractCaller.ComputeHashForThingValidationVerifierLottery(data);
-            var userXorDataHash = await _contractCaller.ComputeHashForThingValidationVerifierLottery(userXorData);
-
-            long lotteryInitBlockNumber = await _contractCaller.InitThingValidationVerifierLottery(
-                command.ThingId.ToByteArray(), dataHash, userXorDataHash
-            );
-
-            // @@NOTE: In a theoretical situation when something glitches and two identical Init commands get dispatched one
-            // after another, even though the above call will fail for the second command, we still should continue executing
-            // the code below, since we don't know which transaction Postgres will keep and which one it will discard due to
-            // serialization failure.
-
-            _logger.LogInformation("Thing {ThingId} Lottery Init Block: {BlockNum}", command.ThingId, lotteryInitBlockNumber);
-
-            int lotteryDurationBlocks = await _contractCaller.GetThingValidationVerifierLotteryDurationBlocks();
-
-            var task = new DeferredTask(
-                type: TaskType.CloseThingValidationVerifierLottery,
-                scheduledBlockNumber: lotteryInitBlockNumber + lotteryDurationBlocks + 1
-            );
-            var payload = new Dictionary<string, object>()
-            {
-                ["thingId"] = command.ThingId,
-                ["data"] = data.ToHex(prefix: true),
-                ["userXorData"] = userXorData.ToHex(prefix: true)
-            };
-
-            Telemetry.CurrentActivity!.AddTraceparentTo(payload);
-            task.SetPayload(payload);
-
-            _taskRepository.Create(task);
-
-            await _thingRepository.UpdateStateFor(command.ThingId, ThingState.FundedAndVerifierLotteryInitiated);
-
-            await _thingUpdateRepository.AddOrUpdate(new ThingUpdate(
-                thingId: command.ThingId,
-                category: ThingUpdateCategory.General,
-                updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                title: "Promise funded",
-                details: "Verifier selection lottery initiated"
-            ));
-
-            await _taskRepository.SaveChanges();
-            await _thingRepository.SaveChanges();
-            await _thingUpdateRepository.SaveChanges();
+            _logger.LogWarning($"Trying to initialize an already initialized thing {ThingId} validation verifier lottery", command.ThingId);
+            return VoidResult.Instance;
         }
+
+        var data = RandomNumberGenerator.GetBytes(32);
+        var userXorData = RandomNumberGenerator.GetBytes(32);
+        // @@TODO!!: Compute on the server!
+        var dataHash = await _contractCaller.ComputeHashForThingValidationVerifierLottery(data);
+        var userXorDataHash = await _contractCaller.ComputeHashForThingValidationVerifierLottery(userXorData);
+
+        long lotteryInitBlockNumber = await _contractCaller.InitThingValidationVerifierLottery(
+            command.ThingId.ToByteArray(), dataHash, userXorDataHash
+        );
+
+        // @@NOTE: In a theoretical situation when something glitches and two identical Init commands get dispatched one
+        // after another, even though the above call will fail for the second command, we still should continue executing
+        // the code below, since we don't know which transaction Postgres will keep and which one it will discard due to
+        // serialization failure.
+
+        int lotteryDurationBlocks = await _contractCaller.GetThingValidationVerifierLotteryDurationBlocks();
+
+        var task = new DeferredTask(
+            type: TaskType.CloseThingValidationVerifierLottery,
+            scheduledBlockNumber: lotteryInitBlockNumber + lotteryDurationBlocks + 1
+        );
+        var payload = new Dictionary<string, object>()
+        {
+            ["thingId"] = command.ThingId,
+            ["data"] = data.ToHex(prefix: true),
+            ["userXorData"] = userXorData.ToHex(prefix: true)
+        };
+
+        Telemetry.CurrentActivity!.AddTraceparentTo(payload);
+        task.SetPayload(payload);
+
+        _taskRepository.Create(task);
+
+        await _thingRepository.UpdateStateFor(command.ThingId, ThingState.FundedAndVerifierLotteryInitiated);
+
+        await _thingUpdateRepository.AddOrUpdate(new ThingUpdate(
+            thingId: command.ThingId,
+            category: ThingUpdateCategory.General,
+            updateTimestamp: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            title: "Promise funded",
+            details: "Verifier selection lottery initiated"
+        ));
+
+        await _taskRepository.SaveChanges();
+        await _thingRepository.SaveChanges();
+        await _thingUpdateRepository.SaveChanges();
+
+        _logger.LogInformation(
+            $"Initialized thing {ThingId} validation verifier lottery.\nInit block: {InitBlockNum}\nEnd block: {EndBlockNum}",
+            command.ThingId, lotteryInitBlockNumber, lotteryInitBlockNumber + lotteryDurationBlocks
+        );
 
         return VoidResult.Instance;
     }

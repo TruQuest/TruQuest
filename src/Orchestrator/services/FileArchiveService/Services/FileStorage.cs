@@ -1,6 +1,9 @@
 using System.Diagnostics;
 using System.Text.Json;
 
+using Common.Monitoring;
+using static Common.Monitoring.LogMessagePlaceholders;
+
 namespace Services;
 
 internal class FileStorage : IFileStorage
@@ -84,7 +87,7 @@ internal class FileStorage : IFileStorage
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Error trying to unpin folder {IpfsCid} from IPFS", folderIpfsCid);
+            _logger.LogWarning(ex, $"Error trying to unpin folder {IpfsCid} from IPFS", folderIpfsCid);
         }
     }
 }

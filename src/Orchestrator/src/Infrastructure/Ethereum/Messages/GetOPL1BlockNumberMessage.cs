@@ -4,4 +4,4 @@ using Nethereum.Contracts;
 namespace Infrastructure.Ethereum.Messages;
 
 [Function("number", "uint64")]
-public class GetOptimismL1BlockNumberMessage : FunctionMessage { }
+public class GetOPL1BlockNumberMessage : FunctionMessage { }

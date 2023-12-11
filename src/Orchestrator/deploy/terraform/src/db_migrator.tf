@@ -22,7 +22,7 @@ resource "docker_container" "db_migrator" {
   env = [
     "DOTNET_ENVIRONMENT=Staging",
     "USE_TUNNEL=0",
-    "APPLICATION_VERSION=${var.application_version_index_to_tag[var.application_version_count - 1]}",
+    "ApplicationVersion=${var.application_version_index_to_tag[var.application_version_count - 1]}",
     # "BASTION_HOST=${aws_elastic_beanstalk_environment.backend_staging.cname}", # should tunnel through a separate bastion host
     # "BASTION_USER=ec2-user",
     # "BASTION_PRIVATE_KEY=${var.bastion_private_key}",

@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+
 using GoThataway;
 
 using Domain.Aggregates;
@@ -6,6 +8,8 @@ using ThingDm = Domain.Aggregates.Thing;
 using Application.Thing.Common.Models.IM;
 using Application.Common.Interfaces;
 using Application.Common.Attributes;
+using Application.Common.Monitoring;
+using static Application.Common.Monitoring.LogMessagePlaceholders;
 
 namespace Application.Thing.Events.AttachmentsArchivingCompleted;
 
@@ -15,22 +19,34 @@ public class AttachmentsArchivingCompletedEvent : IEvent
     public required string SubmitterId { get; init; }
     public required Guid ThingId { get; init; }
     public required NewThingIm Input { get; init; }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags()
+    {
+        return new (string Name, object? Value)[]
+        {
+            (ActivityTags.UserId, SubmitterId),
+            (ActivityTags.ThingId, ThingId)
+        };
+    }
 }
 
 public class AttachmentsArchivingCompletedEventHandler : IEventHandler<AttachmentsArchivingCompletedEvent>
 {
+    private readonly ILogger<AttachmentsArchivingCompletedEventHandler> _logger;
     private readonly IClientNotifier _clientNotifier;
     private readonly IThingRepository _thingRepository;
     private readonly IThingUpdateRepository _thingUpdateRepository;
     private readonly IWatchedItemRepository _watchedItemRepository;
 
     public AttachmentsArchivingCompletedEventHandler(
+        ILogger<AttachmentsArchivingCompletedEventHandler> logger,
         IClientNotifier clientNotifier,
         IThingRepository thingRepository,
         IThingUpdateRepository thingUpdateRepository,
         IWatchedItemRepository watchedItemRepository
     )
     {
+        _logger = logger;
         _clientNotifier = clientNotifier;
         _thingRepository = thingRepository;
         _thingUpdateRepository = thingUpdateRepository;
@@ -84,5 +100,7 @@ public class AttachmentsArchivingCompletedEventHandler : IEventHandler<Attachmen
         await _thingRepository.SaveChanges();
         await _watchedItemRepository.SaveChanges();
         await _thingUpdateRepository.SaveChanges();
+
+        _logger.LogInformation($"Thing (Id: {ThingId}, Title: {ThingTitle}) created", thing.Id, thing.Title);
     }
 }

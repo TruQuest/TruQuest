@@ -4,7 +4,7 @@ using Npgsql;
 using NpgsqlTypes;
 
 using Domain.Aggregates;
-using Application;
+using Application.Common.Monitoring;
 
 namespace Infrastructure.Persistence.Repositories;
 

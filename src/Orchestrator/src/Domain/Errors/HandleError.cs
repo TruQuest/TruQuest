@@ -8,4 +8,6 @@ public class HandleError
     {
         Message = message;
     }
+
+    public override string ToString() => Message;
 }

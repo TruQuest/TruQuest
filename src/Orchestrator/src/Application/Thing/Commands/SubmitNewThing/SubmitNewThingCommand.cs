@@ -9,6 +9,8 @@ using Domain.Errors;
 
 using Application.Common.Attributes;
 using Application.Common.Interfaces;
+using Application.Common.Monitoring;
+using static Application.Common.Monitoring.LogMessagePlaceholders;
 
 namespace Application.Thing.Commands.SubmitNewThing;
 
@@ -16,6 +18,14 @@ namespace Application.Thing.Commands.SubmitNewThing;
 public class SubmitNewThingCommand : IRequest<HandleResult<SubmitNewThingResultVm>>
 {
     public required Guid ThingId { get; init; }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags(HandleResult<SubmitNewThingResultVm> _)
+    {
+        return new (string, object?)[]
+        {
+            (ActivityTags.ThingId, ThingId)
+        };
+    }
 }
 
 internal class Validator : AbstractValidator<SubmitNewThingCommand>
@@ -54,9 +64,9 @@ public class SubmitNewThingCommandHandler : IRequestHandler<SubmitNewThingComman
     )
     {
         var thing = await _thingRepository.FindById(command.ThingId);
-        // @@??: Should check using resource-based authorization?
         if (thing.SubmitterId != _currentPrincipal.Id!)
         {
+            _logger.LogWarning($"User {UserId} trying to submit a thing {ThingId} created by another", _currentPrincipal.Id!, thing.Id);
             return new()
             {
                 Error = new HandleError("Invalid request")
@@ -64,6 +74,7 @@ public class SubmitNewThingCommandHandler : IRequestHandler<SubmitNewThingComman
         }
         if (thing.State != ThingState.Draft)
         {
+            _logger.LogWarning($"User {UserId} trying to submit an already submitted thing {ThingId}", _currentPrincipal.Id!, thing.Id);
             return new()
             {
                 Error = new HandleError("Already submitted")
@@ -82,6 +93,8 @@ public class SubmitNewThingCommandHandler : IRequestHandler<SubmitNewThingComman
 
         await _thingRepository.SaveChanges();
         await _thingUpdateRepository.SaveChanges();
+
+        _logger.LogInformation($"Thing {ThingId} successfully submitted", thing.Id);
 
         return new()
         {

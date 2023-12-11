@@ -4,6 +4,7 @@ using Domain.Aggregates.Events;
 
 using Application.Common.Interfaces;
 using Application.Ethereum.Common.Models.IM;
+using Application.Common.Monitoring;
 
 namespace Application.Ethereum.Events.SettlementProposalAssessmentVerifierLottery.ClaimedLotterySpot;
 
@@ -13,20 +14,30 @@ public class ClaimedLotterySpotEvent : BaseContractEvent, IEvent
     public required byte[] SettlementProposalId { get; init; }
     public required string WalletAddress { get; init; }
     public required long L1BlockNumber { get; init; }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags()
+    {
+        return new (string Name, object? Value)[]
+        {
+            (ActivityTags.SettlementProposalId, new Guid(SettlementProposalId)),
+            (ActivityTags.WalletAddress, WalletAddress),
+            (ActivityTags.TxnHash, TxnHash)
+        };
+    }
 }
 
 public class ClaimedLotterySpotEventHandler : IEventHandler<ClaimedLotterySpotEvent>
 {
     private readonly IThingValidationVerifierLotteryEventQueryable _thingLotteryEventQueryable;
-    private readonly IClaimedSettlementProposalAssessmentVerifierLotterySpotEventRepository _claimedAssessmentVerifierLotterySpotEventRepository;
+    private readonly IClaimedSettlementProposalAssessmentVerifierLotterySpotEventRepository _proposalLotteryEventRepository;
 
     public ClaimedLotterySpotEventHandler(
         IThingValidationVerifierLotteryEventQueryable thingLotteryEventQueryable,
-        IClaimedSettlementProposalAssessmentVerifierLotterySpotEventRepository claimedAssessmentVerifierLotterySpotEventRepository
+        IClaimedSettlementProposalAssessmentVerifierLotterySpotEventRepository proposalLotteryEventRepository
     )
     {
         _thingLotteryEventQueryable = thingLotteryEventQueryable;
-        _claimedAssessmentVerifierLotterySpotEventRepository = claimedAssessmentVerifierLotterySpotEventRepository;
+        _proposalLotteryEventRepository = proposalLotteryEventRepository;
     }
 
     public async Task Handle(ClaimedLotterySpotEvent @event, CancellationToken ct)
@@ -45,8 +56,8 @@ public class ClaimedLotterySpotEventHandler : IEventHandler<ClaimedLotterySpotEv
             l1BlockNumber: @event.L1BlockNumber,
             userData: userData
         );
-        _claimedAssessmentVerifierLotterySpotEventRepository.Create(spotClaimedEvent);
+        _proposalLotteryEventRepository.Create(spotClaimedEvent);
 
-        await _claimedAssessmentVerifierLotterySpotEventRepository.SaveChanges();
+        await _proposalLotteryEventRepository.SaveChanges();
     }
 }

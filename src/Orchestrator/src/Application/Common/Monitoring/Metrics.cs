@@ -4,7 +4,7 @@ using System.Reflection;
 using Application.Common.Attributes;
 using Application.Common.Interfaces;
 
-namespace Application;
+namespace Application.Common.Monitoring;
 
 public static class Metrics
 {

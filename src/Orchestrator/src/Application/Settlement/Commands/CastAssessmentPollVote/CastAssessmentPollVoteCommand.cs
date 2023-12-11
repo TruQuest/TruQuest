@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+
 using GoThataway;
 using FluentValidation;
 
@@ -7,6 +9,8 @@ using Domain.Aggregates;
 
 using Application.Common.Attributes;
 using Application.Common.Interfaces;
+using Application.Common.Monitoring;
+using static Application.Common.Monitoring.LogMessagePlaceholders;
 
 namespace Application.Settlement.Commands.CastAssessmentPollVote;
 
@@ -15,6 +19,21 @@ public class CastAssessmentPollVoteCommand : IRequest<HandleResult<string>>
 {
     public required NewSettlementProposalAssessmentPollVoteIm Input { get; init; }
     public required string Signature { get; init; }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags(HandleResult<string> response)
+    {
+        if (response.Error == null)
+        {
+            return new (string Name, object? Value)[]
+            {
+                (ActivityTags.SettlementProposalId, Input.SettlementProposalId),
+                (ActivityTags.Decision, Input.Decision.GetString()),
+                (ActivityTags.IpfsCid, response.Data!)
+            };
+        }
+
+        return Enumerable.Empty<(string Name, object? Value)>();
+    }
 }
 
 internal class Validator : AbstractValidator<CastAssessmentPollVoteCommand>
@@ -28,6 +47,7 @@ internal class Validator : AbstractValidator<CastAssessmentPollVoteCommand>
 
 public class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssessmentPollVoteCommand, HandleResult<string>>
 {
+    private readonly ILogger<CastAssessmentPollVoteCommandHandler> _logger;
     private readonly ICurrentPrincipal _currentPrincipal;
     private readonly ISigner _signer;
     private readonly IContractCaller _contractCaller;
@@ -36,6 +56,7 @@ public class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssessme
     private readonly ISettlementProposalAssessmentPollVoteRepository _voteRepository;
 
     public CastAssessmentPollVoteCommandHandler(
+        ILogger<CastAssessmentPollVoteCommandHandler> logger,
         ICurrentPrincipal currentPrincipal,
         ISigner signer,
         IContractCaller contractCaller,
@@ -44,6 +65,7 @@ public class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssessme
         ISettlementProposalAssessmentPollVoteRepository voteRepository
     )
     {
+        _logger = logger;
         _currentPrincipal = currentPrincipal;
         _signer = signer;
         _contractCaller = contractCaller;
@@ -62,6 +84,10 @@ public class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssessme
 
         if (!isDesignatedVerifier)
         {
+            _logger.LogWarning(
+                $"User {UserId} trying to cast a vote for settlement proposal {SettlementProposalId}, even though he is not a designated verifier",
+                _currentPrincipal.Id!, command.Input.SettlementProposalId.Value
+            );
             return new()
             {
                 Error = new HandleError(
@@ -74,6 +100,10 @@ public class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssessme
 
         if (_currentPrincipal.SignerAddress != recoveredAddress)
         {
+            _logger.LogWarning(
+                $"Current principal's signer address {SignerAddress} and recovered address {RecoveredAddress} do not match",
+                _currentPrincipal.SignerAddress!, recoveredAddress
+            );
             return new()
             {
                 Error = new HandleError("Invalid request")
@@ -87,6 +117,10 @@ public class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssessme
             .ToUniversalTime();
         if ((DateTimeOffset.UtcNow - castedAtUtc).Duration() > TimeSpan.FromMinutes(5)) // @@TODO: Config.
         {
+            _logger.LogInformation(
+                $"Settlement proposal {SettlementProposalId} assessment poll vote's timestamp does not approximately match server time",
+                command.Input.SettlementProposalId.Value
+            );
             return new()
             {
                 Error = new HandleError("Invalid timestamp. Check your system clock")
@@ -112,6 +146,10 @@ public class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssessme
         });
         if (uploadResult.IsError)
         {
+            _logger.LogWarning(
+                $"Error trying to upload settlement proposal {SettlementProposalId} assessment poll vote to IPFS: {uploadResult.Error}",
+                command.Input.SettlementProposalId.Value
+            );
             return new()
             {
                 Error = uploadResult.Error
@@ -131,6 +169,11 @@ public class CastAssessmentPollVoteCommandHandler : IRequestHandler<CastAssessme
         _voteRepository.Create(vote);
 
         await _voteRepository.SaveChanges();
+
+        _logger.LogInformation(
+            $"User {UserId} casted an off-chain settlement proposal {SettlementProposalId} assessment poll vote",
+            _currentPrincipal.Id!, command.Input.SettlementProposalId.Value
+        );
 
         return new()
         {

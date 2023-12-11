@@ -9,6 +9,7 @@ using Application.Common.Attributes;
 using Application.Common.Interfaces;
 using Application.Common.Messages.Requests;
 using Application.Common.Models.IM;
+using Application.Common.Monitoring;
 
 namespace Application.Thing.Commands.CreateNewThingDraft;
 
@@ -16,6 +17,20 @@ namespace Application.Thing.Commands.CreateNewThingDraft;
 public class CreateNewThingDraftCommand : ManuallyBoundInputModelCommand, IRequest<HandleResult<Guid>>
 {
     public CreateNewThingDraftCommand(HttpRequest request) : base(request, new NewThingIm()) { }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags(HandleResult<Guid> response)
+    {
+        if (response.Error == null)
+        {
+            return new (string, object?)[]
+            {
+                (ActivityTags.SubjectId, ((NewThingIm)Input).SubjectId),
+                (ActivityTags.ThingId, response.Data)
+            };
+        }
+
+        return Enumerable.Empty<(string, object?)>();
+    }
 }
 
 public class CreateNewThingDraftCommandHandler : IRequestHandler<CreateNewThingDraftCommand, HandleResult<Guid>>

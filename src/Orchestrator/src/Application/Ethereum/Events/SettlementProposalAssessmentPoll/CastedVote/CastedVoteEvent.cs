@@ -4,6 +4,7 @@ using Domain.Aggregates;
 using Domain.Aggregates.Events;
 
 using Application.Ethereum.Common.Models.IM;
+using Application.Common.Monitoring;
 
 namespace Application.Ethereum.Events.SettlementProposalAssessmentPoll.CastedVote;
 
@@ -15,17 +16,26 @@ public class CastedVoteEvent : BaseContractEvent, IEvent
     public required int Vote { get; init; }
     public string? Reason { get; init; }
     public required long L1BlockNumber { get; init; }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags()
+    {
+        return new (string Name, object? Value)[]
+        {
+            (ActivityTags.SettlementProposalId, new Guid(SettlementProposalId)),
+            (ActivityTags.WalletAddress, WalletAddress),
+            (ActivityTags.Vote, ((SettlementProposalAssessmentPollVote.VoteDecision)Vote).ToString()),
+            (ActivityTags.TxnHash, TxnHash)
+        };
+    }
 }
 
 public class CastedVoteEventHandler : IEventHandler<CastedVoteEvent>
 {
-    private readonly ICastedSettlementProposalAssessmentPollVoteEventRepository _castedAssessmentPollVoteEventRepository;
+    private readonly ICastedSettlementProposalAssessmentPollVoteEventRepository _voteEventRepository;
 
-    public CastedVoteEventHandler(
-        ICastedSettlementProposalAssessmentPollVoteEventRepository castedAssessmentPollVoteEventRepository
-    )
+    public CastedVoteEventHandler(ICastedSettlementProposalAssessmentPollVoteEventRepository voteEventRepository)
     {
-        _castedAssessmentPollVoteEventRepository = castedAssessmentPollVoteEventRepository;
+        _voteEventRepository = voteEventRepository;
     }
 
     public async Task Handle(CastedVoteEvent @event, CancellationToken ct)
@@ -42,8 +52,8 @@ public class CastedVoteEventHandler : IEventHandler<CastedVoteEvent>
             reason: @event.Reason,
             l1BlockNumber: @event.L1BlockNumber
         );
-        _castedAssessmentPollVoteEventRepository.Create(castedVoteEvent);
+        _voteEventRepository.Create(castedVoteEvent);
 
-        await _castedAssessmentPollVoteEventRepository.SaveChanges();
+        await _voteEventRepository.SaveChanges();
     }
 }

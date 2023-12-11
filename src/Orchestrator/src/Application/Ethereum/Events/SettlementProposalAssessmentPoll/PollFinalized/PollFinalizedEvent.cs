@@ -2,6 +2,7 @@ using GoThataway;
 
 using Domain.Aggregates.Events;
 
+using Application.Common.Monitoring;
 using Application.Ethereum.Common.Models.IM;
 
 namespace Application.Ethereum.Events.SettlementProposalAssessmentPoll.PollFinalized;
@@ -14,6 +15,16 @@ public class PollFinalizedEvent : BaseContractEvent, IEvent
     public required string VoteAggIpfsCid { get; init; }
     public required List<string> RewardedVerifiers { get; init; }
     public required List<string> SlashedVerifiers { get; init; }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags()
+    {
+        return new (string Name, object? Value)[]
+        {
+            (ActivityTags.ThingId, new Guid(ThingId)),
+            (ActivityTags.SettlementProposalId, new Guid(SettlementProposalId)),
+            (ActivityTags.TxnHash, TxnHash)
+        };
+    }
 }
 
 public class PollFinalizedEventHandler : IEventHandler<PollFinalizedEvent>

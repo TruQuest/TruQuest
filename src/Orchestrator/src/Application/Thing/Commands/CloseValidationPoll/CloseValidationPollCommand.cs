@@ -12,6 +12,8 @@ using Application.Common.Interfaces;
 using Application.Thing.Commands.CastValidationPollVote;
 using Application.Common.Misc;
 using Application.Common.Models.IM;
+using Application.Common.Monitoring;
+using static Application.Common.Monitoring.LogMessagePlaceholders;
 
 namespace Application.Thing.Commands.CloseValidationPoll;
 
@@ -20,6 +22,16 @@ public class CloseValidationPollCommand : DeferredTaskCommand, IRequest<VoidResu
     public required Guid ThingId { get; init; }
     public required long EndBlock { get; init; }
     public required long TaskId { get; init; }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags(VoidResult _)
+    {
+        return new (string, object?)[]
+        {
+            (ActivityTags.ThingId, ThingId),
+            (ActivityTags.EndBlockNum, EndBlock),
+            (ActivityTags.TaskId, TaskId)
+        };
+    }
 }
 
 public class CloseValidationPollCommandHandler : IRequestHandler<CloseValidationPollCommand, VoidResult>
@@ -94,6 +106,7 @@ public class CloseValidationPollCommandHandler : IRequestHandler<CloseValidation
 
         if (result.IsError)
         {
+            _logger.LogWarning($"Error trying to upload thing {ThingId} validation poll's aggregate vote to IPFS: {result.Error}", command.ThingId);
             return new()
             {
                 Error = result.Error
@@ -133,32 +146,25 @@ public class CloseValidationPollCommandHandler : IRequestHandler<CloseValidation
         var verifierAddressesIndexed = verifierAddresses
             .Select((address, i) => (Address: address, Index: i))
             .ToList();
-        _logger.LogDebug("Thing {ThingId} Poll: {NumVerifiers} verifiers", command.ThingId, verifierAddresses.Count());
 
         var notVotedVerifierIndices = verifierAddressesIndexed
             .Where(vi => accountedVotes.SingleOrDefault(v => v.VoterWalletAddress == vi.Address) == null)
             .Select(vi => (ulong)vi.Index)
             .ToList();
 
-        _logger.LogDebug(
-            "Thing {ThingId} Poll: {NumVerifiers} not voted",
-            command.ThingId, notVotedVerifierIndices.Count
-        );
-
         int votingVolumeThresholdPercent = await _contractCaller.GetThingValidationPollVotingVolumeThresholdPercent();
 
         var requiredVoterCount = Math.Ceiling(votingVolumeThresholdPercent / 100f * verifierAddresses.Count());
-        _logger.LogDebug("Required voter count: {VoterCount}", requiredVoterCount);
-
         if (accountedVotes.Count < requiredVoterCount)
         {
-            _logger.LogInformation(
-                "Thing {ThingId} Lottery: Insufficient voting volume. " +
-                "Required at least {RequiredVoterCount} voters out of {NumVerifiers} to vote; Got {ActualVoterCount}",
-                command.ThingId, requiredVoterCount, verifierAddresses.Count(), accountedVotes.Count
-            );
             await _contractCaller.FinalizeThingValidationPollAsUnsettledDueToInsufficientVotingVolume(
                 command.ThingId.ToByteArray(), result.Data!, notVotedVerifierIndices
+            );
+
+            _logger.LogInformation(
+                $"Finalized thing {ThingId} validation poll as unsettled: insufficient voting volume.\n" +
+                $"Required at least {RequiredVoterCount} voters out of {NumVerifiers} to vote, but got {ActualVoterCount}",
+                command.ThingId, requiredVoterCount, verifierAddresses.Count(), accountedVotes.Count
             );
 
             return VoidResult.Instance;
@@ -169,7 +175,6 @@ public class CloseValidationPollCommandHandler : IRequestHandler<CloseValidation
         int majorityThresholdPercent = await _contractCaller.GetThingValidationPollMajorityThresholdPercent();
         Debug.Assert(majorityThresholdPercent >= 51);
         var acceptedDecisionRequiredVoteCount = Math.Ceiling(majorityThresholdPercent / 100f * accountedVotes.Count);
-        _logger.LogDebug("Accepted decision required vote count: {VoteCount}", acceptedDecisionRequiredVoteCount);
 
         var votesGroupedByDecision = accountedVotes.GroupBy(v => v.VoteDecision);
         Debug.Assert(accountedVotes.Count == votesGroupedByDecision.Aggregate(0, (count, group) => count + group.Count()));
@@ -177,13 +182,14 @@ public class CloseValidationPollCommandHandler : IRequestHandler<CloseValidation
 
         if (acceptedDecision.Count() < acceptedDecisionRequiredVoteCount)
         {
-            _logger.LogInformation(
-                "Thing {ThingId} Lottery: Majority threshold not reached. " +
-                "Required at least {RequiredVoteCount} votes out of {TotalVoteCount}; Got {ActualVoteCount}",
-                command.ThingId, acceptedDecisionRequiredVoteCount, accountedVotes.Count, acceptedDecision.Count()
-            );
             await _contractCaller.FinalizeThingValidationPollAsUnsettledDueToMajorityThresholdNotReached(
                 command.ThingId.ToByteArray(), result.Data!, notVotedVerifierIndices
+            );
+
+            _logger.LogInformation(
+                $"Finalized thing {ThingId} validaton poll as unsettled: majority threshold not reached.\n" +
+                $"Required at least {RequiredVoteCount} votes out of {TotalVoteCount} to be in concord, but got {ActualVoteCount} at most",
+                command.ThingId, acceptedDecisionRequiredVoteCount, accountedVotes.Count, acceptedDecision.Count()
             );
 
             return VoidResult.Instance;
@@ -200,17 +206,6 @@ public class CloseValidationPollCommandHandler : IRequestHandler<CloseValidation
             .Select(v => v.VoterWalletAddress)
             .ToList();
 
-        _logger.LogInformation(
-            "Thing {ThingId} Lottery Decision: {Decision}.\n" +
-            "Accept: {NumAcceptedVotes} votes.\n" +
-            "Soft Decline: {NumSoftDeclinedVotes} votes.\n" +
-            "Hard Decline: {NumHardDeclinedVotes} votes.",
-            command.ThingId, acceptedDecision.Key,
-            votesGroupedByDecision.SingleOrDefault(v => v.Key == AccountedVote.Decision.Accept)?.Count() ?? 0,
-            votesGroupedByDecision.SingleOrDefault(v => v.Key == AccountedVote.Decision.SoftDecline)?.Count() ?? 0,
-            votesGroupedByDecision.SingleOrDefault(v => v.Key == AccountedVote.Decision.HardDecline)?.Count() ?? 0
-        );
-
         var indicesOfVerifiersThatDisagreedWithAcceptedDecisionDirection = verifierAddressesIndexed
             .Where(vi => verifiersThatDisagreedWithAcceptedDecisionDirection
                 .SingleOrDefault(verifier => verifier == vi.Address) != null
@@ -221,11 +216,6 @@ public class CloseValidationPollCommandHandler : IRequestHandler<CloseValidation
             .Concat(indicesOfVerifiersThatDisagreedWithAcceptedDecisionDirection)
             .Order()
             .ToList();
-
-        _logger.LogInformation(
-            "Thing {ThingId} Lottery: Slashing {VerifierCount} verifiers...",
-            command.ThingId, verifiersToSlashIndices.Count
-        );
 
         if (acceptedDecision.Key == AccountedVote.Decision.Accept)
         {
@@ -255,6 +245,17 @@ public class CloseValidationPollCommandHandler : IRequestHandler<CloseValidation
         }
 
         await _taskRepository.SetCompletedStateFor(command.TaskId);
+
+        _logger.LogInformation(
+            $"Finalized thing {ThingId} validation poll. Decision: {Decision}.\n" +
+            $"Accept: {NumAcceptVotes} vote(s)\n" +
+            $"Soft Decline: {NumSoftDeclineVotes} vote(s)\n" +
+            $"Hard Decline: {NumHardDeclineVotes} vote(s)",
+            command.ThingId, acceptedDecision.Key,
+            votesGroupedByDecision.SingleOrDefault(v => v.Key == AccountedVote.Decision.Accept)?.Count() ?? 0,
+            votesGroupedByDecision.SingleOrDefault(v => v.Key == AccountedVote.Decision.SoftDecline)?.Count() ?? 0,
+            votesGroupedByDecision.SingleOrDefault(v => v.Key == AccountedVote.Decision.HardDecline)?.Count() ?? 0
+        );
 
         return VoidResult.Instance;
     }

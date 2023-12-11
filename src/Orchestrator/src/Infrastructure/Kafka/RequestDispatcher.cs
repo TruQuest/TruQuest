@@ -8,8 +8,9 @@ using Microsoft.Extensions.Configuration;
 
 using KafkaFlow;
 
-using Application;
+using Application.Common.Monitoring;
 using Application.Common.Interfaces;
+using Application.Common.Messages.Requests;
 
 namespace Infrastructure.Kafka;
 
@@ -52,9 +53,7 @@ internal class RequestDispatcher : IRequestDispatcher
             await foreach (var response in _responseStream.ReadAllAsync(ct))
             {
                 if (_requestIdToResponseReceivedTcs.TryRemove(response.RequestId, out TaskCompletionSource<object>? tcs))
-                {
                     tcs.SetResult(response.Message);
-                }
             }
         }
         catch (OperationCanceledException)
@@ -66,6 +65,9 @@ internal class RequestDispatcher : IRequestDispatcher
     public async Task<object> GetResult(object request, string? requestId = null)
     {
         using var span = Telemetry.StartActivity(request.GetType().FullName!, kind: ActivityKind.Producer)!;
+
+        foreach (var tag in ((BaseRequest)request).GetActivityTags())
+            span.AddTag(tag.Name, tag.Value);
 
         requestId ??= Guid.NewGuid().ToString();
         var messageKey = Guid.NewGuid().ToString();
@@ -98,6 +100,9 @@ internal class RequestDispatcher : IRequestDispatcher
     public async Task Send(object request, string? requestId = null)
     {
         using var span = Telemetry.StartActivity(request.GetType().FullName!, kind: ActivityKind.Producer)!;
+
+        foreach (var tag in ((BaseRequest)request).GetActivityTags())
+            span.AddTag(tag.Name, tag.Value);
 
         requestId ??= Guid.NewGuid().ToString();
         var messageKey = Guid.NewGuid().ToString();

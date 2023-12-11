@@ -9,6 +9,8 @@ using Domain.Errors;
 
 using Application.Common.Attributes;
 using Application.Common.Interfaces;
+using Application.Common.Monitoring;
+using static Application.Common.Monitoring.LogMessagePlaceholders;
 
 namespace Application.Settlement.Commands.SubmitNewSettlementProposal;
 
@@ -16,6 +18,14 @@ namespace Application.Settlement.Commands.SubmitNewSettlementProposal;
 public class SubmitNewSettlementProposalCommand : IRequest<HandleResult<SubmitNewSettlementProposalResultVm>>
 {
     public required Guid ProposalId { get; init; }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags(HandleResult<SubmitNewSettlementProposalResultVm> _)
+    {
+        return new (string, object?)[]
+        {
+            (ActivityTags.SettlementProposalId, ProposalId)
+        };
+    }
 }
 
 internal class Validator : AbstractValidator<SubmitNewSettlementProposalCommand>
@@ -60,6 +70,10 @@ public class SubmitNewSettlementProposalCommandHandler :
         var proposal = await _settlementProposalRepository.FindById(command.ProposalId);
         if (proposal.SubmitterId != _currentPrincipal.Id!)
         {
+            _logger.LogWarning(
+                $"User {UserId} trying to submit a settlement proposal {SettlementProposalId} created by another",
+                _currentPrincipal.Id!, proposal.Id
+            );
             return new()
             {
                 Error = new HandleError("Invalid request")
@@ -67,6 +81,10 @@ public class SubmitNewSettlementProposalCommandHandler :
         }
         if (proposal.State != SettlementProposalState.Draft)
         {
+            _logger.LogWarning(
+                $"User {UserId} trying to submit an already submitted settlement proposal {SettlementProposalId}",
+                _currentPrincipal.Id!, proposal.Id
+            );
             return new()
             {
                 Error = new HandleError("Already submitted")
@@ -76,6 +94,10 @@ public class SubmitNewSettlementProposalCommandHandler :
         var thingState = await _thingQueryable.GetStateFor(proposal.ThingId);
         if (thingState != ThingState.AwaitingSettlement)
         {
+            _logger.LogWarning(
+                $"User {UserId} trying to submit a settlement proposal {SettlementProposalId} for a thing {ThingId} that is not awaiting settlement",
+                _currentPrincipal.Id!, proposal.Id, proposal.ThingId
+            );
             return new()
             {
                 Error = new HandleError("The specified promise is not awaiting settlement")
@@ -94,6 +116,8 @@ public class SubmitNewSettlementProposalCommandHandler :
 
         await _settlementProposalRepository.SaveChanges();
         await _settlementProposalUpdateRepository.SaveChanges();
+
+        _logger.LogInformation($"Settlement proposal {SettlementProposalId} successfully submitted", proposal.Id);
 
         return new()
         {

@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Domain.Results;
 using Domain.Errors;
 using Application.Common.Interfaces;
-using Application;
+using Application.Common.Monitoring;
 
 namespace Infrastructure.Files;
 
@@ -45,6 +45,7 @@ internal class FileStorage : IFileStorage
             }
         };
 
+        // @@TODO: Try-catch
         var response = await client.SendAsync(request);
         if (!response.IsSuccessStatusCode)
         {

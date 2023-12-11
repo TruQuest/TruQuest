@@ -4,6 +4,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 using GoThataway;
 
+using Application.Common.Monitoring;
 using Application.Ethereum.Common.Models.IM;
 using Application.Ethereum.Events.BlockMined;
 
@@ -36,6 +37,7 @@ public class TracingMiddleware<TEvent> : IEventMiddleware<TEvent> where TEvent :
             }
 
             await next();
+            foreach (var tag in @event.GetActivityTags()) span?.AddTag(tag.Name, tag.Value);
         }
         finally
         {

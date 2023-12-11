@@ -2,6 +2,7 @@ using GoThataway;
 
 using Domain.Aggregates.Events;
 
+using Application.Common.Monitoring;
 using Application.Ethereum.Common.Models.IM;
 
 namespace Application.Ethereum.Events.ThingFunded;
@@ -11,6 +12,16 @@ public class ThingFundedEvent : BaseContractEvent, IEvent
     public required byte[] ThingId { get; init; }
     public required string WalletAddress { get; init; }
     public required decimal Stake { get; init; }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags()
+    {
+        return new (string Name, object? Value)[]
+        {
+            (ActivityTags.ThingId, new Guid(ThingId)),
+            (ActivityTags.WalletAddress, WalletAddress),
+            (ActivityTags.TxnHash, TxnHash)
+        };
+    }
 }
 
 public class ThingFundedEventHandler : IEventHandler<ThingFundedEvent>

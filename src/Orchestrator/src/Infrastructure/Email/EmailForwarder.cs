@@ -49,12 +49,12 @@ internal class EmailForwarder : IEmailForwarder
 
         if (!emailKeys.Any()) return;
 
-        _logger.LogInformation("There are {EmailCount} emails in the bucket", emailKeys.Count);
+        _logger.LogInformation($"There are {emailKeys.Count} emails in the bucket");
 
         var transferUtil = new TransferUtility(_amazonS3); // @@??: Can this be injected instead?
         var downloadPath = Path.Combine(_path, "truquest-email");
 
-        _logger.LogInformation("Downloading the contents of the bucket to {DownloadPath}", downloadPath);
+        _logger.LogInformation($"Downloading the contents of the bucket to {downloadPath}");
 
         int fileCountBefore = 0;
         if (Directory.Exists(downloadPath))
@@ -76,12 +76,12 @@ internal class EmailForwarder : IEmailForwarder
             var files = Directory.GetFiles(downloadPath);
             if (files.Length > fileCountBefore)
             {
-                _logger.LogInformation($"Successfully downloaded {files.Length - fileCountBefore} email(-s)");
+                _logger.LogInformation($"Successfully downloaded {files.Length - fileCountBefore} email(s)");
 
                 foreach (var file in files)
                 {
                     await _emailSender.ForwardEmail("tru9quest@gmail.com", file);
-                    _logger.LogInformation("Successfully forwarded email: {EmailKey}", Path.GetFileName(file));
+                    _logger.LogInformation($"Successfully forwarded email: {Path.GetFileName(file)}");
                 }
 
                 var deleteResponse = await _amazonS3.DeleteObjectsAsync(new DeleteObjectsRequest
@@ -94,9 +94,7 @@ internal class EmailForwarder : IEmailForwarder
                 {
                     foreach (var error in deleteResponse.DeleteErrors)
                     {
-                        _logger.LogError(
-                            "Error deleting email {EmailKey} from the bucket: [{ErrorCode}] {ErrorMessage}", error.Key, error.Code, error.Message
-                        );
+                        _logger.LogError($"Error deleting email {error.Key} from the bucket: [{error.Code}] {error.Message}");
                     }
                 }
                 else

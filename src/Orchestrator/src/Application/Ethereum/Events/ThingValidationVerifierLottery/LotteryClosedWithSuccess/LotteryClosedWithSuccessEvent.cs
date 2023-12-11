@@ -3,6 +3,7 @@ using GoThataway;
 using Domain.Aggregates.Events;
 
 using Application.Common.Misc;
+using Application.Common.Monitoring;
 using Application.Ethereum.Common.Models.IM;
 
 namespace Application.Ethereum.Events.ThingValidationVerifierLottery.LotteryClosedWithSuccess;
@@ -16,15 +17,22 @@ public class LotteryClosedWithSuccessEvent : BaseContractEvent, IEvent
     public required byte[] HashOfL1EndBlock { get; init; }
     public required long Nonce { get; init; }
     public required List<string> WinnerWalletAddresses { get; init; }
+
+    public IEnumerable<(string Name, object? Value)> GetActivityTags()
+    {
+        return new (string Name, object? Value)[]
+        {
+            (ActivityTags.ThingId, new Guid(ThingId)),
+            (ActivityTags.TxnHash, TxnHash)
+        };
+    }
 }
 
 public class LotteryClosedWithSuccessEventHandler : IEventHandler<LotteryClosedWithSuccessEvent>
 {
     private readonly IActionableThingRelatedEventRepository _actionableThingRelatedEventRepository;
 
-    public LotteryClosedWithSuccessEventHandler(
-        IActionableThingRelatedEventRepository actionableThingRelatedEventRepository
-    )
+    public LotteryClosedWithSuccessEventHandler(IActionableThingRelatedEventRepository actionableThingRelatedEventRepository)
     {
         _actionableThingRelatedEventRepository = actionableThingRelatedEventRepository;
     }

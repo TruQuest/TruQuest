@@ -9,7 +9,7 @@ using Npgsql;
 
 using Domain.Results;
 using Domain.Errors;
-using Application;
+using Application.Common.Monitoring;
 using Application.Common.Attributes;
 
 namespace Infrastructure.Persistence;

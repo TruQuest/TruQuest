@@ -2,6 +2,7 @@ using GoThataway;
 
 using Application.Common.Interfaces;
 using Application.Ethereum.Events.BlockMined;
+using static Application.Common.Monitoring.LogMessagePlaceholders;
 
 namespace API.BackgroundServices;
 
@@ -29,7 +30,7 @@ public class BlockTracker : BackgroundService
     {
         await foreach (long latestL1block in _blockListener.GetNext(stoppingToken))
         {
-            _logger.LogInformation("Latest confirmed L1 block: {BlockNumber}", latestL1block);
+            _logger.LogDebug($"Latest confirmed L1 block: {BlockNum}", latestL1block);
 
             using var scope = _serviceProvider.CreateScope();
             var blockProgressQueryable = scope.ServiceProvider.GetRequiredService<IBlockProgressQueryable>();
@@ -54,8 +55,8 @@ public class BlockTracker : BackgroundService
                 }
                 else
                 {
-                    _logger.LogWarning(
-                        "Waiting for all L2 events corresponding to L1 block {BlockNumber} to be processed",
+                    _logger.LogInformation(
+                        $"Waiting for all L2 events corresponding to L1 block {BlockNum} to be processed",
                         latestL1block
                     );
                     await Task.Delay(TimeSpan.FromSeconds(2)); // @@TODO: Config.
