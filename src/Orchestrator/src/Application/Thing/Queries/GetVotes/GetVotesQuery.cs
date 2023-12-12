@@ -36,10 +36,7 @@ public class GetVotesQueryHandler : IRequestHandler<GetVotesQuery, HandleResult<
 
     public async Task<HandleResult<GetVotesResultVm>> Handle(GetVotesQuery query, CancellationToken ct)
     {
-        var (pollResult, votes) = await _validationPollVoteQueryable.GetAllFor(
-            query.ThingId, _currentPrincipal.Id
-        );
-
+        var (pollResult, votes) = await _validationPollVoteQueryable.GetAllFor(query.ThingId, _currentPrincipal.Id);
         return new()
         {
             Data = new()

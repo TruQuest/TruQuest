@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 
 using GoThataway;
 
@@ -32,13 +33,18 @@ public class InitVerifierLotteryCommand : IRequest<VoidResult>
 public class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierLotteryCommand, VoidResult>
 {
     private readonly ILogger<InitVerifierLotteryCommandHandler> _logger;
+    private readonly IKeccakHasher _keccakHasher;
     private readonly IThingRepository _thingRepository;
     private readonly IThingUpdateRepository _thingUpdateRepository;
     private readonly ITaskRepository _taskRepository;
     private readonly IContractCaller _contractCaller;
 
+    private readonly string _lotteryAddress;
+
     public InitVerifierLotteryCommandHandler(
         ILogger<InitVerifierLotteryCommandHandler> logger,
+        IConfiguration configuration,
+        IKeccakHasher keccakHasher,
         IThingRepository thingRepository,
         IThingUpdateRepository thingUpdateRepository,
         ITaskRepository taskRepository,
@@ -46,10 +52,14 @@ public class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierLot
     )
     {
         _logger = logger;
+        _keccakHasher = keccakHasher;
         _thingRepository = thingRepository;
         _thingUpdateRepository = thingUpdateRepository;
         _taskRepository = taskRepository;
         _contractCaller = contractCaller;
+
+        var network = configuration["Ethereum:Network"]!;
+        _lotteryAddress = configuration[$"Ethereum:Contracts:{network}:ThingValidationVerifierLottery:Address"]!;
     }
 
     public async Task<VoidResult> Handle(InitVerifierLotteryCommand command, CancellationToken ct)
@@ -63,9 +73,8 @@ public class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierLot
 
         var data = RandomNumberGenerator.GetBytes(32);
         var userXorData = RandomNumberGenerator.GetBytes(32);
-        // @@TODO!!: Compute on the server!
-        var dataHash = await _contractCaller.ComputeHashForThingValidationVerifierLottery(data);
-        var userXorDataHash = await _contractCaller.ComputeHashForThingValidationVerifierLottery(userXorData);
+        var dataHash = _keccakHasher.Hash(_lotteryAddress, data.ToHex(prefix: true));
+        var userXorDataHash = _keccakHasher.Hash(_lotteryAddress, userXorData.ToHex(prefix: true));
 
         long lotteryInitBlockNumber = await _contractCaller.InitThingValidationVerifierLottery(
             command.ThingId.ToByteArray(), dataHash, userXorDataHash

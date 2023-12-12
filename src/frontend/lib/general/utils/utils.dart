@@ -43,7 +43,7 @@ Error wrapDioException(DioException ex) {
     case DioExceptionType.badCertificate:
       logger.warning('Connection error', ex);
       return ServerError(message: 'Bad certificate');
-    case DioExceptionType.unknown:
+    case DioExceptionType.badResponse:
       var response = ex.response!;
       var statusCode = response.statusCode!;
       if (statusCode >= 500) {
@@ -236,7 +236,7 @@ Future<bool> multiStageFlow(
       ctx.approveUserOpTask.complete(userOp);
       if (userOp == null) proceededTilTheEndWithoutErrors = false;
     } else if (stageResult is UserOperationError) {
-      // @@NOTE: WalletActionDeclinedError is wrapped into this.
+      // @@NOTE: WalletActionDeclinedError and GetCredentialError are wrapped into this.
       BotToast.showText(text: stageResult.message);
       proceededTilTheEndWithoutErrors = false;
     } else if (stageResult is FailedMultiStageExecutionError) {

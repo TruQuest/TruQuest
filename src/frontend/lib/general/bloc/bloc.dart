@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'actions.dart';
 import '../utils/logger.dart';
+import '../errors/error.dart';
 import '../errors/validation_error.dart';
 import '../services/toast_messenger.dart';
 import '../contexts/multi_stage_operation_context.dart';
@@ -18,7 +19,8 @@ abstract class Bloc<TAction extends Action> {
       try {
         await onAction(action);
       } catch (e) {
-        logger.warning('Error trying to handle action: $action');
+        logger.warning('Error trying to handle action $action: $e');
+        toastMessenger.add(e is Error ? e.toString() : 'Sorry, something went wrong. This shouldn\'t have happened');
       }
     });
   }
@@ -43,7 +45,8 @@ abstract class Bloc<TAction extends Action> {
     try {
       return await handleExecute(action) as TResult;
     } catch (e) {
-      logger.warning('Error trying to handle action: $action');
+      logger.warning('Error trying to handle action $action: $e');
+      toastMessenger.add(e is Error ? e.toString() : 'Sorry, something went wrong. This shouldn\'t have happened');
       return null;
     }
   }
@@ -59,9 +62,12 @@ abstract class Bloc<TAction extends Action> {
     }
 
     try {
+      // @@BUG: Flutter Web issue: 'catch' block is never executed, just hangs when exception is thrown.
+      // See: https://github.com/dart-lang/sdk/issues/47764
       yield* handleMultiStageExecute(action, ctx);
     } catch (e) {
-      logger.warning('Error trying to handle action: $action');
+      logger.warning('Error trying to handle action $action: $e');
+      toastMessenger.add(e is Error ? e.toString() : 'Sorry, something went wrong. This shouldn\'t have happened');
       yield const FailedMultiStageExecutionError();
     }
   }

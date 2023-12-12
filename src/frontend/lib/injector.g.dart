@@ -25,7 +25,8 @@ class _$Injector extends Injector {
           (c) => EthereumBloc(c<ToastMessenger>(), c<EthereumRpcProvider>()))
       ..registerSingleton((c) => ServerConnector())
       ..registerSingleton((c) => UserApiService(c<ServerConnector>()))
-      ..registerSingleton((c) => ThingApiService(c<ServerConnector>()))
+      ..registerSingleton(
+          (c) => ThingApiService(c<ServerConnector>(), c<ToastMessenger>()))
       ..registerSingleton((c) => ThingService(
           c<ThingApiService>(),
           c<UserService>(),
@@ -59,7 +60,8 @@ class _$Injector extends Injector {
           c<ThingValidationPollContract>(),
           c<SettlementProposalAssessmentVerifierLotteryContract>(),
           c<SettlementProposalAssessmentPollContract>()))
-      ..registerSingleton((c) => SettlementApiService(c<ServerConnector>()))
+      ..registerSingleton((c) =>
+          SettlementApiService(c<ServerConnector>(), c<ToastMessenger>()))
       ..registerSingleton((c) =>
           SettlementProposalAssessmentVerifierLotteryContract(
               c<EthereumRpcProvider>()))

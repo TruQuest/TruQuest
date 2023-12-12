@@ -25,11 +25,13 @@ import '../bloc/thing_actions.dart';
 import '../bloc/thing_bloc.dart';
 import '../models/vm/settlement_proposal_preview_vm.dart';
 import '../../general/utils/utils.dart';
+import '../models/vm/thing_state_vm.dart';
+import '../models/vm/thing_vm.dart';
 
 class SettlementProposalsList extends StatefulWidget {
-  final String thingId;
+  final ThingVm thing;
 
-  const SettlementProposalsList({super.key, required this.thingId});
+  const SettlementProposalsList({super.key, required this.thing});
 
   @override
   State<SettlementProposalsList> createState() => _SettlementProposalsListState();
@@ -43,7 +45,7 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
   @override
   void initState() {
     super.initState();
-    _thingBloc.dispatch(GetSettlementProposalsList(thingId: widget.thingId));
+    _thingBloc.dispatch(GetSettlementProposalsList(thingId: widget.thing.id));
   }
 
   @override
@@ -141,59 +143,63 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xffF8F9FA),
                         foregroundColor: const Color(0xFF242423),
+                        disabledBackgroundColor: Color.fromARGB(255, 161, 161, 162),
+                        disabledForegroundColor: Color.fromARGB(255, 80, 80, 79),
                         elevation: 10,
                       ),
                       icon: const Icon(Icons.add),
                       label: const Text('Add'),
-                      onPressed: () {
-                        var documentContext = DocumentContext();
-                        documentContext.thingId = widget.thingId;
+                      onPressed: widget.thing.state == ThingStateVm.awaitingSettlement
+                          ? () {
+                              var documentContext = DocumentContext();
+                              documentContext.thingId = widget.thing.id;
 
-                        var btnController = RoundedLoadingButtonController();
+                              var btnController = RoundedLoadingButtonController();
 
-                        showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (context) => ScopeX(
-                            useInstances: [documentContext],
-                            child: DocumentComposer(
-                              title: 'New settlement proposal',
-                              nameFieldLabel: 'Title',
-                              submitButton: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
-                                child: RoundedLoadingButton(
-                                  child: const Text('Prepare draft'),
-                                  controller: btnController,
-                                  onPressed: () async {
-                                    var success = await _settlementBloc.execute<bool>(
-                                      CreateNewSettlementProposalDraft(
-                                        documentContext: DocumentContext.fromEditable(documentContext),
+                              showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (context) => ScopeX(
+                                  useInstances: [documentContext],
+                                  child: DocumentComposer(
+                                    title: 'New settlement proposal',
+                                    nameFieldLabel: 'Title',
+                                    submitButton: Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                                      child: RoundedLoadingButton(
+                                        child: const Text('Prepare draft'),
+                                        controller: btnController,
+                                        onPressed: () async {
+                                          var success = await _settlementBloc.execute<bool>(
+                                            CreateNewSettlementProposalDraft(
+                                              documentContext: DocumentContext.fromEditable(documentContext),
+                                            ),
+                                          );
+
+                                          if (!success.isTrue) {
+                                            btnController.error();
+                                            await Future.delayed(const Duration(milliseconds: 1500));
+                                            btnController.reset();
+
+                                            return;
+                                          }
+
+                                          btnController.success();
+                                          await Future.delayed(const Duration(milliseconds: 1500));
+                                          if (context.mounted) Navigator.of(context).pop();
+                                        },
                                       ),
-                                    );
-
-                                    if (!success.isTrue) {
-                                      btnController.error();
-                                      await Future.delayed(const Duration(milliseconds: 1500));
-                                      btnController.reset();
-
-                                      return;
-                                    }
-
-                                    btnController.success();
-                                    await Future.delayed(const Duration(milliseconds: 1500));
-                                    if (context.mounted) Navigator.of(context).pop();
-                                  },
+                                    ),
+                                    sideBlocks: const [
+                                      VerdictSelectionBlock(),
+                                      ImageBlockWithCrop(cropCircle: false),
+                                      EvidenceBlock(),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              sideBlocks: const [
-                                VerdictSelectionBlock(),
-                                ImageBlockWithCrop(cropCircle: false),
-                                EvidenceBlock(),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
+                              );
+                            }
+                          : null,
                     ),
                   ),
                   const SizedBox(width: 20),
@@ -262,7 +268,7 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
                             left: 4,
                             right: 120,
                             height: 70,
-                            child: GestureDetector(
+                            child: InkWell(
                               onTap: highlightedProposal != null
                                   ? () => _pageContext.goto('/proposals/${highlightedProposal.id}')
                                   : null,

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 
+import '../../general/services/toast_messenger.dart';
 import '../../general/utils/utils.dart';
 import '../models/im/cast_assessment_poll_vote_command.dart';
 import '../models/im/new_settlement_proposal_assessment_poll_vote_im.dart';
@@ -18,20 +19,25 @@ import '../models/vm/submit_new_settlement_proposal_rvm.dart';
 
 class SettlementApiService {
   final ServerConnector _serverConnector;
+  final ToastMessenger _toastMessenger;
   final Dio _dio;
 
   final Map<String, StreamController<int>> _proposalIdToProgressChannel = {};
 
-  SettlementApiService(this._serverConnector) : _dio = _serverConnector.dio {
+  SettlementApiService(
+    this._serverConnector,
+    this._toastMessenger,
+  ) : _dio = _serverConnector.dio {
     _serverConnector.serverEvent$.where((event) => event.$1 == ServerEventType.settlement).listen(
       (event) {
         var (settlementEventType, proposalId, data) = event.$2 as (SettlementEventType, String, Object);
         if (settlementEventType == SettlementEventType.draftCreationProgress) {
           var percent = data as int;
           if (_proposalIdToProgressChannel.containsKey(proposalId)) {
-            _proposalIdToProgressChannel[proposalId]!.add(percent);
-            if (percent == 100) {
+            _proposalIdToProgressChannel[proposalId]!.add(percent < 0 ? 0 : percent);
+            if (percent == 100 || percent == -100) {
               _proposalIdToProgressChannel.remove(proposalId)!.close();
+              if (percent == -100) _toastMessenger.add('Something went wrong during draft creation, please try again');
             }
           }
         }

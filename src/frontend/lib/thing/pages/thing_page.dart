@@ -154,7 +154,7 @@ class _ThingPageState extends StateX<ThingPage> {
       if (state.index >= ThingStateVm.verifiersSelectedAndPollInitiated.index) {
         items.add(Poll(thing: thing));
         if (state.index >= ThingStateVm.awaitingSettlement.index) {
-          items.add(SettlementProposalsList(thingId: thing.id));
+          items.add(SettlementProposalsList(thing: thing));
         }
       }
     }

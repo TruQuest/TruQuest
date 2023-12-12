@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 
 import '../../general/models/im/watch_command.dart';
+import '../../general/services/toast_messenger.dart';
 import '../../general/utils/utils.dart';
 import '../models/vm/get_settlement_proposals_list_rvm.dart';
 import '../models/im/cast_validation_poll_vote_command.dart';
@@ -20,20 +21,25 @@ import '../models/im/new_thing_im.dart';
 
 class ThingApiService {
   final ServerConnector _serverConnector;
+  final ToastMessenger _toastMessenger;
   final Dio _dio;
 
   final Map<String, StreamController<int>> _thingIdToProgressChannel = {};
 
-  ThingApiService(this._serverConnector) : _dio = _serverConnector.dio {
+  ThingApiService(
+    this._serverConnector,
+    this._toastMessenger,
+  ) : _dio = _serverConnector.dio {
     _serverConnector.serverEvent$.where((event) => event.$1 == ServerEventType.thing).listen(
       (event) {
         var (thingEventType, thingId, data) = event.$2 as (ThingEventType, String, Object);
         if (thingEventType == ThingEventType.draftCreationProgress) {
           var percent = data as int;
           if (_thingIdToProgressChannel.containsKey(thingId)) {
-            _thingIdToProgressChannel[thingId]!.add(percent);
-            if (percent == 100) {
+            _thingIdToProgressChannel[thingId]!.add(percent < 0 ? 0 : percent);
+            if (percent == 100 || percent == -100) {
               _thingIdToProgressChannel.remove(thingId)!.close();
+              if (percent == -100) _toastMessenger.add('Something went wrong during draft creation, please try again');
             }
           }
         }

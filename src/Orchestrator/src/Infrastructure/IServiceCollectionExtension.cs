@@ -101,6 +101,7 @@ public static class IServiceCollectionExtension
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddSingleton<IAuthTokenProvider, AuthTokenProvider>();
+        services.AddSingleton<IKeccakHasher, KeccakHasher>();
         services.AddSingleton<Eip712TypedDataSigner>();
         services.AddSingleton<EthereumMessageSigner>();
         services.AddSingleton<ISigner, Signer>();

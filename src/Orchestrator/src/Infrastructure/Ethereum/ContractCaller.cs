@@ -188,13 +188,6 @@ internal class ContractCaller : IContractCaller
             }
         );
 
-    public Task<byte[]> ComputeHashForThingValidationVerifierLottery(byte[] data)
-    {
-        return _web3.Eth.GetContractQueryHandler<ComputeHashMessage>().QueryAsync<byte[]>(
-            _thingValidationVerifierLotteryAddress, new() { Data = data }
-        );
-    }
-
     public async Task<long> InitThingValidationVerifierLottery(byte[] thingId, byte[] dataHash, byte[] userXorDataHash)
     {
         using var span = Telemetry.StartActivity(
@@ -738,16 +731,6 @@ internal class ContractCaller : IContractCaller
             );
 
         return (long)block;
-    }
-
-    public Task<byte[]> ComputeHashForSettlementProposalAssessmentVerifierLottery(byte[] data)
-    {
-        return _web3.Eth
-            .GetContractQueryHandler<ComputeHashMessage>()
-            .QueryAsync<byte[]>(
-                _settlementProposalAssessmentVerifierLotteryAddress,
-                new() { Data = data }
-            );
     }
 
     public Task<bool> CheckSettlementProposalAssessmentVerifierLotteryExpired(

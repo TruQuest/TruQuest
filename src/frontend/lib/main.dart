@@ -24,7 +24,11 @@ Future main() async {
 
   logging.hierarchicalLoggingEnabled = true;
 
-  logger = TalkerFlutter.init();
+  logger = TalkerFlutter.init(
+    logger: TalkerLogger(
+      settings: TalkerLoggerSettings(level: LogLevel.debug),
+    ),
+  );
 
   runApp(const App());
 }

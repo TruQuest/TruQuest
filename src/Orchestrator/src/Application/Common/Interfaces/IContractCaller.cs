@@ -15,7 +15,6 @@ public interface IContractCaller
     Task<int> GetThingValidationVerifierLotteryNumVerifiers();
     Task<int> GetThingValidationVerifierLotteryDurationBlocks();
     Task<IEnumerable<string>> GetThingValidationVerifierLotteryParticipants(byte[] thingId);
-    Task<byte[]> ComputeHashForThingValidationVerifierLottery(byte[] data);
     [TrackGasUsage(MetricName = "init-thing-lottery")]
     Task<long> InitThingValidationVerifierLottery(byte[] thingId, byte[] dataHash, byte[] userXorDataHash);
     Task<long> GetThingValidationVerifierLotteryInitBlock(byte[] thingId);
@@ -58,7 +57,6 @@ public interface IContractCaller
     Task<int> GetSettlementProposalAssessmentVerifierLotteryDurationBlocks();
     Task<IEnumerable<string>> GetSettlementProposalAssessmentVerifierLotterySpotClaimants(byte[] thingId, byte[] proposalId);
     Task<IEnumerable<string>> GetSettlementProposalAssessmentVerifierLotteryParticipants(byte[] thingId, byte[] proposalId);
-    Task<byte[]> ComputeHashForSettlementProposalAssessmentVerifierLottery(byte[] data);
     [TrackGasUsage(MetricName = "init-proposal-lottery")]
     Task<long> InitSettlementProposalAssessmentVerifierLottery(byte[] thingId, byte[] proposalId, byte[] dataHash, byte[] userXorDataHash);
     Task<long> GetSettlementProposalAssessmentVerifierLotteryInitBlock(byte[] thingId, byte[] proposalId);

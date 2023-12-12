@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 
 using GoThataway;
 
@@ -34,13 +35,18 @@ public class InitVerifierLotteryCommand : IRequest<VoidResult>
 public class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierLotteryCommand, VoidResult>
 {
     private readonly ILogger<InitVerifierLotteryCommandHandler> _logger;
+    private readonly IKeccakHasher _keccakHasher;
     private readonly ISettlementProposalRepository _settlementProposalRepository;
     private readonly ITaskRepository _taskRepository;
     private readonly ISettlementProposalUpdateRepository _settlementProposalUpdateRepository;
     private readonly IContractCaller _contractCaller;
 
+    private readonly string _lotteryAddress;
+
     public InitVerifierLotteryCommandHandler(
         ILogger<InitVerifierLotteryCommandHandler> logger,
+        IConfiguration configuration,
+        IKeccakHasher keccakHasher,
         ISettlementProposalRepository settlementProposalRepository,
         ITaskRepository taskRepository,
         ISettlementProposalUpdateRepository settlementProposalUpdateRepository,
@@ -48,10 +54,14 @@ public class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierLot
     )
     {
         _logger = logger;
+        _keccakHasher = keccakHasher;
         _settlementProposalRepository = settlementProposalRepository;
         _taskRepository = taskRepository;
         _settlementProposalUpdateRepository = settlementProposalUpdateRepository;
         _contractCaller = contractCaller;
+
+        var network = configuration["Ethereum:Network"]!;
+        _lotteryAddress = configuration[$"Ethereum:Contracts:{network}:SettlementProposalAssessmentVerifierLottery:Address"]!;
     }
 
     public async Task<VoidResult> Handle(InitVerifierLotteryCommand command, CancellationToken ct)
@@ -68,9 +78,8 @@ public class InitVerifierLotteryCommandHandler : IRequestHandler<InitVerifierLot
 
         var data = RandomNumberGenerator.GetBytes(32);
         var userXorData = RandomNumberGenerator.GetBytes(32);
-        // @@TODO!!: Compute on the server!
-        var dataHash = await _contractCaller.ComputeHashForSettlementProposalAssessmentVerifierLottery(data);
-        var userXorDataHash = await _contractCaller.ComputeHashForSettlementProposalAssessmentVerifierLottery(userXorData);
+        var dataHash = _keccakHasher.Hash(_lotteryAddress, data.ToHex(prefix: true));
+        var userXorDataHash = _keccakHasher.Hash(_lotteryAddress, userXorData.ToHex(prefix: true));
 
         long lotteryInitBlockNumber = await _contractCaller.InitSettlementProposalAssessmentVerifierLottery(
             command.ThingId.ToByteArray(), command.SettlementProposalId.ToByteArray(),
