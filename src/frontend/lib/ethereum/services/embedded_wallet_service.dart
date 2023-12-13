@@ -146,7 +146,7 @@ class EmbeddedWalletService implements IWalletService {
     var result = await promiseToFuture<GetCredentialResult>(getCredential(options));
     if (result.error != null) {
       logger.info('Error trying to get credential');
-      throw GetCredentialError();
+      throw const GetCredentialError();
     }
 
     var serverKeyShare = await _userApiService.verifyAssertionAndGetKeyShare(result.assertion!);
@@ -162,7 +162,7 @@ class EmbeddedWalletService implements IWalletService {
     var result = await promiseToFuture<GetCredentialResult>(getCredential(options));
     if (result.error != null) {
       logger.info('Error trying to get credential');
-      throw GetCredentialError();
+      throw const GetCredentialError();
     }
 
     var serverKeyShare = await _userApiService.verifyAssertionAndGetKeyShare(result.assertion!);

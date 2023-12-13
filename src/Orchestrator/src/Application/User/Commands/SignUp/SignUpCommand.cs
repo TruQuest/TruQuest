@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 
 using Fido2NetLib;
 using GoThataway;
+using FluentValidation;
 
 using Domain.Aggregates;
 using Domain.Errors;
@@ -27,6 +28,18 @@ public class SignUpCommand : IRequest<HandleResult<AuthResultVm>>
     public required string SignatureOverCode { get; init; }
     public required AuthenticatorAttestationRawResponse RawAttestation { get; init; }
     public required string KeyShare { get; init; }
+}
+
+internal class Validator : AbstractValidator<SignUpCommand>
+{
+    public Validator()
+    {
+        RuleFor(c => c.Email).EmailAddress();
+        RuleFor(c => c.ConfirmationCode).Must(value => value.Length == 6 && int.TryParse(value, out _));
+        RuleFor(c => c.SignatureOverCode).NotEmpty();
+        RuleFor(c => c.RawAttestation).NotNull();
+        RuleFor(c => c.KeyShare).NotEmpty();
+    }
 }
 
 public class SignUpCommandHandler : IRequestHandler<SignUpCommand, HandleResult<AuthResultVm>>

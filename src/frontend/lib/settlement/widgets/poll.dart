@@ -65,7 +65,7 @@ class _PollState extends StateX<Poll> {
     return FutureBuilder(
       future: _infoRetrieved,
       builder: (context, snapshot) {
-        if (snapshot.data == null) return Center(child: CircularProgressIndicator());
+        if (snapshot.data == null) return const Center(child: CircularProgressIndicator());
 
         var info = snapshot.data!;
 
@@ -78,7 +78,7 @@ class _PollState extends StateX<Poll> {
 
         return Container(
           padding: EdgeInsets.symmetric(horizontal: horizontalMargin),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: Color(0xFF32407B),
             borderRadius: BorderRadius.only(
               topLeft: Radius.circular(16),
@@ -87,7 +87,7 @@ class _PollState extends StateX<Poll> {
           ),
           child: Column(
             children: [
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               StreamBuilder(
                 stream: _ethereumBloc.latestL1BlockNumber$,
                 initialData: _ethereumBloc.latestL1BlockNumber,
@@ -145,7 +145,7 @@ class _PollState extends StateX<Poll> {
                           ),
                         ],
                       ),
-                      SizedBox(width: 80),
+                      const SizedBox(width: 80),
                       SizedBox(
                         width: 600,
                         child: PollStepper(
@@ -159,12 +159,12 @@ class _PollState extends StateX<Poll> {
                   );
                 },
               ),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               Expanded(
                 child: StreamBuilder(
                   stream: _settlementBloc.votes$,
                   builder: (context, snapshot) {
-                    if (snapshot.data == null) return Center(child: CircularProgressIndicator());
+                    if (snapshot.data == null) return const Center(child: CircularProgressIndicator());
 
                     var result = snapshot.data!;
                     var votes = result.votes;
@@ -186,7 +186,7 @@ class _PollState extends StateX<Poll> {
                                 color: Colors.blue,
                                 fromNarrowToWide: true,
                                 narrowSideFraction: 0.4,
-                                borderRadius: BorderRadius.only(
+                                borderRadius: const BorderRadius.only(
                                   topLeft: Radius.circular(8),
                                   bottomLeft: Radius.circular(8),
                                 ),
@@ -207,7 +207,7 @@ class _PollState extends StateX<Poll> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              Spacer(),
+                              const Spacer(),
                               SizedBox(
                                 width: 170,
                                 height: 30,
@@ -218,20 +218,20 @@ class _PollState extends StateX<Poll> {
                                       fontSize: 14,
                                     ),
                                     contentPadding: const EdgeInsets.only(left: 12),
-                                    suffixIcon: Icon(Icons.search, size: 20),
-                                    border: OutlineInputBorder(),
+                                    suffixIcon: const Icon(Icons.search, size: 20),
+                                    border: const OutlineInputBorder(),
                                   ),
                                 ),
                               ),
-                              SizedBox(width: 12),
+                              const SizedBox(width: 12),
                               IconButton(
-                                icon: Icon(Icons.refresh, size: 20),
+                                icon: const Icon(Icons.refresh, size: 20),
                                 onPressed: () => _settlementBloc.dispatch(GetVotes(proposalId: widget.proposal.id)),
                               ),
                             ],
                           ),
                         ),
-                        SizedBox(height: 28),
+                        const SizedBox(height: 28),
                         Expanded(
                           child: GridView.builder(
                             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -245,7 +245,7 @@ class _PollState extends StateX<Poll> {
 
                               return Card(
                                 margin: EdgeInsets.zero,
-                                color: vote.userId == _currentUserId ? Color(0xff0A6EBD) : Colors.white,
+                                color: vote.userId == _currentUserId ? const Color(0xff0A6EBD) : Colors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -257,7 +257,7 @@ class _PollState extends StateX<Poll> {
                                         width: double.infinity,
                                         decoration: BoxDecoration(
                                           color: vote.cardColor,
-                                          borderRadius: BorderRadius.only(
+                                          borderRadius: const BorderRadius.only(
                                             topLeft: Radius.circular(8),
                                             topRight: Radius.circular(8),
                                           ),
@@ -273,7 +273,7 @@ class _PollState extends StateX<Poll> {
                                                 fontSize: 24,
                                               ),
                                             ),
-                                            SizedBox(height: 6),
+                                            const SizedBox(height: 6),
                                             Text(
                                               vote.onOrOffChain,
                                               style: GoogleFonts.raleway(
@@ -301,7 +301,7 @@ class _PollState extends StateX<Poll> {
                             itemCount: votes.length,
                           ),
                         ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                       ],
                     );
                   },

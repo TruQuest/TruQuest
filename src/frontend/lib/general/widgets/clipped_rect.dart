@@ -33,7 +33,7 @@ class ClippedRect extends StatelessWidget {
           color: color,
           borderRadius: borderRadius,
         ),
-        alignment: child != null ? Alignment(-0.53, 0) : null,
+        alignment: child != null ? const Alignment(-0.53, 0) : null,
         child: child,
       ),
     );

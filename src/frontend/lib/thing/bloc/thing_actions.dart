@@ -21,13 +21,23 @@ class CreateNewThingDraft extends ThingAction {
       errors ??= [];
       errors.add('Title should be at least 3 characters long');
     }
-    if (documentContext.details!.isEmpty) {
+    if (documentContext.operations!.isEmpty) {
       errors ??= [];
       errors.add('Details are not specified');
     }
+    if (documentContext.imageExt == null ||
+        documentContext.imageBytes == null ||
+        documentContext.croppedImageBytes == null) {
+      errors ??= [];
+      errors.add('No image added');
+    }
     if (documentContext.evidence.isEmpty) {
       errors ??= [];
-      errors.add('Must provide evidence');
+      errors.add('Evidence is not provided');
+    }
+    if (documentContext.tags.isEmpty) {
+      errors ??= [];
+      errors.add('Tags are not specified');
     }
 
     return errors;
@@ -182,6 +192,17 @@ class CastVoteOffChain extends ThingAction {
   final DecisionIm decision;
   final String reason;
 
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (!thingId.isValidUuid) {
+      errors ??= [];
+      errors.add('Invalid Promise Id');
+    }
+
+    return errors;
+  }
+
   const CastVoteOffChain({
     required this.thingId,
     required this.decision,
@@ -194,6 +215,21 @@ class CastVoteOnChain extends ThingAction {
   final int thingVerifiersArrayIndex;
   final DecisionIm decision;
   final String reason;
+
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (!thingId.isValidUuid) {
+      errors ??= [];
+      errors.add('Invalid Promise Id');
+    }
+    if (thingVerifiersArrayIndex < 0) {
+      errors ??= [];
+      errors.add('Invalid verifier index');
+    }
+
+    return errors;
+  }
 
   const CastVoteOnChain({
     required this.thingId,
@@ -223,6 +259,17 @@ class GetSettlementProposalsList extends ThingAction {
 class Watch extends ThingAction {
   final String thingId;
   final bool markedAsWatched;
+
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (!thingId.isValidUuid) {
+      errors ??= [];
+      errors.add('Invalid Promise Id');
+    }
+
+    return errors;
+  }
 
   const Watch({
     required this.thingId,

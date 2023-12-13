@@ -217,6 +217,13 @@ await web3.Eth
     );
 
 await web3.Eth
+    .GetContractTransactionHandler<EnableWithdrawalsMessage>()
+    .SendRequestAndWaitForReceiptAsync(
+        contractNameToAddress["TruQuest"],
+        new() { Value = true }
+    );
+
+await web3.Eth
     .GetContractTransactionHandler<SetThingValidationPollMessage>()
     .SendRequestAndWaitForReceiptAsync(
         contractNameToAddress["ThingValidationVerifierLottery"],

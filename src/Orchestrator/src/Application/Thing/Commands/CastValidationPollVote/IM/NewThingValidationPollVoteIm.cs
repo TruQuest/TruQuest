@@ -34,13 +34,10 @@ internal class NewThingValidationPollVoteImValidator : AbstractValidator<NewThin
 {
     public NewThingValidationPollVoteImValidator()
     {
-        RuleFor(v => v.ThingId).Must(
-            thingId => thingId != null && thingId.Value != Guid.Empty
-        );
+        RuleFor(v => v.ThingId).Must(thingId => thingId != null && thingId.Value != Guid.Empty);
         RuleFor(v => v.CastedAt).Must(ts => DateTimeOffset.TryParseExact(
             ts, "yyyy-MM-dd HH:mm:sszzz", null, DateTimeStyles.None, out _
         ));
         RuleFor(v => v.Decision).IsInEnum();
-        RuleFor(v => v.Reason).NotEmpty();
     }
 }

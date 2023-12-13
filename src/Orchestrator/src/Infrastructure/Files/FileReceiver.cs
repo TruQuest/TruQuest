@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Net.Http.Headers;
+using Microsoft.Extensions.Logging;
 
 using Domain.Errors;
 using Domain.Results;
@@ -16,16 +17,19 @@ namespace Infrastructure.Files;
 
 internal class FileReceiver : IFileReceiver
 {
+    private readonly ILogger<FileReceiver> _logger;
     private readonly MultipartRequestHelper _multipartRequestHelper;
     private readonly ImageFileValidator _imageFileValidator;
     private readonly string _path;
 
     public FileReceiver(
+        ILogger<FileReceiver> logger,
         IConfiguration configuration,
         MultipartRequestHelper multipartRequestHelper,
         ImageFileValidator imageFileValidator
     )
     {
+        _logger = logger;
         _multipartRequestHelper = multipartRequestHelper;
         _imageFileValidator = imageFileValidator;
         _path = configuration["UserFiles:Path"]!;
@@ -186,5 +190,18 @@ internal class FileReceiver : IFileReceiver
         }
 
         return contentType.Encoding;
+    }
+
+    public void DeleteReceivedFiles(string filePrefix)
+    {
+        try
+        {
+            var dir = new DirectoryInfo($"{_path}/{filePrefix}");
+            if (dir.Exists) dir.Delete(recursive: true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, $"Error trying to delete directory {_path}/{filePrefix}");
+        }
     }
 }

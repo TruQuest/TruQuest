@@ -140,7 +140,7 @@ class ThirdPartyWalletService implements IWalletService {
     var domain = 'truquest.io';
     var statement = 'I accept the TruQuest Terms of Service: https://truquest.io/tos';
     var uri = 'https://truquest.io/';
-    var version = 1;
+    var version = dotenv.env['APPLICATION_VERSION']!;
 
     var now = DateTime.now().toUtc().toIso8601String();
     int indexOfDot = now.indexOf('.');

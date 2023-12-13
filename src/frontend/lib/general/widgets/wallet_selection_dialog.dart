@@ -38,7 +38,7 @@ class WalletSelectionDialog extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(width: 20),
+              const SizedBox(width: 20),
               InkWell(
                 onTap: () => Navigator.of(context).pop('WalletConnect'),
                 child: Card(
@@ -61,7 +61,7 @@ class WalletSelectionDialog extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -85,7 +85,7 @@ class WalletSelectionDialog extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(width: 20),
+              const SizedBox(width: 20),
               InkWell(
                 onTap: () => Navigator.of(context).pop('CoinbaseWallet'),
                 child: Card(

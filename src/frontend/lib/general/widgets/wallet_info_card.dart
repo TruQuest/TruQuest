@@ -21,7 +21,7 @@ class WalletInfoCard extends StatelessWidgetX {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        TokenPriceTracker(),
+        const TokenPriceTracker(),
         Container(
           color: const Color(0xFF242423),
           height: 284,
@@ -30,7 +30,7 @@ class WalletInfoCard extends StatelessWidgetX {
             stream: _userBloc.smartWalletInfo$,
             builder: (context, snapshot) {
               if (snapshot.data == null) {
-                return Center(
+                return const Center(
                   child: CircularProgressIndicator(color: Colors.white),
                 );
               }
@@ -43,7 +43,7 @@ class WalletInfoCard extends StatelessWidgetX {
                   const Spacer(),
                   Column(
                     children: [
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       Text(
                         'Deposited / Staked',
                         style: GoogleFonts.philosopher(
@@ -51,7 +51,7 @@ class WalletInfoCard extends StatelessWidgetX {
                           fontSize: 20,
                         ),
                       ),
-                      SizedBox(height: 14),
+                      const SizedBox(height: 14),
                       info.isPlaceholder
                           ? Text(
                               info.depositedSlashStakedShort,
@@ -70,16 +70,16 @@ class WalletInfoCard extends StatelessWidgetX {
                                 ),
                               ),
                             ),
-                      SizedBox(height: 40),
-                      DepositFundsButton(),
-                      SizedBox(height: 14),
-                      WithdrawFundsButton(),
+                      const SizedBox(height: 40),
+                      const DepositFundsButton(),
+                      const SizedBox(height: 14),
+                      const WithdrawFundsButton(),
                     ],
                   ),
-                  SizedBox(width: 80),
+                  const SizedBox(width: 80),
                   Column(
                     children: [
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -90,7 +90,7 @@ class WalletInfoCard extends StatelessWidgetX {
                               fontSize: 20,
                             ),
                           ),
-                          SizedBox(width: 6),
+                          const SizedBox(width: 6),
                           Tooltip(
                             message: info.isPlaceholder
                                 ? 'Not connected'
@@ -105,7 +105,7 @@ class WalletInfoCard extends StatelessWidgetX {
                           ),
                         ],
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       info.isPlaceholder
                           ? Text(
                               info.addressShort,
@@ -133,8 +133,8 @@ class WalletInfoCard extends StatelessWidgetX {
                       Container(
                         width: 120,
                         height: 44,
-                        alignment: Alignment(0, -0.35),
-                        child: Divider(color: Colors.white60),
+                        alignment: const Alignment(0, -0.35),
+                        child: const Divider(color: Colors.white60),
                       ),
                       info.isPlaceholder
                           ? Text(
@@ -154,7 +154,7 @@ class WalletInfoCard extends StatelessWidgetX {
                                 ),
                               ),
                             ),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
                       info.isPlaceholder
                           ? Text(
                               info.truBalanceShort,
@@ -175,7 +175,7 @@ class WalletInfoCard extends StatelessWidgetX {
                             ),
                     ],
                   ),
-                  SizedBox(width: 80),
+                  const SizedBox(width: 80),
                   Card(
                     color: Colors.white,
                     elevation: 5,
@@ -216,7 +216,7 @@ class WalletInfoCard extends StatelessWidgetX {
                                   },
                                 ),
                               ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                       ],
                     ),
                   ),

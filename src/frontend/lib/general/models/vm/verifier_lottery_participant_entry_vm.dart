@@ -2,21 +2,21 @@ import 'package:flutter/material.dart';
 
 class VerifierLotteryParticipantEntryVm {
   static final _coldColors = [
-    Color(0xff72efdd),
-    Color(0xff64dfdf),
-    Color(0xff56cfe1),
-    Color(0xff48bfe3),
-    Color(0xff4ea8de),
-    Color(0xff5390d9),
+    const Color(0xff72efdd),
+    const Color(0xff64dfdf),
+    const Color(0xff56cfe1),
+    const Color(0xff48bfe3),
+    const Color(0xff4ea8de),
+    const Color(0xff5390d9),
   ];
 
   static final _warmColors = [
-    Color(0xffF28266),
-    Color(0xffF17063),
-    Color(0xffEF5D60),
-    Color(0xffEE4F64),
-    Color(0xffEC4067),
-    Color(0xffD9376D),
+    const Color(0xffF28266),
+    const Color(0xffF17063),
+    const Color(0xffEF5D60),
+    const Color(0xffEE4F64),
+    const Color(0xffEC4067),
+    const Color(0xffD9376D),
   ];
 
   final int l1BlockNumber;

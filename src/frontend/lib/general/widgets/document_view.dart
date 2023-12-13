@@ -48,7 +48,7 @@ class _DocumentViewState extends StateX<DocumentView> {
     return Container(
       width: double.infinity,
       height: double.infinity,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Color(0xFF242423),
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(16),

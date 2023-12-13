@@ -24,7 +24,7 @@ class SubjectApiService {
     String imageExt,
     Uint8List imageBytes,
     Uint8List croppedImageBytes,
-    List<int> tags,
+    List<TagIm> tags,
   ) async {
     var accessToken = (await _serverConnector.latestConnection).$2;
     try {
@@ -36,7 +36,7 @@ class SubjectApiService {
         imageBytes: imageBytes,
         croppedImageExt: 'png',
         croppedImageBytes: croppedImageBytes,
-        tags: tags.map((tagId) => TagIm(id: tagId)).toList(),
+        tags: tags,
       );
 
       var response = await _dio.post(

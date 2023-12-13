@@ -14,6 +14,7 @@ class DocumentContext {
   String? nameOrTitle;
   VerdictIm? verdict;
   final QuillController? quillController;
+  final List<Operation>? operations;
   final String? details;
   String? imageExt;
   Uint8List? imageBytes;
@@ -23,10 +24,12 @@ class DocumentContext {
 
   DocumentContext()
       : quillController = QuillController.basic(),
+        operations = null,
         details = null;
 
   DocumentContext.fromEditable(DocumentContext context)
       : quillController = null,
+        operations = context.quillController!.document.toDelta().toList(),
         details = jsonEncode(context.quillController!.document.toDelta().toJson()) {
     subjectType = context.subjectType;
     subjectId = context.subjectId;

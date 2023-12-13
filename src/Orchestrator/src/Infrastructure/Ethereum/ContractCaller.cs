@@ -301,8 +301,29 @@ internal class ContractCaller : IContractCaller
             }
             catch (SmartContractCustomErrorRevertException ex)
             {
-                // @@TODO!!
-                throw new NotImplementedException();
+                BaseError error;
+                if (ex.IsCustomErrorFor<Errors.ThingValidationVerifierLottery.NotActiveError>())
+                {
+                    error = ex.DecodeError<Errors.ThingValidationVerifierLottery.NotActiveError>();
+                }
+                else if (ex.IsCustomErrorFor<Errors.ThingValidationVerifierLottery.StillInProgressError>())
+                {
+                    error = ex.DecodeError<Errors.ThingValidationVerifierLottery.StillInProgressError>();
+                }
+                else if (ex.IsCustomErrorFor<Errors.ThingValidationVerifierLottery.InvalidNumberOfWinnersError>())
+                {
+                    error = ex.DecodeError<Errors.ThingValidationVerifierLottery.InvalidNumberOfWinnersError>();
+                }
+                else if (ex.IsCustomErrorFor<Errors.ThingValidationVerifierLottery.InvalidRevealError>())
+                {
+                    error = ex.DecodeError<Errors.ThingValidationVerifierLottery.InvalidRevealError>();
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+
+                return error;
             }
         });
 
@@ -345,7 +366,21 @@ internal class ContractCaller : IContractCaller
             }
             catch (SmartContractCustomErrorRevertException ex)
             {
-                throw new NotImplementedException();
+                BaseError error;
+                if (ex.IsCustomErrorFor<Errors.ThingValidationVerifierLottery.NotActiveError>())
+                {
+                    error = ex.DecodeError<Errors.ThingValidationVerifierLottery.NotActiveError>();
+                }
+                else if (ex.IsCustomErrorFor<Errors.ThingValidationVerifierLottery.StillInProgressError>())
+                {
+                    error = ex.DecodeError<Errors.ThingValidationVerifierLottery.StillInProgressError>();
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+
+                return error;
             }
         });
 
@@ -416,7 +451,21 @@ internal class ContractCaller : IContractCaller
             }
             catch (SmartContractCustomErrorRevertException ex)
             {
-                throw new NotImplementedException();
+                BaseError error;
+                if (ex.IsCustomErrorFor<Errors.ThingValidationPoll.NotActiveError>())
+                {
+                    error = ex.DecodeError<Errors.ThingValidationPoll.NotActiveError>();
+                }
+                else if (ex.IsCustomErrorFor<Errors.ThingValidationPoll.StillInProgressError>())
+                {
+                    error = ex.DecodeError<Errors.ThingValidationPoll.StillInProgressError>();
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+
+                return error;
             }
         });
 
@@ -465,7 +514,21 @@ internal class ContractCaller : IContractCaller
             }
             catch (SmartContractCustomErrorRevertException ex)
             {
-                throw new NotImplementedException();
+                BaseError error;
+                if (ex.IsCustomErrorFor<Errors.ThingValidationPoll.NotActiveError>())
+                {
+                    error = ex.DecodeError<Errors.ThingValidationPoll.NotActiveError>();
+                }
+                else if (ex.IsCustomErrorFor<Errors.ThingValidationPoll.StillInProgressError>())
+                {
+                    error = ex.DecodeError<Errors.ThingValidationPoll.StillInProgressError>();
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+
+                return error;
             }
         });
 
@@ -513,7 +576,21 @@ internal class ContractCaller : IContractCaller
             }
             catch (SmartContractCustomErrorRevertException ex)
             {
-                throw new NotImplementedException();
+                BaseError error;
+                if (ex.IsCustomErrorFor<Errors.ThingValidationPoll.NotActiveError>())
+                {
+                    error = ex.DecodeError<Errors.ThingValidationPoll.NotActiveError>();
+                }
+                else if (ex.IsCustomErrorFor<Errors.ThingValidationPoll.StillInProgressError>())
+                {
+                    error = ex.DecodeError<Errors.ThingValidationPoll.StillInProgressError>();
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+
+                return error;
             }
         });
 
@@ -561,7 +638,21 @@ internal class ContractCaller : IContractCaller
             }
             catch (SmartContractCustomErrorRevertException ex)
             {
-                throw new NotImplementedException();
+                BaseError error;
+                if (ex.IsCustomErrorFor<Errors.ThingValidationPoll.NotActiveError>())
+                {
+                    error = ex.DecodeError<Errors.ThingValidationPoll.NotActiveError>();
+                }
+                else if (ex.IsCustomErrorFor<Errors.ThingValidationPoll.StillInProgressError>())
+                {
+                    error = ex.DecodeError<Errors.ThingValidationPoll.StillInProgressError>();
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+
+                return error;
             }
         });
 
@@ -609,7 +700,21 @@ internal class ContractCaller : IContractCaller
             }
             catch (SmartContractCustomErrorRevertException ex)
             {
-                throw new NotImplementedException();
+                BaseError error;
+                if (ex.IsCustomErrorFor<Errors.ThingValidationPoll.NotActiveError>())
+                {
+                    error = ex.DecodeError<Errors.ThingValidationPoll.NotActiveError>();
+                }
+                else if (ex.IsCustomErrorFor<Errors.ThingValidationPoll.StillInProgressError>())
+                {
+                    error = ex.DecodeError<Errors.ThingValidationPoll.StillInProgressError>();
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+
+                return error;
             }
         });
 
@@ -694,7 +799,17 @@ internal class ContractCaller : IContractCaller
             }
             catch (SmartContractCustomErrorRevertException ex)
             {
-                throw new NotImplementedException();
+                BaseError error;
+                if (ex.IsCustomErrorFor<Errors.SettlementProposalAssessmentVerifierLottery.AlreadyInitializedError>())
+                {
+                    error = ex.DecodeError<Errors.SettlementProposalAssessmentVerifierLottery.AlreadyInitializedError>();
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+
+                return error;
             }
         });
 
@@ -777,7 +892,29 @@ internal class ContractCaller : IContractCaller
             }
             catch (SmartContractCustomErrorRevertException ex)
             {
-                throw new NotImplementedException();
+                BaseError error;
+                if (ex.IsCustomErrorFor<Errors.SettlementProposalAssessmentVerifierLottery.NotActiveError>())
+                {
+                    error = ex.DecodeError<Errors.SettlementProposalAssessmentVerifierLottery.NotActiveError>();
+                }
+                else if (ex.IsCustomErrorFor<Errors.SettlementProposalAssessmentVerifierLottery.StillInProgressError>())
+                {
+                    error = ex.DecodeError<Errors.SettlementProposalAssessmentVerifierLottery.StillInProgressError>();
+                }
+                else if (ex.IsCustomErrorFor<Errors.SettlementProposalAssessmentVerifierLottery.InvalidNumberOfWinnersError>())
+                {
+                    error = ex.DecodeError<Errors.SettlementProposalAssessmentVerifierLottery.InvalidNumberOfWinnersError>();
+                }
+                else if (ex.IsCustomErrorFor<Errors.SettlementProposalAssessmentVerifierLottery.InvalidRevealError>())
+                {
+                    error = ex.DecodeError<Errors.SettlementProposalAssessmentVerifierLottery.InvalidRevealError>();
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+
+                return error;
             }
         });
 
@@ -823,7 +960,21 @@ internal class ContractCaller : IContractCaller
             }
             catch (SmartContractCustomErrorRevertException ex)
             {
-                throw new NotImplementedException();
+                BaseError error;
+                if (ex.IsCustomErrorFor<Errors.SettlementProposalAssessmentVerifierLottery.NotActiveError>())
+                {
+                    error = ex.DecodeError<Errors.SettlementProposalAssessmentVerifierLottery.NotActiveError>();
+                }
+                else if (ex.IsCustomErrorFor<Errors.SettlementProposalAssessmentVerifierLottery.StillInProgressError>())
+                {
+                    error = ex.DecodeError<Errors.SettlementProposalAssessmentVerifierLottery.StillInProgressError>();
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+
+                return error;
             }
         });
 
@@ -909,7 +1060,21 @@ internal class ContractCaller : IContractCaller
             }
             catch (SmartContractCustomErrorRevertException ex)
             {
-                throw new NotImplementedException();
+                BaseError error;
+                if (ex.IsCustomErrorFor<Errors.SettlementProposalAssessmentPoll.NotActiveError>())
+                {
+                    error = ex.DecodeError<Errors.SettlementProposalAssessmentPoll.NotActiveError>();
+                }
+                else if (ex.IsCustomErrorFor<Errors.SettlementProposalAssessmentPoll.StillInProgressError>())
+                {
+                    error = ex.DecodeError<Errors.SettlementProposalAssessmentPoll.StillInProgressError>();
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+
+                return error;
             }
         });
 
@@ -959,7 +1124,21 @@ internal class ContractCaller : IContractCaller
             }
             catch (SmartContractCustomErrorRevertException ex)
             {
-                throw new NotImplementedException();
+                BaseError error;
+                if (ex.IsCustomErrorFor<Errors.SettlementProposalAssessmentPoll.NotActiveError>())
+                {
+                    error = ex.DecodeError<Errors.SettlementProposalAssessmentPoll.NotActiveError>();
+                }
+                else if (ex.IsCustomErrorFor<Errors.SettlementProposalAssessmentPoll.StillInProgressError>())
+                {
+                    error = ex.DecodeError<Errors.SettlementProposalAssessmentPoll.StillInProgressError>();
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+
+                return error;
             }
         });
 
@@ -1008,7 +1187,21 @@ internal class ContractCaller : IContractCaller
             }
             catch (SmartContractCustomErrorRevertException ex)
             {
-                throw new NotImplementedException();
+                BaseError error;
+                if (ex.IsCustomErrorFor<Errors.SettlementProposalAssessmentPoll.NotActiveError>())
+                {
+                    error = ex.DecodeError<Errors.SettlementProposalAssessmentPoll.NotActiveError>();
+                }
+                else if (ex.IsCustomErrorFor<Errors.SettlementProposalAssessmentPoll.StillInProgressError>())
+                {
+                    error = ex.DecodeError<Errors.SettlementProposalAssessmentPoll.StillInProgressError>();
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+
+                return error;
             }
         });
 
@@ -1057,7 +1250,21 @@ internal class ContractCaller : IContractCaller
             }
             catch (SmartContractCustomErrorRevertException ex)
             {
-                throw new NotImplementedException();
+                BaseError error;
+                if (ex.IsCustomErrorFor<Errors.SettlementProposalAssessmentPoll.NotActiveError>())
+                {
+                    error = ex.DecodeError<Errors.SettlementProposalAssessmentPoll.NotActiveError>();
+                }
+                else if (ex.IsCustomErrorFor<Errors.SettlementProposalAssessmentPoll.StillInProgressError>())
+                {
+                    error = ex.DecodeError<Errors.SettlementProposalAssessmentPoll.StillInProgressError>();
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+
+                return error;
             }
         });
 
@@ -1106,7 +1313,21 @@ internal class ContractCaller : IContractCaller
             }
             catch (SmartContractCustomErrorRevertException ex)
             {
-                throw new NotImplementedException();
+                BaseError error;
+                if (ex.IsCustomErrorFor<Errors.SettlementProposalAssessmentPoll.NotActiveError>())
+                {
+                    error = ex.DecodeError<Errors.SettlementProposalAssessmentPoll.NotActiveError>();
+                }
+                else if (ex.IsCustomErrorFor<Errors.SettlementProposalAssessmentPoll.StillInProgressError>())
+                {
+                    error = ex.DecodeError<Errors.SettlementProposalAssessmentPoll.StillInProgressError>();
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+
+                return error;
             }
         });
 

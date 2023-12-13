@@ -10,7 +10,7 @@ import '../services/iframe_manager.dart';
 class ScanKeyShareDialog extends StatefulWidget {
   final String scanRequestId;
 
-  ScanKeyShareDialog({super.key, required this.scanRequestId});
+  const ScanKeyShareDialog({super.key, required this.scanRequestId});
 
   @override
   State<ScanKeyShareDialog> createState() => _ScanKeyShareDialogState();

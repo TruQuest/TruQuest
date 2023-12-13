@@ -4,6 +4,7 @@ using Microsoft.Extensions.Caching.Memory;
 using GoThataway;
 using Fido2NetLib;
 using Fido2NetLib.Objects;
+using FluentValidation;
 
 using Domain.Aggregates;
 using Domain.Errors;
@@ -19,6 +20,14 @@ namespace Application.User.Commands.VerifyAssertionAndGetKeyShare;
 public class VerifyAssertionAndGetKeyShareCommand : IRequest<HandleResult<string>>
 {
     public required AuthenticatorAssertionRawResponse RawAssertion { get; init; }
+}
+
+internal class Validator : AbstractValidator<VerifyAssertionAndGetKeyShareCommand>
+{
+    public Validator()
+    {
+        RuleFor(c => c.RawAssertion).NotNull();
+    }
 }
 
 public class VerifyAssertionAndGetKeyShareCommandHandler : IRequestHandler<

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
 
 using Application.Common.Interfaces;
 
@@ -17,16 +18,68 @@ public class NewSettlementProposalIm : IManuallyBoundIm
     public string? ImageIpfsCid { get; set; }
     public string? CroppedImageIpfsCid { get; set; }
 
-    public void BindFrom(FormCollection form)
+    public bool BindFrom(FormCollection form)
     {
-        // @@TODO: Validate.
-        ThingId = Guid.Parse(form["thingId"]!);
-        Title = form["title"]!;
-        Verdict = (VerdictIm)int.Parse(form["verdict"]!);
-        Details = form["details"]!;
-        ImagePath = form["file1"];
-        CroppedImagePath = form["file2"];
-        Evidence = ((string)form["evidence"]!).Split('|')
-            .Select(url => new SettlementProposalEvidenceIm { Url = url });
+        if (!(
+            form.TryGetValue("thingId", out var value) &&
+            !StringValues.IsNullOrEmpty(value) &&
+            Guid.TryParse(value, out var thingId)
+        ))
+        {
+            return false;
+        }
+        ThingId = thingId;
+
+        if (!form.TryGetValue("title", out value) || StringValues.IsNullOrEmpty(value))
+        {
+            return false;
+        }
+        Title = value!;
+
+        if (!(
+            form.TryGetValue("verdict", out value) &&
+            !StringValues.IsNullOrEmpty(value) &&
+            int.TryParse(value, out int verdict) &&
+            Enum.IsDefined<VerdictIm>((VerdictIm)verdict)
+        ))
+        {
+            return false;
+        }
+        Verdict = (VerdictIm)verdict;
+
+        if (!form.TryGetValue("details", out value) || StringValues.IsNullOrEmpty(value))
+        {
+            return false;
+        }
+        Details = value!;
+
+        if (!form.TryGetValue("file1", out value) || StringValues.IsNullOrEmpty(value))
+        {
+            return false;
+        }
+        ImagePath = value!;
+
+        if (!form.TryGetValue("file2", out value) || StringValues.IsNullOrEmpty(value))
+        {
+            return false;
+        }
+        CroppedImagePath = value!;
+
+        string[] valueSplit;
+        if (!(
+            form.TryGetValue("evidence", out value) &&
+            !StringValues.IsNullOrEmpty(value) &&
+            (valueSplit = ((string)value!).Split('|')).Length > 0 &&
+            valueSplit.All(v =>
+                Uri.TryCreate(v, UriKind.Absolute, out var url) &&
+                (url.Scheme == Uri.UriSchemeHttp || url.Scheme == Uri.UriSchemeHttps)
+            )
+        ))
+        {
+            return false;
+        }
+        Evidence = valueSplit.Select(url => new SettlementProposalEvidenceIm { Url = url });
+
+        return true;
     }
 }

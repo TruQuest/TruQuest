@@ -47,8 +47,8 @@ class _TransferFundsStepperState extends StateX<TransferFundsStepper> {
               context,
               (ctx) => _userBloc.executeMultiStage(
                 widget.direction == TransferDirection.deposit
-                    ? DepositFunds(amount: int.parse(_controller.text))
-                    : WithdrawFunds(amount: int.parse(_controller.text)),
+                    ? DepositFunds(amount: int.tryParse(_controller.text) ?? 0)
+                    : WithdrawFunds(amount: int.tryParse(_controller.text) ?? 0),
                 ctx,
               ),
             );

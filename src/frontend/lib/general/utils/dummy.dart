@@ -90,7 +90,7 @@ class _DummyState extends StateX<Dummy> {
   @override
   Widget buildX(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Dummy')),
+      appBar: AppBar(title: const Text('Dummy')),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -99,10 +99,10 @@ class _DummyState extends StateX<Dummy> {
               width: 300,
               child: TextField(
                 onChanged: (value) => _name = value,
-                decoration: InputDecoration(hintText: 'Name'),
+                decoration: const InputDecoration(hintText: 'Name'),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             SizedBox(
               width: 300,
               child: TextField(
@@ -110,12 +110,12 @@ class _DummyState extends StateX<Dummy> {
                   int? age;
                   if ((age = int.tryParse(value)) != null) _age = age;
                 },
-                decoration: InputDecoration(hintText: 'Age'),
+                decoration: const InputDecoration(hintText: 'Age'),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
-              child: Text('Foo'),
+              child: const Text('Foo'),
               onPressed: () async {
                 if (_name == null || _age == null) return;
 
@@ -136,9 +136,9 @@ class _DummyState extends StateX<Dummy> {
                   logger.info('name: ${await _dummyContract.name()}');
               },
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
-              child: Text('MooFoo'),
+              child: const Text('MooFoo'),
               onPressed: () async {
                 if (_name == null || _age == null) return;
 

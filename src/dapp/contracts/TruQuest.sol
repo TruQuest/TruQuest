@@ -5,6 +5,7 @@ import "./Truthserum.sol";
 import "./RestrictedAccess.sol";
 
 error TruQuest__TheWorldIsStopped();
+error TruQuest__WithdrawalsDisabled();
 error TruQuest__ThingAlreadyFunded(bytes16 thingId);
 error TruQuest__NotEnoughFunds(uint256 requiredAmount, uint256 availableAmount);
 error TruQuest__Unauthorized();
@@ -70,6 +71,7 @@ contract TruQuest {
     // between contract versions on the testnet. Will be removed (along with import/export functions
     // and some fields that are only maintained for migration purposes) from the mainnet version.
     bool public s_stopTheWorld;
+    bool public s_withdrawalsEnabled = false;
 
     // @@??: Use it to deposit ephemeral funds for new users? Cannot withdraw, only use on the platform?
     uint256 private s_treasury;
@@ -313,6 +315,10 @@ contract TruQuest {
         s_stopTheWorld = _value;
     }
 
+    function enableWithdrawals(bool _value) external onlyOrchestrator {
+        s_withdrawalsEnabled = _value;
+    }
+
     function exportUsersAndBalances()
         external
         view
@@ -427,6 +433,10 @@ contract TruQuest {
     function withdraw(
         uint256 _amount
     ) external onlyWhenTheWorldIsSpinning onlyIfWhitelisted {
+        if (!s_withdrawalsEnabled) {
+            revert TruQuest__WithdrawalsDisabled();
+        }
+        
         uint256 availableAmount = getAvailableFunds(msg.sender);
         if (availableAmount < _amount) {
             revert TruQuest__RequestedWithdrawAmountExceedsAvailable(

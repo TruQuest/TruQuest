@@ -1,3 +1,6 @@
+import 'package:email_validator/email_validator.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import '../../ethereum_js_interop.dart';
 import '../../general/bloc/actions.dart';
 
@@ -8,6 +11,17 @@ abstract class UserAction extends Action {
 class GenerateConfirmationCodeAndAttestationOptions extends UserAction {
   final String email;
 
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (!EmailValidator.validate(email)) {
+      errors ??= [];
+      errors.add('Invalid email');
+    }
+
+    return errors;
+  }
+
   const GenerateConfirmationCodeAndAttestationOptions({required this.email});
 }
 
@@ -15,6 +29,22 @@ class SignUp extends UserAction {
   final String email;
   final String confirmationCode;
   final AttestationOptions options;
+
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (!EmailValidator.validate(email)) {
+      errors ??= [];
+      errors.add('Invalid email');
+    }
+    if (dotenv.env['ENVIRONMENT'] != 'Development' &&
+        (confirmationCode.length != 6 || int.tryParse(confirmationCode) == null)) {
+      errors ??= [];
+      errors.add('Confirmation code must be 6 digits long');
+    }
+
+    return errors;
+  }
 
   const SignUp({
     required this.email,
@@ -29,6 +59,17 @@ class SaveKeyShareQrCodeImage extends UserAction {
 
 class SignInWithThirdPartyWallet extends UserAction {
   final String? walletName;
+
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (walletName != 'Metamask' && walletName != 'CoinbaseWallet' && walletName != 'WalletConnect') {
+      errors ??= [];
+      errors.add('Unsupported wallet');
+    }
+
+    return errors;
+  }
 
   const SignInWithThirdPartyWallet({this.walletName});
 }
@@ -45,7 +86,7 @@ class DepositFunds extends UserAction {
     List<String>? errors;
     if (amount <= 0) {
       errors ??= [];
-      errors.add('Amount must be greater than 0');
+      errors.add('Invalid amount');
     }
 
     return errors;
@@ -62,7 +103,7 @@ class WithdrawFunds extends UserAction {
     List<String>? errors;
     if (amount <= 0) {
       errors ??= [];
-      errors.add('Amount must be greater than 0');
+      errors.add('Invalid amount');
     }
 
     return errors;

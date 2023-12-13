@@ -64,7 +64,7 @@ class IFrameManager {
 }
 
 class IFrame {
-  static final Uuid _uuid = Uuid();
+  static const Uuid _uuid = Uuid();
 
   final String viewId;
   final String url;

@@ -4,5 +4,5 @@ namespace Application.Common.Interfaces;
 
 public interface IManuallyBoundIm
 {
-    void BindFrom(FormCollection form);
+    bool BindFrom(FormCollection form);
 }

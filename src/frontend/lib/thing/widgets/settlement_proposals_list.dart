@@ -53,9 +53,9 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
     return Container(
       width: double.infinity,
       height: double.infinity,
-      decoration: BoxDecoration(
-        color: const Color(0xFF242423),
-        borderRadius: const BorderRadius.only(
+      decoration: const BoxDecoration(
+        color: Color(0xFF242423),
+        borderRadius: BorderRadius.only(
           topLeft: Radius.circular(16),
           topRight: Radius.circular(16),
         ),
@@ -63,7 +63,7 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
       child: StreamBuilder(
         stream: _thingBloc.proposalsList$,
         builder: (context, snapshot) {
-          if (snapshot.data == null) return Center(child: CircularProgressIndicator());
+          if (snapshot.data == null) return const Center(child: CircularProgressIndicator());
 
           var proposals = snapshot.data!;
           var highlightedProposal = proposals
@@ -126,7 +126,7 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
                       ),
                     ),
                   ),
-                  Spacer(),
+                  const Spacer(),
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xffF8F9FA),
@@ -143,8 +143,8 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xffF8F9FA),
                         foregroundColor: const Color(0xFF242423),
-                        disabledBackgroundColor: Color.fromARGB(255, 161, 161, 162),
-                        disabledForegroundColor: Color.fromARGB(255, 80, 80, 79),
+                        disabledBackgroundColor: const Color.fromARGB(255, 161, 161, 162),
+                        disabledForegroundColor: const Color.fromARGB(255, 80, 80, 79),
                         elevation: 10,
                       ),
                       icon: const Icon(Icons.add),
@@ -205,7 +205,7 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
                   const SizedBox(width: 20),
                 ],
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -240,9 +240,9 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
                               Container(
                                 width: double.infinity,
                                 height: 90,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xffF8F9FA),
-                                  border: const Border(
+                                decoration: const BoxDecoration(
+                                  color: Color(0xffF8F9FA),
+                                  border: Border(
                                     top: BorderSide(
                                       color: Colors.black,
                                       width: 3,
@@ -304,15 +304,15 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
                                           ),
                                           Container(
                                             width: 25,
-                                            decoration: BoxDecoration(
+                                            decoration: const BoxDecoration(
                                               color: Colors.white,
-                                              borderRadius: const BorderRadius.only(
+                                              borderRadius: BorderRadius.only(
                                                 topRight: Radius.circular(6),
                                                 bottomRight: Radius.circular(6),
                                               ),
                                             ),
                                             alignment: Alignment.center,
-                                            child: Icon(
+                                            child: const Icon(
                                               Icons.arrow_forward_ios,
                                               size: 18,
                                             ),
@@ -455,9 +455,9 @@ class _SettlementProposalsListState extends StateX<SettlementProposalsList> {
                 Expanded(
                   child: Container(
                     width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: const Color(0xffF8F9FA),
-                      border: const Border(
+                    decoration: const BoxDecoration(
+                      color: Color(0xffF8F9FA),
+                      border: Border(
                         top: BorderSide(
                           color: Colors.black,
                           width: 2,

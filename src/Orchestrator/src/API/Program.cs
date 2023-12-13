@@ -264,6 +264,35 @@ public static class WebApplicationBuilderExtension
             await process.WaitForExitAsync();
         }
 
+        if (app.Environment.EnvironmentName is "Testing")
+        {
+            var processInfo = new ProcessStartInfo()
+            {
+                FileName = "cmd.exe",
+                Arguments =
+                    "/c docker run --rm -v C:/chekh/Projects/TruQuest/src/dapp:/src ethereum/solc:0.8.17" +
+                    " --storage-layout --overwrite -o /src/layout --base-path /src/contracts --include-path /src/node_modules" +
+                    " /src/contracts/TruQuest.sol" +
+                    " /src/contracts/ThingValidationVerifierLottery.sol /src/contracts/ThingValidationPoll.sol" +
+                    " /src/contracts/SettlementProposalAssessmentVerifierLottery.sol /src/contracts/SettlementProposalAssessmentPoll.sol",
+                UseShellExecute = false,
+                RedirectStandardError = true
+            };
+            var process = new Process
+            {
+                StartInfo = processInfo
+            };
+            process.Start();
+
+            string? line;
+            while ((line = await process.StandardError.ReadLineAsync()) != null)
+            {
+                app.Logger.LogInformation(line);
+            }
+
+            await process.WaitForExitAsync();
+        }
+
         {
             var processInfo = new ProcessStartInfo()
             {

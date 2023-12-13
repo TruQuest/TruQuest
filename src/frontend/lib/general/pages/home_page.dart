@@ -91,11 +91,11 @@ class _HomePageState extends StateX<HomePage> {
               toolbarHeight: 70,
               centerTitle: true,
               elevation: 0,
-              actions: [
+              actions: const [
                 Banner(
                   message: 'pre-alpha',
                   location: BannerLocation.topEnd,
-                  color: const Color.fromARGB(255, 208, 53, 76),
+                  color: Color.fromARGB(255, 208, 53, 76),
                 ),
               ],
             ),

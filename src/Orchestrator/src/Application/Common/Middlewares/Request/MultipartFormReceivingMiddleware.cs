@@ -1,6 +1,7 @@
 using GoThataway;
 
 using Domain.Results;
+using Domain.Errors;
 
 using Application.Common.Interfaces;
 using Application.Common.Models.IM;
@@ -34,13 +35,22 @@ public class MultipartFormReceivingMiddleware<TRequest, TResponse> : IRequestMid
             );
             if (result.IsError)
             {
+                _fileReceiver.DeleteReceivedFiles(filePrefix: command.RequestId);
                 return new()
                 {
                     Error = result.Error
                 };
             }
 
-            command.Input.BindFrom(result.Data!);
+            bool valid = command.Input.BindFrom(result.Data!);
+            if (!valid)
+            {
+                _fileReceiver.DeleteReceivedFiles(filePrefix: command.RequestId);
+                return new()
+                {
+                    Error = new HandleError("Invalid input")
+                };
+            }
         }
 
         return await next();

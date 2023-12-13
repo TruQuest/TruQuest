@@ -42,6 +42,7 @@ resource "local_file" "frontend_env" {
   content = templatefile(
     "./eb/frontend-env.tftpl",
     {
+      application_version        = var.application_version_index_to_tag[var.application_version_count - 1]
       using_simulated_blockchain = var.using_simulated_blockchain
       hostname                   = var.hostname
       ethereum_rpc_url           = var.ethereum_rpc_url

@@ -26,7 +26,7 @@ Future main() async {
 
   logger = TalkerFlutter.init(
     logger: TalkerLogger(
-      settings: TalkerLoggerSettings(level: LogLevel.debug),
+      settings: const TalkerLoggerSettings(level: LogLevel.debug),
     ),
   );
 
@@ -47,7 +47,7 @@ class App extends StatelessWidget {
       ),
       builder: BotToastInit(),
       navigatorObservers: [BotToastNavigatorObserver()],
-      home: HomePage(),
+      home: const HomePage(),
     );
   }
 }

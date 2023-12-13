@@ -27,7 +27,7 @@ class UserStatusTracker extends StatelessWidgetX {
           return Tooltip(
             message: user.signerAddress,
             child: IconButton(
-              icon: Icon(
+              icon: const Icon(
                 Icons.account_box,
                 color: Colors.white,
               ),
@@ -36,13 +36,13 @@ class UserStatusTracker extends StatelessWidgetX {
           );
         } else if (user.originWallet == null) {
           return IconButton(
-            icon: Icon(
+            icon: const Icon(
               Icons.login,
               color: Colors.white,
             ),
             onPressed: () => showDialog(
               context: context,
-              builder: (context) => OnboardingDialog(),
+              builder: (context) => const OnboardingDialog(),
             ),
           );
         }

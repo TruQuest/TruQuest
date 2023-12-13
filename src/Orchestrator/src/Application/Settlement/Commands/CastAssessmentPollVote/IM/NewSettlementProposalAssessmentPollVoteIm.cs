@@ -32,6 +32,5 @@ internal class NewSettlementProposalAssessmentPollVoteImValidator : AbstractVali
             ts, "yyyy-MM-dd HH:mm:sszzz", null, DateTimeStyles.None, out _
         ));
         RuleFor(v => v.Decision).IsInEnum();
-        RuleFor(v => v.Reason).NotEmpty();
     }
 }

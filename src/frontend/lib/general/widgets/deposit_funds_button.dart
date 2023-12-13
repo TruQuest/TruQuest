@@ -12,7 +12,7 @@ class DepositFundsButton extends StatelessWidget {
     return RestrictWhenUnauthorizedButton(
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          fixedSize: Size.fromWidth(100),
+          fixedSize: const Size.fromWidth(100),
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,
           textStyle: GoogleFonts.righteous(

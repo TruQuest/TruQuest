@@ -107,8 +107,8 @@ class _OnboardingDialogState extends StateX<OnboardingDialog> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        leading: Icon(Icons.devices),
-                        title: Text('Signed-in from this device before'),
+                        leading: const Icon(Icons.devices),
+                        title: const Text('Signed-in from this device before'),
                         onTap: () async {
                           var success = await multiStageOffChainFlow(
                             context,
@@ -120,15 +120,17 @@ class _OnboardingDialogState extends StateX<OnboardingDialog> {
                           if (success && context.mounted) Navigator.of(context).pop();
                         },
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       ListTile(
                         tileColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        leading: Icon(Icons.device_unknown),
-                        title: Text('First time from this device'),
-                        subtitle: Text('Scan a QR-code from an already signed-in device'), // @@TODO: Help message.
+                        leading: const Icon(Icons.device_unknown),
+                        title: const Text('First time from this device'),
+                        subtitle: const Text(
+                          'Scan a QR-code from an already signed-in device',
+                        ), // @@TODO: Help message.
                         onTap: () {},
                       ),
                     ],

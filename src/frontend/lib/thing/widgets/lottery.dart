@@ -58,7 +58,7 @@ class _LotteryState extends StateX<Lottery> {
     return FutureBuilder(
       future: _initialInfoRetrieved,
       builder: (context, snapshot) {
-        if (snapshot.data == null) return Center(child: CircularProgressIndicator());
+        if (snapshot.data == null) return const Center(child: CircularProgressIndicator());
 
         var initialInfo = snapshot.data!;
 
@@ -71,7 +71,7 @@ class _LotteryState extends StateX<Lottery> {
 
         return Container(
           padding: EdgeInsets.symmetric(horizontal: horizontalMargin),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: Color(0xFF413C69),
             borderRadius: BorderRadius.only(
               topLeft: Radius.circular(16),
@@ -80,7 +80,7 @@ class _LotteryState extends StateX<Lottery> {
           ),
           child: Column(
             children: [
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               StreamBuilder(
                 stream: _thingBloc.verifierLotteryInfo$,
                 initialData: initialInfo,
@@ -143,7 +143,7 @@ class _LotteryState extends StateX<Lottery> {
                               ),
                             ],
                           ),
-                          SizedBox(width: 80),
+                          const SizedBox(width: 80),
                           SizedBox(
                             width: 600,
                             child: LotteryStepper(
@@ -159,12 +159,12 @@ class _LotteryState extends StateX<Lottery> {
                   );
                 },
               ),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               Expanded(
                 child: StreamBuilder(
                   stream: _thingBloc.verifierLotteryParticipants$,
                   builder: (context, snapshot) {
-                    if (snapshot.data == null) return Center(child: CircularProgressIndicator());
+                    if (snapshot.data == null) return const Center(child: CircularProgressIndicator());
 
                     var result = snapshot.data!;
                     var orchestratorCommitment = result.orchestratorCommitment;
@@ -188,7 +188,7 @@ class _LotteryState extends StateX<Lottery> {
                                 color: Colors.blue,
                                 fromNarrowToWide: true,
                                 narrowSideFraction: 0.4,
-                                borderRadius: BorderRadius.only(
+                                borderRadius: const BorderRadius.only(
                                   topLeft: Radius.circular(8),
                                   bottomLeft: Radius.circular(8),
                                 ),
@@ -222,7 +222,7 @@ class _LotteryState extends StateX<Lottery> {
                                     ],
                                   ),
                                 ),
-                              Spacer(),
+                              const Spacer(),
                               SizedBox(
                                 width: 170,
                                 height: 30,
@@ -233,14 +233,14 @@ class _LotteryState extends StateX<Lottery> {
                                       fontSize: 14,
                                     ),
                                     contentPadding: const EdgeInsets.only(left: 12),
-                                    suffixIcon: Icon(Icons.search, size: 20),
-                                    border: OutlineInputBorder(),
+                                    suffixIcon: const Icon(Icons.search, size: 20),
+                                    border: const OutlineInputBorder(),
                                   ),
                                 ),
                               ),
-                              SizedBox(width: 12),
+                              const SizedBox(width: 12),
                               IconButton(
-                                icon: Icon(Icons.refresh, size: 20),
+                                icon: const Icon(Icons.refresh, size: 20),
                                 onPressed: () => _thingBloc.dispatch(
                                   GetVerifierLotteryParticipants(thingId: widget.thing.id),
                                 ),
@@ -248,7 +248,7 @@ class _LotteryState extends StateX<Lottery> {
                             ],
                           ),
                         ),
-                        SizedBox(height: 28),
+                        const SizedBox(height: 28),
                         Expanded(
                           child: GridView.builder(
                             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -262,7 +262,7 @@ class _LotteryState extends StateX<Lottery> {
 
                               return Card(
                                 margin: EdgeInsets.zero,
-                                color: participant.userId == _currentUserId ? Color(0xff0A6EBD) : Colors.white,
+                                color: participant.userId == _currentUserId ? const Color(0xff0A6EBD) : Colors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -276,7 +276,7 @@ class _LotteryState extends StateX<Lottery> {
                                             width: double.infinity,
                                             decoration: BoxDecoration(
                                               color: participant.coldCardColor,
-                                              borderRadius: BorderRadius.only(
+                                              borderRadius: const BorderRadius.only(
                                                 topLeft: Radius.circular(8),
                                                 topRight: Radius.circular(8),
                                               ),
@@ -292,7 +292,7 @@ class _LotteryState extends StateX<Lottery> {
                                                     fontSize: 30,
                                                   ),
                                                 ),
-                                                SizedBox(height: 6),
+                                                const SizedBox(height: 6),
                                                 Text(
                                                   participant.commitment,
                                                   style: GoogleFonts.raleway(
@@ -316,7 +316,7 @@ class _LotteryState extends StateX<Lottery> {
                                       ],
                                     ),
                                     if (participant.isWinner)
-                                      Positioned(
+                                      const Positioned(
                                         top: 0,
                                         left: 0,
                                         child: CornerBanner(
@@ -334,7 +334,7 @@ class _LotteryState extends StateX<Lottery> {
                             itemCount: participants.length,
                           ),
                         ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                       ],
                     );
                   },

@@ -17,7 +17,7 @@ class SubjectService {
       documentContext.imageExt!,
       documentContext.imageBytes!,
       documentContext.croppedImageBytes!,
-      [1],
+      documentContext.tags.toList(),
     );
 
     return subjectId;

@@ -36,6 +36,69 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
     _subjectBloc.dispatch(const GetSubjects());
   }
 
+  Widget _buildAddButton() {
+    return RestrictWhenUnauthorizedButton(
+      child: ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xffF8F9FA),
+          foregroundColor: const Color(0xFF242423),
+          elevation: 10,
+        ),
+        icon: const Icon(Icons.add),
+        label: const Text('Add'),
+        onPressed: () async {
+          var documentContext = DocumentContext();
+          var btnController = RoundedLoadingButtonController();
+
+          var subjectId = await showDialog<String>(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => ScopeX(
+              useInstances: [documentContext],
+              child: DocumentComposer(
+                title: 'New subject',
+                nameFieldLabel: 'Name',
+                submitButton: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                  ),
+                  child: RoundedLoadingButton(
+                    child: const Text('Submit'),
+                    controller: btnController,
+                    onPressed: () async {
+                      var subjectId = await _subjectBloc.execute<String>(
+                        AddNewSubject(documentContext: DocumentContext.fromEditable(documentContext)),
+                      );
+
+                      if (subjectId == null) {
+                        btnController.error();
+                        await Future.delayed(const Duration(milliseconds: 1500));
+                        btnController.reset();
+
+                        return;
+                      }
+
+                      btnController.success();
+                      await Future.delayed(const Duration(milliseconds: 1500));
+                      if (context.mounted) Navigator.of(context).pop(subjectId);
+                    },
+                  ),
+                ),
+                sideBlocks: const [
+                  TypeSelectorBlock(),
+                  ImageBlockWithCrop(cropCircle: true),
+                  TagsBlock(),
+                ],
+              ),
+            ),
+          );
+
+          if (subjectId != null) _pageContext.goto('/subjects/$subjectId');
+        },
+      ),
+    );
+  }
+
   @override
   Widget buildX(BuildContext context) {
     return StreamBuilder(
@@ -52,11 +115,9 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
 
         var subjects = snapshot.data!;
         if (subjects.isEmpty) {
-          return const SliverFillRemaining(
+          return SliverFillRemaining(
             hasScrollBody: false,
-            child: Center(
-              child: Text('Nothing here yet'),
-            ),
+            child: Center(child: _buildAddButton()),
           );
         }
 
@@ -68,7 +129,7 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
                 child: Column(
                   children: [
                     WalletInfoCard(),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
@@ -83,70 +144,7 @@ class _SubjectsPageState extends StateX<SubjectsPage> {
                           onPressed: () {},
                         ),
                         const SizedBox(width: 12),
-                        RestrictWhenUnauthorizedButton(
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xffF8F9FA),
-                              foregroundColor: const Color(0xFF242423),
-                              elevation: 10,
-                            ),
-                            icon: const Icon(Icons.add),
-                            label: const Text('Add'),
-                            onPressed: () async {
-                              var documentContext = DocumentContext();
-                              var btnController = RoundedLoadingButtonController();
-
-                              var subjectId = await showDialog<String>(
-                                context: context,
-                                barrierDismissible: false,
-                                builder: (context) => ScopeX(
-                                  useInstances: [documentContext],
-                                  child: DocumentComposer(
-                                    title: 'New subject',
-                                    nameFieldLabel: 'Name',
-                                    submitButton: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                      ),
-                                      child: RoundedLoadingButton(
-                                        child: const Text('Submit'),
-                                        controller: btnController,
-                                        onPressed: () async {
-                                          var subjectId = await _subjectBloc.execute<String>(
-                                            AddNewSubject(
-                                              documentContext: DocumentContext.fromEditable(documentContext),
-                                            ),
-                                          );
-
-                                          if (subjectId == null) {
-                                            btnController.error();
-                                            await Future.delayed(const Duration(milliseconds: 1500));
-                                            btnController.reset();
-
-                                            return;
-                                          }
-
-                                          btnController.success();
-                                          await Future.delayed(const Duration(milliseconds: 1500));
-                                          if (context.mounted) Navigator.of(context).pop(subjectId);
-                                        },
-                                      ),
-                                    ),
-                                    sideBlocks: const [
-                                      TypeSelectorBlock(),
-                                      ImageBlockWithCrop(cropCircle: true),
-                                      TagsBlock(),
-                                    ],
-                                  ),
-                                ),
-                              );
-
-                              if (subjectId != null) {
-                                _pageContext.goto('/subjects/$subjectId');
-                              }
-                            },
-                          ),
-                        ),
+                        _buildAddButton(),
                       ],
                     ),
                   ],

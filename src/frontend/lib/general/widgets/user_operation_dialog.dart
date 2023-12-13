@@ -72,7 +72,7 @@ class UserOperationDialog extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            SizedBox(width: 24),
+                            const SizedBox(width: 24),
                             Expanded(
                               flex: 3,
                               child: Tooltip(
@@ -88,7 +88,7 @@ class UserOperationDialog extends StatelessWidget {
                             ),
                           ],
                         ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -101,7 +101,7 @@ class UserOperationDialog extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            SizedBox(width: 24),
+                            const SizedBox(width: 24),
                             Expanded(
                               flex: 3,
                               child: Text(
@@ -129,7 +129,7 @@ class UserOperationDialog extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                                SizedBox(width: 24),
+                                const SizedBox(width: 24),
                                 Expanded(
                                   flex: 3,
                                   child: Tooltip(
@@ -146,7 +146,7 @@ class UserOperationDialog extends StatelessWidget {
                               ],
                             ),
                           ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -159,7 +159,7 @@ class UserOperationDialog extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            SizedBox(width: 24),
+                            const SizedBox(width: 24),
                             Expanded(
                               flex: 3,
                               child: Text(
@@ -177,7 +177,7 @@ class UserOperationDialog extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Column(
@@ -194,7 +194,7 @@ class UserOperationDialog extends StatelessWidget {
                               ),
                             ),
                           ),
-                          SizedBox(width: 24),
+                          const SizedBox(width: 24),
                           Expanded(
                             child: Text(
                               userOp.estimatedGas,
@@ -206,7 +206,7 @@ class UserOperationDialog extends StatelessWidget {
                           ),
                         ],
                       ),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -219,7 +219,7 @@ class UserOperationDialog extends StatelessWidget {
                               ),
                             ),
                           ),
-                          SizedBox(width: 24),
+                          const SizedBox(width: 24),
                           Expanded(
                             child: Tooltip(
                               message: userOp.estimatedTxnFee,
@@ -234,7 +234,7 @@ class UserOperationDialog extends StatelessWidget {
                           ),
                         ],
                       ),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -247,7 +247,7 @@ class UserOperationDialog extends StatelessWidget {
                               ),
                             ),
                           ),
-                          SizedBox(width: 24),
+                          const SizedBox(width: 24),
                           Expanded(
                             child: Text(
                               userOp.txnFeeCoveredByPaymaster ? 'YES' : 'NO',
@@ -282,7 +282,7 @@ class UserOperationDialog extends StatelessWidget {
           ),
           onPressed: () => Navigator.of(context).pop(null),
         ),
-        SizedBox(width: 6),
+        const SizedBox(width: 6),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.white,

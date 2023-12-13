@@ -14,16 +14,25 @@ class AddNewSubject extends SubjectAction {
     List<String>? errors;
     if (documentContext.subjectType == null) {
       errors ??= [];
-      errors.add('Type must be specified');
+      errors.add('Subject type must be specified');
     }
     if (documentContext.nameOrTitle == null || documentContext.nameOrTitle!.length < 3) {
       errors ??= [];
       errors.add('Name should be at least 3 characters long');
     }
-    if (documentContext.details!.isEmpty) {
-      // @@TODO: Figure out why it is never empty.
+    if (documentContext.operations!.isEmpty) {
       errors ??= [];
       errors.add('Details are not specified');
+    }
+    if (documentContext.imageExt == null ||
+        documentContext.imageBytes == null ||
+        documentContext.croppedImageBytes == null) {
+      errors ??= [];
+      errors.add('No image added');
+    }
+    if (documentContext.tags.isEmpty) {
+      errors ??= [];
+      errors.add('Tags are not specified');
     }
 
     return errors;

@@ -21,13 +21,23 @@ class CreateNewSettlementProposalDraft extends SettlementAction {
       errors ??= [];
       errors.add('Title should be at least 3 characters long');
     }
-    if (documentContext.details!.isEmpty) {
+    if (documentContext.verdict == null) {
+      errors ??= [];
+      errors.add('Verdict is not specified');
+    }
+    if (documentContext.operations!.isEmpty) {
       errors ??= [];
       errors.add('Details are not specified');
     }
+    if (documentContext.imageExt == null ||
+        documentContext.imageBytes == null ||
+        documentContext.croppedImageBytes == null) {
+      errors ??= [];
+      errors.add('No image added');
+    }
     if (documentContext.evidence.isEmpty) {
       errors ??= [];
-      errors.add('Must provide evidence');
+      errors.add('Evidence is not provided');
     }
 
     return errors;
@@ -169,7 +179,7 @@ class ClaimLotterySpot extends SettlementAction {
     }
     if (thingVerifiersArrayIndex < 0) {
       errors ??= [];
-      errors.add('Invalid index');
+      errors.add('Invalid verifier index');
     }
 
     return errors;
@@ -255,6 +265,21 @@ class CastVoteOffChain extends SettlementAction {
   final DecisionIm decision;
   final String reason;
 
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (!thingId.isValidUuid) {
+      errors ??= [];
+      errors.add('Invalid Promise Id');
+    }
+    if (!proposalId.isValidUuid) {
+      errors ??= [];
+      errors.add('Invalid Proposal Id');
+    }
+
+    return errors;
+  }
+
   const CastVoteOffChain({
     required this.thingId,
     required this.proposalId,
@@ -269,6 +294,25 @@ class CastVoteOnChain extends SettlementAction {
   final int settlementProposalVerifiersArrayIndex;
   final DecisionIm decision;
   final String reason;
+
+  @override
+  List<String>? validate() {
+    List<String>? errors;
+    if (!thingId.isValidUuid) {
+      errors ??= [];
+      errors.add('Invalid Promise Id');
+    }
+    if (!proposalId.isValidUuid) {
+      errors ??= [];
+      errors.add('Invalid Proposal Id');
+    }
+    if (settlementProposalVerifiersArrayIndex < 0) {
+      errors ??= [];
+      errors.add('Invalid verifier index');
+    }
+
+    return errors;
+  }
 
   const CastVoteOnChain({
     required this.thingId,
