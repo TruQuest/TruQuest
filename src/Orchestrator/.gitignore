@@ -516,6 +516,7 @@ override.tf.json
 terraform.rc
 
 deploy/terraform/docker-compose.tf.yml
+deploy/terraform/src/eb/backend_source/static_files
 
 *.zip
 
