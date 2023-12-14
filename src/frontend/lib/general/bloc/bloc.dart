@@ -57,6 +57,8 @@ abstract class Bloc<TAction extends Action> {
     List<String>? validationErrors;
     if ((validationErrors = action.validate()) != null) {
       toastMessenger.add('• ' + validationErrors!.join('\n• '));
+      // @@??!!: Why the hell synchronous return makes Flutter go nuts??
+      await Future.delayed(const Duration(milliseconds: 50));
       yield const ValidationError();
       return;
     }

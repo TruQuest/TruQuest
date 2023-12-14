@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:logging/logging.dart' as logging;
 
@@ -29,6 +30,8 @@ Future main() async {
       settings: const TalkerLoggerSettings(level: LogLevel.debug),
     ),
   );
+
+  GoogleFonts.config.allowRuntimeFetching = false;
 
   runApp(const App());
 }

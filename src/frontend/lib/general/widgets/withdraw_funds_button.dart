@@ -15,9 +15,7 @@ class WithdrawFundsButton extends StatelessWidget {
           fixedSize: const Size.fromWidth(100),
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,
-          textStyle: GoogleFonts.righteous(
-            fontSize: 12,
-          ),
+          textStyle: GoogleFonts.righteous(fontSize: 12),
         ),
         child: const Text('Withdraw'),
         onPressed: () => showDialog(
@@ -26,9 +24,7 @@ class WithdrawFundsButton extends StatelessWidget {
             backgroundColor: const Color(0xFF242423),
             title: Text(
               'Withdraw funds from the platform back to your wallet',
-              style: GoogleFonts.philosopher(
-                color: Colors.white,
-              ),
+              style: GoogleFonts.philosopher(color: Colors.white),
             ),
             contentPadding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
             children: [
@@ -41,9 +37,7 @@ class WithdrawFundsButton extends StatelessWidget {
                 child: Text(
                   'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor. '
                   'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
-                  style: GoogleFonts.raleway(
-                    color: Colors.white,
-                  ),
+                  style: GoogleFonts.raleway(color: Colors.white),
                 ),
               ),
               const SizedBox(height: 16),

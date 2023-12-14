@@ -15,9 +15,7 @@ class DepositFundsButton extends StatelessWidget {
           fixedSize: const Size.fromWidth(100),
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,
-          textStyle: GoogleFonts.righteous(
-            fontSize: 12,
-          ),
+          textStyle: GoogleFonts.righteous(fontSize: 12),
         ),
         child: const Text('Deposit'),
         onPressed: () => showDialog(
@@ -26,9 +24,7 @@ class DepositFundsButton extends StatelessWidget {
             backgroundColor: const Color(0xFF242423),
             title: Text(
               'Deposit Truthserum to be used on the platform',
-              style: GoogleFonts.philosopher(
-                color: Colors.white,
-              ),
+              style: GoogleFonts.philosopher(color: Colors.white),
             ),
             contentPadding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
             children: [
@@ -41,9 +37,7 @@ class DepositFundsButton extends StatelessWidget {
                 child: Text(
                   'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor. '
                   'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor',
-                  style: GoogleFonts.raleway(
-                    color: Colors.white,
-                  ),
+                  style: GoogleFonts.raleway(color: Colors.white),
                 ),
               ),
               const SizedBox(height: 16),

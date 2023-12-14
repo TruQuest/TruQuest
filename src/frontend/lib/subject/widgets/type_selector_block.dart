@@ -38,9 +38,7 @@ class _TypeSelectorBlockState extends StateX<TypeSelectorBlock> {
             value: SubjectTypeIm.person,
             groupValue: _documentContext.subjectType,
             onChanged: (value) {
-              setState(() {
-                _documentContext.subjectType = value;
-              });
+              setState(() => _documentContext.subjectType = value);
             },
           ),
         ),
@@ -51,9 +49,7 @@ class _TypeSelectorBlockState extends StateX<TypeSelectorBlock> {
             value: SubjectTypeIm.organization,
             groupValue: _documentContext.subjectType,
             onChanged: (value) {
-              setState(() {
-                _documentContext.subjectType = value;
-              });
+              setState(() => _documentContext.subjectType = value);
             },
           ),
         ),

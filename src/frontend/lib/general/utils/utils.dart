@@ -126,6 +126,15 @@ extension StringExtension on String {
 
     return (prefix ? '0x' : '') + hex.encode(thingIdBytes);
   }
+
+  String trimZeros() {
+    if (indexOf('.') == -1) return this;
+
+    int index = length;
+    while (this[index - 1] == '0') --index;
+
+    return substring(0, this[index - 1] == '.' ? index - 1 : index);
+  }
 }
 
 extension DateTimeExtension on DateTime {
