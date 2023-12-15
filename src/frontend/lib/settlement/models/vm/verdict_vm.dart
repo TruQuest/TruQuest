@@ -30,17 +30,17 @@ extension VerdictVmExtension on VerdictVm {
   Color getColor() {
     switch (this) {
       case VerdictVm.delivered:
-        return const Color.fromARGB(255, 72, 206, 119);
+        return const Color.fromARGB(255, 87, 26, 255);
       case VerdictVm.guessItCounts:
-        return const Color.fromARGB(255, 122, 226, 129);
+        return Colors.deepPurpleAccent;
       case VerdictVm.aintGoodEnough:
-        return const Color.fromARGB(255, 210, 255, 60);
+        return const Color.fromARGB(255, 240, 107, 255);
       case VerdictVm.motionNotAction:
-        return const Color.fromARGB(255, 255, 202, 141);
+        return const Color.fromARGB(255, 255, 107, 188);
       case VerdictVm.noEffortWhatsoever:
         return const Color(0xffFF6B6B);
       case VerdictVm.asGoodAsMaliciousIntent:
-        return const Color.fromARGB(255, 203, 62, 88);
+        return const Color.fromARGB(255, 174, 32, 58);
     }
   }
 }

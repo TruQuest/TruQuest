@@ -300,6 +300,12 @@ class SwipeButtonState extends StateX<SwipeButton> {
     _swiped = widget.swiped;
   }
 
+  Future<bool> _onCompletedSwipe() async {
+    await Future.delayed(const Duration(milliseconds: 10)); // @@HACK
+    // @@??: Why the hell if widget.onCompletedSwipe() returns synchronously it makes Flutter go nuts??
+    return await widget.onCompletedSwipe();
+  }
+
   @override
   Widget buildX(BuildContext context) {
     return _SwipeButton.expand(
@@ -325,7 +331,7 @@ class SwipeButtonState extends StateX<SwipeButton> {
           _swiped = true;
         });
 
-        if (!await widget.onCompletedSwipe()) {
+        if (!await _onCompletedSwipe()) {
           // @@NOTE: Situation: User swiped the join lottery button but, while the action handling was still in progress,
           // the lottery expired, which led to the button's key changing and therefore to a new state object being created
           // and this one being disposed of.

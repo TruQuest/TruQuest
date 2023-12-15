@@ -4,13 +4,13 @@ import 'package:intl/intl.dart';
 import 'decision_vm.dart';
 
 class VoteVm {
-  static final _colors = [
-    const Color(0xff72efdd),
-    const Color(0xff64dfdf),
-    const Color(0xff56cfe1),
-    const Color(0xff48bfe3),
-    const Color(0xff4ea8de),
-    const Color(0xff5390d9),
+  static const _colors = [
+    Color(0xff72efdd),
+    Color(0xff64dfdf),
+    Color(0xff56cfe1),
+    Color(0xff48bfe3),
+    Color(0xff4ea8de),
+    Color(0xff5390d9),
   ];
 
   final String userId;

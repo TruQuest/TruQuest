@@ -1,9 +1,11 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
+import '../../general/utils/utils.dart';
 import '../../general/widgets/clipped_rect.dart';
 import '../models/vm/assessment_poll_info_vm.dart';
 import '../../general/widgets/block_countdown.dart';
@@ -34,6 +36,8 @@ class _PollState extends StateX<Poll> {
 
   late Future<AssessmentPollInfoVm?> _infoRetrieved;
 
+  OverlayEntry? _overlayEntry;
+
   @override
   void initState() {
     super.initState();
@@ -58,6 +62,18 @@ class _PollState extends StateX<Poll> {
         proposalId: widget.proposal.id,
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _removeOverlay();
+    super.dispose();
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry?.dispose();
+    _overlayEntry = null;
   }
 
   @override
@@ -200,13 +216,43 @@ class _PollState extends StateX<Poll> {
                                   ),
                                 ),
                               ),
-                              Text(
-                                'Decision: ${result.decision}',
-                                style: GoogleFonts.raleway(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
+                              if (result.voteAggIpfsCid == null)
+                                Text(
+                                  'Decision: Pending',
+                                  style: GoogleFonts.raleway(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                )
+                              else
+                                InkWell(
+                                  onTapDown: (details) => showOverlay(
+                                    context: context,
+                                    onOverlayEntryCreated: (overlayEntry) => _overlayEntry = overlayEntry,
+                                    onOverlayEntryRemoveRequested: _removeOverlay,
+                                    position: details.globalPosition,
+                                    title: 'Assessment poll aggregate vote',
+                                    urlText: 'See on IPFS...',
+                                    url: '${dotenv.env['IPFS_GATEWAY_URL']}/${result.voteAggIpfsCid}',
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        'Decision: ${result.decision}',
+                                        style: GoogleFonts.raleway(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      const Icon(
+                                        Icons.launch,
+                                        color: Colors.black,
+                                        size: 14,
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
                               const Spacer(),
                               SizedBox(
                                 width: 170,
@@ -274,11 +320,37 @@ class _PollState extends StateX<Poll> {
                                               ),
                                             ),
                                             const SizedBox(height: 6),
-                                            Text(
-                                              vote.onOrOffChain,
-                                              style: GoogleFonts.raleway(
-                                                color: Colors.white,
-                                                fontSize: 20,
+                                            InkWell(
+                                              onTapDown: (details) => showOverlay(
+                                                context: context,
+                                                onOverlayEntryCreated: (overlayEntry) => _overlayEntry = overlayEntry,
+                                                onOverlayEntryRemoveRequested: _removeOverlay,
+                                                position: details.globalPosition,
+                                                title: 'User\'s vote',
+                                                urlText:
+                                                    'See on ${vote.blockNumber != null ? 'block explorer' : 'IPFS'}...',
+                                                url: vote.blockNumber != null
+                                                    ? dotenv.env['BLOCK_EXPLORER_URL'] != null
+                                                        ? '${dotenv.env['BLOCK_EXPLORER_URL']}/tx/${vote.txnHash}'
+                                                        : null
+                                                    : '${dotenv.env['IPFS_GATEWAY_URL']}/${vote.ipfsCid}',
+                                              ),
+                                              child: Column(
+                                                children: [
+                                                  Text(
+                                                    vote.onOrOffChain,
+                                                    style: GoogleFonts.raleway(
+                                                      color: Colors.white,
+                                                      fontSize: 20,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 6),
+                                                  Icon(
+                                                    Icons.launch,
+                                                    color: Colors.black.withOpacity(0.4),
+                                                    size: 18,
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ],
@@ -287,10 +359,13 @@ class _PollState extends StateX<Poll> {
                                     ),
                                     Padding(
                                       padding: const EdgeInsets.symmetric(vertical: 8),
-                                      child: Text(
-                                        vote.walletAddressShort,
-                                        style: GoogleFonts.raleway(
-                                          color: vote.userId == _currentUserId ? Colors.white : Colors.black,
+                                      child: Tooltip(
+                                        message: 'User: ${vote.walletAddress}',
+                                        child: Text(
+                                          vote.walletAddressShort,
+                                          style: GoogleFonts.raleway(
+                                            color: vote.userId == _currentUserId ? Colors.white : Colors.black,
+                                          ),
                                         ),
                                       ),
                                     ),

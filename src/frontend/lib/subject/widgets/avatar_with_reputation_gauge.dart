@@ -78,6 +78,10 @@ class AvatarWithReputationGauge extends StatelessWidget {
       alignment: Alignment.center,
       children: [
         Tooltip(
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.8),
+            border: Border.all(color: Colors.black),
+          ),
           richMessage: TextSpan(
             children: [
               TextSpan(
@@ -91,14 +95,14 @@ class AvatarWithReputationGauge extends StatelessWidget {
                 TextSpan(
                   text: before,
                   style: GoogleFonts.righteous(
-                    color: Colors.white,
+                    color: Colors.black,
                     fontSize: 16,
                   ),
                 ),
               TextSpan(
                 text: 'v',
                 style: GoogleFonts.righteous(
-                  color: Colors.white,
+                  color: Colors.black,
                   fontSize: 16,
                 ),
               ),
@@ -106,7 +110,7 @@ class AvatarWithReputationGauge extends StatelessWidget {
                 TextSpan(
                   text: after,
                   style: GoogleFonts.righteous(
-                    color: Colors.white,
+                    color: Colors.black,
                     fontSize: 16,
                   ),
                 ),

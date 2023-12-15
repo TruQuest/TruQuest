@@ -55,11 +55,7 @@ class _TransferFundsStepperState extends StateX<TransferFundsStepper> {
               amountInGt = int.tryParse(value);
             }
 
-            if (amountInGt == null) {
-              // @@??!!: Why the hell synchronous return makes Flutter go nuts??
-              await Future.delayed(const Duration(milliseconds: 50));
-              return false;
-            }
+            if (amountInGt == null) return false;
 
             bool success = await multiStageFlow(
               context,
@@ -84,16 +80,15 @@ class _TransferFundsStepperState extends StateX<TransferFundsStepper> {
               ),
             ),
             subtitle: Text(
-              '1 TRU = 1 000 000 000 GT (Guttae /guht-ee/)',
-              style: GoogleFonts.raleway(
+              '1 TRU = 1 000 000 000 GT (Guttae [guht-ee])',
+              style: GoogleFonts.philosopher(
                 color: Colors.white,
-                fontSize: 14,
-                height: 1.3,
+                fontSize: 15,
               ),
             ),
             content: Container(
-              height: 60,
-              padding: const EdgeInsets.only(bottom: 12),
+              height: 68,
+              padding: const EdgeInsets.only(bottom: 20),
               child: Row(
                 children: [
                   Expanded(

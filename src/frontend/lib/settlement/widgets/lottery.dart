@@ -1,10 +1,12 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
 import '../../general/models/vm/verifier_lottery_participant_entry_vm.dart';
+import '../../general/utils/utils.dart';
 import '../../general/widgets/block_countdown.dart';
 import '../../general/widgets/clipped_rect.dart';
 import '../../general/widgets/corner_banner.dart';
@@ -34,6 +36,8 @@ class _LotteryState extends StateX<Lottery> {
   String? _currentUserId;
 
   late Future<VerifierLotteryInfoVm?> _initialInfoRetrieved;
+
+  OverlayEntry? _overlayEntry;
 
   @override
   void initState() {
@@ -65,6 +69,18 @@ class _LotteryState extends StateX<Lottery> {
         proposalId: widget.proposal.id,
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _removeOverlay();
+    super.dispose();
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry?.dispose();
+    _overlayEntry = null;
   }
 
   @override
@@ -216,26 +232,79 @@ class _LotteryState extends StateX<Lottery> {
                                 ),
                               ),
                               if (orchestratorCommitment != null)
-                                RichText(
-                                  text: TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: lotteryClosedEvent == null
-                                            ? 'No nonce yet'
-                                            : lotteryClosedEvent.nonce?.toString() ?? 'Lottery failed',
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (lotteryClosedEvent == null)
+                                      Text(
+                                        'No nonce yet',
                                         style: GoogleFonts.righteous(
                                           color: Colors.black.withOpacity(0.7),
                                           fontSize: 16,
                                         ),
-                                      ),
-                                      TextSpan(
-                                        text: '\n         ${orchestratorCommitment.commitmentShort}',
-                                        style: GoogleFonts.raleway(
-                                          fontSize: 13,
+                                      )
+                                    else
+                                      InkWell(
+                                        onTapDown: (details) => showOverlay(
+                                          context: context,
+                                          onOverlayEntryCreated: (overlayEntry) => _overlayEntry = overlayEntry,
+                                          onOverlayEntryRemoveRequested: _removeOverlay,
+                                          position: details.globalPosition,
+                                          title: 'Close lottery transaction',
+                                          urlText: 'See on block explorer...',
+                                          url: dotenv.env['BLOCK_EXPLORER_URL'] != null
+                                              ? '${dotenv.env['BLOCK_EXPLORER_URL']}/tx/${lotteryClosedEvent.txnHash}'
+                                              : null,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Text(
+                                              lotteryClosedEvent.nonce?.toString() ?? 'Lottery failed',
+                                              style: GoogleFonts.righteous(
+                                                color: Colors.black.withOpacity(0.7),
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            const Icon(
+                                              Icons.launch,
+                                              color: Colors.black,
+                                              size: 12,
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                    ],
-                                  ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 24),
+                                      child: InkWell(
+                                        onTapDown: (details) => showOverlay(
+                                          context: context,
+                                          onOverlayEntryCreated: (overlayEntry) => _overlayEntry = overlayEntry,
+                                          onOverlayEntryRemoveRequested: _removeOverlay,
+                                          position: details.globalPosition,
+                                          title: 'Initialize lottery transaction',
+                                          urlText: 'See on block explorer...',
+                                          url: dotenv.env['BLOCK_EXPLORER_URL'] != null
+                                              ? '${dotenv.env['BLOCK_EXPLORER_URL']}/tx/${orchestratorCommitment.txnHash}'
+                                              : null,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Text(
+                                              orchestratorCommitment.commitmentShort,
+                                              style: GoogleFonts.raleway(fontSize: 13),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            const Icon(
+                                              Icons.launch,
+                                              color: Colors.black,
+                                              size: 12,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               const Spacer(),
                               SizedBox(
@@ -323,11 +392,37 @@ class _LotteryState extends StateX<Lottery> {
                                                   ),
                                                 ),
                                                 const SizedBox(height: 6),
-                                                Text(
-                                                  entry.commitment,
-                                                  style: GoogleFonts.raleway(
-                                                    color: Colors.white,
-                                                    fontSize: 17,
+                                                InkWell(
+                                                  onTapDown: (details) => showOverlay(
+                                                    context: context,
+                                                    onOverlayEntryCreated: (overlayEntry) =>
+                                                        _overlayEntry = overlayEntry,
+                                                    onOverlayEntryRemoveRequested: _removeOverlay,
+                                                    position: details.globalPosition,
+                                                    title: isClaimant
+                                                        ? 'Claim lottery spot transaction'
+                                                        : 'Join lottery transaction',
+                                                    urlText: 'See on block explorer...',
+                                                    url: dotenv.env['BLOCK_EXPLORER_URL'] != null
+                                                        ? '${dotenv.env['BLOCK_EXPLORER_URL']}/tx/${entry.txnHash}'
+                                                        : null,
+                                                  ),
+                                                  child: Column(
+                                                    children: [
+                                                      Text(
+                                                        entry.commitment,
+                                                        style: GoogleFonts.raleway(
+                                                          color: Colors.white,
+                                                          fontSize: 17,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 6),
+                                                      Icon(
+                                                        Icons.launch,
+                                                        color: Colors.black.withOpacity(0.4),
+                                                        size: 18,
+                                                      ),
+                                                    ],
                                                   ),
                                                 ),
                                               ],
@@ -336,10 +431,13 @@ class _LotteryState extends StateX<Lottery> {
                                         ),
                                         Padding(
                                           padding: const EdgeInsets.symmetric(vertical: 8),
-                                          child: Text(
-                                            entry.walletAddressShort,
-                                            style: GoogleFonts.raleway(
-                                              color: entry.userId == _currentUserId ? Colors.white : Colors.black,
+                                          child: Tooltip(
+                                            message: 'User: ${entry.walletAddress}',
+                                            child: Text(
+                                              entry.walletAddressShort,
+                                              style: GoogleFonts.raleway(
+                                                color: entry.userId == _currentUserId ? Colors.white : Colors.black,
+                                              ),
                                             ),
                                           ),
                                         ),

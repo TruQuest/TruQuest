@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:convert/convert.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
 import '../errors/api_error.dart';
@@ -130,10 +132,10 @@ extension StringExtension on String {
   String trimZeros() {
     if (indexOf('.') == -1) return this;
 
-    int index = length;
-    while (this[index - 1] == '0') --index;
+    int index = length - 1;
+    while (this[index] == '0') --index;
 
-    return substring(0, this[index - 1] == '.' ? index - 1 : index);
+    return substring(0, this[index] == '.' ? index : index + 1);
   }
 }
 
@@ -204,6 +206,73 @@ String getMinLengthAmount(BigInt amount, String tokenSymbol, [int length = 3]) {
   }
 
   return '${balanceStringSplit.first}.$decimals';
+}
+
+void showOverlay({
+  required BuildContext context,
+  required void Function(OverlayEntry overlayEntry) onOverlayEntryCreated,
+  required VoidCallback onOverlayEntryRemoveRequested,
+  required Offset position,
+  required String title,
+  required String urlText,
+  required String? url,
+}) {
+  onOverlayEntryRemoveRequested();
+
+  var overlayEntry = OverlayEntry(
+    builder: (context) => Stack(
+      children: [
+        Positioned.fill(
+          child: GestureDetector(
+            onTap: onOverlayEntryRemoveRequested,
+            child: Container(color: Colors.black.withOpacity(0.3)),
+          ),
+        ),
+        Positioned(
+          left: position.dx,
+          top: position.dy,
+          child: Material(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black,
+                border: Border.all(
+                  color: Colors.white,
+                  width: 2,
+                ),
+              ),
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.raleway(color: Colors.white),
+                  ),
+                  const SizedBox(height: 8),
+                  InkWell(
+                    onTap: url != null
+                        ? () async {
+                            await launchUrl(Uri.parse(url));
+                            onOverlayEntryRemoveRequested();
+                          }
+                        : null,
+                    child: Text(
+                      urlText,
+                      style: GoogleFonts.philosopher(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  onOverlayEntryCreated(overlayEntry);
+
+  Overlay.of(context).insert(overlayEntry);
 }
 
 ThemeData getThemeDataForSteppers(BuildContext context) => ThemeData(

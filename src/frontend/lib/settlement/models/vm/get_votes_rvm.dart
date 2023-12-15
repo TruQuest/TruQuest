@@ -7,9 +7,7 @@ class GetVotesRvm {
   final String? voteAggIpfsCid;
   final List<VoteVm> votes;
 
-  String get decision => proposalState == SettlementProposalStateVm.verifiersSelectedAndPollInitiated
-      ? 'Pending'
-      : proposalState.getString();
+  String get decision => proposalState.getString();
 
   GetVotesRvm.fromMap(Map<String, dynamic> map)
       : proposalId = map['proposalId'],

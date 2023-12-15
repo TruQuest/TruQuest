@@ -7,11 +7,9 @@ class GetVotesRvm {
   final String? voteAggIpfsCid;
   final List<VoteVm> votes;
 
-  String get decision => thingState == ThingStateVm.verifiersSelectedAndPollInitiated
-      ? 'Pending'
-      : thingState == ThingStateVm.consensusNotReached || thingState == ThingStateVm.declined
-          ? thingState.getString()
-          : 'Accepted';
+  String get decision => thingState == ThingStateVm.consensusNotReached || thingState == ThingStateVm.declined
+      ? thingState.getString()
+      : 'Accepted';
 
   GetVotesRvm.fromMap(Map<String, dynamic> map)
       : thingId = map['thingId'],
