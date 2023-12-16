@@ -22,7 +22,7 @@ People have short memories. Blockchain never forgets.
 ## Gallery
 
 <p float="left">
-    <img src="https://github.com/TruQuest/TruQuest/assets/84779039/5609ab09-b5fa-4084-aaa7-6285f83d841b" width="40%" />
+    <img src="https://github.com/TruQuest/TruQuest/assets/84779039/8cd98f77-e2d9-47f2-bcbe-3945027a17c1" width="40%" />
     <img src="https://github.com/TruQuest/TruQuest/assets/84779039/646f82de-aa00-4f1d-8d5a-cf6ed32cbcce" width="40%" />
 </p>
 <p float="left">

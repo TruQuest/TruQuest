@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:side_sheet/side_sheet.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
-import 'contacts_panel.dart';
 import 'progress_bar.dart';
 import '../contexts/page_context.dart';
 import 'notification_tracker.dart';
@@ -67,32 +65,6 @@ class NavPanel extends StatelessWidgetX {
                     const SizedBox(width: 12),
                     Text(
                       'How To',
-                      style: GoogleFonts.raleway(
-                        fontSize: 17,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 48),
-              InkWell(
-                onTap: () => SideSheet.right(
-                  context: context,
-                  sheetColor: Colors.black87,
-                  width: MediaQuery.of(context).size.width * 0.2,
-                  body: const ContactsPanel(),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.circle,
-                      color: Colors.white,
-                      size: 8,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Contacts',
                       style: GoogleFonts.raleway(
                         fontSize: 17,
                         color: Colors.white,

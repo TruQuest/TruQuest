@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:talker_flutter/talker_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../services/iframe_manager.dart';
 import '../utils/logger.dart';
@@ -23,11 +26,23 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends StateX<HomePage> {
+class _HomePageState extends StateX<HomePage> with TickerProviderStateMixin {
   late final _subscriptionManager = use<SubscriptionManager>();
   late final _pageContext = use<PageContext>();
   late final _notificationBloc = use<NotificationBloc>();
   late final _iframeManager = use<IFrameManager>();
+
+  late final AnimationController _rightAnimationController;
+  late final Animation<double> _rightAnimation;
+  late final AnimationController _leftAnimationController;
+  late final Animation<double> _leftAnimation;
+
+  final double _overlayWidth = 250;
+  final double _overlayHeight = 250;
+  final double _overlayInitialVisibleWidth = 30;
+  late double _halfScreenHeight;
+  OverlayEntry? _rightOverlayEntry;
+  OverlayEntry? _leftOverlayEntry;
 
   @override
   void initState() {
@@ -42,6 +57,226 @@ class _HomePageState extends StateX<HomePage> {
         duration: const Duration(seconds: 5),
       ),
     );
+
+    _rightAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    _rightAnimation = Tween<double>(begin: 0, end: _overlayWidth - _overlayInitialVisibleWidth - 2).animate(
+      CurvedAnimation(
+        parent: _rightAnimationController,
+        curve: Curves.fastOutSlowIn,
+      ),
+    );
+
+    _leftAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    _leftAnimation = Tween<double>(begin: 0, end: _overlayWidth - _overlayInitialVisibleWidth - 2).animate(
+      CurvedAnimation(
+        parent: _leftAnimationController,
+        curve: Curves.fastOutSlowIn,
+      ),
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _halfScreenHeight = MediaQuery.sizeOf(context).height * 0.5;
+    SchedulerBinding.instance.scheduleFrameCallback((_) => _buildOverlays());
+  }
+
+  void _removeOverlays() {
+    _rightOverlayEntry?.remove();
+    _rightOverlayEntry?.dispose();
+    _rightOverlayEntry = null;
+
+    _leftOverlayEntry?.remove();
+    _leftOverlayEntry?.dispose();
+    _leftOverlayEntry = null;
+  }
+
+  @override
+  void dispose() {
+    _removeOverlays();
+    _rightAnimationController.dispose();
+    _leftAnimationController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildContact({
+    required Icon icon,
+    required String address,
+    required String description,
+    required bool tappable,
+  }) {
+    return Row(
+      children: [
+        icon,
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                description,
+                style: GoogleFonts.philosopher(
+                  color: Colors.white,
+                  fontSize: 13,
+                ),
+              ),
+              tappable
+                  ? InkWell(
+                      onTap: () => launchUrl(Uri.parse('https://$address')),
+                      child: Text(
+                        address,
+                        style: GoogleFonts.philosopher(
+                          color: Colors.white,
+                          fontSize: 15,
+                          decoration: TextDecoration.underline,
+                          decorationThickness: 0.8,
+                        ),
+                      ),
+                    )
+                  : SelectableText(
+                      address,
+                      style: GoogleFonts.philosopher(
+                        color: Colors.white,
+                        fontSize: 15,
+                        decoration: TextDecoration.underline,
+                        decorationThickness: 0.8,
+                      ),
+                    ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _buildOverlays() {
+    _removeOverlays();
+    _rightAnimationController.reset();
+    _leftAnimationController.reset();
+
+    _rightOverlayEntry = OverlayEntry(
+      builder: (_) => AnimatedBuilder(
+        animation: _rightAnimation,
+        child: MouseRegion(
+          onEnter: (_) => _rightAnimationController.forward(),
+          onExit: (_) => _rightAnimationController.reverse(),
+          child: Container(
+            width: _overlayWidth,
+            height: _overlayHeight,
+            padding: const EdgeInsets.fromLTRB(8, 4, 6, 4),
+            child: Column(
+              children: [
+                Expanded(
+                  child: _buildContact(
+                    icon: const Icon(
+                      Icons.code,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                    address: 'github.com/TruQuest/TruQuest',
+                    description: 'Project repository:',
+                    tappable: true,
+                  ),
+                ),
+                Expanded(
+                  child: _buildContact(
+                    icon: Icon(
+                      Icons.dynamic_feed,
+                      color: Colors.blue[200],
+                      size: 18,
+                    ),
+                    address: 'twitter.com/tru9quest',
+                    description: 'You can find my ramblings about development process here:',
+                    tappable: true,
+                  ),
+                ),
+                Expanded(
+                  child: _buildContact(
+                    icon: Icon(
+                      Icons.email,
+                      color: Colors.red[200],
+                      size: 16,
+                    ),
+                    address: 'feedback@truquest.io',
+                    description: 'Please direct your questions, bug reports, suggestions, etc. here:',
+                    tappable: false,
+                  ),
+                ),
+                Expanded(
+                  child: _buildContact(
+                    icon: Icon(
+                      Icons.email,
+                      color: Colors.deepPurple[100],
+                      size: 16,
+                    ),
+                    address: 'admin@truquest.io',
+                    description: 'If you want to request access please write here:',
+                    tappable: false,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        builder: (_, child) => Positioned(
+          top: _halfScreenHeight - _overlayHeight * 0.5,
+          right: _overlayInitialVisibleWidth - _overlayWidth + _rightAnimation.value,
+          child: Material(
+            color: Colors.black.withOpacity(0.45 + 0.4 * _rightAnimationController.value),
+            shape: const BeveledRectangleBorder(
+              side: BorderSide(color: Colors.black87),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(30),
+                bottomLeft: Radius.circular(30),
+              ),
+            ),
+            child: child!,
+          ),
+        ),
+      ),
+    );
+
+    _leftOverlayEntry = OverlayEntry(
+      builder: (_) => AnimatedBuilder(
+        animation: _leftAnimation,
+        child: MouseRegion(
+          onEnter: (_) => _leftAnimationController.forward(),
+          onExit: (_) => _leftAnimationController.reverse(),
+          child: Container(
+            width: _overlayWidth,
+            height: _overlayHeight,
+            padding: const EdgeInsets.fromLTRB(8, 4, 6, 4),
+          ),
+        ),
+        builder: (_, child) => Positioned(
+          top: _halfScreenHeight - _overlayHeight * 0.5,
+          left: _overlayInitialVisibleWidth - _overlayWidth + _leftAnimation.value,
+          child: Material(
+            color: Colors.black.withOpacity(0.45 + 0.4 * _leftAnimationController.value),
+            shape: const BeveledRectangleBorder(
+              side: BorderSide(color: Colors.black87),
+              borderRadius: BorderRadius.only(
+                topRight: Radius.circular(30),
+                bottomRight: Radius.circular(30),
+              ),
+            ),
+            child: child!,
+          ),
+        ),
+      ),
+    );
+
+    Overlay.of(context).insertAll([_rightOverlayEntry!, _leftOverlayEntry!]);
   }
 
   @override
