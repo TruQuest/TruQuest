@@ -11,10 +11,11 @@ class _$Injector extends Injector {
   void configure() {
     final KiwiContainer container = KiwiContainer();
     container
-      ..registerSingleton((c) => UserBloc(
-          c<ToastMessenger>(), c<UserService>(), c<EmbeddedWalletService>()))
+      ..registerSingleton((c) => UserBloc(c<ToastMessenger>(), c<UserService>(),
+          c<EmbeddedWalletService>(), c<ThirdPartyWalletService>()))
       ..registerSingleton((c) => UserService(
           c<EmbeddedWalletService>(),
+          c<ThirdPartyWalletService>(),
           c<ServerConnector>(),
           c<LocalStorage>(),
           c<UserOperationService>(),
@@ -81,6 +82,8 @@ class _$Injector extends Injector {
       ..registerSingleton((c) => EthereumApiService(c<IEntryPointContract>()))
       ..registerSingleton((c) => UserOperationService(c<EthereumRpcProvider>(),
           c<EthereumApiService>(), c<IEntryPointContract>()))
+      ..registerSingleton((c) =>
+          ThirdPartyWalletService(c<LocalStorage>(), c<UserApiService>()))
       ..registerFactory((c) => UserOperationBuilder(
           c<UserService>(),
           c<EthereumApiService>(),

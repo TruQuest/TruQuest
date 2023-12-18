@@ -20,7 +20,6 @@ class NotificationBloc extends Bloc<NotificationAction> {
   final _toastChannel = StreamController<String>.broadcast();
   Stream<String> get toast$ => _toastChannel.stream;
 
-  Stream<int> get unreadNotificationsCount$ => _notificationsCache.unreadNotificationsCount$;
   Stream<(List<NotificationVm>, String?)> get unreadNotifications$ => _notificationsCache.unreadNotifications$;
 
   NotificationBloc(

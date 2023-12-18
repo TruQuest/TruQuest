@@ -52,14 +52,14 @@ class UserStatusTracker extends StatelessWidgetX {
         // This could only happen with a third party wallet, not embedded one.
 
         // return IconButton(
-        //   icon: Icon(
+        //   icon: const Icon(
         //     Icons.login,
         //     color: Colors.white,
         //   ),
         //   onPressed: () => multiStageOffChainFlow(
         //     context,
         //     (ctx) => _userBloc.executeMultiStage(
-        //       SignInWithThirdPartyWallet(),
+        //       const SignInWithThirdPartyWallet(),
         //       ctx,
         //     ),
         //   ),

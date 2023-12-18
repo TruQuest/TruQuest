@@ -1,348 +1,204 @@
 import 'package:flutter/material.dart';
 
-import '../../widget_extensions.dart';
-
-enum _SwipeButtonType {
-  swipe,
-  expand,
-}
-
-class _SwipeButton extends StatefulWidget {
-  final Widget child;
-  final Widget? thumb;
-
-  final Color? activeThumbColor;
-  final Color? inactiveThumbColor;
-  final EdgeInsets thumbPadding;
-
-  final Color? activeTrackColor;
-  final Color? inactiveTrackColor;
-  final EdgeInsets trackPadding;
-
-  final BorderRadius? borderRadius;
-
+class SwipeButton extends StatefulWidget {
+  final Widget onTrackChild;
+  final Widget? onExpandingHandleChild;
   final double width;
   final double height;
-
   final bool enabled;
-
-  final double elevationThumb;
-  final double elevationTrack;
-
-  final VoidCallback? onSwipeStart;
-  final VoidCallback? onSwipe;
-  final VoidCallback? onSwipeEnd;
-
-  final _SwipeButtonType _swipeButtonType;
-
-  final Duration duration;
-
   final bool swiped;
+  final Color color;
+  final Color disabledColor;
+  final Color trackColor;
+  final Duration rollbackDuration;
+  final Curve rollbackCurve;
+  final Future<bool> Function() onFullSwipe;
 
-  const _SwipeButton.expand({
+  const SwipeButton({
+    super.key,
+    required this.onTrackChild,
+    this.onExpandingHandleChild,
+    required this.width,
+    required this.height,
+    required this.enabled,
+    required this.swiped,
+    required this.color,
+    required this.disabledColor,
+    required this.trackColor,
+    this.rollbackDuration = const Duration(milliseconds: 500),
+    this.rollbackCurve = Curves.fastOutSlowIn,
+    required this.onFullSwipe,
+  });
+
+  static Widget expand({
     Key? key,
-    required this.child,
-    this.thumb,
-    this.activeThumbColor,
-    this.inactiveThumbColor,
-    this.thumbPadding = EdgeInsets.zero,
-    this.activeTrackColor,
-    this.inactiveTrackColor,
-    this.trackPadding = EdgeInsets.zero,
-    this.borderRadius,
-    this.width = double.infinity,
-    this.height = 50,
-    this.enabled = true,
-    this.elevationThumb = 0,
-    this.elevationTrack = 0,
-    this.onSwipeStart,
-    this.onSwipe,
-    this.onSwipeEnd,
-    this.duration = const Duration(milliseconds: 250),
-    this.swiped = false,
-  })  : assert(elevationThumb >= 0.0),
-        assert(elevationTrack >= 0.0),
-        _swipeButtonType = _SwipeButtonType.expand,
-        super(key: key);
+    required Widget onTrackChild,
+    Widget? onExpandingHandleChild,
+    required double height,
+    required bool enabled,
+    required bool swiped,
+    required Color color,
+    required Color disabledColor,
+    required Color trackColor,
+    Duration rollbackDuration = const Duration(milliseconds: 500),
+    Curve rollbackCurve = Curves.fastOutSlowIn,
+    required Future<bool> Function() onFullSwipe,
+  }) =>
+      LayoutBuilder(
+        builder: (_, constraints) => SwipeButton(
+          key: key,
+          onTrackChild: onTrackChild,
+          onExpandingHandleChild: onExpandingHandleChild,
+          width: constraints.maxWidth,
+          height: height,
+          enabled: enabled,
+          swiped: swiped,
+          color: color,
+          disabledColor: disabledColor,
+          trackColor: trackColor,
+          rollbackDuration: rollbackDuration,
+          rollbackCurve: rollbackCurve,
+          onFullSwipe: onFullSwipe,
+        ),
+      );
 
   @override
-  State<_SwipeButton> createState() => _SwipeButtonState();
+  State<SwipeButton> createState() => _SwipeButtonState();
 }
 
-class _SwipeButtonState extends State<_SwipeButton> with TickerProviderStateMixin {
-  late AnimationController swipeAnimationController;
-  late AnimationController expandAnimationController;
+class _SwipeButtonState extends State<SwipeButton> with SingleTickerProviderStateMixin {
+  late final AnimationController _animationController;
 
-  late bool swiped;
+  late bool _enabled;
+  late bool _swiped;
+  late Color _color;
+
+  late double _upperBound;
+
+  bool _dragging = false;
+  late double _dragStartDx;
+  bool _inCooldown = false;
 
   @override
   void initState() {
     super.initState();
-    _initAnimationControllers();
-    swiped = widget.swiped;
-  }
 
-  void _initAnimationControllers() {
-    swipeAnimationController = AnimationController(
-      vsync: this,
-      duration: widget.duration,
+    _enabled = widget.enabled;
+    _swiped = widget.swiped;
+    _color = _enabled ? widget.color : widget.disabledColor;
+    _upperBound = widget.width - widget.height;
+
+    _animationController = AnimationController(
       lowerBound: 0,
-      upperBound: 1,
-      value: 0,
-    );
-    expandAnimationController = AnimationController(
+      upperBound: _upperBound,
+      value: _swiped ? _upperBound : 0,
       vsync: this,
-      duration: widget.duration,
-      lowerBound: 0,
-      upperBound: 1,
-      value: widget.swiped ? 1 : 0,
     );
-  }
-
-  @override
-  void didUpdateWidget(covariant _SwipeButton oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    if (oldWidget.duration != widget.duration) {
-      _initAnimationControllers();
-    }
-
-    swiped = widget.swiped;
-    if (swiped != oldWidget.swiped) {
-      if (swiped && expandAnimationController.value != 1) {
-        expandAnimationController.animateTo(1);
-      } else if (!swiped && expandAnimationController.value != 0) {
-        expandAnimationController.animateTo(0);
-      }
-    }
   }
 
   @override
   void dispose() {
-    swipeAnimationController.dispose();
-    expandAnimationController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: widget.width,
-      height: widget.height,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return Stack(
-            clipBehavior: Clip.none,
-            children: [
-              _buildTrack(context, constraints),
-              _buildThumb(context, constraints),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildTrack(BuildContext context, BoxConstraints constraints) {
-    final ThemeData theme = Theme.of(context);
-
-    final trackColor = widget.enabled
-        ? widget.activeTrackColor ?? theme.colorScheme.background
-        : widget.inactiveTrackColor ?? theme.disabledColor;
-
-    final borderRadius = widget.borderRadius ?? BorderRadius.circular(150);
-    final elevationTrack = widget.enabled ? widget.elevationTrack : 0.0;
-
-    return Padding(
-      padding: widget.trackPadding,
-      child: Material(
-        elevation: elevationTrack,
-        borderRadius: borderRadius,
-        clipBehavior: Clip.antiAlias,
-        color: trackColor,
-        child: Container(
-          width: constraints.maxWidth,
-          height: widget.height,
+    return Stack(
+      children: [
+        Container(
           decoration: BoxDecoration(
-            borderRadius: borderRadius,
+            color: widget.trackColor,
+            borderRadius: BorderRadius.circular(widget.height * 0.5),
           ),
-          clipBehavior: Clip.antiAlias,
+          width: widget.width,
+          height: widget.height,
           alignment: Alignment.center,
-          child: widget.child,
+          child: widget.onTrackChild,
         ),
-      ),
-    );
-  }
-
-  Widget _buildThumb(BuildContext context, BoxConstraints constraints) {
-    final ThemeData theme = Theme.of(context);
-
-    final thumbColor = widget.enabled
-        ? widget.activeThumbColor ?? theme.colorScheme.secondary
-        : widget.inactiveThumbColor ?? theme.disabledColor;
-
-    final borderRadius = widget.borderRadius ?? BorderRadius.circular(150);
-
-    final elevationThumb = widget.enabled ? widget.elevationThumb : 0.0;
-
-    return AnimatedBuilder(
-      animation: swipeAnimationController,
-      builder: (context, child) {
-        return Transform(
-          transform: Matrix4.identity()
-            ..translate(swipeAnimationController.value * (constraints.maxWidth - widget.height)),
-          child: Container(
-            padding: widget.thumbPadding,
-            child: GestureDetector(
-              onHorizontalDragStart: widget.enabled ? _onHorizontalDragStart : null,
-              onHorizontalDragUpdate:
-                  widget.enabled ? (details) => _onHorizontalDragUpdate(details, constraints.maxWidth) : null,
-              onHorizontalDragEnd: widget.enabled ? _onHorizontalDragEnd : null,
-              child: Material(
-                elevation: elevationThumb,
-                borderRadius: borderRadius,
-                color: thumbColor,
-                clipBehavior: Clip.antiAlias,
-                child: AnimatedBuilder(
-                  animation: expandAnimationController,
-                  builder: (context, child) {
-                    return SizedBox(
-                      width: widget.height +
-                          (expandAnimationController.value * (constraints.maxWidth - widget.height)) -
-                          widget.thumbPadding.horizontal,
-                      height: widget.height - widget.thumbPadding.vertical,
-                      child: widget.thumb ??
-                          Icon(
-                            Icons.arrow_forward,
-                            color: widget.activeTrackColor ?? widget.inactiveTrackColor,
-                          ),
-                    );
+        Stack(
+          children: [
+            AnimatedBuilder(
+              animation: _animationController,
+              builder: (context, _) => Container(
+                decoration: BoxDecoration(
+                  color: _color,
+                  borderRadius: BorderRadius.circular(widget.height * 0.5),
+                ),
+                width: widget.height + _animationController.value,
+                height: widget.height,
+                alignment: Alignment.center,
+                child: widget.onExpandingHandleChild,
+              ),
+            ),
+            Positioned(
+              right: 0,
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onHorizontalDragStart: (details) {
+                    if (_dragging || _inCooldown || _swiped || !_enabled) return;
+                    _dragging = true;
+                    _dragStartDx = details.globalPosition.dx;
                   },
+                  onHorizontalDragUpdate: (details) {
+                    if (!_dragging) return;
+                    var delta = details.globalPosition.dx - _dragStartDx;
+                    if (delta > 0) {
+                      _animationController.value = delta < _upperBound ? delta : _upperBound;
+                    }
+                  },
+                  onHorizontalDragEnd: (details) async {
+                    if (!_dragging) return;
+
+                    _dragging = false;
+
+                    if (_animationController.value < _animationController.upperBound) {
+                      _inCooldown = true;
+                      await _animationController.animateTo(
+                        _animationController.lowerBound,
+                        duration: widget.rollbackDuration,
+                        curve: widget.rollbackCurve,
+                      );
+                      _inCooldown = false;
+
+                      return;
+                    }
+
+                    _swiped = true;
+
+                    if (await widget.onFullSwipe()) {
+                      if (mounted) {
+                        setState(() {
+                          _enabled = false;
+                          _color = widget.disabledColor;
+                        });
+                      }
+                    } else {
+                      _swiped = false;
+                      _inCooldown = true;
+                      await _animationController.animateTo(
+                        _animationController.lowerBound,
+                        duration: widget.rollbackDuration,
+                        curve: widget.rollbackCurve,
+                      );
+                      _inCooldown = false;
+                    }
+                  },
+                  child: Container(
+                    width: widget.height,
+                    height: widget.height,
+                    decoration: const BoxDecoration(
+                      color: Colors.transparent,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        );
-      },
-    );
-  }
-
-  _onHorizontalDragStart(DragStartDetails details) {
-    setState(() {
-      swiped = false;
-    });
-    widget.onSwipeStart?.call();
-  }
-
-  _onHorizontalDragUpdate(DragUpdateDetails details, double width) {
-    switch (widget._swipeButtonType) {
-      case _SwipeButtonType.swipe:
-        if (!swiped && widget.enabled) {
-          swipeAnimationController.value += details.primaryDelta! / (width - widget.height);
-          if (swipeAnimationController.value == 1) {
-            setState(() {
-              swiped = true;
-              widget.onSwipe?.call();
-            });
-          }
-        }
-        break;
-      case _SwipeButtonType.expand:
-        if (!swiped && widget.enabled) {
-          expandAnimationController.value += details.primaryDelta! / (width - widget.height);
-          if (expandAnimationController.value == 1) {
-            setState(() {
-              swiped = true;
-              widget.onSwipe?.call();
-            });
-          }
-        }
-        break;
-    }
-  }
-
-  _onHorizontalDragEnd(DragEndDetails details) {
-    if (!swiped) {
-      setState(() {
-        expandAnimationController.animateTo(0);
-      });
-    }
-    widget.onSwipeEnd?.call();
-  }
-}
-
-class SwipeButton extends StatefulWidget {
-  final String text;
-  final bool enabled;
-  final bool swiped;
-  final Future<bool> Function() onCompletedSwipe;
-
-  const SwipeButton({
-    super.key,
-    required this.text,
-    required this.enabled,
-    required this.swiped,
-    required this.onCompletedSwipe,
-  }) : assert(!(enabled && swiped));
-
-  @override
-  State<SwipeButton> createState() => SwipeButtonState();
-}
-
-class SwipeButtonState extends StateX<SwipeButton> {
-  late bool _enabled;
-  late bool _swiped;
-
-  @override
-  void initState() {
-    super.initState();
-    _enabled = widget.enabled;
-    _swiped = widget.swiped;
-  }
-
-  Future<bool> _onCompletedSwipe() async {
-    await Future.delayed(const Duration(milliseconds: 10)); // @@HACK
-    // @@??: Why the hell if widget.onCompletedSwipe() returns synchronously it makes Flutter go nuts??
-    return await widget.onCompletedSwipe();
-  }
-
-  @override
-  Widget buildX(BuildContext context) {
-    return _SwipeButton.expand(
-      enabled: _enabled,
-      swiped: _swiped,
-      thumb: const Icon(
-        Icons.double_arrow_rounded,
-        color: Colors.white,
-      ),
-      child: Text(
-        widget.text,
-        style: const TextStyle(
-          color: Colors.white,
+          ],
         ),
-      ),
-      activeThumbColor: Colors.red,
-      activeTrackColor: Colors.grey,
-      inactiveThumbColor: Colors.blue[300],
-      inactiveTrackColor: Colors.grey,
-      onSwipe: () async {
-        setState(() {
-          _enabled = false;
-          _swiped = true;
-        });
-
-        if (!await _onCompletedSwipe()) {
-          // @@NOTE: Situation: User swiped the join lottery button but, while the action handling was still in progress,
-          // the lottery expired, which led to the button's key changing and therefore to a new state object being created
-          // and this one being disposed of.
-          if (mounted) {
-            setState(() {
-              _enabled = true;
-              _swiped = false;
-            });
-          }
-        }
-      },
+      ],
     );
   }
 }

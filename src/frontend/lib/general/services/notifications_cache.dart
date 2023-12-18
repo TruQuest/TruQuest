@@ -16,9 +16,6 @@ class NotificationsCache {
   Set<NotificationVm>? _unreadNotifications;
   String? _userId;
 
-  final _unreadNotificationsCountChannel = BehaviorSubject<int>();
-  Stream<int> get unreadNotificationsCount$ => _unreadNotificationsCountChannel.stream;
-
   final _unreadNotificationsChannel = BehaviorSubject<(List<NotificationVm>, String?)>();
   Stream<(List<NotificationVm>, String?)> get unreadNotifications$ => _unreadNotificationsChannel.stream;
 
@@ -70,7 +67,6 @@ class NotificationsCache {
         _userId,
       ),
     );
-    _unreadNotificationsCountChannel.add(_unreadNotifications?.length ?? 0);
   }
 
   void _onInitialRetrieve(String userId, List<NotificationVm> notifications) {

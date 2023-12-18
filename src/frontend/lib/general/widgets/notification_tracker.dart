@@ -3,15 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lottie/lottie.dart';
-// ignore: implementation_imports
-import 'package:lottie/src/model/layer/layer.dart';
 import 'package:side_sheet/side_sheet.dart';
 
 import '../contexts/page_context.dart';
 import '../bloc/notification_actions.dart';
 import '../bloc/notification_bloc.dart';
 import '../../widget_extensions.dart';
+import '../models/vm/notification_vm.dart';
 import 'clipped_rect.dart';
 
 class NotificationTracker extends StatefulWidget {
@@ -26,66 +24,44 @@ class _NotificationTrackerState extends StateX<NotificationTracker> with SingleT
   late final _pageContext = use<PageContext>();
 
   late final AnimationController _animationController;
-  late final StreamSubscription<int> _unreadNotificationsCount$$;
+  late final StreamSubscription<(List<NotificationVm>, String?)> _unreadNotifications$$;
 
-  LottieComposition? _composition;
+  Future _latestAnimateIconFuture = Future.value();
+  int _unreadCount = 0;
 
   @override
   void initState() {
     super.initState();
 
     _animationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
       vsync: this,
-      duration: const Duration(seconds: 1),
     );
 
-    AssetLottie('assets/icons/bell.json').load().then(
-      (composition) {
-        var oldLayer = composition.layers[1];
-        composition.layers[1] = Layer(
-          shapes: oldLayer.shapes,
-          composition: oldLayer.composition,
-          name: oldLayer.name,
-          id: oldLayer.id,
-          layerType: oldLayer.layerType,
-          parentId: oldLayer.parentId,
-          refId: oldLayer.refId,
-          masks: oldLayer.masks,
-          transform: oldLayer.transform,
-          solidWidth: oldLayer.solidWidth,
-          solidHeight: oldLayer.solidHeight,
-          solidColor: const Color.fromARGB(255, 208, 53, 76),
-          timeStretch: oldLayer.timeStretch,
-          startFrame: oldLayer.startFrame,
-          preCompWidth: oldLayer.preCompWidth,
-          preCompHeight: oldLayer.preCompHeight,
-          text: oldLayer.text,
-          textProperties: oldLayer.textProperties,
-          inOutKeyframes: oldLayer.inOutKeyframes,
-          matteType: oldLayer.matteType,
-          timeRemapping: oldLayer.timeRemapping,
-          isHidden: oldLayer.isHidden,
-          blurEffect: oldLayer.blurEffect,
-          dropShadowEffect: oldLayer.dropShadowEffect,
-        );
+    _unreadNotifications$$ = _notificationBloc.unreadNotifications$.listen((data) {
+      var (notifications, _) = data;
+      if (notifications.length > _unreadCount) {
+        _latestAnimateIconFuture = _latestAnimateIconFuture.then((_) => _animateIcon());
+      }
 
-        setState(() {
-          _composition = composition;
-        });
-
-        _unreadNotificationsCount$$ = _notificationBloc.unreadNotificationsCount$.listen((_) {
-          _animationController.reset();
-          _animationController.forward();
-        });
-      },
-    );
+      if (notifications.length != _unreadCount) {
+        setState(() => _unreadCount = notifications.length);
+      }
+    });
   }
 
   @override
   void dispose() {
     _animationController.dispose();
-    _unreadNotificationsCount$$.cancel();
+    _unreadNotifications$$.cancel();
     super.dispose();
+  }
+
+  Future _animateIcon() async {
+    for (int i = 0; i < 3; ++i) {
+      await _animationController.forward();
+      await _animationController.reverse();
+    }
   }
 
   Widget _buildNotificationPanel() {
@@ -221,40 +197,39 @@ class _NotificationTrackerState extends StateX<NotificationTracker> with SingleT
           fromNarrowToWide: false,
           narrowSideFraction: 0.4,
         ),
-        if (_composition != null)
-          IconButton(
-            icon: Lottie(
-              composition: _composition,
-              controller: _animationController,
-            ),
-            iconSize: 35,
-            onPressed: () => SideSheet.left(
-              context: context,
-              sheetColor: Colors.black54,
-              width: MediaQuery.of(context).size.width * 0.2,
-              body: _buildNotificationPanel(),
+        Positioned(
+          top: 2,
+          left: 6,
+          child: RotationTransition(
+            turns:
+                Tween(begin: 0.0, end: -0.13).chain(CurveTween(curve: Curves.elasticIn)).animate(_animationController),
+            child: IconButton(
+              icon: Icon(
+                _unreadCount == 0 ? Icons.notifications : Icons.notifications_active,
+                color: const Color.fromARGB(255, 208, 53, 76),
+              ),
+              iconSize: 26,
+              onPressed: () => SideSheet.left(
+                context: context,
+                sheetColor: Colors.black54,
+                width: MediaQuery.of(context).size.width * 0.2,
+                body: _buildNotificationPanel(),
+              ),
             ),
           ),
-        StreamBuilder(
-          stream: _notificationBloc.unreadNotificationsCount$,
-          initialData: 0,
-          builder: (context, snapshot) {
-            var count = snapshot.data!;
-            return Positioned(
-              top: 8,
-              left: 36,
-              child: count > 0
-                  ? Text(
-                      count.toString(),
-                      style: TextStyle(
-                        color: Colors.red[800],
-                        fontSize: 12,
-                      ),
-                    )
-                  : const SizedBox.shrink(),
-            );
-          },
         ),
+        if (_unreadCount > 0)
+          Positioned(
+            top: 8,
+            left: 40,
+            child: Text(
+              _unreadCount.toString(),
+              style: TextStyle(
+                color: Colors.red[800],
+                fontSize: 12,
+              ),
+            ),
+          )
       ],
     );
   }

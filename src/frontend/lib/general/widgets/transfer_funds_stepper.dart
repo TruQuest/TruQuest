@@ -42,11 +42,22 @@ class _TransferFundsStepperState extends StateX<TransferFundsStepper> {
       data: getThemeDataForSteppers(context),
       child: Stepper(
         currentStep: 0,
-        controlsBuilder: (context, details) => SwipeButton(
-          text: 'Swipe to ${widget.direction == TransferDirection.deposit ? 'deposit' : 'withdraw'}',
+        controlsBuilder: (context, details) => SwipeButton.expand(
+          height: 50,
           enabled: true,
           swiped: false,
-          onCompletedSwipe: () async {
+          onTrackChild: Text(
+            'Swipe to ${widget.direction == TransferDirection.deposit ? 'deposit' : 'withdraw'}',
+            style: const TextStyle(color: Colors.black54),
+          ),
+          onExpandingHandleChild: const Icon(
+            Icons.double_arrow_rounded,
+            color: Colors.white,
+          ),
+          color: Colors.red,
+          disabledColor: Colors.blue[200]!,
+          trackColor: Colors.grey[350]!,
+          onFullSwipe: () async {
             var value = _controller.text;
             int? amountInGt;
             if (_selectedUnit == TokenUnit.tru) {

@@ -41,7 +41,7 @@ class LotteryStepper extends StatelessWidgetX {
       data: getThemeDataForSteppers(context),
       child: Stepper(
         controlsBuilder: (context, details) => info.userId != null && !thing.isSubmitter(info.userId)
-            ? SwipeButton(
+            ? SwipeButton.expand(
                 // @@NOTE: We want the button to:
                 // - Update 'enabled' and 'swiped' to the values corresponding to the new user on user change.
                 // - Not change 'enabled' and 'swiped' when an action is in progress (e.g. new block gets mined while
@@ -49,10 +49,21 @@ class LotteryStepper extends StatelessWidgetX {
                 //   is complete.
                 // - Get disabled once the lottery is over.
                 key: ValueKey('${info.userId}::${currentBlock < endBlock}::${info.alreadyJoined}'),
-                text: 'Slide to join',
+                height: 50,
                 enabled: _checkButtonShouldBeEnabled(),
                 swiped: _checkButtonShouldBeSwiped(),
-                onCompletedSwipe: () async {
+                onTrackChild: const Text(
+                  'Swipe to join',
+                  style: TextStyle(color: Colors.black54),
+                ),
+                onExpandingHandleChild: const Icon(
+                  Icons.double_arrow_rounded,
+                  color: Colors.white,
+                ),
+                color: Colors.red,
+                disabledColor: Colors.blue[200]!,
+                trackColor: Colors.grey[350]!,
+                onFullSwipe: () async {
                   bool success = await multiStageFlow(
                     context,
                     (ctx) => _thingBloc.executeMultiStage(

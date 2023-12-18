@@ -60,7 +60,6 @@ dependencies:
   url_launcher: ^6.1.11
   animated_text_kit: ^4.2.2
   flutter_card_swiper: ^4.1.3
-  lottie: ^2.4.0
   qr_flutter: ^4.1.0
   flutter_dotenv: ^5.1.0
   bot_toast: ^4.0.4
@@ -107,7 +106,6 @@ flutter:
     - assets/images/metamask.png
     - assets/images/walletconnect.png
     - assets/images/document.png
-    - assets/icons/bell.json
     - assets/fonts/
 
   # An image asset can refer to one or more resolution-specific "variants", see

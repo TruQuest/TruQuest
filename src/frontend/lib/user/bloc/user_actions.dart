@@ -60,17 +60,6 @@ class SaveKeyShareQrCodeImage extends UserAction {
 class SignInWithThirdPartyWallet extends UserAction {
   final String? walletName;
 
-  @override
-  List<String>? validate() {
-    List<String>? errors;
-    if (walletName != 'Metamask' && walletName != 'CoinbaseWallet' && walletName != 'WalletConnect') {
-      errors ??= [];
-      errors.add('Unsupported wallet');
-    }
-
-    return errors;
-  }
-
   const SignInWithThirdPartyWallet({this.walletName});
 }
 

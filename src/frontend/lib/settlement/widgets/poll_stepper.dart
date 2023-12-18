@@ -52,14 +52,25 @@ class _PollStepperState extends StateX<PollStepper> {
         currentStep: _currentStep,
         controlsBuilder: (context, details) =>
             widget.info.userId != null && widget.info.settlementProposalVerifiersArrayIndex >= 0
-                ? SwipeButton(
+                ? SwipeButton.expand(
                     key: ValueKey(
                       '${details.currentStep}::${widget.info.userId}::${widget.currentBlock < widget.endBlock}',
                     ),
-                    text: 'Slide to vote',
+                    height: 50,
                     enabled: _checkButtonShouldBeEnabled(),
                     swiped: false,
-                    onCompletedSwipe: () async {
+                    onTrackChild: const Text(
+                      'Swipe to vote',
+                      style: TextStyle(color: Colors.black54),
+                    ),
+                    onExpandingHandleChild: const Icon(
+                      Icons.double_arrow_rounded,
+                      color: Colors.white,
+                    ),
+                    color: Colors.red,
+                    disabledColor: Colors.blue[200]!,
+                    trackColor: Colors.grey[350]!,
+                    onFullSwipe: () async {
                       await showDialog(
                         context: context,
                         builder: (_) => VoteDialog<DecisionIm>(

@@ -205,12 +205,23 @@ class StatusStepperBlock extends StatelessWidgetX {
         controlsBuilder: (context, details) {
           var step = details.currentStep;
           if (_thing.isSubmitter(_currentUserId) && step <= 2) {
-            return SwipeButton(
+            return SwipeButton.expand(
               key: ValueKey(step),
-              text: 'Swipe to ${step == 0 ? 'edit' : step == 1 ? 'submit' : 'fund'}',
+              height: 50,
               enabled: _checkShouldBeEnabled(step),
               swiped: _checkShouldBeSwiped(step),
-              onCompletedSwipe: () async {
+              onTrackChild: Text(
+                'Swipe to ${step == 0 ? 'edit' : step == 1 ? 'submit' : 'fund'}',
+                style: const TextStyle(color: Colors.black54),
+              ),
+              onExpandingHandleChild: const Icon(
+                Icons.double_arrow_rounded,
+                color: Colors.white,
+              ),
+              color: Colors.red,
+              disabledColor: Colors.blue[200]!,
+              trackColor: Colors.grey[350]!,
+              onFullSwipe: () async {
                 if (step == 0) {
                   return true;
                 } else if (step == 1) {

@@ -3,7 +3,7 @@ import 'dart:async';
 import '../../ethereum/services/embedded_wallet_service.dart';
 import '../../ethereum_js_interop.dart';
 import '../models/vm/smart_wallet_info_vm.dart';
-// import '../../ethereum/services/third_party_wallet_service.dart';
+import '../../ethereum/services/third_party_wallet_service.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
 import '../models/vm/user_vm.dart';
 import 'user_actions.dart';
@@ -13,7 +13,7 @@ import '../../general/bloc/bloc.dart';
 class UserBloc extends Bloc<UserAction> {
   final UserService _userService;
   final EmbeddedWalletService _embeddedWalletService;
-  // final ThirdPartyWalletService _thirdPartyWalletService;
+  final ThirdPartyWalletService _thirdPartyWalletService;
 
   Stream<UserVm> get currentUser$ => _userService.currentUserChanged$;
   UserVm? get latestCurrentUser => _userService.latestCurrentUser;
@@ -24,7 +24,7 @@ class UserBloc extends Bloc<UserAction> {
     super.toastMessenger,
     this._userService,
     this._embeddedWalletService,
-    // this._thirdPartyWalletService,
+    this._thirdPartyWalletService,
   ) {
     onAction = (action) async {
       if (action is SaveKeyShareQrCodeImage) {
@@ -46,10 +46,9 @@ class UserBloc extends Bloc<UserAction> {
 
   @override
   Stream<Object> handleMultiStageExecute(UserAction action, MultiStageOperationContext ctx) {
-    // if (action is SignInWithThirdPartyWallet) {
-    //   return _signInWithThirdPartyWallet(action, ctx);
-    // }
-    if (action is SignInFromExistingDevice) {
+    if (action is SignInWithThirdPartyWallet) {
+      return _signInWithThirdPartyWallet(action, ctx);
+    } else if (action is SignInFromExistingDevice) {
       return _signInFromExistingDevice(action, ctx);
     } else if (action is DepositFunds) {
       return _depositFunds(action, ctx);
@@ -71,8 +70,8 @@ class UserBloc extends Bloc<UserAction> {
 
   Future _saveKeyShareQrCodeImage(SaveKeyShareQrCodeImage action) => _embeddedWalletService.saveKeyShareQrCodeImage();
 
-  // Stream<Object> _signInWithThirdPartyWallet(SignInWithThirdPartyWallet action, MultiStageOperationContext ctx) =>
-  //     _thirdPartyWalletService.signIn(action.walletName, ctx);
+  Stream<Object> _signInWithThirdPartyWallet(SignInWithThirdPartyWallet action, MultiStageOperationContext ctx) =>
+      _thirdPartyWalletService.signIn(action.walletName, ctx);
 
   Stream<Object> _signInFromExistingDevice(SignInFromExistingDevice action, MultiStageOperationContext ctx) =>
       _embeddedWalletService.signInFromExistingDevice(ctx);

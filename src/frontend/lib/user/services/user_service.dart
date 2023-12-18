@@ -12,7 +12,7 @@ import '../../general/errors/insufficient_balance_error.dart';
 import '../../general/contexts/multi_stage_operation_context.dart';
 import '../../general/contracts/truthserum_contract.dart';
 import '../../ethereum/services/iwallet_service.dart';
-// import '../../ethereum/services/third_party_wallet_service.dart';
+import '../../ethereum/services/third_party_wallet_service.dart';
 import '../../ethereum/services/user_operation_service.dart';
 import '../../general/contracts/truquest_contract.dart';
 import '../models/vm/user_vm.dart';
@@ -21,7 +21,7 @@ import '../../general/services/server_connector.dart';
 
 class UserService {
   final EmbeddedWalletService _embeddedWalletService;
-  // final ThirdPartyWalletService _thirdPartyWalletService;
+  final ThirdPartyWalletService _thirdPartyWalletService;
   final ServerConnector _serverConnector;
   final LocalStorage _localStorage;
   final UserOperationService _userOperationService;
@@ -40,7 +40,7 @@ class UserService {
 
   UserService(
     this._embeddedWalletService,
-    // this._thirdPartyWalletService,
+    this._thirdPartyWalletService,
     this._serverConnector,
     this._localStorage,
     this._userOperationService,
@@ -54,10 +54,10 @@ class UserService {
         _walletService = _embeddedWalletService;
         _walletService.currentSignerChanged$.listen(_reloadUser);
       };
-      // _thirdPartyWalletService.onSelectedForOnboarding = () {
-      //   _walletService = _thirdPartyWalletService;
-      //   _walletService.currentSignerChanged$.listen(_reloadUser);
-      // };
+      _thirdPartyWalletService.onSelectedForOnboarding = () {
+        _walletService = _thirdPartyWalletService;
+        _walletService.currentSignerChanged$.listen(_reloadUser);
+      };
 
       _reloadUser(null);
       return;
@@ -66,10 +66,9 @@ class UserService {
     var wallet = jsonDecode(walletJson) as Map<String, dynamic>;
     if (wallet['name'] == _embeddedWalletService.name) {
       _setupEmbeddedWallet(wallet);
+    } else {
+      _setupThirdPartyWallet(wallet['name']);
     }
-    // else {
-    //   _setupThirdPartyWallet(wallet['name']);
-    // }
   }
 
   void _setupEmbeddedWallet(Map<String, dynamic> wallet) {
@@ -78,11 +77,11 @@ class UserService {
     _walletService.currentSignerChanged$.listen(_reloadUser);
   }
 
-  // void _setupThirdPartyWallet(String walletName) async {
-  //   await _thirdPartyWalletService.setup(walletName);
-  //   _walletService = _thirdPartyWalletService;
-  //   _walletService.currentSignerChanged$.listen(_reloadUser);
-  // }
+  void _setupThirdPartyWallet(String walletName) async {
+    await _thirdPartyWalletService.setup(walletName);
+    _walletService = _thirdPartyWalletService;
+    _walletService.currentSignerChanged$.listen(_reloadUser);
+  }
 
   void _reloadUser(String? currentSignerAddress) {
     var walletJson = _localStorage.getString('Wallet');

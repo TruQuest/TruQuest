@@ -48,12 +48,23 @@ class LotteryStepper extends StatelessWidgetX {
           Stepper(
             controlsBuilder: (context, details) =>
                 info.userId != null && !proposal.isSubmitter(info.userId) && info.thingVerifiersArrayIndex >= 0
-                    ? SwipeButton(
+                    ? SwipeButton.expand(
                         key: ValueKey('${info.userId}::${currentBlock < endBlock}::${info.alreadyClaimedASpot}'),
-                        text: 'Slide to claim',
+                        height: 50,
                         enabled: _checkButtonShouldBeEnabled(-1),
                         swiped: _checkButtonShouldBeSwiped(-1),
-                        onCompletedSwipe: () async {
+                        onTrackChild: const Text(
+                          'Swipe to claim',
+                          style: TextStyle(color: Colors.black54),
+                        ),
+                        onExpandingHandleChild: const Icon(
+                          Icons.double_arrow_rounded,
+                          color: Colors.white,
+                        ),
+                        color: Colors.red,
+                        disabledColor: Colors.blue[200]!,
+                        trackColor: Colors.grey[350]!,
+                        onFullSwipe: () async {
                           bool success = await multiStageFlow(
                             context,
                             (ctx) => _settlementBloc.executeMultiStage(
@@ -100,12 +111,23 @@ class LotteryStepper extends StatelessWidgetX {
           const SizedBox(height: 6),
           Stepper(
             controlsBuilder: (context, details) => info.userId != null && !proposal.isSubmitter(info.userId)
-                ? SwipeButton(
+                ? SwipeButton.expand(
                     key: ValueKey('${info.userId}::${currentBlock < endBlock}::${info.alreadyJoined}'),
-                    text: 'Slide to join',
+                    height: 50,
                     enabled: _checkButtonShouldBeEnabled(0),
                     swiped: _checkButtonShouldBeSwiped(0),
-                    onCompletedSwipe: () async {
+                    onTrackChild: const Text(
+                      'Swipe to join',
+                      style: TextStyle(color: Colors.black54),
+                    ),
+                    onExpandingHandleChild: const Icon(
+                      Icons.double_arrow_rounded,
+                      color: Colors.white,
+                    ),
+                    color: Colors.red,
+                    disabledColor: Colors.blue[200]!,
+                    trackColor: Colors.grey[350]!,
+                    onFullSwipe: () async {
                       bool success = await multiStageFlow(
                         context,
                         (ctx) => _settlementBloc.executeMultiStage(
