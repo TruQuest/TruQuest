@@ -191,7 +191,7 @@ internal class ContractCaller : IContractCaller
     public async Task<long> InitThingValidationVerifierLottery(byte[] thingId, byte[] dataHash, byte[] userXorDataHash)
     {
         using var span = Telemetry.StartActivity(
-            $"{GetType().FullName}.{nameof(InitThingValidationVerifierLottery)}",
+            $"{GetType().GetActivityName()}.{nameof(InitThingValidationVerifierLottery)}",
             kind: ActivityKind.Client
         )!;
 
@@ -277,7 +277,7 @@ internal class ContractCaller : IContractCaller
     )
     {
         using var span = Telemetry.StartActivity(
-            $"{GetType().FullName}.{nameof(CloseThingValidationVerifierLotteryWithSuccess)}",
+            $"{GetType().GetActivityName()}.{nameof(CloseThingValidationVerifierLotteryWithSuccess)}",
             kind: ActivityKind.Client
         )!;
 
@@ -345,7 +345,7 @@ internal class ContractCaller : IContractCaller
     public async Task CloseThingValidationVerifierLotteryInFailure(byte[] thingId, int joinedNumVerifiers)
     {
         using var span = Telemetry.StartActivity(
-            $"{GetType().FullName}.{nameof(CloseThingValidationVerifierLotteryInFailure)}",
+            $"{GetType().GetActivityName()}.{nameof(CloseThingValidationVerifierLotteryInFailure)}",
             kind: ActivityKind.Client
         )!;
 
@@ -428,7 +428,7 @@ internal class ContractCaller : IContractCaller
     )
     {
         using var span = Telemetry.StartActivity(
-            $"{GetType().FullName}.{nameof(FinalizeThingValidationPollAsUnsettledDueToInsufficientVotingVolume)}",
+            $"{GetType().GetActivityName()}.{nameof(FinalizeThingValidationPollAsUnsettledDueToInsufficientVotingVolume)}",
             kind: ActivityKind.Client
         )!;
 
@@ -491,7 +491,7 @@ internal class ContractCaller : IContractCaller
     )
     {
         using var span = Telemetry.StartActivity(
-            $"{GetType().FullName}.{nameof(FinalizeThingValidationPollAsUnsettledDueToMajorityThresholdNotReached)}",
+            $"{GetType().GetActivityName()}.{nameof(FinalizeThingValidationPollAsUnsettledDueToMajorityThresholdNotReached)}",
             kind: ActivityKind.Client
         )!;
 
@@ -554,7 +554,7 @@ internal class ContractCaller : IContractCaller
     )
     {
         using var span = Telemetry.StartActivity(
-            $"{GetType().FullName}.{nameof(FinalizeThingValidationPollAsAccepted)}",
+            $"{GetType().GetActivityName()}.{nameof(FinalizeThingValidationPollAsAccepted)}",
             kind: ActivityKind.Client
         )!;
 
@@ -616,7 +616,7 @@ internal class ContractCaller : IContractCaller
     )
     {
         using var span = Telemetry.StartActivity(
-            $"{GetType().FullName}.{nameof(FinalizeThingValidationPollAsSoftDeclined)}",
+            $"{GetType().GetActivityName()}.{nameof(FinalizeThingValidationPollAsSoftDeclined)}",
             kind: ActivityKind.Client
         )!;
 
@@ -678,7 +678,7 @@ internal class ContractCaller : IContractCaller
     )
     {
         using var span = Telemetry.StartActivity(
-            $"{GetType().FullName}.{nameof(FinalizeThingValidationPollAsHardDeclined)}",
+            $"{GetType().GetActivityName()}.{nameof(FinalizeThingValidationPollAsHardDeclined)}",
             kind: ActivityKind.Client
         )!;
 
@@ -777,7 +777,7 @@ internal class ContractCaller : IContractCaller
     )
     {
         using var span = Telemetry.StartActivity(
-            $"{GetType().FullName}.{nameof(InitSettlementProposalAssessmentVerifierLottery)}",
+            $"{GetType().GetActivityName()}.{nameof(InitSettlementProposalAssessmentVerifierLottery)}",
             kind: ActivityKind.Client
         )!;
 
@@ -867,7 +867,7 @@ internal class ContractCaller : IContractCaller
     )
     {
         using var span = Telemetry.StartActivity(
-            $"{GetType().FullName}.{nameof(CloseSettlementProposalAssessmentVerifierLotteryWithSuccess)}",
+            $"{GetType().GetActivityName()}.{nameof(CloseSettlementProposalAssessmentVerifierLotteryWithSuccess)}",
             kind: ActivityKind.Client
         )!;
 
@@ -939,7 +939,7 @@ internal class ContractCaller : IContractCaller
     public async Task CloseSettlementProposalAssessmentVerifierLotteryInFailure(byte[] thingId, byte[] proposalId, int joinedNumVerifiers)
     {
         using var span = Telemetry.StartActivity(
-            $"{GetType().FullName}.{nameof(CloseSettlementProposalAssessmentVerifierLotteryInFailure)}",
+            $"{GetType().GetActivityName()}.{nameof(CloseSettlementProposalAssessmentVerifierLotteryInFailure)}",
             kind: ActivityKind.Client
         )!;
 
@@ -1037,7 +1037,7 @@ internal class ContractCaller : IContractCaller
     )
     {
         using var span = Telemetry.StartActivity(
-            $"{GetType().FullName}.{nameof(FinalizeSettlementProposalAssessmentPollAsUnsettledDueToInsufficientVotingVolume)}",
+            $"{GetType().GetActivityName()}.{nameof(FinalizeSettlementProposalAssessmentPollAsUnsettledDueToInsufficientVotingVolume)}",
             kind: ActivityKind.Client
         )!;
 
@@ -1101,7 +1101,7 @@ internal class ContractCaller : IContractCaller
     )
     {
         using var span = Telemetry.StartActivity(
-            $"{GetType().FullName}.{nameof(FinalizeSettlementProposalAssessmentPollAsUnsettledDueToMajorityThresholdNotReached)}",
+            $"{GetType().GetActivityName()}.{nameof(FinalizeSettlementProposalAssessmentPollAsUnsettledDueToMajorityThresholdNotReached)}",
             kind: ActivityKind.Client
         )!;
 
@@ -1165,7 +1165,7 @@ internal class ContractCaller : IContractCaller
     )
     {
         using var span = Telemetry.StartActivity(
-            $"{GetType().FullName}.{nameof(FinalizeSettlementProposalAssessmentPollAsAccepted)}",
+            $"{GetType().GetActivityName()}.{nameof(FinalizeSettlementProposalAssessmentPollAsAccepted)}",
             kind: ActivityKind.Client
         )!;
 
@@ -1228,7 +1228,7 @@ internal class ContractCaller : IContractCaller
     )
     {
         using var span = Telemetry.StartActivity(
-            $"{GetType().FullName}.{nameof(FinalizeSettlementProposalAssessmentPollAsSoftDeclined)}",
+            $"{GetType().GetActivityName()}.{nameof(FinalizeSettlementProposalAssessmentPollAsSoftDeclined)}",
             kind: ActivityKind.Client
         )!;
 
@@ -1291,7 +1291,7 @@ internal class ContractCaller : IContractCaller
     )
     {
         using var span = Telemetry.StartActivity(
-            $"{GetType().FullName}.{nameof(FinalizeSettlementProposalAssessmentPollAsHardDeclined)}",
+            $"{GetType().GetActivityName()}.{nameof(FinalizeSettlementProposalAssessmentPollAsHardDeclined)}",
             kind: ActivityKind.Client
         )!;
 

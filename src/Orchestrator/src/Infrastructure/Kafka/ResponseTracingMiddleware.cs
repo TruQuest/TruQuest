@@ -24,7 +24,7 @@ internal class ResponseTracingMiddleware : IMessageMiddleware
         // @@??: Should add messaging tags here to connect both ends of communication ?
 
         using var span = Telemetry.StartActivity(
-            context.Message.Value.GetType().FullName!,
+            context.Message.Value.GetType().GetActivityName(),
             parentContext: parentSpanContext,
             kind: ActivityKind.Consumer
         )!;

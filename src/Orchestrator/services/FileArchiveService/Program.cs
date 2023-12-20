@@ -9,6 +9,8 @@ using OpenTelemetry.Trace;
 using Services;
 using Common.Monitoring;
 
+ActivityNames.Populate();
+
 Action<ResourceBuilder>? configureResource = null;
 
 IHost host = Host.CreateDefaultBuilder(args)
@@ -98,7 +100,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                                 .AddMiddlewares(middlewares =>
                                     middlewares
                                         .AddDeserializer<MessageSerializer, MessageTypeResolver>()
-                                        .Add<TelemetryMiddleware>(MiddlewareLifetime.Singleton)
+                                        .Add<TracingMiddleware>(MiddlewareLifetime.Singleton)
                                         .AddTypedHandlers(handlers =>
                                             handlers
                                                 .WithHandlerLifetime(InstanceLifetime.Singleton)

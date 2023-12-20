@@ -19,7 +19,7 @@ internal class FileStorage : IFileStorage
 
     public async Task<(List<string> FileIpfsCids, string FolderIpfsCid)> Upload(string folderName, IEnumerable<string> filePaths)
     {
-        using var span = Telemetry.StartActivity($"{GetType().FullName}.{nameof(Upload)}", kind: ActivityKind.Client);
+        using var span = Telemetry.StartActivity($"{GetType().GetActivityName()}.{nameof(Upload)}", kind: ActivityKind.Client);
 
         using var client = _httpClientFactory.CreateClient("ipfs");
 

@@ -50,7 +50,7 @@ internal class EmailSender : IEmailSender
 
     public async Task SendConfirmationEmail(string recipient, string subject, string body)
     {
-        using var span = Telemetry.StartActivity($"{GetType().FullName}.{nameof(SendConfirmationEmail)}", kind: ActivityKind.Client)!;
+        using var span = Telemetry.StartActivity($"{GetType().GetActivityName()}.{nameof(SendConfirmationEmail)}", kind: ActivityKind.Client)!;
 
         using var email = new MimeMessage();
         email.From.Add(new MailboxAddress(_senderDisplayName, _senderAddress));
@@ -67,7 +67,7 @@ internal class EmailSender : IEmailSender
 
     public async Task ForwardEmail(string recipient, string filePath)
     {
-        using var span = Telemetry.StartActivity($"{GetType().FullName}.{nameof(ForwardEmail)}", kind: ActivityKind.Client)!;
+        using var span = Telemetry.StartActivity($"{GetType().GetActivityName()}.{nameof(ForwardEmail)}", kind: ActivityKind.Client)!;
 
         using var receivedEmail = await MimeMessage.LoadAsync(filePath);
         using var email = new MimeMessage();

@@ -26,7 +26,7 @@ internal class FileStorage : IFileStorage
 
     public async Task<Either<HandleError, string>> UploadJson(object obj)
     {
-        using var span = Telemetry.StartActivity($"{GetType().FullName}.{nameof(UploadJson)}", kind: ActivityKind.Client);
+        using var span = Telemetry.StartActivity($"{GetType().GetActivityName()}.{nameof(UploadJson)}", kind: ActivityKind.Client);
 
         using var client = _clientFactory.CreateClient("ipfs");
 

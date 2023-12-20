@@ -22,10 +22,10 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
 
     private readonly string _path;
 
-    private readonly ChannelWriter<(string RequestId, IEnumerable<string> Urls, TaskCompletionSource<List<string>?> Tcs)> _sink;
-    private readonly ChannelReader<(string RequestId, IEnumerable<string> Urls, TaskCompletionSource<List<string>?> Tcs)> _stream;
+    private readonly ChannelWriter<(string RequestId, IEnumerable<string> Urls, TaskCompletionSource<List<string>?> Tcs, string Traceparent)> _sink;
+    private readonly ChannelReader<(string RequestId, IEnumerable<string> Urls, TaskCompletionSource<List<string>?> Tcs, string Traceparent)> _stream;
 
-    private readonly BlockingCollection<(string RequestId, IEnumerable<string> Urls, TaskCompletionSource<List<string>> Tcs)>[] _workerQueues;
+    private readonly BlockingCollection<(string RequestId, IEnumerable<string> Urls, TaskCompletionSource<List<string>> Tcs, string Traceparent)>[] _workerQueues;
     private readonly int[] _workerQueueSizes;
 
     private readonly int _targetAvgLoad;
@@ -47,13 +47,13 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
         _scrollTimeoutMs = configuration.GetValue<int>("WebPageScreenshots:Playwright:ScrollTimeoutSec") * 1000;
         _screenshotTimeoutMs = configuration.GetValue<int>("WebPageScreenshots:Playwright:ScreenshotTimeoutSec") * 1000;
 
-        var channel = Channel.CreateUnbounded<(string RequestId, IEnumerable<string> Urls, TaskCompletionSource<List<string>?> Tcs)>(
+        var channel = Channel.CreateUnbounded<(string RequestId, IEnumerable<string> Urls, TaskCompletionSource<List<string>?> Tcs, string Traceparent)>(
             new() { SingleReader = true }
         );
         _sink = channel.Writer;
         _stream = channel.Reader;
 
-        _workerQueues = new BlockingCollection<(string RequestId, IEnumerable<string> Urls, TaskCompletionSource<List<string>> Tcs)>[workerCount];
+        _workerQueues = new BlockingCollection<(string RequestId, IEnumerable<string> Urls, TaskCompletionSource<List<string>> Tcs, string Traceparent)>[workerCount];
         _workerQueueSizes = new int[workerCount];
         for (int i = 0; i < _workerQueues.Length; ++i)
         {
@@ -79,6 +79,11 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
 
             await foreach (var request in _stream.ReadAllAsync(ct))
             {
+                using var span = Telemetry.StartActivity(
+                    $"{GetType().GetActivityName()}.{nameof(_monitorRequests)}.Next",
+                    traceparent: request.Traceparent
+                )!;
+
                 if (_tryLoadBalanceRequests(request.Urls.Count(), out List<WorkerAssignment>? workerAssignments))
                 {
                     int urlsTakenCount = 0;
@@ -92,7 +97,12 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
                         var tcs = new TaskCompletionSource<List<string>>();
                         tasks.Add(tcs.Task);
 
-                        _workerQueues[workerAssignment.WorkerIndex].Add((RequestId: request.RequestId, Urls: urls, Tcs: tcs));
+                        _workerQueues[workerAssignment.WorkerIndex].Add((
+                            RequestId: request.RequestId,
+                            Urls: urls,
+                            Tcs: tcs,
+                            Traceparent: span.GetTraceparent()
+                        ));
                         urlsTakenCount += urlsToTake;
                     }
 
@@ -197,6 +207,12 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
         while (true)
         {
             var request = queue.Take();
+
+            using var span = Telemetry.StartActivity(
+                $"{GetType().GetActivityName()}.{workerIndex}.{nameof(_processRequests)}.Next",
+                traceparent: request.Traceparent
+            );
+
             var filePaths = new List<string>(request.Urls.Count());
 
             try
@@ -287,10 +303,10 @@ internal class WebPageScreenshotTakerUsingPlaywright : IWebPageScreenshotTaker
 
     public async Task<List<string>?> Take(string requestId, IEnumerable<string> urls)
     {
-        using var span = Telemetry.StartActivity($"{GetType().FullName}.{nameof(Take)}");
+        using var span = Telemetry.StartActivity($"{GetType().GetActivityName()}.{nameof(Take)}")!;
 
         var tcs = new TaskCompletionSource<List<string>?>();
-        await _sink.WriteAsync((RequestId: requestId, Urls: urls, Tcs: tcs));
+        await _sink.WriteAsync((RequestId: requestId, Urls: urls, Tcs: tcs, Traceparent: span.GetTraceparent()));
         return await tcs.Task;
     }
 }

@@ -6,7 +6,7 @@ using KafkaFlow;
 using Common.Monitoring;
 using Messages.Requests;
 
-internal class TelemetryMiddleware : IMessageMiddleware
+internal class TracingMiddleware : IMessageMiddleware
 {
     public async Task Invoke(IMessageContext context, MiddlewareDelegate next)
     {
@@ -20,7 +20,7 @@ internal class TelemetryMiddleware : IMessageMiddleware
         );
 
         using var span = Telemetry.StartActivity(
-            context.Message.Value.GetType().FullName!,
+            context.Message.Value.GetType().GetActivityName(),
             parentContext: parentSpanContext,
             kind: ActivityKind.Consumer
         )!;

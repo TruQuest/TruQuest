@@ -20,7 +20,7 @@ public class TracingMiddleware<TRequest, TResponse> : IRequestMiddleware<TReques
 
         // @@NOTE: Passing null 'traceparent' is the same as not passing it at all, that is,
         // parent gets set from Activity.Current if any.
-        using var span = Telemetry.StartActivity(request.GetType().FullName!, traceparent: traceparent)!;
+        using var span = Telemetry.StartActivity(request.GetType().GetActivityName(), traceparent: traceparent)!;
         var response = await next();
         foreach (var tag in request.GetActivityTags(response)) span.AddTag(tag.Name, tag.Value);
 

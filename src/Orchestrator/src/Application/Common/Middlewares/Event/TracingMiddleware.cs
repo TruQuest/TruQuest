@@ -33,7 +33,7 @@ public class TracingMiddleware<TEvent> : IEventMiddleware<TEvent> where TEvent :
                     // for events we must wait for more confirmations than when we send the txn.
                     traceparent = _memoryCache.Get<string>(contractEvent.TxnHash);
                 }
-                span = Telemetry.StartActivity(@event.GetType().FullName!, traceparent: traceparent)!;
+                span = Telemetry.StartActivity(@event.GetType().GetActivityName(), traceparent: traceparent)!;
             }
 
             await next();

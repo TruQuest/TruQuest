@@ -62,6 +62,15 @@ public static class WebApplicationBuilderExtension
     {
         var configuration = builder.Configuration;
 
+        if (builder.Configuration["DbMigrator"] == null)
+        {
+            ActivityNames.Populate(
+                Assembly.GetExecutingAssembly(),
+                Assembly.GetAssembly(typeof(Application.IServiceCollectionExtension))!,
+                Assembly.GetAssembly(typeof(Infrastructure.IServiceCollectionExtension))!
+            );
+        }
+
         builder.Logging.ClearProviders();
         if (builder.Environment.EnvironmentName is "Development" or "Testing")
         {

@@ -64,7 +64,7 @@ internal class RequestDispatcher : IRequestDispatcher
 
     public async Task<object> GetResult(object request, string? requestId = null)
     {
-        using var span = Telemetry.StartActivity(request.GetType().FullName!, kind: ActivityKind.Producer)!;
+        using var span = Telemetry.StartActivity(request.GetType().GetActivityName(), kind: ActivityKind.Producer)!;
 
         foreach (var tag in ((BaseRequest)request).GetActivityTags())
             span.AddTag(tag.Name, tag.Value);
@@ -99,7 +99,7 @@ internal class RequestDispatcher : IRequestDispatcher
 
     public async Task Send(object request, string? requestId = null)
     {
-        using var span = Telemetry.StartActivity(request.GetType().FullName!, kind: ActivityKind.Producer)!;
+        using var span = Telemetry.StartActivity(request.GetType().GetActivityName(), kind: ActivityKind.Producer)!;
 
         foreach (var tag in ((BaseRequest)request).GetActivityTags())
             span.AddTag(tag.Name, tag.Value);

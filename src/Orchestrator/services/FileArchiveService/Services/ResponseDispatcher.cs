@@ -29,7 +29,7 @@ internal class ResponseDispatcher : IResponseDispatcher
 
     public async Task Reply(string requestId, object message)
     {
-        using var span = Telemetry.StartActivity(message.GetType().FullName!, kind: ActivityKind.Producer)!;
+        using var span = Telemetry.StartActivity(message.GetType().GetActivityName(), kind: ActivityKind.Producer)!;
 
         foreach (var tag in ((BaseResponse)message).GetActivityTags())
             span.AddTag(tag.Name, tag.Value);
@@ -58,7 +58,7 @@ internal class ResponseDispatcher : IResponseDispatcher
 
     public async Task Send(string requestId, object message, string? key = null)
     {
-        using var span = Telemetry.StartActivity(message.GetType().FullName!, kind: ActivityKind.Producer)!;
+        using var span = Telemetry.StartActivity(message.GetType().GetActivityName(), kind: ActivityKind.Producer)!;
 
         foreach (var tag in ((BaseResponse)message).GetActivityTags())
             span.AddTag(tag.Name, tag.Value);
@@ -86,7 +86,7 @@ internal class ResponseDispatcher : IResponseDispatcher
 
     public void SendSync(string requestId, object message, string? key = null)
     {
-        using var span = Telemetry.StartActivity(message.GetType().FullName!, kind: ActivityKind.Producer)!;
+        using var span = Telemetry.StartActivity(message.GetType().GetActivityName(), kind: ActivityKind.Producer)!;
 
         foreach (var tag in ((BaseResponse)message).GetActivityTags())
             span.AddTag(tag.Name, tag.Value);

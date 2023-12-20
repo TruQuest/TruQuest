@@ -38,7 +38,7 @@ internal class ImageSaver : IImageSaver
     public async Task<string> SaveLocalCopy(string requestId, string url, bool isWebPageScreenshot = false)
     {
         using var span = Telemetry.StartActivity(
-            $"{GetType().FullName}.{nameof(SaveLocalCopy)}", kind: ActivityKind.Client
+            $"{GetType().GetActivityName()}.{nameof(SaveLocalCopy)}", kind: ActivityKind.Client
         );
 
         using var client = _httpClientFactory.CreateClient("image");

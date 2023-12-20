@@ -39,7 +39,7 @@ internal class FileReceiver : IFileReceiver
         HttpRequest request, int maxSize, string filePrefix
     )
     {
-        using var span = Telemetry.StartActivity($"{GetType().FullName}.{nameof(ReceiveFilesAndFormValues)}");
+        using var span = Telemetry.StartActivity($"{GetType().GetActivityName()}.{nameof(ReceiveFilesAndFormValues)}");
 
         if (!_multipartRequestHelper.IsMultipartContentType(request.ContentType))
         {
