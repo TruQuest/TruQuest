@@ -1349,6 +1349,39 @@ internal class ContractCaller : IContractCaller
         }
     }
 
+    public async Task<TruQuestContractInfoQm> ExportTruQuestContractInfo()
+    {
+        var info = (
+            await _web3.Eth
+                .GetContractQueryHandler<ExportContractInfoMessage>()
+                .QueryAsync<ExportContractInfoFunctionOutput>(_truquestAddress, new())
+        ).Info;
+
+        return new()
+        {
+            Version = info.Version,
+            StopTheWorld = info.StopTheWorld,
+            WithdrawalsEnabled = info.WithdrawalsEnabled,
+            TruthserumAddress = info.TruthserumAddress,
+            RestrictedAccessAddress = info.RestrictedAccessAddress,
+            TruQuestAddress = info.TruQuestAddress,
+            ThingValidationVerifierLotteryAddress = info.ThingValidationVerifierLotteryAddress,
+            ThingValidationPollAddress = info.ThingValidationPollAddress,
+            SettlementProposalAssessmentVerifierLotteryAddress = info.SettlementProposalAssessmentVerifierLotteryAddress,
+            SettlementProposalAssessmentPollAddress = info.SettlementProposalAssessmentPollAddress,
+            HexTreasury = new HexBigInteger(info.Treasury).HexValue,
+            HexThingStake = new HexBigInteger(info.ThingStake).HexValue,
+            HexVerifierStake = new HexBigInteger(info.VerifierStake).HexValue,
+            HexSettlementProposalStake = new HexBigInteger(info.SettlementProposalStake).HexValue,
+            HexThingAcceptedReward = new HexBigInteger(info.ThingAcceptedReward).HexValue,
+            HexThingRejectedPenalty = new HexBigInteger(info.ThingRejectedPenalty).HexValue,
+            HexVerifierReward = new HexBigInteger(info.VerifierReward).HexValue,
+            HexVerifierPenalty = new HexBigInteger(info.VerifierPenalty).HexValue,
+            HexSettlementProposalAcceptedReward = new HexBigInteger(info.SettlementProposalAcceptedReward).HexValue,
+            HexSettlementProposalRejectedPenalty = new HexBigInteger(info.SettlementProposalRejectedPenalty).HexValue,
+        };
+    }
+
     public Task<List<string>> GetRestrictedAccessWhitelist() => _web3.Eth
         .GetContractQueryHandler<GetWhitelistMessage>()
         .QueryAsync<List<string>>(_restrictedAccessAddress, new());
@@ -1401,13 +1434,22 @@ internal class ContractCaller : IContractCaller
         var settlementProposalSubmitters = new List<SettlementProposalSubmitterQm>();
         for (int i = 0; i < result.ThingIds.Count; ++i)
         {
-            settlementProposalSubmitters.Add(new()
+            var thingId = new Guid(result.ThingIds[i]);
+            if (
+                settlementProposalSubmitters.SingleOrDefault(s => s.ThingId == thingId) == null &&
+                !result.SettlementProposals[i].Id.SequenceEqual(new byte[16])
+            )
             {
-                ThingId = new Guid(result.ThingIds[i]),
-                SettlementProposalId = new Guid(result.SettlementProposals[i].Id),
-                Submitter = result.SettlementProposals[i].Submitter
-            });
+                settlementProposalSubmitters.Add(new()
+                {
+                    ThingId = thingId,
+                    SettlementProposalId = new Guid(result.SettlementProposals[i].Id),
+                    Submitter = result.SettlementProposals[i].Submitter
+                });
+            }
         }
+
+        Debug.Assert(settlementProposalSubmitters.All(s => s.SettlementProposalId != Guid.Empty));
 
         return settlementProposalSubmitters;
     }
@@ -1445,6 +1487,8 @@ internal class ContractCaller : IContractCaller
             });
         }
 
+        Debug.Assert(lotteries.Where(l => l.OrchestratorCommitment.Block < 0).All(l => l.Participants.Count() == 0));
+
         return lotteries;
     }
 
@@ -1464,6 +1508,8 @@ internal class ContractCaller : IContractCaller
                 Verifiers = result.Verifiers[i]
             });
         }
+
+        Debug.Assert(polls.Where(p => p.Verifiers.Count() == 0).All(p => p.InitBlockNumber < 0));
 
         return polls;
     }
@@ -1517,6 +1563,8 @@ internal class ContractCaller : IContractCaller
             });
         }
 
+        Debug.Assert(lotteries.Where(l => l.OrchestratorCommitment.Block < 0).All(l => l.Participants.Count() + l.Claimants.Count() == 0));
+
         return lotteries;
     }
 
@@ -1540,6 +1588,8 @@ internal class ContractCaller : IContractCaller
                 Verifiers = result.Verifiers[i]
             });
         }
+
+        Debug.Assert(polls.Where(p => p.InitBlockNumber < 0).All(p => p.Verifiers.Count() == 0));
 
         return polls;
     }

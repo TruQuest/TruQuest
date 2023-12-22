@@ -6,6 +6,7 @@ using Domain.Aggregates;
 using Application.Thing.Queries.GetSettlementProposalsList;
 using Application.Common.Interfaces;
 using Application.Settlement.Queries.GetSettlementProposal;
+using Application.General.Queries.GetContractsStates.QM;
 
 namespace Infrastructure.Persistence.Queryables;
 
@@ -92,4 +93,15 @@ internal class SettlementProposalQueryable : Queryable, ISettlementProposalQuery
 
         return proposal;
     }
+
+    public Task<List<SettlementProposalTitleAndThingInfoQm>> GetTitleAndThingInfoFor(IEnumerable<Guid> proposalIds) =>
+        _dbContext.SettlementProposals
+            .Where(p => proposalIds.Contains(p.Id))
+            .Select(p => new SettlementProposalTitleAndThingInfoQm
+            {
+                Id = p.Id,
+                Title = p.Title,
+                ThingId = p.ThingId
+            })
+            .ToListAsync();
 }

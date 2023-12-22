@@ -28,6 +28,7 @@ contract ThingValidationPoll {
 
     TruQuest private immutable i_truQuest;
     address private s_thingValidationVerifierLotteryAddress;
+    address private s_settlementProposalAssessmentVerifierLotteryAddress;
     address private s_orchestrator;
 
     L1Block private constant L1BLOCK =
@@ -86,6 +87,15 @@ contract ThingValidationPoll {
         _;
     }
 
+    modifier onlySettlementProposalAssessmentVerifierLottery() {
+        if (
+            msg.sender != s_settlementProposalAssessmentVerifierLotteryAddress
+        ) {
+            revert ThingValidationPoll__Unauthorized();
+        }
+        _;
+    }
+
     modifier whenActiveAndNotExpired(bytes16 _thingId) {
         int256 pollInitBlock = s_thingIdToPollInitBlock[_thingId];
         if (pollInitBlock < 1) {
@@ -139,10 +149,12 @@ contract ThingValidationPoll {
         s_majorityThresholdPercent = _majorityThresholdPercent;
     }
 
-    function setThingValidationVerifierLotteryAddress(
-        address _thingValidationVerifierLotteryAddress
+    function setLotteryAddresses(
+        address _thingValidationVerifierLotteryAddress,
+        address _settlementProposalAssessmentVerifierLotteryAddress
     ) external onlyOrchestrator {
         s_thingValidationVerifierLotteryAddress = _thingValidationVerifierLotteryAddress;
+        s_settlementProposalAssessmentVerifierLotteryAddress = _settlementProposalAssessmentVerifierLotteryAddress;
     }
 
     function exportData()
@@ -160,6 +172,9 @@ contract ThingValidationPoll {
         for (uint256 i = 0; i < thingIds.length; ++i) {
             initBlockNumbers[i] = s_thingIdToPollInitBlock[thingIds[i]];
             verifiers[i] = s_thingVerifiers[thingIds[i]];
+            // could be empty if finalized as unsettled or declined, or if finalized as
+            // accepted and later cleared by settlement proposal assessment verifier lottery once
+            // it gets closed
         }
     }
 
@@ -413,5 +428,11 @@ contract ThingValidationPoll {
         uint16 _index
     ) external view returns (bool) {
         return s_thingVerifiers[_thingId][_index] == _user;
+    }
+
+    function clearThingVerifiers(
+        bytes16 _thingId
+    ) external onlySettlementProposalAssessmentVerifierLottery {
+        delete s_thingVerifiers[_thingId];
     }
 }

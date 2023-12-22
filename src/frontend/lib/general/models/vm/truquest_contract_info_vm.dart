@@ -1,0 +1,44 @@
+class TruQuestContractInfoVm {
+  final String version;
+  final bool stopTheWorld;
+  final bool withdrawalsEnabled;
+  final String truthserumAddress;
+  final String restrictedAccessAddress;
+  final String truQuestAddress;
+  final String thingValidationVerifierLotteryAddress;
+  final String thingValidationPollAddress;
+  final String settlementProposalAssessmentVerifierLotteryAddress;
+  final String settlementProposalAssessmentPollAddress;
+  final BigInt treasury;
+  final BigInt thingStake;
+  final BigInt verifierStake;
+  final BigInt settlementProposalStake;
+  final BigInt thingAcceptedReward;
+  final BigInt thingRejectedPenalty;
+  final BigInt verifierReward;
+  final BigInt verifierPenalty;
+  final BigInt settlementProposalAcceptedReward;
+  final BigInt settlementProposalRejectedPenalty;
+
+  TruQuestContractInfoVm.fromMap(Map<String, dynamic> map)
+      : version = map['version'],
+        stopTheWorld = map['stopTheWorld'],
+        withdrawalsEnabled = map['withdrawalsEnabled'],
+        truthserumAddress = map['truthserumAddress'],
+        restrictedAccessAddress = map['restrictedAccessAddress'],
+        truQuestAddress = map['truQuestAddress'],
+        thingValidationVerifierLotteryAddress = map['thingValidationVerifierLotteryAddress'],
+        thingValidationPollAddress = map['thingValidationPollAddress'],
+        settlementProposalAssessmentVerifierLotteryAddress = map['settlementProposalAssessmentVerifierLotteryAddress'],
+        settlementProposalAssessmentPollAddress = map['settlementProposalAssessmentPollAddress'],
+        treasury = BigInt.parse(map['hexTreasury']),
+        thingStake = BigInt.parse(map['hexThingStake']),
+        verifierStake = BigInt.parse(map['hexVerifierStake']),
+        settlementProposalStake = BigInt.parse(map['hexSettlementProposalStake']),
+        thingAcceptedReward = BigInt.parse(map['hexThingAcceptedReward']),
+        thingRejectedPenalty = BigInt.parse(map['hexThingRejectedPenalty']),
+        verifierReward = BigInt.parse(map['hexVerifierReward']),
+        verifierPenalty = BigInt.parse(map['hexVerifierPenalty']),
+        settlementProposalAcceptedReward = BigInt.parse(map['hexSettlementProposalAcceptedReward']),
+        settlementProposalRejectedPenalty = BigInt.parse(map['hexSettlementProposalRejectedPenalty']);
+}

@@ -34,7 +34,7 @@ public class AuthTokenProvider : IAuthTokenProvider
 
     public string GenerateJwt(string id, IList<Claim>? claims = null)
     {
-        claims = claims ?? new List<Claim>();
+        claims ??= new List<Claim>();
         claims.Add(new Claim(JwtRegisteredClaimNames.Sub, id));
 
         var token = new JwtSecurityToken(

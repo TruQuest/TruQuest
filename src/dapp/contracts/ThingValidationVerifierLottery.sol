@@ -203,7 +203,7 @@ contract ThingValidationVerifierLottery {
             orchestratorCommitments[i] = s_thingIdToOrchestratorCommitment[
                 thingId
             ];
-            participants[i] = s_thingIdToParticipants[thingId];
+            participants[i] = s_thingIdToParticipants[thingId]; // could be empty if closed
             blockNumbers[i] = new uint256[](participants[i].length);
             for (uint256 j = 0; j < blockNumbers[i].length; ++j) {
                 blockNumbers[i][j] = s_thingIdToParticipantJoinedBlockNo[

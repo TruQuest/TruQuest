@@ -33,6 +33,29 @@ contract TruQuest {
         address submitter;
     }
 
+    struct ContractInfo {
+        string version;
+        bool stopTheWorld;
+        bool withdrawalsEnabled;
+        address truthserumAddress;
+        address restrictedAccessAddress;
+        address truQuestAddress;
+        address thingValidationVerifierLotteryAddress;
+        address thingValidationPollAddress;
+        address settlementProposalAssessmentVerifierLotteryAddress;
+        address settlementProposalAssessmentPollAddress;
+        uint256 treasury;
+        uint256 thingStake;
+        uint256 verifierStake;
+        uint256 settlementProposalStake;
+        uint256 thingAcceptedReward;
+        uint256 thingRejectedPenalty;
+        uint256 verifierReward;
+        uint256 verifierPenalty;
+        uint256 settlementProposalAcceptedReward;
+        uint256 settlementProposalRejectedPenalty;
+    }
+
     bytes private constant THING_TD = "ThingTd(bytes16 id)";
     bytes32 private immutable i_thingTdHash;
     bytes private constant SETTLEMENT_PROPOSAL_TD =
@@ -319,6 +342,35 @@ contract TruQuest {
         s_withdrawalsEnabled = _value;
     }
 
+    function exportContractInfo()
+        external
+        view
+        returns (ContractInfo memory info)
+    {
+        info = ContractInfo(
+            string(VERSION),
+            s_stopTheWorld,
+            s_withdrawalsEnabled,
+            address(i_truthserum),
+            address(s_restrictedAccess),
+            address(this),
+            s_thingValidationVerifierLotteryAddress,
+            s_thingValidationPollAddress,
+            s_settlementProposalAssessmentVerifierLotteryAddress,
+            s_settlementProposalAssessmentPollAddress,
+            s_treasury,
+            s_thingStake,
+            s_verifierStake,
+            s_settlementProposalStake,
+            s_thingAcceptedReward,
+            s_thingRejectedPenalty,
+            s_verifierReward,
+            s_verifierPenalty,
+            s_settlementProposalAcceptedReward,
+            s_settlementProposalRejectedPenalty
+        );
+    }
+
     function exportUsersAndBalances()
         external
         view
@@ -383,9 +435,10 @@ contract TruQuest {
     {
         // @@!!: Keep in mind that we don't remove the thing from s_thingsWithFundedSettlementProposal array
         // when a proposal gets archived/declined/etc, but we /do/ remove the corresponding entry from
-        // s_thingIdToSettlementProposal mapping to allow for future proposals. This means that there could
-        // be duplicates in s_thingsWithFundedSettlementProposal array. This is fine so long as we take care
-        // of them on the client side.
+        // s_thingIdToSettlementProposal mapping to allow for future proposals. This means that (1) there could be thing ids
+        // in the array pointing to an empty SettlementProposal and (2) there could be duplicates in the array.
+        // Or even both these cases at the same time (i.e. duplicates pointing to an empty SettlementProposal).
+        // This is fine so long as we take care of it on the client side.
         thingIds = s_thingsWithFundedSettlementProposal;
         settlementProposals = new SettlementProposal[](thingIds.length);
         for (uint256 i = 0; i < settlementProposals.length; ++i) {
@@ -436,7 +489,7 @@ contract TruQuest {
         if (!s_withdrawalsEnabled) {
             revert TruQuest__WithdrawalsDisabled();
         }
-        
+
         uint256 availableAmount = getAvailableFunds(msg.sender);
         if (availableAmount < _amount) {
             revert TruQuest__RequestedWithdrawAmountExceedsAvailable(

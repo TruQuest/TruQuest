@@ -5,8 +5,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../bloc/general_actions.dart';
+import '../bloc/general_bloc.dart';
+import '../models/vm/get_contracts_states_rvm.dart';
 import '../services/iframe_manager.dart';
 import '../utils/logger.dart';
+import '../widgets/admin_panel_dialog.dart';
 import '../widgets/fixed_width.dart';
 import '../widgets/clipped_rect.dart';
 import '../widgets/nav_panel.dart';
@@ -31,6 +35,7 @@ class _HomePageState extends StateX<HomePage> with TickerProviderStateMixin {
   late final _pageContext = use<PageContext>();
   late final _notificationBloc = use<NotificationBloc>();
   late final _iframeManager = use<IFrameManager>();
+  late final _generalBloc = use<GeneralBloc>();
 
   late final AnimationController _rightAnimationController;
   late final Animation<double> _rightAnimation;
@@ -256,6 +261,23 @@ class _HomePageState extends StateX<HomePage> with TickerProviderStateMixin {
             width: _overlayWidth,
             height: _overlayHeight,
             padding: const EdgeInsets.fromLTRB(8, 4, 6, 4),
+            child: Center(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                ),
+                child: Text('Admin panel'),
+                onPressed: () async {
+                  var result = await _generalBloc.execute<GetContractsStatesRvm>(const GetContractsStates());
+                  if (result != null && context.mounted)
+                    showDialog(
+                      context: context,
+                      builder: (_) => AdminPanelDialog(vm: result),
+                    );
+                },
+              ),
+            ),
           ),
         ),
         builder: (_, child) => Positioned(

@@ -96,6 +96,7 @@ public interface IContractCaller
     );
     Task<IEnumerable<string>> GetVerifiersForSettlementProposal(byte[] thingId, byte[] proposalId);
 
+    Task<TruQuestContractInfoQm> ExportTruQuestContractInfo();
     Task<List<string>> GetRestrictedAccessWhitelist();
     Task<IEnumerable<UserBalanceQm>> ExportUsersAndBalances();
     Task<IEnumerable<ThingSubmitterQm>> ExportThingSubmitter();

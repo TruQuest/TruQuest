@@ -11,4 +11,10 @@ class OrchestratorLotteryCommitmentVm {
         txnHash = map['txnHash'],
         dataHash = map['dataHash'],
         userXorDataHash = map['userXorDataHash'];
+
+  OrchestratorLotteryCommitmentVm.fromExportMap(Map<String, dynamic> map)
+      : l1BlockNumber = map['block'],
+        txnHash = '',
+        dataHash = map['dataHash'],
+        userXorDataHash = map['userXorDataHash'];
 }

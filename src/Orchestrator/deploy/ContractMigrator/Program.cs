@@ -231,10 +231,14 @@ await web3.Eth
     );
 
 await web3.Eth
-    .GetContractTransactionHandler<SetThingValidationVerifierLotteryAddressMessage>()
+    .GetContractTransactionHandler<SetLotteryAddressesMessage>()
     .SendRequestAndWaitForReceiptAsync(
         contractNameToAddress["ThingValidationPoll"],
-        new() { ThingValidationVerifierLotteryAddress = contractNameToAddress["ThingValidationVerifierLottery"] }
+        new()
+        {
+            ThingValidationVerifierLotteryAddress = contractNameToAddress["ThingValidationVerifierLottery"],
+            SettlementProposalAssessmentVerifierLotteryAddress = contractNameToAddress["SettlementProposalAssessmentVerifierLottery"]
+        }
     );
 
 await web3.Eth

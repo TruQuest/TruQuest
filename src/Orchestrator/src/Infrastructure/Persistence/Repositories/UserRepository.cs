@@ -29,10 +29,20 @@ internal class UserRepository : Repository, IUserRepository
     public Task<UserDm?> FindByUsername(string username) => _userManager.FindByNameAsync(username);
 
     public Task<List<string>> GetUserIdsByWalletAddresses(IEnumerable<string> walletAddresses) =>
-        _dbContext.UserClaims
-            .Where(c => c.ClaimType == "wallet_address" && walletAddresses.Contains(c.ClaimValue))
-            .Select(c => c.UserId)
+        _dbContext.Users
+            .Where(u => walletAddresses.Contains(u.WalletAddress))
+            .Select(u => u.Id)
             .ToListAsync();
+
+    public async Task<IEnumerable<(string UserId, string WalletAddress)>> GetUserIdsForWalletAddresses(IEnumerable<string> walletAddresses)
+    {
+        var users = await _dbContext.Users
+            .Where(u => walletAddresses.Contains(u.WalletAddress))
+            .Select(u => new { UserId = u.Id, WalletAddress = u.WalletAddress })
+            .ToListAsync();
+
+        return users.Select(u => (u.UserId, u.WalletAddress));
+    }
 
     public async Task<HandleError?> Create(UserDm user)
     {

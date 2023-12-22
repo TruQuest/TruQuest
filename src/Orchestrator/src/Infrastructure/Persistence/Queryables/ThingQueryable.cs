@@ -7,6 +7,7 @@ using Application.Thing.Queries.GetThing;
 using Application.Common.Models.QM;
 using Application.Common.Interfaces;
 using Application.Subject.Common.Models.QM;
+using Application.General.Queries.GetContractsStates.QM;
 
 namespace Infrastructure.Persistence.Queryables;
 
@@ -119,4 +120,24 @@ internal class ThingQueryable : Queryable, IThingQueryable
 
     public Task<ThingState> GetStateFor(Guid thingId) =>
         _dbContext.Things.Where(t => t.Id == thingId).Select(t => t.State).SingleAsync();
+
+    public async Task<IEnumerable<ThingTitleAndSubjectInfoQm>> GetTitleAndSubjectInfoFor(IEnumerable<Guid> thingIds)
+    {
+        var dbConn = await _getOpenConnection();
+        return await dbConn.QueryAsync<ThingTitleAndSubjectInfoQm>(
+            @"
+                SELECT t.""Id"", t.""Title"", t.""SubjectId"", s.""Name"" AS ""SubjectName""
+                FROM
+                    truquest.""Things"" AS t
+                        INNER JOIN
+                    truquest.""Subjects"" AS s
+                        ON t.""SubjectId"" = s.""Id""
+                WHERE t.""Id"" = ANY(@ThingIds);
+            ",
+            param: new
+            {
+                ThingIds = thingIds
+            }
+        );
+    }
 }

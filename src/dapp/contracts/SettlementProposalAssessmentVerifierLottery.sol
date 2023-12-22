@@ -259,8 +259,8 @@ contract SettlementProposalAssessmentVerifierLottery {
             orchestratorCommitments[
                 i
             ] = s_thingProposalIdToOrchestratorCommitment[thingProposalId];
-            participants[i] = s_thingProposalIdToParticipants[thingProposalId];
-            claimants[i] = s_thingProposalIdToClaimants[thingProposalId];
+            participants[i] = s_thingProposalIdToParticipants[thingProposalId]; // could be empty if closed
+            claimants[i] = s_thingProposalIdToClaimants[thingProposalId]; // could be empty if closed
             blockNumbers[i] = new uint256[](
                 participants[i].length + claimants[i].length
             );
@@ -665,6 +665,8 @@ contract SettlementProposalAssessmentVerifierLottery {
 
         (bytes16 thingId, bytes16 proposalId) = _splitIds(_thingProposalId);
 
+        s_thingValidationPoll.clearThingVerifiers(thingId);
+
         emit LotteryClosedWithSuccess(
             thingId,
             proposalId,
@@ -717,6 +719,8 @@ contract SettlementProposalAssessmentVerifierLottery {
         i_truQuest.setThingNoLongerHasSettlementProposalUnderAssessment(
             thingId
         );
+
+        s_thingValidationPoll.clearThingVerifiers(thingId);
 
         emit LotteryClosedInFailure(
             thingId,

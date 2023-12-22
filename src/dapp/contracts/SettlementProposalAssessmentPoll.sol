@@ -192,7 +192,7 @@ contract SettlementProposalAssessmentPoll {
             initBlockNumbers[i] = s_thingProposalIdToPollInitBlock[
                 thingProposalIds[i]
             ];
-            verifiers[i] = s_settlementProposalVerifiers[thingProposalIds[i]];
+            verifiers[i] = s_settlementProposalVerifiers[thingProposalIds[i]]; // could be empty if finalized
         }
     }
 

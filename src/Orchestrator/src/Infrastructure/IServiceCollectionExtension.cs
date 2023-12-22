@@ -177,7 +177,9 @@ public static class IServiceCollectionExtension
                 };
             });
 
-        services.AddAuthorizationCore();
+        services.AddAuthorizationCore(options =>
+            options.AddPolicy("AdminOnly", builder => builder.RequireClaim("is_admin"))
+        );
         services.AddScoped<IAuthenticationContext, AuthenticationContext>();
         services.AddTransient<IAuthorizationService, AuthorizationService>();
         services.AddScoped<ICurrentPrincipal, CurrentPrincipal>();

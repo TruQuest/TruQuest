@@ -45,4 +45,13 @@ class VerifierLotteryParticipantEntryVm {
         userData = map['userData'],
         nonce = map['nonce'],
         isWinner = map.containsKey('isWinner'); // either true or absent
+
+  VerifierLotteryParticipantEntryVm.fromExportMap(Map<String, dynamic> map)
+      : l1BlockNumber = map['joinedBlockNumber'],
+        txnHash = '',
+        userId = map['userId'],
+        walletAddress = map['walletAddress'],
+        userData = '',
+        nonce = null,
+        isWinner = false;
 }

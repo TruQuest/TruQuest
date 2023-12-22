@@ -1,6 +1,7 @@
 using GoThataway;
 
 using Application.General.Queries.GetTags;
+using Application.General.Queries.GetContractsStates;
 
 namespace API.Endpoints;
 
@@ -13,6 +14,10 @@ public static class GeneralEndpoints
             app.MapGet(
                 "/api/tags",
                 (Thataway thataway) => thataway.Send(new GetTagsQuery())
+            ),
+            app.MapGet(
+                "/api/contracts-states",
+                (Thataway thataway) => thataway.Send(new GetContractsStatesQuery())
             )
         };
 
