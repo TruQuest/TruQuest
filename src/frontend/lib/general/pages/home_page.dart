@@ -41,13 +41,20 @@ class _HomePageState extends StateX<HomePage> with TickerProviderStateMixin {
   late final Animation<double> _rightAnimation;
   late final AnimationController _leftAnimationController;
   late final Animation<double> _leftAnimation;
+  late final AnimationController _consoleAnimationController;
+  late final Animation<double> _consoleAnimation;
 
   final double _overlayWidth = 250;
   final double _overlayHeight = 250;
   final double _overlayInitialVisibleWidth = 30;
+  final double _consoleHeight = 60;
   late double _halfScreenHeight;
   OverlayEntry? _rightOverlayEntry;
   OverlayEntry? _leftOverlayEntry;
+  OverlayEntry? _consoleOverlayEntry;
+
+  final _consoleFocusNode = FocusNode();
+  final _consoleTextController = TextEditingController();
 
   @override
   void initState() {
@@ -86,6 +93,18 @@ class _HomePageState extends StateX<HomePage> with TickerProviderStateMixin {
         curve: Curves.fastOutSlowIn,
       ),
     );
+
+    _consoleAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 250),
+      vsync: this,
+    );
+
+    _consoleAnimation = Tween<double>(begin: 0, end: _consoleHeight).animate(
+      CurvedAnimation(
+        parent: _consoleAnimationController,
+        curve: Curves.fastOutSlowIn,
+      ),
+    );
   }
 
   @override
@@ -105,11 +124,24 @@ class _HomePageState extends StateX<HomePage> with TickerProviderStateMixin {
     _leftOverlayEntry = null;
   }
 
+  bool _removeConsole() {
+    var consoleWasDisplayed = _consoleOverlayEntry != null;
+    _consoleOverlayEntry?.remove();
+    _consoleOverlayEntry?.dispose();
+    _consoleOverlayEntry = null;
+
+    return consoleWasDisplayed;
+  }
+
   @override
   void dispose() {
     _removeOverlays();
+    _removeConsole();
     _rightAnimationController.dispose();
     _leftAnimationController.dispose();
+    _consoleAnimationController.dispose();
+    _consoleFocusNode.dispose();
+    _consoleTextController.dispose();
     super.dispose();
   }
 
@@ -164,10 +196,97 @@ class _HomePageState extends StateX<HomePage> with TickerProviderStateMixin {
     );
   }
 
+  void _buildConsole() {
+    _consoleFocusNode.requestFocus();
+    _consoleOverlayEntry = OverlayEntry(
+      builder: (_) => AnimatedBuilder(
+        animation: _consoleAnimation,
+        child: Material(
+          color: Colors.black87,
+          child: Container(
+            width: double.infinity,
+            height: _consoleHeight,
+            padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+            alignment: Alignment.bottomLeft,
+            child: TextField(
+              focusNode: _consoleFocusNode,
+              controller: _consoleTextController,
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: 'Command',
+                hintStyle: TextStyle(color: Colors.white70),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white70),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              onSubmitted: (value) async {
+                _consoleTextController.clear();
+                await _consoleAnimationController.reverse();
+                _removeConsole();
+
+                var commandArgs = value.split(' ');
+                var command = commandArgs.first.toLowerCase();
+                switch (command) {
+                  case 'logs':
+                    if (context.mounted)
+                      await showDialog(
+                        context: context,
+                        builder: (_) => SimpleDialog(
+                          children: [
+                            SizedBox(
+                              width: 1000,
+                              height: 600,
+                              child: TalkerScreen(
+                                appBarTitle: 'Logs',
+                                talker: logger,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                  case 'admin':
+                    var result = await _generalBloc.execute<GetContractsStatesRvm>(const GetContractsStates());
+                    if (result != null && context.mounted)
+                      await showDialog(
+                        context: context,
+                        builder: (_) => AdminPanelDialog(vm: result),
+                      );
+                  case 'goto':
+                    var route = commandArgs.elementAtOrNull(1);
+                    if (route != null) _pageContext.goto(route);
+                  default:
+                    logger.info('Invalid command');
+                }
+              },
+            ),
+          ),
+        ),
+        builder: (_, child) => Positioned(
+          top: _consoleAnimation.value - _consoleHeight,
+          left: 0,
+          right: 0,
+          child: child!,
+        ),
+      ),
+    );
+
+    Overlay.of(context).insert(_consoleOverlayEntry!);
+  }
+
   void _buildOverlays() {
     _removeOverlays();
     _rightAnimationController.reset();
     _leftAnimationController.reset();
+    _consoleAnimationController.reset();
+
+    bool consoleWasDisplayed = _removeConsole();
+    if (consoleWasDisplayed) {
+      _buildConsole();
+      _consoleAnimationController.value = _consoleAnimationController.upperBound;
+    }
 
     _rightOverlayEntry = OverlayEntry(
       builder: (_) => AnimatedBuilder(
@@ -261,23 +380,6 @@ class _HomePageState extends StateX<HomePage> with TickerProviderStateMixin {
             width: _overlayWidth,
             height: _overlayHeight,
             padding: const EdgeInsets.fromLTRB(8, 4, 6, 4),
-            child: Center(
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                ),
-                child: Text('Admin panel'),
-                onPressed: () async {
-                  var result = await _generalBloc.execute<GetContractsStatesRvm>(const GetContractsStates());
-                  if (result != null && context.mounted)
-                    showDialog(
-                      context: context,
-                      builder: (_) => AdminPanelDialog(vm: result),
-                    );
-                },
-              ),
-            ),
           ),
         ),
         builder: (_, child) => Positioned(
@@ -315,35 +417,29 @@ class _HomePageState extends StateX<HomePage> with TickerProviderStateMixin {
               snap: false,
               backgroundColor: const Color(0xffF8F9FA),
               leadingWidth: 120,
-              leading: GestureDetector(
-                onDoubleTap: () => showDialog(
-                  context: context,
-                  builder: (_) => SimpleDialog(
-                    children: [
-                      SizedBox(
-                        width: 1000,
-                        height: 600,
-                        child: TalkerScreen(
-                          appBarTitle: 'Logs',
-                          talker: logger,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                child: ClippedRect(
-                  height: 70,
-                  color: Colors.black,
-                  fromNarrowToWide: true,
-                  narrowSideFraction: 0.55,
-                  child: SizedBox.shrink(
-                    child: HtmlElementView(viewType: _iframeManager.iframePrivateKeyGen.viewId),
-                  ),
+              leading: ClippedRect(
+                height: 70,
+                color: Colors.black,
+                fromNarrowToWide: true,
+                narrowSideFraction: 0.55,
+                child: SizedBox.shrink(
+                  child: HtmlElementView(viewType: _iframeManager.iframePrivateKeyGen.viewId),
                 ),
               ),
-              title: Image.asset(
-                'assets/images/logo.png',
-                height: 60,
+              title: GestureDetector(
+                onDoubleTap: () async {
+                  if (_consoleOverlayEntry == null) {
+                    _buildConsole();
+                    await _consoleAnimationController.forward();
+                  } else {
+                    await _consoleAnimationController.reverse();
+                    _removeConsole();
+                  }
+                },
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  height: 60,
+                ),
               ),
               toolbarHeight: 70,
               centerTitle: true,
@@ -368,72 +464,35 @@ class _HomePageState extends StateX<HomePage> with TickerProviderStateMixin {
                 }
 
                 var route = snapshot.data!;
-                switch (route) {
-                  case '/subjects':
-                    return const SubjectsPage();
-                  case '/goto':
-                    return SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Center(
-                        child: TextButton(
-                          child: const Text('Go To'),
-                          onPressed: () async {
-                            var route = '';
-                            var shouldGo = await showDialog<bool>(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('Page'),
-                                content: SizedBox(
-                                  width: 100,
-                                  child: TextField(
-                                    onChanged: (value) => route = value,
-                                  ),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    child: const Text('Ok'),
-                                    onPressed: () => Navigator.of(context).pop(true),
-                                  ),
-                                ],
-                              ),
-                            );
+                if (route == '/subjects') return const SubjectsPage();
 
-                            if (shouldGo != null && shouldGo && route.isNotEmpty) {
-                              _pageContext.goto(route);
-                            }
-                          },
-                        ),
-                      ),
-                    );
-                  default:
-                    var routeSplit = route.split('/');
-                    var id = routeSplit[2];
-                    var timestamp = DateTime.fromMillisecondsSinceEpoch(
-                      int.parse(routeSplit.last),
-                    );
+                var routeSplit = route.split('/');
+                var id = routeSplit[2];
+                var timestamp = DateTime.fromMillisecondsSinceEpoch(
+                  int.parse(routeSplit.last),
+                );
 
-                    if (routeSplit[1] == 'subjects') {
-                      return SubjectPage(
-                        subjectId: id,
-                        timestamp: timestamp,
-                      );
-                    } else if (routeSplit[1] == 'things') {
-                      return ThingPage(
-                        thingId: id,
-                        timestamp: timestamp,
-                      );
-                    } else if (routeSplit[1] == 'proposals') {
-                      return SettlementProposalPage(
-                        proposalId: id,
-                        timestamp: timestamp,
-                      );
-                    }
-
-                    return const SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Center(child: Text('Not found')),
-                    );
+                if (routeSplit[1] == 'subjects') {
+                  return SubjectPage(
+                    subjectId: id,
+                    timestamp: timestamp,
+                  );
+                } else if (routeSplit[1] == 'things') {
+                  return ThingPage(
+                    thingId: id,
+                    timestamp: timestamp,
+                  );
+                } else if (routeSplit[1] == 'proposals') {
+                  return SettlementProposalPage(
+                    proposalId: id,
+                    timestamp: timestamp,
+                  );
                 }
+
+                return const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(child: Text('Not found')),
+                );
               },
             ),
           ],

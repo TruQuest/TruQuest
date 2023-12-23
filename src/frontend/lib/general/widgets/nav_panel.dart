@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
@@ -73,30 +72,6 @@ class NavPanel extends StatelessWidgetX {
                   ],
                 ),
               ),
-              if (dotenv.env['ENVIRONMENT'] == 'Development')
-                Padding(
-                  padding: const EdgeInsets.only(left: 48),
-                  child: InkWell(
-                    onTap: () => _pageContext.goto('/goto'),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.circle,
-                          color: Colors.white,
-                          size: 8,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Go To',
-                          style: GoogleFonts.raleway(
-                            fontSize: 17,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
               const Spacer(),
               Container(
                 width: 300,

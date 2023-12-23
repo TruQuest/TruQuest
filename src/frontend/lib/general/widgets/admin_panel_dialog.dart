@@ -5,7 +5,11 @@ import 'package:multi_select_flutter/multi_select_flutter.dart';
 
 import '../../widget_extensions.dart';
 import '../models/vm/get_contracts_states_rvm.dart';
+import '../models/vm/poll_vm.dart';
+import '../models/vm/settlement_proposal_assessment_verifier_lottery_vm.dart';
+import '../models/vm/thing_validation_verifier_lottery_vm.dart';
 import 'contained_tab_bar_view.dart';
+import 'searchable_list.dart';
 
 // ignore: must_be_immutable
 class AdminPanelDialog extends StatelessWidgetX {
@@ -334,6 +338,305 @@ class AdminPanelDialog extends StatelessWidgetX {
     );
   }
 
+  Widget _buildSubjectsThingsProposalsTab() {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        color: Color.fromARGB(255, 67, 75, 145),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: EdgeInsets.fromLTRB(20, 10, 20, 10),
+      child: ListView.builder(
+        itemBuilder: (context, index) {
+          var subject = vm.subjects[index];
+          return Container(
+            margin: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.amber,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Text(subject.name),
+                    const SizedBox(width: 12),
+                    Text(subject.id),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 400,
+                  child: GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 16,
+                      mainAxisExtent: 250,
+                      mainAxisSpacing: 10,
+                    ),
+                    itemBuilder: (context, index) {
+                      var thing = subject.things[index];
+                      var proposal = thing.settlementProposal;
+
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: Colors.teal[100]!,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                        child: Column(
+                          children: [
+                            Text(thing.title),
+                            Text(thing.id),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: InkWell(
+                                    onTap: thing.lottery != null
+                                        ? () => showDialog(
+                                              context: context,
+                                              builder: (_) => _buildThingLotteryDialog(thing.lottery!),
+                                            )
+                                        : null,
+                                    child: Container(
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                        color: thing.lottery != null ? Colors.pink[100]! : Colors.transparent,
+                                        border: Border.all(color: Colors.pink[100]!),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Text('Lottery'),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: InkWell(
+                                    onTap: thing.poll != null
+                                        ? () => showDialog(
+                                              context: context,
+                                              builder: (_) => _buildPollDialog('Thing validation poll', thing.poll!),
+                                            )
+                                        : null,
+                                    child: Container(
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                        color: thing.poll != null ? Colors.cyan[100]! : Colors.transparent,
+                                        border: Border.all(color: Colors.cyan[100]!),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Text('Poll'),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              width: double.infinity,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                color: proposal != null ? Colors.deepPurple[300]! : Colors.transparent,
+                                border: Border.all(color: Colors.deepPurple[300]!),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              alignment: Alignment.center,
+                              padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
+                              child: proposal != null
+                                  ? Column(
+                                      children: [
+                                        Text(proposal.title),
+                                        Text(proposal.id),
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: InkWell(
+                                                onTap: proposal.lottery != null
+                                                    ? () => showDialog(
+                                                          context: context,
+                                                          builder: (_) => _buildProposalLotteryDialog(
+                                                            proposal.lottery!,
+                                                          ),
+                                                        )
+                                                    : null,
+                                                child: Container(
+                                                  height: 40,
+                                                  decoration: BoxDecoration(
+                                                    color: proposal.lottery != null
+                                                        ? Colors.pink[100]!
+                                                        : Colors.transparent,
+                                                    border: Border.all(color: Colors.pink[100]!),
+                                                    borderRadius: BorderRadius.circular(4),
+                                                  ),
+                                                  alignment: Alignment.center,
+                                                  child: Text('Lottery'),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Expanded(
+                                              child: InkWell(
+                                                onTap: proposal.poll != null
+                                                    ? () => showDialog(
+                                                          context: context,
+                                                          builder: (_) => _buildPollDialog(
+                                                            'Settlement proposal assessment poll',
+                                                            proposal.poll!,
+                                                          ),
+                                                        )
+                                                    : null,
+                                                child: Container(
+                                                  height: 40,
+                                                  decoration: BoxDecoration(
+                                                    color:
+                                                        proposal.poll != null ? Colors.cyan[100]! : Colors.transparent,
+                                                    border: Border.all(color: Colors.cyan[100]!),
+                                                    borderRadius: BorderRadius.circular(4),
+                                                  ),
+                                                  alignment: Alignment.center,
+                                                  child: Text('Poll'),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    )
+                                  : Text('No settlement proposal'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    itemCount: subject.things.length,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+        itemCount: vm.subjects.length,
+      ),
+    );
+  }
+
+  Widget _buildThingLotteryDialog(ThingValidationVerifierLotteryVm lottery) {
+    return AlertDialog(
+      title: Text('Thing validation verifier lottery'),
+      content: Column(
+        children: [
+          Text('Block: ${lottery.orchestratorCommitment.l1BlockNumber}'),
+          Text('DataHash: ${lottery.orchestratorCommitment.dataHash}'),
+          Text('UserXorDataHash: ${lottery.orchestratorCommitment.userXorDataHash}'),
+          SearchableList(
+            values: lottery.participants,
+            onSearch: (allParticipants, searchTerm) {
+              var regex = RegExp(searchTerm, caseSensitive: false);
+              return allParticipants.where((p) => regex.hasMatch(p.walletAddress)).toList();
+            },
+            onDisplay: (participant) => ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.green[200]!,
+                radius: 15,
+                child: Text(participant.l1BlockNumber.toString()),
+              ),
+              title: Text(participant.walletAddress),
+              subtitle: Text(participant.userId),
+            ),
+            width: 300,
+            height: 500,
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(6),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProposalLotteryDialog(SettlementProposalAssessmentVerifierLotteryVm lottery) {
+    return AlertDialog(
+      title: Text('Settlement proposal assessment verifier lottery'),
+      content: SingleChildScrollView(
+        child: Column(
+          children: [
+            Text('Block: ${lottery.orchestratorCommitment.l1BlockNumber}'),
+            Text('DataHash: ${lottery.orchestratorCommitment.dataHash}'),
+            Text('UserXorDataHash: ${lottery.orchestratorCommitment.userXorDataHash}'),
+            SearchableList(
+              values: lottery.claimants,
+              onSearch: (allClaimants, searchTerm) {
+                var regex = RegExp(searchTerm, caseSensitive: false);
+                return allClaimants.where((c) => regex.hasMatch(c.walletAddress)).toList();
+              },
+              onDisplay: (claimant) => ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.green[200]!,
+                  radius: 15,
+                  child: Text(claimant.l1BlockNumber.toString()),
+                ),
+                title: Text(claimant.walletAddress),
+                subtitle: Text(claimant.userId),
+              ),
+              width: 300,
+              height: 500,
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            SearchableList(
+              values: lottery.participants,
+              onSearch: (allParticipants, searchTerm) {
+                var regex = RegExp(searchTerm, caseSensitive: false);
+                return allParticipants.where((p) => regex.hasMatch(p.walletAddress)).toList();
+              },
+              onDisplay: (participant) => ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.green[200]!,
+                  radius: 15,
+                  child: Text(participant.l1BlockNumber.toString()),
+                ),
+                title: Text(participant.walletAddress),
+                subtitle: Text(participant.userId),
+              ),
+              width: 300,
+              height: 500,
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPollDialog(String title, PollVm poll) {
+    return AlertDialog(
+      title: Text(title),
+      content: Column(
+        children: [
+          Text('InitBlockNumber: ${poll.initBlockNumber}'),
+          SearchableList(
+            values: poll.verifiers,
+            onSearch: (allVerifiers, searchTerm) {
+              var regex = RegExp(searchTerm, caseSensitive: false);
+              return allVerifiers.where((v) => regex.hasMatch(v.walletAddress)).toList();
+            },
+            onDisplay: (verifier) => ListTile(
+              title: Text(verifier.walletAddress),
+              subtitle: Text(verifier.userId),
+            ),
+            width: 300,
+            height: 500,
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(6),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget buildX(BuildContext context) {
     // @@NOTE: Use AlertDialog because SimpleDialog is automatically scrollable, which I don't want.
@@ -351,7 +654,7 @@ class AdminPanelDialog extends StatelessWidgetX {
           tabs: const [
             Text('General info'),
             Text('Users'),
-            // Text('Subjects/Things/Proposals'),
+            Text('Subjects/Things/Proposals'),
           ],
           tabBarProperties: TabBarProperties(
             margin: const EdgeInsets.only(bottom: 8),
@@ -370,6 +673,7 @@ class AdminPanelDialog extends StatelessWidgetX {
           views: [
             _buildGeneralInfoTab(),
             _buildUsersTab(),
+            _buildSubjectsThingsProposalsTab(),
           ],
         ),
       ),
