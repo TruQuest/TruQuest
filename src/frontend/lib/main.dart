@@ -44,7 +44,7 @@ class App extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       scrollBehavior: MouseIncludedScrollBehavior(),
-      title: 'TruQuest',
+      title: 'A promise/trustworthiness tracker powered by Ethereum and Base',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
