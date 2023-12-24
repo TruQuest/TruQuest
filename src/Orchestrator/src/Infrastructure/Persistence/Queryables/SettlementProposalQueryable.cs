@@ -6,7 +6,7 @@ using Domain.Aggregates;
 using Application.Thing.Queries.GetSettlementProposalsList;
 using Application.Common.Interfaces;
 using Application.Settlement.Queries.GetSettlementProposal;
-using Application.General.Queries.GetContractsStates.QM;
+using Application.Admin.Queries.GetContractsStates.QM;
 
 namespace Infrastructure.Persistence.Queryables;
 

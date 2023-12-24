@@ -38,4 +38,5 @@ public static class LogMessagePlaceholders
     public const string NumHardDeclineVotes = "{NumHardDeclineVotes}";
     public const string EventName = "{EventName}";
     public const string RequestName = "{RequestName}";
+    public const string FunctionName = "{FunctionName}";
 }

@@ -7,7 +7,3 @@ abstract class GeneralAction extends Action {
 class GetTags extends GeneralAction {
   const GetTags();
 }
-
-class GetContractsStates extends GeneralAction {
-  const GetContractsStates();
-}

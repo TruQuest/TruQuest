@@ -18,7 +18,7 @@ using Application.Common.Monitoring;
 using Application.Common.Interfaces;
 using Application.Common.Misc;
 using Application.Ethereum.Common.Models.IM;
-using Application.General.Queries.GetContractsStates.QM;
+using Application.Admin.Queries.GetContractsStates.QM;
 using static Application.Common.Monitoring.LogMessagePlaceholders;
 
 using Infrastructure.Ethereum.Messages;
@@ -100,13 +100,22 @@ internal class ContractCaller : IContractCaller
             await foreach (var item in _stream.ReadAllAsync(ct))
             {
                 // @@TODO!!: Try-catch common errors like insufficient funds, OOG, etc.
-                var result = await item.Task();
-                if (!result.IsError)
+                try
                 {
-                    _memoryCache.Set(result.Data!.TransactionHash, item.Traceparent);
-                    Metrics.FunctionNameToGasUsedHistogram[item.FunctionName].Record((int)result.Data!.GasUsed.Value);
+                    var result = await item.Task();
+                    if (!result.IsError)
+                    {
+                        _memoryCache.Set(result.Data!.TransactionHash, item.Traceparent);
+                        Metrics.FunctionNameToGasUsedHistogram[item.FunctionName].Record((int)result.Data!.GasUsed.Value);
+                    }
+                    item.Tcs.SetResult(result);
                 }
-                item.Tcs.SetResult(result);
+                catch (Exception ex)
+                {
+                    // @@TODO: Create activity so that the log gets added to it.
+                    _logger.LogError(ex, $"Error trying to execute function {FunctionName}", item.FunctionName);
+                    item.Tcs.SetResult(new NonCustomRevertError(ex.Message));
+                }
             }
         }
         catch (OperationCanceledException)
@@ -1592,5 +1601,58 @@ internal class ContractCaller : IContractCaller
         Debug.Assert(polls.Where(p => p.InitBlockNumber < 0).All(p => p.Verifiers.Count() == 0));
 
         return polls;
+    }
+
+    public async Task<string?> ToggleWithdrawals(bool value)
+    {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().GetActivityName()}.{nameof(ToggleWithdrawals)}",
+            kind: ActivityKind.Client
+        )!;
+
+        var result = await _sendTxn(async () =>
+        {
+            return await _web3.Eth
+                .GetContractTransactionHandler<EnableWithdrawalsMessage>()
+                .SendRequestAndWaitForReceiptAsync(_truquestAddress, new() { Value = value });
+        });
+
+        if (result.IsError)
+        {
+            _logger.LogWarning($"Error trying to set s_withdrawalsEnabled to {value}: {result.Error}");
+            return null;
+        }
+
+        _logger.LogInformation(
+            $"Set s_withdrawalsEnabled to {value}.\nTxn hash: {TxnHash}",
+            result.Data!.TransactionHash
+        );
+
+        return result.Data.TransactionHash;
+    }
+
+    public async Task<string?> ToggleStopTheWorld(bool value)
+    {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().GetActivityName()}.{nameof(ToggleStopTheWorld)}",
+            kind: ActivityKind.Client
+        )!;
+
+        var result = await _sendTxn(async () =>
+        {
+            return await _web3.Eth
+                .GetContractTransactionHandler<StopTheWorldMessage>()
+                .SendRequestAndWaitForReceiptAsync(_truquestAddress, new() { Value = value });
+        });
+
+        if (result.IsError)
+        {
+            _logger.LogWarning($"Error trying to set s_stopTheWorld to {value}: {result.Error}");
+            return null;
+        }
+
+        _logger.LogInformation($"Set s_stopTheWorld to {value}.\nTxn hash: {TxnHash}", result.Data!.TransactionHash);
+
+        return result.Data.TransactionHash;
     }
 }

@@ -235,6 +235,7 @@ public static class WebApplicationBuilderExtension
         app.MapThingEndpoints();
         app.MapSettlementProposalEndpoints();
         app.MapGeneralEndpoints();
+        app.MapAdminEndpoints();
 
         app.MapHub<TruQuestHub>("/api/hub");
 

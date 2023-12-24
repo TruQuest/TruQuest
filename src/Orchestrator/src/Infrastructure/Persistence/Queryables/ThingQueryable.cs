@@ -7,7 +7,7 @@ using Application.Thing.Queries.GetThing;
 using Application.Common.Models.QM;
 using Application.Common.Interfaces;
 using Application.Subject.Common.Models.QM;
-using Application.General.Queries.GetContractsStates.QM;
+using Application.Admin.Queries.GetContractsStates.QM;
 
 namespace Infrastructure.Persistence.Queryables;
 

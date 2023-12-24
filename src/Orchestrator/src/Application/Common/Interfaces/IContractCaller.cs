@@ -2,7 +2,7 @@ using System.Numerics;
 
 using Application.Common.Attributes;
 using Application.Ethereum.Common.Models.IM;
-using Application.General.Queries.GetContractsStates.QM;
+using Application.Admin.Queries.GetContractsStates.QM;
 
 namespace Application.Common.Interfaces;
 
@@ -105,4 +105,9 @@ public interface IContractCaller
     Task<IEnumerable<ThingValidationPollQm>> ExportThingValidationPollData();
     Task<IEnumerable<SettlementProposalAssessmentVerifierLotteryQm>> ExportSettlementProposalAssessmentVerifierLotteryData();
     Task<IEnumerable<SettlementProposalAssessmentPollQm>> ExportSettlementProposalAssessmentPollData();
+
+    [TrackGasUsage(MetricName = "enable-withdrawals")]
+    Task<string?> ToggleWithdrawals(bool value);
+    [TrackGasUsage(MetricName = "stop-the-world")]
+    Task<string?> ToggleStopTheWorld(bool value);
 }

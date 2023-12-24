@@ -1,4 +1,4 @@
-using Application.General.Queries.GetContractsStates.QM;
+using Application.Admin.Queries.GetContractsStates.QM;
 using Application.Settlement.Queries.GetSettlementProposal;
 using Application.Thing.Queries.GetSettlementProposalsList;
 

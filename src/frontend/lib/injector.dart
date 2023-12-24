@@ -1,6 +1,9 @@
 import 'package:kiwi/kiwi.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import 'admin/bloc/admin_bloc.dart';
+import 'admin/services/admin_api_service.dart';
+import 'admin/services/admin_service.dart';
 import 'ethereum/models/im/user_operation.dart';
 import 'ethereum/services/embedded_wallet_service.dart';
 import 'ethereum/services/third_party_wallet_service.dart';
@@ -85,6 +88,9 @@ abstract class Injector {
   @Register.factory(UserOperationBuilder)
   @Register.singleton(IFrameManager)
   @Register.singleton(EmbeddedWalletService)
+  @Register.singleton(AdminBloc)
+  @Register.singleton(AdminService)
+  @Register.singleton(AdminApiService)
   void configure();
 
   @Register.singleton(

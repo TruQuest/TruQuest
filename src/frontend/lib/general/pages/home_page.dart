@@ -2,15 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:talker_flutter/talker_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../bloc/general_actions.dart';
-import '../bloc/general_bloc.dart';
-import '../models/vm/get_contracts_states_rvm.dart';
+import '../../admin/models/vm/command_output.dart';
+import '../../admin/bloc/admin_bloc.dart';
+import '../../admin/bloc/admin_actions.dart';
 import '../services/iframe_manager.dart';
-import '../utils/logger.dart';
-import '../widgets/admin_panel_dialog.dart';
 import '../widgets/fixed_width.dart';
 import '../widgets/clipped_rect.dart';
 import '../widgets/nav_panel.dart';
@@ -35,7 +32,7 @@ class _HomePageState extends StateX<HomePage> with TickerProviderStateMixin {
   late final _pageContext = use<PageContext>();
   late final _notificationBloc = use<NotificationBloc>();
   late final _iframeManager = use<IFrameManager>();
-  late final _generalBloc = use<GeneralBloc>();
+  late final _adminBloc = use<AdminBloc>();
 
   late final AnimationController _rightAnimationController;
   late final Animation<double> _rightAnimation;
@@ -47,7 +44,7 @@ class _HomePageState extends StateX<HomePage> with TickerProviderStateMixin {
   final double _overlayWidth = 250;
   final double _overlayHeight = 250;
   final double _overlayInitialVisibleWidth = 30;
-  final double _consoleHeight = 60;
+  final double _consoleHeight = 300;
   late double _halfScreenHeight;
   OverlayEntry? _rightOverlayEntry;
   OverlayEntry? _leftOverlayEntry;
@@ -198,6 +195,7 @@ class _HomePageState extends StateX<HomePage> with TickerProviderStateMixin {
 
   void _buildConsole() {
     _consoleFocusNode.requestFocus();
+
     _consoleOverlayEntry = OverlayEntry(
       builder: (_) => AnimatedBuilder(
         animation: _consoleAnimation,
@@ -208,59 +206,88 @@ class _HomePageState extends StateX<HomePage> with TickerProviderStateMixin {
             height: _consoleHeight,
             padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
             alignment: Alignment.bottomLeft,
-            child: TextField(
-              focusNode: _consoleFocusNode,
-              controller: _consoleTextController,
-              style: TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: 'Command',
-                hintStyle: TextStyle(color: Colors.white70),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white70),
-                ),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-              ),
-              onSubmitted: (value) async {
-                _consoleTextController.clear();
-                await _consoleAnimationController.reverse();
-                _removeConsole();
-
-                var commandArgs = value.split(' ');
-                var command = commandArgs.first.toLowerCase();
-                switch (command) {
-                  case 'logs':
-                    if (context.mounted)
-                      await showDialog(
-                        context: context,
-                        builder: (_) => SimpleDialog(
-                          children: [
-                            SizedBox(
-                              width: 1000,
-                              height: 600,
-                              child: TalkerScreen(
-                                appBarTitle: 'Logs',
-                                talker: logger,
+            child: Column(
+              children: [
+                Expanded(
+                  child: StreamBuilder(
+                    stream: _adminBloc.commandOutputs$,
+                    initialData: <CommandOutput>[],
+                    builder: (context, snapshot) {
+                      var commandOutputs = snapshot.data!;
+                      return ListView.separated(
+                        reverse: true,
+                        itemBuilder: (context, index) {
+                          var commandOutput = commandOutputs[index];
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SelectableText(
+                                commandOutput.commandLine,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
+                              if (commandOutput.outputLines != null)
+                                ...commandOutput.outputLines!.map(
+                                  (line) => SelectableText(
+                                    line,
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
+                        separatorBuilder: (_, __) => const Divider(color: Colors.white),
+                        itemCount: commandOutputs.length,
                       );
-                  case 'admin':
-                    var result = await _generalBloc.execute<GetContractsStatesRvm>(const GetContractsStates());
-                    if (result != null && context.mounted)
-                      await showDialog(
-                        context: context,
-                        builder: (_) => AdminPanelDialog(vm: result),
-                      );
-                  case 'goto':
-                    var route = commandArgs.elementAtOrNull(1);
-                    if (route != null) _pageContext.goto(route);
-                  default:
-                    logger.info('Invalid command');
-                }
-              },
+                    },
+                  ),
+                ),
+                TextField(
+                  focusNode: _consoleFocusNode,
+                  controller: _consoleTextController,
+                  style: TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Command',
+                    hintStyle: TextStyle(color: Colors.white70),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white70),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  onSubmitted: (value) async {
+                    var valueSplit = value.trim().split(' ');
+                    if (valueSplit.first.isEmpty) {
+                      _consoleTextController.clear();
+                      _consoleFocusNode.requestFocus();
+                      return;
+                    }
+
+                    bool? keepConsoleOpen = await _adminBloc.execute<bool>(CommandAction(
+                      command: valueSplit.first,
+                      args: valueSplit.length > 1 ? valueSplit.sublist(1) : null,
+                      context: context,
+                    ));
+
+                    if (keepConsoleOpen == null) {
+                      _consoleFocusNode.requestFocus();
+                      return;
+                    }
+
+                    _consoleTextController.clear();
+
+                    if (keepConsoleOpen) {
+                      _consoleFocusNode.requestFocus();
+                    } else {
+                      await _consoleAnimationController.reverse();
+                      _removeConsole();
+                    }
+                  },
+                ),
+              ],
             ),
           ),
         ),

@@ -91,7 +91,12 @@ class _$Injector extends Injector {
           c<IAccountFactoryContract>()))
       ..registerSingleton((c) => IFrameManager())
       ..registerSingleton((c) => EmbeddedWalletService(
-          c<UserApiService>(), c<IFrameManager>(), c<LocalStorage>()));
+          c<UserApiService>(), c<IFrameManager>(), c<LocalStorage>()))
+      ..registerSingleton(
+          (c) => AdminBloc(c<ToastMessenger>(), c<AdminService>()))
+      ..registerSingleton(
+          (c) => AdminService(c<AdminApiService>(), c<PageContext>()))
+      ..registerSingleton((c) => AdminApiService(c<ServerConnector>()));
   }
 
   @override
