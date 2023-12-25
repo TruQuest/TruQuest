@@ -3,6 +3,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 error RestrictedAccess__Unauthorized();
 error RestrictedAccess__Forbidden();
+error RestrictedAccess__InvalidUserIndex(uint16 index);
 
 contract RestrictedAccess {
     address private s_orchestrator;
@@ -49,6 +50,20 @@ contract RestrictedAccess {
         }
     }
 
+    function getIndexOfWhitelistedUser(
+        address _user
+    ) external view returns (int16) {
+        int16 index = -1;
+        for (uint16 i = 0; i < s_whitelist.length; ++i) {
+            if (_user == s_whitelist[i]) {
+                index = int16(i);
+                break;
+            }
+        }
+
+        return index;
+    }
+
     function removeAccessFrom(
         address _user,
         uint16 _whitelistIndex
@@ -64,6 +79,8 @@ contract RestrictedAccess {
             }
             s_whitelist.pop();
             delete s_whitelistedAddresses[_user];
+        } else {
+            revert RestrictedAccess__InvalidUserIndex(_whitelistIndex);
         }
     }
 }

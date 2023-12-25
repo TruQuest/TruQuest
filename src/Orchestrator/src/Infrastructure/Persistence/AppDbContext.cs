@@ -372,10 +372,9 @@ public class AppDbContext : IdentityUserContext<UserDm, string>
 
         modelBuilder.Entity<WhitelistEntry>(builder =>
         {
-            builder.HasKey(e => e.Id);
-            builder.Property(e => e.Id).UseIdentityAlwaysColumn();
-            builder.Property(e => e.Type).IsRequired();
-            builder.Property(e => e.Value).IsRequired();
+            builder.HasKey(e => new { e.Type, e.Value });
+            builder.Property(e => e.Type);
+            builder.Property(e => e.Value);
         });
 
         modelBuilder.Entity<DeadLetter>(builder =>

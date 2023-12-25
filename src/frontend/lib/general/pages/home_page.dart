@@ -225,9 +225,11 @@ class _HomePageState extends StateX<HomePage> with TickerProviderStateMixin {
                                 commandOutput.commandLine,
                                 style: TextStyle(
                                   color: Colors.white,
+                                  fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
+                              const SizedBox(height: 3),
                               if (commandOutput.outputLines != null)
                                 ...commandOutput.outputLines!.map(
                                   (line) => SelectableText(
@@ -272,14 +274,9 @@ class _HomePageState extends StateX<HomePage> with TickerProviderStateMixin {
                       context: context,
                     ));
 
-                    if (keepConsoleOpen == null) {
-                      _consoleFocusNode.requestFocus();
-                      return;
-                    }
-
                     _consoleTextController.clear();
 
-                    if (keepConsoleOpen) {
+                    if (keepConsoleOpen!) {
                       _consoleFocusNode.requestFocus();
                     } else {
                       await _consoleAnimationController.reverse();

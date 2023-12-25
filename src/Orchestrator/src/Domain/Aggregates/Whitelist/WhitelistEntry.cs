@@ -4,7 +4,6 @@ namespace Domain.Aggregates;
 
 public class WhitelistEntry : Entity, IAggregateRoot
 {
-    public int? Id { get; private set; }
     public WhitelistEntryType Type { get; }
     public string Value { get; }
 

@@ -12,4 +12,6 @@ internal class WhitelistRepository : Repository, IWhitelistRepository
     }
 
     public void Create(WhitelistEntry entry) => _dbContext.Whitelist.Add(entry);
+
+    public void Remove(WhitelistEntry entry) => _dbContext.Whitelist.Remove(entry);
 }

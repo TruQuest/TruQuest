@@ -42,7 +42,7 @@ if (environment == "Development")
             .GetEtherTransferService()
             .TransferEtherAndWaitForReceiptAsync(
                 toAddress: address,
-                etherAmount: 1.0m
+                etherAmount: 1000.0m
             );
 
         Console.WriteLine($"Funded with Eth {address}. Txn hash: {txnReceipt.TransactionHash}");

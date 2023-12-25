@@ -106,7 +106,10 @@ internal class ContractCaller : IContractCaller
                     if (!result.IsError)
                     {
                         _memoryCache.Set(result.Data!.TransactionHash, item.Traceparent);
-                        Metrics.FunctionNameToGasUsedHistogram[item.FunctionName].Record((int)result.Data!.GasUsed.Value);
+                        if (Metrics.FunctionNameToGasUsedHistogram.TryGetValue(item.FunctionName, out var histogram))
+                        {
+                            histogram.Record((int)result.Data!.GasUsed.Value);
+                        }
                     }
                     item.Tcs.SetResult(result);
                 }
@@ -1652,6 +1655,166 @@ internal class ContractCaller : IContractCaller
         }
 
         _logger.LogInformation($"Set s_stopTheWorld to {value}.\nTxn hash: {TxnHash}", result.Data!.TransactionHash);
+
+        return result.Data.TransactionHash;
+    }
+
+    public Task<bool> CheckHasAccess(string address) => _web3.Eth
+        .GetContractQueryHandler<CheckHasAccessMessage>()
+        .QueryAsync<bool>(_restrictedAccessAddress, new() { User = address });
+
+    public async Task<string?> GiveAccessTo(string address)
+    {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().GetActivityName()}.{nameof(GiveAccessTo)}",
+            kind: ActivityKind.Client
+        )!;
+
+        var result = await _sendTxn(async () =>
+        {
+            return await _web3.Eth
+                .GetContractTransactionHandler<GiveAccessToMessage>()
+                .SendRequestAndWaitForReceiptAsync(_restrictedAccessAddress, new() { User = address });
+        });
+
+        if (result.IsError)
+        {
+            _logger.LogWarning($"Error trying to give restricted access to {WalletAddress}: {result.Error}", address);
+            return null;
+        }
+
+        _logger.LogInformation(
+            $"Gave restricted access to {WalletAddress}.\nTxn hash: {TxnHash}",
+            address, result.Data!.TransactionHash
+        );
+
+        return result.Data.TransactionHash;
+    }
+
+    public async Task<string?> GiveAccessToMany(List<string> addresses)
+    {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().GetActivityName()}.{nameof(GiveAccessToMany)}",
+            kind: ActivityKind.Client
+        )!;
+
+        var result = await _sendTxn(async () =>
+        {
+            return await _web3.Eth
+                .GetContractTransactionHandler<GiveAccessToManyMessage>()
+                .SendRequestAndWaitForReceiptAsync(_restrictedAccessAddress, new() { Users = addresses });
+        });
+
+        if (result.IsError)
+        {
+            _logger.LogWarning($"Error trying to give restricted access to multiple addresses: {result.Error}");
+            return null;
+        }
+
+        _logger.LogInformation($"Gave restricted access to multiple addresses.\nTxn hash: {TxnHash}", result.Data!.TransactionHash);
+
+        return result.Data.TransactionHash;
+    }
+
+    public Task<int> GetIndexOfWhitelistedUser(string address) => _web3.Eth
+        .GetContractQueryHandler<GetIndexOfWhitelistedUserMessage>()
+        .QueryAsync<int>(_restrictedAccessAddress, new() { User = address });
+
+    public async Task<string?> RemoveAccessFrom(string address, ushort index)
+    {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().GetActivityName()}.{nameof(RemoveAccessFrom)}",
+            kind: ActivityKind.Client
+        )!;
+
+        var result = await _sendTxn(async () =>
+        {
+            // @@TODO: Catch RestrictedAccess__InvalidUserIndex
+            return await _web3.Eth
+                .GetContractTransactionHandler<RemoveAccessFromMessage>()
+                .SendRequestAndWaitForReceiptAsync(
+                    _restrictedAccessAddress,
+                    new()
+                    {
+                        User = address,
+                        WhitelistIndex = index
+                    }
+                );
+        });
+
+        if (result.IsError)
+        {
+            _logger.LogWarning($"Error trying to remove restricted access from {WalletAddress}: {result.Error}", address);
+            return null;
+        }
+
+        _logger.LogInformation(
+            $"Removed restricted access from {WalletAddress}.\nTxn hash: {TxnHash}",
+            address, result.Data!.TransactionHash
+        );
+
+        return result.Data.TransactionHash;
+    }
+
+    public async Task<string?> FundWithEth(string address, decimal amountInEth)
+    {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().GetActivityName()}.{nameof(FundWithEth)}",
+            kind: ActivityKind.Client
+        )!;
+
+        var result = await _sendTxn(async () =>
+        {
+            return await _web3.Eth
+                .GetEtherTransferService()
+                .TransferEtherAndWaitForReceiptAsync(
+                    toAddress: address,
+                    etherAmount: amountInEth
+                );
+        });
+
+        if (result.IsError)
+        {
+            _logger.LogWarning($"Error trying to fund {WalletAddress} with Eth: {result.Error}", address);
+            return null;
+        }
+
+        _logger.LogInformation($"Funded {WalletAddress} with Eth.\nTxn hash: {TxnHash}", address, result.Data!.TransactionHash);
+
+        return result.Data.TransactionHash;
+    }
+
+    public async Task<string?> MintAndDepositTruthserumTo(string address, BigInteger amountInGt)
+    {
+        using var span = Telemetry.StartActivity(
+            $"{GetType().GetActivityName()}.{nameof(MintAndDepositTruthserumTo)}",
+            kind: ActivityKind.Client
+        )!;
+
+        var result = await _sendTxn(async () =>
+        {
+            return await _web3.Eth
+                .GetContractTransactionHandler<MintAndDepositTruthserumToMessage>()
+                .SendRequestAndWaitForReceiptAsync(
+                    _truquestAddress,
+                    new()
+                    {
+                        User = address,
+                        Amount = amountInGt
+                    }
+                );
+        });
+
+        if (result.IsError)
+        {
+            _logger.LogWarning($"Error trying to mint and deposit Tru to {WalletAddress}: {result.Error}", address);
+            return null;
+        }
+
+        _logger.LogInformation(
+            $"Minted and deposited Tru to {WalletAddress}.\nTxn hash: {TxnHash}",
+            address, result.Data!.TransactionHash
+        );
 
         return result.Data.TransactionHash;
     }

@@ -110,4 +110,15 @@ public interface IContractCaller
     Task<string?> ToggleWithdrawals(bool value);
     [TrackGasUsage(MetricName = "stop-the-world")]
     Task<string?> ToggleStopTheWorld(bool value);
+
+    Task<bool> CheckHasAccess(string address);
+    [TrackGasUsage(MetricName = "give-access-to")]
+    Task<string?> GiveAccessTo(string address);
+    [TrackGasUsage(MetricName = "give-access-to-many")]
+    Task<string?> GiveAccessToMany(List<string> addresses);
+    Task<int> GetIndexOfWhitelistedUser(string address);
+    [TrackGasUsage(MetricName = "remove-access-from")]
+    Task<string?> RemoveAccessFrom(string address, ushort index);
+    Task<string?> FundWithEth(string address, decimal amountInEth);
+    Task<string?> MintAndDepositTruthserumTo(string address, BigInteger amountInGt);
 }
